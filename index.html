@@ -644,29 +644,46 @@ document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
 </body>
 </html>
 
-<div id="arkanPay" style="display:none;position:fixed;inset:0;z-index:99999;background:#000b;align-items:center;justify-content:center;font-family:'Poppins',sans-serif" onclick="if(event.target===this)this.style.display='none'">
-  <div dir="rtl" style="max-width:460px;width:90%;padding:26px;border:1px solid #E8C24A55;border-radius:18px;background:#0d0d0f;color:#fff;text-align:center">
-    <h3 style="margin:0 0 4px;font-size:22px">ادفع بـ USDT</h3>
-    <p style="margin:0 0 16px;color:#9a9aa2;font-size:14px">الشبكة: <b style="color:#E8C24A">TRON (TRC20)</b> فقط</p>
-    <div style="display:flex;align-items:center;gap:10px;background:#000;border:1px solid #2a2a30;border-radius:12px;padding:12px">
-      <code style="flex:1;font-size:12px;word-break:break-all;direction:ltr;text-align:left">TTXUswnqmRPcqRRZkonxwpH2KDStAJm7td</code>
-      <button onclick="navigator.clipboard.writeText('TTXUswnqmRPcqRRZkonxwpH2KDStAJm7td');this.innerText='✓'" style="background:#E8C24A;border:0;border-radius:9px;padding:9px 14px;font-weight:700">نسخ</button>
+<div id="arkanPay" style="display:none;position:fixed;inset:0;z-index:99999;background:#000c;backdrop-filter:blur(6px);align-items:center;justify-content:center;font-family:'Poppins','Tajawal',sans-serif" onclick="if(event.target===this)this.style.display='none'">
+  <div dir="rtl" style="max-width:440px;width:90%;padding:30px 26px;border:1px solid #E8C24A55;border-radius:20px;background:linear-gradient(180deg,#101014,#17171c);color:#fff;text-align:center;box-shadow:0 25px 70px #000c">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <span style="font-size:12px;letter-spacing:2px;color:#E8C24A">// إتمام الاشتراك</span>
+      <span onclick="document.getElementById('arkanPay').style.display='none'" style="cursor:pointer;color:#777;font-size:24px;line-height:1">&times;</span>
     </div>
-    <div style="margin:14px 0;padding:10px;background:#E8C24A14;border-radius:10px;font-size:12px;color:#E8C24A">⚠️ TRC20 فقط — أي شبكة أخرى = ضياع المبلغ.</div>
-    <a href="https://t.me/ArkanAI_Access_Bot" target="_blank" style="display:block;background:#E8C24A;color:#000;text-decoration:none;border-radius:12px;padding:13px;font-weight:700">أرسلتُ الدفع — أكّد عبر Telegram</a>
+    <div style="color:#9a9aa2;font-size:13px;margin-bottom:4px">المبلغ المطلوب</div>
+    <div style="font-size:46px;font-weight:800;color:#E8C24A;line-height:1"><span id="arkanAmt">—</span> <span style="font-size:18px;color:#fff">USDT</span></div>
+    <div style="color:#9a9aa2;font-size:13px;margin:6px 0 22px">الشبكة: <b style="color:#E8C24A">TRON (TRC20)</b> فقط</div>
+
+    <div style="text-align:right;font-size:12px;color:#9a9aa2;margin-bottom:6px">عنوان المحفظة</div>
+    <div style="display:flex;align-items:center;gap:8px;background:#000;border:1px solid #2a2a30;border-radius:12px;padding:11px 12px;margin-bottom:18px">
+      <code style="flex:1;font-size:12px;word-break:break-all;direction:ltr;text-align:left;color:#fff">TTXUswnqmRPcqRRZkonxwpH2KDStAJm7td</code>
+      <button onclick="navigator.clipboard.writeText('TTXUswnqmRPcqRRZkonxwpH2KDStAJm7td');this.innerText='✓'" style="background:#E8C24A;color:#000;border:0;border-radius:9px;padding:9px 14px;font-weight:700;cursor:pointer;font-family:inherit">نسخ</button>
+    </div>
+
+    <div style="background:#E8C24A12;border:1px solid #E8C24A33;border-radius:10px;padding:10px;font-size:12px;color:#E8C24A;margin-bottom:18px">⚠️ حوّل <b>المبلغ بالضبط</b> على شبكة TRC20 فقط — أي خطأ في الشبكة يعني ضياع المبلغ.</div>
+
+    <a href="https://t.me/ArkanAI_Access_Bot" target="_blank" style="display:block;background:#E8C24A;color:#000;text-decoration:none;border-radius:12px;padding:14px;font-weight:700;font-size:15px">أرسلتُ الدفع — أكّد وفعل عبر Telegram</a>
+    <p style="margin:12px 0 0;color:#6b6b73;font-size:11px">أرسل صورة الإيصال في Telegram لتفعيل اشتراكك فورًا.</p>
   </div>
 </div>
 <script>
 document.addEventListener('click',function(e){
-  var b=e.target.closest('a,button,[role="button"],div');
-  if(b&&b.textContent&&b.textContent.indexOf('اشترك الآن')!==-1){
-    e.preventDefault();e.stopPropagation();
-    document.getElementById('arkanPay').style.display='flex';
+  var btn=e.target.closest('a,button,[role="button"]');
+  if(!btn||(btn.textContent||'').indexOf('اشترك الآن')===-1)return;
+  e.preventDefault();e.stopPropagation();
+  var node=btn.parentElement,amount='',t=0;
+  while(node&&t<10){
+    var txt=node.innerText||'';var idx=txt.indexOf('اشترك');
+    var head=idx>0?txt.slice(0,idx):'';
+    var m=head.match(/\d[\d,]{0,5}/);
+    if(m){amount=m[0].replace(/,/g,'');break;}
+    node=node.parentElement;t++;
   }
+  document.getElementById('arkanAmt').textContent=amount||'—';
+  document.getElementById('arkanPay').style.display='flex';
 },true);
 </script>
 
-</script>
 <div style="background:#0d0d0f;border-top:1px solid #E8C24A33;border-bottom:1px solid #E8C24A33;overflow:hidden;white-space:nowrap;font-family:'Poppins','Tajawal',sans-serif">
   <div id="arkanTicker" style="display:inline-block;padding:12px 0;color:#fff;font-size:14px;animation:arkanScroll 60s linear infinite">
     <span style="color:#E8C24A">⟳ جارٍ تحميل أخبار السوق…</span>
