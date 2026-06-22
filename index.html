@@ -671,7 +671,7 @@ document.addEventListener('click',function(e){
   <div style="text-align:center;margin-bottom:18px">
     <div style="font-size:13px;letter-spacing:2px;color:#E8C24A">// MARKET NEWS</div>
     <h2 style="margin:6px 0 0;color:#fff;font-size:26px">أهم أخبار السوق</h2>
-    <p style="color:#9a9aa2;font-size:14px;margin:6px 0 0">أحدث ما يؤثّر على سوق الكريبتو — بالعربية، تُحدَّث تلقائيًا</p>
+    <p style="color:#9a9aa2;font-size:14px;margin:6px 0 0">أحدث ما يؤثّر على سوق الكريبتو — بالعربية</p>
   </div>
   <div id="arkanNews" style="display:flex;flex-direction:column;gap:12px">
     <div style="color:#9a9aa2;text-align:center;padding:20px">جارٍ تحميل الأخبار…</div>
@@ -680,18 +680,26 @@ document.addEventListener('click',function(e){
 <script>
 (function(){
   var FEED="https://ar.cointelegraph.com/rss";
-  var url="https://api.rss2json.com/v1/api.json?count=6&rss_url="+encodeURIComponent(FEED);
-  fetch(url).then(function(r){return r.json()}).then(function(d){
-    var box=document.getElementById('arkanNews');
-    if(!d.items||!d.items.length){box.innerHTML='<div style="color:#9a9aa2;text-align:center">تعذّر تحميل الأخبار حاليًا.</div>';return;}
-    box.innerHTML=d.items.map(function(it){
-      var date=new Date(it.pubDate).toLocaleDateString('ar',{day:'numeric',month:'long'});
-      return '<a href="'+it.link+'" target="_blank" style="display:block;text-decoration:none;background:linear-gradient(180deg,#0d0d0f,#141418);border:1px solid #E8C24A22;border-radius:14px;padding:16px 18px;transition:.2s" onmouseover="this.style.borderColor=\'#E8C24A66\'" onmouseout="this.style.borderColor=\'#E8C24A22\'">'
-        +'<div style="color:#fff;font-size:16px;font-weight:600;line-height:1.5">'+it.title+'</div>'
+  var PROXY="https://api.allorigins.win/raw?url="+encodeURIComponent(FEED);
+  var box=document.getElementById('arkanNews');
+  fetch(PROXY).then(function(r){return r.text()}).then(function(xml){
+    var doc=new DOMParser().parseFromString(xml,"text/xml");
+    var items=doc.querySelectorAll("item");
+    if(!items.length){throw 0;}
+    var html="",n=Math.min(6,items.length);
+    for(var i=0;i<n;i++){
+      var it=items[i];
+      var title=(it.querySelector("title")||{}).textContent||"";
+      var link=(it.querySelector("link")||{}).textContent||"#";
+      var d=it.querySelector("pubDate");
+      var date=d?new Date(d.textContent).toLocaleDateString('ar',{day:'numeric',month:'long'}):"";
+      html+='<a href="'+link+'" target="_blank" style="display:block;text-decoration:none;background:linear-gradient(180deg,#0d0d0f,#141418);border:1px solid #E8C24A22;border-radius:14px;padding:16px 18px">'
+        +'<div style="color:#fff;font-size:16px;font-weight:600;line-height:1.5">'+title+'</div>'
         +'<div style="color:#E8C24A;font-size:12px;margin-top:8px">'+date+' · Cointelegraph عربي</div></a>';
-    }).join('');
+    }
+    box.innerHTML=html;
   }).catch(function(){
-    document.getElementById('arkanNews').innerHTML='<div style="color:#9a9aa2;text-align:center">تعذّر تحميل الأخبار حاليًا.</div>';
+    box.innerHTML='<div style="color:#9a9aa2;text-align:center;padding:16px">تعذّر تحميل الأخبار العربية حاليًا.</div>';
   });
 })();
 </script>
