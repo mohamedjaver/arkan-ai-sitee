@@ -640,7 +640,10 @@ burger.onclick=()=>navLinks.classList.toggle('open');navLinks.querySelectorAll('
 const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}}),{threshold:.1});
 document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
 </script>
-  <div dir="rtl" style="max-width:520px;margin:40px auto;padding:28px;border:1px solid #E8C24A33;border-radius:18px;background:linear-gradient(180deg,#0d0d0f,#141418);font-family:'Poppins',sans-serif;color:#fff;text-align:center;box-shadow:0 10px 40px #0008">
+
+</body>
+</html>
+<div dir="rtl" style="max-width:520px;margin:40px auto;padding:28px;border:1px solid #E8C24A33;border-radius:18px;background:linear-gradient(180deg,#0d0d0f,#141418);font-family:'Poppins',sans-serif;color:#fff;text-align:center;box-shadow:0 10px 40px #0008">
   <div style="font-size:13px;letter-spacing:2px;color:#E8C24A;margin-bottom:6px">// PAYMENT</div>
   <h3 style="margin:0 0 4px;font-size:22px">ادفع بـ USDT</h3>
   <p style="margin:0 0 20px;color:#9a9aa2;font-size:14px">الشبكة: <b style="color:#E8C24A">TRON (TRC20)</b> فقط</p>
@@ -658,6 +661,3 @@ document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
     أرسلتُ الدفع — تواصل عبر Telegram
   </a>
 </div>
-
-</body>
-</html>
