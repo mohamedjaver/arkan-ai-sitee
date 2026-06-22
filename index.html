@@ -667,30 +667,31 @@ document.addEventListener('click',function(e){
 </script>
 
 </script>
-<section dir="rtl" style="max-width:900px;margin:50px auto;padding:0 16px;font-family:'Poppins',sans-serif">
-  <div style="text-align:center;margin-bottom:18px">
-    <div style="font-size:13px;letter-spacing:2px;color:#E8C24A">// MARKET NEWS</div>
-    <h2 style="margin:6px 0 0;color:#fff;font-size:26px">أهم أخبار السوق</h2>
-    <p style="color:#9a9aa2;font-size:14px;margin:6px 0 0">أحدث الأخبار المؤثرة على سوق الكريبتو — تُحدَّث لحظيًا</p>
+<div style="background:#0d0d0f;border-top:1px solid #E8C24A33;border-bottom:1px solid #E8C24A33;overflow:hidden;white-space:nowrap;font-family:'Poppins','Tajawal',sans-serif">
+  <div id="arkanTicker" style="display:inline-block;padding:12px 0;color:#fff;font-size:14px;animation:arkanScroll 60s linear infinite">
+    <span style="color:#E8C24A">⟳ جارٍ تحميل أخبار السوق…</span>
   </div>
-  <div style="border:1px solid #E8C24A33;border-radius:16px;overflow:hidden;box-shadow:0 10px 40px #0008">
-    <div class="tradingview-widget-container">
-      <div class="tradingview-widget-container__widget"></div>
-      <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-timeline.js" async>
-      {
-      "feedMode": "market",
-      "market": "crypto",
-      "isTransparent": true,
-      "displayMode": "regular",
-      "width": "100%",
-      "height": 560,
-      "colorTheme": "dark",
-      "locale": "ar_AE"
-      }
-      </script>
-    </div>
-  </div>
-</section>
+</div>
+<style>@keyframes arkanScroll{from{transform:translateX(100%)}to{transform:translateX(-100%)}}</style>
+<script>
+(function(){
+  var t=document.getElementById('arkanTicker');
+  var px=function(u){return "https://api.allorigins.win/raw?url="+encodeURIComponent(u);};
+  fetch(px("https://cointelegraph.com/rss")).then(function(r){return r.text()}).then(function(xml){
+    var items=new DOMParser().parseFromString(xml,"text/xml").querySelectorAll("item");
+    var titles=[];for(var i=0;i<Math.min(8,items.length);i++){titles.push((items[i].querySelector("title")||{}).textContent||"");}
+    if(!titles.length)throw 0;
+    var q=titles.join("\n");
+    return fetch(px("https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=ar&dt=t&q="+encodeURIComponent(q)))
+      .then(function(r){return r.json()}).then(function(d){return d[0].map(function(s){return s[0]}).join("").split("\n")})
+      .catch(function(){return titles;})
+      .then(function(ar){
+        t.innerHTML=ar.map(function(x){return '<span style="margin:0 28px">📰 '+x+'</span><span style="color:#E8C24A">•</span>';}).join("");
+      });
+  }).catch(function(){ t.innerHTML='<span style="color:#9a9aa2">تعذّر تحميل الأخبار حاليًا</span>'; });
+})();
+</script>
+
 
 },true);
 </script>
