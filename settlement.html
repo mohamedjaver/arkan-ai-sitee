@@ -20,38 +20,57 @@
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 body{background:var(--bg);color:var(--txt);font-family:'IBM Plex Sans Arabic',sans-serif;min-height:100vh;padding-bottom:60px}
 .num{font-family:'IBM Plex Mono',monospace;font-feature-settings:"tnum"}
-#lock{position:fixed;inset:0;background:var(--bg);z-index:1000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:24px}
+/* ===== LOCK ===== */
+#lock{position:fixed;inset:0;background:var(--bg);z-index:1000;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:24px}
 #lock .hex{width:64px;height:64px;font-size:30px}
 #lock h2{font-size:16px;letter-spacing:2px}
 #lock h2 span{color:var(--gold)}
-#lock input{width:200px;text-align:center;letter-spacing:12px;font-size:24px;padding:14px;border-radius:12px;background:var(--panel);border:1px solid var(--line);color:var(--gold);outline:none;font-family:'IBM Plex Mono',monospace}
+#lock input{width:200px;text-align:center;letter-spacing:12px;font-size:24px;
+  padding:14px;border-radius:12px;background:var(--panel);
+  border:1px solid var(--line);color:var(--gold);outline:none;
+  font-family:'IBM Plex Mono',monospace}
 #lock input:focus{border-color:var(--gold)}
 #lockMsg{font-size:12px;color:var(--dim);min-height:18px}
 #lockMsg.err{color:var(--red)}
+/* ===== HEADER ===== */
 header{padding:22px 18px 16px;border-bottom:1px solid var(--line);background:linear-gradient(180deg,#111318,var(--bg))}
 .brand{display:flex;align-items:center;gap:12px}
-.hex{width:42px;height:42px;flex-shrink:0;background:var(--gold);clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);display:flex;align-items:center;justify-content:center;color:#0C0D10;font-weight:700;font-size:20px}
+.hex{width:42px;height:42px;flex-shrink:0;background:var(--gold);
+  clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);
+  display:flex;align-items:center;justify-content:center;color:#0C0D10;font-weight:700;font-size:20px}
 .brand h1{font-size:17px;font-weight:700;letter-spacing:1px}
 .brand h1 span{color:var(--gold)}
 .brand p{font-size:11px;color:var(--dim);letter-spacing:2px}
+/* ===== TABS ===== */
 .tabs{display:flex;gap:8px;padding:14px 18px 0}
-.tab{flex:1;padding:10px 4px;text-align:center;font-size:13px;font-weight:600;background:var(--panel);border:1px solid var(--line);border-radius:10px;color:var(--dim);cursor:pointer;transition:.15s}
+.tab{flex:1;padding:10px 4px;text-align:center;font-size:13px;font-weight:600;
+  background:var(--panel);border:1px solid var(--line);border-radius:10px;
+  color:var(--dim);cursor:pointer;transition:.15s}
 .tab.on{background:var(--gold);color:#0C0D10;border-color:var(--gold)}
 section{padding:16px 18px;display:none}
 section.on{display:block}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px}
 .card h3{font-size:13px;color:var(--gold);letter-spacing:1px;margin-bottom:12px;font-weight:600}
 label{display:block;font-size:12px;color:var(--dim);margin:10px 0 5px}
-input{width:100%;padding:11px 12px;border-radius:10px;background:var(--panel2);border:1px solid var(--line);color:var(--txt);font-size:15px;font-family:'IBM Plex Mono',monospace;outline:none;transition:.15s}
+input{width:100%;padding:11px 12px;border-radius:10px;background:var(--panel2);
+  border:1px solid var(--line);color:var(--txt);font-size:15px;
+  font-family:'IBM Plex Mono',monospace;outline:none;transition:.15s}
 input:focus{border-color:var(--gold)}
 input.ar{font-family:'IBM Plex Sans Arabic',sans-serif}
 .row{display:flex;gap:10px}
 .row>div{flex:1}
-/* نوع المعاملة */
-.type-sw{display:flex;gap:8px;margin-bottom:14px}
-.type-btn{flex:1;padding:11px 4px;text-align:center;font-size:12px;font-weight:700;background:var(--panel);border:1px solid var(--line);border-radius:10px;color:var(--dim);cursor:pointer;transition:.15s}
-.type-btn.on{background:linear-gradient(135deg,#2a1f02,#1a1503);color:var(--gold);border-color:var(--gold)}
-.ticket{background:linear-gradient(135deg,#1B1400,#14161B 55%);border:1px solid #4a3a10;border-radius:14px;padding:16px;margin-bottom:14px;position:relative;overflow:hidden}
+/* ===== TYPE SELECTOR ===== */
+.types{display:flex;gap:8px;margin-bottom:14px}
+.type{flex:1;padding:12px 6px;text-align:center;border-radius:11px;cursor:pointer;
+  background:var(--panel);border:1px solid var(--line);transition:.15s}
+.type .t1{font-size:13px;font-weight:700}
+.type .t2{font-size:10px;color:var(--dim);margin-top:3px;font-family:'IBM Plex Mono',monospace}
+.type.on{border-color:var(--gold);background:linear-gradient(135deg,#1B1400,#14161B)}
+.type.on .t1{color:var(--gold)}
+/* ===== TICKET ===== */
+.ticket{background:linear-gradient(135deg,#1B1400,#14161B 55%);border:1px solid #4a3a10;
+  border-radius:14px;padding:16px;margin-bottom:14px;position:relative;overflow:hidden}
 .ticket::before{content:'';position:absolute;top:0;right:0;width:4px;height:100%;background:var(--gold)}
 .ref{font-size:22px;font-weight:600;color:var(--gold);letter-spacing:1px}
 .ticket .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
@@ -59,9 +78,12 @@ input.ar{font-family:'IBM Plex Sans Arabic',sans-serif}
 .kv .v{font-size:16px;font-weight:600;margin-top:2px}
 .kv .v.gold{color:var(--gold)}
 .kv .v.green{color:var(--green)}
-.timer{position:absolute;top:14px;left:14px;font-size:12px;color:var(--dim);background:var(--panel2);padding:4px 10px;border-radius:20px;border:1px solid var(--line)}
+.timer{position:absolute;top:14px;left:14px;font-size:12px;color:var(--dim);
+  background:var(--panel2);padding:4px 10px;border-radius:20px;border:1px solid var(--line)}
 .timer.hot{color:var(--red);border-color:var(--red)}
-.btn{width:100%;padding:13px;border:none;border-radius:11px;font-size:14px;font-weight:700;cursor:pointer;font-family:'IBM Plex Sans Arabic',sans-serif;transition:.15s;margin-top:10px}
+/* ===== BUTTONS ===== */
+.btn{width:100%;padding:13px;border:none;border-radius:11px;font-size:14px;font-weight:700;
+  cursor:pointer;font-family:'IBM Plex Sans Arabic',sans-serif;transition:.15s;margin-top:10px}
 .btn-gold{background:var(--gold);color:#0C0D10}
 .btn:active{transform:scale(.98)}
 .btn-line{background:transparent;color:var(--gold);border:1px solid var(--gold)}
@@ -69,13 +91,16 @@ input.ar{font-family:'IBM Plex Sans Arabic',sans-serif}
 .btn-sm{padding:7px 12px;font-size:12px;width:auto;margin:0;border-radius:8px}
 .btn-row{display:flex;gap:8px}
 .btn-row .btn{flex:1}
+/* ===== WA ===== */
 .wa-box{background:#0B1512;border:1px solid #1d3a2c;border-radius:14px;padding:14px;margin-bottom:14px}
 .wa-box h3{color:var(--wa);font-size:13px;margin-bottom:10px;letter-spacing:1px}
-.bubble{background:#123626;border-radius:12px 12px 12px 3px;padding:12px;font-size:13px;line-height:1.9;white-space:pre-wrap;font-family:'IBM Plex Mono',monospace;color:#D7F5E3}
+.bubble{background:#123626;border-radius:12px 12px 12px 3px;padding:12px;font-size:13px;
+  line-height:1.9;white-space:pre-wrap;font-family:'IBM Plex Mono',monospace;color:#D7F5E3}
+/* ===== LEDGER ===== */
 .tx{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:13px 14px;margin-bottom:10px}
-.tx-top{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.tx-top{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
 .tx-ref{font-family:'IBM Plex Mono',monospace;font-size:14px;color:var(--gold);font-weight:600}
-.badge{font-size:11px;padding:3px 10px;border-radius:20px;font-weight:600;white-space:nowrap}
+.badge{font-size:11px;padding:3px 10px;border-radius:20px;font-weight:600}
 .b-wait{background:#3a2c07;color:var(--gold-soft)}
 .b-conf{background:#0d3320;color:var(--green)}
 .b-paid{background:#1a2440;color:var(--blue)}
@@ -84,6 +109,7 @@ input.ar{font-family:'IBM Plex Sans Arabic',sans-serif}
 .tx-mid b{color:var(--txt);font-family:'IBM Plex Mono',monospace}
 .tx-mid b.green{color:var(--green)}
 .tx-acts{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
+/* ===== SUMMARY ===== */
 .sum-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .sum{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:14px;text-align:center}
 .sum .k{font-size:11px;color:var(--dim)}
@@ -91,7 +117,9 @@ input.ar{font-family:'IBM Plex Sans Arabic',sans-serif}
 .sum .v.gold{color:var(--gold)}
 .sum .v.green{color:var(--green)}
 .empty{text-align:center;color:var(--dim);padding:36px 0;font-size:13px}
-.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--gold);color:#0C0D10;padding:10px 22px;border-radius:24px;font-size:13px;font-weight:700;transition:.25s;z-index:99;opacity:0}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(80px);
+  background:var(--gold);color:#0C0D10;padding:10px 22px;border-radius:24px;
+  font-size:13px;font-weight:700;transition:.25s;z-index:99;opacity:0}
 .toast.show{transform:translateX(-50%) translateY(0);opacity:1}
 .footer-note{text-align:center;font-size:10px;color:#4a4e58;letter-spacing:2px;margin-top:24px}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
@@ -99,6 +127,7 @@ input.ar{font-family:'IBM Plex Sans Arabic',sans-serif}
 </head>
 <body>
 
+<!-- ===== PIN LOCK ===== -->
 <div id="lock">
   <div class="hex">A</div>
   <h2>ARKAN <span>SETTLEMENT</span></h2>
@@ -125,15 +154,15 @@ input.ar{font-family:'IBM Plex Sans Arabic',sans-serif}
 <!-- ================= NEW TX ================= -->
 <section id="new" class="on">
 
-  <div class="type-sw">
-    <div class="type-btn on" data-ty="bridge">جسر كامل<br>AOA → MRU</div>
-    <div class="type-btn" data-ty="p2p_aoa">P2P كوانزا<br>AOA / USDT</div>
-    <div class="type-btn" data-ty="p2p_mru">P2P أوقية<br>MRU / USDT</div>
+  <div class="types">
+    <div class="type on" data-ty="bridge"><div class="t1">جسر تحويل</div><div class="t2">AOA→MRU</div></div>
+    <div class="type" data-ty="aoa"><div class="t1">تداول USDT</div><div class="t2">AOA/USDT</div></div>
+    <div class="type" data-ty="mru"><div class="t1">تداول USDT</div><div class="t2">MRU/USDT</div></div>
   </div>
 
-  <!-- ===== BRIDGE FORM ===== -->
+  <!-- BRIDGE FORM -->
   <div class="card" id="fBridge">
-    <h3>بيانات العملية — جسر كامل</h3>
+    <h3>بيانات التحويل</h3>
     <div class="row">
       <div><label>مبلغ AOA من العميل</label><input type="number" id="aoa" placeholder="850000" inputmode="decimal"></div>
       <div><label>سعر العميل AOA/USDT</label><input type="number" id="rClient" placeholder="1180" inputmode="decimal"></div>
@@ -150,23 +179,28 @@ input.ar{font-family:'IBM Plex Sans Arabic',sans-serif}
     <input type="tel" id="cWa" placeholder="244xxxxxxxxx" inputmode="tel">
   </div>
 
-  <!-- ===== P2P FORM ===== -->
-  <div class="card" id="fP2P" style="display:none">
-    <h3 id="p2pTitle">P2P كوانزا — AOA / USDT</h3>
+  <!-- TRADE FORM -->
+  <div class="card" id="fTrade" style="display:none">
+    <h3 id="tradeTitle">تداول AOA/USDT</h3>
+    <label>كمية USDT</label>
+    <input type="number" id="qty" placeholder="1000" inputmode="decimal">
     <div class="row">
-      <div><label>كمية USDT</label><input type="number" id="pQty" placeholder="1000" inputmode="decimal"></div>
-      <div><label>الطرف المقابل (اختياري)</label><input type="text" id="pParty" class="ar" placeholder="اسم التاجر"></div>
+      <div><label id="lblBuy">سعر الشراء (AOA)</label><input type="number" id="rBuy" placeholder="1160" inputmode="decimal"></div>
+      <div><label id="lblSell">سعر البيع (AOA)</label><input type="number" id="rSell" placeholder="1170" inputmode="decimal"></div>
     </div>
-    <div class="row">
-      <div><label id="pBuyLbl">سعر الشراء KWZ/USDT</label><input type="number" id="pBuy" placeholder="1160" inputmode="decimal"></div>
-      <div><label id="pSellLbl">سعر البيع KWZ/USDT</label><input type="number" id="pSell" placeholder="1170" inputmode="decimal"></div>
-    </div>
+    <label>ملاحظة / الطرف المقابل (اختياري)</label>
+    <input type="text" id="note" class="ar" placeholder="Binance P2P / اسم التاجر">
   </div>
 
   <div class="ticket" id="ticket" style="display:none">
     <div class="timer num" id="timer" style="display:none">⏱ 30:00</div>
     <div class="ref num" id="refNo">ARK-0000-000</div>
-    <div class="grid" id="tGrid"></div>
+    <div class="grid">
+      <div class="kv"><div class="k" id="k1">—</div><div class="v num" id="v1">—</div></div>
+      <div class="kv"><div class="k" id="k2">—</div><div class="v num" id="v2">—</div></div>
+      <div class="kv"><div class="k" id="k3">—</div><div class="v gold num" id="v3">—</div></div>
+      <div class="kv"><div class="k">الربح</div><div class="v green num" id="v4">—</div></div>
+    </div>
   </div>
 
   <div class="wa-box" id="waBox" style="display:none">
@@ -198,35 +232,25 @@ input.ar{font-family:'IBM Plex Sans Arabic',sans-serif}
 
 <!-- ================= SETTLE ================= -->
 <section id="settle">
-  <div class="card" id="sumBridge">
-    <h3>جسر AOA → MRU — <span class="num" id="todayLbl"></span></h3>
+  <div class="card">
+    <h3>جسر التحويل — <span class="num" id="todayLbl"></span></h3>
     <div class="sum-grid">
       <div class="sum"><div class="k">إجمالي AOA المستلم</div><div class="v" id="sAoa">0</div></div>
       <div class="sum"><div class="k">عدد العمليات</div><div class="v" id="sCount">0</div></div>
       <div class="sum"><div class="k">USDT مستحق من أنغولا</div><div class="v gold" id="sUsdtIn">0</div></div>
       <div class="sum"><div class="k">MRU مدفوع Bankily</div><div class="v" id="sMru">0</div></div>
       <div class="sum"><div class="k">USDT لتعبئة موريتانيا</div><div class="v gold" id="sUsdtOut">0</div></div>
-      <div class="sum"><div class="k">صافي الربح USDT</div><div class="v green" id="sProfit">0</div></div>
+      <div class="sum"><div class="k">ربح الجسر USDT</div><div class="v green" id="sProfit">0</div></div>
     </div>
   </div>
 
-  <div class="card" id="sumKwz" style="display:none">
-    <h3>P2P كوانزا — AOA / USDT</h3>
+  <div class="card">
+    <h3>تداول USDT</h3>
     <div class="sum-grid">
-      <div class="sum"><div class="k">حجم USDT المتداول</div><div class="v" id="kQty">0</div></div>
-      <div class="sum"><div class="k">عدد الصفقات</div><div class="v" id="kCount">0</div></div>
-      <div class="sum"><div class="k">صافي الربح</div><div class="v green" id="kProfit">0 KWZ</div></div>
-      <div class="sum"><div class="k">متوسط الهامش</div><div class="v gold" id="kSpread">0</div></div>
-    </div>
-  </div>
-
-  <div class="card" id="sumMru2" style="display:none">
-    <h3>P2P أوقية — MRU / USDT</h3>
-    <div class="sum-grid">
-      <div class="sum"><div class="k">حجم USDT المتداول</div><div class="v" id="mQty">0</div></div>
-      <div class="sum"><div class="k">عدد الصفقات</div><div class="v" id="mCount">0</div></div>
-      <div class="sum"><div class="k">صافي الربح</div><div class="v green" id="mProfit">0 MRU</div></div>
-      <div class="sum"><div class="k">متوسط الهامش</div><div class="v gold" id="mSpread">0</div></div>
+      <div class="sum"><div class="k">حجم تداول AOA (USDT)</div><div class="v" id="sVolAoa">0</div></div>
+      <div class="sum"><div class="k">ربح KWZ</div><div class="v green" id="sPAoa">0</div></div>
+      <div class="sum"><div class="k">حجم تداول MRU (USDT)</div><div class="v" id="sVolMru">0</div></div>
+      <div class="sum"><div class="k">ربح MRU</div><div class="v green" id="sPMru">0</div></div>
     </div>
   </div>
 
@@ -255,28 +279,33 @@ input.ar{font-family:'IBM Plex Sans Arabic',sans-serif}
 <div class="toast" id="toast">تم النسخ ✓</div>
 
 <script>
-/* ============ PIN ============ */
+/* ================= PIN LOCK ================= */
 const DEFAULT_PIN='2026';
 function getPin(){return localStorage.getItem('arkan-pin')||DEFAULT_PIN;}
 const pinEl=document.getElementById('pin');
 pinEl.addEventListener('input',()=>{
   if(pinEl.value.length>=getPin().length){
     if(pinEl.value===getPin()){document.getElementById('lock').style.display='none';}
-    else{const m=document.getElementById('lockMsg');m.textContent='رمز خاطئ';m.className='err';pinEl.value='';
-      setTimeout(()=>{m.textContent='';m.className='';},1500);}
+    else{
+      const m=document.getElementById('lockMsg');
+      m.textContent='رمز خاطئ';m.className='err';pinEl.value='';
+      setTimeout(()=>{m.textContent='';m.className='';},1500);
+    }
   }
 });
 function changePin(){
   const v=document.getElementById('newPin').value.trim();
   if(v.length<4){toast('الرمز 4 أرقام على الأقل');return;}
   localStorage.setItem('arkan-pin',v);
-  document.getElementById('newPin').value='';toast('تم تغيير الرمز ✓');
+  document.getElementById('newPin').value='';
+  toast('تم تغيير الرمز ✓');
 }
 
-/* ============ STATE ============ */
-let txs=[],seq=1,timerInt=null,cur=null,lastClientWa='',txType='bridge';
+/* ================= STATE ================= */
+let txs=[],seq=1,timerInt=null,timerEnd=null,cur=null,lastClientWa='',curType='bridge';
 const $=id=>document.getElementById(id);
 const fmt=(n,d=2)=>Number(n).toLocaleString('en-US',{maximumFractionDigits:d});
+const CCY={aoa:'KWZ',mru:'MRU'};
 
 function load(){
   try{
@@ -288,44 +317,50 @@ function load(){
 }
 function persist(){localStorage.setItem('arkan-settle-v1',JSON.stringify({txs,seq}));}
 function saveCfg(){localStorage.setItem('arkan-partner-wa',$('partnerWa').value.trim());toast('حُفظ ✓');}
+
+/* ================= TYPE SELECTOR ================= */
+document.querySelectorAll('.type').forEach(el=>el.addEventListener('click',()=>{
+  curType=el.dataset.ty;
+  document.querySelectorAll('.type').forEach(x=>x.classList.toggle('on',x===el));
+  $('fBridge').style.display=curType==='bridge'?'block':'none';
+  $('fTrade').style.display=curType==='bridge'?'none':'block';
+  if(curType!=='bridge'){
+    $('tradeTitle').textContent=curType==='aoa'?'تداول AOA/USDT':'تداول MRU/USDT';
+    $('lblBuy').textContent=`سعر الشراء (${curType==='aoa'?'AOA':'MRU'})`;
+    $('lblSell').textContent=`سعر البيع (${curType==='aoa'?'AOA':'MRU'})`;
+  }
+  calc();
+}));
+
+/* ================= REF ================= */
 function todayCode(){const d=new Date();return String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0');}
 function makeRef(){return `ARK-${todayCode()}-${String(seq).padStart(3,'0')}`;}
 
-/* ============ TYPE SWITCH ============ */
-document.querySelectorAll('.type-btn').forEach(b=>b.addEventListener('click',()=>{
-  txType=b.dataset.ty;
-  document.querySelectorAll('.type-btn').forEach(x=>x.classList.toggle('on',x===b));
-  $('fBridge').style.display=txType==='bridge'?'block':'none';
-  $('fP2P').style.display=txType!=='bridge'?'block':'none';
-  if(txType==='p2p_aoa'){$('p2pTitle').textContent='P2P كوانزا — AOA / USDT';$('pBuyLbl').textContent='سعر الشراء KWZ/USDT';$('pSellLbl').textContent='سعر البيع KWZ/USDT';$('pBuy').placeholder='1160';$('pSell').placeholder='1170';}
-  if(txType==='p2p_mru'){$('p2pTitle').textContent='P2P أوقية — MRU / USDT';$('pBuyLbl').textContent='سعر الشراء MRU/USDT';$('pSellLbl').textContent='سعر البيع MRU/USDT';$('pBuy').placeholder='39.5';$('pSell').placeholder='40.2';}
-  hideOut();calc();
-}));
-function hideOut(){$('ticket').style.display='none';$('waBox').style.display='none';$('waBox2').style.display='none';cur=null;}
+/* ================= LIVE CALC ================= */
+const inputs=['aoa','rClient','rMarket','rMru','bName','bPhone','cWa','qty','rBuy','rSell','note'];
+inputs.forEach(i=>$(i).addEventListener('input',calc));
 
-/* ============ LIVE CALC ============ */
-const bridgeInputs=['aoa','rClient','rMarket','rMru','bName','bPhone','cWa'];
-const p2pInputs=['pQty','pBuy','pSell','pParty'];
-[...bridgeInputs,...p2pInputs].forEach(i=>$(i).addEventListener('input',calc));
+function hideTicket(){
+  $('ticket').style.display='none';$('waBox').style.display='none';$('waBox2').style.display='none';cur=null;
+}
 
 function calc(){
-  if(txType==='bridge')calcBridge();else calcP2P();
+  if(curType==='bridge')calcBridge();else calcTrade();
 }
 
 function calcBridge(){
   const aoa=+$('aoa').value,rc=+$('rClient').value,rm=+$('rMarket').value,rmru=+$('rMru').value;
-  if(!aoa||!rc||!rm||!rmru){hideOut();return;}
+  if(!aoa||!rc||!rm||!rmru){hideTicket();return;}
   const uC=aoa/rc,uM=aoa/rm,mru=uC*rmru,pUsdt=uM-uC,pMru=pUsdt*rmru;
   const ref=makeRef();
   cur={type:'bridge',ref,aoa,rc,rm,rmru,uC,uM,mru,pUsdt,
     name:$('bName').value||'—',phone:$('bPhone').value||'—',
     cWa:$('cWa').value.trim(),status:'wait',ts:Date.now()};
   $('refNo').textContent=ref;
-  $('tGrid').innerHTML=`
-    <div class="kv"><div class="k">USDT للعميل</div><div class="v num">${fmt(uC)} $</div></div>
-    <div class="kv"><div class="k">USDT بسعر السوق</div><div class="v num">${fmt(uM)} $</div></div>
-    <div class="kv"><div class="k">دفع MRU (Bankily)</div><div class="v gold num">${fmt(mru,0)} MRU</div></div>
-    <div class="kv"><div class="k">ربحك</div><div class="v green num">${fmt(pUsdt)} $ ≈ ${fmt(pMru,0)} MRU</div></div>`;
+  $('k1').textContent='USDT للعميل';$('v1').textContent=fmt(uC)+' $';
+  $('k2').textContent='USDT بسعر السوق';$('v2').textContent=fmt(uM)+' $';
+  $('k3').textContent='دفع MRU (Bankily)';$('v3').textContent=fmt(mru,0)+' MRU';
+  $('v4').textContent=fmt(pUsdt)+' $ ≈ '+fmt(pMru,0)+' MRU';
   $('ticket').style.display='block';$('timer').style.display='block';
   $('waTitle').textContent='رسالة التأكيد — أنغولا';
   $('waMsg').textContent=
@@ -344,36 +379,38 @@ Bankily: ${cur.phone}
   startTimer();
 }
 
-function calcP2P(){
-  const qty=+$('pQty').value,buy=+$('pBuy').value,sell=+$('pSell').value;
-  if(!qty||!buy||!sell){hideOut();return;}
-  const ccy=txType==='p2p_aoa'?'KWZ':'MRU';
-  const spread=sell-buy, profit=qty*spread, pct=(spread/buy*100);
+function calcTrade(){
+  const qty=+$('qty').value,rb=+$('rBuy').value,rs=+$('rSell').value;
+  if(!qty||!rb){hideTicket();return;}
+  const ccy=CCY[curType];
+  const cost=qty*rb, rev=rs?qty*rs:0, profit=rs?rev-cost:0;
   const ref=makeRef();
-  cur={type:txType,ref,qty,buy,sell,spread,profit,ccy,
-    party:$('pParty').value||'—',status:'wait',ts:Date.now()};
+  cur={type:curType,ref,qty,rBuy:rb,rSell:rs||0,cost,rev,profit,
+    note:$('note').value||'—',status:rs?'paid':'wait',ts:Date.now()};
   $('refNo').textContent=ref;
-  $('tGrid').innerHTML=`
-    <div class="kv"><div class="k">كمية USDT</div><div class="v num">${fmt(qty,0)} $</div></div>
-    <div class="kv"><div class="k">الهامش / USDT</div><div class="v gold num">${fmt(spread)} ${ccy}</div></div>
-    <div class="kv"><div class="k">نسبة الربح</div><div class="v num">${fmt(pct)}%</div></div>
-    <div class="kv"><div class="k">صافي الربح</div><div class="v green num">${fmt(profit,0)} ${ccy}</div></div>`;
+  $('k1').textContent='تكلفة الشراء';$('v1').textContent=fmt(cost,0)+' '+ccy;
+  $('k2').textContent='عائد البيع';$('v2').textContent=rs?fmt(rev,0)+' '+ccy:'— (مفتوحة)';
+  $('k3').textContent='الفارق / وحدة';$('v3').textContent=rs?fmt(rs-rb)+' '+ccy:'—';
+  $('v4').textContent=rs?fmt(profit,0)+' '+ccy:'—';
   $('ticket').style.display='block';$('timer').style.display='none';
   if(timerInt)clearInterval(timerInt);
-  $('waTitle').textContent='سجل الصفقة — للنسخ';
+  $('waTitle').textContent='ملخص الصفقة';
   $('waMsg').textContent=
-`💱 ARKAN P2P — ${ref}
-USDT: ${fmt(qty,0)}
-شراء @ ${buy} — بيع @ ${sell} ${ccy}
-الربح: ${fmt(profit,0)} ${ccy} (${fmt(pct)}%)`;
+`TRADE ${ref}
+${curType==='aoa'?'AOA':'MRU'}/USDT
+QTY: ${fmt(qty)} USDT
+BUY @ ${rb}${rs?`
+SELL @ ${rs}
+PROFIT: ${fmt(profit,0)} ${ccy}`:`
+⏳ بانتظار البيع`}`;
   $('waBox').style.display='block';$('waBox2').style.display='none';
 }
 
 function startTimer(){
   if(timerInt)clearInterval(timerInt);
-  const end=Date.now()+30*60*1000;
+  timerEnd=Date.now()+30*60*1000;
   timerInt=setInterval(()=>{
-    const s=Math.max(0,Math.floor((end-Date.now())/1000));
+    const s=Math.max(0,Math.floor((timerEnd-Date.now())/1000));
     const m=Math.floor(s/60),ss=s%60,el=$('timer');
     el.textContent=`⏱ ${String(m).padStart(2,'0')}:${String(ss).padStart(2,'0')}`;
     el.classList.toggle('hot',s<300);
@@ -381,7 +418,7 @@ function startTimer(){
   },1000);
 }
 
-/* ============ WHATSAPP ============ */
+/* ================= WHATSAPP ================= */
 function sendWa(target,msgId){
   const msg=encodeURIComponent($(msgId).textContent);
   let phone='';
@@ -395,22 +432,22 @@ function sendWa(target,msgId){
   window.open(`https://wa.me/${phone}?text=${msg}`,'_blank');
 }
 
-/* ============ SAVE ============ */
+/* ================= SAVE ================= */
 function saveTx(){
   if(!cur){toast('أكمل البيانات أولًا');return;}
   if(cur.type==='bridge')lastClientWa=cur.cWa;
   txs.push(cur);seq++;cur=null;
-  [...bridgeInputs,...p2pInputs].forEach(i=>$(i).value='');
-  hideOut();
+  inputs.forEach(i=>$(i).value='');
+  hideTicket();
   if(timerInt)clearInterval(timerInt);
   persist();render();toast('سُجلت العملية ✓');
   switchTab('ledger');
 }
 
-/* ============ LEDGER ============ */
+/* ================= LEDGER ================= */
 const bridgeBadges={wait:['b-wait','بانتظار AOA'],conf:['b-conf','CONFIRMED'],paid:['b-paid','تم دفع Bankily']};
-const p2pBadges={wait:['b-wait','قيد التنفيذ'],paid:['b-conf','مكتملة']};
-const typeLabels={bridge:'جسر',p2p_aoa:'P2P KWZ',p2p_mru:'P2P MRU'};
+const tradeBadges={wait:['b-wait','مفتوحة — بانتظار البيع'],paid:['b-conf','مكتملة']};
+const typeLbl={bridge:'جسر AOA→MRU',aoa:'تداول AOA/USDT',mru:'تداول MRU/USDT'};
 
 function render(){
   const list=$('txList');list.innerHTML='';
@@ -421,7 +458,7 @@ function render(){
       const [cls,lbl]=bridgeBadges[t.status];
       div.innerHTML=`
         <div class="tx-top"><span class="tx-ref">${t.ref}</span>
-          <span><span class="badge b-type">${typeLabels[t.type]}</span> <span class="badge ${cls}">${lbl}</span></span></div>
+          <span><span class="badge b-type">${typeLbl.bridge}</span> <span class="badge ${cls}">${lbl}</span></span></div>
         <div class="tx-mid">
           <span>AOA <b>${fmt(t.aoa,0)}</b></span>
           <span>USDT <b>${fmt(t.uC)}</b></span>
@@ -435,19 +472,20 @@ function render(){
           <button class="btn btn-line btn-sm" onclick="delTx('${t.ref}')">حذف</button>
         </div>`;
     }else{
-      const [cls,lbl]=p2pBadges[t.status==='paid'?'paid':'wait'];
+      const ccy=CCY[t.type];
+      const [cls,lbl]=tradeBadges[t.status]||tradeBadges.paid;
       div.innerHTML=`
         <div class="tx-top"><span class="tx-ref">${t.ref}</span>
-          <span><span class="badge b-type">${typeLabels[t.type]}</span> <span class="badge ${cls}">${lbl}</span></span></div>
+          <span><span class="badge b-type">${typeLbl[t.type]}</span> <span class="badge ${cls}">${lbl}</span></span></div>
         <div class="tx-mid">
-          <span>USDT <b>${fmt(t.qty,0)}</b></span>
-          <span>شراء <b>${t.buy}</b></span>
-          <span>بيع <b>${t.sell}</b></span>
-          <span>ربح <b class="green">${fmt(t.profit,0)} ${t.ccy}</b></span>
+          <span>QTY <b>${fmt(t.qty)} $</b></span>
+          <span>شراء <b>${t.rBuy}</b></span>
+          <span>بيع <b>${t.rSell||'—'}</b></span>
+          <span>الربح <b class="green">${t.rSell?fmt(t.profit,0)+' '+ccy:'—'}</b></span>
         </div>
-        ${t.party!=='—'?`<div class="tx-mid"><span>${t.party}</span></div>`:''}
+        ${t.note!=='—'?`<div class="tx-mid"><span>${t.note}</span></div>`:''}
         <div class="tx-acts">
-          ${t.status!=='paid'?`<button class="btn btn-gold btn-sm" onclick="setSt('${t.ref}','paid')">اكتملت</button>`:''}
+          ${t.status==='wait'?`<button class="btn btn-gold btn-sm" onclick="sellTrade('${t.ref}')">تسجيل البيع</button>`:''}
           <button class="btn btn-line btn-sm" onclick="delTx('${t.ref}')">حذف</button>
         </div>`;
     }
@@ -455,8 +493,20 @@ function render(){
   });
   renderSettle();
 }
-function setSt(ref,st){const t=txs.find(x=>x.ref===ref);if(!t)return;t.status=st;persist();render();}
-function delTx(ref){txs=txs.filter(x=>x.ref!==ref);persist();render();}
+function setSt(ref,st){
+  const t=txs.find(x=>x.ref===ref);if(!t)return;
+  t.status=st;persist();render();
+}
+function sellTrade(ref){
+  const t=txs.find(x=>x.ref===ref);if(!t)return;
+  const rs=parseFloat(prompt('سعر البيع ('+CCY[t.type]+'):'));
+  if(!rs||rs<=0)return;
+  t.rSell=rs;t.rev=t.qty*rs;t.profit=t.rev-t.cost;t.status='paid';
+  persist();render();toast('اكتملت الصفقة ✓');
+}
+function delTx(ref){
+  txs=txs.filter(x=>x.ref!==ref);persist();render();
+}
 function notifyClient(ref){
   const t=txs.find(x=>x.ref===ref);if(!t||!t.cWa)return;
   const statusTxt={wait:'بانتظار تأكيد الدفع',conf:'تم تأكيد الاستلام — جاري التحويل',paid:'✅ تم التحويل عبر Bankily'}[t.status];
@@ -469,12 +519,11 @@ function notifyClient(ref){
   window.open(`https://wa.me/${t.cWa}?text=${msg}`,'_blank');
 }
 
-/* ============ SETTLEMENT ============ */
+/* ================= SETTLEMENT ================= */
 function renderSettle(){
   const d=new Date();
   $('todayLbl').textContent=d.toLocaleDateString('en-GB');
-
-  /* --- Bridge --- */
+  /* --- bridge --- */
   const br=txs.filter(t=>t.type==='bridge');
   const done=br.filter(t=>t.status!=='wait');
   const aoa=done.reduce((s,t)=>s+t.aoa,0);
@@ -482,51 +531,42 @@ function renderSettle(){
   const uOut=done.reduce((s,t)=>s+t.uC,0);
   const mru=done.reduce((s,t)=>s+t.mru,0);
   const prof=uIn-uOut;
-  $('sumBridge').style.display=br.length?'block':'none';
   $('sAoa').textContent=fmt(aoa,0);
   $('sCount').textContent=done.length+' / '+br.length;
   $('sUsdtIn').textContent=fmt(uIn)+' $';
   $('sMru').textContent=fmt(mru,0);
   $('sUsdtOut').textContent=fmt(uOut)+' $';
   $('sProfit').textContent=fmt(prof)+' $';
-
-  /* --- P2P KWZ --- */
-  const pk=txs.filter(t=>t.type==='p2p_aoa'&&t.status==='paid');
-  const pkAll=txs.filter(t=>t.type==='p2p_aoa');
-  $('sumKwz').style.display=pkAll.length?'block':'none';
-  const kQ=pk.reduce((s,t)=>s+t.qty,0),kP=pk.reduce((s,t)=>s+t.profit,0);
-  $('kQty').textContent=fmt(kQ,0)+' $';
-  $('kCount').textContent=pk.length+' / '+pkAll.length;
-  $('kProfit').textContent=fmt(kP,0)+' KWZ';
-  $('kSpread').textContent=pk.length?fmt(pk.reduce((s,t)=>s+t.spread,0)/pk.length)+' KWZ':'—';
-
-  /* --- P2P MRU --- */
-  const pm=txs.filter(t=>t.type==='p2p_mru'&&t.status==='paid');
-  const pmAll=txs.filter(t=>t.type==='p2p_mru');
-  $('sumMru2').style.display=pmAll.length?'block':'none';
-  const mQ=pm.reduce((s,t)=>s+t.qty,0),mP=pm.reduce((s,t)=>s+t.profit,0);
-  $('mQty').textContent=fmt(mQ,0)+' $';
-  $('mCount').textContent=pm.length+' / '+pmAll.length;
-  $('mProfit').textContent=fmt(mP,0)+' MRU';
-  $('mSpread').textContent=pm.length?fmt(pm.reduce((s,t)=>s+t.spread,0)/pm.length)+' MRU':'—';
-
-  /* --- Message --- */
-  let lines=[`📊 ARKAN — تسوية ${d.toLocaleDateString('en-GB')}`];
+  /* --- trades --- */
+  const tA=txs.filter(t=>t.type==='aoa'&&t.status==='paid');
+  const tM=txs.filter(t=>t.type==='mru'&&t.status==='paid');
+  const volA=tA.reduce((s,t)=>s+t.qty,0), pA=tA.reduce((s,t)=>s+t.profit,0);
+  const volM=tM.reduce((s,t)=>s+t.qty,0), pM=tM.reduce((s,t)=>s+t.profit,0);
+  $('sVolAoa').textContent=fmt(volA)+' $';
+  $('sPAoa').textContent=fmt(pA,0)+' KWZ';
+  $('sVolMru').textContent=fmt(volM)+' $';
+  $('sPMru').textContent=fmt(pM,0)+' MRU';
+  /* --- message --- */
+  let msg='';
   if(done.length){
-    lines.push(`— جسر AOA→MRU —`,
-    `العمليات: ${done.length}`,
-    `إجمالي AOA: ${fmt(aoa,0)}`,
-    `USDT مستحق (أنغولا ← أركان): ${fmt(uIn)} $`,
-    `USDT للتعبئة (أركان ← موريتانيا): ${fmt(uOut)} $`,
-    `MRU مدفوع Bankily: ${fmt(mru,0)}`,
-    `ربح الجسر: ${fmt(prof)} $`);
+    msg+=`📊 ARKAN — تسوية ${d.toLocaleDateString('en-GB')}
+— جسر التحويل —
+العمليات: ${done.length}
+إجمالي AOA: ${fmt(aoa,0)}
+USDT مستحق (أنغولا ← أركان): ${fmt(uIn)} $
+USDT للتعبئة (أركان ← موريتانيا): ${fmt(uOut)} $
+MRU مدفوع Bankily: ${fmt(mru,0)}
+ربح الجسر: ${fmt(prof)} $`;
   }
-  if(pk.length)lines.push(`— P2P كوانزا —`,`حجم: ${fmt(kQ,0)} USDT | ربح: ${fmt(kP,0)} KWZ`);
-  if(pm.length)lines.push(`— P2P أوقية —`,`حجم: ${fmt(mQ,0)} USDT | ربح: ${fmt(mP,0)} MRU`);
-  $('settleMsg').textContent=lines.length>1?lines.join('\n'):'لا عمليات مؤكدة بعد';
+  if(tA.length||tM.length){
+    msg+=(msg?'\n':'')+`— تداول USDT —`;
+    if(tA.length)msg+=`\nAOA/USDT: ${tA.length} صفقة · حجم ${fmt(volA)} $ · ربح ${fmt(pA,0)} KWZ`;
+    if(tM.length)msg+=`\nMRU/USDT: ${tM.length} صفقة · حجم ${fmt(volM)} $ · ربح ${fmt(pM,0)} MRU`;
+  }
+  $('settleMsg').textContent=msg||'لا عمليات مؤكدة بعد';
 }
 
-/* ============ EXCEL ============ */
+/* ================= EXCEL EXPORT ================= */
 function exportXlsx(){
   if(!txs.length){toast('السجل فارغ');return;}
   const rows=txs.map(t=>{
@@ -534,48 +574,39 @@ function exportXlsx(){
       'Ref':t.ref,'Type':'BRIDGE','Date':new Date(t.ts).toLocaleDateString('en-GB'),
       'AOA':t.aoa,'Rate Client':t.rc,'Rate Market':t.rm,'Rate MRU':t.rmru,
       'USDT Client':+t.uC.toFixed(2),'USDT Market':+t.uM.toFixed(2),
-      'MRU Paid':Math.round(t.mru),'Profit USDT':+t.pUsdt.toFixed(2),
-      'Profit KWZ':'','Profit MRU':'',
+      'MRU Paid':Math.round(t.mru),'Profit':+t.pUsdt.toFixed(2),'Profit CCY':'USDT',
       'Beneficiary':t.name,'Bankily':t.phone,
       'Status':{wait:'PENDING',conf:'CONFIRMED',paid:'PAID'}[t.status]};
     return{
-      'Ref':t.ref,'Type':t.type==='p2p_aoa'?'P2P KWZ':'P2P MRU',
+      'Ref':t.ref,'Type':t.type==='aoa'?'TRADE AOA/USDT':'TRADE MRU/USDT',
       'Date':new Date(t.ts).toLocaleDateString('en-GB'),
-      'AOA':'','Rate Client':t.buy,'Rate Market':t.sell,'Rate MRU':'',
-      'USDT Client':t.qty,'USDT Market':'','MRU Paid':'',
-      'Profit USDT':'',
-      'Profit KWZ':t.ccy==='KWZ'?Math.round(t.profit):'',
-      'Profit MRU':t.ccy==='MRU'?Math.round(t.profit):'',
-      'Beneficiary':t.party,'Bankily':'',
-      'Status':t.status==='paid'?'DONE':'PENDING'};
+      'Qty USDT':t.qty,'Buy':t.rBuy,'Sell':t.rSell||'',
+      'Profit':t.rSell?Math.round(t.profit):'','Profit CCY':CCY[t.type],
+      'Note':t.note,'Status':t.status==='paid'?'CLOSED':'OPEN'};
   });
-  const done=txs.filter(t=>t.type==='bridge'&&t.status!=='wait');
-  const pk=txs.filter(t=>t.type==='p2p_aoa'&&t.status==='paid');
-  const pm=txs.filter(t=>t.type==='p2p_mru'&&t.status==='paid');
+  const br=txs.filter(t=>t.type==='bridge'&&t.status!=='wait');
+  const tA=txs.filter(t=>t.type==='aoa'&&t.status==='paid');
+  const tM=txs.filter(t=>t.type==='mru'&&t.status==='paid');
   rows.push({});
-  rows.push({'Ref':'TOTAL',
-    'AOA':done.reduce((s,t)=>s+t.aoa,0),
-    'USDT Client':+done.reduce((s,t)=>s+t.uC,0).toFixed(2),
-    'USDT Market':+done.reduce((s,t)=>s+t.uM,0).toFixed(2),
-    'MRU Paid':Math.round(done.reduce((s,t)=>s+t.mru,0)),
-    'Profit USDT':+done.reduce((s,t)=>s+t.uM-t.uC,0).toFixed(2),
-    'Profit KWZ':Math.round(pk.reduce((s,t)=>s+t.profit,0)),
-    'Profit MRU':Math.round(pm.reduce((s,t)=>s+t.profit,0))});
+  rows.push({'Ref':'TOTAL BRIDGE','Profit':+br.reduce((s,t)=>s+t.pUsdt,0).toFixed(2),'Profit CCY':'USDT',
+    'AOA':br.reduce((s,t)=>s+t.aoa,0),'MRU Paid':Math.round(br.reduce((s,t)=>s+t.mru,0))});
+  rows.push({'Ref':'TOTAL AOA TRADES','Profit':Math.round(tA.reduce((s,t)=>s+t.profit,0)),'Profit CCY':'KWZ','Qty USDT':tA.reduce((s,t)=>s+t.qty,0)});
+  rows.push({'Ref':'TOTAL MRU TRADES','Profit':Math.round(tM.reduce((s,t)=>s+t.profit,0)),'Profit CCY':'MRU','Qty USDT':tM.reduce((s,t)=>s+t.qty,0)});
   const ws=XLSX.utils.json_to_sheet(rows);
-  ws['!cols']=[{wch:14},{wch:9},{wch:11},{wch:12},{wch:11},{wch:11},{wch:9},{wch:11},{wch:11},{wch:11},{wch:11},{wch:11},{wch:11},{wch:18},{wch:11},{wch:11}];
   const wb=XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb,ws,'Settlement');
   XLSX.writeFile(wb,`ARKAN_Settlement_${todayCode()}.xlsx`);
 }
 
-/* ============ CLOSE DAY ============ */
+/* ================= CLOSE DAY ================= */
 function closeDay(){
   if(!txs.length){toast('السجل فارغ');return;}
-  localStorage.setItem('arkan-archive-'+todayCode()+'-'+Date.now(),JSON.stringify(txs));
+  const key='arkan-archive-'+todayCode()+'-'+Date.now();
+  localStorage.setItem(key,JSON.stringify(txs));
   txs=[];seq=1;persist();render();toast('أُغلق اليوم وأُرشف ✓');
 }
 
-/* ============ UTILS ============ */
+/* ================= UTILS ================= */
 function copyMsg(id){
   const txt=$(id).textContent;
   navigator.clipboard.writeText(txt).then(()=>toast('تم النسخ ✓')).catch(()=>{
