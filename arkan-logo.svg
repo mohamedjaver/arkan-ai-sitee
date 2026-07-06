@@ -1,36 +1,75 @@
 <svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#FFD574"/>
-      <stop offset="0.45" stop-color="#F4A50C"/>
-      <stop offset="1" stop-color="#B67B06"/>
+    <linearGradient id="gold" x1="0" y1="0" x2="0.9" y2="1">
+      <stop offset="0" stop-color="#FFDD8A"/>
+      <stop offset="0.42" stop-color="#F4A50C"/>
+      <stop offset="1" stop-color="#A86F04"/>
     </linearGradient>
-    <radialGradient id="glow" cx="0.5" cy="0.32" r="0.75">
-      <stop offset="0" stop-color="#F4A50C" stop-opacity="0.22"/>
-      <stop offset="1" stop-color="#F4A50C" stop-opacity="0"/>
+    <linearGradient id="goldA" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFE9B0"/>
+      <stop offset="0.5" stop-color="#F7B32B"/>
+      <stop offset="1" stop-color="#C2830A"/>
+    </linearGradient>
+    <!-- خلفية v3: توهجات radial على قاعدة #07080B -->
+    <radialGradient id="glowTR" cx="0.85" cy="0.02" r="0.9">
+      <stop offset="0" stop-color="#F4A50C" stop-opacity="0.16"/>
+      <stop offset="0.6" stop-color="#F4A50C" stop-opacity="0"/>
     </radialGradient>
-    <linearGradient id="edge" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#15171D"/>
-      <stop offset="1" stop-color="#07080B"/>
-    </linearGradient>
+    <radialGradient id="glowBL" cx="0.0" cy="0.9" r="0.8">
+      <stop offset="0" stop-color="#7FA8FF" stop-opacity="0.06"/>
+      <stop offset="0.6" stop-color="#7FA8FF" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glowC" cx="0.5" cy="1.15" r="0.8">
+      <stop offset="0" stop-color="#F4A50C" stop-opacity="0.07"/>
+      <stop offset="0.7" stop-color="#F4A50C" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="soft" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="12"/>
+    </filter>
+    <filter id="soft2" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="6"/>
+    </filter>
   </defs>
 
-  <!-- app tile -->
-  <rect width="512" height="512" rx="112" fill="url(#edge)"/>
-  <rect width="512" height="512" rx="112" fill="url(#glow)"/>
-  <rect x="6" y="6" width="500" height="500" rx="106" fill="none" stroke="#F4A50C" stroke-opacity="0.18" stroke-width="2"/>
+  <!-- ===== الخلفية (v3) ===== -->
+  <rect width="512" height="512" rx="112" fill="#07080B"/>
+  <rect width="512" height="512" rx="112" fill="url(#glowTR)"/>
+  <rect width="512" height="512" rx="112" fill="url(#glowBL)"/>
+  <rect width="512" height="512" rx="112" fill="url(#glowC)"/>
+  <rect x="5" y="5" width="502" height="502" rx="107" fill="none" stroke="#F4A50C" stroke-opacity="0.14" stroke-width="2"/>
 
-  <!-- hexagon frame -->
-  <polygon points="256,92 398,174 398,338 256,420 114,338 114,174"
-           fill="none" stroke="url(#gold)" stroke-width="22" stroke-linejoin="round"/>
+  <!-- ===== هالة السداسي ===== -->
+  <polygon points="256,96 397,177 397,339 256,420 115,339 115,177"
+           fill="none" stroke="#F4A50C" stroke-opacity="0.5" stroke-width="20"
+           stroke-linejoin="round" filter="url(#soft)"/>
 
-  <!-- letter A -->
-  <path d="M256 148 L178 356" stroke="url(#gold)" stroke-width="26" stroke-linecap="round" fill="none"/>
-  <path d="M256 148 L334 356" stroke="url(#gold)" stroke-width="26" stroke-linecap="round" fill="none"/>
+  <!-- ===== السداسي الرئيسي ===== -->
+  <polygon points="256,96 397,177 397,339 256,420 115,339 115,177"
+           fill="none" stroke="url(#gold)" stroke-width="18" stroke-linejoin="round"/>
+  <!-- خط داخلي رفيع (عمق) -->
+  <polygon points="256,122 375,190 375,326 256,394 137,326 137,190"
+           fill="none" stroke="#FFDD8A" stroke-opacity="0.16" stroke-width="3"/>
 
-  <!-- crossbar = exchange arrows -->
-  <path d="M209 282 H289" stroke="url(#gold)" stroke-width="16" stroke-linecap="round"/>
-  <polygon points="289,266 317,282 289,298" fill="url(#gold)"/>
-  <path d="M303 316 H223" stroke="#FFD574" stroke-width="11" stroke-linecap="round" opacity="0.85"/>
-  <polygon points="223,304 201,316 223,328" fill="#FFD574" opacity="0.85"/>
+  <!-- ===== توهج الحرف ===== -->
+  <g filter="url(#soft2)" opacity="0.55">
+    <path d="M256 152 L182 352" stroke="#F4A50C" stroke-width="30" stroke-linecap="round" fill="none"/>
+    <path d="M256 152 L330 352" stroke="#F4A50C" stroke-width="30" stroke-linecap="round" fill="none"/>
+  </g>
+
+  <!-- ===== حرف A ===== -->
+  <path d="M256 152 L182 352" stroke="url(#goldA)" stroke-width="27" stroke-linecap="round" fill="none"/>
+  <path d="M256 152 L330 352" stroke="url(#goldA)" stroke-width="27" stroke-linecap="round" fill="none"/>
+  <!-- لمعة قمة الحرف -->
+  <circle cx="256" cy="153" r="10" fill="#FFF3D0" opacity="0.9"/>
+
+  <!-- ===== العارضة: سهما تبادل ===== -->
+  <g>
+    <path d="M215 276 H283" stroke="#FFE9B0" stroke-width="13" stroke-linecap="round"/>
+    <path d="M283 276 l-16 -13 M283 276 l-16 13" stroke="#FFE9B0" stroke-width="13" stroke-linecap="round" fill="none"/>
+    <path d="M297 312 H229" stroke="#F4A50C" stroke-width="13" stroke-linecap="round"/>
+    <path d="M229 312 l16 -13 M229 312 l16 13" stroke="#F4A50C" stroke-width="13" stroke-linecap="round" fill="none"/>
+  </g>
+
+  <!-- ===== لمعة قطرية على البلاطة ===== -->
+  <path d="M40 150 Q 250 30 472 120" stroke="#FFFFFF" stroke-opacity="0.05" stroke-width="60" fill="none"/>
 </svg>
