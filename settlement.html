@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0C0D10">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="robots" content="noindex, nofollow">
+<title>ARKAN SETTLEMENT FLOW</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root{
+  --bg:#0C0D10;--panel:#14161B;--panel2:#1A1D24;--line:#252932;
+  --gold:#F4A50C;--gold-soft:#E8C24A;--txt:#EDEDEF;--dim:#8B909C;
+  --green:#22C55E;--red:#EF4444;--wa:#25D366;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--txt);font-family:'IBM Plex Sans Arabic',sans-serif;min-height:100vh;padding-bottom:60px}
+.num{font-family:'IBM Plex Mono',monospace;font-feature-settings:"tnum"}
+/* ===== LOCK ===== */
+#lock{
+  position:fixed;inset:0;background:var(--bg);z-index:1000;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:24px;
+}
+#lock .hex{width:64px;height:64px;font-size:30px}
+#lock h2{font-size:16px;letter-spacing:2px}
+#lock h2 span{color:var(--gold)}
+#lock input{
+  width:200px;text-align:center;letter-spacing:12px;font-size:24px;
+  padding:14px;border-radius:12px;background:var(--panel);
+  border:1px solid var(--line);color:var(--gold);outline:none;
+  font-family:'IBM Plex Mono',monospace;
+}
+#lock input:focus{border-color:var(--gold)}
+#lockMsg{font-size:12px;color:var(--dim);min-height:18px}
+#lockMsg.err{color:var(--red)}
+/* ===== HEADER ===== */
+header{padding:22px 18px 16px;border-bottom:1px solid var(--line);background:linear-gradient(180deg,#111318,var(--bg))}
+.brand{display:flex;align-items:center;gap:12px}
+.hex{width:42px;height:42px;flex-shrink:0;background:var(--gold);
+  clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);
+  display:flex;align-items:center;justify-content:center;color:#0C0D10;font-weight:700;font-size:20px}
+.brand h1{font-size:17px;font-weight:700;letter-spacing:1px}
+.brand h1 span{color:var(--gold)}
+.brand p{font-size:11px;color:var(--dim);letter-spacing:2px}
+/* ===== TABS ===== */
+.tabs{display:flex;gap:8px;padding:14px 18px 0}
+.tab{flex:1;padding:10px 4px;text-align:center;font-size:13px;font-weight:600;
+  background:var(--panel);border:1px solid var(--line);border-radius:10px;
+  color:var(--dim);cursor:pointer;transition:.15s}
+.tab.on{background:var(--gold);color:#0C0D10;border-color:var(--gold)}
+section{padding:16px 18px;display:none}
+section.on{display:block}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px}
+.card h3{font-size:13px;color:var(--gold);letter-spacing:1px;margin-bottom:12px;font-weight:600}
+label{display:block;font-size:12px;color:var(--dim);margin:10px 0 5px}
+input,select{width:100%;padding:11px 12px;border-radius:10px;background:var(--panel2);
+  border:1px solid var(--line);color:var(--txt);font-size:15px;
+  font-family:'IBM Plex Mono',monospace;outline:none;transition:.15s}
+input:focus{border-color:var(--gold)}
+input.ar{font-family:'IBM Plex Sans Arabic',sans-serif}
+.row{display:flex;gap:10px}
+.row>div{flex:1}
+/* ===== TICKET ===== */
+.ticket{background:linear-gradient(135deg,#1B1400,#14161B 55%);border:1px solid #4a3a10;
+  border-radius:14px;padding:16px;margin-bottom:14px;position:relative;overflow:hidden}
+.ticket::before{content:'';position:absolute;top:0;right:0;width:4px;height:100%;background:var(--gold)}
+.ref{font-size:22px;font-weight:600;color:var(--gold);letter-spacing:1px}
+.ticket .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.kv .k{font-size:11px;color:var(--dim)}
+.kv .v{font-size:16px;font-weight:600;margin-top:2px}
+.kv .v.gold{color:var(--gold)}
+.kv .v.green{color:var(--green)}
+.timer{position:absolute;top:14px;left:14px;font-size:12px;color:var(--dim);
+  background:var(--panel2);padding:4px 10px;border-radius:20px;border:1px solid var(--line)}
+.timer.hot{color:var(--red);border-color:var(--red)}
+/* ===== BUTTONS ===== */
+.btn{width:100%;padding:13px;border:none;border-radius:11px;font-size:14px;font-weight:700;
+  cursor:pointer;font-family:'IBM Plex Sans Arabic',sans-serif;transition:.15s;margin-top:10px}
+.btn-gold{background:var(--gold);color:#0C0D10}
+.btn:active{transform:scale(.98)}
+.btn-line{background:transparent;color:var(--gold);border:1px solid var(--gold)}
+.btn-wa{background:var(--wa);color:#062b14}
+.btn-sm{padding:7px 12px;font-size:12px;width:auto;margin:0;border-radius:8px}
+.btn-row{display:flex;gap:8px}
+.btn-row .btn{flex:1}
+/* ===== WA ===== */
+.wa-box{background:#0B1512;border:1px solid #1d3a2c;border-radius:14px;padding:14px;margin-bottom:14px}
+.wa-box h3{color:var(--wa);font-size:13px;margin-bottom:10px;letter-spacing:1px}
+.bubble{background:#123626;border-radius:12px 12px 12px 3px;padding:12px;font-size:13px;
+  line-height:1.9;white-space:pre-wrap;font-family:'IBM Plex Mono',monospace;color:#D7F5E3}
+/* ===== LEDGER ===== */
+.tx{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:13px 14px;margin-bottom:10px}
+.tx-top{display:flex;justify-content:space-between;align-items:center}
+.tx-ref{font-family:'IBM Plex Mono',monospace;font-size:14px;color:var(--gold);font-weight:600}
+.badge{font-size:11px;padding:3px 10px;border-radius:20px;font-weight:600}
+.b-wait{background:#3a2c07;color:var(--gold-soft)}
+.b-conf{background:#0d3320;color:var(--green)}
+.b-paid{background:#1a2440;color:#7FA8FF}
+.tx-mid{display:flex;gap:16px;margin:8px 0;font-size:13px;color:var(--dim);flex-wrap:wrap}
+.tx-mid b{color:var(--txt);font-family:'IBM Plex Mono',monospace}
+.tx-acts{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
+/* ===== SUMMARY ===== */
+.sum-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.sum{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:14px;text-align:center}
+.sum .k{font-size:11px;color:var(--dim)}
+.sum .v{font-size:19px;font-weight:600;margin-top:6px;font-family:'IBM Plex Mono',monospace}
+.sum .v.gold{color:var(--gold)}
+.sum .v.green{color:var(--green)}
+.empty{text-align:center;color:var(--dim);padding:36px 0;font-size:13px}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(80px);
+  background:var(--gold);color:#0C0D10;padding:10px 22px;border-radius:24px;
+  font-size:13px;font-weight:700;transition:.25s;z-index:99;opacity:0}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+.footer-note{text-align:center;font-size:10px;color:#4a4e58;letter-spacing:2px;margin-top:24px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<!-- ===== PIN LOCK ===== -->
+<div id="lock">
+  <div class="hex">A</div>
+  <h2>ARKAN <span>SETTLEMENT</span></h2>
+  <input type="password" id="pin" inputmode="numeric" maxlength="6" placeholder="••••">
+  <div id="lockMsg"></div>
+</div>
+
+<header>
+  <div class="brand">
+    <div class="hex">A</div>
+    <div>
+      <h1>ARKAN <span>SETTLEMENT FLOW</span></h1>
+      <p>AOA · USDT · MRU — BANKILY BRIDGE</p>
+    </div>
+  </div>
+</header>
+
+<div class="tabs">
+  <div class="tab on" data-t="new">عملية جديدة</div>
+  <div class="tab" data-t="ledger">سجل اليوم</div>
+  <div class="tab" data-t="settle">التسوية</div>
+</div>
+
+<!-- ================= NEW TX ================= -->
+<section id="new" class="on">
+  <div class="card">
+    <h3>بيانات العملية</h3>
+    <div class="row">
+      <div><label>مبلغ AOA من العميل</label><input type="number" id="aoa" placeholder="850000" inputmode="decimal"></div>
+      <div><label>سعر العميل AOA/USDT</label><input type="number" id="rClient" placeholder="1180" inputmode="decimal"></div>
+    </div>
+    <div class="row">
+      <div><label>سعر السوق AOA/USDT</label><input type="number" id="rMarket" placeholder="1120" inputmode="decimal"></div>
+      <div><label>سعر الدفع MRU/USDT</label><input type="number" id="rMru" placeholder="40" inputmode="decimal"></div>
+    </div>
+    <div class="row">
+      <div><label>اسم المستفيد (Bankily)</label><input type="text" id="bName" class="ar" placeholder="محمد ولد ..."></div>
+      <div><label>رقم Bankily</label><input type="tel" id="bPhone" placeholder="36xxxxxx" inputmode="tel"></div>
+    </div>
+    <label>واتساب العميل (بالرمز الدولي، بدون +)</label>
+    <input type="tel" id="cWa" placeholder="244xxxxxxxxx" inputmode="tel">
+  </div>
+
+  <div class="ticket" id="ticket" style="display:none">
+    <div class="timer num" id="timer">⏱ 30:00</div>
+    <div class="ref num" id="refNo">ARK-0000-000</div>
+    <div class="grid">
+      <div class="kv"><div class="k">USDT للعميل</div><div class="v num" id="usdtClient">—</div></div>
+      <div class="kv"><div class="k">USDT بسعر السوق</div><div class="v num" id="usdtMkt">—</div></div>
+      <div class="kv"><div class="k">دفع MRU (Bankily)</div><div class="v gold num" id="mruOut">—</div></div>
+      <div class="kv"><div class="k">ربحك</div><div class="v green num" id="profit">—</div></div>
+    </div>
+  </div>
+
+  <div class="wa-box" id="waBox" style="display:none">
+    <h3>رسالة التأكيد — أنغولا</h3>
+    <div class="bubble" id="waMsg"></div>
+    <div class="btn-row">
+      <button class="btn btn-wa" onclick="sendWa('partner','waMsg')">إرسال واتساب</button>
+      <button class="btn btn-line" onclick="copyMsg('waMsg')">نسخ</button>
+    </div>
+  </div>
+
+  <div class="wa-box" id="waBox2" style="display:none">
+    <h3>إيصال العميل</h3>
+    <div class="bubble" id="waClient"></div>
+    <div class="btn-row">
+      <button class="btn btn-wa" onclick="sendWa('client','waClient')">إرسال واتساب</button>
+      <button class="btn btn-line" onclick="copyMsg('waClient')">نسخ</button>
+    </div>
+  </div>
+
+  <button class="btn btn-gold" onclick="saveTx()">تسجيل العملية في السجل</button>
+</section>
+
+<!-- ================= LEDGER ================= -->
+<section id="ledger">
+  <div id="txList"></div>
+  <div class="empty" id="ledgerEmpty">لا توجد عمليات اليوم</div>
+</section>
+
+<!-- ================= SETTLE ================= -->
+<section id="settle">
+  <div class="card">
+    <h3>تسوية نهاية اليوم — <span class="num" id="todayLbl"></span></h3>
+    <div class="sum-grid">
+      <div class="sum"><div class="k">إجمالي AOA المستلم</div><div class="v" id="sAoa">0</div></div>
+      <div class="sum"><div class="k">عدد العمليات</div><div class="v" id="sCount">0</div></div>
+      <div class="sum"><div class="k">USDT مستحق من أنغولا</div><div class="v gold" id="sUsdtIn">0</div></div>
+      <div class="sum"><div class="k">MRU مدفوع Bankily</div><div class="v" id="sMru">0</div></div>
+      <div class="sum"><div class="k">USDT لتعبئة موريتانيا</div><div class="v gold" id="sUsdtOut">0</div></div>
+      <div class="sum"><div class="k">صافي الربح USDT</div><div class="v green" id="sProfit">0</div></div>
+    </div>
+  </div>
+
+  <div class="wa-box">
+    <h3>رسالة التسوية اليومية</h3>
+    <div class="bubble" id="settleMsg">—</div>
+    <div class="btn-row">
+      <button class="btn btn-wa" onclick="sendWa('partner','settleMsg')">إرسال واتساب</button>
+      <button class="btn btn-line" onclick="copyMsg('settleMsg')">نسخ</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>الإعدادات</h3>
+    <label>واتساب شريك أنغولا (بالرمز الدولي، بدون +)</label>
+    <input type="tel" id="partnerWa" placeholder="244xxxxxxxxx" inputmode="tel" onchange="saveCfg()">
+    <label>تغيير رمز PIN</label>
+    <input type="password" id="newPin" maxlength="6" placeholder="رمز جديد" inputmode="numeric" onchange="changePin()">
+  </div>
+
+  <button class="btn btn-gold" onclick="exportXlsx()">تصدير Excel (اليوم)</button>
+  <button class="btn btn-line" onclick="closeDay()">إغلاق اليوم وأرشفة العمليات</button>
+  <div class="footer-note">ARKAN INTERNATIONAL TRADING · WHATSAPP 36295050</div>
+</section>
+
+<div class="toast" id="toast">تم النسخ ✓</div>
+
+<script>
+/* ================= PIN LOCK ================= */
+const DEFAULT_PIN='2026';
+function getPin(){return localStorage.getItem('arkan-pin')||DEFAULT_PIN;}
+const pinEl=document.getElementById('pin');
+pinEl.addEventListener('input',()=>{
+  if(pinEl.value.length>=getPin().length){
+    if(pinEl.value===getPin()){
+      document.getElementById('lock').style.display='none';
+    }else{
+      const m=document.getElementById('lockMsg');
+      m.textContent='رمز خاطئ';m.className='err';
+      pinEl.value='';
+      setTimeout(()=>{m.textContent='';m.className='';},1500);
+    }
+  }
+});
+function changePin(){
+  const v=document.getElementById('newPin').value.trim();
+  if(v.length<4){toast('الرمز 4 أرقام على الأقل');return;}
+  localStorage.setItem('arkan-pin',v);
+  document.getElementById('newPin').value='';
+  toast('تم تغيير الرمز ✓');
+}
+
+/* ================= STATE ================= */
+let txs=[],seq=1,timerInt=null,timerEnd=null,cur=null,lastClientWa='';
+const $=id=>document.getElementById(id);
+const fmt=(n,d=2)=>Number(n).toLocaleString('en-US',{maximumFractionDigits:d});
+
+function load(){
+  try{
+    const d=JSON.parse(localStorage.getItem('arkan-settle-v1')||'{}');
+    txs=d.txs||[];seq=d.seq||1;
+    $('partnerWa').value=localStorage.getItem('arkan-partner-wa')||'';
+  }catch(e){}
+  render();
+}
+function persist(){
+  localStorage.setItem('arkan-settle-v1',JSON.stringify({txs,seq}));
+}
+function saveCfg(){
+  localStorage.setItem('arkan-partner-wa',$('partnerWa').value.trim());
+  toast('حُفظ ✓');
+}
+
+/* ================= REF ================= */
+function todayCode(){const d=new Date();return String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0');}
+function makeRef(){return `ARK-${todayCode()}-${String(seq).padStart(3,'0')}`;}
+
+/* ================= LIVE CALC ================= */
+const inputs=['aoa','rClient','rMarket','rMru','bName','bPhone','cWa'];
+inputs.forEach(i=>$(i).addEventListener('input',calc));
+
+function calc(){
+  const aoa=+$('aoa').value,rc=+$('rClient').value,rm=+$('rMarket').value,rmru=+$('rMru').value;
+  if(!aoa||!rc||!rm||!rmru){
+    $('ticket').style.display='none';$('waBox').style.display='none';$('waBox2').style.display='none';cur=null;return;
+  }
+  const uC=aoa/rc,uM=aoa/rm,mru=uC*rmru,pUsdt=uM-uC,pMru=pUsdt*rmru;
+  const ref=makeRef();
+  cur={ref,aoa,rc,rm,rmru,uC,uM,mru,pUsdt,
+    name:$('bName').value||'—',phone:$('bPhone').value||'—',
+    cWa:$('cWa').value.trim(),status:'wait',ts:Date.now()};
+  $('refNo').textContent=ref;
+  $('usdtClient').textContent=fmt(uC)+' $';
+  $('usdtMkt').textContent=fmt(uM)+' $';
+  $('mruOut').textContent=fmt(mru,0)+' MRU';
+  $('profit').textContent=fmt(pUsdt)+' $ ≈ '+fmt(pMru,0)+' MRU';
+  $('ticket').style.display='block';
+  $('waMsg').textContent=
+`CONFIRMED ${ref}
+AOA ${fmt(aoa,0)} @ ${rc}
+USDT NET: ${fmt(uC)} $
+⚠️ سعر ثابت 30 دقيقة`;
+  $('waClient').textContent=
+`✅ ARKAN — إشعار تحويل
+المرجع: ${ref}
+المستلم: ${cur.name}
+Bankily: ${cur.phone}
+المبلغ: ${fmt(mru,0)} MRU
+الحالة: بانتظار تأكيد الدفع`;
+  $('waBox').style.display='block';
+  $('waBox2').style.display='block';
+  startTimer();
+}
+
+function startTimer(){
+  if(timerInt)clearInterval(timerInt);
+  timerEnd=Date.now()+30*60*1000;
+  timerInt=setInterval(()=>{
+    const s=Math.max(0,Math.floor((timerEnd-Date.now())/1000));
+    const m=Math.floor(s/60),ss=s%60,el=$('timer');
+    el.textContent=`⏱ ${String(m).padStart(2,'0')}:${String(ss).padStart(2,'0')}`;
+    el.classList.toggle('hot',s<300);
+    if(s===0){el.textContent='⛔ السعر انتهى';clearInterval(timerInt);}
+  },1000);
+}
+
+/* ================= WHATSAPP ================= */
+function sendWa(target,msgId){
+  const msg=encodeURIComponent($(msgId).textContent);
+  let phone='';
+  if(target==='client'){
+    phone=(cur&&cur.cWa)||lastClientWa||'';
+    if(!phone){toast('أدخل رقم واتساب العميل');return;}
+  }else{
+    phone=localStorage.getItem('arkan-partner-wa')||'';
+    if(!phone){toast('أضف رقم الشريك في الإعدادات');return;}
+  }
+  window.open(`https://wa.me/${phone}?text=${msg}`,'_blank');
+}
+
+/* ================= SAVE ================= */
+function saveTx(){
+  if(!cur){toast('أكمل البيانات أولًا');return;}
+  lastClientWa=cur.cWa;
+  txs.push(cur);seq++;cur=null;
+  inputs.forEach(i=>$(i).value='');
+  $('ticket').style.display='none';$('waBox').style.display='none';$('waBox2').style.display='none';
+  if(timerInt)clearInterval(timerInt);
+  persist();render();toast('سُجلت العملية ✓');
+  switchTab('ledger');
+}
+
+/* ================= LEDGER ================= */
+const badges={wait:['b-wait','بانتظار AOA'],conf:['b-conf','CONFIRMED'],paid:['b-paid','تم دفع Bankily']};
+function render(){
+  const list=$('txList');list.innerHTML='';
+  $('ledgerEmpty').style.display=txs.length?'none':'block';
+  txs.slice().reverse().forEach(t=>{
+    const [cls,lbl]=badges[t.status];
+    const div=document.createElement('div');div.className='tx';
+    div.innerHTML=`
+      <div class="tx-top"><span class="tx-ref">${t.ref}</span><span class="badge ${cls}">${lbl}</span></div>
+      <div class="tx-mid">
+        <span>AOA <b>${fmt(t.aoa,0)}</b></span>
+        <span>USDT <b>${fmt(t.uC)}</b></span>
+        <span>MRU <b>${fmt(t.mru,0)}</b></span>
+      </div>
+      <div class="tx-mid"><span>${t.name} · <b>${t.phone}</b></span></div>
+      <div class="tx-acts">
+        ${t.status==='wait'?`<button class="btn btn-gold btn-sm" onclick="setSt('${t.ref}','conf')">تأكيد AOA</button>`:''}
+        ${t.status==='conf'?`<button class="btn btn-gold btn-sm" onclick="setSt('${t.ref}','paid')">تم دفع Bankily</button>`:''}
+        ${t.cWa?`<button class="btn btn-wa btn-sm" onclick="notifyClient('${t.ref}')">إشعار العميل</button>`:''}
+        <button class="btn btn-line btn-sm" onclick="delTx('${t.ref}')">حذف</button>
+      </div>`;
+    list.appendChild(div);
+  });
+  renderSettle();
+}
+function setSt(ref,st){
+  const t=txs.find(x=>x.ref===ref);if(!t)return;
+  t.status=st;persist();render();
+}
+function delTx(ref){
+  txs=txs.filter(x=>x.ref!==ref);persist();render();
+}
+function notifyClient(ref){
+  const t=txs.find(x=>x.ref===ref);if(!t||!t.cWa)return;
+  const statusTxt={wait:'بانتظار تأكيد الدفع',conf:'تم تأكيد الاستلام — جاري التحويل',paid:'✅ تم التحويل عبر Bankily'}[t.status];
+  const msg=encodeURIComponent(
+`✅ ARKAN — تحديث حالة
+المرجع: ${t.ref}
+المستلم: ${t.name}
+المبلغ: ${fmt(t.mru,0)} MRU
+الحالة: ${statusTxt}`);
+  window.open(`https://wa.me/${t.cWa}?text=${msg}`,'_blank');
+}
+
+/* ================= SETTLEMENT ================= */
+function renderSettle(){
+  const d=new Date();
+  $('todayLbl').textContent=d.toLocaleDateString('en-GB');
+  const done=txs.filter(t=>t.status!=='wait');
+  const aoa=done.reduce((s,t)=>s+t.aoa,0);
+  const uIn=done.reduce((s,t)=>s+t.uM,0);
+  const uOut=done.reduce((s,t)=>s+t.uC,0);
+  const mru=done.reduce((s,t)=>s+t.mru,0);
+  const prof=uIn-uOut;
+  $('sAoa').textContent=fmt(aoa,0);
+  $('sCount').textContent=done.length+' / '+txs.length;
+  $('sUsdtIn').textContent=fmt(uIn)+' $';
+  $('sMru').textContent=fmt(mru,0);
+  $('sUsdtOut').textContent=fmt(uOut)+' $';
+  $('sProfit').textContent=fmt(prof)+' $';
+  $('settleMsg').textContent=done.length?
+`📊 ARKAN — تسوية ${d.toLocaleDateString('en-GB')}
+العمليات: ${done.length}
+إجمالي AOA: ${fmt(aoa,0)}
+USDT مستحق (أنغولا ← أركان): ${fmt(uIn)} $
+USDT للتعبئة (أركان ← موريتانيا): ${fmt(uOut)} $
+MRU مدفوع Bankily: ${fmt(mru,0)}
+صافي الربح: ${fmt(prof)} $`:'لا عمليات مؤكدة بعد';
+}
+
+/* ================= EXCEL EXPORT ================= */
+function exportXlsx(){
+  if(!txs.length){toast('السجل فارغ');return;}
+  const rows=txs.map(t=>({
+    'Ref':t.ref,
+    'Date':new Date(t.ts).toLocaleDateString('en-GB'),
+    'AOA':t.aoa,
+    'Rate Client':t.rc,
+    'Rate Market':t.rm,
+    'Rate MRU':t.rmru,
+    'USDT Client':+t.uC.toFixed(2),
+    'USDT Market':+t.uM.toFixed(2),
+    'MRU Paid':Math.round(t.mru),
+    'Profit USDT':+t.pUsdt.toFixed(2),
+    'Beneficiary':t.name,
+    'Bankily':t.phone,
+    'Status':{wait:'PENDING',conf:'CONFIRMED',paid:'PAID'}[t.status]
+  }));
+  const done=txs.filter(t=>t.status!=='wait');
+  rows.push({});
+  rows.push({'Ref':'TOTAL',
+    'AOA':done.reduce((s,t)=>s+t.aoa,0),
+    'USDT Client':+done.reduce((s,t)=>s+t.uC,0).toFixed(2),
+    'USDT Market':+done.reduce((s,t)=>s+t.uM,0).toFixed(2),
+    'MRU Paid':Math.round(done.reduce((s,t)=>s+t.mru,0)),
+    'Profit USDT':+done.reduce((s,t)=>s+t.pUsdt,0).toFixed(2)});
+  const ws=XLSX.utils.json_to_sheet(rows);
+  ws['!cols']=[{wch:14},{wch:11},{wch:12},{wch:11},{wch:11},{wch:9},{wch:11},{wch:11},{wch:11},{wch:11},{wch:18},{wch:11},{wch:11}];
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'Settlement');
+  XLSX.writeFile(wb,`ARKAN_Settlement_${todayCode()}.xlsx`);
+}
+
+/* ================= CLOSE DAY ================= */
+function closeDay(){
+  if(!txs.length){toast('السجل فارغ');return;}
+  const key='arkan-archive-'+todayCode()+'-'+Date.now();
+  localStorage.setItem(key,JSON.stringify(txs));
+  txs=[];seq=1;persist();render();toast('أُغلق اليوم وأُرشف ✓');
+}
+
+/* ================= UTILS ================= */
+function copyMsg(id){
+  const txt=$(id).textContent;
+  navigator.clipboard.writeText(txt).then(()=>toast('تم النسخ ✓')).catch(()=>{
+    const ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);
+    ta.select();document.execCommand('copy');ta.remove();toast('تم النسخ ✓');
+  });
+}
+function toast(m){
+  const t=$('toast');t.textContent=m;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),1800);
+}
+document.querySelectorAll('.tab').forEach(tb=>tb.addEventListener('click',()=>switchTab(tb.dataset.t)));
+function switchTab(t){
+  document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x.dataset.t===t));
+  document.querySelectorAll('section').forEach(x=>x.classList.toggle('on',x.id===t));
+}
+load();
+</script>
+</body>
+</html>
