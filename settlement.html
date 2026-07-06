@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-<meta name="theme-color" content="#07080B">
+<meta name="theme-color" content="#0C0D10">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="robots" content="noindex, nofollow">
@@ -52,10 +52,11 @@ header{padding:20px 18px 4px}
 .brand h1 span{color:var(--gold)}
 .brand p{font-size:10px;color:var(--dim);letter-spacing:2.5px;margin-top:2px}
 .hero{
-  margin:16px 18px 0;padding:20px;border-radius:22px;position:relative;overflow:hidden;
+  margin:16px 18px 0;padding:18px;border-radius:14px;position:relative;overflow:hidden;
   background:linear-gradient(135deg,#1B1400,#14161B 55%);
   border:1px solid #4a3a10;
 }
+.hero::before{content:'';position:absolute;top:0;right:0;width:4px;height:100%;background:var(--gold)}
 
 .hero .hk{font-size:11px;color:var(--dim);letter-spacing:2px}
 .hero .hv{font-size:30px;font-weight:700;color:var(--gold);margin-top:6px;font-family:'IBM Plex Mono',monospace}
@@ -67,9 +68,7 @@ header{padding:20px 18px 4px}
 section{padding:16px 18px;display:none}
 section.on{display:block;animation:fadeUp .28s ease}
 @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
-.card{background:var(--glass);-webkit-
-  border:1px solid var(--stroke);border-radius:20px;padding:18px;margin-bottom:14px;
-  }
+.card{background:var(--glass);border:1px solid var(--stroke);border-radius:14px;padding:16px;margin-bottom:14px}
 .card h3{font-size:12px;color:var(--gold);letter-spacing:2px;margin-bottom:12px;font-weight:600}
 label{display:block;font-size:12px;color:var(--dim);margin:10px 0 6px}
 input{width:100%;padding:12px 13px;border-radius:13px;background:var(--glass2);
@@ -81,7 +80,7 @@ input.ar{font-family:'IBM Plex Sans Arabic',sans-serif}
 .row>div{flex:1}
 /* ===================== TYPE SELECTOR ===================== */
 .types{display:flex;gap:8px;margin-bottom:14px}
-.type{flex:1;padding:13px 6px;text-align:center;border-radius:15px;cursor:pointer;
+.type{flex:1;padding:13px 6px;text-align:center;border-radius:11px;cursor:pointer;
   background:var(--glass);border:1px solid var(--stroke);transition:.18s}
 .type .t1{font-size:13px;font-weight:700}
 .type .t2{font-size:10px;color:var(--dim);margin-top:3px;font-family:'IBM Plex Mono',monospace}
@@ -89,9 +88,10 @@ input.ar{font-family:'IBM Plex Sans Arabic',sans-serif}
   background:linear-gradient(135deg,#1B1400,#14161B)}
 .type.on .t1{color:var(--gold)}
 /* ===================== TICKET ===================== */
-.ticket{border-radius:20px;padding:18px;margin-bottom:14px;position:relative;overflow:hidden;
+.ticket{border-radius:14px;padding:16px;margin-bottom:14px;position:relative;overflow:hidden;
   background:linear-gradient(135deg,#1B1400,#14161B 55%);
   border:1px solid #4a3a10}
+.ticket::before{content:'';position:absolute;top:0;right:0;width:4px;height:100%;background:var(--gold)}
 .ref{font-size:23px;font-weight:600;color:var(--gold);letter-spacing:1px}
 .ticket .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}
 .kv .k{font-size:11px;color:var(--dim)}
@@ -106,20 +106,20 @@ input.ar{font-family:'IBM Plex Sans Arabic',sans-serif}
   cursor:pointer;font-family:'IBM Plex Sans Arabic',sans-serif;transition:.18s;margin-top:10px}
 .btn-gold{background:var(--gold);color:#0C0D10}
 .btn:active{transform:scale(.97)}
-.btn-line{background:transparent;color:var(--gold);border:1px solid var(--stroke-gold)}
+.btn-line{background:transparent;color:var(--gold);border:1px solid var(--gold)}
 .btn-wa{background:var(--wa);color:#062b14}
 .btn-sm{padding:8px 13px;font-size:12px;width:auto;margin:0;border-radius:10px}
 .btn-row{display:flex;gap:8px}
 .btn-row .btn{flex:1}
 /* ===================== WA ===================== */
 .wa-box{background:#0B1512;
-  border:1px solid #1d3a2c;border-radius:20px;padding:15px;margin-bottom:14px}
+  border:1px solid #1d3a2c;border-radius:14px;padding:14px;margin-bottom:14px}
 .wa-box h3{color:var(--wa);font-size:12px;margin-bottom:10px;letter-spacing:2px}
 .bubble{background:#123626;border-radius:14px 14px 14px 4px;padding:13px;font-size:13px;
   line-height:1.9;white-space:pre-wrap;font-family:'IBM Plex Mono',monospace;color:#D7F5E3}
 /* ===================== LEDGER ===================== */
 .tx{background:var(--glass);border:1px solid var(--stroke);
-  border-radius:17px;padding:14px 15px;margin-bottom:10px;transition:.18s}
+  border-radius:12px;padding:13px 14px;margin-bottom:10px;transition:.18s}
 .tx-top{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
 .tx-ref{font-family:'IBM Plex Mono',monospace;font-size:14px;color:var(--gold);font-weight:600}
 .badge{font-size:11px;padding:4px 11px;border-radius:20px;font-weight:600}
@@ -133,7 +133,7 @@ input.ar{font-family:'IBM Plex Sans Arabic',sans-serif}
 .tx-acts{display:flex;gap:8px;margin-top:9px;flex-wrap:wrap}
 /* ===================== SUMMARY ===================== */
 .sum-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.sum{background:var(--glass2);border:1px solid var(--stroke);border-radius:15px;padding:14px;text-align:center}
+.sum{background:var(--glass2);border:1px solid var(--stroke);border-radius:12px;padding:14px;text-align:center}
 .sum .k{font-size:11px;color:var(--dim)}
 .sum .v{font-size:18px;font-weight:600;margin-top:6px;font-family:'IBM Plex Mono',monospace}
 .sum .v.gold{color:var(--gold)}
@@ -141,7 +141,7 @@ input.ar{font-family:'IBM Plex Sans Arabic',sans-serif}
 .empty{text-align:center;color:var(--dim);padding:36px 0;font-size:13px}
 /* ===================== HISTORY ===================== */
 .day{background:var(--glass);border:1px solid var(--stroke);
-  border-radius:17px;margin-bottom:10px;overflow:hidden}
+  border-radius:12px;margin-bottom:10px;overflow:hidden}
 .day-head{padding:14px 15px;display:flex;justify-content:space-between;align-items:center;cursor:pointer}
 .day-head .d1{font-size:14px;font-weight:700;font-family:'IBM Plex Mono',monospace;color:var(--gold)}
 .day-head .d2{font-size:11px;color:var(--dim);margin-top:3px}
@@ -154,12 +154,12 @@ input.ar{font-family:'IBM Plex Sans Arabic',sans-serif}
 /* ===================== BOTTOM NAV ===================== */
 nav{position:fixed;bottom:0;left:0;right:0;z-index:90;
   display:flex;padding:10px 14px calc(10px + env(safe-area-inset-bottom));gap:6px;
-  background:#0E0F13;-webkit-
-  border-top:1px solid var(--stroke)}
+  background:#0E0F13;border-top:1px solid var(--stroke)}
 .nv{flex:1;text-align:center;padding:8px 2px;border-radius:14px;cursor:pointer;color:var(--dim);transition:.18s}
 .nv svg{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .nv div{font-size:10px;margin-top:3px;font-weight:600}
-.nv.on{color:var(--gold);background:rgba(244,165,12,.10)}
+.nv.on{color:#0C0D10;background:var(--gold)}
+.nv.on svg{stroke:#0C0D10}
 /* ===================== TOAST ===================== */
 .toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%) translateY(80px);
   background:var(--gold);color:#0C0D10;padding:11px 24px;border-radius:26px;
