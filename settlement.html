@@ -8,6 +8,8 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="robots" content="noindex, nofollow">
 <title>ARKAN SETTLEMENT FLOW</title>
+<link rel="icon" type="image/svg+xml" href="arkan-logo.svg">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -328,6 +330,35 @@ nav{position:fixed;bottom:0;left:0;right:0;z-index:90;
   <div class="footer-note">ARKAN INTERNATIONAL TRADING · WHATSAPP 36295050</div>
 </section>
 
+<!-- ================= CONTACTS ================= -->
+<section id="contacts">
+  <div class="card">
+    <h3>تسجيل جهة جديدة</h3>
+    <div class="types" style="margin-bottom:4px">
+      <div class="type on" data-ct="supplier"><div class="t1">مورد</div><div class="t2">SUPPLIER</div></div>
+      <div class="type" data-ct="buyer"><div class="t1">مشترٍ</div><div class="t2">BUYER</div></div>
+      <div class="type" data-ct="seller"><div class="t1">بائع</div><div class="t2">SELLER</div></div>
+    </div>
+    <div class="row">
+      <div><label>الاسم</label><input type="text" id="cnName" class="ar" placeholder="الاسم الكامل / الشركة"></div>
+      <div><label>واتساب (بالرمز الدولي)</label><input type="tel" id="cnWa" placeholder="244xxxxxxxxx" inputmode="tel"></div>
+    </div>
+    <div class="row">
+      <div><label>رقم Bankily (اختياري)</label><input type="tel" id="cnBank" placeholder="36xxxxxx" inputmode="tel"></div>
+      <div><label>البلد / العملة</label><input type="text" id="cnCcy" class="ar" placeholder="أنغولا AOA / موريتانيا MRU"></div>
+    </div>
+    <label>ملاحظة (أسعاره، موثوقيته، حدوده...)</label>
+    <input type="text" id="cnNote" class="ar" placeholder="سعر جيد فوق 5000$ · دفع سريع">
+    <button class="btn btn-gold" onclick="saveContact()" id="cnBtn">حفظ الجهة</button>
+  </div>
+  <div class="card">
+    <h3>بحث في الجهات</h3>
+    <input type="text" id="cq" class="ar" placeholder="اسم / رقم / ملاحظة..." oninput="renderContacts()">
+  </div>
+  <div id="cnList"></div>
+  <div class="empty" id="cnEmpty">لا توجد جهات مسجلة</div>
+</section>
+
 <!-- ================= HISTORY ================= -->
 <section id="history">
   <div class="card">
@@ -357,6 +388,9 @@ nav{position:fixed;bottom:0;left:0;right:0;z-index:90;
   </div>
   <div class="nv" data-t="settle">
     <svg viewBox="0 0 24 24"><path d="M12 3v18M7 8l5-5 5 5M5 21h14"/></svg><div>التسوية</div>
+  </div>
+  <div class="nv" data-t="contacts">
+    <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="10" cy="7" r="4"/><path d="M21 21v-2a4 4 0 0 0-3-3.87"/></svg><div>الجهات</div>
   </div>
   <div class="nv" data-t="history">
     <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg><div>الذاكرة</div>
@@ -603,7 +637,7 @@ function render(){
     }
     list.appendChild(div);
   });
-  renderSettle();renderHero();renderHistory();
+  renderSettle();renderHero();renderHistory();renderContacts();
 }
 function setSt(ref,st){const t=txs.find(x=>x.ref===ref);if(!t)return;t.status=st;persist();render();}
 function sellTrade(ref){
@@ -725,6 +759,88 @@ function renderHistory(){
 function delDay(i){
   if(!confirm('حذف أرشيف '+hist[i].date+' نهائيًا؟'))return;
   hist.splice(i,1);saveHist();renderHistory();toast('حُذف ✓');
+}
+
+/* ================= CONTACTS ================= */
+let contacts=JSON.parse(localStorage.getItem('arkan-contacts')||'[]');
+let cnType='supplier',cnEdit=null;
+const cnLbl={supplier:['مورد','b-wait'],buyer:['مشترٍ','b-conf'],seller:['بائع','b-paid']};
+function saveContacts(){localStorage.setItem('arkan-contacts',JSON.stringify(contacts));}
+document.querySelectorAll('[data-ct]').forEach(el=>el.addEventListener('click',()=>{
+  cnType=el.dataset.ct;
+  document.querySelectorAll('[data-ct]').forEach(x=>x.classList.toggle('on',x===el));
+}));
+function saveContact(){
+  const name=$('cnName').value.trim();
+  if(!name){toast('أدخل الاسم');return;}
+  const c={id:cnEdit||('C'+Date.now()),type:cnType,name,
+    wa:$('cnWa').value.trim(),bank:$('cnBank').value.trim(),
+    ccy:$('cnCcy').value.trim(),note:$('cnNote').value.trim(),ts:Date.now()};
+  if(cnEdit){const i=contacts.findIndex(x=>x.id===cnEdit);if(i>-1)contacts[i]=c;cnEdit=null;$('cnBtn').textContent='حفظ الجهة';}
+  else contacts.push(c);
+  ['cnName','cnWa','cnBank','cnCcy','cnNote'].forEach(i=>$(i).value='');
+  saveContacts();renderContacts();toast('حُفظت الجهة ✓');
+}
+function editContact(id){
+  const c=contacts.find(x=>x.id===id);if(!c)return;
+  cnEdit=id;cnType=c.type;
+  document.querySelectorAll('[data-ct]').forEach(x=>x.classList.toggle('on',x.dataset.ct===c.type));
+  $('cnName').value=c.name;$('cnWa').value=c.wa;$('cnBank').value=c.bank;
+  $('cnCcy').value=c.ccy;$('cnNote').value=c.note;
+  $('cnBtn').textContent='تحديث الجهة';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function delContact(id){
+  const c=contacts.find(x=>x.id===id);
+  if(!confirm('حذف '+c.name+'؟'))return;
+  contacts=contacts.filter(x=>x.id!==id);saveContacts();renderContacts();toast('حُذفت ✓');
+}
+function contactStats(c){
+  const all=hist.reduce((a,d)=>a.concat(d.txs),[]).concat(txs);
+  return all.filter(t=>
+    (c.bank&&t.phone===c.bank)||(c.wa&&(t.cWa===c.wa||t.phone===c.wa))||
+    (t.name&&t.name!=='—'&&t.name===c.name)).length;
+}
+function useContact(id){
+  const c=contacts.find(x=>x.id===id);if(!c)return;
+  curType='bridge';
+  document.querySelectorAll('.type[data-ty]').forEach(x=>x.classList.toggle('on',x.dataset.ty==='bridge'));
+  $('fBridge').style.display='block';$('fTrade').style.display='none';
+  $('bName').value=c.name;
+  if(c.bank)$('bPhone').value=c.bank;
+  if(c.wa)$('cWa').value=c.wa;
+  switchTab('new');calc();
+  toast('عُبئت بيانات '+c.name+' ✓');
+}
+function renderContacts(){
+  const q=($('cq').value||'').trim().toLowerCase();
+  const list=$('cnList');list.innerHTML='';
+  let data=contacts.slice().sort((a,b)=>a.type.localeCompare(b.type)||a.name.localeCompare(b.name));
+  if(q)data=data.filter(c=>
+    c.name.toLowerCase().includes(q)||c.wa.includes(q)||c.bank.includes(q)||
+    (c.note||'').toLowerCase().includes(q)||(c.ccy||'').toLowerCase().includes(q));
+  $('cnEmpty').style.display=data.length?'none':'block';
+  data.forEach(c=>{
+    const [lbl,cls]=cnLbl[c.type];
+    const n=contactStats(c);
+    const div=document.createElement('div');div.className='tx';
+    div.innerHTML=`
+      <div class="tx-top"><span style="font-weight:700;font-size:14px">${c.name}</span>
+        <span><span class="badge ${cls}">${lbl}</span>${n?` <span class="badge b-type num">${n} عملية</span>`:''}</span></div>
+      <div class="tx-mid">
+        ${c.wa?`<span>WA <b>${c.wa}</b></span>`:''}
+        ${c.bank?`<span>Bankily <b>${c.bank}</b></span>`:''}
+        ${c.ccy?`<span>${c.ccy}</span>`:''}
+      </div>
+      ${c.note?`<div class="tx-mid"><span>📝 ${c.note}</span></div>`:''}
+      <div class="tx-acts">
+        <button class="btn btn-gold btn-sm" onclick="useContact('${c.id}')">عملية جديدة بهذه الجهة</button>
+        ${c.wa?`<button class="btn btn-wa btn-sm" onclick="window.open('https://wa.me/${c.wa}','_blank')">واتساب</button>`:''}
+        <button class="btn btn-line btn-sm" onclick="editContact('${c.id}')">تعديل</button>
+        <button class="btn btn-line btn-sm" onclick="delContact('${c.id}')">حذف</button>
+      </div>`;
+    list.appendChild(div);
+  });
 }
 
 /* ================= CLOSE DAY ================= */
