@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-<meta name="theme-color" content="#0C0D10">
+<meta name="theme-color" content="#15172E">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="robots" content="noindex, nofollow">
@@ -17,25 +17,34 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
 :root{
-  --bg:#0C0D10;--glass:#14161B;--glass2:#1A1D24;
-  --stroke:#252932;--stroke-gold:rgba(244,165,12,.45);
-  --gold:#F4A50C;--gold2:#FFC94D;--txt:#EDEDEF;--dim:#8B909C;
-  --green:#22C55E;--red:#EF4444;--wa:#25D366;--blue:#7FA8FF;
+  --bg:#15172E;--bg2:#1B1D38;
+  --glass:rgba(255,255,255,.045);--glass2:rgba(255,255,255,.07);
+  --stroke:rgba(255,255,255,.09);--stroke-acc:rgba(139,114,255,.45);
+  --acc:#8B72FF;--acc2:#A78BFF;--accD:#6C4FE0;
+  --gold:#F4A50C;--gold2:#FFC94D;
+  --txt:#F2F2F7;--dim:#9BA0B8;
+  --green:#3DDC97;--red:#FF6B6B;--wa:#25D366;--blue:#4DA3FF;--teal:#26A17B;
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 body{background:var(--bg);color:var(--txt);
   font-family:'IBM Plex Sans Arabic',sans-serif;min-height:100vh;
-  padding-bottom:calc(88px + env(safe-area-inset-bottom))}
+  padding-bottom:calc(88px + env(safe-area-inset-bottom));
+  background-image:
+    radial-gradient(720px 460px at 50% -10%, rgba(139,114,255,.32), transparent 62%),
+    radial-gradient(560px 380px at 108% 22%, rgba(77,163,255,.08), transparent 60%),
+    linear-gradient(180deg,#1A1C38 0%,#15172E 34%,#121327 100%);
+  background-attachment:fixed}
 .num{font-family:'IBM Plex Mono',monospace;font-feature-settings:"tnum"}
-#lock{position:fixed;inset:0;background:var(--bg);z-index:1000;
+#lock{position:fixed;inset:0;z-index:1000;background:var(--bg);
+  background-image:radial-gradient(620px 420px at 50% 28%, rgba(139,114,255,.30), transparent 65%);
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;padding:24px}
-#lock .hex{width:72px;height:72px;font-size:34px;box-shadow:0 0 44px rgba(244,165,12,.45)}
+#lock .hex{width:72px;height:72px;font-size:34px;box-shadow:0 0 50px rgba(244,165,12,.5)}
 #lock h2{font-size:17px;letter-spacing:3px;font-weight:600}
-#lock h2 span{color:var(--gold)}
+#lock h2 span{color:var(--acc2)}
 #lock input{width:210px;text-align:center;letter-spacing:14px;font-size:26px;
-  padding:15px;border-radius:16px;background:var(--glass);
-  border:1px solid var(--stroke);color:var(--gold);outline:none;font-family:'IBM Plex Mono',monospace}
-#lock input:focus{border-color:var(--stroke-gold)}
+  padding:15px;border-radius:18px;background:var(--glass);backdrop-filter:blur(16px);
+  border:1px solid var(--stroke);color:var(--acc2);outline:none;font-family:'IBM Plex Mono',monospace}
+#lock input:focus{border-color:var(--stroke-acc);box-shadow:0 0 0 4px rgba(139,114,255,.15)}
 #lockMsg{font-size:12px;color:var(--dim);min-height:18px}
 #lockMsg.err{color:var(--red)}
 header{padding:20px 18px 4px}
@@ -43,81 +52,105 @@ header{padding:20px 18px 4px}
 .hex{width:44px;height:44px;flex-shrink:0;
   background:linear-gradient(135deg,var(--gold2),var(--gold) 60%,#B67B06);
   clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);
-  display:flex;align-items:center;justify-content:center;color:#0C0D10;font-weight:700;font-size:21px}
+  display:flex;align-items:center;justify-content:center;color:#15172E;font-weight:700;font-size:21px}
 .brand h1{font-size:16px;font-weight:700;letter-spacing:1.5px}
-.brand h1 span{color:var(--gold)}
+.brand h1 span{color:var(--acc2)}
 .brand p{font-size:10px;color:var(--dim);letter-spacing:2.5px;margin-top:2px}
-.hero{margin:16px 18px 0;padding:20px;border-radius:22px;position:relative;overflow:hidden;
-  background:linear-gradient(140deg, rgba(244,165,12,.16), rgba(244,165,12,.03) 45%, var(--glass));
-  border:1px solid var(--stroke-gold);
-  box-shadow:0 18px 50px rgba(0,0,0,.5)}
-.hero .hk{font-size:11px;color:var(--dim);letter-spacing:2px}
-.hero .hv{font-size:30px;font-weight:700;color:var(--gold);margin-top:6px;font-family:'IBM Plex Mono',monospace}
-.hero .chips{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+/* ===== PORTFOLIO ===== */
+.folio{margin:14px 18px 0;padding:22px 18px 16px;border-radius:26px;position:relative;
+  background:linear-gradient(160deg, rgba(139,114,255,.16), rgba(255,255,255,.03) 55%);
+  border:1px solid var(--stroke-acc);
+  box-shadow:0 22px 60px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.09);
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
+.donutWrap{display:flex;justify-content:center;position:relative}
+.donutC{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.donutC .t{font-size:30px;font-weight:700;font-family:'IBM Plex Mono',monospace}
+.donutC .t small{font-size:15px;color:var(--dim)}
+.donutC .s{font-size:11px;color:var(--dim);letter-spacing:2px;margin-top:2px}
+.assets{margin-top:16px}
+.asset{display:flex;align-items:center;gap:12px;padding:12px 10px;border-radius:16px;
+  background:var(--glass);border:1px solid var(--stroke);margin-bottom:8px}
+.asset .ic{width:38px;height:38px;flex-shrink:0;border-radius:12px;
+  display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:#0e0f20;
+  font-family:'IBM Plex Mono',monospace}
+.asset .nm{flex:1}
+.asset .nm .n1{font-size:14px;font-weight:700}
+.asset .nm .n2{font-size:11px;color:var(--dim);margin-top:2px;font-family:'IBM Plex Mono',monospace}
+.asset .am{text-align:left}
+.asset .am .a1{font-size:14px;font-weight:700;font-family:'IBM Plex Mono',monospace}
+.asset .am .a2{font-size:11px;color:var(--dim);margin-top:2px;font-family:'IBM Plex Mono',monospace}
+.chips{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;justify-content:center}
 .chip{font-size:12px;padding:6px 12px;border-radius:20px;font-family:'IBM Plex Mono',monospace;
-  background:var(--glass2);border:1px solid var(--stroke);color:var(--txt)}
+  background:rgba(0,0,0,.3);border:1px solid var(--stroke);color:var(--txt)}
 .chip b{color:var(--green);font-weight:600}
 .chip b.red{color:var(--red)}
 section{padding:16px 18px;display:none}
 section.on{display:block;animation:fadeUp .25s ease}
 @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
-.card{background:var(--glass);border:1px solid var(--stroke);border-radius:20px;padding:18px;margin-bottom:14px}
-.card h3{font-size:12px;color:var(--gold);letter-spacing:2px;margin-bottom:12px;font-weight:600}
+.card{background:var(--glass);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+  border:1px solid var(--stroke);border-radius:22px;padding:18px;margin-bottom:14px;
+  box-shadow:0 12px 34px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.06)}
+.card h3{font-size:12px;color:var(--acc2);letter-spacing:2px;margin-bottom:12px;font-weight:600}
 label{display:block;font-size:12px;color:var(--dim);margin:10px 0 6px}
-input,select{width:100%;padding:12px 13px;border-radius:13px;background:var(--glass2);
+input,select{width:100%;padding:12px 13px;border-radius:14px;background:rgba(0,0,0,.28);
   border:1px solid var(--stroke);color:var(--txt);font-size:15px;
   font-family:'IBM Plex Mono',monospace;outline:none;transition:.15s;appearance:none}
-input:focus,select:focus{border-color:var(--stroke-gold)}
+input:focus,select:focus{border-color:var(--stroke-acc);box-shadow:0 0 0 3px rgba(139,114,255,.12)}
 input.ar,select.ar{font-family:'IBM Plex Sans Arabic',sans-serif}
 .row{display:flex;gap:10px}
 .row>div{flex:1}
 .types{display:flex;gap:8px;margin-bottom:14px}
-.type{flex:1;padding:13px 6px;text-align:center;border-radius:15px;cursor:pointer;
-  background:var(--glass);border:1px solid var(--stroke);transition:.15s}
+.type{flex:1;padding:13px 6px;text-align:center;border-radius:16px;cursor:pointer;
+  background:var(--glass);border:1px solid var(--stroke);transition:.15s;backdrop-filter:blur(10px)}
 .type .t1{font-size:13px;font-weight:700}
 .type .t2{font-size:10px;color:var(--dim);margin-top:3px;font-family:'IBM Plex Mono',monospace}
-.type.on{border-color:var(--stroke-gold);
-  background:linear-gradient(140deg, rgba(244,165,12,.18), var(--glass))}
-.type.on .t1{color:var(--gold)}
+.type.on{border-color:var(--stroke-acc);
+  background:linear-gradient(150deg, rgba(139,114,255,.28), rgba(139,114,255,.06));
+  box-shadow:0 8px 26px rgba(139,114,255,.22)}
+.type.on .t1{color:var(--acc2)}
 .alertline{display:none;margin-top:10px;padding:10px 12px;border-radius:12px;font-size:12px;font-weight:600}
 .alertline.warn{display:block;background:rgba(244,165,12,.12);border:1px solid rgba(244,165,12,.35);color:var(--gold2)}
-.alertline.danger{display:block;background:rgba(255,92,92,.10);border:1px solid rgba(239,68,68,.4);color:var(--red)}
-.ticket{border-radius:20px;padding:18px;margin-bottom:14px;position:relative;overflow:hidden;
-  background:linear-gradient(140deg, rgba(244,165,12,.14), var(--glass) 60%);
-  border:1px solid var(--stroke-gold);box-shadow:0 14px 40px rgba(0,0,0,.45)}
-.ref{font-size:23px;font-weight:600;color:var(--gold);letter-spacing:1px}
+.alertline.danger{display:block;background:rgba(255,107,107,.10);border:1px solid rgba(255,107,107,.4);color:var(--red)}
+.ticket{border-radius:22px;padding:18px;margin-bottom:14px;position:relative;overflow:hidden;
+  background:linear-gradient(150deg, rgba(139,114,255,.22), rgba(255,255,255,.03) 60%);
+  border:1px solid var(--stroke-acc);
+  box-shadow:0 16px 44px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.08);
+  backdrop-filter:blur(18px)}
+.ref{font-size:23px;font-weight:600;color:var(--acc2);letter-spacing:1px}
 .ticket .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}
 .kv .k{font-size:11px;color:var(--dim)}
 .kv .v{font-size:16px;font-weight:600;margin-top:3px}
-.kv .v.gold{color:var(--gold)}
+.kv .v.gold{color:var(--gold2)}
 .kv .v.green{color:var(--green)}
 .kv .v.red{color:var(--red)}
 .timer{position:absolute;top:16px;left:16px;font-size:12px;color:var(--dim);
-  background:var(--glass2);padding:5px 11px;border-radius:20px;border:1px solid var(--stroke)}
-.timer.hot{color:var(--red);border-color:rgba(239,68,68,.5)}
-.btn{width:100%;padding:14px;border:none;border-radius:14px;font-size:14px;font-weight:700;
+  background:rgba(0,0,0,.35);padding:5px 11px;border-radius:20px;border:1px solid var(--stroke)}
+.timer.hot{color:var(--red);border-color:rgba(255,107,107,.5)}
+.btn{width:100%;padding:14px;border:none;border-radius:16px;font-size:14px;font-weight:700;
   cursor:pointer;font-family:'IBM Plex Sans Arabic',sans-serif;transition:.15s;margin-top:10px}
-.btn-gold{background:linear-gradient(135deg,var(--gold2),var(--gold) 55%,#D18E07);color:#0C0D10;
-  box-shadow:0 8px 24px rgba(244,165,12,.25)}
+.btn-gold{background:linear-gradient(135deg,var(--acc2),var(--acc) 55%,var(--accD));color:#fff;
+  box-shadow:0 10px 28px rgba(139,114,255,.35)}
 .btn:active{transform:scale(.97)}
-.btn-line{background:transparent;color:var(--gold);border:1px solid var(--stroke-gold)}
-.btn-wa{background:linear-gradient(135deg,#3BE07F,var(--wa));color:#062b14}
-.btn-sm{padding:8px 13px;font-size:12px;width:auto;margin:0;border-radius:10px}
+.btn-line{background:rgba(139,114,255,.08);color:var(--acc2);border:1px solid var(--stroke-acc)}
+.btn-wa{background:linear-gradient(135deg,#3BE07F,var(--wa));color:#062b14;box-shadow:0 8px 22px rgba(37,211,102,.25)}
+.btn-sm{padding:8px 13px;font-size:12px;width:auto;margin:0;border-radius:11px}
 .btn-row{display:flex;gap:8px}
 .btn-row .btn{flex:1}
-.wa-box{background:#0B1512;border:1px solid rgba(37,211,102,.3);border-radius:20px;padding:15px;margin-bottom:14px}
+.wa-box{background:rgba(18,54,38,.30);backdrop-filter:blur(14px);
+  border:1px solid rgba(37,211,102,.3);border-radius:22px;padding:15px;margin-bottom:14px}
 .wa-box h3{color:var(--wa);font-size:12px;margin-bottom:10px;letter-spacing:2px}
-.bubble{background:#123626;border-radius:14px 14px 14px 4px;padding:13px;font-size:13px;
+.bubble{background:rgba(18,54,38,.55);border-radius:14px 14px 14px 4px;padding:13px;font-size:13px;
   line-height:1.9;white-space:pre-wrap;font-family:'IBM Plex Mono',monospace;color:#D7F5E3}
-.tx{background:var(--glass);border:1px solid var(--stroke);border-radius:17px;padding:14px 15px;margin-bottom:10px}
+.tx{background:var(--glass);backdrop-filter:blur(14px);border:1px solid var(--stroke);
+  border-radius:18px;padding:14px 15px;margin-bottom:10px}
 .tx-top{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
-.tx-ref{font-family:'IBM Plex Mono',monospace;font-size:14px;color:var(--gold);font-weight:600}
+.tx-ref{font-family:'IBM Plex Mono',monospace;font-size:14px;color:var(--acc2);font-weight:600}
 .badge{font-size:11px;padding:4px 11px;border-radius:20px;font-weight:600}
-.b-wait{background:rgba(244,165,12,.14);color:var(--gold2);border:1px solid rgba(244,165,12,.25)}
-.b-conf{background:rgba(34,197,94,.12);color:var(--green);border:1px solid rgba(34,197,94,.25)}
-.b-paid{background:rgba(127,168,255,.12);color:var(--blue);border:1px solid rgba(127,168,255,.25)}
-.b-debt{background:rgba(239,68,68,.12);color:var(--red);border:1px solid rgba(239,68,68,.3)}
-.b-type{background:var(--glass2);color:var(--dim);border:1px solid var(--stroke)}
+.b-wait{background:rgba(244,165,12,.14);color:var(--gold2);border:1px solid rgba(244,165,12,.3)}
+.b-conf{background:rgba(61,220,151,.12);color:var(--green);border:1px solid rgba(61,220,151,.3)}
+.b-paid{background:rgba(139,114,255,.14);color:var(--acc2);border:1px solid rgba(139,114,255,.3)}
+.b-debt{background:rgba(255,107,107,.12);color:var(--red);border:1px solid rgba(255,107,107,.3)}
+.b-type{background:rgba(0,0,0,.3);color:var(--dim);border:1px solid var(--stroke)}
 .tx-mid{display:flex;gap:14px;margin:9px 0;font-size:13px;color:var(--dim);flex-wrap:wrap}
 .tx-mid b{color:var(--txt);font-family:'IBM Plex Mono',monospace}
 .tx-mid b.green{color:var(--green)}
@@ -125,16 +158,16 @@ input.ar,select.ar{font-family:'IBM Plex Sans Arabic',sans-serif}
 .tx-acts{display:flex;gap:8px;margin-top:9px;flex-wrap:wrap}
 .sum-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .sum-grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
-.sum{background:var(--glass2);border:1px solid var(--stroke);border-radius:15px;padding:14px;text-align:center}
+.sum{background:rgba(0,0,0,.26);border:1px solid var(--stroke);border-radius:16px;padding:14px;text-align:center}
 .sum .k{font-size:11px;color:var(--dim)}
 .sum .v{font-size:18px;font-weight:600;margin-top:6px;font-family:'IBM Plex Mono',monospace}
-.sum .v.gold{color:var(--gold)}
+.sum .v.gold{color:var(--gold2)}
 .sum .v.green{color:var(--green)}
 .sum .v.red{color:var(--red)}
 .empty{text-align:center;color:var(--dim);padding:36px 0;font-size:13px}
-.chain{border-radius:18px;padding:15px;margin-bottom:12px;
-  background:linear-gradient(140deg, rgba(127,168,255,.10), var(--glass));
-  border:1px solid rgba(127,168,255,.3)}
+.chain{border-radius:20px;padding:15px;margin-bottom:12px;
+  background:linear-gradient(150deg, rgba(77,163,255,.14), rgba(255,255,255,.03));
+  border:1px solid rgba(77,163,255,.35);backdrop-filter:blur(14px)}
 .chain .c-top{display:flex;justify-content:space-between;align-items:center}
 .chain .c-ref{font-family:'IBM Plex Mono',monospace;color:var(--blue);font-weight:700;font-size:14px}
 .chain .c-cap{font-family:'IBM Plex Mono',monospace;font-size:16px;font-weight:700;margin-top:8px}
@@ -142,33 +175,34 @@ input.ar,select.ar{font-family:'IBM Plex Sans Arabic',sans-serif}
   font-family:'IBM Plex Mono',monospace;color:var(--dim)}
 .leg b{color:var(--txt)}
 .leg .lp{color:var(--green)}
-.legform{margin-top:10px;padding:12px;border-radius:14px;background:var(--glass2);border:1px solid var(--stroke)}
-.day{background:var(--glass);border:1px solid var(--stroke);border-radius:17px;margin-bottom:10px;overflow:hidden}
+.legform{margin-top:10px;padding:12px;border-radius:16px;background:rgba(0,0,0,.26);border:1px solid var(--stroke)}
+.day{background:var(--glass);backdrop-filter:blur(14px);border:1px solid var(--stroke);
+  border-radius:18px;margin-bottom:10px;overflow:hidden}
 .day-head{padding:14px 15px;display:flex;justify-content:space-between;align-items:center;cursor:pointer}
-.day-head .d1{font-size:14px;font-weight:700;font-family:'IBM Plex Mono',monospace;color:var(--gold)}
+.day-head .d1{font-size:14px;font-weight:700;font-family:'IBM Plex Mono',monospace;color:var(--acc2)}
 .day-head .d2{font-size:11px;color:var(--dim);margin-top:3px}
 .day-profits{font-size:11px;font-family:'IBM Plex Mono',monospace;color:var(--green);text-align:left;line-height:1.7}
 .day-body{display:none;padding:0 15px 14px;border-top:1px solid var(--stroke)}
 .day.open .day-body{display:block}
 .mini{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px dashed var(--stroke);font-size:12px}
-.mini .r{font-family:'IBM Plex Mono',monospace;color:var(--gold)}
+.mini .r{font-family:'IBM Plex Mono',monospace;color:var(--acc2)}
 .mini .p{font-family:'IBM Plex Mono',monospace;color:var(--green)}
 .stars{display:flex;gap:6px;margin:6px 0 2px}
-.star{font-size:22px;color:#3a3e48;cursor:pointer;transition:.12s}
+.star{font-size:22px;color:#3d4158;cursor:pointer;transition:.12s}
 .star.on{color:var(--gold)}
 nav{position:fixed;bottom:0;left:0;right:0;z-index:90;
   display:flex;padding:10px 14px calc(10px + env(safe-area-inset-bottom));gap:6px;
-  background:rgba(12,13,16,.92);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+  background:rgba(18,19,39,.85);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
   border-top:1px solid var(--stroke)}
-.nv{flex:1;text-align:center;padding:8px 2px;border-radius:14px;cursor:pointer;color:var(--dim);transition:.15s}
+.nv{flex:1;text-align:center;padding:8px 2px;border-radius:16px;cursor:pointer;color:var(--dim);transition:.15s}
 .nv svg{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .nv div{font-size:10px;margin-top:3px;font-weight:600}
-.nv.on{color:var(--gold);background:rgba(244,165,12,.10)}
+.nv.on{color:#fff;background:linear-gradient(135deg,var(--acc2),var(--accD));box-shadow:0 8px 22px rgba(139,114,255,.35)}
 .toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%) translateY(80px);
-  background:linear-gradient(135deg,var(--gold2),var(--gold));color:#0C0D10;padding:11px 24px;border-radius:26px;
-  font-size:13px;font-weight:700;transition:.25s;z-index:99;opacity:0;box-shadow:0 10px 30px rgba(244,165,12,.35)}
+  background:linear-gradient(135deg,var(--acc2),var(--accD));color:#fff;padding:11px 24px;border-radius:26px;
+  font-size:13px;font-weight:700;transition:.25s;z-index:99;opacity:0;box-shadow:0 10px 30px rgba(139,114,255,.4)}
 .toast.show{transform:translateX(-50%) translateY(0);opacity:1}
-.footer-note{text-align:center;font-size:10px;color:#3d414b;letter-spacing:2px;margin-top:24px}
+.footer-note{text-align:center;font-size:10px;color:#454a63;letter-spacing:2px;margin-top:24px}
 #pdfStage{position:fixed;top:0;right:-2000px;width:794px;background:#fff;color:#111;z-index:-1;
   font-family:'IBM Plex Sans Arabic',sans-serif;direction:rtl}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
@@ -193,13 +227,37 @@ nav{position:fixed;bottom:0;left:0;right:0;z-index:90;
   </div>
 </header>
 
-<div class="hero">
-  <div class="hk">أرباح اليوم</div>
-  <div class="hv num" id="heroMain">0.00 $</div>
+<div class="folio">
+  <div class="donutWrap">
+    <svg id="donut" width="190" height="190" viewBox="0 0 190 190">
+      <circle cx="95" cy="95" r="80" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="11"/>
+      <g transform="rotate(-90 95 95)">
+        <circle id="arcU" cx="95" cy="95" r="80" fill="none" stroke="#26A17B" stroke-width="11" stroke-linecap="round" stroke-dasharray="0 503"/>
+        <circle id="arcA" cx="95" cy="95" r="80" fill="none" stroke="#F4A50C" stroke-width="11" stroke-linecap="round" stroke-dasharray="0 503"/>
+        <circle id="arcM" cx="95" cy="95" r="80" fill="none" stroke="#4DA3FF" stroke-width="11" stroke-linecap="round" stroke-dasharray="0 503"/>
+      </g>
+    </svg>
+    <div class="donutC">
+      <div class="t num"><small>$</small><span id="balTotal">0</span></div>
+      <div class="s">إجمالي المحفظة</div>
+    </div>
+  </div>
+  <div class="assets">
+    <div class="asset"><div class="ic" style="background:#26A17B">₮</div>
+      <div class="nm"><div class="n1">Tether</div><div class="n2">USDT</div></div>
+      <div class="am"><div class="a1 num" id="balU">0</div><div class="a2 num" id="balUu">$0</div></div></div>
+    <div class="asset"><div class="ic" style="background:#F4A50C">Kz</div>
+      <div class="nm"><div class="n1">Kwanza</div><div class="n2">AOA · KWZ</div></div>
+      <div class="am"><div class="a1 num" id="balA">0</div><div class="a2 num" id="balAu">$0</div></div></div>
+    <div class="asset"><div class="ic" style="background:#4DA3FF">UM</div>
+      <div class="nm"><div class="n1">Ouguiya</div><div class="n2">MRU</div></div>
+      <div class="am"><div class="a1 num" id="balM">0</div><div class="a2 num" id="balMu">$0</div></div></div>
+  </div>
   <div class="chips">
+    <span class="chip">ربح اليوم <b id="heroMain">0 $</b></span>
     <span class="chip">KWZ <b id="heroKwz">0</b></span>
     <span class="chip">MRU <b id="heroMru">0</b></span>
-    <span class="chip">عمليات <b id="heroCount" style="color:var(--gold)">0</b></span>
+    <span class="chip">عمليات <b id="heroCount" style="color:var(--acc2)">0</b></span>
     <span class="chip" id="heroDebtChip" style="display:none">ديون <b class="red" id="heroDebt">0</b></span>
   </div>
 </div>
@@ -364,6 +422,16 @@ nav{position:fixed;bottom:0;left:0;right:0;z-index:90;
     <h3>الإعدادات</h3>
     <label>واتساب شريك أنغولا (بالرمز الدولي، بدون +)</label>
     <input type="tel" id="partnerWa" placeholder="244xxxxxxxxx" inputmode="tel" onchange="saveCfg()">
+    <h3 style="margin-top:16px">المحفظة — أرصدة الافتتاح</h3>
+    <div class="row">
+      <div><label>USDT</label><input type="number" id="wU" placeholder="0" inputmode="decimal" onchange="saveWallet()"></div>
+      <div><label>AOA</label><input type="number" id="wA" placeholder="0" inputmode="decimal" onchange="saveWallet()"></div>
+      <div><label>MRU</label><input type="number" id="wM" placeholder="0" inputmode="decimal" onchange="saveWallet()"></div>
+    </div>
+    <div class="row">
+      <div><label>سعر التقييم AOA/USDT</label><input type="number" id="wVA" placeholder="1160" inputmode="decimal" onchange="saveWallet()"></div>
+      <div><label>سعر التقييم MRU/USDT</label><input type="number" id="wVM" placeholder="40" inputmode="decimal" onchange="saveWallet()"></div>
+    </div>
     <label>تغيير رمز PIN</label>
     <input type="password" id="newPin" maxlength="6" placeholder="رمز جديد" inputmode="numeric" onchange="changePin()">
   </div>
@@ -836,7 +904,7 @@ function render(){
     }
     list.appendChild(div);
   });
-  renderSettle();renderHero();renderHistory();renderContacts();renderDebts();renderChains();
+  renderSettle();renderHero();renderPortfolio();renderHistory();renderContacts();renderDebts();renderChains();
 }
 function setSt(ref,st){const t=txs.find(x=>x.ref===ref);if(!t)return;t.status=st;persist();render();}
 function sellTrade(ref){
@@ -891,6 +959,51 @@ function totals(list){
   };
 }
 
+
+/* ================= WALLET / PORTFOLIO ================= */
+let wallet=JSON.parse(localStorage.getItem('arkan-wallet')||'{"U":0,"A":0,"M":0,"vA":1160,"vM":40}');
+function saveWallet(){
+  wallet={U:+$('wU').value||0,A:+$('wA').value||0,M:+$('wM').value||0,
+    vA:+$('wVA').value||1160,vM:+$('wVM').value||40};
+  localStorage.setItem('arkan-wallet',JSON.stringify(wallet));
+  renderPortfolio();toast('حُفظت المحفظة ✓');
+}
+function txFlows(t,f){
+  if(t.type==='bridge'){f.AOA+=t.aoa;f.MRU-=t.mru;f.USDT+=(t.pUsdt||0);}
+  else if(t.type==='aoa'||t.type==='mru'){
+    const k=t.type==='aoa'?'AOA':'MRU';
+    if(t.rSell)f[k]+=t.profit;else{f[k]-=t.cost;f.USDT+=t.qty;}
+  }
+  else if(t.type==='leg'){f[t.from]-=t.fromAmt;f[t.to]+=t.toAmt;}
+  else if(t.kind==='pair'&&t.from){f[t.from]-=t.fromAmt;f[t.to]+=t.toAmt;}
+}
+function balances(){
+  const f={USDT:0,AOA:0,MRU:0};
+  hist.forEach(d=>(d.txs||[]).forEach(t=>txFlows(t,f)));
+  txs.forEach(t=>txFlows(t,f));
+  return {USDT:wallet.U+f.USDT,AOA:wallet.A+f.AOA,MRU:wallet.M+f.MRU};
+}
+function renderPortfolio(){
+  const b=balances();
+  const uU=b.USDT, uA=b.AOA/(wallet.vA||1160), uM=b.MRU/(wallet.vM||40);
+  const tot=Math.max(uU+uA+uM,0);
+  $('balTotal').textContent=fmt(tot,2);
+  $('balU').textContent=fmt(b.USDT)+' ₮';$('balUu').textContent='$'+fmt(Math.max(uU,0));
+  $('balA').textContent=fmt(b.AOA,0)+' Kz';$('balAu').textContent='$'+fmt(Math.max(uA,0));
+  $('balM').textContent=fmt(b.MRU,0)+' UM';$('balMu').textContent='$'+fmt(Math.max(uM,0));
+  const C=2*Math.PI*80, gap=tot>0?6:0;
+  const segs=[['arcU',Math.max(uU,0)],['arcA',Math.max(uA,0)],['arcM',Math.max(uM,0)]];
+  let off=0;
+  segs.forEach(([id,v])=>{
+    const len=tot>0?Math.max(C*(v/tot)-gap,0):0;
+    const el=$(id);
+    el.setAttribute('stroke-dasharray',len+' '+(C-len));
+    el.setAttribute('stroke-dashoffset',-off);
+    off+=tot>0?C*(v/tot):0;
+  });
+  $('wU').value=wallet.U||'';$('wA').value=wallet.A||'';$('wM').value=wallet.M||'';
+  $('wVA').value=wallet.vA||'';$('wVM').value=wallet.vM||'';
+}
 /* ================= HERO ================= */
 function renderHero(){
   const T=totals(txs);
