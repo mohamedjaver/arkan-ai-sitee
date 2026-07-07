@@ -1,0 +1,14 @@
+{
+  "name": "ARKAN SETTLEMENT FLOW",
+  "short_name": "ARKAN",
+  "description": "AOA · USDT · MRU — Bankily Bridge",
+  "start_url": "settlement.html",
+  "display": "standalone",
+  "background_color": "#15172E",
+  "theme_color": "#15172E",
+  "orientation": "portrait",
+  "icons": [
+    { "src": "arkan-icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "apple-touch-icon.png", "sizes": "180x180", "type": "image/png", "purpose": "any" }
+  ]
+}
