@@ -1,38 +1,34 @@
 <svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="tile" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#2A2350"/><stop offset="0.5" stop-color="#1A1B38"/><stop offset="1" stop-color="#121327"/>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#2E2758"/><stop offset="0.5" stop-color="#1C1D3C"/><stop offset="1" stop-color="#101127"/>
     </linearGradient>
-    <linearGradient id="vio" x1="0.2" y1="0.05" x2="0.8" y2="0.95">
-      <stop offset="0" stop-color="#B9A8FF"/><stop offset="0.45" stop-color="#8B72FF"/><stop offset="1" stop-color="#5B3FD1"/>
-    </linearGradient>
-    <linearGradient id="aFill" x1="0.5" y1="0" x2="0.5" y2="1">
-      <stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#E9E2FF"/>
-    </linearGradient>
-    <radialGradient id="topglow" cx="0.5" cy="0.1" r="0.85">
-      <stop offset="0" stop-color="#8B72FF" stop-opacity="0.55"/><stop offset="0.6" stop-color="#8B72FF" stop-opacity="0"/>
+    <radialGradient id="glow" cx="0.5" cy="0.08" r="0.9">
+      <stop offset="0" stop-color="#8B72FF" stop-opacity="0.55"/><stop offset="0.55" stop-color="#8B72FF" stop-opacity="0"/>
     </radialGradient>
-    <filter id="dropA" x="-40%" y="-40%" width="180%" height="180%">
-      <feDropShadow dx="0" dy="12" stdDeviation="20" flood-color="#4A32B8" flood-opacity="0.6"/>
+    <linearGradient id="vio" x1="0.1" y1="0" x2="0.9" y2="1">
+      <stop offset="0" stop-color="#D2C6FF"/><stop offset="0.5" stop-color="#8B72FF"/><stop offset="1" stop-color="#5B3FD1"/>
+    </linearGradient>
+    <linearGradient id="speed" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#8B72FF" stop-opacity="0"/><stop offset="1" stop-color="#A78BFF"/>
+    </linearGradient>
+    <filter id="dp" x="-40%" y="-40%" width="180%" height="180%">
+      <feDropShadow dx="0" dy="10" stdDeviation="16" flood-color="#3A2699" flood-opacity="0.55"/>
     </filter>
   </defs>
+  <rect width="512" height="512" fill="url(#bg)"/>
+  <rect width="512" height="512" fill="url(#glow)"/>
 
-  <rect width="512" height="512" rx="118" fill="url(#tile)"/>
-  <rect width="512" height="512" rx="118" fill="url(#topglow)"/>
-  <rect x="5" y="5" width="502" height="502" rx="113" fill="none" stroke="#8B72FF" stroke-opacity="0.22" stroke-width="2"/>
-
-  <g filter="url(#dropA)">
-    <path d="M256 92 C278 92 296 101 311 116 L396 201 C411 216 420 234 420 256
-             C420 278 411 296 396 311 L311 396 C296 411 278 420 256 420
-             C234 420 216 411 201 396 L116 311 C101 296 92 278 92 256
-             C92 234 101 216 116 201 L201 116 C216 101 234 92 256 92 Z" fill="url(#vio)"/>
+  <g>
+    <rect x="104" y="214" width="94"  height="13" rx="6.5" fill="url(#speed)" opacity="0.45"/>
+    <rect x="76"  y="250" width="148" height="16" rx="8"   fill="url(#speed)" opacity="0.9"/>
+    <rect x="104" y="288" width="94"  height="13" rx="6.5" fill="url(#speed)" opacity="0.45"/>
   </g>
-  <path d="M256 100 C276 100 292 108 305 121 L366 182 C305 148 210 150 150 205 L207 121 C221 108 236 100 256 100 Z" fill="#ffffff" opacity="0.15"/>
 
-  <!-- A مصمت مع فتحتين محفورتين (even-odd): الفتحة المثلثة العلوية + سهم التبادل في الشريط السفلي -->
-  <path fill="url(#aFill)" fill-rule="evenodd" d="
-    M256 148 L344 364 L300 364 L286 328 L226 328 L212 364 L168 364 Z
-    M256 232 L241 290 L271 290 Z
-    M232 300 h58 v-9 l24 18 l-24 18 v-9 h-58 v9 l-24 -18 l24 -18 z
-  "/>
+  <g filter="url(#dp)" transform="translate(20,0) skewX(-9)">
+    <path fill="url(#vio)" fill-rule="evenodd" d="
+      M252 124 L342 382 L297 382 L283 341 L221 341 L207 382 L162 382 Z
+      M252 212 L237 296 L267 296 Z"/>
+    <path d="M252 124 L232 341 L227 341 L247 124 Z" fill="#EEE8FF" opacity="0.35"/>
+  </g>
 </svg>
