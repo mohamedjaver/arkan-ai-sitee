@@ -1,75 +1,62 @@
 <svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="gold" x1="0" y1="0" x2="0.9" y2="1">
-      <stop offset="0" stop-color="#FFDD8A"/>
-      <stop offset="0.42" stop-color="#F4A50C"/>
-      <stop offset="1" stop-color="#A86F04"/>
+    <linearGradient id="tile" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#2A2350"/>
+      <stop offset="0.5" stop-color="#1A1B38"/>
+      <stop offset="1" stop-color="#121327"/>
     </linearGradient>
-    <linearGradient id="goldA" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#FFE9B0"/>
-      <stop offset="0.5" stop-color="#F7B32B"/>
-      <stop offset="1" stop-color="#C2830A"/>
+    <linearGradient id="vio" x1="0.2" y1="0.05" x2="0.8" y2="0.95">
+      <stop offset="0" stop-color="#B9A8FF"/>
+      <stop offset="0.45" stop-color="#8B72FF"/>
+      <stop offset="1" stop-color="#5B3FD1"/>
     </linearGradient>
-    <!-- خلفية v3: توهجات radial على قاعدة #07080B -->
-    <radialGradient id="glowTR" cx="0.85" cy="0.02" r="0.9">
-      <stop offset="0" stop-color="#F4A50C" stop-opacity="0.16"/>
-      <stop offset="0.6" stop-color="#F4A50C" stop-opacity="0"/>
+    <linearGradient id="aFill" x1="0.5" y1="0" x2="0.5" y2="1">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#E6DDFF"/>
+    </linearGradient>
+    <radialGradient id="topglow" cx="0.5" cy="0.1" r="0.85">
+      <stop offset="0" stop-color="#8B72FF" stop-opacity="0.55"/>
+      <stop offset="0.6" stop-color="#8B72FF" stop-opacity="0"/>
     </radialGradient>
-    <radialGradient id="glowBL" cx="0.0" cy="0.9" r="0.8">
-      <stop offset="0" stop-color="#7FA8FF" stop-opacity="0.06"/>
-      <stop offset="0.6" stop-color="#7FA8FF" stop-opacity="0"/>
-    </radialGradient>
-    <radialGradient id="glowC" cx="0.5" cy="1.15" r="0.8">
-      <stop offset="0" stop-color="#F4A50C" stop-opacity="0.07"/>
-      <stop offset="0.7" stop-color="#F4A50C" stop-opacity="0"/>
-    </radialGradient>
-    <filter id="soft" x="-40%" y="-40%" width="180%" height="180%">
-      <feGaussianBlur stdDeviation="12"/>
-    </filter>
-    <filter id="soft2" x="-40%" y="-40%" width="180%" height="180%">
-      <feGaussianBlur stdDeviation="6"/>
+    <filter id="dropA" x="-40%" y="-40%" width="180%" height="180%">
+      <feDropShadow dx="0" dy="12" stdDeviation="20" flood-color="#4A32B8" flood-opacity="0.6"/>
     </filter>
   </defs>
 
-  <!-- ===== الخلفية (v3) ===== -->
-  <rect width="512" height="512" rx="112" fill="#07080B"/>
-  <rect width="512" height="512" rx="112" fill="url(#glowTR)"/>
-  <rect width="512" height="512" rx="112" fill="url(#glowBL)"/>
-  <rect width="512" height="512" rx="112" fill="url(#glowC)"/>
-  <rect x="5" y="5" width="502" height="502" rx="107" fill="none" stroke="#F4A50C" stroke-opacity="0.14" stroke-width="2"/>
+  <rect width="512" height="512" rx="118" fill="url(#tile)"/>
+  <rect width="512" height="512" rx="118" fill="url(#topglow)"/>
+  <rect x="5" y="5" width="502" height="502" rx="113" fill="none" stroke="#8B72FF" stroke-opacity="0.22" stroke-width="2"/>
 
-  <!-- ===== هالة السداسي ===== -->
-  <polygon points="256,96 397,177 397,339 256,420 115,339 115,177"
-           fill="none" stroke="#F4A50C" stroke-opacity="0.5" stroke-width="20"
-           stroke-linejoin="round" filter="url(#soft)"/>
-
-  <!-- ===== السداسي الرئيسي ===== -->
-  <polygon points="256,96 397,177 397,339 256,420 115,339 115,177"
-           fill="none" stroke="url(#gold)" stroke-width="18" stroke-linejoin="round"/>
-  <!-- خط داخلي رفيع (عمق) -->
-  <polygon points="256,122 375,190 375,326 256,394 137,326 137,190"
-           fill="none" stroke="#FFDD8A" stroke-opacity="0.16" stroke-width="3"/>
-
-  <!-- ===== توهج الحرف ===== -->
-  <g filter="url(#soft2)" opacity="0.55">
-    <path d="M256 152 L182 352" stroke="#F4A50C" stroke-width="30" stroke-linecap="round" fill="none"/>
-    <path d="M256 152 L330 352" stroke="#F4A50C" stroke-width="30" stroke-linecap="round" fill="none"/>
+  <!-- rounded rhombus badge -->
+  <g filter="url(#dropA)">
+    <path d="M256 92 C278 92 296 101 311 116 L396 201 C411 216 420 234 420 256
+             C420 278 411 296 396 311 L311 396 C296 411 278 420 256 420
+             C234 420 216 411 201 396 L116 311 C101 296 92 278 92 256
+             C92 234 101 216 116 201 L201 116 C216 101 234 92 256 92 Z"
+          fill="url(#vio)"/>
   </g>
+  <path d="M256 100 C276 100 292 108 305 121 L366 182 C305 148 210 150 150 205 L207 121 C221 108 236 100 256 100 Z"
+        fill="#ffffff" opacity="0.15"/>
 
-  <!-- ===== حرف A ===== -->
-  <path d="M256 152 L182 352" stroke="url(#goldA)" stroke-width="27" stroke-linecap="round" fill="none"/>
-  <path d="M256 152 L330 352" stroke="url(#goldA)" stroke-width="27" stroke-linecap="round" fill="none"/>
-  <!-- لمعة قمة الحرف -->
-  <circle cx="256" cy="153" r="10" fill="#FFF3D0" opacity="0.9"/>
+  <!-- solid A: outer triangle minus inner triangle + gap, single even-odd path -->
+  <path fill="url(#aFill)" fill-rule="evenodd" d="
+    M256 150
+    L338 362
+    L296 362
+    L281 320
+    L231 320
+    L216 362
+    L174 362
+    Z
+    M256 232
+    L243 286
+    L269 286
+    Z
+  "/>
 
-  <!-- ===== العارضة: سهما تبادل ===== -->
+  <!-- exchange arrows as crossbar, sitting on the A's bar zone -->
   <g>
-    <path d="M215 276 H283" stroke="#FFE9B0" stroke-width="13" stroke-linecap="round"/>
-    <path d="M283 276 l-16 -13 M283 276 l-16 13" stroke="#FFE9B0" stroke-width="13" stroke-linecap="round" fill="none"/>
-    <path d="M297 312 H229" stroke="#F4A50C" stroke-width="13" stroke-linecap="round"/>
-    <path d="M229 312 l16 -13 M229 312 l16 13" stroke="#F4A50C" stroke-width="13" stroke-linecap="round" fill="none"/>
+    <path d="M222 300 H290" stroke="#5B3FD1" stroke-width="15" stroke-linecap="round"/>
+    <path d="M290 300 l-17 -13 M290 300 l-17 13" stroke="#5B3FD1" stroke-width="15" stroke-linecap="round" fill="none"/>
   </g>
-
-  <!-- ===== لمعة قطرية على البلاطة ===== -->
-  <path d="M40 150 Q 250 30 472 120" stroke="#FFFFFF" stroke-opacity="0.05" stroke-width="60" fill="none"/>
 </svg>
