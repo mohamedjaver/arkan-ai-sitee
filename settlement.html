@@ -41,7 +41,7 @@ body{background:var(--bg);color:var(--txt);
 #lock{position:fixed;inset:0;z-index:1000;background:var(--bg);
   background-image:radial-gradient(620px 420px at 50% 28%, rgba(139,114,255,.30), transparent 65%);
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;padding:24px}
-#lock .hex{width:72px;height:72px;font-size:34px;border-radius:22px;box-shadow:0 0 55px rgba(139,114,255,.6)}
+#lock .hex{width:82px;height:82px;border-radius:20px;box-shadow:0 0 55px rgba(139,114,255,.6)}
 #lock h2{font-size:17px;letter-spacing:3px;font-weight:600}
 #lock h2 span{color:var(--acc2)}
 #lock input{width:210px;text-align:center;letter-spacing:14px;font-size:26px;
@@ -52,11 +52,11 @@ body{background:var(--bg);color:var(--txt);
 #lockMsg.err{color:var(--red)}
 header{padding:20px 18px 4px}
 .brand{display:flex;align-items:center;gap:12px}
-.hex{width:44px;height:44px;flex-shrink:0;border-radius:14px;
-  background:linear-gradient(140deg,#B9A8FF,#8B72FF 55%,#5B3FD1);
-  transform:rotate(0deg);
-  display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:22px;
+.hex{width:46px;height:46px;flex-shrink:0;border-radius:13px;
+  background:url("arkan-logo.svg") center/cover;
   box-shadow:0 8px 22px rgba(91,63,209,.5)}
+.hex.txt{background:linear-gradient(140deg,#B9A8FF,#8B72FF 55%,#5B3FD1);
+  display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:22px}
 .brand h1{font-size:16px;font-weight:700;letter-spacing:1.5px}
 .brand h1 span{color:var(--acc2)}
 .brand p{font-size:10px;color:var(--dim);letter-spacing:2.5px;margin-top:2px}
@@ -215,7 +215,7 @@ nav{position:fixed;bottom:0;left:0;right:0;z-index:90;
 <body>
 
 <div id="lock">
-  <div class="hex">A</div>
+  <div class="hex"></div>
   <h2>ARKAN <span>SETTLEMENT</span></h2>
   <input type="password" id="pin" inputmode="numeric" maxlength="6" placeholder="••••">
   <div id="lockMsg"></div>
@@ -223,7 +223,7 @@ nav{position:fixed;bottom:0;left:0;right:0;z-index:90;
 
 <header>
   <div class="brand">
-    <div class="hex">A</div>
+    <div class="hex"></div>
     <div>
       <h1>ARKAN <span>SETTLEMENT FLOW</span></h1>
       <p>AOA · USDT · MRU — BANKILY BRIDGE</p>
