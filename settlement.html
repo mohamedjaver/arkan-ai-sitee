@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-<meta name="theme-color" content="#07080B">
+<meta name="theme-color" content="#0C0D10">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="robots" content="noindex, nofollow">
@@ -17,26 +17,21 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
 :root{
-  --bg:#07080B;--glass:rgba(255,255,255,.035);--glass2:rgba(255,255,255,.055);
-  --stroke:rgba(255,255,255,.08);--stroke-gold:rgba(244,165,12,.35);
-  --gold:#F4A50C;--gold2:#FFC94D;--txt:#F2F2F4;--dim:#8B909C;
-  --green:#2EE59D;--red:#FF5C5C;--wa:#25D366;--blue:#7FA8FF;
+  --bg:#0C0D10;--glass:#14161B;--glass2:#1A1D24;
+  --stroke:#252932;--stroke-gold:rgba(244,165,12,.45);
+  --gold:#F4A50C;--gold2:#FFC94D;--txt:#EDEDEF;--dim:#8B909C;
+  --green:#22C55E;--red:#EF4444;--wa:#25D366;--blue:#7FA8FF;
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 body{
   background:var(--bg);color:var(--txt);
   font-family:'IBM Plex Sans Arabic',sans-serif;min-height:100vh;
   padding-bottom:calc(88px + env(safe-area-inset-bottom));
-  background-image:
-    radial-gradient(900px 500px at 85% -5%, rgba(244,165,12,.10), transparent 60%),
-    radial-gradient(700px 420px at -10% 25%, rgba(127,168,255,.05), transparent 60%),
-    radial-gradient(800px 600px at 50% 115%, rgba(244,165,12,.05), transparent 60%);
-  background-attachment:fixed;
 }
 .num{font-family:'IBM Plex Mono',monospace;font-feature-settings:"tnum"}
 #lock{position:fixed;inset:0;background:var(--bg);z-index:1000;
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;padding:24px;
-  background-image:radial-gradient(600px 400px at 50% 30%, rgba(244,165,12,.12), transparent 65%)}
+  }
 #lock .hex{width:72px;height:72px;font-size:34px;box-shadow:0 0 44px rgba(244,165,12,.45)}
 #lock h2{font-size:17px;letter-spacing:3px;font-weight:600}
 #lock h2 span{color:var(--gold)}
@@ -65,7 +60,7 @@ header{padding:20px 18px 4px}
 .hero .hv{font-size:30px;font-weight:700;color:var(--gold);margin-top:6px;font-family:'IBM Plex Mono',monospace}
 .hero .chips{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
 .chip{font-size:12px;padding:6px 12px;border-radius:20px;font-family:'IBM Plex Mono',monospace;
-  background:rgba(0,0,0,.35);border:1px solid var(--stroke);color:var(--txt)}
+  background:var(--glass2);border:1px solid var(--stroke);color:var(--txt)}
 .chip b{color:var(--green);font-weight:600}
 .chip b.red{color:var(--red)}
 section{padding:16px 18px;display:none}
@@ -76,7 +71,7 @@ section.on{display:block;animation:fadeUp .28s ease}
   box-shadow:0 10px 30px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.05)}
 .card h3{font-size:12px;color:var(--gold);letter-spacing:2px;margin-bottom:12px;font-weight:600}
 label{display:block;font-size:12px;color:var(--dim);margin:10px 0 6px}
-input,select{width:100%;padding:12px 13px;border-radius:13px;background:rgba(0,0,0,.35);
+input,select{width:100%;padding:12px 13px;border-radius:13px;background:var(--glass2);
   border:1px solid var(--stroke);color:var(--txt);font-size:15px;
   font-family:'IBM Plex Mono',monospace;outline:none;transition:.18s;appearance:none}
 input:focus,select:focus{border-color:var(--stroke-gold);box-shadow:0 0 0 3px rgba(244,165,12,.10)}
@@ -116,7 +111,7 @@ input.ar,select.ar{font-family:'IBM Plex Sans Arabic',sans-serif}
 .kv .v.green{color:var(--green)}
 .kv .v.red{color:var(--red)}
 .timer{position:absolute;top:16px;left:16px;font-size:12px;color:var(--dim);
-  background:rgba(0,0,0,.45);padding:5px 11px;border-radius:20px;border:1px solid var(--stroke)}
+  background:var(--glass2);padding:5px 11px;border-radius:20px;border:1px solid var(--stroke)}
 .timer.hot{color:var(--red);border-color:rgba(255,92,92,.5)}
 .btn{width:100%;padding:14px;border:none;border-radius:14px;font-size:14px;font-weight:700;
   cursor:pointer;font-family:'IBM Plex Sans Arabic',sans-serif;transition:.18s;margin-top:10px}
@@ -142,7 +137,7 @@ input.ar,select.ar{font-family:'IBM Plex Sans Arabic',sans-serif}
 .b-conf{background:rgba(46,229,157,.12);color:var(--green);border:1px solid rgba(46,229,157,.25)}
 .b-paid{background:rgba(127,168,255,.12);color:var(--blue);border:1px solid rgba(127,168,255,.25)}
 .b-debt{background:rgba(255,92,92,.12);color:var(--red);border:1px solid rgba(255,92,92,.3)}
-.b-type{background:rgba(0,0,0,.35);color:var(--dim);border:1px solid var(--stroke)}
+.b-type{background:var(--glass2);color:var(--dim);border:1px solid var(--stroke)}
 .tx-mid{display:flex;gap:14px;margin:9px 0;font-size:13px;color:var(--dim);flex-wrap:wrap}
 .tx-mid b{color:var(--txt);font-family:'IBM Plex Mono',monospace}
 .tx-mid b.green{color:var(--green)}
@@ -150,7 +145,7 @@ input.ar,select.ar{font-family:'IBM Plex Sans Arabic',sans-serif}
 .tx-acts{display:flex;gap:8px;margin-top:9px;flex-wrap:wrap}
 .sum-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .sum-grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
-.sum{background:rgba(0,0,0,.3);border:1px solid var(--stroke);border-radius:15px;padding:14px;text-align:center}
+.sum{background:var(--glass2);border:1px solid var(--stroke);border-radius:15px;padding:14px;text-align:center}
 .sum .k{font-size:11px;color:var(--dim)}
 .sum .v{font-size:18px;font-weight:600;margin-top:6px;font-family:'IBM Plex Mono',monospace}
 .sum .v.gold{color:var(--gold)}
