@@ -1043,32 +1043,51 @@ async function pdfText(dataUrl){
   }
   return txt;
 }
-/* كشف المبالغ: يدعم الفاصلة الأوروبية (1.234,56) والإنجليزية (1,234.56) */
-function parseAmounts(txt){
-  const found=[];
-  /* نلتقط أرقامًا قرب كلمات مالية أو عملات */
-  const re=/(?:AOA|Kz|MRU|UM|USD|USDT|R\$|valor|montante|amount|total)?\s*([0-9]{1,3}(?:[.,\s][0-9]{3})*(?:[.,][0-9]{1,2})?)/gi;
-  let m;
-  while((m=re.exec(txt))!==null){
-    let raw=m[1].replace(/\s/g,'');
-    let val;
-    /* تحديد الفاصل العشري: آخر فاصلة/نقطة إن تبعها 1-2 رقم */
-    const lastComma=raw.lastIndexOf(','),lastDot=raw.lastIndexOf('.');
-    if(lastComma>lastDot){ // أوروبي: , عشري
-      val=parseFloat(raw.replace(/\./g,'').replace(',','.'));
-    }else if(lastDot>lastComma){ // إنجليزي: . عشري
-      val=parseFloat(raw.replace(/,/g,''));
-    }else{
-      val=parseFloat(raw.replace(/[.,]/g,''));
-    }
-    if(!isNaN(val)&&val>=1&&val<1e12)found.push(val);
-  }
-  return found;
+/* كشف المبلغ الحقيقي: يستهدف حقول المبلغ ويرفض أرقام الحسابات/المراجع */
+function normNum(raw){
+  raw=raw.replace(/\s/g,'');
+  const lc=raw.lastIndexOf(','),ld=raw.lastIndexOf('.');
+  let val;
+  if(lc>ld)val=parseFloat(raw.replace(/\./g,'').replace(',','.'));      // أوروبي 50.000,00
+  else if(ld>lc)val=parseFloat(raw.replace(/,/g,''));                    // إنجليزي 50,000.00
+  else val=parseFloat(raw.replace(/[.,]/g,''));
+  return val;
 }
-/* أكبر مبلغ في النص = المبلغ الرئيسي للإيصال غالبًا */
-function primaryAmount(amounts){
-  if(!amounts.length)return null;
-  return Math.max(...amounts);
+/* يستخرج مرشحين مع درجة ثقة */
+function extractAmount(txt){
+  const cands=[];
+  /* نمط رقم بفاصلة عشرية (مبلغ مالي حقيقي غالبًا) */
+  const money=/([0-9]{1,3}(?:[.\s][0-9]{3})*,[0-9]{2}|[0-9]{1,3}(?:,[0-9]{3})*\.[0-9]{2})/g;
+  /* كلمات حقل المبلغ (برتغالي/إنجليزي/عربي) */
+  const kw=/(valor|montante|total|importân|amount|quantia|debitado|creditado|transferido|المبلغ|قيمة)/i;
+  /* كلمات نتجنبها (حساب/مرجع/هاتف) */
+  const bad=/(conta|iban|nib|referência|referencia|ref\.?|telefone|telemóvel|nº|numero|número|account|nib|swift|bi\b|contribuinte|nif)/i;
+
+  let m;
+  while((m=money.exec(txt))!==null){
+    const val=normNum(m[1]);
+    if(isNaN(val)||val<1||val>5e9)continue; // نطاق منطقي: 1 حتى 5 مليار
+    const ctxBefore=txt.slice(Math.max(0,m.index-40),m.index).toLowerCase();
+    const ctxAfter=txt.slice(m.index+m[0].length,m.index+m[0].length+15).toLowerCase();
+    let score=1;
+    if(kw.test(ctxBefore))score+=5;               // قرب كلمة "المبلغ"
+    if(/kz|akz|aoa|mru|usd|um\b/i.test(ctxAfter)||/kz|akz|aoa|mru|usd/i.test(ctxBefore))score+=3; // قرب عملة
+    if(bad.test(ctxBefore))score-=6;              // قرب "حساب/مرجع" → استبعاد
+    cands.push({val,score,pos:m.index});
+  }
+  return cands;
+}
+function parseAmounts(txt){
+  /* للعرض فقط: كل الأرقام ذات الفاصلة العشرية */
+  return extractAmount(txt).sort((a,b)=>b.score-a.score).map(c=>c.val);
+}
+function primaryAmount(txt_or_arr){
+  /* إن مُرّر نص، نحلله؛ إن مُرّرت مصفوفة قديمة، نأخذ أول عنصر */
+  if(typeof txt_or_arr==='string'){
+    const c=extractAmount(txt_or_arr).sort((a,b)=>b.score-a.score||a.pos-b.pos);
+    return c.length?c[0].val:null;
+  }
+  return (txt_or_arr&&txt_or_arr.length)?txt_or_arr[0]:null;
 }
 
 async function scanReceipts(ref){
@@ -1080,13 +1099,12 @@ async function scanReceipts(ref){
   for(const r of rs){
     try{
       const txt=await pdfText(r.data);
+      const primary=primaryAmount(txt);
       const amts=parseAmounts(txt);
-      const primary=primaryAmount(amts);
-      /* حفظ المبلغ المكتشف على الإيصال */
       r.amount=primary;r.amounts=amts.slice(0,20);
-      if(primary){total+=primary;results.push({name:r.name,amount:primary,all:amts});}
-      else results.push({name:r.name,amount:null,all:[]});
-    }catch(e){results.push({name:r.name,amount:null,err:1});}
+      if(primary){total+=primary;results.push({name:r.name,amount:primary,all:amts,rid:r.id});}
+      else results.push({name:r.name,amount:null,all:amts,rid:r.id});
+    }catch(e){results.push({name:r.name,amount:null,err:1,rid:r.id});}
   }
   saveReceipts();
   /* عرض النتيجة */
@@ -1097,12 +1115,14 @@ async function scanReceipts(ref){
         <div class="k">إجمالي المبالغ المكتشفة (${results.filter(x=>x.amount).length} PDF)</div>
         <div class="v gold" style="font-size:24px">${fmt(total,2)}</div>
       </div>
-      ${results.map(x=>`
+      ${results.map((x,i)=>`
         <div class="mini" style="flex-wrap:wrap">
-          <span class="r" style="font-size:11px">${x.name.slice(0,28)}</span>
-          <span class="p">${x.amount!=null?fmt(x.amount,2):(x.err?'⚠️ خطأ قراءة':'— لم يُكتشف')}</span>
+          <span class="r" style="font-size:11px">${x.name.slice(0,26)}</span>
+          <span class="p">${x.amount!=null?fmt(x.amount,2):(x.err?'⚠️ خطأ قراءة':'— لم يُكتشف')}
+            <button class="btn btn-line btn-sm" style="margin-right:6px;padding:3px 8px" onclick="fixAmount('${ref}','${x.rid}')">تصحيح</button>
+          </span>
         </div>
-        ${x.all&&x.all.length>1?`<div style="color:var(--dim);font-size:10px;padding:2px 4px 8px;font-family:'IBM Plex Mono'">مبالغ أخرى: ${x.all.filter(v=>v!==x.amount).slice(0,6).map(v=>fmt(v,0)).join(' · ')}</div>`:''}
+        ${x.all&&x.all.length>1?`<div style="color:var(--dim);font-size:10px;padding:2px 4px 8px;font-family:'IBM Plex Mono'">مرشحون: ${x.all.filter(v=>v!==x.amount).slice(0,6).map(v=>fmt(v,2)).join(' · ')}</div>`:''}
       `).join('')}
       <div style="color:var(--dim);font-size:11px;margin-top:10px;line-height:1.7">
         النظام يختار أكبر مبلغ في كل إيصال كالمبلغ الرئيسي. راجع "المبالغ الأخرى" إن كان الاختيار خاطئًا.
@@ -1664,6 +1684,19 @@ function exportXlsx(dayIdx){
 }
 
 
+
+function fixAmount(ref,rid){
+  const r=receipts.find(x=>x.id===rid);if(!r)return;
+  const opts=(r.amounts||[]).slice(0,8);
+  let msg='المبلغ الصحيح لـ '+r.name+':\n';
+  if(opts.length)msg+='مرشحون: '+opts.map(v=>fmt(v,2)).join(' · ')+'\n\n';
+  msg+='اكتب المبلغ الصحيح:';
+  const v=parseFloat(prompt(msg,r.amount||''));
+  if(isNaN(v)||v<0)return;
+  r.amount=v;r.manual=true;saveReceipts();
+  scanReceipts(ref);renderReceiptTotals();
+  toast('صُحّح المبلغ ✓');
+}
 /* ================= SCAN ALL TODAY ================= */
 async function scanAllToday(){
   const todayRefs=txs.map(t=>t.ref);
@@ -1673,7 +1706,7 @@ async function scanAllToday(){
   toast('جارٍ تحليل '+rs.length+' PDF...');
   for(const r of rs){
     if(r.amount!=null)continue;
-    try{const txt=await pdfText(r.data);const a=parseAmounts(txt);r.amount=primaryAmount(a);r.amounts=a.slice(0,20);}catch(e){}
+    try{const txt=await pdfText(r.data);r.amount=primaryAmount(txt);r.amounts=parseAmounts(txt).slice(0,20);}catch(e){}
   }
   saveReceipts();renderReceiptTotals();toast('اكتمل التحليل ✓');
 }
