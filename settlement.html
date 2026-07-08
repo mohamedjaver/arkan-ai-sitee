@@ -74,9 +74,10 @@ header{padding:20px 18px 4px;position:relative;z-index:6}
   background:linear-gradient(180deg, rgba(139,114,255,.40) 0%, rgba(139,114,255,.16) 52%, transparent 94%)}
 .donutWrap{display:flex;justify-content:center;position:relative}
 .donutC{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
-.donutC .t{font-size:52px;font-weight:700;font-family:'IBM Plex Sans Arabic',sans-serif;letter-spacing:-1px}
-.donutC .t .cur{font-size:22px;color:var(--dim);font-weight:500;vertical-align:18px;margin-left:2px}
-.donutC .t .dec{font-size:22px;color:var(--dim);font-weight:500}
+.donutC{padding:0 46px;text-align:center}
+.donutC .t{font-size:52px;font-weight:700;font-family:'IBM Plex Sans Arabic',sans-serif;letter-spacing:-1px;white-space:nowrap;line-height:1.1}
+.donutC .t .cur{font-size:.42em;color:var(--dim);font-weight:500;vertical-align:.55em;margin-left:2px}
+.donutC .t .dec{font-size:.42em;color:var(--dim);font-weight:500}
 .donutC .s{font-size:11px;color:var(--dim);letter-spacing:2px;margin-top:4px}
 .assets{margin-top:18px;padding:0 0}
 .asset{display:flex;align-items:center;gap:14px;padding:18px 16px;border-radius:22px;
@@ -1383,6 +1384,16 @@ function balances(){
   txs.forEach(t=>txFlows(t,f));
   return {USDT:wallet.U+f.USDT,AOA:wallet.A+f.AOA,MRU:wallet.M+f.MRU};
 }
+
+/* قياس تلقائي لحجم رقم المركز ليبقى داخل الدائرة */
+function fitCenter(){
+  const t=document.querySelector('.donutC .t');if(!t)return;
+  const chars=(t.textContent||'').length;
+  /* عرض داخلي متاح ≈ 252px، متوسط عرض الحرف ≈ 0.58em */
+  let size=Math.floor(252/(Math.max(chars,4)*0.58));
+  size=Math.max(20,Math.min(size,54));
+  t.style.fontSize=size+'px';
+}
 let selAsset=null; /* null=الإجمالي | U/A/M */
 function selectAsset(k){selAsset=(selAsset===k)?null:k;renderPortfolio();}
 function renderPortfolio(){
@@ -1413,6 +1424,7 @@ function renderPortfolio(){
       curEl.textContent='$';
       lbl.textContent='إجمالي المحفظة';
     }
+    fitCenter();
   }
   $('balU').textContent=fmt(b.USDT)+' ₮';$('balUu').textContent='$'+fmt(uU);
   $('balA').textContent=fmt(b.AOA,0)+' Kz';$('balAu').textContent='$'+fmt(uA);
