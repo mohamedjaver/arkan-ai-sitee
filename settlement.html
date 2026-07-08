@@ -59,7 +59,7 @@ body{background:var(--bg);color:var(--txt);
 #lock input:focus{border-color:var(--stroke-acc);box-shadow:0 0 0 4px rgba(139,114,255,.15)}
 #lockMsg{font-size:12px;color:var(--dim);min-height:18px}
 #lockMsg.err{color:var(--red)}
-header{padding:20px 18px 4px}
+header{padding:20px 18px 4px;position:relative;z-index:6}
 .brand{display:flex;align-items:center;gap:12px}
 .hex{width:46px;height:46px;flex-shrink:0;border-radius:13px;
   background:url("arkan-logo.svg") center/cover;
@@ -70,8 +70,8 @@ header{padding:20px 18px 4px}
 .brand h1 span{color:var(--acc2)}
 .brand p{font-size:10px;color:var(--dim);letter-spacing:2.5px;margin-top:2px}
 /* ===== PORTFOLIO ===== */
-.folio{margin:0 0 6px;padding:8px 18px 16px;position:relative;border:none;border-radius:0 0 34px 34px;
-  background:linear-gradient(180deg, rgba(139,114,255,.34), rgba(139,114,255,.10) 55%, transparent 92%)}
+.folio{margin:-100px 0 6px;padding:112px 18px 16px;position:relative;z-index:1;border:none;border-radius:0 0 36px 36px;
+  background:linear-gradient(180deg, rgba(139,114,255,.40) 0%, rgba(139,114,255,.16) 52%, transparent 94%)}
 .donutWrap{display:flex;justify-content:center;position:relative}
 .donutC{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
 .donutC .t{font-size:52px;font-weight:700;font-family:'IBM Plex Sans Arabic',sans-serif;letter-spacing:-1px}
@@ -241,16 +241,15 @@ nav{position:fixed;bottom:0;left:0;right:0;z-index:90;
 
 <div class="folio">
   <div class="donutWrap">
-    <svg id="donut" width="320" height="320" viewBox="0 0 320 320" style="cursor:pointer">
-      <circle cx="160" cy="160" r="138" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="10"/>
-      <g transform="rotate(-90 160 160)">
-        <circle id="arcU" cx="160" cy="160" r="138" fill="none" stroke="#26A17B" stroke-width="10" stroke-linecap="round" stroke-dasharray="0 868" style="transition:.25s"/>
-        <circle id="arcA" cx="160" cy="160" r="138" fill="none" stroke="#F4A50C" stroke-width="10" stroke-linecap="round" stroke-dasharray="0 868" style="transition:.25s"/>
-        <circle id="arcM" cx="160" cy="160" r="138" fill="none" stroke="#4DA3FF" stroke-width="10" stroke-linecap="round" stroke-dasharray="0 868" style="transition:.25s"/>
-        <!-- طبقات لمس عريضة شفافة فوق كل قوس -->
-        <circle id="hitU" cx="160" cy="160" r="138" fill="none" stroke="rgba(0,0,0,0)" stroke-width="34" stroke-dasharray="0 868" onclick="selectAsset('U')"/>
-        <circle id="hitA" cx="160" cy="160" r="138" fill="none" stroke="rgba(0,0,0,0)" stroke-width="34" stroke-dasharray="0 868" onclick="selectAsset('A')"/>
-        <circle id="hitM" cx="160" cy="160" r="138" fill="none" stroke="rgba(0,0,0,0)" stroke-width="34" stroke-dasharray="0 868" onclick="selectAsset('M')"/>
+    <svg id="donut" width="344" height="344" viewBox="0 0 344 344" style="cursor:pointer">
+      <circle cx="172" cy="172" r="150" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="11"/>
+      <g transform="rotate(-90 172 172)">
+        <circle id="arcU" cx="172" cy="172" r="150" fill="none" stroke="#26A17B" stroke-width="11" stroke-linecap="round" stroke-dasharray="0 943" style="transition:.25s"/>
+        <circle id="arcA" cx="172" cy="172" r="150" fill="none" stroke="#F4A50C" stroke-width="11" stroke-linecap="round" stroke-dasharray="0 943" style="transition:.25s"/>
+        <circle id="arcM" cx="172" cy="172" r="150" fill="none" stroke="#4DA3FF" stroke-width="11" stroke-linecap="round" stroke-dasharray="0 943" style="transition:.25s"/>
+        <circle id="hitU" cx="172" cy="172" r="150" fill="none" stroke="rgba(0,0,0,0)" stroke-width="38" stroke-dasharray="0 943" onclick="selectAsset('U')"/>
+        <circle id="hitA" cx="172" cy="172" r="150" fill="none" stroke="rgba(0,0,0,0)" stroke-width="38" stroke-dasharray="0 943" onclick="selectAsset('A')"/>
+        <circle id="hitM" cx="172" cy="172" r="150" fill="none" stroke="rgba(0,0,0,0)" stroke-width="38" stroke-dasharray="0 943" onclick="selectAsset('M')"/>
       </g>
     </svg>
     <div class="donutC" onclick="selectAsset(null)" style="cursor:pointer">
@@ -1421,21 +1420,30 @@ function renderPortfolio(){
   const rA=$('rateA'),rM=$('rateM');
   if(rA)rA.textContent=fmt(wallet.vA||1160,0)+' Kz/USDT';
   if(rM)rM.textContent=fmt(wallet.vM||40,0)+' UM/USDT';
-  /* الحلقة r=138 + تفاعل: المحدد أسمك، الباقي باهت */
-  const C=2*Math.PI*138, gap=tot>0?9:0;
-  const segs=[['U',uU],['A',uA],['M',uM]];
+  /* الحلقة r=150 + حصص مرئية: أي عملة موجبة تأخذ 2.5% كحد أدنى ليظهر قوسها ويُلمس */
+  const C=2*Math.PI*150, gap=tot>0?10:0, MIN=0.025;
+  let shares={U:tot>0?uU/tot:0,A:tot>0?uA/tot:0,M:tot>0?uM/tot:0};
+  /* رفع الصغيرة الموجبة للحد الأدنى وخصم الفرق من الأكبر */
+  const keys=['U','A','M'];
+  let deficit=0;
+  keys.forEach(k=>{if(shares[k]>0&&shares[k]<MIN){deficit+=MIN-shares[k];shares[k]=MIN;}});
+  if(deficit>0){
+    const big=keys.reduce((a,b)=>shares[a]>=shares[b]?a:b);
+    shares[big]=Math.max(shares[big]-deficit,0);
+  }
   let off=0;
-  segs.forEach(([k,v])=>{
-    const len=tot>0?Math.max(C*(v/tot)-gap,0):0;
+  keys.forEach(k=>{
+    const sh=shares[k];
+    const len=Math.max(C*sh-gap,0);
     const arc=$('arc'+k),hit=$('hit'+k);
     arc.setAttribute('stroke-dasharray',len+' '+(C-len));
     arc.setAttribute('stroke-dashoffset',-off);
-    hit.setAttribute('stroke-dasharray',(tot>0?C*(v/tot):0)+' '+C);
+    hit.setAttribute('stroke-dasharray',(C*sh)+' '+C);
     hit.setAttribute('stroke-dashoffset',-off);
-    if(selAsset===k){arc.setAttribute('stroke-width','16');arc.style.opacity='1';}
-    else if(selAsset){arc.setAttribute('stroke-width','10');arc.style.opacity='.22';}
-    else{arc.setAttribute('stroke-width','10');arc.style.opacity='1';}
-    off+=tot>0?C*(v/tot):0;
+    if(selAsset===k){arc.setAttribute('stroke-width','17');arc.style.opacity='1';}
+    else if(selAsset){arc.setAttribute('stroke-width','11');arc.style.opacity='.22';}
+    else{arc.setAttribute('stroke-width','11');arc.style.opacity='1';}
+    off+=C*sh;
   });
   /* إبراز بطاقة الأصل المحددة */
   [['U','cardU'],['A','cardA'],['M','cardM']].forEach(([k,id])=>{
