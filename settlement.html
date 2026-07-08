@@ -19,6 +19,8 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.1.0/tesseract.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.1.0/tesseract.min.js"></script>
 <script>
 if(window.pdfjsLib){
   pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
@@ -460,6 +462,12 @@ nav{position:fixed;bottom:0;left:0;right:0;z-index:90;
     <h3>الإعدادات</h3>
     <label>واتساب شريك أنغولا (بالرمز الدولي، بدون +)</label>
     <input type="tel" id="partnerWa" placeholder="244xxxxxxxxx" inputmode="tel" onchange="saveCfg()">
+    <label>رسالة واتساب تلقائية بعد كل عملية</label>
+    <select id="autoWa" class="ar" onchange="saveAutoWa()">
+      <option value="off">إيقاف</option>
+      <option value="partner">للشريك (تأكيد العملية)</option>
+      <option value="client">للعميل (إيصال — عمليات الجسر)</option>
+    </select>
     <div class="tx-mid" style="margin-top:14px;padding-top:14px;border-top:1px solid var(--stroke)">
       <span>الإيصالات المحفوظة: <b id="rcptCount">0</b></span>
       <button class="btn btn-line btn-sm" onclick="cleanReceipts()">حذف إيصالات قبل 60 يوم</button>
@@ -793,8 +801,10 @@ function saveTx(){
     batch.forEach(b=>receipts.push({id:'R'+Date.now()+Math.random().toString(36).slice(2,6),ref:cur.ref,name:b.name,type:'application/pdf',data:null,scannedOnly:true,amount:b.amount,ts:Date.now()}));
     saveReceipts();
   }
+  const savedTx=cur;
   txs.push(cur);seq++;cur=null;
   clearBatch();
+  fireAutoWa(savedTx);
   inputs.forEach(i=>$(i).value='');
   $('pContact').value='';$('pPay').value='settled';$('pDue').value='';$('dueRow').style.display='none';
   hideTicket();if(timerInt)clearInterval(timerInt);
@@ -888,6 +898,27 @@ function findInHist(ref){
   return null;
 }
 
+
+/* ================= AUTO WHATSAPP ================= */
+let autoWa=localStorage.getItem('arkan-autowa')||'partner';
+function saveAutoWa(){autoWa=$('autoWa').value;localStorage.setItem('arkan-autowa',autoWa);toast('حُفظ ✓');}
+function autoWaMsg(t){
+  if(t.type==='bridge')return `CONFIRMED ${t.ref}\nAOA ${fmt(t.aoa,0)} @ ${t.rc}\nUSDT NET: ${fmt(t.uC)} $\nMRU (Bankily): ${fmt(t.mru,0)}`;
+  if(t.type==='aoa'||t.type==='mru')return `TRADE ${t.ref}\n${t.type==='aoa'?'AOA':'MRU'}/USDT\nQTY: ${fmt(t.qty)} $ @ ${t.rBuy}${t.rSell?`→${t.rSell}\nPROFIT: ${fmt(t.profit,0)} ${CCY[t.type]}`:''}`;
+  return null;
+}
+function clientWaMsg(t){
+  if(t.type!=='bridge')return null;
+  return `✅ ARKAN — إشعار تحويل\nالمرجع: ${t.ref}\nالمستلم: ${t.name}\nBankily: ${t.phone}\nالمبلغ: ${fmt(t.mru,0)} MRU`;
+}
+function fireAutoWa(t){
+  if(autoWa==='off')return;
+  let phone='',msg='';
+  if(autoWa==='client'&&t.type==='bridge'&&t.cWa){phone=t.cWa;msg=clientWaMsg(t);}
+  else{phone=localStorage.getItem('arkan-partner-wa')||'';msg=autoWaMsg(t);}
+  if(!phone||!msg)return;
+  window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`,'_blank');
+}
 /* ================= WHATSAPP ================= */
 function sendWa(target,msgId){
   const msg=encodeURIComponent($(msgId).textContent);
@@ -989,17 +1020,20 @@ let batch=[]; /* {name,amount|null} — بلا بيانات ملفات إطلا�
 function uploadBatch(){
   if(!window.pdfjsLib){toast('مكتبة PDF لم تحمّل — تحقق من الإنترنت');return;}
   const inp=document.createElement('input');
-  inp.type='file';inp.accept='application/pdf';inp.multiple=true;
+  inp.type='file';inp.accept='application/pdf,image/*';inp.multiple=true;
   inp.onchange=async()=>{
     const files=[...inp.files];
     if(!files.length)return;
     if(batch.length+files.length>100){toast('الحد 100 إيصال للعملية');return;}
-    toast('جارٍ قراءة '+files.length+' ملف...');
-    let ok=0;
+    toast('جارٍ قراءة '+files.length+' ملف... (الصور تستغرق أطول)');
+    let ok=0,i=0;
     for(const f of files){
+      i++;
       try{
         const dataUrl=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(f);});
-        const txt=await pdfText(dataUrl);
+        let txt='';
+        if(f.type==='application/pdf')txt=await pdfText(dataUrl);
+        else{toast('OCR صورة '+i+'/'+files.length+'...');txt=await ocrImage(dataUrl);}
         const ex=extractAmount(txt);
         batch.push({name:f.name,amount:ex.value});
         if(ex.value!=null)ok++;
@@ -1074,9 +1108,12 @@ function attachReceipt(ref){
       const dataUrl=r.result;
       /* قراءة المبلغ من PDF قبل أي قرار حفظ */
       let amount=null,label=null,cands=[];
-      if(f.type==='application/pdf'&&window.pdfjsLib){
-        try{const txt=await pdfText(dataUrl);const ex=extractAmount(txt);amount=ex.value;label=ex.label;cands=allCandidates(txt).slice(0,20);}catch(e){}
-      }
+      try{
+        let txt='';
+        if(f.type==='application/pdf'&&window.pdfjsLib)txt=await pdfText(dataUrl);
+        else if(f.type.startsWith('image/')){toast('قراءة الصورة (OCR)...');txt=await ocrImage(dataUrl);}
+        if(txt){const ex=extractAmount(txt);amount=ex.value;label=ex.label;cands=allCandidates(txt).slice(0,20);}
+      }catch(e){}
       const meta={id:'R'+Date.now(),ref,name:f.name,type:f.type,size:f.size,ts:Date.now(),amount,amountLabel:label,amounts:cands};
       const mode=keepFiles;
       if(mode==='scan'){ /* لا نحفظ الملف — المبلغ فقط */
@@ -1164,6 +1201,34 @@ async function pdfText(dataUrl){
   }
   return txt;
 }
+
+/* ================= IMAGE OCR (Tesseract) ================= */
+let _ocrReady=false;
+async function ocrImage(dataUrl){
+  if(!window.Tesseract)throw new Error('OCR lib not loaded');
+  if(!_ocrReady){toast('تحميل محرك قراءة الصور (مرة واحدة)...');_ocrReady=true;}
+  const res=await Tesseract.recognize(dataUrl,'por',{});
+  return res.data.text||'';
+}
+
+/* ================= IMAGE OCR (Tesseract) ================= */
+let _ocrWorker=null;
+async function ocrWorker(){
+  if(_ocrWorker)return _ocrWorker;
+  toast('تحميل محرك قراءة الصور (مرة واحدة)...');
+  _ocrWorker=await Tesseract.createWorker('eng');
+  return _ocrWorker;
+}
+async function imageText(dataUrl){
+  const w=await ocrWorker();
+  const {data}=await w.recognize(dataUrl);
+  return data.text||'';
+}
+async function anyReceiptText(dataUrl,type){
+  if(type==='application/pdf')return await pdfText(dataUrl);
+  if(window.Tesseract)return await imageText(dataUrl);
+  return '';
+}
 /* ================= AMOUNT EXTRACTION (bank-field targeted) ================= */
 function normNum(raw){
   raw=raw.replace(/\s/g,'');
@@ -1174,7 +1239,7 @@ function normNum(raw){
   else val=parseFloat(raw.replace(/[.,]/g,''));
   return isNaN(val)?null:val;
 }
-const AMOUNT_LABELS=['montante','valor','importe','total a pagar','quantia','amount','débito','debito','crédito','credito'];
+const AMOUNT_LABELS=['importancia a transferir','importância a transferir','importancia','montante','valor','importe','total a pagar','quantia','amount','débito','debito','crédito','credito'];
 const MONEY_RE='([0-9]{1,3}(?:[.\\s][0-9]{3})*,[0-9]{2}|[0-9]{1,3}(?:,[0-9]{3})*\\.[0-9]{2}|[0-9]+[.,][0-9]{2})';
 function looksLikeAmount(raw){
   const d=raw.replace(/[^0-9]/g,'');
@@ -1197,6 +1262,8 @@ function extractAmount(txt){
   }
   const cur=t.match(new RegExp('(?:Kz|AOA|MRU|UM|USD|USDT|R\\$|\\$)\\s*'+MONEY_RE,'i'));
   if(cur){const v=normNum(cur[1]);if(v!=null)return {value:v,label:'عملة',raw:cur[1]};}
+  const cur2=t.match(new RegExp(MONEY_RE+'\\s*(?:Kz|KZ|AOA|MRU|UM)','i'));
+  if(cur2){const v=normNum(cur2[1]);if(v!=null)return {value:v,label:'عملة',raw:cur2[1]};}
   return {value:null,label:null,raw:null};
 }
 /* كل المرشحين النقديين (للمراجعة) */
@@ -1472,6 +1539,7 @@ function renderPortfolio(){
   $('wU').value=wallet.U||'';$('wA').value=wallet.A||'';$('wM').value=wallet.M||'';
   $('wVA').value=wallet.vA||'';$('wVM').value=wallet.vM||'';
   const rc=$('rcptCount');if(rc)rc.textContent=receipts.length;
+  const aw=$('autoWa');if(aw&&aw.value!==autoWa)aw.value=autoWa;
 }
 /* ================= HERO ================= */
 function renderHero(){
