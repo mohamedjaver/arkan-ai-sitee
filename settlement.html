@@ -19,7 +19,14 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-<script>if(window.pdfjsLib)pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";</script>
+<script>
+if(window.pdfjsLib){
+  pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+  if(pdfjsLib.VerbosityLevel)pdfjsLib.setVerbosityLevel&&pdfjsLib.setVerbosityLevel(0);
+}
+/* كتم تحذير fake worker غير المؤثر */
+(function(){const _w=console.warn;console.warn=function(){const s=(arguments[0]||'')+'';if(s.indexOf('fake worker')>-1||s.indexOf('Setting up fake')>-1)return;_w.apply(console,arguments);};})();
+</script>
 <style>
 :root{
   --bg:#15172E;--bg2:#1B1D38;
