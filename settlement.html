@@ -426,6 +426,10 @@ nav{position:fixed;bottom:0;left:0;right:0;z-index:90;
     <h3>الإعدادات</h3>
     <label>واتساب شريك أنغولا (بالرمز الدولي، بدون +)</label>
     <input type="tel" id="partnerWa" placeholder="244xxxxxxxxx" inputmode="tel" onchange="saveCfg()">
+    <div class="tx-mid" style="margin-top:14px;padding-top:14px;border-top:1px solid var(--stroke)">
+      <span>الإيصالات المحفوظة: <b id="rcptCount">0</b></span>
+      <button class="btn btn-line btn-sm" onclick="cleanReceipts()">حذف إيصالات قبل 60 يوم</button>
+    </div>
     <h3 style="margin-top:16px">المحفظة — أرصدة الافتتاح</h3>
     <div class="row">
       <div><label>USDT</label><input type="number" id="wU" placeholder="0" inputmode="decimal" onchange="saveWallet()"></div>
@@ -477,6 +481,20 @@ nav{position:fixed;bottom:0;left:0;right:0;z-index:90;
   <div id="cnList"></div>
   <div class="empty" id="cnEmpty">لا توجد جهات مسجلة</div>
 </section>
+
+<!-- ================= MODAL (statement / receipts) ================= -->
+<div id="modal" style="display:none;position:fixed;inset:0;z-index:200;
+  background:rgba(7,8,14,.75);backdrop-filter:blur(6px);padding:20px;overflow-y:auto">
+  <div style="max-width:560px;margin:30px auto">
+    <div class="card" style="margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <h3 id="mdlTitle" style="margin:0">كشف الحساب</h3>
+        <button class="btn btn-line btn-sm" onclick="closeModal()">إغلاق ✕</button>
+      </div>
+    </div>
+    <div id="mdlBody"></div>
+  </div>
+</div>
 
 <!-- ================= HISTORY ================= -->
 <section id="history">
@@ -544,6 +562,8 @@ function changePin(){
 /* ================= STATE ================= */
 let txs=[],seq=1,hist=[],chains=[],seqC=1,timerInt=null,timerEnd=null,cur=null,lastClientWa='';
 let curType='bridge';
+let payments=JSON.parse(localStorage.getItem('arkan-payments')||'[]');
+let receipts=JSON.parse(localStorage.getItem('arkan-receipts')||'[]');
 let rateMem=JSON.parse(localStorage.getItem('arkan-rates')||'{}');
 const $=id=>document.getElementById(id);
 const fmt=(n,d=2)=>Number(n).toLocaleString('en-US',{maximumFractionDigits:d});
@@ -863,8 +883,9 @@ function render(){
         <div class="tx-acts">
           ${t.status==='wait'?`<button class="btn btn-gold btn-sm" onclick="setSt('${t.ref}','conf')">تأكيد AOA</button>`:''}
           ${t.status==='conf'?`<button class="btn btn-gold btn-sm" onclick="setSt('${t.ref}','paid')">تم دفع Bankily</button>`:''}
-          ${t.pay&&t.pay!=='settled'?`<button class="btn btn-gold btn-sm" onclick="settleDebt('${t.ref}')">تسجيل السداد</button>`:''}
+          ${t.pay&&t.pay!=='settled'?`<button class="btn btn-gold btn-sm" onclick="addPayment('${t.ref}')">دفعة (متبقٍ ${fmt(remaining(t),0)})</button>`:''}
           ${t.cWa?`<button class="btn btn-wa btn-sm" onclick="notifyClient('${t.ref}')">إشعار العميل</button>`:''}
+          <button class="btn btn-line btn-sm" onclick="openReceipts('${t.ref}')">📎 إيصال${receiptsOf(t.ref).length?' ('+receiptsOf(t.ref).length+')':''}</button>
           <button class="btn btn-line btn-sm" onclick="delTx('${t.ref}')">حذف</button>
         </div>`;
     }else if(t.type==='aoa'||t.type==='mru'){
@@ -882,7 +903,8 @@ function render(){
         ${(t.contactName||t.note!=='—')?`<div class="tx-mid"><span>${t.contactName||''}${t.contactName&&t.note!=='—'?' · ':''}${t.note!=='—'?t.note:''}</span></div>`:''}
         <div class="tx-acts">
           ${t.status==='wait'?`<button class="btn btn-gold btn-sm" onclick="sellTrade('${t.ref}')">تسجيل البيع</button>`:''}
-          ${t.pay&&t.pay!=='settled'?`<button class="btn btn-gold btn-sm" onclick="settleDebt('${t.ref}')">تسجيل السداد</button>`:''}
+          ${t.pay&&t.pay!=='settled'?`<button class="btn btn-gold btn-sm" onclick="addPayment('${t.ref}')">دفعة (متبقٍ ${fmt(remaining(t),0)})</button>`:''}
+          <button class="btn btn-line btn-sm" onclick="openReceipts('${t.ref}')">📎 إيصال${receiptsOf(t.ref).length?' ('+receiptsOf(t.ref).length+')':''}</button>
           <button class="btn btn-line btn-sm" onclick="delTx('${t.ref}')">حذف</button>
         </div>`;
     }else if(t.type==='leg'){
@@ -919,6 +941,126 @@ function sellTrade(ref){
   persist();render();toast('اكتملت الصفقة ✓');
 }
 function settleDebt(ref){const t=txs.find(x=>x.ref===ref);if(!t)return;t.pay='settled';t.settledAt=Date.now();persist();render();toast('سُدد ✓');}
+
+/* ================= LEDGER PAYMENTS (CashBook-style) ================= */
+function savePayments(){localStorage.setItem('arkan-payments',JSON.stringify(payments));}
+
+/* المبلغ الأصلي والعملة لعملية دين */
+function debtBase(t){
+  if(t.type==='bridge')return t.pay==='owed_us'?{a:t.aoa,c:'AOA'}:{a:t.mru,c:'MRU'};
+  if(t.type==='aoa')return {a:t.pay==='owed_us'?(t.rev||t.cost):t.cost,c:'AOA'};
+  if(t.type==='mru')return {a:t.pay==='owed_us'?(t.rev||t.cost):t.cost,c:'MRU'};
+  return null;
+}
+function paidSum(ref){return payments.filter(p=>p.ref===ref).reduce((s,p)=>s+p.amount,0);}
+function remaining(t){const b=debtBase(t);if(!b)return 0;return Math.max(b.a-paidSum(t.ref),0);}
+
+function addPayment(ref){
+  const t=findTxAnywhere(ref);if(!t)return;
+  const b=debtBase(t);if(!b)return;
+  const rem=remaining(t);
+  const v=parseFloat(prompt(`دفعة على ${ref}\nالمتبقي: ${fmt(rem,0)} ${CCYI[b.c]}\nأدخل مبلغ الدفعة:`));
+  if(!v||v<=0)return;
+  payments.push({id:'P'+Date.now(),ref,amount:Math.min(v,rem),ccy:b.c,ts:Date.now()});
+  savePayments();
+  /* إن اكتمل السداد، علّم العملية settled */
+  if(remaining(t)<=0.001){t.pay='settled';t.settledAt=Date.now();persist();}
+  render();toast('سُجلت دفعة '+fmt(Math.min(v,rem),0)+' '+CCYI[b.c]+' ✓');
+}
+
+/* البحث عن عملية في اليوم أو الذاكرة */
+function findTxAnywhere(ref){
+  let t=txs.find(x=>x.ref===ref);if(t)return t;
+  return findInHist(ref);
+}
+
+/* ================= RECEIPTS ================= */
+function saveReceipts(){
+  try{localStorage.setItem('arkan-receipts',JSON.stringify(receipts));return true;}
+  catch(e){toast('المساحة ممتلئة — احذف إيصالات قديمة');return false;}
+}
+function attachReceipt(ref){
+  const inp=document.createElement('input');
+  inp.type='file';inp.accept='image/*,application/pdf';
+  inp.onchange=()=>{
+    const f=inp.files[0];if(!f)return;
+    if(f.size>2.5*1024*1024){toast('الحد 2.5MB — صغّر الصورة');return;}
+    const r=new FileReader();
+    r.onload=()=>{
+      const bak=JSON.stringify(receipts);
+      receipts.push({id:'R'+Date.now(),ref,name:f.name,type:f.type,data:r.result,ts:Date.now()});
+      if(!saveReceipts()){receipts=JSON.parse(bak);}
+      else{toast('أُرفق الإيصال ✓');if($('modal').style.display!=='none')openReceipts(ref);render();}
+    };
+    r.readAsDataURL(f);
+  };
+  inp.click();
+}
+function receiptsOf(ref){return receipts.filter(r=>r.ref===ref);}
+function delReceipt(id,ref){
+  if(!confirm('حذف الإيصال؟'))return;
+  receipts=receipts.filter(r=>r.id!==id);saveReceipts();openReceipts(ref);render();
+}
+function viewReceipt(id){
+  const r=receipts.find(x=>x.id===id);if(!r)return;
+  const w=window.open('');
+  if(r.type==='application/pdf')w.document.write(`<iframe src="${r.data}" style="border:0;width:100%;height:100vh"></iframe>`);
+  else w.document.write(`<img src="${r.data}" style="max-width:100%">`);
+}
+
+/* ================= MODAL ================= */
+function closeModal(){$('modal').style.display='none';}
+function openReceipts(ref){
+  const rs=receiptsOf(ref);
+  $('mdlTitle').textContent='إيصالات '+ref;
+  $('mdlBody').innerHTML=`
+    <div class="card">
+      <button class="btn btn-gold" onclick="attachReceipt('${ref}')">📎 إرفاق إيصال (صورة / PDF)</button>
+      <div style="margin-top:12px">
+        ${rs.length?rs.map(r=>`
+          <div class="tx" style="display:flex;justify-content:space-between;align-items:center">
+            <span style="font-size:13px">${r.type==='application/pdf'?'📄':'🖼️'} ${r.name}<br>
+              <span style="color:var(--dim);font-size:11px">${new Date(r.ts).toLocaleString('en-GB')}</span></span>
+            <span>
+              <button class="btn btn-line btn-sm" onclick="viewReceipt('${r.id}')">عرض</button>
+              <button class="btn btn-line btn-sm" onclick="delReceipt('${r.id}','${ref}')">حذف</button>
+            </span>
+          </div>`).join(''):'<div class="empty" style="padding:20px 0">لا إيصالات — أرفق أول واحد</div>'}
+      </div>
+    </div>`;
+  $('modal').style.display='block';
+}
+function openStatement(cid){
+  const c=contacts.find(x=>x.id===cid);if(!c)return;
+  const list=contactTxs(c).sort((a,b)=>a.ts-b.ts);
+  /* أرصدة جارية بالعملات */
+  const bal={USDT:0,AOA:0,MRU:0}; // + لنا عليه | - له علينا
+  const rows=list.map(t=>{
+    let line='',delta=0,ccy='',dir='';
+    const b=debtBase(t);
+    if(t.pay==='owed_us'&&b){delta=remaining(t);ccy=b.c;dir='لنا';bal[b.c]+=remaining(t);}
+    else if(t.pay==='we_owe'&&b){delta=remaining(t);ccy=b.c;dir='علينا';bal[b.c]-=remaining(t);}
+    const s=txSummary(t);
+    const rcpt=receiptsOf(t.ref).length;
+    return `<div class="mini" style="flex-wrap:wrap">
+      <span class="r">${t.ref}</span>
+      <span style="flex:1;text-align:center;color:var(--dim);font-size:11px">${s.info}${rcpt?' 📎'+rcpt:''}</span>
+      <span class="${dir==='لنا'?'p':''}" style="color:${dir==='علينا'?'var(--red)':(dir==='لنا'?'var(--green)':'var(--dim)')}">${dir?dir+' '+fmt(delta,0)+' '+CCYI[ccy]:s.p}</span>
+    </div>`;
+  }).join('');
+  const balLine=['USDT','AOA','MRU'].filter(k=>Math.abs(bal[k])>0.01).map(k=>{
+    const v=bal[k];return `<span class="chip">${CCYI[k]} <b class="${v>=0?'':'red'}">${v>=0?'لنا ':'علينا '}${fmt(Math.abs(v),0)}</b></span>`;
+  }).join('')||'<span class="chip">لا رصيد مفتوح ✓</span>';
+  $('mdlTitle').textContent='كشف حساب: '+c.name;
+  $('mdlBody').innerHTML=`
+    <div class="card">
+      <div class="chips" style="justify-content:flex-start;margin-bottom:6px">${balLine}</div>
+      <div style="color:var(--dim);font-size:12px;margin:4px 0 10px">${cnLbl[c.type][0]} · ${contactTxs(c).length} عملية${c.wa?' · '+c.wa:''}</div>
+      ${list.length?rows:'<div class="empty" style="padding:20px 0">لا عمليات</div>'}
+    </div>`;
+  $('modal').style.display='block';
+}
+
 function delTx(ref){
   const why=prompt('سبب الحذف (إلزامي):');
   if(!why||!why.trim())return;
@@ -964,6 +1106,15 @@ function totals(list){
 }
 
 
+/* ================= RECEIPTS MAINTENANCE ================= */
+function cleanReceipts(){
+  const cutoff=Date.now()-60*24*3600*1000;
+  const before=receipts.length;
+  receipts=receipts.filter(r=>r.ts>=cutoff);
+  saveReceipts();
+  const n=$('rcptCount');if(n)n.textContent=receipts.length;
+  toast('حُذف '+(before-receipts.length)+' إيصال قديم');
+}
 /* ================= WALLET / PORTFOLIO ================= */
 let wallet=JSON.parse(localStorage.getItem('arkan-wallet')||'{"U":0,"A":0,"M":0,"vA":1160,"vM":40}');
 function saveWallet(){
@@ -1007,6 +1158,7 @@ function renderPortfolio(){
   });
   $('wU').value=wallet.U||'';$('wA').value=wallet.A||'';$('wM').value=wallet.M||'';
   $('wVA').value=wallet.vA||'';$('wVM').value=wallet.vM||'';
+  const rc=$('rcptCount');if(rc)rc.textContent=receipts.length;
 }
 /* ================= HERO ================= */
 function renderHero(){
@@ -1152,6 +1304,7 @@ function renderContacts(){
       ${c.note?`<div class="tx-mid"><span>📝 ${c.note}</span></div>`:''}
       <div class="tx-acts">
         <button class="btn btn-gold btn-sm" onclick="useContact('${c.id}')">عملية بهذه الجهة</button>
+        <button class="btn btn-line btn-sm" onclick="openStatement('${c.id}')">كشف الحساب</button>
         ${c.wa?`<button class="btn btn-wa btn-sm" onclick="window.open('https://wa.me/${c.wa}','_blank')">واتساب</button>`:''}
         <button class="btn btn-line btn-sm" onclick="editContact('${c.id}')">تعديل</button>
         <button class="btn btn-line btn-sm" onclick="delContact('${c.id}')">حذف</button>
@@ -1174,7 +1327,8 @@ function renderDebts(){
   const tot={USDT:{us:0,we:0},AOA:{us:0,we:0},MRU:{us:0,we:0}};
   open.forEach(t=>{
     const d=debtAmount(t);if(!d)return;
-    if(t.pay==='owed_us')tot[d.c].us+=d.a;else tot[d.c].we+=d.a;
+    const rem=remaining(t);if(rem<=0.01)return;
+    if(t.pay==='owed_us')tot[d.c].us+=rem;else tot[d.c].we+=rem;
   });
   const dt=$('debtTotals');dt.innerHTML='';
   ['USDT','AOA','MRU'].forEach(ccy=>{
@@ -1186,11 +1340,13 @@ function renderDebts(){
   const today=new Date().toISOString().slice(0,10);
   open.sort((a,b)=>(a.due||'9999')<(b.due||'9999')?-1:1).forEach(t=>{
     const d=debtAmount(t);if(!d)return;
+    const rem=remaining(t);if(rem<=0.01)return;
+    const paid=paidSum(t.ref);
     const late=t.due&&t.due<today;
     const who=t.contactName||t.name||'—';
     const dir=t.pay==='owed_us'
-      ?`لنا <b class="green" style="font-family:'IBM Plex Mono'">${fmt(d.a,0)} ${CCYI[d.c]}</b>`
-      :`علينا <b class="red" style="font-family:'IBM Plex Mono'">${fmt(d.a,0)} ${CCYI[d.c]}</b>`;
+      ?`لنا <b class="green" style="font-family:'IBM Plex Mono'">${fmt(rem,0)} ${CCYI[d.c]}</b>${paid>0?` <span style="color:var(--dim);font-size:10px">(سُدد ${fmt(paid,0)})</span>`:''}`
+      :`علينا <b class="red" style="font-family:'IBM Plex Mono'">${fmt(rem,0)} ${CCYI[d.c]}</b>${paid>0?` <span style="color:var(--dim);font-size:10px">(سُدد ${fmt(paid,0)})</span>`:''}`;
     dl.innerHTML+=`<div class="leg"><span>${t.ref} · ${who}${t.due?` · ${late?'⛔ متأخر':'استحقاق'} ${t.due}`:''}</span><span>${dir}</span></div>`;
   });
   if(!open.length)dl.innerHTML='<div class="empty" style="padding:12px 0">لا ديون مفتوحة ✓</div>';
