@@ -1402,7 +1402,7 @@ function renderPortfolio(){
       const ip=Math.floor(Math.abs(v.amt)).toLocaleString('en-US');
       const dp=(Math.abs(v.amt)-Math.floor(Math.abs(v.amt))).toFixed(2).slice(1);
       bi.textContent=(v.amt<0?'-':'')+ip;bd.textContent=dp;
-      bi.style.color=v.color;
+      bi.style.color=v.amt<0?'#FF6B6B':v.color;
       curEl.textContent=v.sym;
       lbl.innerHTML=v.name+' · <span style="color:var(--dim)">$'+fmt(v.usd)+'</span><br><span style="font-size:9px;opacity:.7">اضغط للعودة للإجمالي</span>';
     }else{
@@ -1420,29 +1420,35 @@ function renderPortfolio(){
   const rA=$('rateA'),rM=$('rateM');
   if(rA)rA.textContent=fmt(wallet.vA||1160,0)+' Kz/USDT';
   if(rM)rM.textContent=fmt(wallet.vM||40,0)+' UM/USDT';
-  /* الحلقة r=150 + حصص مرئية: أي عملة موجبة تأخذ 2.5% كحد أدنى ليظهر قوسها ويُلمس */
-  const C=2*Math.PI*150, gap=tot>0?10:0, MIN=0.025;
-  let shares={U:tot>0?uU/tot:0,A:tot>0?uA/tot:0,M:tot>0?uM/tot:0};
-  /* رفع الصغيرة الموجبة للحد الأدنى وخصم الفرق من الأكبر */
+  /* الحلقة r=150 — كل عملة لها قوس دائم قابل للمس:
+     الموجبة: حصة نسبية (حد أدنى 3%) · الصفرية/السالبة: قوس ثابت باهت 3% */
+  const C=2*Math.PI*150, gap=10, MIN=0.03;
   const keys=['U','A','M'];
-  let deficit=0;
-  keys.forEach(k=>{if(shares[k]>0&&shares[k]<MIN){deficit+=MIN-shares[k];shares[k]=MIN;}});
-  if(deficit>0){
-    const big=keys.reduce((a,b)=>shares[a]>=shares[b]?a:b);
-    shares[big]=Math.max(shares[big]-deficit,0);
+  const usdVals={U:uU,A:uA,M:uM};
+  const rawBal={U:b.USDT,A:b.AOA,M:b.MRU};
+  let shares={};
+  if(tot<=0){keys.forEach(k=>shares[k]=1/3);}
+  else{
+    keys.forEach(k=>{
+      const s=usdVals[k]/tot;
+      shares[k]=(usdVals[k]>0)?Math.max(s,MIN):MIN; /* السالبة/الصفرية تأخذ 3% ثابتة */
+    });
+    const sum=keys.reduce((s,k)=>s+shares[k],0);
+    keys.forEach(k=>shares[k]=shares[k]/sum); /* تطبيع ليكتمل المحيط */
   }
   let off=0;
   keys.forEach(k=>{
     const sh=shares[k];
-    const len=Math.max(C*sh-gap,0);
+    const len=Math.max(C*sh-gap,2);
     const arc=$('arc'+k),hit=$('hit'+k);
     arc.setAttribute('stroke-dasharray',len+' '+(C-len));
     arc.setAttribute('stroke-dashoffset',-off);
     hit.setAttribute('stroke-dasharray',(C*sh)+' '+C);
     hit.setAttribute('stroke-dashoffset',-off);
+    const empty=rawBal[k]<=0||tot<=0;
     if(selAsset===k){arc.setAttribute('stroke-width','17');arc.style.opacity='1';}
     else if(selAsset){arc.setAttribute('stroke-width','11');arc.style.opacity='.22';}
-    else{arc.setAttribute('stroke-width','11');arc.style.opacity='1';}
+    else{arc.setAttribute('stroke-width','11');arc.style.opacity=empty?'.35':'1';}
     off+=C*sh;
   });
   /* إبراز بطاقة الأصل المحددة */
