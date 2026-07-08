@@ -3,32 +3,40 @@
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0" stop-color="#2E2758"/><stop offset="0.5" stop-color="#1C1D3C"/><stop offset="1" stop-color="#101127"/>
     </linearGradient>
-    <radialGradient id="glow" cx="0.5" cy="0.08" r="0.9">
-      <stop offset="0" stop-color="#8B72FF" stop-opacity="0.55"/><stop offset="0.55" stop-color="#8B72FF" stop-opacity="0"/>
+    <radialGradient id="glow" cx="0.5" cy="0.1" r="0.9">
+      <stop offset="0" stop-color="#8B72FF" stop-opacity="0.5"/><stop offset="0.6" stop-color="#8B72FF" stop-opacity="0"/>
     </radialGradient>
     <linearGradient id="vio" x1="0.1" y1="0" x2="0.9" y2="1">
-      <stop offset="0" stop-color="#D2C6FF"/><stop offset="0.5" stop-color="#8B72FF"/><stop offset="1" stop-color="#5B3FD1"/>
+      <stop offset="0" stop-color="#CBBEFF"/><stop offset="0.5" stop-color="#8B72FF"/><stop offset="1" stop-color="#5B3FD1"/>
     </linearGradient>
-    <linearGradient id="speed" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0" stop-color="#8B72FF" stop-opacity="0"/><stop offset="1" stop-color="#A78BFF"/>
+    <linearGradient id="bub" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#C6B8FF"/><stop offset="1" stop-color="#7A5CE0"/>
     </linearGradient>
     <filter id="dp" x="-40%" y="-40%" width="180%" height="180%">
-      <feDropShadow dx="0" dy="10" stdDeviation="16" flood-color="#3A2699" flood-opacity="0.55"/>
+      <feDropShadow dx="0" dy="9" stdDeviation="14" flood-color="#3A2699" flood-opacity="0.5"/>
     </filter>
   </defs>
+
   <rect width="512" height="512" fill="url(#bg)"/>
   <rect width="512" height="512" fill="url(#glow)"/>
 
-  <g>
-    <rect x="104" y="214" width="94"  height="13" rx="6.5" fill="url(#speed)" opacity="0.45"/>
-    <rect x="76"  y="250" width="148" height="16" rx="8"   fill="url(#speed)" opacity="0.9"/>
-    <rect x="104" y="288" width="94"  height="13" rx="6.5" fill="url(#speed)" opacity="0.45"/>
+  <circle cx="256" cy="256" r="190" fill="none" stroke="url(#vio)" stroke-width="19"/>
+
+  <g fill="url(#vio)" filter="url(#dp)">
+    <path d="M256 124 L368 192 L144 192 Z"/>
+    <rect x="150" y="352" width="212" height="26" rx="6"/>
+    <rect x="171" y="210" width="28" height="138" rx="5"/>
+    <rect x="242" y="210" width="28" height="138" rx="5"/>
+    <rect x="313" y="210" width="28" height="138" rx="5"/>
   </g>
 
-  <g filter="url(#dp)" transform="translate(20,0) skewX(-9)">
-    <path fill="url(#vio)" fill-rule="evenodd" d="
-      M252 124 L342 382 L297 382 L283 341 L221 341 L207 382 L162 382 Z
-      M252 212 L237 296 L267 296 Z"/>
-    <path d="M252 124 L232 341 L227 341 L247 124 Z" fill="#EEE8FF" opacity="0.35"/>
+  <circle cx="338" cy="206" r="97" fill="#1C1D3C"/>
+  <path d="M282 262 l-18 46 l50 -26 Z" fill="#1C1D3C"/>
+
+  <g filter="url(#dp)">
+    <circle cx="338" cy="206" r="86" fill="url(#bub)"/>
+    <path d="M288 258 l-14 38 l40 -20 Z" fill="url(#bub)"/>
+    <text x="338" y="206" font-family="DejaVu Sans, Arial, sans-serif" font-size="130" font-weight="bold"
+          fill="#15172E" text-anchor="middle" dominant-baseline="central">$</text>
   </g>
 </svg>
