@@ -70,28 +70,27 @@ header{padding:20px 18px 4px}
 .brand h1 span{color:var(--acc2)}
 .brand p{font-size:10px;color:var(--dim);letter-spacing:2.5px;margin-top:2px}
 /* ===== PORTFOLIO ===== */
-.folio{margin:14px 18px 0;padding:22px 18px 16px;border-radius:26px;position:relative;
-  background:linear-gradient(160deg, rgba(139,114,255,.16), rgba(255,255,255,.03) 55%);
-  border:1px solid var(--stroke-acc);
-  box-shadow:0 22px 60px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.09);
-  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
+.folio{margin:0 0 6px;padding:8px 18px 16px;position:relative;border:none;border-radius:0 0 34px 34px;
+  background:linear-gradient(180deg, rgba(139,114,255,.34), rgba(139,114,255,.10) 55%, transparent 92%)}
 .donutWrap{display:flex;justify-content:center;position:relative}
 .donutC{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
-.donutC .t{font-size:30px;font-weight:700;font-family:'IBM Plex Mono',monospace}
-.donutC .t small{font-size:15px;color:var(--dim)}
-.donutC .s{font-size:11px;color:var(--dim);letter-spacing:2px;margin-top:2px}
-.assets{margin-top:16px}
-.asset{display:flex;align-items:center;gap:12px;padding:12px 10px;border-radius:16px;
-  background:var(--glass);border:1px solid var(--stroke);margin-bottom:8px}
-.asset .ic{width:38px;height:38px;flex-shrink:0;border-radius:12px;
-  display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:#0e0f20;
-  font-family:'IBM Plex Mono',monospace}
+.donutC .t{font-size:52px;font-weight:700;font-family:'IBM Plex Sans Arabic',sans-serif;letter-spacing:-1px}
+.donutC .t .cur{font-size:22px;color:var(--dim);font-weight:500;vertical-align:18px;margin-left:2px}
+.donutC .t .dec{font-size:22px;color:var(--dim);font-weight:500}
+.donutC .s{font-size:11px;color:var(--dim);letter-spacing:2px;margin-top:4px}
+.assets{margin-top:18px;padding:0 0}
+.asset{display:flex;align-items:center;gap:14px;padding:18px 16px;border-radius:22px;
+  background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.07);margin-bottom:12px}
+.asset .ic{width:52px;height:52px;flex-shrink:0;border-radius:16px;
+  display:flex;align-items:center;justify-content:center;font-weight:800;font-size:17px;color:#0e0f20;
+  font-family:'IBM Plex Mono',monospace;
+  clip-path:polygon(50% 0,93% 25%,93% 75%,50% 100%,7% 75%,7% 25%)}
 .asset .nm{flex:1}
-.asset .nm .n1{font-size:14px;font-weight:700}
-.asset .nm .n2{font-size:11px;color:var(--dim);margin-top:2px;font-family:'IBM Plex Mono',monospace}
+.asset .nm .n1{font-size:18px;font-weight:700}
+.asset .nm .n2{font-size:13px;color:var(--dim);margin-top:4px;font-family:'IBM Plex Mono',monospace}
 .asset .am{text-align:left}
-.asset .am .a1{font-size:14px;font-weight:700;font-family:'IBM Plex Mono',monospace}
-.asset .am .a2{font-size:11px;color:var(--dim);margin-top:2px;font-family:'IBM Plex Mono',monospace}
+.asset .am .a1{font-size:17px;font-weight:700;font-family:'IBM Plex Mono',monospace}
+.asset .am .a2{font-size:13px;color:var(--dim);margin-top:4px;font-family:'IBM Plex Mono',monospace}
 .chips{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;justify-content:center}
 .chip{font-size:12px;padding:6px 12px;border-radius:20px;font-family:'IBM Plex Mono',monospace;
   background:rgba(0,0,0,.3);border:1px solid var(--stroke);color:var(--txt)}
@@ -242,16 +241,16 @@ nav{position:fixed;bottom:0;left:0;right:0;z-index:90;
 
 <div class="folio">
   <div class="donutWrap">
-    <svg id="donut" width="190" height="190" viewBox="0 0 190 190">
-      <circle cx="95" cy="95" r="80" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="11"/>
-      <g transform="rotate(-90 95 95)">
-        <circle id="arcU" cx="95" cy="95" r="80" fill="none" stroke="#26A17B" stroke-width="11" stroke-linecap="round" stroke-dasharray="0 503"/>
-        <circle id="arcA" cx="95" cy="95" r="80" fill="none" stroke="#F4A50C" stroke-width="11" stroke-linecap="round" stroke-dasharray="0 503"/>
-        <circle id="arcM" cx="95" cy="95" r="80" fill="none" stroke="#4DA3FF" stroke-width="11" stroke-linecap="round" stroke-dasharray="0 503"/>
+    <svg id="donut" width="272" height="272" viewBox="0 0 272 272">
+      <circle cx="136" cy="136" r="116" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="9"/>
+      <g transform="rotate(-90 136 136)">
+        <circle id="arcU" cx="136" cy="136" r="116" fill="none" stroke="#26A17B" stroke-width="9" stroke-linecap="round" stroke-dasharray="0 729"/>
+        <circle id="arcA" cx="136" cy="136" r="116" fill="none" stroke="#F4A50C" stroke-width="9" stroke-linecap="round" stroke-dasharray="0 729"/>
+        <circle id="arcM" cx="136" cy="136" r="116" fill="none" stroke="#4DA3FF" stroke-width="9" stroke-linecap="round" stroke-dasharray="0 729"/>
       </g>
     </svg>
     <div class="donutC">
-      <div class="t num"><small>$</small><span id="balTotal">0</span></div>
+      <div class="t"><span class="cur">$</span><span id="balInt">0</span><span class="dec" id="balDec">.00</span></div>
       <div class="s">إجمالي المحفظة</div>
     </div>
   </div>
@@ -259,14 +258,14 @@ nav{position:fixed;bottom:0;left:0;right:0;z-index:90;
     <div class="asset"><div class="ic" style="background:#26A17B;padding:0">
         <svg viewBox="0 0 32 32" width="26" height="26"><circle cx="16" cy="16" r="15" fill="#26A17B"/><path d="M16 7H9v3h5v2.3c-3.4.2-6 .9-6 1.8s2.6 1.6 6 1.8v6.8h4v-6.8c3.4-.2 6-.9 6-1.8s-2.6-1.6-6-1.8V10h5V7h-7zm0 8.9c-2.9 0-5.3-.4-5.3-.9s2.4-.9 5.3-.9 5.3.4 5.3.9-2.4.9-5.3.9z" fill="#fff"/></svg>
       </div>
-      <div class="nm"><div class="n1">Tether</div><div class="n2">USDT</div></div>
-      <div class="am"><div class="a1 num" id="balU">0</div><div class="a2 num" id="balUu">$0</div></div></div>
+      <div class="nm"><div class="n1">Tether</div><div class="n2" id="rateU">$1.00 · USDT</div></div>
+      <div class="am"><div class="a1 num" id="balU" style="color:#3DDC97">0</div><div class="a2 num" id="balUu">$0</div></div></div>
     <div class="asset"><div class="ic" style="background:#F4A50C;color:#15172E;font-weight:800;font-size:14px;letter-spacing:-.5px">Kz</div>
-      <div class="nm"><div class="n1">Kwanza</div><div class="n2">AOA · KWZ</div></div>
-      <div class="am"><div class="a1 num" id="balA">0</div><div class="a2 num" id="balAu">$0</div></div></div>
+      <div class="nm"><div class="n1">Kwanza</div><div class="n2" id="rateA">— Kz/USDT</div></div>
+      <div class="am"><div class="a1 num" id="balA" style="color:#FFC94D">0</div><div class="a2 num" id="balAu">$0</div></div></div>
     <div class="asset"><div class="ic" style="background:#4DA3FF;color:#0e2544;font-weight:800;font-size:13px;letter-spacing:-.5px">UM</div>
-      <div class="nm"><div class="n1">Ouguiya</div><div class="n2">MRU</div></div>
-      <div class="am"><div class="a1 num" id="balM">0</div><div class="a2 num" id="balMu">$0</div></div></div>
+      <div class="nm"><div class="n1">Ouguiya</div><div class="n2" id="rateM">— UM/USDT</div></div>
+      <div class="am"><div class="a1 num" id="balM" style="color:#7FB8FF">0</div><div class="a2 num" id="balMu">$0</div></div></div>
   </div>
   <div class="chips">
     <span class="chip">ربح اليوم <b id="heroMain">0 $</b></span>
@@ -1385,11 +1384,20 @@ function renderPortfolio(){
   const b=balances();
   const uU=b.USDT, uA=b.AOA/(wallet.vA||1160), uM=b.MRU/(wallet.vM||40);
   const tot=Math.max(uU+uA+uM,0);
-  $('balTotal').textContent=fmt(tot,2);
+  /* الرقم الكبير: صحيح كبير + كسور صغيرة رمادية */
+  const intPart=Math.floor(tot).toLocaleString('en-US');
+  const decPart=(tot-Math.floor(tot)).toFixed(2).slice(1);
+  const bi=$('balInt'),bd=$('balDec');
+  if(bi){bi.textContent=intPart;bd.textContent=decPart;}
   $('balU').textContent=fmt(b.USDT)+' ₮';$('balUu').textContent='$'+fmt(Math.max(uU,0));
   $('balA').textContent=fmt(b.AOA,0)+' Kz';$('balAu').textContent='$'+fmt(Math.max(uA,0));
   $('balM').textContent=fmt(b.MRU,0)+' UM';$('balMu').textContent='$'+fmt(Math.max(uM,0));
-  const C=2*Math.PI*80, gap=tot>0?6:0;
+  /* أسطر الأسعار تحت الأسماء */
+  const rA=$('rateA'),rM=$('rateM');
+  if(rA)rA.textContent=fmt(wallet.vA||1160,0)+' Kz/USDT';
+  if(rM)rM.textContent=fmt(wallet.vM||40,0)+' UM/USDT';
+  /* الحلقة: r=116 */
+  const C=2*Math.PI*116, gap=tot>0?8:0;
   const segs=[['arcU',Math.max(uU,0)],['arcA',Math.max(uA,0)],['arcM',Math.max(uM,0)]];
   let off=0;
   segs.forEach(([id,v])=>{
