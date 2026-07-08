@@ -1037,7 +1037,7 @@ function uploadBatch(){
         const ex=extractAmount(txt);
         batch.push({name:f.name,amount:ex.value});
         if(ex.value!=null)ok++;
-      }catch(e){batch.push({name:f.name,amount:null});}
+      }catch(e){batch.push({name:f.name,amount:null,err:(e&&e.message?String(e.message).slice(0,40):'فشل التحميل')});}
     }
     renderBatch(true);
     toast('قُرئ '+ok+'/'+files.length+' ✓ — المجموع حُدّث');
@@ -1051,12 +1051,19 @@ function renderBatch(fill){
   c.textContent=batch.length;
   s.textContent=fmt(batchTotal(),0);
   l.innerHTML=batch.length?batch.map((b,i)=>`
-    <div class="leg"><span style="font-size:10px">${b.name.slice(0,26)}</span>
-      <span>${b.amount!=null?'<b class="lp">'+fmt(b.amount,0)+'</b>':'<span style="color:var(--red)">لم يُقرأ</span>'}
+    <div class="leg"><span style="font-size:10px">${b.name.slice(0,24)}${b.err?`<br><span style="color:var(--red);font-size:8px">${b.err}</span>`:''}</span>
+      <span>${b.amount!=null
+        ?'<b class="lp" style="cursor:pointer" onclick="editBatch('+i+')">'+fmt(b.amount,0)+'</b>'
+        :'<button class="btn btn-gold btn-sm" style="padding:2px 10px;font-size:10px" onclick="editBatch('+i+')">أدخل المبلغ</button>'}
       <button class="btn btn-line btn-sm" style="padding:2px 8px;font-size:10px;margin-right:6px" onclick="dropBatch(${i})">✕</button></span>
     </div>`).join(''):'';
   /* تعبئة خانة المبلغ تلقائيًا من المجموع */
   if(fill&&batch.length){$('aoa').value=batchTotal()||'';calc();}
+}
+function editBatch(i){
+  const v=parseFloat(prompt('مبلغ الإيصال ('+batch[i].name.slice(0,20)+'):',batch[i].amount||''));
+  if(!v||v<=0)return;
+  batch[i].amount=v;batch[i].err=null;renderBatch(true);
 }
 function dropBatch(i){batch.splice(i,1);renderBatch(true);}
 function clearBatch(){batch=[];renderBatch(false);$('aoa').value='';calc();toast('صُفّرت الإيصالات');}
@@ -1215,13 +1222,41 @@ async function ocrImage(dataUrl){
 let _ocrWorker=null;
 async function ocrWorker(){
   if(_ocrWorker)return _ocrWorker;
-  toast('تحميل محرك قراءة الصور (مرة واحدة)...');
+  toast('تحميل محرك قراءة الصور (مرة واحدة ~2MB)...');
   _ocrWorker=await Tesseract.createWorker('eng');
+  await _ocrWorker.setParameters({tessedit_pageseg_mode:'6'});
   return _ocrWorker;
 }
+/* تحسين الصورة قبل القراءة: تصغير + رمادي + رفع تباين */
+function preprocessImage(dataUrl){
+  return new Promise((res,rej)=>{
+    const img=new Image();
+    img.onload=()=>{
+      const MAX=1600;
+      let w=img.width,hh=img.height;
+      const sc=Math.min(1,MAX/Math.max(w,hh));
+      w=Math.round(w*sc);hh=Math.round(hh*sc);
+      const cv=document.createElement('canvas');cv.width=w;cv.height=hh;
+      const cx=cv.getContext('2d');
+      cx.drawImage(img,0,0,w,hh);
+      const d=cx.getImageData(0,0,w,hh),p=d.data;
+      for(let i=0;i<p.length;i+=4){
+        let g=0.299*p[i]+0.587*p[i+1]+0.114*p[i+2];
+        g=(g-128)*1.35+128+15; /* تباين + سطوع */
+        g=Math.max(0,Math.min(255,g));
+        p[i]=p[i+1]=p[i+2]=g;
+      }
+      cx.putImageData(d,0,0);
+      res(cv.toDataURL('image/jpeg',0.92));
+    };
+    img.onerror=rej;
+    img.src=dataUrl;
+  });
+}
 async function imageText(dataUrl){
+  const pre=await preprocessImage(dataUrl).catch(()=>dataUrl);
   const w=await ocrWorker();
-  const {data}=await w.recognize(dataUrl);
+  const {data}=await w.recognize(pre);
   return data.text||'';
 }
 async function anyReceiptText(dataUrl,type){
@@ -1234,8 +1269,15 @@ function normNum(raw){
   raw=raw.replace(/\s/g,'');
   const lc=raw.lastIndexOf(','),ld=raw.lastIndexOf('.');
   let val;
-  if(lc>ld)val=parseFloat(raw.replace(/\./g,'').replace(',','.'));   // 11.780.900,00
-  else if(ld>lc)val=parseFloat(raw.replace(/,/g,''));                 // 11,780,900.00
+  if(lc>ld){val=parseFloat(raw.replace(/\./g,'').replace(',','.'));}      /* 11.780.900,00 */
+  else if(ld>lc){
+    const parts=raw.replace(/,/g,'').split('.');
+    if(parts.length>2){ /* نقاط متعددة: الأخيرة عشرية إن كانت خانتين، وإلا كلها آلاف */
+      const last=parts[parts.length-1];
+      if(last.length<=2)val=parseFloat(parts.slice(0,-1).join('')+'.'+last);
+      else val=parseFloat(parts.join(''));
+    }else val=parseFloat(raw.replace(/,/g,''));
+  }
   else val=parseFloat(raw.replace(/[.,]/g,''));
   return isNaN(val)?null:val;
 }
