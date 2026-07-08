@@ -1003,9 +1003,18 @@ function delReceipt(id,ref){
 }
 function viewReceipt(id){
   const r=receipts.find(x=>x.id===id);if(!r)return;
-  const w=window.open('');
-  if(r.type==='application/pdf')w.document.write(`<iframe src="${r.data}" style="border:0;width:100%;height:100vh"></iframe>`);
-  else w.document.write(`<img src="${r.data}" style="max-width:100%">`);
+  const body=r.type==='application/pdf'
+    ? `<iframe src="${r.data}" style="border:0;width:100%;height:72vh;border-radius:12px;background:#fff"></iframe>
+       <a href="${r.data}" download="${r.name}" class="btn btn-line" style="display:block;text-align:center;text-decoration:none;margin-top:10px">تنزيل الـ PDF</a>`
+    : `<img src="${r.data}" style="max-width:100%;border-radius:12px;display:block">
+       <a href="${r.data}" download="${r.name}" class="btn btn-line" style="display:block;text-align:center;text-decoration:none;margin-top:10px">تنزيل الصورة</a>`;
+  $('mdlTitle').textContent=r.name;
+  $('mdlBody').innerHTML=`
+    <div class="card">${body}
+      <button class="btn btn-gold" onclick="openReceipts('${r.ref}')" style="margin-top:10px">← رجوع للإيصالات</button>
+    </div>`;
+  $('modal').style.display='block';
+  window.scrollTo(0,0);
 }
 
 /* ================= MODAL ================= */
