@@ -18,6 +18,8 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>if(window.pdfjsLib)pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";</script>
 <style>
 :root{
   --bg:#15172E;--bg2:#1B1D38;
@@ -405,6 +407,15 @@ nav{position:fixed;bottom:0;left:0;right:0;z-index:90;
       <div class="sum"><div class="k">حجم تداول MRU (USDT)</div><div class="v" id="sVolMru">0</div></div>
       <div class="sum"><div class="k">ربح MRU</div><div class="v green" id="sPMru">0</div></div>
     </div>
+  </div>
+
+  <div class="card">
+    <h3>مبالغ الإيصالات (PDF)</h3>
+    <div class="sum-grid">
+      <div class="sum"><div class="k">إجمالي مبالغ اليوم</div><div class="v gold" id="rcptTotal">0</div></div>
+      <div class="sum"><div class="k">إيصالات محللة</div><div class="v" id="rcptScanned">0</div></div>
+    </div>
+    <button class="btn btn-line" onclick="scanAllToday()" style="margin-top:10px">🧮 تحليل كل إيصالات اليوم</button>
   </div>
 
   <div class="wa-box">
@@ -930,7 +941,7 @@ function render(){
     }
     list.appendChild(div);
   });
-  renderSettle();renderHero();renderPortfolio();renderHistory();renderContacts();renderDebts();renderChains();
+  renderSettle();renderHero();renderPortfolio();renderHistory();renderContacts();renderDebts();renderChains();renderReceiptTotals();
 }
 function setSt(ref,st){const t=txs.find(x=>x.ref===ref);if(!t)return;t.status=st;persist();render();}
 function sellTrade(ref){
@@ -1017,6 +1028,90 @@ function viewReceipt(id){
   window.scrollTo(0,0);
 }
 
+
+/* ================= PDF AMOUNT EXTRACTION ================= */
+async function pdfText(dataUrl){
+  const bytes=atob(dataUrl.split(',')[1]);
+  const arr=new Uint8Array(bytes.length);
+  for(let i=0;i<bytes.length;i++)arr[i]=bytes.charCodeAt(i);
+  const pdf=await pdfjsLib.getDocument({data:arr}).promise;
+  let txt='';
+  for(let p=1;p<=pdf.numPages;p++){
+    const page=await pdf.getPage(p);
+    const c=await page.getTextContent();
+    txt+=' '+c.items.map(i=>i.str).join(' ');
+  }
+  return txt;
+}
+/* كشف المبالغ: يدعم الفاصلة الأوروبية (1.234,56) والإنجليزية (1,234.56) */
+function parseAmounts(txt){
+  const found=[];
+  /* نلتقط أرقامًا قرب كلمات مالية أو عملات */
+  const re=/(?:AOA|Kz|MRU|UM|USD|USDT|R\$|valor|montante|amount|total)?\s*([0-9]{1,3}(?:[.,\s][0-9]{3})*(?:[.,][0-9]{1,2})?)/gi;
+  let m;
+  while((m=re.exec(txt))!==null){
+    let raw=m[1].replace(/\s/g,'');
+    let val;
+    /* تحديد الفاصل العشري: آخر فاصلة/نقطة إن تبعها 1-2 رقم */
+    const lastComma=raw.lastIndexOf(','),lastDot=raw.lastIndexOf('.');
+    if(lastComma>lastDot){ // أوروبي: , عشري
+      val=parseFloat(raw.replace(/\./g,'').replace(',','.'));
+    }else if(lastDot>lastComma){ // إنجليزي: . عشري
+      val=parseFloat(raw.replace(/,/g,''));
+    }else{
+      val=parseFloat(raw.replace(/[.,]/g,''));
+    }
+    if(!isNaN(val)&&val>=1&&val<1e12)found.push(val);
+  }
+  return found;
+}
+/* أكبر مبلغ في النص = المبلغ الرئيسي للإيصال غالبًا */
+function primaryAmount(amounts){
+  if(!amounts.length)return null;
+  return Math.max(...amounts);
+}
+
+async function scanReceipts(ref){
+  const rs=receiptsOf(ref).filter(r=>r.type==='application/pdf');
+  if(!rs.length){toast('لا PDF لتحليله (الصور تحتاج قراءة يدوية)');return;}
+  if(!window.pdfjsLib){toast('مكتبة PDF لم تحمّل — تحقق من الإنترنت');return;}
+  toast('جارٍ تحليل '+rs.length+' PDF...');
+  const results=[];let total=0;
+  for(const r of rs){
+    try{
+      const txt=await pdfText(r.data);
+      const amts=parseAmounts(txt);
+      const primary=primaryAmount(amts);
+      /* حفظ المبلغ المكتشف على الإيصال */
+      r.amount=primary;r.amounts=amts.slice(0,20);
+      if(primary){total+=primary;results.push({name:r.name,amount:primary,all:amts});}
+      else results.push({name:r.name,amount:null,all:[]});
+    }catch(e){results.push({name:r.name,amount:null,err:1});}
+  }
+  saveReceipts();
+  /* عرض النتيجة */
+  $('mdlTitle').textContent='تحليل مبالغ '+ref;
+  $('mdlBody').innerHTML=`
+    <div class="card">
+      <div class="sum" style="margin-bottom:12px">
+        <div class="k">إجمالي المبالغ المكتشفة (${results.filter(x=>x.amount).length} PDF)</div>
+        <div class="v gold" style="font-size:24px">${fmt(total,2)}</div>
+      </div>
+      ${results.map(x=>`
+        <div class="mini" style="flex-wrap:wrap">
+          <span class="r" style="font-size:11px">${x.name.slice(0,28)}</span>
+          <span class="p">${x.amount!=null?fmt(x.amount,2):(x.err?'⚠️ خطأ قراءة':'— لم يُكتشف')}</span>
+        </div>
+        ${x.all&&x.all.length>1?`<div style="color:var(--dim);font-size:10px;padding:2px 4px 8px;font-family:'IBM Plex Mono'">مبالغ أخرى: ${x.all.filter(v=>v!==x.amount).slice(0,6).map(v=>fmt(v,0)).join(' · ')}</div>`:''}
+      `).join('')}
+      <div style="color:var(--dim);font-size:11px;margin-top:10px;line-height:1.7">
+        النظام يختار أكبر مبلغ في كل إيصال كالمبلغ الرئيسي. راجع "المبالغ الأخرى" إن كان الاختيار خاطئًا.
+        الصور الممسوحة لا تُقرأ (تحتاج OCR).
+      </div>
+      <button class="btn btn-gold" onclick="openReceipts('${ref}')" style="margin-top:10px">← رجوع للإيصالات</button>
+    </div>`;
+  $('modal').style.display='block';window.scrollTo(0,0);
+}
 /* ================= MODAL ================= */
 function closeModal(){$('modal').style.display='none';}
 function openReceipts(ref){
@@ -1025,6 +1120,7 @@ function openReceipts(ref){
   $('mdlBody').innerHTML=`
     <div class="card">
       <button class="btn btn-gold" onclick="attachReceipt('${ref}')">📎 إرفاق إيصال (صورة / PDF)</button>
+      <button class="btn btn-line" onclick="scanReceipts('${ref}')">🧮 جمع مبالغ الـ PDF تلقائيًا</button>
       <div style="margin-top:12px">
         ${rs.length?rs.map(r=>`
           <div class="tx" style="display:flex;justify-content:space-between;align-items:center">
@@ -1567,6 +1663,27 @@ function exportXlsx(dayIdx){
   XLSX.writeFile(wb,`ARKAN_Settlement_${code}.xlsx`);
 }
 
+
+/* ================= SCAN ALL TODAY ================= */
+async function scanAllToday(){
+  const todayRefs=txs.map(t=>t.ref);
+  const rs=receipts.filter(r=>todayRefs.includes(r.ref)&&r.type==='application/pdf');
+  if(!rs.length){toast('لا PDF في عمليات اليوم');return;}
+  if(!window.pdfjsLib){toast('مكتبة PDF لم تحمّل');return;}
+  toast('جارٍ تحليل '+rs.length+' PDF...');
+  for(const r of rs){
+    if(r.amount!=null)continue;
+    try{const txt=await pdfText(r.data);const a=parseAmounts(txt);r.amount=primaryAmount(a);r.amounts=a.slice(0,20);}catch(e){}
+  }
+  saveReceipts();renderReceiptTotals();toast('اكتمل التحليل ✓');
+}
+function renderReceiptTotals(){
+  const todayRefs=txs.map(t=>t.ref);
+  const rs=receipts.filter(r=>todayRefs.includes(r.ref)&&r.type==='application/pdf'&&r.amount!=null);
+  const tot=rs.reduce((s,r)=>s+r.amount,0);
+  const el=$('rcptTotal');if(el)el.textContent=fmt(tot,2);
+  const sc=$('rcptScanned');if(sc)sc.textContent=rs.length;
+}
 /* ================= UTILS ================= */
 function copyMsg(id){
   const txt=$(id).textContent;
