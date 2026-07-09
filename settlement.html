@@ -22,12 +22,15 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.1.0/tesseract.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.1.0/tesseract.min.js"></script>
 <script>
-if(window.pdfjsLib){
-  pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
-  if(pdfjsLib.VerbosityLevel)pdfjsLib.setVerbosityLevel&&pdfjsLib.setVerbosityLevel(0);
-}
-/* كتم تحذير fake worker غير المؤثر */
+/* كتم تحذير fake worker */
 (function(){const _w=console.warn;console.warn=function(){const s=(arguments[0]||'')+'';if(s.indexOf('fake worker')>-1||s.indexOf('Setting up fake')>-1)return;_w.apply(console,arguments);};})();
+/* عامل pdf.js عبر blob محلي — يتجاوز حجب Safari للعمال الخارجيين */
+if(window.pdfjsLib){
+  fetch("https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js")
+    .then(r=>r.text())
+    .then(t=>{pdfjsLib.GlobalWorkerOptions.workerSrc=URL.createObjectURL(new Blob([t],{type:"text/javascript"}));})
+    .catch(()=>{pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";});
+}
 </script>
 <style>
 :root{
@@ -1153,23 +1156,43 @@ async function genInvoice(ref){
   stage.innerHTML='';
   return {doc,t};
 }
-async function sendInvoice(ref){
+let _lastInv=null; /* {ref,blob,name,dataUrl,cWa} */
+async function sendInvoice(ref){ /* توليد + معاينة */
   const r=await genInvoice(ref);if(!r)return;
   const {doc,t}=r;
-  const fname=`ARKAN_${t.ref}.pdf`;
+  const name=`ARKAN_${t.ref}.pdf`;
   const blob=doc.output('blob');
-  const file=new File([blob],fname,{type:'application/pdf'});
-  /* مشاركة مباشرة (تختار واتساب من القائمة) */
+  const dataUrl=doc.output('datauristring');
+  _lastInv={ref:t.ref,blob,name,dataUrl,cWa:t.cWa||''};
+  $('mdlTitle').textContent='فاتورة '+t.ref;
+  $('mdlBody').innerHTML=`
+    <div class="card">
+      <iframe src="${dataUrl}" style="border:0;width:100%;height:60vh;border-radius:12px;background:#fff"></iframe>
+      <button class="btn btn-gold" onclick="shareInvFile()">📤 مشاركة الفاتورة (واتساب)</button>
+      <div class="btn-row">
+        <button class="btn btn-line" onclick="dlInvFile()">تنزيل PDF</button>
+        ${_lastInv.cWa?`<button class="btn btn-wa" onclick="window.open('https://wa.me/${_lastInv.cWa}','_blank')">فتح محادثة العميل</button>`:''}
+      </div>
+    </div>`;
+  $('modal').style.display='block';window.scrollTo(0,0);
+}
+async function shareInvFile(){
+  if(!_lastInv)return;
+  const file=new File([_lastInv.blob],_lastInv.name,{type:'application/pdf'});
   if(navigator.canShare&&navigator.canShare({files:[file]})){
-    try{
-      await navigator.share({files:[file],title:'إيصال '+t.ref,text:'إيصال عمليتكم — ARKAN'});
-      toast('اختر واتساب وأرسل للعميل ✓');
-      return;
-    }catch(e){/* أُلغي أو فشل → تنزيل */}
+    try{await navigator.share({files:[file],title:_lastInv.name});return;}
+    catch(e){if(e&&e.name==='AbortError')return;}
   }
-  doc.save(fname);
-  toast('نُزّلت الفاتورة — أرفقها في واتساب');
-  if(t.cWa)window.open(`https://wa.me/${t.cWa}`,'_blank');
+  /* البيئة لا تدعم مشاركة الملفات (متصفح داخل تطبيق) */
+  dlInvFile();
+  toast('المشاركة غير مدعومة هنا — افتح الموقع في Safari نفسه');
+}
+function dlInvFile(){
+  if(!_lastInv)return;
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(_lastInv.blob);a.download=_lastInv.name;
+  document.body.appendChild(a);a.click();a.remove();
+  toast('نُزّلت الفاتورة — أرفقها في واتساب من الملفات');
 }
 /* ================= AUTO WHATSAPP ================= */
 let autoWa=localStorage.getItem('arkan-autowa')||'invoice';
