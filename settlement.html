@@ -74,6 +74,11 @@ header{padding:20px 18px 4px;position:relative;z-index:6}
 /* ===== PORTFOLIO ===== */
 .folio{margin:-100px 0 6px;padding:112px 18px 16px;position:relative;z-index:1;border:none;border-radius:0 0 36px 36px;
   background:linear-gradient(180deg, rgba(139,114,255,.40) 0%, rgba(139,114,255,.16) 52%, transparent 94%)}
+.ccySel{display:flex;gap:6px;justify-content:center;margin:2px 0 10px}
+.ccySel button{padding:6px 14px;border-radius:18px;border:1px solid var(--stroke);
+  background:rgba(0,0,0,.25);color:var(--dim);font-size:12px;font-weight:700;cursor:pointer;
+  font-family:'IBM Plex Mono',monospace;transition:.15s}
+.ccySel button.on{background:linear-gradient(135deg,var(--acc2),var(--accD));color:#fff;border-color:transparent}
 .donutWrap{display:flex;justify-content:center;position:relative}
 .donutC{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
 .donutC{padding:0 46px;text-align:center}
@@ -229,6 +234,7 @@ nav{position:fixed;bottom:0;left:0;right:0;z-index:90;
   <div class="hex"></div>
   <h2>ARKAN <span>SETTLEMENT</span></h2>
   <input type="password" id="pin" inputmode="numeric" maxlength="6" placeholder="••••">
+  <button id="faceBtn" class="btn btn-line" style="display:none;width:210px" onclick="faceUnlock()">🔓 الدخول ببصمة الوجه</button>
   <div id="lockMsg"></div>
 </div>
 
@@ -243,6 +249,12 @@ nav{position:fixed;bottom:0;left:0;right:0;z-index:90;
 </header>
 
 <div class="folio">
+  <div class="ccySel">
+    <button data-dc="USD" onclick="setDispCcy('USD')">USD</button>
+    <button data-dc="USDT" onclick="setDispCcy('USDT')">USDT</button>
+    <button data-dc="AOA" onclick="setDispCcy('AOA')">Kz</button>
+    <button data-dc="MRU" onclick="setDispCcy('MRU')">UM</button>
+  </div>
   <div class="donutWrap">
     <svg id="donut" width="344" height="344" viewBox="0 0 344 344" style="cursor:pointer">
       <circle cx="172" cy="172" r="150" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="11"/>
@@ -482,6 +494,12 @@ nav{position:fixed;bottom:0;left:0;right:0;z-index:90;
       <div><label>سعر التقييم AOA/USDT</label><input type="number" id="wVA" placeholder="1160" inputmode="decimal" onchange="saveWallet()"></div>
       <div><label>سعر التقييم MRU/USDT</label><input type="number" id="wVM" placeholder="40" inputmode="decimal" onchange="saveWallet()"></div>
     </div>
+    <h3 style="margin-top:16px">الحماية — بصمة الوجه (Face ID)</h3>
+    <div class="row">
+      <div><label>البريد الإلكتروني</label><input type="email" id="ownEmail" class="ar" placeholder="you@mail.com" style="direction:ltr"></div>
+      <div><label>رقم الهاتف</label><input type="tel" id="ownPhone" placeholder="36xxxxxx" inputmode="tel"></div>
+    </div>
+    <button class="btn btn-gold" id="faceEnableBtn" onclick="enableFaceID()">تفعيل بصمة الوجه</button>
     <label>تغيير رمز PIN</label>
     <input type="password" id="newPin" maxlength="6" placeholder="رمز جديد" inputmode="numeric" onchange="changePin()">
   </div>
@@ -601,6 +619,62 @@ function changePin(){
   localStorage.setItem('arkan-pin',v);document.getElementById('newPin').value='';toast('تم تغيير الرمز ✓');
 }
 
+
+/* ================= FACE ID (WebAuthn) ================= */
+function b64(buf){return btoa(String.fromCharCode(...new Uint8Array(buf)));}
+function unb64(s){return Uint8Array.from(atob(s),c=>c.charCodeAt(0));}
+async function enableFaceID(){
+  if(!window.PublicKeyCredential){toast('غير مدعوم على هذا المتصفح');return;}
+  const email=$('ownEmail').value.trim(),phone=$('ownPhone').value.trim();
+  if(!email&&!phone){toast('أدخل الإيميل أو الهاتف أولًا');return;}
+  const ident=email||phone;
+  try{
+    const cred=await navigator.credentials.create({publicKey:{
+      challenge:crypto.getRandomValues(new Uint8Array(32)),
+      rp:{name:'ARKAN SETTLEMENT',id:location.hostname},
+      user:{id:new TextEncoder().encode(ident.slice(0,32)),name:ident,displayName:'ARKAN — '+ident},
+      pubKeyCredParams:[{type:'public-key',alg:-7},{type:'public-key',alg:-257}],
+      authenticatorSelection:{authenticatorAttachment:'platform',userVerification:'required'},
+      timeout:60000,attestation:'none'
+    }});
+    localStorage.setItem('arkan-faceid',b64(cred.rawId));
+    localStorage.setItem('arkan-owner-email',email);
+    localStorage.setItem('arkan-owner-phone',phone);
+    toast('فُعّلت بصمة الوجه ✓');
+    renderFaceUI();
+  }catch(e){toast('أُلغي التفعيل أو رُفض');}
+}
+async function faceUnlock(){
+  const rawId=localStorage.getItem('arkan-faceid');
+  if(!rawId)return;
+  try{
+    await navigator.credentials.get({publicKey:{
+      challenge:crypto.getRandomValues(new Uint8Array(32)),
+      allowCredentials:[{type:'public-key',id:unb64(rawId),transports:['internal']}],
+      userVerification:'required',timeout:60000
+    }});
+    document.getElementById('lock').style.display='none';
+  }catch(e){
+    const m=document.getElementById('lockMsg');m.textContent='فشل التحقق — استخدم الرمز';m.className='err';
+    setTimeout(()=>{m.textContent='';m.className='';},2000);
+  }
+}
+function disableFaceID(){
+  localStorage.removeItem('arkan-faceid');toast('عُطّلت بصمة الوجه');renderFaceUI();
+}
+function renderFaceUI(){
+  const has=!!localStorage.getItem('arkan-faceid');
+  const fb=$('faceBtn');if(fb)fb.style.display=has?'block':'none';
+  const eb=$('faceEnableBtn');
+  if(eb){
+    eb.textContent=has?'تعطيل بصمة الوجه':'تفعيل بصمة الوجه';
+    eb.onclick=has?disableFaceID:enableFaceID;
+    eb.className=has?'btn btn-line':'btn btn-gold';
+  }
+  const e=$('ownEmail'),p=$('ownPhone');
+  if(e&&!e.value)e.value=localStorage.getItem('arkan-owner-email')||'';
+  if(p&&!p.value)p.value=localStorage.getItem('arkan-owner-phone')||'';
+}
 /* ================= STATE ================= */
 let txs=[],seq=1,hist=[],chains=[],seqC=1,timerInt=null,timerEnd=null,cur=null,lastClientWa='';
 let curType='bridge';
@@ -640,7 +714,7 @@ function load(){
     }
     $('partnerWa').value=localStorage.getItem('arkan-partner-wa')||'';
   }catch(e){}
-  buildStars();render();
+  buildStars();render();renderFaceUI();
 }
 function persist(){localStorage.setItem('arkan-settle-v5',JSON.stringify({txs,seq,chains,seqC}));}
 function saveHist(){localStorage.setItem('arkan-history',JSON.stringify(hist));}
@@ -1497,6 +1571,14 @@ function fitCenter(){
   size=Math.max(20,Math.min(size,54));
   t.style.fontSize=size+'px';
 }
+let dispCcy=localStorage.getItem('arkan-dispccy')||'USD';
+const DISP_SYM={USD:'$',USDT:'₮',AOA:'Kz',MRU:'UM'};
+function convDisp(usd){
+  if(dispCcy==='AOA')return usd*(wallet.vA||1160);
+  if(dispCcy==='MRU')return usd*(wallet.vM||40);
+  return usd; /* USD/USDT */
+}
+function setDispCcy(c){dispCcy=c;localStorage.setItem('arkan-dispccy',c);renderPortfolio();}
 let selAsset=null; /* null=الإجمالي | U/A/M */
 function selectAsset(k){selAsset=(selAsset===k)?null:k;renderPortfolio();}
 function renderPortfolio(){
@@ -1518,20 +1600,21 @@ function renderPortfolio(){
       bi.textContent=(v.amt<0?'-':'')+ip;bd.textContent=dp;
       bi.style.color=v.amt<0?'#FF6B6B':v.color;
       curEl.textContent=v.sym;
-      lbl.innerHTML=v.name+' · <span style="color:var(--dim)">$'+fmt(v.usd)+'</span><br><span style="font-size:9px;opacity:.7">اضغط للعودة للإجمالي</span>';
+      lbl.innerHTML=v.name+' · <span style="color:var(--dim)">'+DISP_SYM[dispCcy]+fmt(convDisp(v.usd))+'</span><br><span style="font-size:9px;opacity:.7">اضغط للعودة للإجمالي</span>';
     }else{
-      const ip=Math.floor(tot).toLocaleString('en-US');
-      const dp=(tot-Math.floor(tot)).toFixed(2).slice(1);
+      const dispTot=convDisp(tot);
+      const ip=Math.floor(dispTot).toLocaleString('en-US');
+      const dp=(dispTot-Math.floor(dispTot)).toFixed(2).slice(1);
       bi.textContent=ip;bd.textContent=dp;
       bi.style.color='';
-      curEl.textContent='$';
-      lbl.textContent='إجمالي المحفظة';
+      curEl.textContent=DISP_SYM[dispCcy];
+      lbl.textContent='إجمالي المحفظة'+(dispCcy!=='USD'?' · '+dispCcy:'');
     }
     fitCenter();
   }
-  $('balU').textContent=fmt(b.USDT)+' ₮';$('balUu').textContent='$'+fmt(uU);
-  $('balA').textContent=fmt(b.AOA,0)+' Kz';$('balAu').textContent='$'+fmt(uA);
-  $('balM').textContent=fmt(b.MRU,0)+' UM';$('balMu').textContent='$'+fmt(uM);
+  $('balU').textContent=fmt(b.USDT)+' ₮';$('balUu').textContent=DISP_SYM[dispCcy]+fmt(convDisp(uU));
+  $('balA').textContent=fmt(b.AOA,0)+' Kz';$('balAu').textContent=DISP_SYM[dispCcy]+fmt(convDisp(uA));
+  $('balM').textContent=fmt(b.MRU,0)+' UM';$('balMu').textContent=DISP_SYM[dispCcy]+fmt(convDisp(uM));
   const rA=$('rateA'),rM=$('rateM');
   if(rA)rA.textContent=fmt(wallet.vA||1160,0)+' Kz/USDT';
   if(rM)rM.textContent=fmt(wallet.vM||40,0)+' UM/USDT';
@@ -1576,6 +1659,7 @@ function renderPortfolio(){
   $('wVA').value=wallet.vA||'';$('wVM').value=wallet.vM||'';
   const rc=$('rcptCount');if(rc)rc.textContent=receipts.length;
   const aw=$('autoWa');if(aw&&aw.value!==autoWa)aw.value=autoWa;
+  document.querySelectorAll('.ccySel button').forEach(x=>x.classList.toggle('on',x.dataset.dc===dispCcy));
 }
 /* ================= HERO ================= */
 function renderHero(){
