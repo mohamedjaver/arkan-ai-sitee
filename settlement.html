@@ -233,8 +233,18 @@ nav{position:fixed;bottom:0;left:0;right:0;z-index:90;
 <div id="lock">
   <div class="hex"></div>
   <h2>ARKAN <span>SETTLEMENT</span></h2>
-  <input type="password" id="pin" inputmode="numeric" maxlength="6" placeholder="••••">
-  <button id="faceBtn" class="btn btn-line" style="display:none;width:210px" onclick="faceUnlock()">🔓 الدخول ببصمة الوجه</button>
+  <div id="pinStage">
+    <input type="password" id="pin" inputmode="numeric" maxlength="6" placeholder="••••">
+    <button id="faceBtn" class="btn btn-line" style="display:none;width:210px;margin-top:12px" onclick="faceUnlock(false)">🔓 الدخول ببصمة الوجه</button>
+  </div>
+  <div id="enrollStage" style="display:none;width:270px;text-align:center">
+    <div style="font-size:13px;color:var(--dim);line-height:1.8;margin-bottom:10px">
+      🔐 تسجيل بصمة الوجه <b style="color:var(--txt)">إلزامي</b> لدخول النظام<br>أدخل بياناتك ثم سجّل بصمتك
+    </div>
+    <input type="email" id="lEmail" placeholder="البريد الإلكتروني" style="direction:ltr;margin-bottom:8px">
+    <input type="tel" id="lPhone" placeholder="رقم الهاتف" inputmode="tel" style="margin-bottom:8px">
+    <button class="btn btn-gold" style="width:100%" onclick="enrollAtLock()">تسجيل بصمة الوجه والدخول</button>
+  </div>
   <div id="lockMsg"></div>
 </div>
 
@@ -624,7 +634,21 @@ function getPin(){return localStorage.getItem('arkan-pin')||DEFAULT_PIN;}
 const pinEl=document.getElementById('pin');
 pinEl.addEventListener('input',()=>{
   if(pinEl.value.length>=getPin().length){
-    if(pinEl.value===getPin()){document.getElementById('lock').style.display='none';}
+    if(pinEl.value===getPin()){
+      pinEl.value='';
+      if(localStorage.getItem('arkan-faceid')){
+        /* البصمة مسجلة: تحقق إلزامي بالوجه */
+        const m=document.getElementById('lockMsg');m.textContent='تحقق بالوجه...';m.className='';
+        faceUnlock(false);
+      }else{
+        /* لا بصمة: التسجيل إلزامي قبل الدخول */
+        document.getElementById('pinStage').style.display='none';
+        document.getElementById('enrollStage').style.display='block';
+        const e=document.getElementById('lEmail'),p=document.getElementById('lPhone');
+        e.value=localStorage.getItem('arkan-owner-email')||'';
+        p.value=localStorage.getItem('arkan-owner-phone')||'';
+      }
+    }
     else{const m=document.getElementById('lockMsg');m.textContent='رمز خاطئ';m.className='err';pinEl.value='';
       setTimeout(()=>{m.textContent='';m.className='';},1500);}
   }
@@ -636,6 +660,33 @@ function changePin(){
 }
 
 
+
+/* تسجيل البصمة من شاشة القفل (إلزامي للدخول الأول) */
+async function enrollAtLock(){
+  if(!window.PublicKeyCredential){toast('المتصفح لا يدعم بصمة الوجه');return;}
+  const email=$('lEmail').value.trim(),phone=$('lPhone').value.trim();
+  if(!email&&!phone){toast('أدخل الإيميل أو الهاتف');return;}
+  const ident=email||phone;
+  try{
+    const cred=await navigator.credentials.create({publicKey:{
+      challenge:crypto.getRandomValues(new Uint8Array(32)),
+      rp:{name:'ARKAN SETTLEMENT'},
+      user:{id:new TextEncoder().encode(ident.slice(0,32)),name:ident,displayName:'ARKAN — '+ident},
+      pubKeyCredParams:[{type:'public-key',alg:-7},{type:'public-key',alg:-257}],
+      authenticatorSelection:{authenticatorAttachment:'platform',userVerification:'required'},
+      timeout:60000,attestation:'none'
+    }});
+    localStorage.setItem('arkan-faceid',b64(cred.rawId));
+    localStorage.setItem('arkan-owner-email',email);
+    localStorage.setItem('arkan-owner-phone',phone);
+    document.getElementById('lock').style.display='none';
+    toast('سُجلت بصمتك ✓ — أهلًا بك');
+    renderFaceUI();
+  }catch(e){
+    const m=document.getElementById('lockMsg');
+    m.textContent='فشل التسجيل: '+(e&&e.name||'')+' — تأكد من تفعيل Face ID وiCloud Keychain';m.className='err';
+  }
+}
 /* ================= FACE ID (WebAuthn) ================= */
 function b64(buf){return btoa(String.fromCharCode(...new Uint8Array(buf)));}
 function unb64(s){return Uint8Array.from(atob(s),c=>c.charCodeAt(0));}
