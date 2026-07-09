@@ -14,7 +14,7 @@
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="manifest" href="manifest.json">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Tajawal:wght@500;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=Tajawal:wght@500;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -524,12 +524,6 @@ nav{position:fixed;bottom:0;left:0;right:0;z-index:90;
       <div><label>سعر التقييم AOA/USDT</label><input type="number" id="wVA" placeholder="1160" inputmode="decimal" onchange="saveWallet()"></div>
       <div><label>سعر التقييم MRU/USDT</label><input type="number" id="wVM" placeholder="40" inputmode="decimal" onchange="saveWallet()"></div>
     </div>
-    <h3 style="margin-top:16px">الحماية — بصمة الوجه (Face ID)</h3>
-    <div class="row">
-      <div><label>البريد الإلكتروني</label><input type="email" id="ownEmail" class="ar" placeholder="you@mail.com" style="direction:ltr"></div>
-      <div><label>رقم الهاتف</label><input type="tel" id="ownPhone" placeholder="36xxxxxx" inputmode="tel"></div>
-    </div>
-    <button class="btn btn-gold" id="faceEnableBtn" onclick="enableFaceID()">تفعيل بصمة الوجه</button>
     <label>تغيير رمز PIN</label>
     <input type="password" id="newPin" maxlength="6" placeholder="رمز جديد" inputmode="numeric" onchange="changePin()">
   </div>
@@ -682,7 +676,7 @@ function b64(buf){return btoa(String.fromCharCode(...new Uint8Array(buf)));}
 function unb64(s){return Uint8Array.from(atob(s),c=>c.charCodeAt(0));}
 async function enableFaceID(){
   if(!window.PublicKeyCredential){toast('غير مدعوم على هذا المتصفح');return;}
-  const email=$('ownEmail').value.trim(),phone=$('ownPhone').value.trim();
+  const email=($('ownEmail')&&$('ownEmail').value.trim())||'',phone=($('ownPhone')&&$('ownPhone').value.trim())||'';
   if(!email&&!phone){toast('أدخل الإيميل أو الهاتف أولًا');return;}
   const ident=email||phone;
   try{
@@ -1090,7 +1084,7 @@ function invRows(t){
   if(t.type==='bridge'){
     const F=t.fromC||'AOA',T=t.toC||'MRU';
     return [
-      ['العملية','تحويل '+F+' → '+T],
+      ['نوع العملية','تحويل '+F+' ⟵ '+T],
       ['المبلغ المستلم من العميل',fmt((t.amt!=null?t.amt:t.aoa),0)+' '+F],
       ...(F!=='USDT'?[['سعر الصرف',t.rc+' '+F+'/USDT']]:[]),
       ['صافي USDT',fmt(t.uC)+' $'],
@@ -1112,47 +1106,50 @@ async function genInvoice(ref){
   const t=findTxAnywhere(ref);if(!t){toast('العملية غير موجودة');return null;}
   toast('جارٍ إنشاء الفاتورة...');
   const rows=invRows(t).map(([k,v])=>`
-    <tr><td style="padding:11px 14px;color:#6b6f85;font-size:12px;border-bottom:1px solid #ecebf5">${k}</td>
-    <td style="padding:11px 14px;font-weight:700;font-size:13px;border-bottom:1px solid #ecebf5;font-family:'IBM Plex Mono';direction:ltr;text-align:left">${v}</td></tr>`).join('');
+    <tr>
+      <td style="padding:16px 22px;color:#565b74;font-size:17px;font-weight:700;border-bottom:1px solid #ecebf5;font-family:'Tajawal'">${k}</td>
+      <td style="padding:16px 22px;font-weight:800;font-size:20px;color:#1C1D3C;border-bottom:1px solid #ecebf5;font-family:'IBM Plex Mono';direction:ltr;text-align:left">${v}</td>
+    </tr>`).join('');
   const stage=$('pdfStage');
   stage.innerHTML=`
-  <div style="width:620px;background:#fff;font-family:'IBM Plex Sans Arabic'">
-    <div style="background:linear-gradient(135deg,#2E2758,#1C1D3C 60%,#15172E);padding:26px 28px;display:flex;justify-content:space-between;align-items:center">
-      <div style="display:flex;align-items:center;gap:14px">
+  <div style="width:794px;background:#fff;font-family:'Tajawal','IBM Plex Sans Arabic'">
+    <div style="background:linear-gradient(135deg,#2E2758,#1C1D3C 60%,#15172E);padding:32px 36px;display:flex;justify-content:space-between;align-items:center">
+      <div style="display:flex;align-items:center;gap:16px">
         ${invLogoSVG()}
         <div>
-          <div style="color:#fff;font-size:19px;font-weight:800;letter-spacing:1px">ARKAN <span style="color:#A78BFF">SETTLEMENT</span></div>
-          <div style="color:#8B8FA8;font-size:10px;letter-spacing:2.5px;margin-top:3px">AOA · USDT · MRU — EXCHANGE RECEIPT</div>
+          <div style="color:#fff;font-size:24px;font-weight:800;letter-spacing:1px;font-family:'IBM Plex Mono'">ARKAN <span style="color:#A78BFF">SETTLEMENT</span></div>
+          <div style="color:#8B8FA8;font-size:12px;letter-spacing:3px;margin-top:4px;font-family:'IBM Plex Mono'">EXCHANGE RECEIPT — إيصال صرف</div>
         </div>
       </div>
       <div style="text-align:left">
-        <div style="color:#A78BFF;font-size:20px;font-weight:800;font-family:'IBM Plex Mono'">${t.ref}</div>
-        <div style="color:#8B8FA8;font-size:11px;margin-top:3px;font-family:'IBM Plex Mono'">${new Date(t.ts).toLocaleString('en-GB')}</div>
+        <div style="color:#A78BFF;font-size:26px;font-weight:800;font-family:'IBM Plex Mono'">${t.ref}</div>
+        <div style="color:#8B8FA8;font-size:14px;margin-top:4px;font-family:'IBM Plex Mono'">${new Date(t.ts).toLocaleString('en-GB')}</div>
       </div>
     </div>
-    <div style="height:5px;background:linear-gradient(90deg,#B9A8FF,#8B72FF,#5B3FD1)"></div>
-    <div style="padding:24px 28px">
-      <div style="font-size:12px;color:#6b6f85;margin-bottom:4px">إيصال عملية صرف — العميل</div>
-      <div style="font-size:17px;font-weight:800;color:#1C1D3C;margin-bottom:16px">${t.contactName||t.name||'—'}</div>
-      <table style="width:100%;border-collapse:collapse;background:#faf9fe;border-radius:14px;overflow:hidden">
+    <div style="height:6px;background:linear-gradient(90deg,#B9A8FF,#8B72FF,#5B3FD1)"></div>
+    <div style="padding:30px 36px">
+      <div style="font-size:15px;color:#565b74;margin-bottom:6px;font-weight:700">العميل</div>
+      <div style="font-size:24px;font-weight:800;color:#1C1D3C;margin-bottom:20px">${t.contactName||t.name||'—'}</div>
+      <table style="width:100%;border-collapse:collapse;background:#faf9fe;border-radius:16px;overflow:hidden">
         ${rows}
       </table>
-      <div style="margin-top:18px;padding:14px;border-radius:12px;background:#F3F0FF;border:1px solid #DDD4FF;
+      <div style="margin-top:22px;padding:18px 22px;border-radius:14px;background:#F3F0FF;border:2px solid #DDD4FF;
         display:flex;justify-content:space-between;align-items:center">
-        <span style="font-size:12px;color:#5B3FD1;font-weight:700">شكرًا لتعاملكم مع أركان</span>
-        <span style="font-size:11px;color:#8B72FF;font-family:'IBM Plex Mono'">ARKAN INTERNATIONAL TRADING</span>
+        <span style="font-size:17px;color:#5B3FD1;font-weight:800">شكرًا لتعاملكم مع أركان ✦</span>
+        <span style="font-size:14px;color:#8B72FF;font-family:'IBM Plex Mono';font-weight:700">ARKAN INTERNATIONAL TRADING</span>
       </div>
     </div>
-    <div style="padding:12px 28px;border-top:1px solid #ecebf5;display:flex;justify-content:space-between;font-size:9.5px;color:#9a9db2">
+    <div style="padding:16px 36px 22px;border-top:1px solid #ecebf5;display:flex;justify-content:space-between;font-size:12px;color:#9a9db2;font-family:'IBM Plex Mono'">
       <span>WhatsApp 36295050 · Mohamedarbi0208@gmail.com</span>
-      <span>Generated by ARKAN SETTLEMENT FLOW</span>
+      <span>ARKAN SETTLEMENT FLOW</span>
     </div>
   </div>`;
-  await new Promise(r=>setTimeout(r,120));
-  const canvas=await html2canvas(stage,{scale:2,backgroundColor:'#ffffff'});
+  try{await document.fonts.ready;}catch(e){}
+  await new Promise(r=>setTimeout(r,200));
+  const canvas=await html2canvas(stage,{scale:2.5,backgroundColor:'#ffffff',width:794});
   const w=148,hh=canvas.height*w/canvas.width;
   const doc=new jspdf.jsPDF('p','mm',[w,hh]);
-  doc.addImage(canvas.toDataURL('image/jpeg',0.95),'JPEG',0,0,w,hh);
+  doc.addImage(canvas.toDataURL('image/jpeg',0.96),'JPEG',0,0,w,hh);
   stage.innerHTML='';
   return {doc,t};
 }
