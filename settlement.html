@@ -647,7 +647,7 @@ async function enableFaceID(){
   try{
     const cred=await navigator.credentials.create({publicKey:{
       challenge:crypto.getRandomValues(new Uint8Array(32)),
-      rp:{name:'ARKAN SETTLEMENT',id:location.hostname},
+      rp:{name:'ARKAN SETTLEMENT'},
       user:{id:new TextEncoder().encode(ident.slice(0,32)),name:ident,displayName:'ARKAN — '+ident},
       pubKeyCredParams:[{type:'public-key',alg:-7},{type:'public-key',alg:-257}],
       authenticatorSelection:{authenticatorAttachment:'platform',userVerification:'required'},
@@ -658,9 +658,10 @@ async function enableFaceID(){
     localStorage.setItem('arkan-owner-phone',phone);
     toast('فُعّلت بصمة الوجه ✓');
     renderFaceUI();
-  }catch(e){toast('أُلغي التفعيل أو رُفض');}
+  }catch(e){toast('فشل التفعيل: '+(e&&e.name?e.name:'')+' '+String(e&&e.message||'').slice(0,50));}
 }
-async function faceUnlock(){
+let _faceTried=false;
+async function faceUnlock(silent){
   const rawId=localStorage.getItem('arkan-faceid');
   if(!rawId)return;
   try{
@@ -671,10 +672,18 @@ async function faceUnlock(){
     }});
     document.getElementById('lock').style.display='none';
   }catch(e){
-    const m=document.getElementById('lockMsg');m.textContent='فشل التحقق — استخدم الرمز';m.className='err';
-    setTimeout(()=>{m.textContent='';m.className='';},2000);
+    if(silent)return; /* المحاولة التلقائية تفشل بصمت — الزر واللمس متاحان */
+    const m=document.getElementById('lockMsg');
+    m.textContent='فشل التحقق ('+(e&&e.name||'')+') — استخدم الرمز';m.className='err';
+    setTimeout(()=>{m.textContent='';m.className='';},2500);
   }
 }
+/* أي لمسة على شاشة القفل تستدعي البصمة (إيماءة المستخدم المطلوبة في Safari) */
+document.getElementById('lock').addEventListener('click',e=>{
+  if(e.target&&e.target.id==='pin')return;
+  if(_faceTried)return;
+  if(localStorage.getItem('arkan-faceid')){_faceTried=true;faceUnlock(false);setTimeout(()=>{_faceTried=false;},1500);}
+});
 function disableFaceID(){
   localStorage.removeItem('arkan-faceid');toast('عُطّلت بصمة الوجه');renderFaceUI();
 }
@@ -731,6 +740,7 @@ function load(){
     $('partnerWa').value=localStorage.getItem('arkan-partner-wa')||'';
   }catch(e){}
   buildStars();render();renderFaceUI();syncBridgeCcy();
+  if(localStorage.getItem('arkan-faceid'))setTimeout(()=>faceUnlock(true),350);
 }
 function persist(){localStorage.setItem('arkan-settle-v5',JSON.stringify({txs,seq,chains,seqC}));}
 function saveHist(){localStorage.setItem('arkan-history',JSON.stringify(hist));}
