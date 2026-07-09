@@ -504,7 +504,8 @@ nav{position:fixed;bottom:0;left:0;right:0;z-index:90;
     <select id="autoWa" class="ar" onchange="saveAutoWa()">
       <option value="off">إيقاف</option>
       <option value="partner">للشريك (تأكيد العملية)</option>
-      <option value="client">للعميل (إيصال — عمليات الجسر)</option>
+      <option value="client">للعميل (نص — عمليات الجسر)</option>
+      <option value="invoice">🧾 فاتورة PDF للعميل (مشاركة واتساب)</option>
     </select>
     <div class="tx-mid" style="margin-top:14px;padding-top:14px;border-top:1px solid var(--stroke)">
       <span>الإيصالات المحفوظة: <b id="rcptCount">0</b></span>
@@ -634,21 +635,7 @@ function getPin(){return localStorage.getItem('arkan-pin')||DEFAULT_PIN;}
 const pinEl=document.getElementById('pin');
 pinEl.addEventListener('input',()=>{
   if(pinEl.value.length>=getPin().length){
-    if(pinEl.value===getPin()){
-      pinEl.value='';
-      if(localStorage.getItem('arkan-faceid')){
-        /* البصمة مسجلة: تحقق إلزامي بالوجه */
-        const m=document.getElementById('lockMsg');m.textContent='تحقق بالوجه...';m.className='';
-        faceUnlock(false);
-      }else{
-        /* لا بصمة: التسجيل إلزامي قبل الدخول */
-        document.getElementById('pinStage').style.display='none';
-        document.getElementById('enrollStage').style.display='block';
-        const e=document.getElementById('lEmail'),p=document.getElementById('lPhone');
-        e.value=localStorage.getItem('arkan-owner-email')||'';
-        p.value=localStorage.getItem('arkan-owner-phone')||'';
-      }
-    }
+    if(pinEl.value===getPin()){pinEl.value='';document.getElementById('lock').style.display='none';}
     else{const m=document.getElementById('lockMsg');m.textContent='رمز خاطئ';m.className='err';pinEl.value='';
       setTimeout(()=>{m.textContent='';m.className='';},1500);}
   }
@@ -791,7 +778,6 @@ function load(){
     $('partnerWa').value=localStorage.getItem('arkan-partner-wa')||'';
   }catch(e){}
   buildStars();render();renderFaceUI();syncBridgeCcy();
-  if(localStorage.getItem('arkan-faceid'))setTimeout(()=>faceUnlock(true),350);
 }
 function persist(){localStorage.setItem('arkan-settle-v5',JSON.stringify({txs,seq,chains,seqC}));}
 function saveHist(){localStorage.setItem('arkan-history',JSON.stringify(hist));}
@@ -1085,8 +1071,108 @@ function findInHist(ref){
 }
 
 
+
+/* ================= CLIENT INVOICE (branded PDF) ================= */
+function invLogoSVG(){
+  return `<svg width="54" height="54" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+    <rect width="512" height="512" rx="110" fill="#1C1D3C"/>
+    <rect x="104" y="214" width="94" height="13" rx="6.5" fill="#A78BFF" opacity="0.5"/>
+    <rect x="76" y="250" width="148" height="16" rx="8" fill="#A78BFF"/>
+    <rect x="104" y="288" width="94" height="13" rx="6.5" fill="#A78BFF" opacity="0.5"/>
+    <g transform="translate(20,0) skewX(-9)">
+      <path fill="#8B72FF" fill-rule="evenodd" d="M252 124 L342 382 L297 382 L283 341 L221 341 L207 382 L162 382 Z M252 212 L237 296 L267 296 Z"/>
+    </g></svg>`;
+}
+function invRows(t){
+  if(t.type==='bridge'){
+    const F=t.fromC||'AOA',T=t.toC||'MRU';
+    return [
+      ['العملية','تحويل '+F+' → '+T],
+      ['المبلغ المستلم من العميل',fmt((t.amt!=null?t.amt:t.aoa),0)+' '+F],
+      ...(F!=='USDT'?[['سعر الصرف',t.rc+' '+F+'/USDT']]:[]),
+      ['صافي USDT',fmt(t.uC)+' $'],
+      ['المبلغ المدفوع للعميل',fmt((t.payout!=null?t.payout:t.mru),0)+' '+T],
+      ...(T==='MRU'&&t.phone!=='—'?[['Bankily',t.phone]]:[]),
+      ['الحالة',{wait:'قيد التنفيذ',conf:'مؤكدة',paid:'مكتملة ✓'}[t.status]||'مكتملة ✓']
+    ];
+  }
+  const ccy=CCY[t.type];
+  return [
+    ['العملية','تداول '+(t.type==='aoa'?'AOA':'MRU')+'/USDT'],
+    ['الكمية',fmt(t.qty)+' USDT'],
+    ['سعر الشراء',t.rBuy+' '+ccy],
+    ...(t.rSell?[['سعر البيع',t.rSell+' '+ccy]]:[]),
+    ['الحالة',t.rSell?'مكتملة ✓':'مفتوحة']
+  ];
+}
+async function genInvoice(ref){
+  const t=findTxAnywhere(ref);if(!t){toast('العملية غير موجودة');return null;}
+  toast('جارٍ إنشاء الفاتورة...');
+  const rows=invRows(t).map(([k,v])=>`
+    <tr><td style="padding:11px 14px;color:#6b6f85;font-size:12px;border-bottom:1px solid #ecebf5">${k}</td>
+    <td style="padding:11px 14px;font-weight:700;font-size:13px;border-bottom:1px solid #ecebf5;font-family:'IBM Plex Mono';direction:ltr;text-align:left">${v}</td></tr>`).join('');
+  const stage=$('pdfStage');
+  stage.innerHTML=`
+  <div style="width:620px;background:#fff;font-family:'IBM Plex Sans Arabic'">
+    <div style="background:linear-gradient(135deg,#2E2758,#1C1D3C 60%,#15172E);padding:26px 28px;display:flex;justify-content:space-between;align-items:center">
+      <div style="display:flex;align-items:center;gap:14px">
+        ${invLogoSVG()}
+        <div>
+          <div style="color:#fff;font-size:19px;font-weight:800;letter-spacing:1px">ARKAN <span style="color:#A78BFF">SETTLEMENT</span></div>
+          <div style="color:#8B8FA8;font-size:10px;letter-spacing:2.5px;margin-top:3px">AOA · USDT · MRU — EXCHANGE RECEIPT</div>
+        </div>
+      </div>
+      <div style="text-align:left">
+        <div style="color:#A78BFF;font-size:20px;font-weight:800;font-family:'IBM Plex Mono'">${t.ref}</div>
+        <div style="color:#8B8FA8;font-size:11px;margin-top:3px;font-family:'IBM Plex Mono'">${new Date(t.ts).toLocaleString('en-GB')}</div>
+      </div>
+    </div>
+    <div style="height:5px;background:linear-gradient(90deg,#B9A8FF,#8B72FF,#5B3FD1)"></div>
+    <div style="padding:24px 28px">
+      <div style="font-size:12px;color:#6b6f85;margin-bottom:4px">إيصال عملية صرف — العميل</div>
+      <div style="font-size:17px;font-weight:800;color:#1C1D3C;margin-bottom:16px">${t.contactName||t.name||'—'}</div>
+      <table style="width:100%;border-collapse:collapse;background:#faf9fe;border-radius:14px;overflow:hidden">
+        ${rows}
+      </table>
+      <div style="margin-top:18px;padding:14px;border-radius:12px;background:#F3F0FF;border:1px solid #DDD4FF;
+        display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:12px;color:#5B3FD1;font-weight:700">شكرًا لتعاملكم مع أركان</span>
+        <span style="font-size:11px;color:#8B72FF;font-family:'IBM Plex Mono'">ARKAN INTERNATIONAL TRADING</span>
+      </div>
+    </div>
+    <div style="padding:12px 28px;border-top:1px solid #ecebf5;display:flex;justify-content:space-between;font-size:9.5px;color:#9a9db2">
+      <span>WhatsApp 36295050 · Mohamedarbi0208@gmail.com</span>
+      <span>Generated by ARKAN SETTLEMENT FLOW</span>
+    </div>
+  </div>`;
+  await new Promise(r=>setTimeout(r,120));
+  const canvas=await html2canvas(stage,{scale:2,backgroundColor:'#ffffff'});
+  const w=148,hh=canvas.height*w/canvas.width;
+  const doc=new jspdf.jsPDF('p','mm',[w,hh]);
+  doc.addImage(canvas.toDataURL('image/jpeg',0.95),'JPEG',0,0,w,hh);
+  stage.innerHTML='';
+  return {doc,t};
+}
+async function sendInvoice(ref){
+  const r=await genInvoice(ref);if(!r)return;
+  const {doc,t}=r;
+  const fname=`ARKAN_${t.ref}.pdf`;
+  const blob=doc.output('blob');
+  const file=new File([blob],fname,{type:'application/pdf'});
+  /* مشاركة مباشرة (تختار واتساب من القائمة) */
+  if(navigator.canShare&&navigator.canShare({files:[file]})){
+    try{
+      await navigator.share({files:[file],title:'إيصال '+t.ref,text:'إيصال عمليتكم — ARKAN'});
+      toast('اختر واتساب وأرسل للعميل ✓');
+      return;
+    }catch(e){/* أُلغي أو فشل → تنزيل */}
+  }
+  doc.save(fname);
+  toast('نُزّلت الفاتورة — أرفقها في واتساب');
+  if(t.cWa)window.open(`https://wa.me/${t.cWa}`,'_blank');
+}
 /* ================= AUTO WHATSAPP ================= */
-let autoWa=localStorage.getItem('arkan-autowa')||'partner';
+let autoWa=localStorage.getItem('arkan-autowa')||'invoice';
 function saveAutoWa(){autoWa=$('autoWa').value;localStorage.setItem('arkan-autowa',autoWa);toast('حُفظ ✓');}
 function autoWaMsg(t){
   if(t.type==='bridge')return `CONFIRMED ${t.ref}\n${t.fromC||'AOA'} ${fmt((t.amt!=null?t.amt:t.aoa),0)}\nUSDT NET: ${fmt(t.uC)} $\n${t.toC||'MRU'}: ${fmt((t.payout!=null?t.payout:t.mru),0)}`;
@@ -1099,6 +1185,7 @@ function clientWaMsg(t){
 }
 function fireAutoWa(t){
   if(autoWa==='off')return;
+  if(autoWa==='invoice'){sendInvoice(t.ref);return;}
   let phone='',msg='';
   if(autoWa==='client'&&t.type==='bridge'&&t.cWa){phone=t.cWa;msg=clientWaMsg(t);}
   else{phone=localStorage.getItem('arkan-partner-wa')||'';msg=autoWaMsg(t);}
@@ -1143,6 +1230,7 @@ function render(){
           ${t.status==='conf'?`<button class="btn btn-gold btn-sm" onclick="setSt('${t.ref}','paid')">تم دفع Bankily</button>`:''}
           ${t.pay&&t.pay!=='settled'?`<button class="btn btn-gold btn-sm" onclick="addPayment('${t.ref}')">دفعة (متبقٍ ${fmt(remaining(t),0)})</button>`:''}
           ${t.cWa?`<button class="btn btn-wa btn-sm" onclick="notifyClient('${t.ref}')">إشعار العميل</button>`:''}
+          <button class="btn btn-line btn-sm" onclick="sendInvoice('${t.ref}')">🧾 فاتورة</button>
           <button class="btn btn-line btn-sm" onclick="openReceipts('${t.ref}')">📎 إيصال${receiptsOf(t.ref).length?' ('+receiptsOf(t.ref).length+')':''}</button>
           <button class="btn btn-line btn-sm" onclick="delTx('${t.ref}')">حذف</button>
         </div>`;
@@ -1162,6 +1250,7 @@ function render(){
         <div class="tx-acts">
           ${t.status==='wait'?`<button class="btn btn-gold btn-sm" onclick="sellTrade('${t.ref}')">تسجيل البيع</button>`:''}
           ${t.pay&&t.pay!=='settled'?`<button class="btn btn-gold btn-sm" onclick="addPayment('${t.ref}')">دفعة (متبقٍ ${fmt(remaining(t),0)})</button>`:''}
+          <button class="btn btn-line btn-sm" onclick="sendInvoice('${t.ref}')">🧾 فاتورة</button>
           <button class="btn btn-line btn-sm" onclick="openReceipts('${t.ref}')">📎 إيصال${receiptsOf(t.ref).length?' ('+receiptsOf(t.ref).length+')':''}</button>
           <button class="btn btn-line btn-sm" onclick="delTx('${t.ref}')">حذف</button>
         </div>`;
