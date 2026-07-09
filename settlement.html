@@ -307,8 +307,22 @@ nav{position:fixed;bottom:0;left:0;right:0;z-index:90;
   <div class="card" id="fBridge">
     <h3>بيانات التحويل</h3>
     <div class="row">
-      <div><label>مبلغ AOA من العميل</label><input type="number" id="aoa" placeholder="850000" inputmode="decimal"></div>
-      <div><label>سعر العميل AOA/USDT</label><input type="number" id="rClient" placeholder="1180" inputmode="decimal"></div>
+      <div><label>عملة العميل (يدفع بـ)</label>
+        <select id="bFrom" class="ar" onchange="syncBridgeCcy()">
+          <option value="AOA">AOA — كوانزا</option>
+          <option value="MRU">MRU — أوقية</option>
+          <option value="USDT">USDT</option>
+        </select></div>
+      <div><label>عملة الدفع (يستلم بـ)</label>
+        <select id="bTo" class="ar" onchange="syncBridgeCcy()">
+          <option value="MRU">MRU — أوقية</option>
+          <option value="AOA">AOA — كوانزا</option>
+          <option value="USDT">USDT</option>
+        </select></div>
+    </div>
+    <div class="row">
+      <div><label id="lblBAmt">مبلغ AOA من العميل</label><input type="number" id="aoa" placeholder="850000" inputmode="decimal"></div>
+      <div id="rcWrap"><label id="lblRc">سعر العميل AOA/USDT</label><input type="number" id="rClient" placeholder="1180" inputmode="decimal"></div>
     </div>
     <!-- دفعة إيصالات العميل: قراءة فقط، بلا حفظ ملفات -->
     <div class="legform" id="batchBox" style="margin-top:10px">
@@ -322,13 +336,15 @@ nav{position:fixed;bottom:0;left:0;right:0;z-index:90;
       <div id="batchList" style="margin-top:6px"></div>
     </div>
     <div class="row">
-      <div><label>سعر السوق AOA/USDT</label><input type="number" id="rMarket" placeholder="1120" inputmode="decimal"></div>
-      <div><label>سعر الدفع MRU/USDT</label><input type="number" id="rMru" placeholder="40" inputmode="decimal"></div>
+      <div id="rmWrap"><label id="lblRm">سعر السوق AOA/USDT</label><input type="number" id="rMarket" placeholder="1120" inputmode="decimal"></div>
+      <div id="rtWrap"><label id="lblRt">سعر الدفع MRU/USDT</label><input type="number" id="rMru" placeholder="40" inputmode="decimal"></div>
     </div>
     <div class="alertline" id="rateAlertB"></div>
+    <div id="bankWrap">
     <div class="row">
       <div><label>اسم المستفيد (Bankily)</label><input type="text" id="bName" class="ar" placeholder="محمد ولد ..."></div>
       <div><label>رقم Bankily</label><input type="tel" id="bPhone" placeholder="36xxxxxx" inputmode="tel"></div>
+    </div>
     </div>
     <label>واتساب العميل (بالرمز الدولي، بدون +)</label>
     <input type="tel" id="cWa" placeholder="244xxxxxxxxx" inputmode="tel">
@@ -714,7 +730,7 @@ function load(){
     }
     $('partnerWa').value=localStorage.getItem('arkan-partner-wa')||'';
   }catch(e){}
-  buildStars();render();renderFaceUI();
+  buildStars();render();renderFaceUI();syncBridgeCcy();
 }
 function persist(){localStorage.setItem('arkan-settle-v5',JSON.stringify({txs,seq,chains,seqC}));}
 function saveHist(){localStorage.setItem('arkan-history',JSON.stringify(hist));}
@@ -760,6 +776,28 @@ function showDev(el,dev){
   else if(Math.abs(dev)>=3){el.className='alertline warn';el.textContent=`⚠️ السعر منحرف ${dev>0?'+':''}${dev.toFixed(1)}% عن متوسطك الأخير`;}
 }
 
+
+/* ================= BRIDGE CURRENCY SYNC ================= */
+function bFromV(){const e=$('bFrom');return e?e.value:'AOA';}
+function bToV(){const e=$('bTo');return e?e.value:'MRU';}
+function syncBridgeCcy(){
+  const F=bFromV(),T=bToV();
+  if(F===T){toast('اختر عملتين مختلفتين');$('bTo').value=F==='MRU'?'AOA':'MRU';return syncBridgeCcy();}
+  $('lblBAmt').textContent=`مبلغ ${F} من العميل`;
+  /* حقلا السعر: من≠USDT → سعر العميل/السوق للعملة المصدر؛ من=USDT → سعرا عملة الوجهة */
+  if(F!=='USDT'){
+    $('lblRc').textContent=`سعر العميل ${F}/USDT`;
+    $('lblRm').textContent=`سعر السوق ${F}/USDT`;
+    $('rtWrap').style.display=T!=='USDT'?'block':'none';
+    $('lblRt').textContent=`سعر الدفع ${T}/USDT`;
+  }else{
+    $('lblRc').textContent=`سعر دفع العميل ${T}/USDT`;
+    $('lblRm').textContent=`سعر السوق ${T}/USDT`;
+    $('rtWrap').style.display='none';
+  }
+  $('bankWrap').style.display=T==='MRU'?'block':'none';
+  calc();
+}
 /* ================= LIVE CALC ================= */
 const inputs=['aoa','rClient','rMarket','rMru','bName','bPhone','cWa','qty','rBuy','rSell','note'];
 inputs.forEach(i=>$(i).addEventListener('input',calc));
@@ -776,13 +814,27 @@ function calc(){
 }
 
 function calcBridge(){
-  const aoa=+$('aoa').value,rc=+$('rClient').value,rm=+$('rMarket').value,rmru=+$('rMru').value;
-  if(!aoa||!rc||!rm||!rmru){hideTicket();return;}
+  const F=bFromV(),T=bToV();
+  const amt=+$('aoa').value,rc=+$('rClient').value,rm=+$('rMarket').value,rt=+$('rMru').value;
+  let uC,uM,payout;
+  if(F!=='USDT'){
+    if(!amt||!rc||!rm||(T!=='USDT'&&!rt)){hideTicket();return;}
+    uC=amt/rc;uM=amt/rm;
+    payout=T==='USDT'?uC:uC*rt;
+  }else{
+    /* العميل يدفع USDT: rc=سعر دفع العميل T/USDT، rm=سعر السوق T/USDT */
+    if(!amt||!rc||!rm){hideTicket();return;}
+    uM=amt;uC=amt*rc/rm; /* تكلفة الدفع الفعلية بالدولار */
+    payout=amt*rc;
+  }
+  const pUsdt=uM-uC,pTo=T!=='USDT'?pUsdt*(F!=='USDT'?(rt||1):rm):pUsdt;
   showDev($('rateAlertB'),rateDeviation('bridge',rc));
-  const uC=aoa/rc,uM=aoa/rm,mru=uC*rmru,pUsdt=uM-uC,pMru=pUsdt*rmru;
   const ref=makeRef();
   const M=metaOf();
-  cur={type:'bridge',ref,aoa,rc,rm,rmru,uC,uM,mru,pUsdt,
+  cur={type:'bridge',ref,fromC:F,toC:T,amt,rcF:rc,rmF:rm,rTo:F!=='USDT'?(rt||1):rc,
+    /* توافق قديم للعرض والتقارير عندما AOA→MRU */
+    aoa:F==='AOA'?amt:0,rc,rm,rmru:F!=='USDT'?(rt||1):rc,
+    uC,uM,mru:T==='MRU'?payout:0,payout,pUsdt,
     contactId:M.contactId,contactName:M.contact?M.contact.name:null,pay:M.pay,due:M.due,
     name:$('bName').value||(M.contact?M.contact.name:'—'),
     phone:$('bPhone').value||(M.contact&&M.contact.bank?M.contact.bank:'—'),
@@ -791,27 +843,26 @@ function calcBridge(){
   $('refNo').textContent=ref;
   $('k1').textContent='USDT للعميل';$('v1').textContent=fmt(uC)+' $';
   $('k2').textContent='USDT بسعر السوق';$('v2').textContent=fmt(uM)+' $';
-  $('k3').textContent='دفع MRU (Bankily)';$('v3').textContent=fmt(mru,0)+' MRU';
-  const v4e=$('v4');v4e.textContent=fmt(pUsdt)+' $ ≈ '+fmt(pMru,0)+' MRU';
+  $('k3').textContent=`دفع ${T}${T==='MRU'?' (Bankily)':''}`;$('v3').textContent=fmt(payout,0)+' '+CCYI[T];
+  const v4e=$('v4');v4e.textContent=fmt(pUsdt)+' $';
   v4e.className='v num '+(pUsdt>=0?'green':'red');
   $('ticket').style.display='block';$('timer').style.display='block';
-  $('waTitle').textContent='رسالة التأكيد — أنغولا';
+  $('waTitle').textContent='رسالة التأكيد';
   $('waMsg').textContent=
 `CONFIRMED ${ref}
-AOA ${fmt(aoa,0)} @ ${rc}
+${F} ${fmt(amt,0)}${F!=='USDT'?' @ '+rc:''}
 USDT NET: ${fmt(uC)} $
+${T} PAYOUT: ${fmt(payout,0)}
 ⚠️ سعر ثابت 30 دقيقة`;
   $('waClient').textContent=
 `✅ ARKAN — إشعار تحويل
 المرجع: ${ref}
 المستلم: ${cur.name}
-Bankily: ${cur.phone}
-المبلغ: ${fmt(mru,0)} MRU
+${T==='MRU'?'Bankily: '+cur.phone+String.fromCharCode(10):''}المبلغ: ${fmt(payout,0)} ${CCYI[T]}
 الحالة: بانتظار تأكيد الدفع`;
-  $('waBox').style.display='block';$('waBox2').style.display='block';
+  $('waBox').style.display='block';$('waBox2').style.display=T==='MRU'?'block':'none';
   startTimer();
 }
-
 function calcTrade(){
   const qty=+$('qty').value,rb=+$('rBuy').value,rs=+$('rSell').value;
   if(!qty||!rb){hideTicket();return;}
@@ -977,13 +1028,13 @@ function findInHist(ref){
 let autoWa=localStorage.getItem('arkan-autowa')||'partner';
 function saveAutoWa(){autoWa=$('autoWa').value;localStorage.setItem('arkan-autowa',autoWa);toast('حُفظ ✓');}
 function autoWaMsg(t){
-  if(t.type==='bridge')return `CONFIRMED ${t.ref}\nAOA ${fmt(t.aoa,0)} @ ${t.rc}\nUSDT NET: ${fmt(t.uC)} $\nMRU (Bankily): ${fmt(t.mru,0)}`;
+  if(t.type==='bridge')return `CONFIRMED ${t.ref}\n${t.fromC||'AOA'} ${fmt((t.amt!=null?t.amt:t.aoa),0)}\nUSDT NET: ${fmt(t.uC)} $\n${t.toC||'MRU'}: ${fmt((t.payout!=null?t.payout:t.mru),0)}`;
   if(t.type==='aoa'||t.type==='mru')return `TRADE ${t.ref}\n${t.type==='aoa'?'AOA':'MRU'}/USDT\nQTY: ${fmt(t.qty)} $ @ ${t.rBuy}${t.rSell?`→${t.rSell}\nPROFIT: ${fmt(t.profit,0)} ${CCY[t.type]}`:''}`;
   return null;
 }
 function clientWaMsg(t){
   if(t.type!=='bridge')return null;
-  return `✅ ARKAN — إشعار تحويل\nالمرجع: ${t.ref}\nالمستلم: ${t.name}\nBankily: ${t.phone}\nالمبلغ: ${fmt(t.mru,0)} MRU`;
+  return `✅ ARKAN — إشعار تحويل\nالمرجع: ${t.ref}\nالمستلم: ${t.name}\nالمبلغ: ${fmt((t.payout!=null?t.payout:t.mru),0)} ${CCYI[t.toC||'MRU']}`;
 }
 function fireAutoWa(t){
   if(autoWa==='off')return;
@@ -1018,11 +1069,11 @@ function render(){
       const [cls,lbl]=bridgeBadges[t.status];
       div.innerHTML=`
         <div class="tx-top"><span class="tx-ref">${t.ref}</span>
-          <span><span class="badge b-type">${typeLbl.bridge}</span> ${pbHtml}<span class="badge ${cls}">${lbl}</span></span></div>
+          <span><span class="badge b-type num">${(t.fromC||"AOA")}→${(t.toC||"MRU")}</span> ${pbHtml}<span class="badge ${cls}">${lbl}</span></span></div>
         <div class="tx-mid">
-          <span>AOA <b>${fmt(t.aoa,0)}</b></span>
+          <span>${t.fromC||'AOA'} <b>${fmt((t.amt!=null?t.amt:t.aoa),0)}</b></span>
           <span>USDT <b>${fmt(t.uC)}</b></span>
-          <span>MRU <b>${fmt(t.mru,0)}</b></span>
+          <span>${t.toC||'MRU'} <b>${fmt((t.payout!=null?t.payout:t.mru),0)}</b></span>
           <span>الربح <b class="${t.pUsdt>=0?'green':'red'}">${fmt(t.pUsdt)} $</b></span>
         </div>
         <div class="tx-mid"><span>${t.contactName||t.name} · <b>${t.phone}</b></span></div>
@@ -1146,7 +1197,7 @@ function savePayments(){localStorage.setItem('arkan-payments',JSON.stringify(pay
 
 /* المبلغ الأصلي والعملة لعملية دين */
 function debtBase(t){
-  if(t.type==='bridge')return t.pay==='owed_us'?{a:t.aoa,c:'AOA'}:{a:t.mru,c:'MRU'};
+  if(t.type==='bridge')return t.pay==='owed_us'?{a:(t.amt!=null?t.amt:t.aoa),c:t.fromC||'AOA'}:{a:(t.payout!=null?t.payout:t.mru),c:t.toC||'MRU'};
   if(t.type==='aoa')return {a:t.pay==='owed_us'?(t.rev||t.cost):t.cost,c:'AOA'};
   if(t.type==='mru')return {a:t.pay==='owed_us'?(t.rev||t.cost):t.cost,c:'MRU'};
   return null;
@@ -1496,7 +1547,7 @@ function notifyClient(ref){
 `✅ ARKAN — تحديث حالة
 المرجع: ${t.ref}
 المستلم: ${t.name}
-المبلغ: ${fmt(t.mru,0)} MRU
+المبلغ: ${fmt((t.payout!=null?t.payout:t.mru),0)} ${CCYI[t.toC||'MRU']}
 الحالة: ${statusTxt}`);
   window.open(`https://wa.me/${t.cWa}?text=${msg}`,'_blank');
 }
@@ -1547,7 +1598,7 @@ function saveWallet(){
   renderPortfolio();toast('حُفظت المحفظة ✓');
 }
 function txFlows(t,f){
-  if(t.type==='bridge'){f.AOA+=t.aoa;f.MRU-=t.mru;f.USDT+=(t.pUsdt||0);}
+  if(t.type==='bridge'){f[t.fromC||'AOA']+=(t.amt!=null?t.amt:t.aoa)||0;f[t.toC||'MRU']-=(t.payout!=null?t.payout:t.mru)||0;f.USDT+=(t.pUsdt||0);}
   else if(t.type==='aoa'||t.type==='mru'){
     const k=t.type==='aoa'?'AOA':'MRU';
     if(t.rSell)f[k]+=t.profit;else{f[k]-=t.cost;f.USDT+=t.qty;}
@@ -1817,7 +1868,7 @@ function renderContacts(){
 /* ================= DEBTS ================= */
 function debtAmount(t){
   /* المبلغ والعملة حسب النوع والاتجاه */
-  if(t.type==='bridge')return t.pay==='owed_us'?{a:t.aoa,c:'AOA'}:{a:t.mru,c:'MRU'};
+  if(t.type==='bridge')return t.pay==='owed_us'?{a:(t.amt!=null?t.amt:t.aoa),c:t.fromC||'AOA'}:{a:(t.payout!=null?t.payout:t.mru),c:t.toC||'MRU'};
   if(t.type==='aoa')return t.pay==='owed_us'?{a:t.rev||t.cost,c:'AOA'}:{a:t.cost,c:'AOA'};
   if(t.type==='mru')return t.pay==='owed_us'?{a:t.rev||t.cost,c:'MRU'}:{a:t.cost,c:'MRU'};
   return null;
@@ -1855,7 +1906,7 @@ function renderDebts(){
 
 /* ================= HISTORY ================= */
 function txSummary(t){
-  if(t.type==='bridge')return{info:(t.contactName||t.name||'')+' · '+fmt(t.mru||0,0)+' MRU',p:fmt(t.pUsdt||0)+' $'};
+  if(t.type==='bridge')return{info:(t.contactName||t.name||'')+' · '+fmt((t.payout!=null?t.payout:t.mru)||0,0)+' '+CCYI[t.toC||'MRU'],p:fmt(t.pUsdt||0)+' $'};
   if(t.type==='aoa'||t.type==='mru')return{info:fmt(t.qty||0)+'$ @ '+t.rBuy+(t.rSell?'→'+t.rSell:''),p:t.rSell?fmt(t.profit,0)+' '+CCY[t.type]:'مفتوحة'};
   if(t.type==='leg')return{info:'رجل: '+pairLabel(t.pair)+' @ '+t.rate,p:fmt(t.toAmt,0)+' '+CCYI[t.to]};
   if(t.type==='chainResult')return{info:'سلسلة '+t.legs+' أرجل',p:(t.profit>=0?'+':'')+fmt(t.profit,0)+' '+CCYI[t.ccy]};
