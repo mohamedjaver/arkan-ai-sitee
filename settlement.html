@@ -243,7 +243,7 @@ nav{position:fixed;bottom:0;left:0;right:0;z-index:90;
     <div class="hex"></div>
     <div>
       <h1>ARKAN <span>SETTLEMENT FLOW</span></h1>
-      <p>AOA · USDT · MRU — BANKILY BRIDGE</p>
+      <p>AOA · USDT · MRU — V6.1</p>
     </div>
   </div>
 </header>
@@ -1348,8 +1348,19 @@ let _ocrWorker=null;
 async function ocrWorker(){
   if(_ocrWorker)return _ocrWorker;
   toast('تحميل محرك قراءة الصور (مرة واحدة ~2MB)...');
-  _ocrWorker=await Tesseract.createWorker('eng');
-  await _ocrWorker.setParameters({tessedit_pageseg_mode:'6'});
+  try{
+    _ocrWorker=await Tesseract.createWorker('eng',1,{
+      workerPath:'https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.1.0/worker.min.js',
+      corePath:'https://cdnjs.cloudflare.com/ajax/libs/tesseract.js-core/5.1.0/tesseract-core-simd.wasm.js',
+      langPath:'https://tessdata.projectnaptha.com/4.0.0',
+      workerBlobURL:true
+    });
+    await _ocrWorker.setParameters({tessedit_pageseg_mode:'6'});
+  }catch(e){
+    _ocrWorker=null;
+    toast('تعذر تحميل محرك القراءة: '+String(e&&e.message||e).slice(0,40));
+    throw e;
+  }
   return _ocrWorker;
 }
 /* تحسين الصورة قبل القراءة: تصغير + رمادي + رفع تباين */
