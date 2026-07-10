@@ -1167,20 +1167,19 @@ async function genInvoice(ref){
   if(ih>297){ih=297;iw=canvas.width*297/canvas.height;}
   doc.addImage(canvas.toDataURL('image/jpeg',0.96),'JPEG',(210-iw)/2,0,iw,ih);
   stage.innerHTML='';
-  return {doc,t};
+  return {doc,t,img:canvas.toDataURL('image/jpeg',0.92)};
 }
 let _lastInv=null; /* {ref,blob,name,dataUrl,cWa} */
 async function sendInvoice(ref){ /* توليد + معاينة */
   const r=await genInvoice(ref);if(!r)return;
-  const {doc,t}=r;
+  const {doc,t,img}=r;
   const name=`ARKAN_${t.ref}.pdf`;
   const blob=doc.output('blob');
-  const dataUrl=doc.output('datauristring');
-  _lastInv={ref:t.ref,blob,name,dataUrl,cWa:t.cWa||''};
+  _lastInv={ref:t.ref,blob,name,cWa:t.cWa||''};
   $('mdlTitle').textContent='فاتورة '+t.ref;
   $('mdlBody').innerHTML=`
     <div class="card">
-      <iframe src="${dataUrl}" style="border:0;width:100%;height:60vh;border-radius:12px;background:#fff"></iframe>
+      <img src="${img}" style="width:100%;border-radius:12px;display:block;background:#fff">
       <button class="btn btn-gold" onclick="shareInvFile()">📤 مشاركة الفاتورة (واتساب)</button>
       <div class="btn-row">
         <button class="btn btn-line" onclick="dlInvFile()">تنزيل PDF</button>
