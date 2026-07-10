@@ -275,9 +275,11 @@ nav{position:fixed;bottom:0;left:0;right:0;z-index:90;
         <circle id="arcU" cx="172" cy="172" r="150" fill="none" stroke="#26A17B" stroke-width="11" stroke-linecap="round" stroke-dasharray="0 943" style="transition:.25s"/>
         <circle id="arcA" cx="172" cy="172" r="150" fill="none" stroke="#F4A50C" stroke-width="11" stroke-linecap="round" stroke-dasharray="0 943" style="transition:.25s"/>
         <circle id="arcM" cx="172" cy="172" r="150" fill="none" stroke="#4DA3FF" stroke-width="11" stroke-linecap="round" stroke-dasharray="0 943" style="transition:.25s"/>
+        <circle id="arcE" cx="172" cy="172" r="150" fill="none" stroke="#A78BFF" stroke-width="11" stroke-linecap="round" stroke-dasharray="0 943" style="transition:.25s"/>
         <circle id="hitU" cx="172" cy="172" r="150" fill="none" stroke="rgba(0,0,0,0)" stroke-width="38" stroke-dasharray="0 943" onclick="selectAsset('U')"/>
         <circle id="hitA" cx="172" cy="172" r="150" fill="none" stroke="rgba(0,0,0,0)" stroke-width="38" stroke-dasharray="0 943" onclick="selectAsset('A')"/>
         <circle id="hitM" cx="172" cy="172" r="150" fill="none" stroke="rgba(0,0,0,0)" stroke-width="38" stroke-dasharray="0 943" onclick="selectAsset('M')"/>
+        <circle id="hitE" cx="172" cy="172" r="150" fill="none" stroke="rgba(0,0,0,0)" stroke-width="38" stroke-dasharray="0 943" onclick="selectAsset('E')"/>
       </g>
     </svg>
     <div class="donutC" onclick="selectAsset(null)" style="cursor:pointer">
@@ -292,11 +294,15 @@ nav{position:fixed;bottom:0;left:0;right:0;z-index:90;
       <div class="nm"><div class="n1">Tether</div><div class="n2" id="rateU">$1.00 · USDT</div></div>
       <div class="am"><div class="a1 num" id="balU" style="color:#3DDC97">0</div><div class="a2 num" id="balUu">$0</div></div></div>
     <div class="asset" id="cardA" onclick="selectAsset('A')" style="cursor:pointer"><div class="ic" style="background:#F4A50C;color:#15172E;font-weight:800;font-size:14px;letter-spacing:-.5px">Kz</div>
-      <div class="nm"><div class="n1">Kwanza</div><div class="n2" id="rateA">— Kz/USDT</div></div>
+      <div class="nm"><div class="n1">AOA</div><div class="n2" id="rateA">— Kz/USDT</div></div>
       <div class="am"><div class="a1 num" id="balA" style="color:#FFC94D">0</div><div class="a2 num" id="balAu">$0</div></div></div>
     <div class="asset" id="cardM" onclick="selectAsset('M')" style="cursor:pointer"><div class="ic" style="background:#4DA3FF;color:#0e2544;font-weight:800;font-size:13px;letter-spacing:-.5px">UM</div>
-      <div class="nm"><div class="n1">Ouguiya</div><div class="n2" id="rateM">— UM/USDT</div></div>
+      <div class="nm"><div class="n1">MRU</div><div class="n2" id="rateM">— UM/USDT</div></div>
       <div class="am"><div class="a1 num" id="balM" style="color:#7FB8FF">0</div><div class="a2 num" id="balMu">$0</div></div></div>
+  <div class="asset" id="cardE" onclick="selectAsset('E')" style="cursor:pointer"><div class="ic" style="background:#A78BFF;color:#1C1D3C;font-weight:800;font-size:17px">€</div>
+    <div class="nm"><div class="n1">EUR</div><div class="n2" id="rateE">— UM/EUR</div></div>
+    <div class="am"><div class="a1 num" id="balE" style="color:#C9B6FF">0</div><div class="a2 num" id="balEu">0</div></div>
+  </div>
   </div>
   <div class="chips">
     <span class="chip">ربح اليوم <b id="heroMain">0 $</b></span>
@@ -313,7 +319,8 @@ nav{position:fixed;bottom:0;left:0;right:0;z-index:90;
     <div class="type on" data-ty="bridge"><div class="t1">جسر تحويل</div><div class="t2">AOA→MRU</div></div>
     <div class="type" data-ty="aoa"><div class="t1">تداول USDT</div><div class="t2">AOA/USDT</div></div>
     <div class="type" data-ty="mru"><div class="t1">تداول USDT</div><div class="t2">MRU/USDT</div></div>
-    <div class="type" data-ty="chain"><div class="t1">سلسلة</div><div class="t2">CHAIN</div></div>
+    <div class="type" data-ty="euraoa"><div class="t1">تداول EUR</div><div class="t2">EUR/AOA</div></div>
+    <div class="type" data-ty="eurmru"><div class="t1">تداول EUR</div><div class="t2">EUR/MRU</div></div>
   </div>
 
   <!-- BRIDGE FORM -->
@@ -366,7 +373,7 @@ nav{position:fixed;bottom:0;left:0;right:0;z-index:90;
   <!-- TRADE FORM (v4 method) -->
   <div class="card" id="fTrade" style="display:none">
     <h3 id="tradeTitle">تداول AOA/USDT</h3>
-    <label>كمية USDT</label>
+    <label id="qtyLbl">كمية USDT</label>
     <input type="text" id="qty" placeholder="1000" inputmode="decimal">
     <div class="row">
       <div><label id="lblBuy">سعر الشراء (AOA)</label><input type="text" id="rBuy" placeholder="1160" inputmode="decimal"></div>
@@ -529,6 +536,10 @@ nav{position:fixed;bottom:0;left:0;right:0;z-index:90;
     <div class="row">
       <div><label>سعر التقييم AOA/USDT</label><input type="number" id="wVA" placeholder="1160" inputmode="decimal" onchange="saveWallet()"></div>
       <div><label>سعر التقييم MRU/USDT</label><input type="number" id="wVM" placeholder="40" inputmode="decimal" onchange="saveWallet()"></div>
+    </div>
+    <div class="row">
+      <div><label>افتتاح EUR</label><input type="number" id="wE" placeholder="0" inputmode="decimal" onchange="saveWallet()"></div>
+      <div><label>سعر التقييم MRU/EUR</label><input type="number" id="wVE" placeholder="44" inputmode="decimal" onchange="saveWallet()"></div>
     </div>
     <label>تغيير رمز PIN</label>
     <input type="password" id="newPin" maxlength="6" placeholder="رمز جديد" inputmode="numeric" onchange="changePin()">
@@ -751,9 +762,11 @@ let rateMem=JSON.parse(localStorage.getItem('arkan-rates')||'{}');
 const $=id=>document.getElementById(id);
 function NV(id){const e=$(id);if(!e)return 0;return parseFloat(String(e.value||'').replace(/[^0-9.\-]/g,''))||0;}
 const fmt=(n,d=2)=>Number(n).toLocaleString('en-US',{maximumFractionDigits:d});
-const CCY={aoa:'KWZ',mru:'MRU'};
-const CCYI={AOA:'KWZ',USDT:'$',MRU:'MRU'};
-const typeLbl={bridge:'جسر AOA→MRU',aoa:'تداول AOA/USDT',mru:'تداول MRU/USDT'};
+const CCY={aoa:'KWZ',mru:'MRU',euraoa:'KWZ',eurmru:'MRU'};
+const TRD={aoa:{b:'USDT',q:'AOA'},mru:{b:'USDT',q:'MRU'},euraoa:{b:'EUR',q:'AOA'},eurmru:{b:'EUR',q:'MRU'}};
+const isTrade=t=>!!TRD[t];
+const CCYI={AOA:'KWZ',USDT:'$',MRU:'MRU',EUR:'EUR'};
+const typeLbl={bridge:'جسر AOA→MRU',aoa:'تداول AOA/USDT',mru:'تداول MRU/USDT',euraoa:'تداول EUR/AOA',eurmru:'تداول EUR/MRU'};
 
 /* محرك تحويل للسلاسل فقط */
 const PAIRS={
@@ -798,14 +811,16 @@ document.querySelectorAll('[data-ty]').forEach(el=>el.addEventListener('click',(
   curType=el.dataset.ty;
   document.querySelectorAll('[data-ty]').forEach(x=>x.classList.toggle('on',x===el));
   $('fBridge').style.display=curType==='bridge'?'block':'none';
-  $('fTrade').style.display=(curType==='aoa'||curType==='mru')?'block':'none';
-  $('fChain').style.display=curType==='chain'?'block':'none';
-  $('fMeta').style.display=curType==='chain'?'none':'block';
-  $('saveBtn').style.display=curType==='chain'?'none':'block';
-  if(curType==='aoa'||curType==='mru'){
-    $('tradeTitle').textContent=curType==='aoa'?'تداول AOA/USDT':'تداول MRU/USDT';
-    $('lblBuy').textContent=`سعر الشراء (${curType==='aoa'?'AOA':'MRU'})`;
-    $('lblSell').textContent=`سعر البيع (${curType==='aoa'?'AOA':'MRU'})`;
+  $('fTrade').style.display=isTrade(curType)?'block':'none';
+  $('fChain').style.display='none';
+  $('fMeta').style.display='block';
+  $('saveBtn').style.display='block';
+  if(isTrade(curType)){
+    const T=TRD[curType];
+    $('tradeTitle').textContent=`تداول ${T.b}/${T.q}`;
+    $('qtyLbl').textContent=`كمية ${T.b}`;
+    $('lblBuy').textContent=`سعر الشراء (${T.q})`;
+    $('lblSell').textContent=`سعر البيع (${T.q})`;
   }
   hideTicket();renderChains();calc();
 }));
@@ -861,7 +876,7 @@ function metaOf(){
 }
 function calc(){
   if(curType==='bridge')calcBridge();
-  else if(curType==='aoa'||curType==='mru')calcTrade();
+  else if(isTrade(curType))calcTrade();
 }
 
 function calcBridge(){
@@ -922,7 +937,7 @@ function calcTrade(){
   const cost=qty*rb,rev=rs?qty*rs:0,profit=rs?rev-cost:0;
   const ref=makeRef();
   const M=metaOf();
-  cur={type:curType,ref,qty,rBuy:rb,rSell:rs||0,cost,rev,profit,
+  cur={type:curType,ref,base:TRD[curType].b,qty,rBuy:rb,rSell:rs||0,cost,rev,profit,
     note:$('note').value||'—',
     contactId:M.contactId,contactName:M.contact?M.contact.name:null,pay:M.pay,due:M.due,
     status:rs?'paid':'wait',ts:Date.now()};
@@ -1103,8 +1118,8 @@ function invRows(t){
   }
   const ccy=CCY[t.type];
   return [
-    ['العملية','تداول '+(t.type==='aoa'?'AOA':'MRU')+'/USDT'],
-    ['الكمية',fmt(t.qty)+' USDT'],
+    ['العملية','تداول '+(TRD[t.type]||{b:'USDT',q:CCY[t.type]}).b+'/'+(TRD[t.type]||{q:'?'}).q],
+    ['الكمية',fmt(t.qty)+' '+(t.base||'USDT')],
     ...(t.rSell?[['سعر البيع',t.rSell+' '+ccy],['الإجمالي',fmt(t.qty*t.rSell,0)+' '+ccy]]:[]),
     ['الحالة',t.rSell?'مكتملة ✓':'مفتوحة']
   ];
@@ -1217,7 +1232,7 @@ let autoWa=localStorage.getItem('arkan-autowa')||'invoice';
 function saveAutoWa(){autoWa=$('autoWa').value;localStorage.setItem('arkan-autowa',autoWa);toast('حُفظ ✓');}
 function autoWaMsg(t){
   if(t.type==='bridge')return `CONFIRMED ${t.ref}\n${t.fromC||'AOA'} ${fmt((t.amt!=null?t.amt:t.aoa),0)}\nUSDT NET: ${fmt(t.uC)} $\n${t.toC||'MRU'}: ${fmt((t.payout!=null?t.payout:t.mru),0)}`;
-  if(t.type==='aoa'||t.type==='mru')return `TRADE ${t.ref}\n${t.type==='aoa'?'AOA':'MRU'}/USDT\nQTY: ${fmt(t.qty)} $ @ ${t.rBuy}${t.rSell?`→${t.rSell}\nPROFIT: ${fmt(t.profit,0)} ${CCY[t.type]}`:''}`;
+  if(isTrade(t.type))return `TRADE ${t.ref}\n${(t.base||'USDT')}/${TRD[t.type].q}\nQTY: ${fmt(t.qty)} ${t.base||'USDT'} @ ${t.rBuy}${t.rSell?`→${t.rSell}\nPROFIT: ${fmt(t.profit,0)} ${CCY[t.type]}`:''}`;
   return null;
 }
 function clientWaMsg(t){
@@ -1275,14 +1290,14 @@ function render(){
           <button class="btn btn-line btn-sm" onclick="openReceipts('${t.ref}')">📎 إيصال${receiptsOf(t.ref).length?' ('+receiptsOf(t.ref).length+')':''}</button>
           <button class="btn btn-line btn-sm" onclick="delTx('${t.ref}')">حذف</button>
         </div>`;
-    }else if(t.type==='aoa'||t.type==='mru'){
+    }else if(isTrade(t.type)){
       const ccy=CCY[t.type];
       const [cls,lbl]=tradeBadges[t.status]||tradeBadges.paid;
       div.innerHTML=`
         <div class="tx-top"><span class="tx-ref">${t.ref}</span>
           <span><span class="badge b-type">${typeLbl[t.type]}</span> ${pbHtml}<span class="badge ${cls}">${lbl}</span></span></div>
         <div class="tx-mid">
-          <span>QTY <b>${fmt(t.qty)} $</b></span>
+          <span>QTY <b>${fmt(t.qty)} ${t.base==='EUR'?'€':'$'}</b></span>
           <span>شراء <b>${t.rBuy}</b></span>
           <span>بيع <b>${t.rSell||'—'}</b></span>
           <span>الربح <b class="${!t.rSell?'':(t.profit>=0?'green':'red')}">${t.rSell?fmt(t.profit,0)+' '+ccy:'—'}</b></span>
@@ -1874,23 +1889,23 @@ function cleanReceipts(){
 /* ================= WALLET / PORTFOLIO ================= */
 let wallet=JSON.parse(localStorage.getItem('arkan-wallet')||'{"U":0,"A":0,"M":0,"vA":1160,"vM":40}');
 function saveWallet(){
-  wallet={U:+$('wU').value||0,A:+$('wA').value||0,M:+$('wM').value||0,
-    vA:+$('wVA').value||1160,vM:+$('wVM').value||40};
+  wallet={U:+$('wU').value||0,A:+$('wA').value||0,M:+$('wM').value||0,E:+$('wE').value||0,
+    vA:+$('wVA').value||1160,vM:+$('wVM').value||40,vE:+$('wVE').value||44};
   localStorage.setItem('arkan-wallet',JSON.stringify(wallet));
   renderPortfolio();toast('حُفظت المحفظة ✓');
 }
 function txFlows(t,f){
   if(t.type==='bridge'){f[t.fromC||'AOA']+=(t.amt!=null?t.amt:t.aoa)||0;f[t.toC||'MRU']-=(t.payout!=null?t.payout:t.mru)||0;f.USDT+=(t.pUsdt||0);}
-  else if(t.type==='aoa'||t.type==='mru'){
-    const k=t.type==='aoa'?'AOA':'MRU';
-    if(t.rSell)f[k]+=t.profit;else{f[k]-=t.cost;f.USDT+=t.qty;}
+  else if(isTrade(t.type)){
+    const k=TRD[t.type].q,b=t.base||'USDT';
+    if(t.rSell)f[k]+=t.profit;else{f[k]-=t.cost;f[b]+=t.qty;}
   }
   else if(t.type==='leg'){f[t.from]-=t.fromAmt;f[t.to]+=t.toAmt;}
   else if(t.type==='ledger'){if(t.pay==='owed_us')f[t.ccy]-=t.amount;else f[t.ccy]+=t.amount;}
   else if(t.kind==='pair'&&t.from){f[t.from]-=t.fromAmt;f[t.to]+=t.toAmt;}
 }
 function balances(){
-  const f={USDT:0,AOA:0,MRU:0};
+  const f={USDT:0,AOA:0,MRU:0,EUR:0};
   hist.forEach(d=>(d.txs||[]).forEach(t=>txFlows(t,f)));
   txs.forEach(t=>txFlows(t,f));
   return {USDT:wallet.U+f.USDT,AOA:wallet.A+f.AOA,MRU:wallet.M+f.MRU};
@@ -1917,14 +1932,16 @@ let selAsset=null; /* null=الإجمالي | U/A/M */
 function selectAsset(k){selAsset=(selAsset===k)?null:k;renderPortfolio();}
 function renderPortfolio(){
   const b=balances();
-  const uU=Math.max(b.USDT,0), uA=Math.max(b.AOA/(wallet.vA||1160),0), uM=Math.max(b.MRU/(wallet.vM||40),0);
-  const tot=Math.max(uU+uA+uM,0);
+  const eurUsd=(wallet.vE||44)/(wallet.vM||40); /* MRU/EUR ÷ MRU/USDT = $ لكل يورو */
+  const uU=Math.max(b.USDT,0), uA=Math.max(b.AOA/(wallet.vA||1160),0), uM=Math.max(b.MRU/(wallet.vM||40),0), uE=Math.max((b.EUR||0)*eurUsd,0);
+  const tot=Math.max(uU+uA+uM+uE,0);
   /* المركز: الإجمالي أو الأصل المحدد */
   const bi=$('balInt'),bd=$('balDec'),lbl=document.querySelector('.donutC .s'),curEl=document.querySelector('.donutC .cur');
   const views={
     U:{amt:b.USDT,usd:uU,name:'Tether · USDT',sym:'₮',color:'#3DDC97'},
-    A:{amt:b.AOA,usd:uA,name:'Kwanza · AOA',sym:'Kz',color:'#FFC94D'},
-    M:{amt:b.MRU,usd:uM,name:'Ouguiya · MRU',sym:'UM',color:'#7FB8FF'}
+    A:{amt:b.AOA,usd:uA,name:'AOA · كوانزا',sym:'Kz',color:'#FFC94D'},
+    M:{amt:b.MRU,usd:uM,name:'MRU · أوقية',sym:'UM',color:'#7FB8FF'},
+    E:{amt:b.EUR||0,usd:uE,name:'EUR · يورو',sym:'€',color:'#C9B6FF'}
   };
   if(bi){
     if(selAsset&&views[selAsset]){
@@ -1949,15 +1966,17 @@ function renderPortfolio(){
   $('balU').textContent=fmt(b.USDT)+' ₮';$('balUu').textContent=DISP_SYM[dispCcy]+fmt(convDisp(uU));
   $('balA').textContent=fmt(b.AOA,0)+' Kz';$('balAu').textContent=DISP_SYM[dispCcy]+fmt(convDisp(uA));
   $('balM').textContent=fmt(b.MRU,0)+' UM';$('balMu').textContent=DISP_SYM[dispCcy]+fmt(convDisp(uM));
-  const rA=$('rateA'),rM=$('rateM');
+  const bE=$('balE');if(bE){bE.textContent=fmt(b.EUR||0)+' €';$('balEu').textContent=DISP_SYM[dispCcy]+fmt(convDisp(uE));}
+  const rA=$('rateA'),rM=$('rateM'),rE=$('rateE');
   if(rA)rA.textContent=fmt(wallet.vA||1160,0)+' Kz/USDT';
   if(rM)rM.textContent=fmt(wallet.vM||40,0)+' UM/USDT';
+  if(rE)rE.textContent=fmt(wallet.vE||44,0)+' UM/EUR';
   /* الحلقة r=150 — كل عملة لها قوس دائم قابل للمس:
      الموجبة: حصة نسبية (حد أدنى 3%) · الصفرية/السالبة: قوس ثابت باهت 3% */
   const C=2*Math.PI*150, gap=10, MIN=0.03;
-  const keys=['U','A','M'];
-  const usdVals={U:uU,A:uA,M:uM};
-  const rawBal={U:b.USDT,A:b.AOA,M:b.MRU};
+  const keys=['U','A','M','E'];
+  const usdVals={U:uU,A:uA,M:uM,E:uE};
+  const rawBal={U:b.USDT,A:b.AOA,M:b.MRU,E:b.EUR||0};
   let shares={};
   if(tot<=0){keys.forEach(k=>shares[k]=1/3);}
   else{
@@ -1984,13 +2003,14 @@ function renderPortfolio(){
     off+=C*sh;
   });
   /* إبراز بطاقة الأصل المحددة */
-  [['U','cardU'],['A','cardA'],['M','cardM']].forEach(([k,id])=>{
+  [['U','cardU'],['A','cardA'],['M','cardM'],['E','cardE']].forEach(([k,id])=>{
     const c=$(id);if(!c)return;
     c.style.borderColor=selAsset===k?views[k].color:'rgba(255,255,255,.07)';
     c.style.background=selAsset===k?'rgba(255,255,255,.08)':'rgba(255,255,255,.045)';
   });
   $('wU').value=wallet.U||'';$('wA').value=wallet.A||'';$('wM').value=wallet.M||'';
   $('wVA').value=wallet.vA||'';$('wVM').value=wallet.vM||'';
+  const wE=$('wE');if(wE){wE.value=wallet.E||'';$('wVE').value=wallet.vE||'';}
   const rc=$('rcptCount');if(rc)rc.textContent=receipts.length;
   const aw=$('autoWa');if(aw&&aw.value!==autoWa)aw.value=autoWa;
   document.querySelectorAll('.ccySel button').forEach(x=>x.classList.toggle('on',x.dataset.dc===dispCcy));
@@ -2207,7 +2227,7 @@ function renderDebts(){
 /* ================= HISTORY ================= */
 function txSummary(t){
   if(t.type==='bridge')return{info:(t.contactName||t.name||'')+' · '+fmt((t.payout!=null?t.payout:t.mru)||0,0)+' '+CCYI[t.toC||'MRU'],p:fmt(t.pUsdt||0)+' $'};
-  if(t.type==='aoa'||t.type==='mru')return{info:fmt(t.qty||0)+'$ @ '+t.rBuy+(t.rSell?'→'+t.rSell:''),p:t.rSell?fmt(t.profit,0)+' '+CCY[t.type]:'مفتوحة'};
+  if(isTrade(t.type))return{info:fmt(t.qty||0)+' '+(t.base||'$')+' @ '+t.rBuy+(t.rSell?'→'+t.rSell:''),p:t.rSell?fmt(t.profit,0)+' '+CCY[t.type]:'مفتوحة'};
   if(t.type==='ledger')return{info:(t.contactName||'')+' · قيد'+(t.note?' — '+t.note:''),p:(t.pay==='owed_us'?'لنا ':'علينا ')+fmt(t.amount,0)+' '+CCYI[t.ccy]};
   if(t.type==='leg')return{info:'رجل: '+pairLabel(t.pair)+' @ '+t.rate,p:fmt(t.toAmt,0)+' '+CCYI[t.to]};
   if(t.type==='chainResult')return{info:'سلسلة '+t.legs+' أرجل',p:(t.profit>=0?'+':'')+fmt(t.profit,0)+' '+CCYI[t.ccy]};
@@ -2288,7 +2308,7 @@ async function genPDF(dayIdx){
       <td>${fmt(t.uC)}</td><td>${fmt(t.mru,0)}</td><td>${t.contactName||t.name}</td>
       <td style="color:${t.pUsdt>=0?'#0a7a3d':'#c0392b'};font-weight:600">${fmt(t.pUsdt)} $</td>
       <td>${t.pay==='settled'?'مسدد':(t.pay==='owed_us'?'دين لنا':'دين علينا')}</td></tr>`).join('');
-  const rowsTr=list.filter(t=>t.type==='aoa'||t.type==='mru').map(t=>`
+  const rowsTr=list.filter(t=>isTrade(t.type)).map(t=>`
     <tr><td>${t.ref}</td><td>${typeLbl[t.type]}</td><td>${fmt(t.qty)}</td>
       <td>${t.rBuy}</td><td>${t.rSell||'—'}</td>
       <td style="color:${(t.profit||0)>=0?'#0a7a3d':'#c0392b'};font-weight:600">${t.rSell?fmt(t.profit,0)+' '+CCY[t.type]:'مفتوحة'}</td></tr>`).join('');
@@ -2385,7 +2405,7 @@ function exportXlsx(dayIdx){
       'MRU Paid':Math.round(t.mru),'Profit':+t.pUsdt.toFixed(2),'Profit CCY':'USDT',
       'Contact':t.contactName||t.name,'Bankily':t.phone,'Pay':t.pay||'settled','Due':t.due||'',
       'Status':{wait:'PENDING',conf:'CONFIRMED',paid:'PAID'}[t.status],'Loss Reason':t.lossReason||''};
-    if(t.type==='aoa'||t.type==='mru')return{
+    if(isTrade(t.type))return{
       'Ref':t.ref,'Type':t.type==='aoa'?'TRADE AOA/USDT':'TRADE MRU/USDT',
       'Date':new Date(t.ts).toLocaleDateString('en-GB'),
       'Qty USDT':t.qty,'Buy':t.rBuy,'Sell':t.rSell||'',
