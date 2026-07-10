@@ -1113,7 +1113,7 @@ async function genInvoice(ref){
     </tr>`).join('');
   const stage=$('pdfStage');
   stage.innerHTML=`
-  <div style="width:794px;background:#fff;font-family:'Tajawal','IBM Plex Sans Arabic'">
+  <div style="width:794px;min-height:1123px;display:flex;flex-direction:column;background:#fff;font-family:'Tajawal','IBM Plex Sans Arabic'">
     <div style="background:linear-gradient(135deg,#2E2758,#1C1D3C 60%,#15172E);padding:32px 36px;display:flex;justify-content:space-between;align-items:center">
       <div style="display:flex;align-items:center;gap:16px">
         ${invLogoSVG()}
@@ -1154,7 +1154,7 @@ async function genInvoice(ref){
         <span style="font-size:14px;color:#8B72FF;font-family:'IBM Plex Mono';font-weight:700">ARKAN INTERNATIONAL TRADING</span>
       </div>
     </div>
-    <div style="padding:16px 36px 22px;border-top:1px solid #ecebf5;display:flex;justify-content:space-between;font-size:12px;color:#9a9db2;font-family:'IBM Plex Mono'">
+    <div style="margin-top:auto;padding:16px 36px 22px;border-top:1px solid #ecebf5;display:flex;justify-content:space-between;font-size:12px;color:#9a9db2;font-family:'IBM Plex Mono'">
       <span>WhatsApp 36295050 · Mohamedarbi0208@gmail.com</span>
       <span>ARKAN SETTLEMENT FLOW</span>
     </div>
@@ -1162,9 +1162,10 @@ async function genInvoice(ref){
   try{await document.fonts.ready;}catch(e){}
   await new Promise(r=>setTimeout(r,200));
   const canvas=await html2canvas(stage,{scale:2.5,backgroundColor:'#ffffff',width:794});
-  const w=148,hh=canvas.height*w/canvas.width;
-  const doc=new jspdf.jsPDF('p','mm',[w,hh]);
-  doc.addImage(canvas.toDataURL('image/jpeg',0.96),'JPEG',0,0,w,hh);
+  const doc=new jspdf.jsPDF('p','mm','a4');
+  let iw=210,ih=canvas.height*210/canvas.width;
+  if(ih>297){ih=297;iw=canvas.width*297/canvas.height;}
+  doc.addImage(canvas.toDataURL('image/jpeg',0.96),'JPEG',(210-iw)/2,0,iw,ih);
   stage.innerHTML='';
   return {doc,t};
 }
