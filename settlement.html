@@ -1099,8 +1099,7 @@ function invRows(t){
   return [
     ['العملية','تداول '+(t.type==='aoa'?'AOA':'MRU')+'/USDT'],
     ['الكمية',fmt(t.qty)+' USDT'],
-    ['سعر الشراء',t.rBuy+' '+ccy],
-    ...(t.rSell?[['سعر البيع',t.rSell+' '+ccy]]:[]),
+    ['السعر',(t.rSell||t.rBuy)+' '+ccy],
     ['الحالة',t.rSell?'مكتملة ✓':'مفتوحة']
   ];
 }
