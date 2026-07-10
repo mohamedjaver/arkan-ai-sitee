@@ -334,8 +334,8 @@ nav{position:fixed;bottom:0;left:0;right:0;z-index:90;
         </select></div>
     </div>
     <div class="row">
-      <div><label id="lblBAmt">مبلغ AOA من العميل</label><input type="number" id="aoa" placeholder="850000" inputmode="decimal"></div>
-      <div id="rcWrap"><label id="lblRc">سعر العميل AOA/USDT</label><input type="number" id="rClient" placeholder="1180" inputmode="decimal"></div>
+      <div><label id="lblBAmt">مبلغ AOA من العميل</label><input type="text" id="aoa" placeholder="850000" inputmode="decimal"></div>
+      <div id="rcWrap"><label id="lblRc">سعر العميل AOA/USDT</label><input type="text" id="rClient" placeholder="1180" inputmode="decimal"></div>
     </div>
     <!-- دفعة إيصالات العميل: قراءة فقط، بلا حفظ ملفات -->
     <div class="legform" id="batchBox" style="margin-top:10px">
@@ -349,8 +349,8 @@ nav{position:fixed;bottom:0;left:0;right:0;z-index:90;
       <div id="batchList" style="margin-top:6px"></div>
     </div>
     <div class="row">
-      <div id="rmWrap"><label id="lblRm">سعر السوق AOA/USDT</label><input type="number" id="rMarket" placeholder="1120" inputmode="decimal"></div>
-      <div id="rtWrap"><label id="lblRt">سعر الدفع MRU/USDT</label><input type="number" id="rMru" placeholder="40" inputmode="decimal"></div>
+      <div id="rmWrap"><label id="lblRm">سعر السوق AOA/USDT</label><input type="text" id="rMarket" placeholder="1120" inputmode="decimal"></div>
+      <div id="rtWrap"><label id="lblRt">سعر الدفع MRU/USDT</label><input type="text" id="rMru" placeholder="40" inputmode="decimal"></div>
     </div>
     <div class="alertline" id="rateAlertB"></div>
     <div id="bankWrap">
@@ -367,10 +367,10 @@ nav{position:fixed;bottom:0;left:0;right:0;z-index:90;
   <div class="card" id="fTrade" style="display:none">
     <h3 id="tradeTitle">تداول AOA/USDT</h3>
     <label>كمية USDT</label>
-    <input type="number" id="qty" placeholder="1000" inputmode="decimal">
+    <input type="text" id="qty" placeholder="1000" inputmode="decimal">
     <div class="row">
-      <div><label id="lblBuy">سعر الشراء (AOA)</label><input type="number" id="rBuy" placeholder="1160" inputmode="decimal"></div>
-      <div><label id="lblSell">سعر البيع (AOA)</label><input type="number" id="rSell" placeholder="1170" inputmode="decimal"></div>
+      <div><label id="lblBuy">سعر الشراء (AOA)</label><input type="text" id="rBuy" placeholder="1160" inputmode="decimal"></div>
+      <div><label id="lblSell">سعر البيع (AOA)</label><input type="text" id="rSell" placeholder="1170" inputmode="decimal"></div>
     </div>
     <div class="alertline" id="rateAlertT"></div>
     <label>ملاحظة / الطرف المقابل (اختياري)</label>
@@ -743,6 +743,7 @@ let receipts=JSON.parse(localStorage.getItem('arkan-receipts')||'[]');
 let keepFiles=(localStorage.getItem('arkan-keepfiles')||'ask'); // ask | keep | scan
 let rateMem=JSON.parse(localStorage.getItem('arkan-rates')||'{}');
 const $=id=>document.getElementById(id);
+function NV(id){const e=$(id);if(!e)return 0;return parseFloat(String(e.value||'').replace(/[^0-9.\-]/g,''))||0;}
 const fmt=(n,d=2)=>Number(n).toLocaleString('en-US',{maximumFractionDigits:d});
 const CCY={aoa:'KWZ',mru:'MRU'};
 const CCYI={AOA:'KWZ',USDT:'$',MRU:'MRU'};
@@ -859,7 +860,7 @@ function calc(){
 
 function calcBridge(){
   const F=bFromV(),T=bToV();
-  const amt=+$('aoa').value,rc=+$('rClient').value,rm=+$('rMarket').value,rt=+$('rMru').value;
+  const amt=NV('aoa'),rc=NV('rClient'),rm=NV('rMarket'),rt=NV('rMru');
   let uC,uM,payout;
   if(F!=='USDT'){
     if(!amt||!rc||!rm||(T!=='USDT'&&!rt)){hideTicket();return;}
@@ -908,7 +909,7 @@ ${T==='MRU'?'Bankily: '+cur.phone+String.fromCharCode(10):''}المبلغ: ${fmt
   startTimer();
 }
 function calcTrade(){
-  const qty=+$('qty').value,rb=+$('rBuy').value,rs=+$('rSell').value;
+  const qty=NV('qty'),rb=NV('rBuy'),rs=NV('rSell');
   if(!qty||!rb){hideTicket();return;}
   showDev($('rateAlertT'),rateDeviation(curType,rb));
   const ccy=CCY[curType];
