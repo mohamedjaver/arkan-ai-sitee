@@ -514,6 +514,12 @@ nav{position:fixed;bottom:0;left:0;right:0;z-index:90;
       <span>الإيصالات المحفوظة: <b id="rcptCount">0</b></span>
       <button class="btn btn-line btn-sm" onclick="cleanReceipts()">حذف إيصالات قبل 60 يوم</button>
     </div>
+    <h3 style="margin-top:16px">النسخة الاحتياطية</h3>
+    <div class="btn-row">
+      <button class="btn btn-gold" onclick="exportBackup()">⬇️ تصدير نسخة كاملة</button>
+      <button class="btn btn-line" onclick="importBackup()">⬆️ استعادة نسخة</button>
+    </div>
+    <div style="color:var(--dim);font-size:11px;margin-top:6px">ملف JSON يشمل كل شيء: العمليات، الجهات، الديون، المحفظة، الإعدادات. احفظه دوريًا أو انقله لجهاز آخر.</div>
     <h3 style="margin-top:16px">المحفظة — أرصدة الافتتاح</h3>
     <div class="row">
       <div><label>USDT</label><input type="number" id="wU" placeholder="0" inputmode="decimal" onchange="saveWallet()"></div>
@@ -1289,6 +1295,21 @@ function render(){
           <button class="btn btn-line btn-sm" onclick="openReceipts('${t.ref}')">📎 إيصال${receiptsOf(t.ref).length?' ('+receiptsOf(t.ref).length+')':''}</button>
           <button class="btn btn-line btn-sm" onclick="delTx('${t.ref}')">حذف</button>
         </div>`;
+    }else if(t.type==='ledger'){
+      const settled=t.pay==='settled';
+      div.innerHTML=`
+        <div class="tx-top"><span class="tx-ref">${t.ref}</span>
+          <span><span class="badge b-paid">قيد يدوي</span>
+          <span class="badge ${t.pay==='owed_us'?'b-wait':'b-conf'}">${t.pay==='owed_us'?'لنا عليه':(settled?'مسدد':'له علينا')}</span></span></div>
+        <div class="tx-mid">
+          <span>${t.contactName||'—'}</span>
+          <span><b class="${t.pay==='owed_us'?'green':'red'}">${fmt(t.amount,0)} ${CCYI[t.ccy]}</b></span>
+          ${t.note?`<span style="color:var(--dim)">${t.note}</span>`:''}
+        </div>
+        <div class="tx-acts">
+          ${!settled?`<button class="btn btn-gold btn-sm" onclick="addPayment('${t.ref}')">دفعة (متبقٍ ${fmt(remaining(t),0)})</button>`:''}
+          <button class="btn btn-line btn-sm" onclick="delTx('${t.ref}')">حذف</button>
+        </div>`;
     }else if(t.type==='leg'){
       const ch=chains.find(c=>c.id===t.chainId);
       div.innerHTML=`
@@ -1377,11 +1398,25 @@ function editBatch(i){
 }
 function dropBatch(i){batch.splice(i,1);renderBatch(true);}
 function clearBatch(){batch=[];renderBatch(false);$('aoa').value='';calc();toast('صُفّرت الإيصالات');}
+
+/* ================= MANUAL LEDGER ENTRY (له/عليه) ================= */
+function addLedger(cid){
+  const c=contacts.find(x=>x.id===cid);if(!c)return;
+  const amt=NV('lgAmt');if(!amt||amt<=0){toast('أدخل المبلغ');return;}
+  const ccy=$('lgCcy').value,dir=$('lgDir').value,note=$('lgNote').value.trim();
+  const ref=makeRef();
+  txs.push({type:'ledger',ref,ccy,amount:amt,pay:dir,note,
+    contactId:c.id,contactName:c.name,cWa:c.wa||'',ts:Date.now()});
+  seq++;persist();render();
+  toast('سُجل القيد ✓ '+(dir==='owed_us'?'لنا ':'علينا ')+fmt(amt,0)+' '+CCYI[ccy]);
+  openStatement(cid);
+}
 /* ================= LEDGER PAYMENTS (CashBook-style) ================= */
 function savePayments(){localStorage.setItem('arkan-payments',JSON.stringify(payments));}
 
 /* المبلغ الأصلي والعملة لعملية دين */
 function debtBase(t){
+  if(t.type==='ledger')return {a:t.amount,c:t.ccy};
   if(t.type==='bridge')return t.pay==='owed_us'?{a:(t.amt!=null?t.amt:t.aoa),c:t.fromC||'AOA'}:{a:(t.payout!=null?t.payout:t.mru),c:t.toC||'MRU'};
   if(t.type==='aoa')return {a:t.pay==='owed_us'?(t.rev||t.cost):t.cost,c:'AOA'};
   if(t.type==='mru')return {a:t.pay==='owed_us'?(t.rev||t.cost):t.cost,c:'MRU'};
@@ -1725,6 +1760,20 @@ function openStatement(cid){
   $('mdlBody').innerHTML=`
     <div class="card">
       <div class="chips" style="justify-content:flex-start;margin-bottom:6px">${balLine}</div>
+      <!-- قيد يدوي سريع (له/عليه) -->
+      <div class="legform" style="margin:8px 0 12px">
+        <div class="row">
+          <div><label>المبلغ</label><input type="text" id="lgAmt" placeholder="0" inputmode="decimal"></div>
+          <div><label>العملة</label><select id="lgCcy" class="ar"><option value="AOA">AOA</option><option value="MRU">MRU</option><option value="USDT">USDT</option></select></div>
+        </div>
+        <div class="row">
+          <div><label>الاتجاه</label><select id="lgDir" class="ar">
+            <option value="owed_us">لنا عليه (أعطيناه)</option>
+            <option value="we_owe">له علينا (أعطانا)</option></select></div>
+          <div><label>تفاصيل (اختياري)</label><input type="text" id="lgNote" class="ar" placeholder="—"></div>
+        </div>
+        <button class="btn btn-gold btn-sm" style="width:100%" onclick="addLedger('${c.id}')">➕ إضافة قيد</button>
+      </div>
       <div style="color:var(--dim);font-size:12px;margin:4px 0 10px">${cnLbl[c.type][0]} · ${contactTxs(c).length} عملية${c.wa?' · '+c.wa:''}</div>
       ${list.length?rows:'<div class="empty" style="padding:20px 0">لا عمليات</div>'}
     </div>`;
@@ -1776,6 +1825,43 @@ function totals(list){
 }
 
 
+
+/* ================= BACKUP / RESTORE ================= */
+function exportBackup(){
+  const data={};
+  for(let i=0;i<localStorage.length;i++){
+    const k=localStorage.key(i);
+    if(k&&k.startsWith('arkan-'))data[k]=localStorage.getItem(k);
+  }
+  const blob=new Blob([JSON.stringify({app:'ARKAN_SETTLEMENT',ts:Date.now(),data},null,1)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='ARKAN_BACKUP_'+new Date().toISOString().slice(0,10)+'.json';
+  document.body.appendChild(a);a.click();a.remove();
+  toast('نُزّلت النسخة الاحتياطية ✓ احفظها بمكان آمن');
+}
+function importBackup(){
+  const inp=document.createElement('input');
+  inp.type='file';inp.accept='application/json,.json';
+  inp.onchange=()=>{
+    const f=inp.files[0];if(!f)return;
+    const r=new FileReader();
+    r.onload=()=>{
+      try{
+        const j=JSON.parse(r.result);
+        const data=j.data||j;
+        const keys=Object.keys(data).filter(k=>k.startsWith('arkan-'));
+        if(!keys.length){toast('ملف غير صالح');return;}
+        if(!confirm('استعادة '+keys.length+' عنصرًا؟ سيستبدل البيانات الحالية.'))return;
+        keys.forEach(k=>localStorage.setItem(k,data[k]));
+        toast('استُعيدت النسخة ✓ — إعادة تحميل...');
+        setTimeout(()=>location.reload(),800);
+      }catch(e){toast('فشل قراءة الملف');}
+    };
+    r.readAsText(f);
+  };
+  inp.click();
+}
 /* ================= RECEIPTS MAINTENANCE ================= */
 function cleanReceipts(){
   const cutoff=Date.now()-60*24*3600*1000;
@@ -1800,6 +1886,7 @@ function txFlows(t,f){
     if(t.rSell)f[k]+=t.profit;else{f[k]-=t.cost;f.USDT+=t.qty;}
   }
   else if(t.type==='leg'){f[t.from]-=t.fromAmt;f[t.to]+=t.toAmt;}
+  else if(t.type==='ledger'){if(t.pay==='owed_us')f[t.ccy]-=t.amount;else f[t.ccy]+=t.amount;}
   else if(t.kind==='pair'&&t.from){f[t.from]-=t.fromAmt;f[t.to]+=t.toAmt;}
 }
 function balances(){
@@ -2027,6 +2114,18 @@ function useContact(id){
   $('bName').value=c.name;
   calc();toast('عُبئت بيانات '+c.name+' ✓');
 }
+
+/* رصيد الجهة الصافي بكل عملة (لنا +، علينا −) */
+function contactBal(c){
+  const bal={USDT:0,AOA:0,MRU:0};
+  contactTxs(c).forEach(t=>{
+    const b=debtBase(t);if(!b)return;
+    const rem=remaining(t);if(rem<=0.01)return;
+    if(t.pay==='owed_us')bal[b.c]+=rem;
+    else if(t.pay==='we_owe')bal[b.c]-=rem;
+  });
+  return bal;
+}
 function renderContacts(){
   fillContactSelect();
   const q=($('cq').value||'').trim().toLowerCase();
@@ -2044,6 +2143,10 @@ function renderContacts(){
     div.innerHTML=`
       <div class="tx-top"><span style="font-weight:700;font-size:14px">${c.name} <span style="color:var(--gold);font-size:12px">${stars}</span></span>
         <span><span class="badge ${cls}">${lbl}</span>${n?` <span class="badge b-type num">${n} عملية</span>`:''}</span></div>
+      <div class="tx-mid" style="flex-wrap:wrap">
+        ${(()=>{const b=contactBal(c);return ['AOA','MRU','USDT'].filter(k=>Math.abs(b[k])>0.01).map(k=>
+          `<span><b class="${b[k]>0?'green':'red'}" style="font-family:'IBM Plex Mono'">${b[k]>0?'لنا ':'علينا '}${fmt(Math.abs(b[k]),0)} ${CCYI[k]}</b></span>`).join('')||'<span style="color:var(--dim)">لا رصيد مفتوح</span>';})()}
+      </div>
       <div class="tx-mid">
         ${c.wa?`<span>WA <b>${c.wa}</b></span>`:''}
         ${c.bank?`<span>Bankily <b>${c.bank}</b></span>`:''}
@@ -2064,6 +2167,7 @@ function renderContacts(){
 /* ================= DEBTS ================= */
 function debtAmount(t){
   /* المبلغ والعملة حسب النوع والاتجاه */
+  if(t.type==='ledger')return {a:t.amount,c:t.ccy};
   if(t.type==='bridge')return t.pay==='owed_us'?{a:(t.amt!=null?t.amt:t.aoa),c:t.fromC||'AOA'}:{a:(t.payout!=null?t.payout:t.mru),c:t.toC||'MRU'};
   if(t.type==='aoa')return t.pay==='owed_us'?{a:t.rev||t.cost,c:'AOA'}:{a:t.cost,c:'AOA'};
   if(t.type==='mru')return t.pay==='owed_us'?{a:t.rev||t.cost,c:'MRU'}:{a:t.cost,c:'MRU'};
@@ -2104,6 +2208,7 @@ function renderDebts(){
 function txSummary(t){
   if(t.type==='bridge')return{info:(t.contactName||t.name||'')+' · '+fmt((t.payout!=null?t.payout:t.mru)||0,0)+' '+CCYI[t.toC||'MRU'],p:fmt(t.pUsdt||0)+' $'};
   if(t.type==='aoa'||t.type==='mru')return{info:fmt(t.qty||0)+'$ @ '+t.rBuy+(t.rSell?'→'+t.rSell:''),p:t.rSell?fmt(t.profit,0)+' '+CCY[t.type]:'مفتوحة'};
+  if(t.type==='ledger')return{info:(t.contactName||'')+' · قيد'+(t.note?' — '+t.note:''),p:(t.pay==='owed_us'?'لنا ':'علينا ')+fmt(t.amount,0)+' '+CCYI[t.ccy]};
   if(t.type==='leg')return{info:'رجل: '+pairLabel(t.pair)+' @ '+t.rate,p:fmt(t.toAmt,0)+' '+CCYI[t.to]};
   if(t.type==='chainResult')return{info:'سلسلة '+t.legs+' أرجل',p:(t.profit>=0?'+':'')+fmt(t.profit,0)+' '+CCYI[t.ccy]};
   if(t.kind==='pair')return{info:pairLabel(t.pair)+' · '+fmt(t.fromAmt,0)+'→'+fmt(t.toAmt,0),p:t.profit!=null?fmt(t.profit,0)+' '+t.profitCcy:'—'};
