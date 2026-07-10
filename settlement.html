@@ -1071,24 +1071,25 @@ function findInHist(ref){
 
 /* ================= CLIENT INVOICE (branded PDF) ================= */
 function invLogoSVG(){
-  return `<svg width="54" height="54" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
-    <rect width="512" height="512" rx="110" fill="#1C1D3C"/>
-    <rect x="104" y="214" width="94" height="13" rx="6.5" fill="#A78BFF" opacity="0.5"/>
-    <rect x="76" y="250" width="148" height="16" rx="8" fill="#A78BFF"/>
-    <rect x="104" y="288" width="94" height="13" rx="6.5" fill="#A78BFF" opacity="0.5"/>
-    <g transform="translate(20,0) skewX(-9)">
-      <path fill="#8B72FF" fill-rule="evenodd" d="M252 124 L342 382 L297 382 L283 341 L221 341 L207 382 L162 382 Z M252 212 L237 296 L267 296 Z"/>
-    </g></svg>`;
+  return `<svg width="58" height="58" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="ivm" x1="0" y1="0.2" x2="1" y2="0.8">
+        <stop offset="0" stop-color="#C24DF5"/><stop offset="0.42" stop-color="#7C5CFF"/>
+        <stop offset="0.72" stop-color="#2F7BF6"/><stop offset="1" stop-color="#3FB6F9"/>
+      </linearGradient>
+    </defs>
+    <rect width="512" height="512" rx="110" fill="#0A0E2A"/>
+    <path fill="url(#ivm)" d="M256 84 L394 428 L338 428 L256 222 L174 428 L118 428 Z"/>
+    <path fill="url(#ivm)" d="M78 384 Q 256 258 434 350 Q 300 306 174 352 Q 118 372 78 384 Z"/>
+    <path fill="url(#ivm)" opacity="0.85" d="M112 414 Q 244 344 342 366 Q 240 372 148 406 Q 126 412 112 414 Z"/>
+  </svg>`;
 }
 function invRows(t){
   if(t.type==='bridge'){
     const F=t.fromC||'AOA',T=t.toC||'MRU';
     return [
       ['نوع العملية','تحويل '+F+' ⟵ '+T],
-      ['المبلغ المستلم من العميل',fmt((t.amt!=null?t.amt:t.aoa),0)+' '+F],
       ...(F!=='USDT'?[['سعر الصرف',t.rc+' '+F+'/USDT']]:[]),
-      ['صافي USDT',fmt(t.uC)+' $'],
-      ['المبلغ المدفوع للعميل',fmt((t.payout!=null?t.payout:t.mru),0)+' '+T],
       ...(T==='MRU'&&t.phone!=='—'?[['Bankily',t.phone]]:[]),
       ['الحالة',{wait:'قيد التنفيذ',conf:'مؤكدة',paid:'مكتملة ✓'}[t.status]||'مكتملة ✓']
     ];
@@ -1130,6 +1131,20 @@ async function genInvoice(ref){
     <div style="padding:30px 36px">
       <div style="font-size:15px;color:#565b74;margin-bottom:6px;font-weight:700">العميل</div>
       <div style="font-size:24px;font-weight:800;color:#1C1D3C;margin-bottom:20px">${t.contactName||t.name||'—'}</div>
+      ${t.type==='bridge'?`
+      <div style="display:flex;gap:14px;align-items:stretch;margin-bottom:20px">
+        <div style="flex:1;background:linear-gradient(150deg,#F6F1FF,#EFE8FF);border:2px solid #D9CCFF;border-radius:16px;padding:18px;text-align:center">
+          <div style="font-size:13px;color:#6D5BB8;font-weight:800;margin-bottom:6px">المبلغ المستلم</div>
+          <div style="font-size:27px;font-weight:800;color:#4C1D95;font-family:'IBM Plex Mono';direction:ltr">${fmt((t.amt!=null?t.amt:t.aoa),0)}</div>
+          <div style="font-size:15px;color:#7C5CFF;font-weight:800;margin-top:3px">${t.fromC||'AOA'}</div>
+        </div>
+        <div style="display:flex;align-items:center;font-size:30px;color:#8B72FF">⟵</div>
+        <div style="flex:1;background:linear-gradient(150deg,#EFF6FF,#E4F0FF);border:2px solid #BFDBFE;border-radius:16px;padding:18px;text-align:center">
+          <div style="font-size:13px;color:#1D4ED8;font-weight:800;margin-bottom:6px">المبلغ المدفوع</div>
+          <div style="font-size:27px;font-weight:800;color:#1E3A8A;font-family:'IBM Plex Mono';direction:ltr">${fmt((t.payout!=null?t.payout:t.mru),0)}</div>
+          <div style="font-size:15px;color:#2F7BF6;font-weight:800;margin-top:3px">${t.toC||'MRU'}</div>
+        </div>
+      </div>`:''}
       <table style="width:100%;border-collapse:collapse;background:#faf9fe;border-radius:16px;overflow:hidden">
         ${rows}
       </table>
