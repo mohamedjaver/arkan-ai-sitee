@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="pt" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>ARKAN — Pagamentos Internacionais | تحويلات دولية</title>
+<link rel="icon" href="arkan-icon-512.png">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@500;700;800&family=IBM+Plex+Mono:wght@500;700&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#101127;--card:#1C1D3C;--acc:#8B72FF;--acc2:#B9A8FF;--gold:#F4A50C;--txt:#EDEAFB;--dim:#8B8FA8;--green:#3DDC97;--stroke:rgba(255,255,255,.09)}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:linear-gradient(180deg,#2E2758 0%,#1C1D3C 30%,#101127 70%);min-height:100vh;font-family:'Inter','Tajawal',sans-serif;color:var(--txt)}
+.wrap{max-width:560px;margin:0 auto;padding:34px 20px 60px}
+.logo{display:flex;align-items:center;gap:14px;justify-content:center;margin-bottom:8px}
+.logo img{width:56px;height:56px;border-radius:15px;box-shadow:0 10px 30px rgba(91,63,209,.5)}
+h1{text-align:center;font-size:24px;font-weight:800;letter-spacing:1px}
+h1 span{color:var(--acc2)}
+.sub{text-align:center;color:var(--dim);font-size:13px;letter-spacing:2px;margin:6px 0 6px;font-family:'IBM Plex Mono'}
+.sub-ar{text-align:center;color:var(--dim);font-size:14px;font-family:'Tajawal';margin-bottom:26px}
+.badges{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:26px}
+.badge{padding:7px 14px;border-radius:20px;background:rgba(139,114,255,.12);border:1px solid rgba(139,114,255,.3);font-size:11.5px;color:var(--acc2);font-weight:600}
+.card{background:rgba(255,255,255,.045);border:1px solid var(--stroke);border-radius:24px;padding:24px 20px;backdrop-filter:blur(14px)}
+.card h2{font-size:16px;margin-bottom:4px}
+.card .h2ar{font-family:'Tajawal';color:var(--dim);font-size:13px;margin-bottom:18px}
+label{display:block;font-size:12px;color:var(--dim);margin:14px 0 6px;font-weight:600}
+input,select,textarea{width:100%;background:rgba(0,0,0,.3);border:1px solid var(--stroke);border-radius:14px;
+  padding:14px;color:var(--txt);font-size:16px;font-family:'Inter','Tajawal';outline:none}
+input:focus,select:focus,textarea:focus{border-color:var(--acc)}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.ccy{display:flex;gap:8px;margin-top:6px}
+.ccy button{flex:1;padding:13px;border-radius:14px;border:1px solid var(--stroke);background:rgba(0,0,0,.25);
+  color:var(--dim);font-weight:800;font-size:15px;cursor:pointer;font-family:'IBM Plex Mono'}
+.ccy button.on{background:linear-gradient(135deg,var(--acc2),#5B3FD1);color:#fff;border-color:transparent}
+.go{width:100%;margin-top:22px;padding:17px;border:none;border-radius:16px;font-size:16.5px;font-weight:800;
+  background:linear-gradient(135deg,#25D366,#128C7E);color:#fff;cursor:pointer;font-family:'Inter','Tajawal';
+  box-shadow:0 12px 30px rgba(37,211,102,.3)}
+.note{margin-top:14px;font-size:11.5px;color:var(--dim);line-height:1.8;text-align:center}
+.steps{margin-top:26px}
+.step{display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-bottom:1px solid rgba(255,255,255,.05)}
+.step:last-child{border:none}
+.step .n{width:28px;height:28px;flex-shrink:0;border-radius:9px;background:rgba(139,114,255,.15);color:var(--acc2);
+  display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;font-family:'IBM Plex Mono'}
+.step .t{font-size:13.5px;line-height:1.6}
+.step .t small{color:var(--dim);display:block;font-family:'Tajawal'}
+footer{text-align:center;margin-top:30px;color:var(--dim);font-size:10.5px;letter-spacing:1.5px;font-family:'IBM Plex Mono'}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="logo"><img src="arkan-icon-512.png" alt="ARKAN"></div>
+  <h1>ARKAN <span>PAYMENTS</span></h1>
+  <div class="sub">EUR · USD · USDT — INTERNATIONAL SETTLEMENT</div>
+  <div class="sub-ar">تسديد فواتير الاستيراد بالعملة الصعبة — سرعة وموثوقية</div>
+
+  <div class="badges">
+    <span class="badge">⚡ Execução 24–48h</span>
+    <span class="badge">🏦 Pagamento direto ao fornecedor</span>
+    <span class="badge">🔒 Comprovativo oficial</span>
+  </div>
+
+  <div class="card">
+    <h2>Solicitar cotação — Pagamento internacional</h2>
+    <div class="h2ar">اطلب عرض سعر — الرد عبر واتساب فورًا</div>
+
+    <label>Nome da empresa · اسم الشركة</label>
+    <input id="comp" placeholder="Ex: LUANDA IMPORT LDA">
+
+    <label>Montante necessário · المبلغ المطلوب</label>
+    <input id="amt" inputmode="decimal" placeholder="Ex: 250,000">
+
+    <label>Moeda · العملة</label>
+    <div class="ccy">
+      <button class="on" data-c="EUR" onclick="pick(this)">EUR €</button>
+      <button data-c="USD" onclick="pick(this)">USD $</button>
+      <button data-c="USDT" onclick="pick(this)">USDT ₮</button>
+    </div>
+
+    <div class="row">
+      <div>
+        <label>País de pagamento · بلد الدفع</label>
+        <input id="dest" placeholder="Ex: Portugal / China">
+      </div>
+      <div>
+        <label>Finalidade · الغرض</label>
+        <select id="purp">
+          <option value="Fatura de importação">Fatura de importação</option>
+          <option value="Fornecedor">Pagamento a fornecedor</option>
+          <option value="Serviços">Serviços</option>
+          <option value="Outro">Outro</option>
+        </select>
+      </div>
+    </div>
+
+    <label>Seu nome e telefone · اسمك وهاتفك</label>
+    <input id="who" placeholder="Ex: João — +244 9xx xxx xxx">
+
+    <button class="go" onclick="send()">📲 Enviar pedido via WhatsApp</button>
+    <div class="note">Pagamos diretamente ao seu fornecedor contra fatura.<br>
+    Documentos necessários: fatura + registo comercial · KYC obrigatório<br>
+    <span style="font-family:'Tajawal'">الدفع مباشرة للمورد مقابل الفاتورة — وثائق KYC إلزامية</span></div>
+  </div>
+
+  <div class="card steps">
+    <h2 style="margin-bottom:14px">Como funciona · كيف نعمل</h2>
+    <div class="step"><div class="n">1</div><div class="t">Envie o pedido — recebe cotação em minutos<small>أرسل طلبك — عرض السعر خلال دقائق</small></div></div>
+    <div class="step"><div class="n">2</div><div class="t">Envia a fatura do fornecedor + documentos da empresa<small>ترسل فاتورة المورد ووثائق الشركة</small></div></div>
+    <div class="step"><div class="n">3</div><div class="t">Deposita Kwanzas — taxa fixa por 30 minutos<small>تودع الكوانزا — سعر مثبت 30 دقيقة</small></div></div>
+    <div class="step"><div class="n">4</div><div class="t">Pagamos o fornecedor e enviamos o comprovativo oficial<small>ندفع للمورد ونرسل إيصال التحويل الرسمي</small></div></div>
+  </div>
+
+  <footer>ARKAN INTERNATIONAL TRADING · WHATSAPP +222 36 29 50 50</footer>
+</div>
+
+<script>
+let ccy='EUR';
+function pick(b){document.querySelectorAll('.ccy button').forEach(x=>x.classList.remove('on'));b.classList.add('on');ccy=b.dataset.c;}
+function send(){
+  const comp=document.getElementById('comp').value.trim();
+  const amt=document.getElementById('amt').value.trim();
+  const dest=document.getElementById('dest').value.trim();
+  const purp=document.getElementById('purp').value;
+  const who=document.getElementById('who').value.trim();
+  if(!comp||!amt){alert('Preencha empresa e montante · أكمل اسم الشركة والمبلغ');return;}
+  const ref='REQ-'+new Date().toISOString().slice(2,10).replace(/-/g,'')+'-'+Math.floor(100+Math.random()*900);
+  const msg=
+`🏦 ARKAN PAYMENTS — NOVO PEDIDO
+${ref}
+———————————
+Empresa: ${comp}
+Montante: ${amt} ${ccy}
+Destino: ${dest||'—'}
+Finalidade: ${purp}
+Contacto: ${who||'—'}
+———————————
+Solicito cotação para pagamento internacional.`;
+  window.open('https://wa.me/22236295050?text='+encodeURIComponent(msg),'_blank');
+}
+</script>
+</body>
+</html>
