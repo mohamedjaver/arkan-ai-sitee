@@ -521,6 +521,10 @@ nav{position:fixed;bottom:0;left:0;right:0;z-index:90;
       <span>الإيصالات المحفوظة: <b id="rcptCount">0</b></span>
       <button class="btn btn-line btn-sm" onclick="cleanReceipts()">حذف إيصالات قبل 60 يوم</button>
     </div>
+    <div class="tx-mid" style="margin-top:10px">
+      <span>حماية الذاكرة: <b id="memStatus" style="color:var(--dim)">فحص...</b></span>
+      <span>المرآة: <b id="mirStatus" style="color:var(--dim)">—</b></span>
+    </div>
     <h3 style="margin-top:16px">النسخة الاحتياطية</h3>
     <div class="btn-row">
       <button class="btn btn-gold" onclick="exportBackup()">⬇️ تصدير نسخة كاملة</button>
@@ -759,6 +763,62 @@ let payments=JSON.parse(localStorage.getItem('arkan-payments')||'[]');
 let receipts=JSON.parse(localStorage.getItem('arkan-receipts')||'[]');
 let keepFiles=(localStorage.getItem('arkan-keepfiles')||'ask'); // ask | keep | scan
 let rateMem=JSON.parse(localStorage.getItem('arkan-rates')||'{}');
+
+/* ================= MEMORY GUARD (persist + IndexedDB mirror + auto-restore) ================= */
+/* 1) طلب تخزين دائم من iOS (يمنع الحذف التلقائي) */
+try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist();}catch(e){}
+
+/* 2) مرآة IndexedDB: نسخة ثانية حية من كل بيانات arkan */
+const IDBM={db:null};
+function idbOpen(){return new Promise(res=>{try{
+  const q=indexedDB.open('arkan-mirror',1);
+  q.onupgradeneeded=e=>{e.target.result.createObjectStore('kv');};
+  q.onsuccess=e=>{IDBM.db=e.target.result;res(true);};
+  q.onerror=()=>res(false);
+}catch(e){res(false);}});}
+function idbPut(k,v){try{if(!IDBM.db)return;IDBM.db.transaction('kv','readwrite').objectStore('kv').put(v,k);}catch(e){}}
+function idbGet(k){return new Promise(res=>{try{if(!IDBM.db)return res(null);
+  const rq=IDBM.db.transaction('kv').objectStore('kv').get(k);
+  rq.onsuccess=()=>res(rq.result||null);rq.onerror=()=>res(null);
+}catch(e){res(null);}});}
+function snapAll(){
+  const o={};
+  for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);
+    if(k&&k.startsWith('arkan-'))o[k]=localStorage.getItem(k);}
+  return o;
+}
+let _mirT=null;
+function mirrorNow(){idbPut('snap',JSON.stringify({ts:Date.now(),data:snapAll()}));}
+/* أي كتابة لأي مفتاح arkan → تحدّث المرآة تلقائيًا */
+(function(){
+  const _s=Storage.prototype.setItem;
+  Storage.prototype.setItem=function(k,v){
+    _s.apply(this,arguments);
+    try{if(String(k).startsWith('arkan-')){clearTimeout(_mirT);_mirT=setTimeout(mirrorNow,600);}}catch(e){}
+  };
+})();
+/* 3) استرجاع تلقائي عند الإقلاع: لو localStorage فارغ والمرآة فيها بيانات */
+(async function(){
+  await idbOpen();
+  const hasLocal=!!localStorage.getItem('arkan-history')||!!localStorage.getItem('arkan-contacts');
+  if(!hasLocal&&!sessionStorage.getItem('arkan-restored')){
+    const raw=await idbGet('snap');
+    if(raw){
+      try{
+        const j=JSON.parse(raw);
+        const keys=Object.keys(j.data||{});
+        if(keys.length){
+          keys.forEach(k=>localStorage.setItem(k,j.data[k]));
+          sessionStorage.setItem('arkan-restored','1');
+          location.reload();return;
+        }
+      }catch(e){}
+    }
+  }
+  /* مزامنة أولى للمرآة */
+  setTimeout(mirrorNow,1500);
+})();
+
 const $=id=>document.getElementById(id);
 function NV(id){const e=$(id);if(!e)return 0;return parseFloat(String(e.value||'').replace(/[^0-9.\-]/g,''))||0;}
 const fmt=(n,d=2)=>Number(n).toLocaleString('en-US',{maximumFractionDigits:d});
@@ -795,6 +855,13 @@ function load(){
     $('partnerWa').value=localStorage.getItem('arkan-partner-wa')||'';
   }catch(e){}
   buildStars();render();renderFaceUI();syncBridgeCcy();
+  /* تذكير أسبوعي بالنسخة الاحتياطية */
+  setTimeout(()=>{
+    const lb=+(localStorage.getItem('arkan-lastbackup')||0);
+    const hasData=(hist&&hist.length)||(txs&&txs.length);
+    if(hasData&&Date.now()-lb>3*24*3600*1000)
+      toast('⚠️ صدّر نسخة احتياطية (الإعدادات) — آخر نسخة قبل أكثر من 3 أيام');
+  },2500);
 }
 function persist(){localStorage.setItem('arkan-settle-v5',JSON.stringify({txs,seq,chains,seqC}));}
 function saveHist(){localStorage.setItem('arkan-history',JSON.stringify(hist));}
@@ -1853,6 +1920,7 @@ function exportBackup(){
   a.href=URL.createObjectURL(blob);
   a.download='ARKAN_BACKUP_'+new Date().toISOString().slice(0,10)+'.json';
   document.body.appendChild(a);a.click();a.remove();
+  localStorage.setItem('arkan-lastbackup',String(Date.now()));
   toast('نُزّلت النسخة الاحتياطية ✓ احفظها بمكان آمن');
 }
 function importBackup(){
@@ -2011,6 +2079,13 @@ function renderPortfolio(){
   $('wU').value=wallet.U||'';$('wA').value=wallet.A||'';$('wM').value=wallet.M||'';
   $('wVA').value=wallet.vA||'';$('wVM').value=wallet.vM||'';
   const wE=$('wE');if(wE){wE.value=wallet.E||'';$('wVE').value=wallet.vE||'';}
+  /* حالة حماية الذاكرة */
+  const ms=$('memStatus');
+  if(ms&&navigator.storage&&navigator.storage.persisted){
+    navigator.storage.persisted().then(p=>{ms.textContent=p?'دائمة ✓':'قياسية';ms.style.color=p?'var(--green)':'var(--gold2)';});
+  }
+  const mi=$('mirStatus');
+  if(mi){mi.textContent=IDBM.db?'نشطة ✓':'غير متاحة';mi.style.color=IDBM.db?'var(--green)':'var(--red)';}
   const rc=$('rcptCount');if(rc)rc.textContent=receipts.length;
   const aw=$('autoWa');if(aw&&aw.value!==autoWa)aw.value=autoWa;
   document.querySelectorAll('.ccySel button').forEach(x=>x.classList.toggle('on',x.dataset.dc===dispCcy));
