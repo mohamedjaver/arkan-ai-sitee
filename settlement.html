@@ -321,6 +321,7 @@ nav{position:fixed;bottom:0;left:0;right:0;z-index:90;
     <div class="type" data-ty="mru"><div class="t1">تداول USDT</div><div class="t2">MRU/USDT</div></div>
     <div class="type" data-ty="euraoa"><div class="t1">تداول EUR</div><div class="t2">EUR/AOA</div></div>
     <div class="type" data-ty="eurmru"><div class="t1">تداول EUR</div><div class="t2">EUR/MRU</div></div>
+    <div class="type" data-ty="m2a"><div class="t1">بيع أوقية</div><div class="t2">UM→AOA</div></div>
   </div>
 
   <!-- BRIDGE FORM -->
@@ -378,6 +379,39 @@ nav{position:fixed;bottom:0;left:0;right:0;z-index:90;
   </div>
 
   <!-- TRADE FORM (v4 method) -->
+
+  <!-- ============ بيع أوقية → كوانزا ============ -->
+  <div class="card" id="fM2A" style="display:none">
+    <h3>بيع أوقية ← كوانزا</h3>
+    <!-- خطوة 1: إيصال Bankily -->
+    <div class="legform">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+        <span style="font-size:12px;color:var(--dim)">① إيصال استلام الأوقية (Bankily / السداد)</span>
+        <button class="btn btn-gold btn-sm" onclick="uploadPayRcpt2()">📥 قراءة الإيصال</button>
+      </div>
+      <div id="m2aRcptInfo" style="margin-top:6px"></div>
+    </div>
+    <div class="row" style="margin-top:10px">
+      <div><label>المبلغ بالقديمة (أوقية)</label><input type="text" id="m2aOld" placeholder="5000000" inputmode="decimal"></div>
+      <div><label>② سعر بيع الأوقية (قديمة/Kz)</label><input type="text" id="m2aRate" placeholder="0.36" inputmode="decimal"></div>
+    </div>
+    <div class="sum" style="margin-top:10px">
+      <div class="k">③ المستحق للعميل بالكوانزا</div>
+      <div class="v gold num" id="m2aDue" style="font-size:24px">0</div>
+    </div>
+    <!-- خطوة 4: إيصالات الكوانزا -->
+    <div class="legform" style="margin-top:10px">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+        <span style="font-size:12px;color:var(--dim)">④ إيصالات الكوانزا المدفوعة: <b id="kbCount" class="num" style="color:var(--txt)">0</b> · المجموع: <b id="kbSum" class="num" style="color:var(--gold2)">0</b></span>
+        <span>
+          <button class="btn btn-gold btn-sm" onclick="uploadKB()">📥 رفع إيصالات</button>
+          <button class="btn btn-line btn-sm" onclick="clearKB()">تصفير</button>
+        </span>
+      </div>
+      <div id="kbList" style="margin-top:6px"></div>
+      <div id="kbDiff" style="margin-top:8px"></div>
+    </div>
+  </div>
   <div class="card" id="fTrade" style="display:none">
     <h3 id="tradeTitle">تداول AOA/USDT</h3>
     <label id="qtyLbl">كمية USDT</label>
@@ -833,7 +867,7 @@ const CCY={aoa:'KWZ',mru:'MRU',euraoa:'KWZ',eurmru:'MRU'};
 const TRD={aoa:{b:'USDT',q:'AOA'},mru:{b:'USDT',q:'MRU'},euraoa:{b:'EUR',q:'AOA'},eurmru:{b:'EUR',q:'MRU'}};
 const isTrade=t=>!!TRD[t];
 const CCYI={AOA:'KWZ',USDT:'$',MRU:'MRU',EUR:'EUR'};
-const typeLbl={bridge:'جسر AOA→MRU',aoa:'تداول AOA/USDT',mru:'تداول MRU/USDT',euraoa:'تداول EUR/AOA',eurmru:'تداول EUR/MRU'};
+const typeLbl={bridge:'جسر AOA→MRU',aoa:'تداول AOA/USDT',mru:'تداول MRU/USDT',euraoa:'تداول EUR/AOA',eurmru:'تداول EUR/MRU',m2a:'بيع أوقية UM→AOA'};
 
 /* محرك تحويل للسلاسل فقط */
 const PAIRS={
@@ -885,6 +919,7 @@ document.querySelectorAll('[data-ty]').forEach(el=>el.addEventListener('click',(
   curType=el.dataset.ty;
   document.querySelectorAll('[data-ty]').forEach(x=>x.classList.toggle('on',x===el));
   $('fBridge').style.display=curType==='bridge'?'block':'none';
+  const fm=$('fM2A');if(fm)fm.style.display=curType==='m2a'?'block':'none';
   $('fTrade').style.display=isTrade(curType)?'block':'none';
   $('fChain').style.display='none';
   $('fMeta').style.display='block';
@@ -951,6 +986,7 @@ function metaOf(){
 function calc(){
   if(curType==='bridge')calcBridge();
   else if(isTrade(curType))calcTrade();
+  else if(curType==='m2a')calcM2A();
 }
 
 function calcBridge(){
@@ -1062,6 +1098,10 @@ function saveTx(){
   rateMem[rateKey]=(rateMem[rateKey]||[]).concat(rateVal).slice(-15);saveRates();
   if(cur.type==='bridge')lastClientWa=cur.cWa||lastClientWa;
   /* حفظ ميتا إيصالات الدفعة (أسماء+مبالغ فقط، بلا ملفات) مربوطة بالعملية */
+  if(cur.type==='m2a'&&kb.length){
+    kb.forEach(b=>receipts.push({id:'R'+Date.now()+Math.random().toString(36).slice(2,6),ref:cur.ref,name:b.name,type:'application/pdf',data:null,scannedOnly:true,amount:b.amount,ts:Date.now()}));
+    saveReceipts();
+  }
   if(cur.type==='bridge'&&batch.length){
     batch.forEach(b=>receipts.push({id:'R'+Date.now()+Math.random().toString(36).slice(2,6),ref:cur.ref,name:b.name,type:'application/pdf',data:null,scannedOnly:true,amount:b.amount,ts:Date.now()}));
     saveReceipts();
@@ -1074,6 +1114,7 @@ function saveTx(){
   }
   txs.push(cur);seq++;cur=null;
   clearBatch();
+  if(savedTx.type==='m2a'){kb=[];renderKB();_payRcpt2=null;renderPayRcpt2();const mo=$('m2aOld');if(mo)mo.value='';}
   fireAutoWa(savedTx);
   inputs.forEach(i=>$(i).value='');
   $('pContact').value='';$('pPay').value='settled';$('pDue').value='';$('dueRow').style.display='none';
@@ -1197,6 +1238,18 @@ function invRows(t){
       ['الحالة',{wait:'قيد التنفيذ',conf:'مؤكدة',paid:'مكتملة ✓'}[t.status]||'مكتملة ✓']
     ];
   }
+  if(t.type==='m2a'){
+    return [
+      ['نوع العملية','بيع أوقية ⟵ كوانزا'],
+      ['المستلم (جديدة)',fmt(t.mruNew,0)+' MRU'],
+      ['المستلم (قديمة)',fmt(t.mruOld,0)+' UM'],
+      ['سعر البيع',t.rate+' UM/Kz'],
+      ['المستحق',fmt(t.dueAoa,0)+' Kz'],
+      ['المدفوع',fmt(t.paidAoa,0)+' Kz'],
+      ...(Math.abs(t.diff)>=1?[[t.diff<0?'⚠️ مبلغ ناقص':'↑ مبلغ زائد',fmt(Math.abs(t.diff),0)+' Kz']]:[['الحالة','مطابق تمامًا ✓']]),
+      ...(t.payRcpt&&t.payRcpt.txn?[['مرجع الإيصال',t.payRcpt.app+' · '+t.payRcpt.txn]]:[])
+    ];
+  }
   const ccy=CCY[t.type];
   return [
     ['العملية','تداول '+(TRD[t.type]||{b:'USDT',q:CCY[t.type]}).b+'/'+(TRD[t.type]||{q:'?'}).q],
@@ -1233,18 +1286,18 @@ async function genInvoice(ref){
     <div style="padding:30px 36px">
       <div style="font-size:15px;color:#565b74;margin-bottom:6px;font-weight:700">العميل</div>
       <div style="font-size:24px;font-weight:800;color:#1C1D3C;margin-bottom:20px">${t.contactName||t.name||'—'}</div>
-      ${t.type==='bridge'?`
+      ${(t.type==='bridge'||t.type==='m2a')?`
       <div style="display:flex;gap:14px;align-items:stretch;margin-bottom:20px">
         <div style="flex:1;background:linear-gradient(150deg,#F6F1FF,#EFE8FF);border:2px solid #D9CCFF;border-radius:16px;padding:18px;text-align:center">
           <div style="font-size:13px;color:#6D5BB8;font-weight:800;margin-bottom:6px">المبلغ المستلم</div>
-          <div style="font-size:27px;font-weight:800;color:#4C1D95;font-family:'IBM Plex Mono';direction:ltr">${fmt((t.amt!=null?t.amt:t.aoa),0)}</div>
-          <div style="font-size:15px;color:#7C5CFF;font-weight:800;margin-top:3px">${t.fromC||'AOA'}</div>
+          <div style="font-size:27px;font-weight:800;color:#4C1D95;font-family:'IBM Plex Mono';direction:ltr">${fmt(t.type==='m2a'?t.mruOld:(t.amt!=null?t.amt:t.aoa),0)}</div>
+          <div style="font-size:15px;color:#7C5CFF;font-weight:800;margin-top:3px">${t.type==='m2a'?'UM قديمة':(t.fromC||'AOA')}</div>
         </div>
         <div style="display:flex;align-items:center;font-size:30px;color:#8B72FF">⟵</div>
         <div style="flex:1;background:linear-gradient(150deg,#EFF6FF,#E4F0FF);border:2px solid #BFDBFE;border-radius:16px;padding:18px;text-align:center">
           <div style="font-size:13px;color:#1D4ED8;font-weight:800;margin-bottom:6px">المبلغ المدفوع</div>
-          <div style="font-size:27px;font-weight:800;color:#1E3A8A;font-family:'IBM Plex Mono';direction:ltr">${fmt((t.payout!=null?t.payout:t.mru),0)}</div>
-          <div style="font-size:15px;color:#2F7BF6;font-weight:800;margin-top:3px">${t.toC||'MRU'}</div>
+          <div style="font-size:27px;font-weight:800;color:#1E3A8A;font-family:'IBM Plex Mono';direction:ltr">${fmt(t.type==='m2a'?t.paidAoa:(t.payout!=null?t.payout:t.mru),0)}</div>
+          <div style="font-size:15px;color:#2F7BF6;font-weight:800;margin-top:3px">${t.type==='m2a'?'AOA':(t.toC||'MRU')}</div>
         </div>
       </div>`:''}
       <table style="width:100%;border-collapse:collapse;background:#faf9fe;border-radius:16px;overflow:hidden">
@@ -1312,13 +1365,13 @@ function dlInvFile(){
 let autoWa=localStorage.getItem('arkan-autowa')||'invoice';
 function saveAutoWa(){autoWa=$('autoWa').value;localStorage.setItem('arkan-autowa',autoWa);toast('حُفظ ✓');}
 function autoWaMsg(t){
-  if(t.type==='bridge')return `CONFIRMED ${t.ref}\n${t.fromC||'AOA'} ${fmt((t.amt!=null?t.amt:t.aoa),0)}\nUSDT NET: ${fmt(t.uC)} $\n${t.toC||'MRU'}: ${fmt((t.payout!=null?t.payout:t.mru),0)}`;
+  if(t.type==='bridge')return `CONFIRMED ${t.ref}\n${t.fromC||'AOA'} ${fmt((t.amt!=null?t.amt:t.aoa),0)}\nUSDT NET: ${fmt(t.uC)} $\n${t.toC||'MRU'}: ${fmt(t.type==='m2a'?t.paidAoa:(t.payout!=null?t.payout:t.mru),0)}`;
   if(isTrade(t.type))return `TRADE ${t.ref}\n${(t.base||'USDT')}/${TRD[t.type].q}\nQTY: ${fmt(t.qty)} ${t.base||'USDT'} @ ${t.rBuy}${t.rSell?`→${t.rSell}\nPROFIT: ${fmt(t.profit,0)} ${CCY[t.type]}`:''}`;
   return null;
 }
 function clientWaMsg(t){
   if(t.type!=='bridge')return null;
-  return `✅ ARKAN — إشعار تحويل\nالمرجع: ${t.ref}\nالمستلم: ${t.name}\nالمبلغ: ${fmt((t.payout!=null?t.payout:t.mru),0)} ${CCYI[t.toC||'MRU']}`;
+  return `✅ ARKAN — إشعار تحويل\nالمرجع: ${t.ref}\nالمستلم: ${t.name}\nالمبلغ: ${fmt(t.type==='m2a'?t.paidAoa:(t.payout!=null?t.payout:t.mru),0)} ${CCYI[t.toC||'MRU']}`;
 }
 function fireAutoWa(t){
   if(autoWa==='off')return;
@@ -1358,7 +1411,7 @@ function render(){
         <div class="tx-mid">
           <span>${t.fromC||'AOA'} <b>${fmt((t.amt!=null?t.amt:t.aoa),0)}</b></span>
           <span>USDT <b>${fmt(t.uC)}</b></span>
-          <span>${t.toC||'MRU'} <b>${fmt((t.payout!=null?t.payout:t.mru),0)}</b></span>
+          <span>${t.toC||'MRU'} <b>${fmt(t.type==='m2a'?t.paidAoa:(t.payout!=null?t.payout:t.mru),0)}</b></span>
           <span>الربح <b class="${t.pUsdt>=0?'green':'red'}">${fmt(t.pUsdt)} $</b></span>
         </div>
         <div class="tx-mid"><span>${t.contactName||t.name} · <b>${t.phone}</b></span></div>
@@ -1389,6 +1442,22 @@ function render(){
           ${t.pay&&t.pay!=='settled'?`<button class="btn btn-gold btn-sm" onclick="addPayment('${t.ref}')">دفعة (متبقٍ ${fmt(remaining(t),0)})</button>`:''}
           <button class="btn btn-line btn-sm" onclick="sendInvoice('${t.ref}')">🧾 فاتورة</button>
           <button class="btn btn-line btn-sm" onclick="openReceipts('${t.ref}')">📎 إيصال${receiptsOf(t.ref).length?' ('+receiptsOf(t.ref).length+')':''}</button>
+          <button class="btn btn-line btn-sm" onclick="delTx('${t.ref}')">حذف</button>
+        </div>`;
+    }else if(t.type==='m2a'){
+      div.innerHTML=`
+        <div class="tx-top"><span class="tx-ref">${t.ref}</span>
+          <span><span class="badge b-type">UM→AOA</span>
+          <span class="badge ${Math.abs(t.diff)<1?'b-paid':(t.diff<0?'b-wait':'b-conf')}">${Math.abs(t.diff)<1?'مطابق ✓':(t.diff<0?'ناقص':'زائد')}</span></span></div>
+        <div class="tx-mid">
+          <span>قديمة <b>${fmt(t.mruOld,0)}</b></span>
+          <span>@ <b>${t.rate}</b></span>
+          <span>مستحق <b>${fmt(t.dueAoa,0)}</b></span>
+          <span>مدفوع <b>${fmt(t.paidAoa,0)}</b></span>
+          ${Math.abs(t.diff)>=1?`<span><b class="${t.diff<0?'red':'gold'}">${t.diff<0?'ناقص':'زائد'} ${fmt(Math.abs(t.diff),0)} Kz</b></span>`:''}
+        </div>
+        <div class="tx-acts">
+          <button class="btn btn-line btn-sm" onclick="sendInvoice('${t.ref}')">🧾 فاتورة</button>
           <button class="btn btn-line btn-sm" onclick="delTx('${t.ref}')">حذف</button>
         </div>`;
     }else if(t.type==='ledger'){
@@ -1443,6 +1512,120 @@ function settleDebt(ref){const t=txs.find(x=>x.ref===ref);if(!t)return;t.pay='se
 
 
 
+
+/* ================= UM→AOA (بيع أوقية) ================= */
+let _payRcpt2=null,kb=[];
+function uploadPayRcpt2(){
+  const inp=document.createElement('input');
+  inp.type='file';inp.accept='image/*,application/pdf';
+  inp.onchange=()=>{
+    const f=inp.files[0];if(!f)return;
+    const r=new FileReader();
+    r.onload=async()=>{
+      toast('جارٍ قراءة الإيصال...');
+      try{
+        const txt=await anyReceiptText(r.result,f.type);
+        const ex=mruReceiptExtract(txt);
+        if(!ex.amount)throw new Error('no amount');
+        _payRcpt2={...ex,amountOld:ex.amount*10,ts:Date.now()};
+        $('m2aOld').value=_payRcpt2.amountOld;
+        renderPayRcpt2();calc();
+        toast('قُرئ '+ex.app+': '+fmt(ex.amount,0)+' MRU = '+fmt(_payRcpt2.amountOld,0)+' قديمة ✓');
+      }catch(e){
+        const amtS=prompt('تعذرت القراءة.\nأدخل المبلغ بالجديدة (MRU):');
+        const amt=parseFloat(String(amtS||'').replace(/[^0-9.]/g,''))||null;
+        if(!amt)return;
+        _payRcpt2={app:'يدوي',amount:amt,amountOld:amt*10,acct:null,name:null,txn:null,ts:Date.now()};
+        $('m2aOld').value=_payRcpt2.amountOld;
+        renderPayRcpt2();calc();toast('سُجل يدويًا ✓');
+      }
+    };
+    r.readAsDataURL(f);
+  };
+  inp.click();
+}
+function renderPayRcpt2(){
+  const el=$('m2aRcptInfo');if(!el)return;
+  if(!_payRcpt2){el.innerHTML='';return;}
+  const p=_payRcpt2;
+  el.innerHTML=`<div class="mini" style="flex-wrap:wrap;gap:6px">
+    <span class="badge b-paid">${p.app}</span>
+    <span><b class="lp">${fmt(p.amount,0)} MRU</b> = <b style="color:var(--gold2);font-family:'IBM Plex Mono'">${fmt(p.amountOld,0)}</b> <span style="color:var(--dim);font-size:10px">قديمة</span></span>
+    ${p.txn?`<span style="color:var(--dim);font-size:10px;font-family:'IBM Plex Mono'">${p.txn}</span>`:''}
+    <button class="btn btn-line btn-sm" style="padding:2px 8px;font-size:10px" onclick="_payRcpt2=null;renderPayRcpt2()">✕</button>
+  </div>`;
+}
+function uploadKB(){
+  if(!window.pdfjsLib&&!window.Tesseract){toast('محرك القراءة غير متاح');return;}
+  const inp=document.createElement('input');
+  inp.type='file';inp.accept='application/pdf,image/*';inp.multiple=true;
+  inp.onchange=async()=>{
+    const files=[...inp.files];if(!files.length)return;
+    if(kb.length+files.length>100){toast('الحد 100 إيصال');return;}
+    toast('جارٍ قراءة '+files.length+' ملف...');
+    let ok=0;
+    for(const f of files){
+      try{
+        const dataUrl=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(f);});
+        const txt=await anyReceiptText(dataUrl,f.type);
+        const ex=extractAmount(txt);
+        kb.push({name:f.name,amount:ex.value});
+        if(ex.value!=null)ok++;
+      }catch(e){kb.push({name:f.name,amount:null,err:'لم يُقرأ'});}
+    }
+    renderKB();calc();
+    toast('قُرئ '+ok+'/'+files.length+' ✓');
+  };
+  inp.click();
+}
+function kbTotal(){return kb.reduce((s,b)=>s+(b.amount||0),0);}
+function editKB(i){
+  const v=parseFloat(prompt('مبلغ الإيصال (Kz):',kb[i].amount||''));
+  if(!v||v<=0)return;kb[i].amount=v;kb[i].err=null;renderKB();calc();
+}
+function dropKB(i){kb.splice(i,1);renderKB();calc();}
+function clearKB(){kb=[];renderKB();calc();}
+function renderKB(){
+  const c=$('kbCount'),s=$('kbSum'),l=$('kbList');if(!c)return;
+  c.textContent=kb.length;s.textContent=fmt(kbTotal(),0);
+  l.innerHTML=kb.map((b,i)=>`
+    <div class="leg"><span style="font-size:10px">${b.name.slice(0,24)}</span>
+      <span>${b.amount!=null?'<b class="lp" style="cursor:pointer" onclick="editKB('+i+')">'+fmt(b.amount,0)+'</b>':'<button class="btn btn-gold btn-sm" style="padding:2px 10px;font-size:10px" onclick="editKB('+i+')">أدخل المبلغ</button>'}
+      <button class="btn btn-line btn-sm" style="padding:2px 8px;font-size:10px;margin-right:6px" onclick="dropKB(${i})">✕</button></span>
+    </div>`).join('');
+}
+function calcM2A(){
+  const old=NV('m2aOld'),rate=NV('m2aRate');
+  const due=(old&&rate)?old/rate:0;
+  $('m2aDue').textContent=fmt(due,0)+' Kz';
+  const paid=kbTotal(),diff=paid-due;
+  const kd=$('kbDiff');
+  if(kd){
+    if(!due)kd.innerHTML='';
+    else if(Math.abs(diff)<1)kd.innerHTML='<span class="badge b-paid">مطابق تمامًا ✓</span>';
+    else if(diff<0)kd.innerHTML=`<span class="badge b-wait">مبلغ ناقص: <b style="font-family:'IBM Plex Mono'">${fmt(Math.abs(diff),0)} Kz</b></span>`;
+    else kd.innerHTML=`<span class="badge b-conf">مبلغ زائد: <b style="font-family:'IBM Plex Mono'">${fmt(diff,0)} Kz</b></span>`;
+  }
+  if(!old||!rate){hideTicket();return;}
+  const ref=makeRef();
+  const M=metaOf();
+  cur={type:'m2a',ref,mruNew:_payRcpt2?_payRcpt2.amount:old/10,mruOld:old,rate,dueAoa:due,paidAoa:paid,diff,
+    payRcpt:_payRcpt2||null,
+    contactId:M.contactId,contactName:M.contact?M.contact.name:null,pay:M.pay,due:M.due,
+    name:M.contact?M.contact.name:'—',cWa:$('cWa')?($('cWa').value.trim()||(M.contact?M.contact.wa:'')):(M.contact?M.contact.wa:''),
+    status:Math.abs(diff)<1?'paid':(diff<0?'wait':'conf'),ts:Date.now()};
+  $('refNo').textContent=ref;
+  $('k1').textContent='المستلم (قديمة)';$('v1').textContent=fmt(old,0)+' UM';
+  $('k2').textContent='المستحق كوانزا';$('v2').textContent=fmt(due,0)+' Kz';
+  $('k3').textContent='المدفوع كوانزا';$('v3').textContent=fmt(paid,0)+' Kz';
+  const v4e=$('v4');
+  v4e.textContent=(diff<0?'ناقص ':'زائد ')+fmt(Math.abs(diff),0)+' Kz';
+  v4e.className='v num '+(Math.abs(diff)<1?'green':(diff<0?'red':'gold'));
+  $('ticket').style.display='block';$('timer').style.display='none';
+  $('waTitle').textContent='رسالة التأكيد';
+  $('waMsg').textContent=`UM→AOA ${ref}\nUM(old): ${fmt(old,0)} @ ${rate}\nDUE: ${fmt(due,0)} Kz\nPAID: ${fmt(paid,0)} Kz\n${diff<0?'SHORT: '+fmt(Math.abs(diff),0):'OVER: '+fmt(diff,0)} Kz`;
+  $('waBox').style.display='block';$('waBox2').style.display='none';
+}
 /* ================= MAURITANIAN PAYOUT RECEIPT (Bankily / Sedad) ================= */
 let _payRcpt=null;
 function mruReceiptExtract(txt){
@@ -1969,7 +2152,7 @@ function notifyClient(ref){
 `✅ ARKAN — تحديث حالة
 المرجع: ${t.ref}
 المستلم: ${t.name}
-المبلغ: ${fmt((t.payout!=null?t.payout:t.mru),0)} ${CCYI[t.toC||'MRU']}
+المبلغ: ${fmt(t.type==='m2a'?t.paidAoa:(t.payout!=null?t.payout:t.mru),0)} ${CCYI[t.toC||'MRU']}
 الحالة: ${statusTxt}`);
   window.open(`https://wa.me/${t.cWa}?text=${msg}`,'_blank');
 }
@@ -2065,6 +2248,7 @@ function txFlows(t,f){
   }
   else if(t.type==='leg'){f[t.from]-=t.fromAmt;f[t.to]+=t.toAmt;}
   else if(t.type==='ledger'){if(t.pay==='owed_us')f[t.ccy]-=t.amount;else f[t.ccy]+=t.amount;}
+  else if(t.type==='m2a'){f.MRU+=(t.mruNew||0);f.AOA-=(t.paidAoa||0);}
   else if(t.kind==='pair'&&t.from){f[t.from]-=t.fromAmt;f[t.to]+=t.toAmt;}
 }
 function balances(){
@@ -2398,6 +2582,7 @@ function renderDebts(){
 function txSummary(t){
   if(t.type==='bridge')return{info:(t.contactName||t.name||'')+' · '+fmt((t.payout!=null?t.payout:t.mru)||0,0)+' '+CCYI[t.toC||'MRU'],p:fmt(t.pUsdt||0)+' $'};
   if(isTrade(t.type))return{info:fmt(t.qty||0)+' '+(t.base||'$')+' @ '+t.rBuy+(t.rSell?'→'+t.rSell:''),p:t.rSell?fmt(t.profit,0)+' '+CCY[t.type]:'مفتوحة'};
+  if(t.type==='m2a')return{info:(t.contactName||t.name||'')+' · '+fmt(t.mruOld,0)+' قديمة @ '+t.rate,p:(Math.abs(t.diff)<1?'مطابق ✓':(t.diff<0?'ناقص ':'زائد ')+fmt(Math.abs(t.diff),0)+' Kz')};
   if(t.type==='ledger')return{info:(t.contactName||'')+' · قيد'+(t.note?' — '+t.note:''),p:(t.pay==='owed_us'?'لنا ':'علينا ')+fmt(t.amount,0)+' '+CCYI[t.ccy]};
   if(t.type==='leg')return{info:'رجل: '+pairLabel(t.pair)+' @ '+t.rate,p:fmt(t.toAmt,0)+' '+CCYI[t.to]};
   if(t.type==='chainResult')return{info:'سلسلة '+t.legs+' أرجل',p:(t.profit>=0?'+':'')+fmt(t.profit,0)+' '+CCYI[t.ccy]};
