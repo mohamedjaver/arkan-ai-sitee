@@ -363,7 +363,14 @@ nav{position:fixed;bottom:0;left:0;right:0;z-index:90;
     <div id="bankWrap">
     <div class="row">
       <div><label>اسم المستفيد (Bankily)</label><input type="text" id="bName" class="ar" placeholder="محمد ولد ..."></div>
-      <div><label>رقم Bankily</label><input type="tel" id="bPhone" placeholder="36xxxxxx" inputmode="tel"></div>
+      <div><label>رقم Bankily / الحساب</label><input type="tel" id="bPhone" placeholder="36xxxxxx" inputmode="tel"></div>
+    </div>
+    <div class="legform" style="margin-top:8px">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+        <span style="font-size:12px;color:var(--dim)">إيصال الدفع الموريتاني</span>
+        <button class="btn btn-gold btn-sm" onclick="uploadPayRcpt()">📥 قراءة إيصال (Bankily / السداد)</button>
+      </div>
+      <div id="payRcptInfo" style="margin-top:6px"></div>
     </div>
     </div>
     <label>واتساب العميل (بالرمز الدولي، بدون +)</label>
@@ -1060,6 +1067,11 @@ function saveTx(){
     saveReceipts();
   }
   const savedTx=cur;
+  if(_payRcpt&&savedTx.type==='bridge'){
+    savedTx.payRcpt=_payRcpt;
+    savedTx.status='paid';
+    _payRcpt=null;renderPayRcpt();
+  }
   txs.push(cur);seq++;cur=null;
   clearBatch();
   fireAutoWa(savedTx);
@@ -1180,6 +1192,8 @@ function invRows(t){
       ['نوع العملية','تحويل '+F+' ⟵ '+T],
       ...(F!=='USDT'?[['سعر الصرف',t.rc+' '+F+'/USDT']]:[]),
       ...(T==='MRU'&&t.phone!=='—'?[['Bankily',t.phone]]:[]),
+      ...(t.payRcpt?[['تأكيد الدفع',t.payRcpt.app+(t.payRcpt.txn?' · '+t.payRcpt.txn:'')],
+                     ...(t.payRcpt.amountOld?[['المبلغ (أوقية قديمة)',fmt(t.payRcpt.amountOld,0)+' UM']]:[])]:[]),
       ['الحالة',{wait:'قيد التنفيذ',conf:'مؤكدة',paid:'مكتملة ✓'}[t.status]||'مكتملة ✓']
     ];
   }
@@ -1428,6 +1442,72 @@ function sellTrade(ref){
 function settleDebt(ref){const t=txs.find(x=>x.ref===ref);if(!t)return;t.pay='settled';t.settledAt=Date.now();persist();render();toast('سُدد ✓');}
 
 
+
+/* ================= MAURITANIAN PAYOUT RECEIPT (Bankily / Sedad) ================= */
+let _payRcpt=null;
+function mruReceiptExtract(txt){
+  const t=(txt||'').replace(/\u00A0/g,' ');
+  const low=t.toLowerCase();
+  let app='بنك موريتاني';
+  if(low.includes('sedad')||t.includes('السداد'))app='السداد';
+  else if(low.includes('peoples bank')||low.includes('bankily')||low.includes('txn id'))app='Bankily';
+  else if(low.includes('masrvi')||low.includes('مصرفي'))app='مصرفي';
+  let amount=null,m;
+  m=t.match(/Amount\s*Sent\s*:?\s*MRU\s*([\d.,\s]+?)(?:\n|$|[A-Z])/i);
+  if(!m)m=t.match(/MRU\s*([0-9][\d.,\s]*)/i);
+  if(!m)m=t.match(/بإرسال\s*([\d.,\s]+?)\s*أوقي/);
+  if(!m)m=t.match(/([\d][\d.,\s]*)\s*أوقي/);
+  if(m){const v=normNum(m[1].trim());if(v&&v>10)amount=v;}
+  let acct=null;
+  m=t.match(/Receiver\s*:?\s*([0-9 ]{8,30})/i);
+  if(!m)m=t.match(/حساب\s*بنكي\s*:?\s*([0-9]{6,20})/);
+  if(m)acct=m[1].replace(/\s/g,'');
+  if(!acct){const longs=t.match(/\b[0-9]{10,24}\b/g)||[];if(longs.length)acct=longs[0];}
+  let name=null;
+  m=t.match(/إلى\s+([A-Z][A-Z .]{4,40})/);
+  if(m)name=m[1].trim();
+  let txn=null;
+  m=t.match(/TR[0-9]{6,}/);
+  if(m)txn=m[0];else{m=t.match(/Txn\s*ID\s*:?\s*([0-9]{8,})/i);if(m)txn=m[1];}
+  return {app,amount,acct,name,txn};
+}
+function uploadPayRcpt(){
+  const inp=document.createElement('input');
+  inp.type='file';inp.accept='image/*,application/pdf';
+  inp.onchange=()=>{
+    const f=inp.files[0];if(!f)return;
+    const r=new FileReader();
+    r.onload=async()=>{
+      toast('جارٍ قراءة الإيصال...');
+      try{
+        const txt=await anyReceiptText(r.result,f.type);
+        const ex=mruReceiptExtract(txt);
+        if(!ex.amount&&!ex.acct){toast('لم يُقرأ — أدخل البيانات يدويًا');return;}
+        _payRcpt={...ex,amountOld:ex.amount?ex.amount*10:null,ts:Date.now()};
+        /* تعبئة الحقول */
+        if(ex.acct)$('bPhone').value=ex.acct;
+        if(ex.name&&!$('bName').value)$('bName').value=ex.name;
+        renderPayRcpt();calc();
+        toast('قُرئ إيصال '+ex.app+' ✓');
+      }catch(e){toast('فشل القراءة: '+String(e&&e.message||'').slice(0,30));}
+    };
+    r.readAsDataURL(f);
+  };
+  inp.click();
+}
+function renderPayRcpt(){
+  const el=$('payRcptInfo');if(!el)return;
+  if(!_payRcpt){el.innerHTML='';return;}
+  const p=_payRcpt;
+  el.innerHTML=`
+    <div class="mini" style="flex-wrap:wrap;gap:6px">
+      <span class="badge b-paid">${p.app}</span>
+      ${p.amount?`<span>المبلغ: <b class="lp">${fmt(p.amount,0)} MRU</b> = <b style="color:var(--gold2);font-family:'IBM Plex Mono'">${fmt(p.amountOld,0)}</b> <span style="color:var(--dim);font-size:10px">(قديمة)</span></span>`:''}
+      ${p.acct?`<span style="font-family:'IBM Plex Mono';font-size:11px">حساب: ${p.acct}</span>`:''}
+      ${p.txn?`<span style="color:var(--dim);font-size:10px;font-family:'IBM Plex Mono'">${p.txn}</span>`:''}
+      <button class="btn btn-line btn-sm" style="padding:2px 8px;font-size:10px" onclick="_payRcpt=null;renderPayRcpt()">✕</button>
+    </div>`;
+}
 /* ================= CLIENT RECEIPTS BATCH (scan-only, per operation) ================= */
 let batch=[]; /* {name,amount|null} — بلا بيانات ملفات إطلاقًا */
 function uploadBatch(){
