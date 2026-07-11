@@ -1489,7 +1489,17 @@ function uploadPayRcpt(){
         if(ex.name&&!$('bName').value)$('bName').value=ex.name;
         renderPayRcpt();calc();
         toast('قُرئ إيصال '+ex.app+' ✓');
-      }catch(e){toast('فشل القراءة: '+String(e&&e.message||'').slice(0,30));}
+      }catch(e){
+        /* مسار يدوي فوري: العمل لا يتوقف */
+        const acct=prompt('تعذرت القراءة هنا.\nأدخل رقم حساب المستفيد:');
+        if(acct===null)return;
+        const amtS=prompt('مبلغ الإيصال بالجديدة (MRU):');
+        const amt=parseFloat(String(amtS||'').replace(/[^0-9.]/g,''))||null;
+        _payRcpt={app:'يدوي',amount:amt,amountOld:amt?amt*10:null,acct:(acct||'').trim()||null,name:null,txn:null,ts:Date.now()};
+        if(_payRcpt.acct)$('bPhone').value=_payRcpt.acct;
+        renderPayRcpt();calc();
+        toast('سُجل يدويًا ✓');
+      }
     };
     r.readAsDataURL(f);
   };
@@ -1726,21 +1736,26 @@ async function ocrImage(dataUrl){
 }
 
 /* ================= IMAGE OCR (Tesseract) ================= */
-let _ocrWorker=null;
+let _ocrWorker=null,_ocrWurl=null;
 async function ocrWorker(){
   if(_ocrWorker)return _ocrWorker;
   toast('تحميل محرك قراءة الصور (مرة واحدة ~2MB)...');
   try{
+    /* جلب سكربت العامل وتحويله blob محلي — يتجاوز حجب Safari للعمال الخارجيين */
+    if(!_ocrWurl){
+      const wtxt=await fetch('https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.1.0/worker.min.js').then(r=>r.text());
+      _ocrWurl=URL.createObjectURL(new Blob([wtxt],{type:'text/javascript'}));
+    }
     _ocrWorker=await Tesseract.createWorker('eng',1,{
-      workerPath:'https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.1.0/worker.min.js',
-      corePath:'https://cdnjs.cloudflare.com/ajax/libs/tesseract.js-core/5.1.0/tesseract-core-simd.wasm.js',
-      langPath:'https://tessdata.projectnaptha.com/4.0.0',
-      workerBlobURL:true
+      workerPath:_ocrWurl,
+      workerBlobURL:false,
+      corePath:'https://cdn.jsdelivr.net/npm/tesseract.js-core@5.1.0/tesseract-core-simd.wasm.js',
+      langPath:'https://tessdata.projectnaptha.com/4.0.0'
     });
     await _ocrWorker.setParameters({tessedit_pageseg_mode:'6'});
   }catch(e){
     _ocrWorker=null;
-    toast('تعذر تحميل محرك القراءة: '+String(e&&e.message||e).slice(0,40));
+    toast('محرك القراءة محجوب هنا — أدخل البيانات يدويًا أو افتح في Safari');
     throw e;
   }
   return _ocrWorker;
