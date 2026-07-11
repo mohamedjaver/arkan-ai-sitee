@@ -392,8 +392,8 @@ nav{position:fixed;bottom:0;left:0;right:0;z-index:90;
       <div id="m2aRcptInfo" style="margin-top:6px"></div>
     </div>
     <div class="row" style="margin-top:10px">
-      <div><label>المبلغ بالقديمة (أوقية)</label><input type="text" id="m2aOld" placeholder="5000000" inputmode="decimal"></div>
-      <div><label>② سعر بيع الأوقية (قديمة/Kz)</label><input type="text" id="m2aRate" placeholder="0.36" inputmode="decimal"></div>
+      <div><label>المبلغ بالقديمة (أوقية)</label><input type="text" id="m2aOld" placeholder="5000000" inputmode="decimal" oninput="calc()"></div>
+      <div><label>② سعر بيع الأوقية (قديمة/Kz)</label><input type="text" id="m2aRate" placeholder="0.36" inputmode="decimal" oninput="calc()"></div>
     </div>
     <div class="sum" style="margin-top:10px">
       <div class="k">③ المستحق للعميل بالكوانزا</div>
@@ -1636,7 +1636,7 @@ function mruReceiptExtract(txt){
   else if(low.includes('peoples bank')||low.includes('bankily')||low.includes('txn id'))app='Bankily';
   else if(low.includes('masrvi')||low.includes('مصرفي'))app='مصرفي';
   let amount=null,m;
-  m=t.match(/Amount\s*Sent\s*:?\s*MRU\s*([\d.,\s]+?)(?:\n|$|[A-Z])/i);
+  m=t.match(/Amount\s*Sent\s*:?\s*MRU\s*([\d.,\s]+?)(?:\n|$|[A-Za-z])/i);
   if(!m)m=t.match(/MRU\s*([0-9][\d.,\s]*)/i);
   if(!m)m=t.match(/بإرسال\s*([\d.,\s]+?)\s*أوقي/);
   if(!m)m=t.match(/([\d][\d.,\s]*)\s*أوقي/);
@@ -1645,7 +1645,8 @@ function mruReceiptExtract(txt){
   m=t.match(/Receiver\s*:?\s*([0-9 ]{8,30})/i);
   if(!m)m=t.match(/حساب\s*بنكي\s*:?\s*([0-9]{6,20})/);
   if(m)acct=m[1].replace(/\s/g,'');
-  if(!acct){const longs=t.match(/\b[0-9]{10,24}\b/g)||[];if(longs.length)acct=longs[0];}
+  let txnPre=null;{const tm=t.match(/Txn\s*ID\s*:?\s*([0-9]{8,})/i);if(tm)txnPre=tm[1];}
+  if(!acct){const longs=(t.match(/\b[0-9]{10,24}\b/g)||[]).filter(x=>x!==txnPre);if(longs.length)acct=longs[0];}
   let name=null;
   m=t.match(/إلى\s+([A-Z][A-Z .]{4,40})/);
   if(m)name=m[1].trim();
