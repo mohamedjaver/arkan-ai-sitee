@@ -395,6 +395,10 @@ nav{position:fixed;bottom:0;left:0;right:0;z-index:90;
       <div><label>المبلغ بالقديمة (أوقية)</label><input type="text" id="m2aOld" placeholder="5000000" inputmode="decimal" oninput="calc()"></div>
       <div><label>② سعر بيع الأوقية (قديمة/Kz)</label><input type="text" id="m2aRate" placeholder="0.36" inputmode="decimal" oninput="calc()"></div>
     </div>
+    <div class="row">
+      <div><label>سعر شراء الأوقية (قديمة/Kz)</label><input type="text" id="m2aBuy" placeholder="0.362" inputmode="decimal" oninput="calc()"></div>
+      <div><label>الربح</label><div class="sum" style="padding:12px"><div class="v num" id="m2aProfit" style="font-size:15px;color:var(--dim)">—</div></div></div>
+    </div>
     <div class="sum" style="margin-top:10px">
       <div class="k">③ المستحق للعميل بالكوانزا</div>
       <div class="v gold num" id="m2aDue" style="font-size:24px">0</div>
@@ -1114,7 +1118,7 @@ function saveTx(){
   }
   txs.push(cur);seq++;cur=null;
   clearBatch();
-  if(savedTx.type==='m2a'){kb=[];renderKB();_payRcpt2=null;renderPayRcpt2();const mo=$('m2aOld');if(mo)mo.value='';}
+  if(savedTx.type==='m2a'){kb=[];renderKB();_payRcpt2=null;renderPayRcpt2();const mo=$('m2aOld');if(mo)mo.value='';const mb=$('m2aBuy');if(mb)mb.value='';}
   fireAutoWa(savedTx);
   inputs.forEach(i=>$(i).value='');
   $('pContact').value='';$('pPay').value='settled';$('pDue').value='';$('dueRow').style.display='none';
@@ -1454,6 +1458,7 @@ function render(){
           <span>@ <b>${t.rate}</b></span>
           <span>مستحق <b>${fmt(t.dueAoa,0)}</b></span>
           <span>مدفوع <b>${fmt(t.paidAoa,0)}</b></span>
+          ${t.buyRate?`<span>الربح <b class="${(t.spread||0)>=0?'green':'red'}">${fmt(t.profitOld||0,0)} قديمة</b></span>`:''}
           ${Math.abs(t.diff)>=1?`<span><b class="${t.diff<0?'red':'gold'}">${t.diff<0?'ناقص':'زائد'} ${fmt(Math.abs(t.diff),0)} Kz</b></span>`:''}
         </div>
         <div class="tx-acts">
@@ -1595,8 +1600,19 @@ function renderKB(){
     </div>`).join('');
 }
 function calcM2A(){
-  const old=NV('m2aOld'),rate=NV('m2aRate');
+  const old=NV('m2aOld'),rate=NV('m2aRate'),buy=NV('m2aBuy');
   const due=(old&&rate)?old/rate:0;
+  /* الربح: (شراء − بيع) قديمة/Kz × المستحق Kz = ربح بالقديمة */
+  let spread=0,profitOld=0,profitKz=0;
+  if(buy&&rate&&due){spread=buy-rate;profitOld=due*spread;profitKz=rate?profitOld/rate:0;}
+  const mp=$('m2aProfit');
+  if(mp){
+    if(!buy||!due){mp.textContent='—';mp.style.color='var(--dim)';}
+    else{
+      mp.innerHTML=(spread>=0?'+':'')+spread.toFixed(3)+' / Kz · <b>'+fmt(profitOld,0)+'</b> قديمة ≈ '+fmt(profitKz,0)+' Kz';
+      mp.style.color=spread>=0?'var(--green)':'var(--red)';
+    }
+  }
   $('m2aDue').textContent=fmt(due,0)+' Kz';
   const paid=kbTotal(),diff=paid-due;
   const kd=$('kbDiff');
@@ -1609,7 +1625,7 @@ function calcM2A(){
   if(!old||!rate){hideTicket();return;}
   const ref=makeRef();
   const M=metaOf();
-  cur={type:'m2a',ref,mruNew:_payRcpt2?_payRcpt2.amount:old/10,mruOld:old,rate,dueAoa:due,paidAoa:paid,diff,
+  cur={type:'m2a',ref,mruNew:_payRcpt2?_payRcpt2.amount:old/10,mruOld:old,rate,buyRate:buy||0,spread,profitOld,profitKz,dueAoa:due,paidAoa:paid,diff,
     payRcpt:_payRcpt2||null,
     contactId:M.contactId,contactName:M.contact?M.contact.name:null,pay:M.pay,due:M.due,
     name:M.contact?M.contact.name:'—',cWa:$('cWa')?($('cWa').value.trim()||(M.contact?M.contact.wa:'')):(M.contact?M.contact.wa:''),
