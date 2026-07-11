@@ -1642,7 +1642,7 @@ function mruReceiptExtract(txt){
   if(!m)m=t.match(/([\d][\d.,\s]*)\s*أوقي/);
   if(m){const v=normNum(m[1].trim());if(v&&v>10)amount=v;}
   let acct=null;
-  m=t.match(/Receiver\s*:?\s*([0-9 ]{8,30})/i);
+  m=t.match(/Receiver\s*:?[\s\n]*([0-9 ]{8,30})/i);
   if(!m)m=t.match(/حساب\s*بنكي\s*:?\s*([0-9]{6,20})/);
   if(m)acct=m[1].replace(/\s/g,'');
   let txnPre=null;{const tm=t.match(/Txn\s*ID\s*:?\s*([0-9]{8,})/i);if(tm)txnPre=tm[1];}
