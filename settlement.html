@@ -1118,7 +1118,7 @@ function saveTx(){
   }
   txs.push(cur);seq++;cur=null;
   clearBatch();
-  if(savedTx.type==='m2a'){kb=[];renderKB();_payRcpt2=null;renderPayRcpt2();const mo=$('m2aOld');if(mo)mo.value='';const mb=$('m2aBuy');if(mb)mb.value='';}
+  if(savedTx.type==='m2a'){kb=[];renderKB();mb=[];_payRcpt2=null;renderPayRcpt2();const mo=$('m2aOld');if(mo)mo.value='';const mb=$('m2aBuy');if(mb)mb.value='';}
   fireAutoWa(savedTx);
   inputs.forEach(i=>$(i).value='');
   $('pContact').value='';$('pPay').value='settled';$('pDue').value='';$('dueRow').style.display='none';
@@ -1247,11 +1247,13 @@ function invRows(t){
       ['نوع العملية','بيع أوقية ⟵ كوانزا'],
       ['المستلم (جديدة)',fmt(t.mruNew,0)+' MRU'],
       ['المستلم (قديمة)',fmt(t.mruOld,0)+' UM'],
+      ...(t.payAcct?[['حساب الاستلام',t.payAcct]]:[]),
+      ...(t.rcptCount>1?[['عدد الحوالات',t.rcptCount]]:[]),
+      ...(t.txns&&t.txns.length?[['مراجع الحوالات',t.txns.length<=3?t.txns.join(' · '):t.txns.slice(0,3).join(' · ')+' +'+(t.txns.length-3)]]:[]),
       ['سعر البيع',t.rate+' UM/Kz'],
       ['المستحق',fmt(t.dueAoa,0)+' Kz'],
       ['المدفوع',fmt(t.paidAoa,0)+' Kz'],
       ...(Math.abs(t.diff)>=1?[[t.diff<0?'⚠️ مبلغ ناقص':'↑ مبلغ زائد',fmt(Math.abs(t.diff),0)+' Kz']]:[['الحالة','مطابق تمامًا ✓']]),
-      ...(t.payRcpt&&t.payRcpt.txn?[['مرجع الإيصال',t.payRcpt.app+' · '+t.payRcpt.txn]]:[])
     ];
   }
   const ccy=CCY[t.type];
@@ -1519,46 +1521,74 @@ function settleDebt(ref){const t=txs.find(x=>x.ref===ref);if(!t)return;t.pay='se
 
 
 /* ================= UM→AOA (بيع أوقية) ================= */
-let _payRcpt2=null,kb=[];
+let _payRcpt2=null,kb=[],mb=[]; /* mb: دفعة إيصالات الأوقية {app,amount,acct,txn,manual,excluded} */
+function mbAcct(){const f=mb.find(x=>x.acct&&!x.manual);return f?f.acct:null;}
+function mbTotal(){return mb.filter(x=>!x.excluded&&x.amount).reduce((s,x)=>s+x.amount,0);}
 function uploadPayRcpt2(){
   const inp=document.createElement('input');
-  inp.type='file';inp.accept='image/*,application/pdf';
-  inp.onchange=()=>{
-    const f=inp.files[0];if(!f)return;
-    const r=new FileReader();
-    r.onload=async()=>{
-      toast('جارٍ قراءة الإيصال...');
+  inp.type='file';inp.accept='image/*,application/pdf';inp.multiple=true;
+  inp.onchange=async()=>{
+    const files=[...inp.files];if(!files.length)return;
+    if(mb.length+files.length>50){toast('الحد 50 إيصال');return;}
+    toast('جارٍ قراءة '+files.length+' إيصال...');
+    let ok=0;
+    for(const f of files){
       try{
-        const txt=await anyReceiptText(r.result,f.type);
+        const dataUrl=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(f);});
+        const txt=await anyReceiptText(dataUrl,f.type);
         const ex=mruReceiptExtract(txt);
         if(!ex.amount)throw new Error('no amount');
-        _payRcpt2={...ex,amountOld:ex.amount*10,ts:Date.now()};
-        $('m2aOld').value=_payRcpt2.amountOld;
-        renderPayRcpt2();calc();
-        toast('قُرئ '+ex.app+': '+fmt(ex.amount,0)+' MRU = '+fmt(_payRcpt2.amountOld,0)+' قديمة ✓');
-      }catch(e){
-        const amtS=prompt('تعذرت القراءة.\nأدخل المبلغ بالجديدة (MRU):');
-        const amt=parseFloat(String(amtS||'').replace(/[^0-9.]/g,''))||null;
-        if(!amt)return;
-        _payRcpt2={app:'يدوي',amount:amt,amountOld:amt*10,acct:null,name:null,txn:null,ts:Date.now()};
-        $('m2aOld').value=_payRcpt2.amountOld;
-        renderPayRcpt2();calc();toast('سُجل يدويًا ✓');
-      }
-    };
-    r.readAsDataURL(f);
+        mb.push({app:ex.app,amount:ex.amount,acct:ex.acct||null,txn:ex.txn||null});
+        ok++;
+      }catch(e){mb.push({app:'؟',amount:null,acct:null,txn:null,err:'لم يُقرأ'});}
+    }
+    reconcileMB();renderPayRcpt2();syncM2AOld();
+    toast('قُرئ '+ok+'/'+files.length+' ✓');
   };
   inp.click();
 }
+/* قاعدة التوحيد: أول حساب مقروء هو المرجع — المخالف يُستبعد من الجمع */
+function reconcileMB(){
+  const main=mbAcct();
+  mb.forEach(x=>{
+    x.excluded=!!(main&&x.acct&&x.acct!==main);
+  });
+}
+function editMB(i){
+  const v=parseFloat(prompt('مبلغ الإيصال بالجديدة (MRU):',mb[i].amount||''));
+  if(!v||v<=0)return;
+  mb[i].amount=v;mb[i].err=null;mb[i].manual=true;
+  reconcileMB();renderPayRcpt2();syncM2AOld();
+}
+function dropMB(i){mb.splice(i,1);reconcileMB();renderPayRcpt2();syncM2AOld();}
+function syncM2AOld(){
+  const tot=mbTotal();
+  if(tot>0){$('m2aOld').value=tot*10;}
+  calc();
+}
 function renderPayRcpt2(){
   const el=$('m2aRcptInfo');if(!el)return;
-  if(!_payRcpt2){el.innerHTML='';return;}
-  const p=_payRcpt2;
-  el.innerHTML=`<div class="mini" style="flex-wrap:wrap;gap:6px">
-    <span class="badge b-paid">${p.app}</span>
-    <span><b class="lp">${fmt(p.amount,0)} MRU</b> = <b style="color:var(--gold2);font-family:'IBM Plex Mono'">${fmt(p.amountOld,0)}</b> <span style="color:var(--dim);font-size:10px">قديمة</span></span>
-    ${p.txn?`<span style="color:var(--dim);font-size:10px;font-family:'IBM Plex Mono'">${p.txn}</span>`:''}
-    <button class="btn btn-line btn-sm" style="padding:2px 8px;font-size:10px" onclick="_payRcpt2=null;renderPayRcpt2()">✕</button>
-  </div>`;
+  if(!mb.length){el.innerHTML='';return;}
+  const main=mbAcct(),tot=mbTotal();
+  el.innerHTML=`
+    ${main?`<div class="mini" style="gap:6px"><span style="color:var(--dim);font-size:11px">حساب الاستلام الموحد:</span>
+      <b style="font-family:'IBM Plex Mono';font-size:11px;color:var(--acc2)">${main}</b></div>`:''}
+    ${mb.map((b,i)=>`
+      <div class="leg" style="${b.excluded?'opacity:.75':''}">
+        <span style="font-size:10px">
+          <span class="badge ${b.excluded?'b-wait':'b-paid'}" style="font-size:9px">${b.app}</span>
+          ${b.excluded?'<span style="color:var(--red);font-size:9px"> حساب مختلف — مستبعد</span>':''}
+          ${b.txn?`<span style="color:var(--dim);font-size:9px;font-family:'IBM Plex Mono'"> ${String(b.txn).slice(-8)}</span>`:''}
+        </span>
+        <span>${b.amount!=null
+          ?'<b class="'+(b.excluded?'red':'lp')+'" style="cursor:pointer" onclick="editMB('+i+')">'+fmt(b.amount,0)+'</b>'
+          :'<button class="btn btn-gold btn-sm" style="padding:2px 10px;font-size:10px" onclick="editMB('+i+')">أدخل المبلغ</button>'}
+        <button class="btn btn-line btn-sm" style="padding:2px 8px;font-size:10px;margin-right:6px" onclick="dropMB(${i})">✕</button></span>
+      </div>`).join('')}
+    <div class="mini" style="margin-top:4px;gap:8px">
+      <span>المجموع: <b class="lp">${fmt(tot,0)} MRU</b></span>
+      <span>= <b style="color:var(--gold2);font-family:'IBM Plex Mono'">${fmt(tot*10,0)}</b> <span style="color:var(--dim);font-size:10px">قديمة</span></span>
+    </div>`;
 }
 function uploadKB(){
   if(!window.pdfjsLib&&!window.Tesseract){toast('محرك القراءة غير متاح');return;}
@@ -1625,8 +1655,8 @@ function calcM2A(){
   if(!old||!rate){hideTicket();return;}
   const ref=makeRef();
   const M=metaOf();
-  cur={type:'m2a',ref,mruNew:_payRcpt2?_payRcpt2.amount:old/10,mruOld:old,rate,buyRate:buy||0,spread,profitOld,profitKz,dueAoa:due,paidAoa:paid,diff,
-    payRcpt:_payRcpt2||null,
+  cur={type:'m2a',ref,mruNew:mbTotal()||old/10,mruOld:old,payAcct:mbAcct(),rcptCount:mb.filter(x=>!x.excluded&&x.amount).length,txns:mb.filter(x=>!x.excluded&&x.txn).map(x=>x.txn),rate,buyRate:buy||0,spread,profitOld,profitKz,dueAoa:due,paidAoa:paid,diff,
+    payRcpt:null,
     contactId:M.contactId,contactName:M.contact?M.contact.name:null,pay:M.pay,due:M.due,
     name:M.contact?M.contact.name:'—',cWa:$('cWa')?($('cWa').value.trim()||(M.contact?M.contact.wa:'')):(M.contact?M.contact.wa:''),
     status:Math.abs(diff)<1?'paid':(diff<0?'wait':'conf'),ts:Date.now()};
