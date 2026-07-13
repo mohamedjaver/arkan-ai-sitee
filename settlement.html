@@ -389,11 +389,11 @@ nav{position:fixed;bottom:0;left:0;right:0;z-index:90;
       <div id="m2aRcptInfo" style="margin-top:6px"></div>
     </div>
     <div class="row" style="margin-top:10px">
-      <div><label>المبلغ بالقديمة (أوقية)</label><input type="text" id="m2aOld" placeholder="5000000" inputmode="decimal" oninput="calc()"></div>
-      <div><label>② سعر بيع الأوقية (قديمة/Kz)</label><input type="text" id="m2aRate" placeholder="0.36" inputmode="decimal" oninput="calc()"></div>
+      <div><label>المبلغ بالقديمة (أوقية)</label><input type="text" id="m2aOld" placeholder="5000000" inputmode="decimal" oninput="calcM2A()"></div>
+      <div><label>② سعر بيع الأوقية (قديمة/Kz)</label><input type="text" id="m2aRate" placeholder="0.36" inputmode="decimal" oninput="calcM2A()"></div>
     </div>
     <div class="row">
-      <div><label>سعر شراء الأوقية (قديمة/Kz)</label><input type="text" id="m2aBuy" placeholder="0.362" inputmode="decimal" oninput="calc()"></div>
+      <div><label>سعر شراء الأوقية (قديمة/Kz)</label><input type="text" id="m2aBuy" placeholder="0.362" inputmode="decimal" oninput="calcM2A()"></div>
       <div><label>الربح</label><div class="sum" style="padding:12px"><div class="v num" id="m2aProfit" style="font-size:15px;color:var(--dim)">—</div></div></div>
     </div>
     <div class="sum" style="margin-top:10px">
@@ -1145,7 +1145,7 @@ function saveTx(){
   }
   txs.push(cur);seq++;cur=null;
   clearBatch();
-  if(savedTx.type==='m2a'){kb=[];renderKB();mb=[];_payRcpt2=null;renderPayRcpt2();const mo=$('m2aOld');if(mo)mo.value='';const mby=$('m2aBuy');if(mby)mby.value='';}
+  if(savedTx.type==='m2a'){kb=[];renderKB();mb=[];mbMain=null;_payRcpt2=null;renderPayRcpt2();const mo=$('m2aOld');if(mo)mo.value='';const mby=$('m2aBuy');if(mby)mby.value='';}
   fireAutoWa(savedTx);
   inputs.forEach(i=>$(i).value='');
   $('pContact').value='';$('pPay').value='settled';$('pDue').value='';$('dueRow').style.display='none';
@@ -1549,7 +1549,12 @@ function settleDebt(ref){const t=txs.find(x=>x.ref===ref);if(!t)return;t.pay='se
 
 /* ================= UM→AOA (بيع أوقية) ================= */
 let _payRcpt2=null,kb=[],mb=[]; /* mb: دفعة إيصالات الأوقية {app,amount,acct,txn,manual,excluded} */
-function mbAcct(){const f=mb.find(x=>x.acct&&!x.manual);return f?f.acct:null;}
+let mbMain=null; /* الحساب المرجعي المختار يدويًا */
+function mbAcct(){
+  if(mbMain)return mbMain;
+  const f=mb.find(x=>x.acct&&!x.manual);return f?f.acct:null;
+}
+function setMbMain(a){mbMain=a;reconcileMB();renderPayRcpt2();syncM2AOld();toast('الحساب المرجعي: ...'+String(a).slice(-6));}
 function mbTotal(){return mb.filter(x=>!x.excluded&&x.amount).reduce((s,x)=>s+x.amount,0);}
 function uploadPayRcpt2(){
   const inp=document.createElement('input');
@@ -1590,8 +1595,8 @@ function editMB(i){
 function dropMB(i){mb.splice(i,1);reconcileMB();renderPayRcpt2();syncM2AOld();}
 function syncM2AOld(){
   const tot=mbTotal();
-  if(tot>0){$('m2aOld').value=tot*10;}
-  calc();
+  if(tot>0&&$('m2aOld')){$('m2aOld').value=tot*10;}
+  calcM2A();
 }
 function renderPayRcpt2(){
   const el=$('m2aRcptInfo');if(!el)return;
@@ -1604,7 +1609,8 @@ function renderPayRcpt2(){
       <div class="leg" style="${b.excluded?'opacity:.75':''}">
         <span style="font-size:10px">
           <span class="badge ${b.excluded?'b-wait':'b-paid'}" style="font-size:9px">${b.app}</span>
-          ${b.excluded?'<span style="color:var(--red);font-size:9px"> حساب مختلف — مستبعد</span>':''}
+          ${b.excluded?`<span style="color:var(--red);font-size:9px"> حساب مختلف</span>
+            <button class="btn btn-line btn-sm" style="padding:1px 6px;font-size:9px" onclick="setMbMain('${b.acct}')">اجعله المرجع</button>`:''}
           ${b.err?`<span style="color:var(--red);font-size:9px"> ${b.err}</span>`:''}
           ${b.txn?`<span style="color:var(--dim);font-size:9px;font-family:'IBM Plex Mono'"> ${String(b.txn).slice(-8)}</span>`:''}
         </span>
@@ -1658,6 +1664,7 @@ function renderKB(){
     </div>`).join('');
 }
 function calcM2A(){
+  if(!$('m2aOld'))return;
   const old=NV('m2aOld'),rate=NV('m2aRate'),buy=NV('m2aBuy');
   const due=(old&&rate)?old/rate:0;
   /* الربح: (شراء − بيع) قديمة/Kz × المستحق Kz = ربح بالقديمة */
@@ -1686,7 +1693,7 @@ function calcM2A(){
   cur={type:'m2a',ref,mruNew:mbTotal()||old/10,mruOld:old,payAcct:mbAcct(),rcptCount:mb.filter(x=>!x.excluded&&x.amount).length,txns:mb.filter(x=>!x.excluded&&x.txn).map(x=>x.txn),rate,buyRate:buy||0,spread,profitOld,profitKz,dueAoa:due,paidAoa:paid,diff,
     payRcpt:null,
     contactId:M.contactId,contactName:M.contact?M.contact.name:null,pay:M.pay,due:M.due,
-    name:M.contact?M.contact.name:'—',cWa:$('cWa')?($('cWa').value.trim()||(M.contact?M.contact.wa:'')):(M.contact?M.contact.wa:''),
+    name:M.contact?M.contact.name:'—',cWa:(M.contact&&M.contact.wa)||'',
     status:Math.abs(diff)<1?'paid':(diff<0?'wait':'conf'),ts:Date.now()};
   $('refNo').textContent=ref;
   $('k1').textContent='المستلم (قديمة)';$('v1').textContent=fmt(old,0)+' UM';
