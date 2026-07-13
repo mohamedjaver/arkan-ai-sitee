@@ -317,10 +317,7 @@ nav{position:fixed;bottom:0;left:0;right:0;z-index:90;
 <section id="new" class="on">
   <div class="types">
     <div class="type on" data-ty="bridge"><div class="t1">جسر تحويل</div><div class="t2">AOA→MRU</div></div>
-    <div class="type" data-ty="aoa"><div class="t1">تداول USDT</div><div class="t2">AOA/USDT</div></div>
-    <div class="type" data-ty="mru"><div class="t1">تداول USDT</div><div class="t2">MRU/USDT</div></div>
-    <div class="type" data-ty="euraoa"><div class="t1">تداول EUR</div><div class="t2">EUR/AOA</div></div>
-    <div class="type" data-ty="eurmru"><div class="t1">تداول EUR</div><div class="t2">EUR/MRU</div></div>
+    <div class="type" data-ty="trade"><div class="t1">تداول</div><div class="t2">كل العملات 💱</div></div>
     <div class="type" data-ty="m2a"><div class="t1">بيع أوقية</div><div class="t2">UM→AOA</div></div>
   </div>
 
@@ -417,7 +414,29 @@ nav{position:fixed;bottom:0;left:0;right:0;z-index:90;
     </div>
   </div>
   <div class="card" id="fTrade" style="display:none">
-    <h3 id="tradeTitle">تداول AOA/USDT</h3>
+    <h3 id="tradeTitle">تداول</h3>
+    <div class="row">
+      <div><label>العملة المتداولة (الكمية)</label>
+        <select id="tBase" class="ar" onchange="syncTradeCcy()">
+          <option value="USDT">USDT ₮</option>
+          <option value="EUR">EUR € — يورو</option>
+          <option value="MAD">MAD د.م — درهم مغربي</option>
+          <option value="AED">AED د.إ — درهم إماراتي</option>
+          <option value="CNY">CNY ¥ — يوان صيني</option>
+          <option value="MRU">MRU — أوقية</option>
+          <option value="AOA">AOA — كوانزا</option>
+        </select></div>
+      <div><label>عملة التسعير (الأسعار)</label>
+        <select id="tQuote" class="ar" onchange="syncTradeCcy()">
+          <option value="AOA">AOA — كوانزا</option>
+          <option value="MRU">MRU — أوقية</option>
+          <option value="USDT">USDT ₮</option>
+          <option value="EUR">EUR €</option>
+          <option value="MAD">MAD د.م</option>
+          <option value="AED">AED د.إ</option>
+          <option value="CNY">CNY ¥</option>
+        </select></div>
+    </div>
     <label id="qtyLbl">كمية USDT</label>
     <input type="text" id="qty" placeholder="1000" inputmode="decimal">
     <div class="row">
@@ -869,9 +888,11 @@ function NV(id){const e=$(id);if(!e)return 0;return parseFloat(String(e.value||'
 const fmt=(n,d=2)=>Number(n).toLocaleString('en-US',{maximumFractionDigits:d});
 const CCY={aoa:'KWZ',mru:'MRU',euraoa:'KWZ',eurmru:'MRU'};
 const TRD={aoa:{b:'USDT',q:'AOA'},mru:{b:'USDT',q:'MRU'},euraoa:{b:'EUR',q:'AOA'},eurmru:{b:'EUR',q:'MRU'}};
-const isTrade=t=>!!TRD[t];
-const CCYI={AOA:'KWZ',USDT:'$',MRU:'MRU',EUR:'EUR'};
-const typeLbl={bridge:'جسر AOA→MRU',aoa:'تداول AOA/USDT',mru:'تداول MRU/USDT',euraoa:'تداول EUR/AOA',eurmru:'تداول EUR/MRU',m2a:'بيع أوقية UM→AOA'};
+const isTrade=t=>t==='trade'||!!TRD[t];
+const trQ=t=>t.quote||((TRD[t.type]||{}).q)||'AOA';
+const trB=t=>t.base||'USDT';
+const CCYI={AOA:'KWZ',USDT:'$',MRU:'MRU',EUR:'EUR',MAD:'MAD',AED:'AED',CNY:'CNY'};
+const typeLbl={bridge:'جسر AOA→MRU',aoa:'تداول AOA/USDT',mru:'تداول MRU/USDT',euraoa:'تداول EUR/AOA',eurmru:'تداول EUR/MRU',trade:'تداول',m2a:'بيع أوقية UM→AOA'};
 
 /* محرك تحويل للسلاسل فقط */
 const PAIRS={
@@ -924,17 +945,11 @@ document.querySelectorAll('[data-ty]').forEach(el=>el.addEventListener('click',(
   document.querySelectorAll('[data-ty]').forEach(x=>x.classList.toggle('on',x===el));
   $('fBridge').style.display=curType==='bridge'?'block':'none';
   const fm=$('fM2A');if(fm)fm.style.display=curType==='m2a'?'block':'none';
-  $('fTrade').style.display=isTrade(curType)?'block':'none';
+  $('fTrade').style.display=curType==='trade'?'block':'none';
   $('fChain').style.display='none';
   $('fMeta').style.display='block';
   $('saveBtn').style.display='block';
-  if(isTrade(curType)){
-    const T=TRD[curType];
-    $('tradeTitle').textContent=`تداول ${T.b}/${T.q}`;
-    $('qtyLbl').textContent=`كمية ${T.b}`;
-    $('lblBuy').textContent=`سعر الشراء (${T.q})`;
-    $('lblSell').textContent=`سعر البيع (${T.q})`;
-  }
+  if(curType==='trade')syncTradeCcy();
   hideTicket();renderChains();calc();
 }));
 $('pPay').addEventListener('change',()=>{
@@ -956,6 +971,16 @@ function showDev(el,dev){
 }
 
 
+
+function syncTradeCcy(){
+  const b=$('tBase')?$('tBase').value:'USDT',q=$('tQuote')?$('tQuote').value:'AOA';
+  if(b===q){toast('اختر عملتين مختلفتين');$('tQuote').value=b==='AOA'?'MRU':'AOA';return syncTradeCcy();}
+  $('tradeTitle').textContent=`تداول ${b}/${q}`;
+  $('qtyLbl').textContent=`كمية ${b}`;
+  $('lblBuy').textContent=`سعر الشراء (${q})`;
+  $('lblSell').textContent=`سعر البيع (${q})`;
+  calc();
+}
 /* ================= BRIDGE CURRENCY SYNC ================= */
 function bFromV(){const e=$('bFrom');return e?e.value:'AOA';}
 function bToV(){const e=$('bTo');return e?e.value:'MRU';}
@@ -989,7 +1014,7 @@ function metaOf(){
 }
 function calc(){
   if(curType==='bridge')calcBridge();
-  else if(isTrade(curType))calcTrade();
+  else if(curType==='trade')calcTrade();
   else if(curType==='m2a')calcM2A();
 }
 
@@ -1046,12 +1071,14 @@ ${T==='MRU'?'Bankily: '+cur.phone+String.fromCharCode(10):''}المبلغ: ${fmt
 function calcTrade(){
   const qty=NV('qty'),rb=NV('rBuy'),rs=NV('rSell');
   if(!qty||!rb){hideTicket();return;}
-  showDev($('rateAlertT'),rateDeviation(curType,rb));
-  const ccy=CCY[curType];
+  const B=curType==='trade'?($('tBase')?$('tBase').value:'USDT'):((TRD[curType]||{}).b||'USDT');
+  const Q=curType==='trade'?($('tQuote')?$('tQuote').value:'AOA'):((TRD[curType]||{}).q||'AOA');
+  showDev($('rateAlertT'),rateDeviation('T'+B+Q,rb));
+  const ccy=CCYI[Q];
   const cost=qty*rb,rev=rs?qty*rs:0,profit=rs?rev-cost:0;
   const ref=makeRef();
   const M=metaOf();
-  cur={type:curType,ref,base:TRD[curType].b,qty,rBuy:rb,rSell:rs||0,cost,rev,profit,
+  cur={type:'trade',ref,base:$('tBase').value,quote:$('tQuote').value,qty,rBuy:rb,rSell:rs||0,cost,rev,profit,
     note:$('note').value||'—',
     contactId:M.contactId,contactName:M.contact?M.contact.name:null,pay:M.pay,due:M.due,
     status:rs?'paid':'wait',ts:Date.now()};
@@ -1118,7 +1145,7 @@ function saveTx(){
   }
   txs.push(cur);seq++;cur=null;
   clearBatch();
-  if(savedTx.type==='m2a'){kb=[];renderKB();mb=[];_payRcpt2=null;renderPayRcpt2();const mo=$('m2aOld');if(mo)mo.value='';const mb=$('m2aBuy');if(mb)mb.value='';}
+  if(savedTx.type==='m2a'){kb=[];renderKB();mb=[];_payRcpt2=null;renderPayRcpt2();const mo=$('m2aOld');if(mo)mo.value='';const mby=$('m2aBuy');if(mby)mby.value='';}
   fireAutoWa(savedTx);
   inputs.forEach(i=>$(i).value='');
   $('pContact').value='';$('pPay').value='settled';$('pDue').value='';$('dueRow').style.display='none';
@@ -1256,9 +1283,9 @@ function invRows(t){
       ...(Math.abs(t.diff)>=1?[[t.diff<0?'⚠️ مبلغ ناقص':'↑ مبلغ زائد',fmt(Math.abs(t.diff),0)+' Kz']]:[['الحالة','مطابق تمامًا ✓']]),
     ];
   }
-  const ccy=CCY[t.type];
+  const ccy=CCYI[trQ(t)];
   return [
-    ['العملية','تداول '+(TRD[t.type]||{b:'USDT',q:CCY[t.type]}).b+'/'+(TRD[t.type]||{q:'?'}).q],
+    ['العملية','تداول '+trB(t)+'/'+trQ(t)],
     ['الكمية',fmt(t.qty)+' '+(t.base||'USDT')],
     ...(t.rSell?[['سعر البيع',t.rSell+' '+ccy],['الإجمالي',fmt(t.qty*t.rSell,0)+' '+ccy]]:[]),
     ['الحالة',t.rSell?'مكتملة ✓':'مفتوحة']
@@ -1372,7 +1399,7 @@ let autoWa=localStorage.getItem('arkan-autowa')||'invoice';
 function saveAutoWa(){autoWa=$('autoWa').value;localStorage.setItem('arkan-autowa',autoWa);toast('حُفظ ✓');}
 function autoWaMsg(t){
   if(t.type==='bridge')return `CONFIRMED ${t.ref}\n${t.fromC||'AOA'} ${fmt((t.amt!=null?t.amt:t.aoa),0)}\nUSDT NET: ${fmt(t.uC)} $\n${t.toC||'MRU'}: ${fmt(t.type==='m2a'?t.paidAoa:(t.payout!=null?t.payout:t.mru),0)}`;
-  if(isTrade(t.type))return `TRADE ${t.ref}\n${(t.base||'USDT')}/${TRD[t.type].q}\nQTY: ${fmt(t.qty)} ${t.base||'USDT'} @ ${t.rBuy}${t.rSell?`→${t.rSell}\nPROFIT: ${fmt(t.profit,0)} ${CCY[t.type]}`:''}`;
+  if(isTrade(t.type))return `TRADE ${t.ref}\n${trB(t)}/${trQ(t)}\nQTY: ${fmt(t.qty)} ${trB(t)} @ ${t.rBuy}${t.rSell?`→${t.rSell}\nPROFIT: ${fmt(t.profit,0)} ${CCYI[trQ(t)]}`:''}`;
   return null;
 }
 function clientWaMsg(t){
@@ -1431,11 +1458,11 @@ function render(){
           <button class="btn btn-line btn-sm" onclick="delTx('${t.ref}')">حذف</button>
         </div>`;
     }else if(isTrade(t.type)){
-      const ccy=CCY[t.type];
+      const ccy=CCYI[trQ(t)];
       const [cls,lbl]=tradeBadges[t.status]||tradeBadges.paid;
       div.innerHTML=`
         <div class="tx-top"><span class="tx-ref">${t.ref}</span>
-          <span><span class="badge b-type">${typeLbl[t.type]}</span> ${pbHtml}<span class="badge ${cls}">${lbl}</span></span></div>
+          <span><span class="badge b-type">${t.type==='trade'?(trB(t)+'/'+trQ(t)):typeLbl[t.type]}</span> ${pbHtml}<span class="badge ${cls}">${lbl}</span></span></div>
         <div class="tx-mid">
           <span>QTY <b>${fmt(t.qty)} ${t.base==='EUR'?'€':'$'}</b></span>
           <span>شراء <b>${t.rBuy}</b></span>
@@ -1510,7 +1537,7 @@ function render(){
 function setSt(ref,st){const t=txs.find(x=>x.ref===ref);if(!t)return;t.status=st;persist();render();}
 function sellTrade(ref){
   const t=txs.find(x=>x.ref===ref);if(!t)return;
-  const rs=parseFloat(prompt('سعر البيع ('+CCY[t.type]+'):'));
+  const rs=parseFloat(prompt('سعر البيع ('+CCYI[trQ(t)]+'):'));
   if(!rs||rs<=0)return;
   t.rSell=rs;t.rev=t.qty*rs;t.profit=t.rev-t.cost;t.status='paid';
   persist();render();toast('اكتملت الصفقة ✓');
@@ -1540,7 +1567,7 @@ function uploadPayRcpt2(){
         if(!ex.amount)throw new Error('no amount');
         mb.push({app:ex.app,amount:ex.amount,acct:ex.acct||null,txn:ex.txn||null});
         ok++;
-      }catch(e){mb.push({app:'؟',amount:null,acct:null,txn:null,err:'لم يُقرأ'});}
+      }catch(e){mb.push({app:'؟',amount:null,acct:null,txn:null,err:(e&&/insecure|Worker|SecurityError/i.test(String(e))?'المتصفح يحجب القراءة — افتح في Safari':'لم يُقرأ')});}
     }
     reconcileMB();renderPayRcpt2();syncM2AOld();
     toast('قُرئ '+ok+'/'+files.length+' ✓');
@@ -1578,6 +1605,7 @@ function renderPayRcpt2(){
         <span style="font-size:10px">
           <span class="badge ${b.excluded?'b-wait':'b-paid'}" style="font-size:9px">${b.app}</span>
           ${b.excluded?'<span style="color:var(--red);font-size:9px"> حساب مختلف — مستبعد</span>':''}
+          ${b.err?`<span style="color:var(--red);font-size:9px"> ${b.err}</span>`:''}
           ${b.txn?`<span style="color:var(--dim);font-size:9px;font-family:'IBM Plex Mono'"> ${String(b.txn).slice(-8)}</span>`:''}
         </span>
         <span>${b.amount!=null
@@ -2290,7 +2318,7 @@ function saveWallet(){
 function txFlows(t,f){
   if(t.type==='bridge'){f[t.fromC||'AOA']+=(t.amt!=null?t.amt:t.aoa)||0;f[t.toC||'MRU']-=(t.payout!=null?t.payout:t.mru)||0;f.USDT+=(t.pUsdt||0);}
   else if(isTrade(t.type)){
-    const k=TRD[t.type].q,b=t.base||'USDT';
+    const k=trQ(t),b=trB(t);
     if(t.rSell)f[k]+=t.profit;else{f[k]-=t.cost;f[b]+=t.qty;}
   }
   else if(t.type==='leg'){f[t.from]-=t.fromAmt;f[t.to]+=t.toAmt;}
@@ -2299,7 +2327,7 @@ function txFlows(t,f){
   else if(t.kind==='pair'&&t.from){f[t.from]-=t.fromAmt;f[t.to]+=t.toAmt;}
 }
 function balances(){
-  const f={USDT:0,AOA:0,MRU:0,EUR:0};
+  const f={USDT:0,AOA:0,MRU:0,EUR:0,MAD:0,AED:0,CNY:0};
   hist.forEach(d=>(d.txs||[]).forEach(t=>txFlows(t,f)));
   txs.forEach(t=>txFlows(t,f));
   return {USDT:wallet.U+f.USDT,AOA:wallet.A+f.AOA,MRU:wallet.M+f.MRU};
@@ -2628,7 +2656,7 @@ function renderDebts(){
 /* ================= HISTORY ================= */
 function txSummary(t){
   if(t.type==='bridge')return{info:(t.contactName||t.name||'')+' · '+fmt((t.payout!=null?t.payout:t.mru)||0,0)+' '+CCYI[t.toC||'MRU'],p:fmt(t.pUsdt||0)+' $'};
-  if(isTrade(t.type))return{info:fmt(t.qty||0)+' '+(t.base||'$')+' @ '+t.rBuy+(t.rSell?'→'+t.rSell:''),p:t.rSell?fmt(t.profit,0)+' '+CCY[t.type]:'مفتوحة'};
+  if(isTrade(t.type))return{info:fmt(t.qty||0)+' '+(t.base||'$')+' @ '+t.rBuy+(t.rSell?'→'+t.rSell:''),p:t.rSell?fmt(t.profit,0)+' '+CCYI[trQ(t)]:'مفتوحة'};
   if(t.type==='m2a')return{info:(t.contactName||t.name||'')+' · '+fmt(t.mruOld,0)+' قديمة @ '+t.rate,p:(Math.abs(t.diff)<1?'مطابق ✓':(t.diff<0?'ناقص ':'زائد ')+fmt(Math.abs(t.diff),0)+' Kz')};
   if(t.type==='ledger')return{info:(t.contactName||'')+' · قيد'+(t.note?' — '+t.note:''),p:(t.pay==='owed_us'?'لنا ':'علينا ')+fmt(t.amount,0)+' '+CCYI[t.ccy]};
   if(t.type==='leg')return{info:'رجل: '+pairLabel(t.pair)+' @ '+t.rate,p:fmt(t.toAmt,0)+' '+CCYI[t.to]};
@@ -2711,9 +2739,9 @@ async function genPDF(dayIdx){
       <td style="color:${t.pUsdt>=0?'#0a7a3d':'#c0392b'};font-weight:600">${fmt(t.pUsdt)} $</td>
       <td>${t.pay==='settled'?'مسدد':(t.pay==='owed_us'?'دين لنا':'دين علينا')}</td></tr>`).join('');
   const rowsTr=list.filter(t=>isTrade(t.type)).map(t=>`
-    <tr><td>${t.ref}</td><td>${typeLbl[t.type]}</td><td>${fmt(t.qty)}</td>
+    <tr><td>${t.ref}</td><td>${t.type==='trade'?(trB(t)+'/'+trQ(t)):typeLbl[t.type]}</td><td>${fmt(t.qty)}</td>
       <td>${t.rBuy}</td><td>${t.rSell||'—'}</td>
-      <td style="color:${(t.profit||0)>=0?'#0a7a3d':'#c0392b'};font-weight:600">${t.rSell?fmt(t.profit,0)+' '+CCY[t.type]:'مفتوحة'}</td></tr>`).join('');
+      <td style="color:${(t.profit||0)>=0?'#0a7a3d':'#c0392b'};font-weight:600">${t.rSell?fmt(t.profit,0)+' '+CCYI[trQ(t)]:'مفتوحة'}</td></tr>`).join('');
   const rowsCh=list.filter(t=>t.type==='chainResult').map(t=>`
     <tr><td>${t.ref}</td><td>${t.legs} أرجل</td><td>${fmt(t.initAmt,0)} ${t.ccy}</td>
       <td>${fmt(t.finalAmt,0)} ${t.ccy}</td>
@@ -2811,7 +2839,7 @@ function exportXlsx(dayIdx){
       'Ref':t.ref,'Type':t.type==='aoa'?'TRADE AOA/USDT':'TRADE MRU/USDT',
       'Date':new Date(t.ts).toLocaleDateString('en-GB'),
       'Qty USDT':t.qty,'Buy':t.rBuy,'Sell':t.rSell||'',
-      'Profit':t.rSell?Math.round(t.profit):'','Profit CCY':CCY[t.type],
+      'Profit':t.rSell?Math.round(t.profit):'','Profit CCY':CCYI[trQ(t)],
       'Contact':t.contactName||'','Note':t.note,'Pay':t.pay||'settled','Due':t.due||'',
       'Status':t.status==='paid'?'CLOSED':'OPEN','Loss Reason':t.lossReason||''};
     if(t.type==='leg')return{
