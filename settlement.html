@@ -1929,6 +1929,29 @@ function settleDebt(ref){const t=txs.find(x=>x.ref===ref);if(!t)return;t.pay='se
 
 
 
+
+/* ملء الخانات تلقائيًا من مجاميع الإيصالات */
+function syncOB(fid){
+  const tot=obTotal(fid);
+  if(!tot)return;
+  if(fid==='trBuy'){
+    /* مجموع إيصالات الشراء = الكمية المتداولة */
+    const q=$('qty');if(q){q.value=+tot.toFixed(6);}
+  }else if(fid==='trSell'){
+    /* مجموع البيع ÷ الكمية = سعر البيع الفعلي */
+    const qty=NV('qty');
+    if(qty>0){const rs=$('rSell');if(rs)rs.value=+(tot/qty).toFixed(4);}
+  }else if(fid==='brPay'){
+    /* مجموع إيصالات الدفع = المبلغ المدفوع للعميل → نشتق منه مبلغ العميل عكسيًا إن أمكن،
+       وإلا نضعه كمرجع فقط (الحقل الأساسي هو مبلغ العميل) */
+    const rt=NV('rMru'),rc=NV('rClient');
+    if(rt>0&&rc>0){
+      const usdt=tot/rt;            /* USDT المكافئ للمدفوع */
+      const amt=usdt*rc;            /* مبلغ العميل بعملة المصدر */
+      const a=$('aoa');if(a)a.value=Math.round(amt);
+    }
+  }
+}
 /* ================= OPERATION RECEIPT BOXES (trade + bridge) ================= */
 const OB={trBuy:[],trSell:[],brPay:[]};
 function obCcy(fid){
@@ -1957,17 +1980,17 @@ async function uploadOB(fid){
         if(ex.amount!=null)ok++;
       }catch(e){OB[fid].push({name:f.name,amount:null,ccy,err:'لم يُقرأ'});}
     }
-    renderOB(fid);calc();
-    toast('قُرئ '+ok+'/'+files.length+' ✓');
+    renderOB(fid);syncOB(fid);calc();
+    toast('قُرئ '+ok+'/'+files.length+' ✓ — عُبّئت الخانة');
   };
   inp.click();
 }
 function obTotal(fid){return OB[fid].filter(x=>x.amount).reduce((s,x)=>s+x.amount,0);}
 function editOB(fid,i){
   const v=parseFloat(String(prompt('المبلغ:',OB[fid][i].amount||'')||'').replace(/[^0-9.]/g,''));
-  if(!v||v<=0)return;OB[fid][i].amount=v;OB[fid][i].err=null;renderOB(fid);calc();
+  if(!v||v<=0)return;OB[fid][i].amount=v;OB[fid][i].err=null;renderOB(fid);syncOB(fid);calc();
 }
-function dropOB(fid,i){OB[fid].splice(i,1);renderOB(fid);calc();}
+function dropOB(fid,i){OB[fid].splice(i,1);renderOB(fid);syncOB(fid);calc();}
 function clearOB(fid){OB[fid]=[];renderOB(fid);calc();}
 function renderOB(fid){
   const c=$(fid+'Count'),s=$(fid+'Sum'),l=$(fid+'List');
