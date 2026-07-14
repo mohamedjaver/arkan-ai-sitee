@@ -255,6 +255,25 @@ nav{position:fixed;bottom:0;left:0;right:0;z-index:90;
 .tkStale{font-size:9px;color:var(--gold2);font-family:'IBM Plex Mono'}
 /* نافذة تفاصيل العملة */
 .spark{width:100%;height:56px;margin:10px 0}
+
+/* ===== E-BANK TILES ===== */
+.types{display:grid !important;grid-template-columns:1fr 1fr;gap:12px;padding:0 2px;overflow:visible !important}
+.type{display:flex !important;flex-direction:column;align-items:center;justify-content:center;gap:8px;
+  min-height:112px;padding:18px 12px !important;border-radius:22px !important;
+  background:linear-gradient(160deg,rgba(255,255,255,.07),rgba(255,255,255,.025)) !important;
+  border:1px solid rgba(255,255,255,.09) !important;
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  box-shadow:0 8px 28px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.08);
+  transition:.18s;cursor:pointer;width:auto !important;flex:none !important}
+.type:active{transform:scale(.97)}
+.type.on{background:linear-gradient(160deg,rgba(139,114,255,.30),rgba(91,63,209,.14)) !important;
+  border-color:rgba(183,163,255,.55) !important;
+  box-shadow:0 10px 34px rgba(91,63,209,.45), inset 0 1px 0 rgba(255,255,255,.14)}
+.type .ico{font-size:26px;line-height:1}
+.type .t1{font-size:14.5px !important;font-weight:800;color:var(--txt)}
+.type .t2{font-size:10.5px !important;color:var(--dim);font-family:'IBM Plex Mono';letter-spacing:.5px}
+.type.wide{grid-column:1 / -1;min-height:78px;flex-direction:row;gap:14px;justify-content:flex-start;padding-inline:22px !important}
+.type.wide .ico{font-size:24px}
 </style>
 </head>
 <body>
@@ -359,8 +378,9 @@ nav{position:fixed;bottom:0;left:0;right:0;z-index:90;
 <section id="new" class="on">
   <div class="types">
     <div class="type on" data-ty="bridge"><div class="t1">جسر تحويل</div><div class="t2">AOA→MRU</div></div>
-    <div class="type" data-ty="trade"><div class="t1">تداول</div><div class="t2">كل العملات 💱</div></div>
-    <div class="type" data-ty="m2a"><div class="t1">بيع أوقية</div><div class="t2">UM→AOA</div></div>
+    <div class="type" data-ty="trade"><div class="ico">💱</div><div class="t1">تداول</div><div class="t2">كل العملات</div></div>
+    <div class="type" data-ty="m2a"><div class="ico">💸</div><div class="t1">بيع أوقية</div><div class="t2">UM → AOA</div></div>
+    <div class="type wide" data-ty="rcpt"><div class="ico">📥</div><div><div class="t1">مركز الإيصالات</div><div class="t2">USDT · MRU · USD · EUR · AOA</div></div></div>
   </div>
 
   <!-- BRIDGE FORM -->
@@ -420,6 +440,44 @@ nav{position:fixed;bottom:0;left:0;right:0;z-index:90;
   <!-- TRADE FORM (v4 method) -->
 
   <!-- ============ بيع أوقية → كوانزا ============ -->
+
+  <!-- ============ مركز الإيصالات الشامل ============ -->
+  <div class="card" id="fRcpt" style="display:none">
+    <h3>مركز الإيصالات — كل العملات</h3>
+    <div class="row">
+      <div><label>العملة</label>
+        <select id="rcCcy" class="ar" onchange="renderRC()">
+          <option value="USDT">USDT (TRC20)</option>
+          <option value="MRU">MRU — أوقية</option>
+          <option value="AOA">AOA — كوانزا</option>
+          <option value="USD">USD — دولار</option>
+          <option value="EUR">EUR — يورو</option>
+          <option value="AED">AED — درهم إماراتي</option>
+          <option value="CNY">CNY — يوان</option>
+        </select></div>
+      <div><label>الاتجاه</label>
+        <select id="rcDir" class="ar">
+          <option value="in">وارد (استلمنا)</option>
+          <option value="out">صادر (دفعنا)</option>
+        </select></div>
+    </div>
+    <label>رابط المعاملة (TRONSCAN / بلوك تشين) — اختياري</label>
+    <input type="text" id="rcLink" placeholder="https://tronscan.org/#/transaction/55c44cc..." style="direction:ltr;font-size:12px">
+    <div class="btn-row" style="margin-top:10px">
+      <button class="btn btn-gold" onclick="uploadRC()">📥 رفع إيصالات (صور / PDF)</button>
+      <button class="btn btn-line" onclick="addRCManual()">✏️ إدخال يدوي</button>
+    </div>
+    <div class="sum" style="margin-top:12px">
+      <div class="k">إجمالي الإيصالات <b id="rcCount" class="num">0</b></div>
+      <div class="v gold num" id="rcSum" style="font-size:24px">0</div>
+    </div>
+    <div id="rcList" style="margin-top:8px"></div>
+    <div class="row" style="margin-top:8px">
+      <div><label>الجهة / الطرف</label><input type="text" id="rcParty" class="ar" placeholder="اسم العميل أو الشريك"></div>
+      <div><label>ملاحظة</label><input type="text" id="rcNote" class="ar" placeholder="—"></div>
+    </div>
+    <button class="btn btn-gold" style="width:100%;margin-top:10px" onclick="saveRC()">💾 تسجيل الإيصالات في السجل</button>
+  </div>
   <div class="card" id="fM2A" style="display:none">
     <h3>بيع أوقية ← كوانزا</h3>
     <!-- خطوة 1: إيصال Bankily -->
@@ -1127,7 +1185,7 @@ const isTrade=t=>t==='trade'||!!TRD[t];
 const trQ=t=>t.quote||((TRD[t.type]||{}).q)||'AOA';
 const trB=t=>t.base||'USDT';
 const CCYI={AOA:'KWZ',USDT:'$',MRU:'MRU',EUR:'EUR',MAD:'MAD',AED:'AED',CNY:'CNY'};
-const typeLbl={bridge:'جسر AOA→MRU',aoa:'تداول AOA/USDT',mru:'تداول MRU/USDT',euraoa:'تداول EUR/AOA',eurmru:'تداول EUR/MRU',trade:'تداول',m2a:'بيع أوقية UM→AOA'};
+const typeLbl={bridge:'جسر AOA→MRU',aoa:'تداول AOA/USDT',mru:'تداول MRU/USDT',euraoa:'تداول EUR/AOA',eurmru:'تداول EUR/MRU',trade:'تداول',m2a:'بيع أوقية UM→AOA',rcpt:'إيصالات'};
 
 /* محرك تحويل للسلاسل فقط */
 const PAIRS={
@@ -1180,6 +1238,8 @@ document.querySelectorAll('[data-ty]').forEach(el=>el.addEventListener('click',(
   document.querySelectorAll('[data-ty]').forEach(x=>x.classList.toggle('on',x===el));
   $('fBridge').style.display=curType==='bridge'?'block':'none';
   const fm=$('fM2A');if(fm)fm.style.display=curType==='m2a'?'block':'none';
+  const fr=$('fRcpt');if(fr)fr.style.display=curType==='rcpt'?'block':'none';
+  if(curType==='rcpt'){hideTicket();$('fMeta').style.display='none';$('saveBtn').style.display='none';renderRC();}
   $('fTrade').style.display=curType==='trade'?'block':'none';
   $('fChain').style.display='none';
   $('fMeta').style.display='block';
@@ -1504,6 +1564,16 @@ function invRows(t){
       ['الحالة',{wait:'قيد التنفيذ',conf:'مؤكدة',paid:'مكتملة ✓'}[t.status]||'مكتملة ✓']
     ];
   }
+  if(t.type==='rcpt'){
+    return [
+      ['نوع العملية','إيصالات '+t.ccy+(t.dir==='in'?' — وارد':' — صادر')],
+      ['عدد الإيصالات',String(t.count)],
+      ['الإجمالي',fmt(t.amount,t.ccy==='USDT'?2:0)+' '+CCYI[t.ccy]],
+      ...(t.accts&&t.accts.length?[['الحساب',t.accts[0]]]:[]),
+      ...(t.txns&&t.txns.length?[['مرجع المعاملة',String(t.txns[0]).slice(0,24)+'…']]:[]),
+      ...(t.note?[['ملاحظة',t.note]]:[])
+    ];
+  }
   if(t.type==='m2a'){
     return [
       ['نوع العملية','بيع أوقية ⟵ كوانزا'],
@@ -1712,6 +1782,22 @@ function render(){
           <button class="btn btn-line btn-sm" onclick="openReceipts('${t.ref}')">📎 إيصال${receiptsOf(t.ref).length?' ('+receiptsOf(t.ref).length+')':''}</button>
           <button class="btn btn-line btn-sm" onclick="delTx('${t.ref}')">حذف</button>
         </div>`;
+    }else if(t.type==='rcpt'){
+      div.innerHTML=`
+        <div class="tx-top"><span class="tx-ref">${t.ref}</span>
+          <span><span class="badge b-type">${t.ccy} إيصالات</span>
+          <span class="badge ${t.dir==='in'?'b-conf':'b-wait'}">${t.dir==='in'?'وارد':'صادر'}</span></span></div>
+        <div class="tx-mid">
+          <span>${t.contactName||'—'}</span>
+          <span><b class="${t.dir==='in'?'green':'red'}">${t.dir==='in'?'+':'-'}${fmt(t.amount,0)} ${CCYI[t.ccy]}</b></span>
+          <span>${t.count} إيصال</span>
+          ${t.note?`<span style="color:var(--dim)">${t.note}</span>`:''}
+        </div>
+        <div class="tx-acts">
+          ${t.link?`<button class="btn btn-line btn-sm" onclick="window.open('${t.link}','_blank')">🔗 المعاملة</button>`:''}
+          <button class="btn btn-line btn-sm" onclick="sendInvoice('${t.ref}')">🧾 فاتورة</button>
+          <button class="btn btn-line btn-sm" onclick="delTx('${t.ref}')">حذف</button>
+        </div>`;
     }else if(t.type==='m2a'){
       div.innerHTML=`
         <div class="tx-top"><span class="tx-ref">${t.ref}</span>
@@ -1782,6 +1868,101 @@ function settleDebt(ref){const t=txs.find(x=>x.ref===ref);if(!t)return;t.pay='se
 
 
 
+
+/* ================= RECEIPTS HUB (all currencies + USDT chain) ================= */
+let rc=[]; /* {name,amount,ccy,acct,txn,link,err} */
+/* استخراج بيانات USDT من نص TRONSCAN/Binance */
+function usdtExtract(txt){
+  const t=(txt||'').replace(/\u00A0/g,' ');
+  let amount=null,m;
+  m=t.match(/transferred\s*([\d.,]+)\s*(?:🪙|\S{0,3})?\s*USDT/i);
+  if(!m)m=t.match(/USDT\s*([\d.,]+)/i);
+  if(!m)m=t.match(/([\d][\d.,]*)\s*USDT/i);
+  if(m)amount=normNum(m[1]);
+  let hash=null;
+  m=t.match(/\b([a-f0-9]{64})\b/i);if(m)hash=m[1];
+  else{m=t.match(/Hash\s*:?\s*([a-f0-9.]{10,})/i);if(m)hash=m[1];}
+  let to=null;
+  m=t.match(/\bT[1-9A-HJ-NP-Za-km-z]{33}\b/g);
+  if(m&&m.length)to=m[m.length-1];
+  let ok=/SUCCESS/i.test(t);
+  return {amount,txn:hash,acct:to,ok};
+}
+function rcCcyV(){return $('rcCcy')?$('rcCcy').value:'USDT';}
+async function uploadRC(){
+  const inp=document.createElement('input');
+  inp.type='file';inp.accept='image/*,application/pdf';inp.multiple=true;
+  inp.onchange=async()=>{
+    const files=[...inp.files];if(!files.length)return;
+    const ccy=rcCcyV();
+    toast('جارٍ قراءة '+files.length+' ملف...');
+    let ok=0;
+    for(const f of files){
+      try{
+        const dataUrl=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(f);});
+        const txt=await anyReceiptText(dataUrl,f.type);
+        let ex;
+        if(ccy==='USDT')ex=usdtExtract(txt);
+        else if(ccy==='MRU'){const e2=mruReceiptExtract(txt);ex={amount:e2.amount,txn:e2.txn,acct:e2.acct};}
+        else {const e3=extractAmount(txt);ex={amount:e3.value,txn:null,acct:null};}
+        rc.push({name:f.name,amount:ex.amount,ccy,acct:ex.acct||null,txn:ex.txn||null,link:null});
+        if(ex.amount!=null)ok++;
+      }catch(e){rc.push({name:f.name,amount:null,ccy,err:'لم يُقرأ — أدخل يدويًا'});}
+    }
+    renderRC();
+    toast('قُرئ '+ok+'/'+files.length+' ✓');
+  };
+  inp.click();
+}
+function addRCManual(){
+  const ccy=rcCcyV();
+  const v=parseFloat(String(prompt('المبلغ ('+ccy+'):')||'').replace(/[^0-9.]/g,''));
+  if(!v||v<=0)return;
+  const link=$('rcLink')?$('rcLink').value.trim():'';
+  rc.push({name:'يدوي',amount:v,ccy,acct:null,txn:null,link:link||null});
+  renderRC();
+}
+function editRC(i){
+  const v=parseFloat(String(prompt('المبلغ ('+rc[i].ccy+'):',rc[i].amount||'')||'').replace(/[^0-9.]/g,''));
+  if(!v||v<=0)return;rc[i].amount=v;rc[i].err=null;renderRC();
+}
+function dropRC(i){rc.splice(i,1);renderRC();}
+function rcTotal(){const c=rcCcyV();return rc.filter(x=>x.ccy===c&&x.amount).reduce((s,x)=>s+x.amount,0);}
+function renderRC(){
+  const l=$('rcList');if(!l)return;
+  const c=rcCcyV();
+  const list=rc.filter(x=>x.ccy===c);
+  $('rcCount').textContent=list.length;
+  $('rcSum').textContent=fmt(rcTotal(),c==='USDT'?2:0)+' '+CCYI[c];
+  l.innerHTML=list.map(b=>{
+    const i=rc.indexOf(b);
+    return `<div class="leg" style="flex-wrap:wrap">
+      <span style="font-size:10px">${b.name.slice(0,20)}
+        ${b.txn?`<br><span style="color:var(--dim);font-size:8.5px;font-family:'IBM Plex Mono'">${String(b.txn).slice(0,18)}…</span>`:''}
+        ${b.err?`<br><span style="color:var(--red);font-size:8.5px">${b.err}</span>`:''}</span>
+      <span>${b.amount!=null
+        ?'<b class="lp" style="cursor:pointer" onclick="editRC('+i+')">'+fmt(b.amount,b.ccy==='USDT'?2:0)+'</b>'
+        :'<button class="btn btn-gold btn-sm" style="padding:2px 10px;font-size:10px" onclick="editRC('+i+')">أدخل المبلغ</button>'}
+        <button class="btn btn-line btn-sm" style="padding:2px 8px;font-size:10px;margin-right:6px" onclick="dropRC(${i})">✕</button></span>
+    </div>`;
+  }).join('')||'<div class="empty" style="padding:14px 0">لا إيصالات بعد</div>';
+}
+function saveRC(){
+  const c=rcCcyV(),list=rc.filter(x=>x.ccy===c&&x.amount);
+  if(!list.length){toast('لا إيصالات مقروءة');return;}
+  const dir=$('rcDir').value, total=rcTotal();
+  const ref=makeRef();
+  const party=$('rcParty').value.trim()||'—', note=$('rcNote').value.trim();
+  const link=$('rcLink')?$('rcLink').value.trim():'';
+  txs.push({type:'rcpt',ref,ccy:c,dir,amount:total,count:list.length,
+    txns:list.filter(x=>x.txn).map(x=>x.txn),accts:[...new Set(list.filter(x=>x.acct).map(x=>x.acct))],
+    link:link||null,contactName:party,note,ts:Date.now()});
+  seq++;persist();
+  rc=rc.filter(x=>x.ccy!==c);renderRC();
+  $('rcParty').value='';$('rcNote').value='';if($('rcLink'))$('rcLink').value='';
+  render();
+  toast('سُجل '+list.length+' إيصال · '+fmt(total,0)+' '+CCYI[c]+' ✓');
+}
 /* ================= UM→AOA (بيع أوقية) ================= */
 let _payRcpt2=null,kb=[],mb=[]; /* mb: دفعة إيصالات الأوقية {app,amount,acct,txn,manual,excluded} */
 let mbMain=null; /* الحساب المرجعي المختار يدويًا */
@@ -2566,6 +2747,7 @@ function txFlows(t,f){
   else if(t.type==='leg'){f[t.from]-=t.fromAmt;f[t.to]+=t.toAmt;}
   else if(t.type==='ledger'){if(t.pay==='owed_us')f[t.ccy]-=t.amount;else f[t.ccy]+=t.amount;}
   else if(t.type==='m2a'){f.MRU+=(t.mruNew||0);f.AOA-=(t.paidAoa||0);}
+  else if(t.type==='rcpt'){if(f[t.ccy]!=null)f[t.ccy]+=(t.dir==='in'?1:-1)*(t.amount||0);}
   else if(t.kind==='pair'&&t.from){f[t.from]-=t.fromAmt;f[t.to]+=t.toAmt;}
 }
 function balances(){
@@ -2899,6 +3081,7 @@ function renderDebts(){
 function txSummary(t){
   if(t.type==='bridge')return{info:(t.contactName||t.name||'')+' · '+fmt((t.payout!=null?t.payout:t.mru)||0,0)+' '+CCYI[t.toC||'MRU'],p:fmt(t.pUsdt||0)+' $'};
   if(isTrade(t.type))return{info:fmt(t.qty||0)+' '+(t.base||'$')+' @ '+t.rBuy+(t.rSell?'→'+t.rSell:''),p:t.rSell?fmt(t.profit,0)+' '+CCYI[trQ(t)]:'مفتوحة'};
+  if(t.type==='rcpt')return{info:(t.contactName||'')+' · '+t.count+' إيصال'+(t.note?' — '+t.note:''),p:(t.dir==='in'?'+':'-')+fmt(t.amount,0)+' '+CCYI[t.ccy]};
   if(t.type==='m2a')return{info:(t.contactName||t.name||'')+' · '+fmt(t.mruOld,0)+' قديمة @ '+t.rate,p:(Math.abs(t.diff)<1?'مطابق ✓':(t.diff<0?'ناقص ':'زائد ')+fmt(Math.abs(t.diff),0)+' Kz')};
   if(t.type==='ledger')return{info:(t.contactName||'')+' · قيد'+(t.note?' — '+t.note:''),p:(t.pay==='owed_us'?'لنا ':'علينا ')+fmt(t.amount,0)+' '+CCYI[t.ccy]};
   if(t.type==='leg')return{info:'رجل: '+pairLabel(t.pair)+' @ '+t.rate,p:fmt(t.toAmt,0)+' '+CCYI[t.to]};
