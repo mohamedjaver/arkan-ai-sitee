@@ -80,7 +80,7 @@ function render(){
         <div class="h">العملة</div><div class="h" style="text-align:center">جملة</div><div class="h" style="text-align:center">تجزئة</div>
         ${rows}
       </div>
-      <div class="note">الجملة للمبالغ فوق ${fmt(DATA.thr)} · التجزئة لما دونها</div>
+      <div class="note">لكل عملة حدّها — فوقه سعر الجملة، دونه التجزئة</div>
     </div>
     <div class="card">
       <h2>احسب تحويلك</h2>
@@ -108,7 +108,8 @@ function calc(){
   if(!DATA)return;
   const cc=$('cc').value, amt=parseFloat(String($('amt').value||'').replace(/[^0-9.]/g,''))||0;
   const row=DATA.r.find(x=>x.ccy===cc);if(!row)return;
-  const isW=amt>=DATA.thr;
+  const thr=row.thr||DATA.thr||0;
+  const isW=amt>=thr;
   const rate=isW?row.w:row.r;
   const out=amt*rate;
   $('tWv').textContent=row.w;$('tRv').textContent=row.r;
@@ -120,7 +121,7 @@ function send(){
   const cc=$('cc').value, amt=parseFloat(String($('amt').value||'').replace(/[^0-9.]/g,''))||0;
   if(!amt){alert('أدخل المبلغ');return;}
   const row=DATA.r.find(x=>x.ccy===cc);
-  const isW=amt>=DATA.thr, rate=isW?row.w:row.r, out=amt*rate;
+  const thr=row.thr||DATA.thr||0, isW=amt>=thr, rate=isW?row.w:row.r, out=amt*rate;
   const who=$('who').value.trim();
   const ref='REQ-'+Date.now().toString().slice(-6);
   const msg=
