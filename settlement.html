@@ -410,9 +410,9 @@ nav{position:fixed;bottom:0;left:0;right:0;z-index:90;
     <!-- دفعة إيصالات العميل: قراءة فقط، بلا حفظ ملفات -->
     <div class="legform" id="batchBox" style="margin-top:10px">
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
-        <span style="font-size:12px;color:var(--dim)">إيصالات هذه العملية: <b id="batchCount" class="num" style="color:var(--txt)">0</b> · المجموع: <b id="batchSum" class="num" style="color:var(--gold2)">0</b></span>
+        <span style="font-size:12px;color:var(--dim)">📥 إيصالات العميل (وارد): <b id="batchCount" class="num" style="color:var(--txt)">0</b> · المجموع: <b id="batchSum" class="num" style="color:var(--gold2)">0</b></span>
         <span>
-          <button class="btn btn-gold btn-sm" onclick="uploadBatch()">📥 رفع إيصالات (قراءة فقط)</button>
+          <button class="btn btn-gold btn-sm" onclick="uploadBatch()">📥 رفع</button>
           <button class="btn btn-line btn-sm" onclick="clearBatch()">تصفير</button>
         </span>
       </div>
@@ -426,18 +426,7 @@ nav{position:fixed;bottom:0;left:0;right:0;z-index:90;
     <div id="bankWrap">
     <div class="legform" style="margin-top:10px">
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
-        <span style="font-size:12px;color:var(--dim)">📎 إيصالات الدفع: <b id="brPayCount" class="num" style="color:var(--txt)">0</b> · المجموع: <b id="brPaySum" class="num" style="color:var(--gold2)">0</b></span>
-        <span>
-          <button class="btn btn-gold btn-sm" onclick="uploadOB('brPay')">📥 رفع</button>
-          <button class="btn btn-line btn-sm" onclick="clearOB('brPay')">تصفير</button>
-        </span>
-      </div>
-      <div id="brPayList" style="margin-top:6px"></div>
-    </div>
-
-    <div class="legform" style="margin-top:10px">
-      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
-        <span style="font-size:12px;color:var(--dim)">📎 إيصالات الدفع (عملة الوجهة): <b id="brPayCount" class="num" style="color:var(--txt)">0</b> · المجموع: <b id="brPaySum" class="num" style="color:var(--gold2)">0</b></span>
+        <span style="font-size:12px;color:var(--dim)">📤 إيصالات دفعنا للعميل (صادر): <b id="brPayCount" class="num" style="color:var(--txt)">0</b> · المجموع: <b id="brPaySum" class="num" style="color:var(--gold2)">0</b></span>
         <span>
           <button class="btn btn-gold btn-sm" onclick="uploadOB('brPay')">📥 رفع</button>
           <button class="btn btn-line btn-sm" onclick="clearOB('brPay')">تصفير</button>
