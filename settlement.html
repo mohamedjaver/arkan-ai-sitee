@@ -402,7 +402,9 @@ nav{position:fixed;bottom:0;left:0;right:0;z-index:90;
         </select></div>
     </div>
     <div class="row">
-      <div><label id="lblBAmt">مبلغ AOA من العميل</label><input type="text" id="aoa" placeholder="850000" inputmode="decimal"></div>
+      <div><label id="lblBAmt">مبلغ AOA من العميل</label>
+        <div style="display:flex;gap:6px"><input type="text" id="aoa" placeholder="850000" inputmode="decimal" style="flex:1">
+        <button class="btn btn-gold btn-sm" style="padding:0 12px;white-space:nowrap" onclick="smartFill('aoa')">📥</button></div></div>
       <div id="rcWrap"><label id="lblRc">سعر العميل AOA/USDT</label><input type="text" id="rClient" placeholder="1180" inputmode="decimal"></div>
     </div>
     <!-- دفعة إيصالات العميل: قراءة فقط، بلا حفظ ملفات -->
@@ -522,7 +524,9 @@ nav{position:fixed;bottom:0;left:0;right:0;z-index:90;
       <div id="m2aRcptInfo" style="margin-top:6px"></div>
     </div>
     <div class="row" style="margin-top:10px">
-      <div><label>المبلغ بالقديمة (أوقية)</label><input type="text" id="m2aOld" placeholder="5000000" inputmode="decimal" oninput="calcM2A()"></div>
+      <div><label>المبلغ بالقديمة (أوقية)</label>
+        <div style="display:flex;gap:6px"><input type="text" id="m2aOld" placeholder="5000000" inputmode="decimal" oninput="calcM2A()" style="flex:1">
+        <button class="btn btn-gold btn-sm" style="padding:0 12px;white-space:nowrap" onclick="smartFill('m2aOld')">📥</button></div></div>
       <div><label>② سعر بيع الأوقية (قديمة/Kz)</label><input type="text" id="m2aRate" placeholder="0.36" inputmode="decimal" oninput="calcM2A()"></div>
     </div>
     <div class="row">
@@ -571,7 +575,8 @@ nav{position:fixed;bottom:0;left:0;right:0;z-index:90;
         </select></div>
     </div>
     <label id="qtyLbl">كمية USDT</label>
-    <input type="text" id="qty" placeholder="1000" inputmode="decimal">
+    <div style="display:flex;gap:6px"><input type="text" id="qty" placeholder="1000" inputmode="decimal" style="flex:1">
+      <button class="btn btn-gold btn-sm" style="padding:0 12px;white-space:nowrap" onclick="smartFill('qty')">📥</button></div>
     <div class="row">
       <div><label id="lblBuy">سعر الشراء (AOA)</label><input type="text" id="rBuy" placeholder="1160" inputmode="decimal"></div>
       <div><label id="lblSell">سعر البيع (AOA)</label><input type="text" id="rSell" placeholder="1170" inputmode="decimal"></div>
@@ -1931,6 +1936,44 @@ function settleDebt(ref){const t=txs.find(x=>x.ref===ref);if(!t)return;t.pay='se
 
 
 
+
+/* ================= ONE SMART BOX — قراءة أي إيصال وكتابة المبلغ ================= */
+async function smartFill(targetId){
+  const inp=document.createElement('input');
+  inp.type='file';inp.accept='image/*,application/pdf';
+  inp.onchange=async()=>{
+    const f=inp.files[0];if(!f)return;
+    toast('جارٍ قراءة الإيصال...');
+    try{
+      const dataUrl=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(f);});
+      const txt=await anyReceiptText(dataUrl,f.type);
+      const sm=smartRead(txt);
+      if(sm.amount==null){
+        const v=parseFloat(String(prompt('تعذّرت القراءة — أدخل المبلغ:')||'').replace(/[^0-9.]/g,''));
+        if(!v)return;
+        writeSmart(targetId,v,null);
+        toast('أُدخل يدويًا ✓');return;
+      }
+      writeSmart(targetId,sm.amount,sm);
+      toast('قُرئ '+(sm.ccy||'')+': '+fmt(sm.amount,sm.ccy==='USDT'?2:0)+' ✓ — كُتب تلقائيًا');
+    }catch(e){
+      const v=parseFloat(String(prompt('المتصفح يحجب القراءة — أدخل المبلغ:')||'').replace(/[^0-9.]/g,''));
+      if(v)writeSmart(targetId,v,null);
+    }
+  };
+  inp.click();
+}
+function writeSmart(targetId,amount,sm){
+  const el=$(targetId);if(!el)return;
+  /* بيع الأوقية: المبلغ ×10 قديمة */
+  if(targetId==='m2aOld'&&sm&&sm.ccy==='MRU')amount=amount*10;
+  el.value=(targetId==='qty')?+amount.toFixed(6):Math.round(amount);
+  /* تعبئة الحساب في الجسر إن وُجد */
+  if(sm&&sm.acct){const bp=$('bPhone');if(bp&&!bp.value)bp.value=sm.acct;}
+  calc();
+  el.style.transition='.3s';el.style.background='rgba(61,220,151,.15)';
+  setTimeout(()=>{el.style.background='';},700);
+}
 /* ================= UNIVERSAL SMART RECEIPT READER ================= */
 function smartRead(txt){
   const t=(txt||'').replace(/\u00A0/g,' ');
