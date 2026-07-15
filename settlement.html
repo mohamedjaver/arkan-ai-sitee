@@ -385,6 +385,7 @@ body{-webkit-overflow-scrolling:touch}
     <div class="type" data-ty="m2a"><div class="ico"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#B9A8FF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M4 21V10l8-6 8 6v11M9 21v-6h6v6"/></svg></div><div class="t1">بيع أوقية</div><div class="t2">UM → AOA</div></div>
     <div class="type" data-ty="rcpt"><div class="ico"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#B9A8FF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4v16l2-1 2 1 2-1 2 1 2-1 2 1 2-1V4l-2 1-2-1-2 1-2-1-2 1-2-1zM8 9h8M8 13h8"/></svg></div><div class="t1">الإيصالات</div><div class="t2">كل العملات</div></div>
     <div class="type" data-ty="svc"><div class="ico"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#B9A8FF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h9l5 5v15H6zM15 2v5h5M9 13h6M9 17h6"/></svg></div><div class="t1">فاتورة مورد</div><div class="t2">دفع دولي</div></div>
+    <div class="type" data-ty="pub"><div class="ico"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#B9A8FF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 010 18M12 3a15 15 0 000 18"/></svg></div><div class="t1">بوابة العملاء</div><div class="t2">نشر الأسعار</div></div>
     <div class="type wide" data-ty="rep"><div class="ico"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#B9A8FF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18M8 16V9M13 16V5M18 16v-4"/></svg></div><div><div class="t1">التقارير</div><div class="t2">PDF · ربحية كل عملة · اليوم</div></div></div>
   </div>
 
@@ -454,6 +455,20 @@ body{-webkit-overflow-scrolling:touch}
   <!-- ============ مركز الإيصالات الشامل ============ -->
 
 
+
+  <div class="card" id="fPub" style="display:none">
+    <h3>بوابة العملاء — نشر أسعار اليوم</h3>
+    <div style="color:var(--dim);font-size:12px;margin-bottom:12px">حدّث أسعارك، ثم انشر الرابط لعملائك. يحسبون بأنفسهم ويرسلون الطلب لواتسابك.</div>
+    <div class="mini" style="margin-bottom:6px"><span class="r">العملة</span><span>جملة (كمية)</span><span>تجزئة</span></div>
+    <div id="pubRates"></div>
+    <button class="btn btn-line btn-sm" onclick="addPubRow()" style="width:100%;margin-top:6px">+ إضافة عملة</button>
+    <div class="row" style="margin-top:10px">
+      <div><label>حد الكمية (فوقه = جملة)</label><input type="text" id="pubThresh" inputmode="decimal" placeholder="5000000"></div>
+      <div><label>واتساب الاستقبال</label><input type="tel" id="pubWa" placeholder="22236295050" inputmode="tel"></div>
+    </div>
+    <button class="btn btn-gold" style="width:100%;margin-top:12px" onclick="publishRates()">📢 نشر الأسعار وإنشاء رابط العملاء</button>
+    <div id="pubLink" style="margin-top:10px"></div>
+  </div>
   <div class="card" id="fSvc" style="display:none">
     <h3>خدمات — فاتورة مورد (دفع دولي)</h3>
     <div class="legform">
@@ -1319,6 +1334,8 @@ document.querySelectorAll('[data-ty]').forEach(el=>el.addEventListener('click',(
   const fr=$('fRcpt');if(fr)fr.style.display=curType==='rcpt'?'block':'none';
   const fp=$('fRep');if(fp)fp.style.display=curType==='rep'?'block':'none';
   const fs=$('fSvc');if(fs)fs.style.display=curType==='svc'?'block':'none';
+  const fpub=$('fPub');if(fpub)fpub.style.display=curType==='pub'?'block':'none';
+  if(curType==='pub'){hideTicket();$('fMeta').style.display='none';$('saveBtn').style.display='none';renderPub();if($('pubWa')&&!$('pubWa').value)$('pubWa').value='22236295050';}
   if(curType==='svc'){hideTicket();$('fMeta').style.display='block';$('saveBtn').style.display='none';calcSvc();}
   if(curType==='rep'){hideTicket();$('fMeta').style.display='none';$('saveBtn').style.display='none';renderRep();}
   renderAllOB();
