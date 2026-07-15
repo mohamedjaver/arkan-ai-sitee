@@ -14,7 +14,7 @@
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="manifest" href="manifest.json">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Tajawal:wght@500;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=Tajawal:wght@500;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Tajawal:wght@500;700;800&family=Cairo:wght@600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=Tajawal:wght@500;700;800&family=Cairo:wght@600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -294,6 +294,11 @@ section.on{animation:exFade .42s cubic-bezier(.22,1,.36,1)}
 /* تمرير سلس عام */
 html{scroll-behavior:smooth}
 body{-webkit-overflow-scrolling:touch}
+input::placeholder,textarea::placeholder,select::placeholder{color:rgba(139,143,168,.55) !important;opacity:1}
+/* خط عربي موحّد للموقع — بلا تقطيع */
+body,input,select,textarea,button,.ar,h1,h2,h3{font-family:'Cairo','Tajawal','IBM Plex Sans Arabic',sans-serif !important}
+/* الأرقام والرموز اللاتينية تبقى Mono */
+.num,.tx-ref,[style*="IBM Plex Mono"]{font-family:'IBM Plex Mono',monospace !important}
 </style>
 </head>
 <body>
@@ -1706,7 +1711,15 @@ function invRows(t){
     ['العملية','تداول '+trB(t)+'/'+trQ(t)],
     ['الكمية',fmt(t.qty)+' '+(t.base||'USDT')],
     ...(t.rSell?[['سعر البيع',t.rSell+' '+ccy],['الإجمالي',fmt(t.qty*t.rSell,0)+' '+ccy]]:[]),
-    ...(t.obTotals?Object.keys(t.obTotals).map(k=>['إيصالات '+(k==='trBuy'?'الشراء':'البيع'),fmt(t.obTotals[k].total,0)+' '+CCYI[t.obTotals[k].ccy]]):[]),
+    ...(t.obTotals&&t.obTotals.trBuy?[['المدفوع (شراء)',fmt(t.obTotals.trBuy.total,0)+' '+CCYI[t.obTotals.trBuy.ccy]]]:[]),
+    ...(t.obTotals&&t.obTotals.trSell?[['المستلم (بيع)',fmt(t.obTotals.trSell.total,0)+' '+CCYI[t.obTotals.trSell.ccy]]]:[]),
+    ...(()=>{
+      /* حساب الناقص/الزائد: الإجمالي المتوقع − إيصالات البيع المستلمة */
+      if(!t.rSell||!t.obTotals||!t.obTotals.trSell)return [];
+      const expected=t.qty*t.rSell, got=t.obTotals.trSell.total, diff=got-expected;
+      if(Math.abs(diff)<1)return [['السداد','مطابق ✓']];
+      return [[diff<0?'⚠️ مبلغ ناقص':'↑ مبلغ زائد',fmt(Math.abs(diff),0)+' '+ccy]];
+    })(),
     ['الحالة',t.rSell?'مكتملة ✓':'مفتوحة']
   ];
 }
@@ -1721,7 +1734,7 @@ async function genInvoice(ref){
   /* صفوف جدول التفاصيل */
   const detRows=rows.map(([k,v])=>`
     <tr>
-      <td style="padding:11px 14px;border:1px solid #c9ccd8;font-size:13px;color:#2b2e3f;font-weight:600;font-family:'Tajawal'">${k}</td>
+      <td style="padding:11px 14px;border:1px solid #c9ccd8;font-size:14px;color:#2b2e3f;font-weight:700;font-family:'Cairo',sans-serif;direction:rtl;text-align:right">${k}</td>
       <td style="padding:11px 14px;border:1px solid #c9ccd8;font-size:14px;font-weight:800;color:#0F1130;font-family:'IBM Plex Mono';direction:ltr;text-align:left">${v}</td>
     </tr>`).join('');
   /* المبالغ الرئيسية للفوتر */
@@ -1733,7 +1746,7 @@ async function genInvoice(ref){
   else if(t.type==='rcpt'){mainAmt=fmt(t.amount,0);mainCcy=CCYI[t.ccy];}
   const stage=$('pdfStage');
   stage.innerHTML=`
-  <div style="width:794px;min-height:1123px;display:flex;flex-direction:column;background:#fff;font-family:'Tajawal','IBM Plex Sans Arabic';color:#0F1130">
+  <div style="width:794px;min-height:1123px;display:flex;flex-direction:column;background:#fff;font-family:'Cairo','Tajawal',sans-serif;color:#0F1130;direction:rtl">
     <!-- رأس رسمي -->
     <div style="padding:26px 34px 0;display:flex;justify-content:space-between;align-items:flex-start">
       <div style="display:flex;align-items:center;gap:14px">
