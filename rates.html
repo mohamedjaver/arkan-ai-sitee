@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>ARKAN — أسعار الصرف اليوم</title>
+<link rel="icon" href="arkan-icon-512.png">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@500;700;800&family=IBM+Plex+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#101127;--card:#1C1D3C;--acc:#8B72FF;--acc2:#B9A8FF;--gold:#F4A50C;--gold2:#FFC94D;--txt:#EDEAFB;--dim:#8B8FA8;--green:#3DDC97;--stroke:rgba(255,255,255,.09)}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:linear-gradient(180deg,#2E2758 0%,#1C1D3C 32%,#101127 72%);min-height:100vh;font-family:'Tajawal',sans-serif;color:var(--txt);padding-bottom:40px}
+.wrap{max-width:540px;margin:0 auto;padding:30px 18px}
+.logo{display:flex;align-items:center;gap:13px;justify-content:center;margin-bottom:6px}
+.logo img{width:52px;height:52px;border-radius:14px;box-shadow:0 8px 26px rgba(91,63,209,.5)}
+h1{text-align:center;font-size:22px;font-weight:800;letter-spacing:.5px}
+h1 span{color:var(--acc2)}
+.sub{text-align:center;color:var(--dim);font-size:12px;letter-spacing:2px;margin:5px 0 22px;font-family:'IBM Plex Mono'}
+.card{background:linear-gradient(150deg,rgba(255,255,255,.08),rgba(255,255,255,.02));border:1px solid var(--stroke);border-radius:22px;padding:22px 18px;backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);box-shadow:0 10px 34px rgba(0,0,0,.4);margin-bottom:16px}
+.card h2{font-size:15px;margin-bottom:14px}
+label{display:block;font-size:12px;color:var(--dim);margin:12px 0 6px;font-weight:600}
+input,select{width:100%;background:rgba(0,0,0,.3);border:1px solid var(--stroke);border-radius:14px;padding:15px;color:var(--txt);font-size:18px;font-family:'IBM Plex Mono';outline:none;text-align:center}
+input:focus,select:focus{border-color:var(--acc)}
+select{font-family:'Tajawal';font-size:16px}
+.res{background:linear-gradient(135deg,rgba(139,114,255,.16),rgba(91,63,209,.06));border:1px solid rgba(183,163,255,.3);border-radius:18px;padding:18px;margin-top:16px;text-align:center}
+.res .lbl{font-size:12px;color:var(--acc2);font-weight:700;margin-bottom:4px}
+.res .big{font-size:32px;font-weight:800;font-family:'IBM Plex Mono';color:#fff;line-height:1.2}
+.res .cur{font-size:14px;color:var(--acc2);font-weight:700}
+.res .rate{font-size:11px;color:var(--dim);margin-top:6px;font-family:'IBM Plex Mono'}
+.tier{display:flex;gap:8px;margin-top:12px}
+.tierbox{flex:1;background:rgba(0,0,0,.25);border:1px solid var(--stroke);border-radius:14px;padding:12px;text-align:center}
+.tierbox.on{background:rgba(61,220,151,.12);border-color:rgba(61,220,151,.4)}
+.tierbox .t{font-size:11px;color:var(--dim)}
+.tierbox .v{font-size:16px;font-weight:800;font-family:'IBM Plex Mono';margin-top:3px}
+.go{width:100%;margin-top:18px;padding:17px;border:none;border-radius:16px;font-size:16px;font-weight:800;background:linear-gradient(135deg,#25D366,#128C7E);color:#fff;cursor:pointer;font-family:'Tajawal';box-shadow:0 10px 28px rgba(37,211,102,.3)}
+.rateGrid{display:grid;grid-template-columns:1fr auto auto;gap:8px 12px;font-size:13px;align-items:center}
+.rateGrid .h{font-size:11px;color:var(--dim);font-weight:700;padding-bottom:4px;border-bottom:1px solid var(--stroke)}
+.rateGrid .cc{font-weight:800;font-family:'IBM Plex Mono'}
+.rateGrid .pw{font-family:'IBM Plex Mono';color:var(--gold2);font-weight:700;text-align:center}
+.rateGrid .pr{font-family:'IBM Plex Mono';color:var(--txt);text-align:center}
+.note{margin-top:14px;font-size:11px;color:var(--dim);text-align:center;line-height:1.7}
+footer{text-align:center;margin-top:24px;color:var(--dim);font-size:10px;letter-spacing:1.5px;font-family:'IBM Plex Mono'}
+.empty{text-align:center;color:var(--dim);padding:30px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="logo"><img src="arkan-icon-512.png" alt="ARKAN"></div>
+  <h1>ARKAN <span>EXCHANGE</span></h1>
+  <div class="sub">أسعار الصرف اليوم · تحويل فوري</div>
+
+  <div id="app"></div>
+
+  <footer>ARKAN INTERNATIONAL TRADING</footer>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+function fmt(n,d=0){return Number(n).toLocaleString('en-US',{maximumFractionDigits:d});}
+const SYM={AOA:'Kz',MRU:'UM',CNY:'¥',AED:'AED',EUR:'€',USD:'$',USDT:'₮',MAD:'MAD'};
+const NAMES={AOA:'كوانزا أنغولية',MRU:'أوقية موريتانية',CNY:'يوان صيني',AED:'درهم إماراتي',EUR:'يورو',USD:'دولار',USDT:'تيثر',MAD:'درهم مغربي'};
+
+let DATA=null;
+try{
+  const hash=location.hash.slice(1);
+  if(hash)DATA=JSON.parse(decodeURIComponent(escape(atob(hash))));
+}catch(e){}
+
+function render(){
+  const app=$('app');
+  if(!DATA||!DATA.r||!DATA.r.length){
+    app.innerHTML='<div class="card"><div class="empty">لا توجد أسعار.<br>اطلب الرابط المحدّث من ARKAN.</div></div>';
+    return;
+  }
+  const rows=DATA.r.map(x=>`<div class="cc">${SYM[x.ccy]||x.ccy} ${x.ccy}</div><div class="pw">${x.w}</div><div class="pr">${x.r}</div>`).join('');
+  app.innerHTML=`
+    <div class="card">
+      <h2>أسعار اليوم (مقابل الأوقية)</h2>
+      <div class="rateGrid">
+        <div class="h">العملة</div><div class="h" style="text-align:center">جملة</div><div class="h" style="text-align:center">تجزئة</div>
+        ${rows}
+      </div>
+      <div class="note">الجملة للمبالغ فوق ${fmt(DATA.thr)} · التجزئة لما دونها</div>
+    </div>
+    <div class="card">
+      <h2>احسب تحويلك</h2>
+      <label>العملة التي تريد تحويلها</label>
+      <select id="cc" onchange="calc()">${DATA.r.map(x=>`<option value="${x.ccy}">${SYM[x.ccy]||x.ccy} — ${NAMES[x.ccy]||x.ccy}</option>`).join('')}</select>
+      <label>المبلغ</label>
+      <input id="amt" inputmode="decimal" placeholder="1000000" oninput="calc()">
+      <div class="tier">
+        <div class="tierbox" id="tW"><div class="t">سعر الجملة</div><div class="v" id="tWv">—</div></div>
+        <div class="tierbox" id="tR"><div class="t">سعر التجزئة</div><div class="v" id="tRv">—</div></div>
+      </div>
+      <div class="res">
+        <div class="lbl">تستلم بالأوقية</div>
+        <div class="big" id="out">0</div>
+        <div class="cur">MRU · أوقية</div>
+        <div class="rate" id="usedRate"></div>
+      </div>
+      <input id="who" placeholder="اسمك (اختياري)" style="margin-top:14px;text-align:right;font-family:Tajawal;font-size:15px">
+      <button class="go" onclick="send()">📲 أرسل الطلب عبر واتساب</button>
+      <div class="note">بعد الإرسال، أكّد الدفع وسنحوّل لك المبلغ فورًا.</div>
+    </div>`;
+  calc();
+}
+function calc(){
+  if(!DATA)return;
+  const cc=$('cc').value, amt=parseFloat(String($('amt').value||'').replace(/[^0-9.]/g,''))||0;
+  const row=DATA.r.find(x=>x.ccy===cc);if(!row)return;
+  const isW=amt>=DATA.thr;
+  const rate=isW?row.w:row.r;
+  const out=amt*rate;
+  $('tWv').textContent=row.w;$('tRv').textContent=row.r;
+  $('tW').classList.toggle('on',isW);$('tR').classList.toggle('on',!isW);
+  $('out').textContent=fmt(out,0);
+  $('usedRate').textContent=`${fmt(amt)} ${SYM[cc]||cc} × ${rate} = ${fmt(out,0)} UM`+(isW?' (جملة)':' (تجزئة)');
+}
+function send(){
+  const cc=$('cc').value, amt=parseFloat(String($('amt').value||'').replace(/[^0-9.]/g,''))||0;
+  if(!amt){alert('أدخل المبلغ');return;}
+  const row=DATA.r.find(x=>x.ccy===cc);
+  const isW=amt>=DATA.thr, rate=isW?row.w:row.r, out=amt*rate;
+  const who=$('who').value.trim();
+  const ref='REQ-'+Date.now().toString().slice(-6);
+  const msg=
+`💱 ARKAN — طلب تحويل
+${ref}
+━━━━━━━━━━
+${who?'الاسم: '+who+'\n':''}المبلغ: ${fmt(amt)} ${SYM[cc]||cc} (${cc})
+السعر: ${rate} ${isW?'(جملة)':'(تجزئة)'}
+━━━━━━━━━━
+المطلوب استلامه: ${fmt(out,0)} أوقية (MRU)
+━━━━━━━━━━
+أؤكد رغبتي في التحويل.`;
+  window.open('https://wa.me/'+DATA.wa+'?text='+encodeURIComponent(msg),'_blank');
+}
+render();
+</script>
+</body>
+</html>
