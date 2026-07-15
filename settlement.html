@@ -3734,6 +3734,61 @@ function switchTab(t){
   document.querySelectorAll('section').forEach(x=>x.classList.toggle('on',x.id===t));
 }
 load();
+
+/* ================= CLIENT PRICE GATE ================= */
+const PUB_ALL=[
+  {ccy:'AOA',name:'كوانزا أنغولية'},{ccy:'CNY',name:'يوان صيني'},
+  {ccy:'AED',name:'درهم إماراتي'},{ccy:'MAD',name:'درهم مغربي'},
+  {ccy:'USD',name:'دولار أمريكي'},{ccy:'EUR',name:'يورو'},
+  {ccy:'USDT',name:'تيثر USDT'},{ccy:'SAR',name:'ريال سعودي'},
+  {ccy:'TRY',name:'ليرة تركية'},{ccy:'EGP',name:'جنيه مصري'},
+];
+let pubRows=JSON.parse(localStorage.getItem('arkan-pubrates')||'null')||[
+  {ccy:'AOA',w:0.36,r:0.357},
+  {ccy:'CNY',w:5.6,r:5.5},
+  {ccy:'AED',w:11.1,r:11.0},
+];
+function renderPub(){
+  const el=$('pubRates');if(!el)return;
+  el.innerHTML=pubRows.map((r,i)=>`
+    <div class="mini" style="gap:6px;align-items:center">
+      <select onchange="pubRows[${i}].ccy=this.value;renderPub()" style="width:110px;background:rgba(0,0,0,.3);border:1px solid var(--stroke);border-radius:10px;padding:9px 6px;color:var(--txt);font-family:'Tajawal';font-size:12px">
+        ${PUB_ALL.map(a=>`<option value="${a.ccy}" ${a.ccy===r.ccy?'selected':''}>${a.ccy} — ${a.name}</option>`).join('')}
+      </select>
+      <input type="text" inputmode="decimal" value="${r.w}" onchange="pubRows[${i}].w=parseFloat(this.value)||0" placeholder="جملة" style="flex:1;background:rgba(0,0,0,.3);border:1px solid var(--stroke);border-radius:10px;padding:9px;color:var(--gold2);font-family:'IBM Plex Mono';text-align:center;min-width:0">
+      <input type="text" inputmode="decimal" value="${r.r}" onchange="pubRows[${i}].r=parseFloat(this.value)||0" placeholder="تجزئة" style="flex:1;background:rgba(0,0,0,.3);border:1px solid var(--stroke);border-radius:10px;padding:9px;color:var(--txt);font-family:'IBM Plex Mono';text-align:center;min-width:0">
+      <button class="btn btn-line btn-sm" style="padding:5px 9px" onclick="pubRows.splice(${i},1);renderPub()">✕</button>
+    </div>`).join('')||'<div class="empty" style="padding:14px 0;color:var(--dim)">أضف عملة لتسعيرها</div>';
+}
+function addPubRow(){
+  /* أضف أول عملة غير مستخدمة */
+  const used=new Set(pubRows.map(x=>x.ccy));
+  const next=PUB_ALL.find(a=>!used.has(a.ccy))||PUB_ALL[0];
+  pubRows.push({ccy:next.ccy,w:0,r:0});
+  renderPub();
+}
+function publishRates(){
+  const valid=pubRows.filter(x=>x.ccy&&(x.w>0||x.r>0));
+  if(!valid.length){toast('سعّر عملة واحدة على الأقل');return;}
+  localStorage.setItem('arkan-pubrates',JSON.stringify(pubRows));
+  const wa=($('pubWa')?$('pubWa').value:'22236295050').replace(/[^0-9]/g,'')||'22236295050';
+  const thr=NV('pubThresh')||5000000;
+  const payload={r:valid,wa,thr,ts:Date.now()};
+  const enc=btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
+  const url=location.origin+location.pathname.replace(/settlement\.html$/,'')+'rates.html#'+enc;
+  const el=$('pubLink');
+  el.innerHTML=`
+    <div class="card" style="background:rgba(139,114,255,.1);margin-top:12px">
+      <div style="font-size:12px;color:var(--dim);margin-bottom:6px">✅ رابط العملاء جاهز:</div>
+      <div style="font-size:11px;font-family:'IBM Plex Mono';word-break:break-all;color:var(--acc2);background:rgba(0,0,0,.3);padding:10px;border-radius:10px">${url}</div>
+      <div class="btn-row" style="margin-top:8px">
+        <button class="btn btn-gold" onclick="(navigator.clipboard&&navigator.clipboard.writeText('${url}'));toast('نُسخ ✓')">📋 نسخ</button>
+        <button class="btn btn-wa" onclick="window.open('https://wa.me/?text='+encodeURIComponent('💱 أسعار ARKAN اليوم:\n${url}'),'_blank')">مشاركة</button>
+        <button class="btn btn-line" onclick="window.open('${url}','_blank')">معاينة</button>
+      </div>
+    </div>`;
+  toast('نُشرت الأسعار ✓');
+}
 </script>
 </body>
 </html>
