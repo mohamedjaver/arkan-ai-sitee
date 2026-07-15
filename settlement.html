@@ -274,6 +274,26 @@ nav{position:fixed;bottom:0;left:0;right:0;z-index:90;
 .type .t2{font-size:10.5px !important;color:var(--dim);font-family:'IBM Plex Mono';letter-spacing:.5px}
 .type.wide{grid-column:1 / -1;min-height:78px;flex-direction:row;gap:14px;justify-content:flex-start;padding-inline:22px !important}
 .type.wide .ico{font-size:24px}
+
+/* ===== EXODUS-LIKE MOTION ===== */
+*{transition-timing-function:cubic-bezier(.22,1,.36,1)}
+section.on{animation:exFade .42s cubic-bezier(.22,1,.36,1)}
+@keyframes exFade{0%{opacity:0;transform:translateY(14px) scale(.985)}100%{opacity:1;transform:none}}
+.type{transition:transform .25s cubic-bezier(.22,1,.36,1),box-shadow .25s,background .25s !important}
+.type:active{transform:scale(.94) !important}
+.asset{transition:transform .3s cubic-bezier(.34,1.56,.64,1),background .2s !important}
+.asset:active{transform:scale(.97)}
+.btn{transition:transform .18s cubic-bezier(.34,1.56,.64,1),filter .2s,background .2s !important}
+.btn:active{transform:scale(.93)}
+/* الحلقة والمركز — تنفّس ناعم */
+#donut circle{transition:stroke-dasharray .55s cubic-bezier(.22,1,.36,1),stroke-dashoffset .55s cubic-bezier(.22,1,.36,1) !important}
+#balInt,#balDec{transition:opacity .3s}
+.nv{transition:transform .2s cubic-bezier(.34,1.56,.64,1),color .2s !important}
+.nv:active{transform:scale(.88)}
+.leg,.mini{transition:background .2s,transform .2s}
+/* تمرير سلس عام */
+html{scroll-behavior:smooth}
+body{-webkit-overflow-scrolling:touch}
 </style>
 </head>
 <body>
@@ -381,6 +401,7 @@ nav{position:fixed;bottom:0;left:0;right:0;z-index:90;
     <div class="type" data-ty="trade"><div class="ico">💱</div><div class="t1">تداول</div><div class="t2">كل العملات</div></div>
     <div class="type" data-ty="m2a"><div class="ico">🏦</div><div class="t1">بيع أوقية</div><div class="t2">UM → AOA</div></div>
     <div class="type" data-ty="rcpt"><div class="ico">📥</div><div class="t1">الإيصالات</div><div class="t2">كل العملات</div></div>
+    <div class="type" data-ty="svc"><div class="ico">🧾</div><div class="t1">فاتورة مورد</div><div class="t2">دفع دولي</div></div>
     <div class="type wide" data-ty="rep"><div class="ico">📊</div><div><div class="t1">التقارير</div><div class="t2">PDF · ربحية كل عملة · اليوم</div></div></div>
   </div>
 
@@ -449,6 +470,41 @@ nav{position:fixed;bottom:0;left:0;right:0;z-index:90;
 
   <!-- ============ مركز الإيصالات الشامل ============ -->
 
+
+  <div class="card" id="fSvc" style="display:none">
+    <h3>خدمات — فاتورة مورد (دفع دولي)</h3>
+    <div class="legform">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+        <span style="font-size:12px;color:var(--dim)">🧾 فاتورة المورد (صورة / PDF)</span>
+        <button class="btn btn-gold btn-sm" onclick="uploadSvc()">📥 رفع الفاتورة</button>
+      </div>
+      <div id="svcInfo" style="margin-top:6px"></div>
+    </div>
+    <label>اسم المورد</label>
+    <input type="text" id="svcSup" class="ar" placeholder="مثال: Shandong Huasheng">
+    <div class="row">
+      <div><label>قيمة الفاتورة</label><input type="text" id="svcAmt" inputmode="decimal" placeholder="0" oninput="calcSvc()"></div>
+      <div><label>عملة الفاتورة</label>
+        <select id="svcCur" class="ar" onchange="calcSvc()">
+          <option value="USD">USD</option><option value="EUR">EUR</option>
+          <option value="CNY">CNY</option><option value="USDT">USDT</option>
+        </select></div>
+    </div>
+    <div class="row">
+      <div><label>عملة العميل (يدفع بـ)</label>
+        <select id="svcPay" class="ar" onchange="calcSvc()">
+          <option value="AOA">AOA — كوانزا</option><option value="MRU">MRU — أوقية</option>
+        </select></div>
+      <div><label>سعر التسوية (عملة العميل/الفاتورة)</label><input type="text" id="svcRate" inputmode="decimal" placeholder="1180" oninput="calcSvc()"></div>
+    </div>
+    <div class="sum" style="margin-top:8px">
+      <div class="k">المطلوب من العميل</div>
+      <div class="v gold num" id="svcDue" style="font-size:24px">0</div>
+    </div>
+    <label>ملاحظة / رقم الفاتورة</label>
+    <input type="text" id="svcNote" class="ar" placeholder="—">
+    <button class="btn btn-gold" style="width:100%;margin-top:10px" onclick="saveSvc()">💾 تسجيل + فاتورة العميل</button>
+  </div>
   <div class="card" id="fRep" style="display:none">
     <h3>التقارير</h3>
     <div class="sum-grid">
@@ -1224,7 +1280,7 @@ const isTrade=t=>t==='trade'||!!TRD[t];
 const trQ=t=>t.quote||((TRD[t.type]||{}).q)||'AOA';
 const trB=t=>t.base||'USDT';
 const CCYI={AOA:'KWZ',USDT:'$',MRU:'MRU',EUR:'EUR',MAD:'MAD',AED:'AED',CNY:'CNY'};
-const typeLbl={bridge:'جسر AOA→MRU',aoa:'تداول AOA/USDT',mru:'تداول MRU/USDT',euraoa:'تداول EUR/AOA',eurmru:'تداول EUR/MRU',trade:'تداول',m2a:'بيع أوقية UM→AOA',rcpt:'إيصالات'};
+const typeLbl={bridge:'جسر AOA→MRU',aoa:'تداول AOA/USDT',mru:'تداول MRU/USDT',euraoa:'تداول EUR/AOA',eurmru:'تداول EUR/MRU',trade:'تداول',m2a:'بيع أوقية UM→AOA',rcpt:'إيصالات',svc:'فاتورة مورد'};
 
 /* محرك تحويل للسلاسل فقط */
 const PAIRS={
@@ -1279,6 +1335,8 @@ document.querySelectorAll('[data-ty]').forEach(el=>el.addEventListener('click',(
   const fm=$('fM2A');if(fm)fm.style.display=curType==='m2a'?'block':'none';
   const fr=$('fRcpt');if(fr)fr.style.display=curType==='rcpt'?'block':'none';
   const fp=$('fRep');if(fp)fp.style.display=curType==='rep'?'block':'none';
+  const fs=$('fSvc');if(fs)fs.style.display=curType==='svc'?'block':'none';
+  if(curType==='svc'){hideTicket();$('fMeta').style.display='block';$('saveBtn').style.display='none';calcSvc();}
   if(curType==='rep'){hideTicket();$('fMeta').style.display='none';$('saveBtn').style.display='none';renderRep();}
   renderAllOB();
   if(curType==='rcpt'){hideTicket();$('fMeta').style.display='none';$('saveBtn').style.display='none';renderRC();}
@@ -1608,6 +1666,16 @@ function invRows(t){
       ['الحالة',{wait:'قيد التنفيذ',conf:'مؤكدة',paid:'مكتملة ✓'}[t.status]||'مكتملة ✓']
     ];
   }
+  if(t.type==='svc'){
+    return [
+      ['العملية','دفع فاتورة مورد دولي'],
+      ['المورد',t.supplier||'—'],
+      ['قيمة الفاتورة',fmt(t.invAmt,0)+' '+t.invCcy],
+      ['سعر التسوية',t.rate+' '+CCYI[t.payCcy]+'/'+t.invCcy],
+      ['المطلوب من العميل',fmt(t.due,0)+' '+CCYI[t.payCcy]],
+      ...(t.note?[['رقم الفاتورة',t.note]]:[])
+    ];
+  }
   if(t.type==='rcpt'){
     return [
       ['نوع العملية','إيصالات '+t.ccy+(t.dir==='in'?' — وارد':' — صادر')],
@@ -1825,6 +1893,19 @@ function render(){
           ${t.pay&&t.pay!=='settled'?`<button class="btn btn-gold btn-sm" onclick="addPayment('${t.ref}')">دفعة (متبقٍ ${fmt(remaining(t),0)})</button>`:''}
           <button class="btn btn-line btn-sm" onclick="sendInvoice('${t.ref}')">🧾 فاتورة</button>
           <button class="btn btn-line btn-sm" onclick="openReceipts('${t.ref}')">📎 إيصال${receiptsOf(t.ref).length?' ('+receiptsOf(t.ref).length+')':''}</button>
+          <button class="btn btn-line btn-sm" onclick="delTx('${t.ref}')">حذف</button>
+        </div>`;
+    }else if(t.type==='svc'){
+      div.innerHTML=`
+        <div class="tx-top"><span class="tx-ref">${t.ref}</span>
+          <span><span class="badge b-type">فاتورة مورد</span></span></div>
+        <div class="tx-mid">
+          <span>${t.supplier||'—'}</span>
+          <span>الفاتورة <b>${fmt(t.invAmt,0)} ${t.invCcy}</b></span>
+          <span>المطلوب <b class="gold">${fmt(t.due,0)} ${CCYI[t.payCcy]}</b></span>
+        </div>
+        <div class="tx-acts">
+          <button class="btn btn-line btn-sm" onclick="sendInvoice('${t.ref}')">🧾 فاتورة</button>
           <button class="btn btn-line btn-sm" onclick="delTx('${t.ref}')">حذف</button>
         </div>`;
     }else if(t.type==='rcpt'){
@@ -3061,6 +3142,7 @@ function txFlows(t,f){
   else if(t.type==='ledger'){if(t.pay==='owed_us')f[t.ccy]-=t.amount;else f[t.ccy]+=t.amount;}
   else if(t.type==='m2a'){f.MRU+=(t.mruNew||0);f.AOA-=(t.paidAoa||0);}
   else if(t.type==='rcpt'){if(f[t.ccy]!=null)f[t.ccy]+=(t.dir==='in'?1:-1)*(t.amount||0);}
+  else if(t.type==='svc'){if(f[t.payCcy]!=null)f[t.payCcy]+=(t.due||0);if(f[t.invCcy]!=null)f[t.invCcy]-=(t.invAmt||0);}
   else if(t.kind==='pair'&&t.from){f[t.from]-=t.fromAmt;f[t.to]+=t.toAmt;}
 }
 function balances(){
@@ -3394,6 +3476,7 @@ function renderDebts(){
 function txSummary(t){
   if(t.type==='bridge')return{info:(t.contactName||t.name||'')+' · '+fmt((t.payout!=null?t.payout:t.mru)||0,0)+' '+CCYI[t.toC||'MRU'],p:fmt(t.pUsdt||0)+' $'};
   if(isTrade(t.type))return{info:fmt(t.qty||0)+' '+(t.base||'$')+' @ '+t.rBuy+(t.rSell?'→'+t.rSell:''),p:t.rSell?fmt(t.profit,0)+' '+CCYI[trQ(t)]:'مفتوحة'};
+  if(t.type==='svc')return{info:(t.supplier||'')+' · '+fmt(t.invAmt,0)+' '+t.invCcy,p:fmt(t.due,0)+' '+CCYI[t.payCcy]};
   if(t.type==='rcpt')return{info:(t.contactName||'')+' · '+t.count+' إيصال'+(t.note?' — '+t.note:''),p:(t.dir==='in'?'+':'-')+fmt(t.amount,0)+' '+CCYI[t.ccy]};
   if(t.type==='m2a')return{info:(t.contactName||t.name||'')+' · '+fmt(t.mruOld,0)+' قديمة @ '+t.rate,p:(Math.abs(t.diff)<1?'مطابق ✓':(t.diff<0?'ناقص ':'زائد ')+fmt(Math.abs(t.diff),0)+' Kz')};
   if(t.type==='ledger')return{info:(t.contactName||'')+' · قيد'+(t.note?' — '+t.note:''),p:(t.pay==='owed_us'?'لنا ':'علينا ')+fmt(t.amount,0)+' '+CCYI[t.ccy]};
