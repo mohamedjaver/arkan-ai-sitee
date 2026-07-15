@@ -459,11 +459,12 @@ body{-webkit-overflow-scrolling:touch}
   <div class="card" id="fPub" style="display:none">
     <h3>بوابة العملاء — نشر أسعار اليوم</h3>
     <div style="color:var(--dim);font-size:12px;margin-bottom:12px">حدّث أسعارك، ثم انشر الرابط لعملائك. يحسبون بأنفسهم ويرسلون الطلب لواتسابك.</div>
-    <div class="mini" style="margin-bottom:6px"><span class="r">العملة</span><span>جملة (كمية)</span><span>تجزئة</span></div>
+    <div style="display:grid;grid-template-columns:1.3fr 1fr 1fr 1fr auto;gap:6px;margin-bottom:6px;font-size:11px;color:var(--dim);font-weight:700">
+      <span>العملة</span><span style="text-align:center">جملة</span><span style="text-align:center">تجزئة</span><span style="text-align:center">حد الجملة</span><span></span>
+    </div>
     <div id="pubRates"></div>
     <button class="btn btn-line btn-sm" onclick="addPubRow()" style="width:100%;margin-top:6px">+ إضافة عملة</button>
     <div class="row" style="margin-top:10px">
-      <div><label>حد الكمية (فوقه = جملة)</label><input type="text" id="pubThresh" inputmode="decimal" placeholder="5000000"></div>
       <div><label>واتساب الاستقبال</label><input type="tel" id="pubWa" placeholder="22236295050" inputmode="tel"></div>
     </div>
     <button class="btn btn-gold" style="width:100%;margin-top:12px" onclick="publishRates()">📢 نشر الأسعار وإنشاء رابط العملاء</button>
@@ -3744,27 +3745,29 @@ const PUB_ALL=[
   {ccy:'TRY',name:'ليرة تركية'},{ccy:'EGP',name:'جنيه مصري'},
 ];
 let pubRows=JSON.parse(localStorage.getItem('arkan-pubrates')||'null')||[
-  {ccy:'AOA',w:0.36,r:0.357},
-  {ccy:'CNY',w:5.6,r:5.5},
-  {ccy:'AED',w:11.1,r:11.0},
+  {ccy:'AOA',w:0.36,r:0.357,thr:5000000},
+  {ccy:'CNY',w:5.6,r:5.5,thr:10000},
+  {ccy:'AED',w:11.1,r:11.0,thr:5000},
 ];
 function renderPub(){
   const el=$('pubRates');if(!el)return;
   el.innerHTML=pubRows.map((r,i)=>`
-    <div class="mini" style="gap:6px;align-items:center">
-      <select onchange="pubRows[${i}].ccy=this.value;renderPub()" style="width:110px;background:rgba(0,0,0,.3);border:1px solid var(--stroke);border-radius:10px;padding:9px 6px;color:var(--txt);font-family:'Tajawal';font-size:12px">
-        ${PUB_ALL.map(a=>`<option value="${a.ccy}" ${a.ccy===r.ccy?'selected':''}>${a.ccy} — ${a.name}</option>`).join('')}
+    <div style="display:grid;grid-template-columns:1.3fr 1fr 1fr 1fr auto;gap:6px;align-items:center;margin-bottom:6px">
+      <select onchange="pubRows[${i}].ccy=this.value;renderPub()" style="background:rgba(0,0,0,.3);border:1px solid var(--stroke);border-radius:10px;padding:9px 4px;color:var(--txt);font-family:'Tajawal';font-size:11px;min-width:0">
+        ${PUB_ALL.map(a=>`<option value="${a.ccy}" ${a.ccy===r.ccy?'selected':''}>${a.ccy}</option>`).join('')}
       </select>
-      <input type="text" inputmode="decimal" value="${r.w}" onchange="pubRows[${i}].w=parseFloat(this.value)||0" placeholder="جملة" style="flex:1;background:rgba(0,0,0,.3);border:1px solid var(--stroke);border-radius:10px;padding:9px;color:var(--gold2);font-family:'IBM Plex Mono';text-align:center;min-width:0">
-      <input type="text" inputmode="decimal" value="${r.r}" onchange="pubRows[${i}].r=parseFloat(this.value)||0" placeholder="تجزئة" style="flex:1;background:rgba(0,0,0,.3);border:1px solid var(--stroke);border-radius:10px;padding:9px;color:var(--txt);font-family:'IBM Plex Mono';text-align:center;min-width:0">
-      <button class="btn btn-line btn-sm" style="padding:5px 9px" onclick="pubRows.splice(${i},1);renderPub()">✕</button>
+      <input type="text" inputmode="decimal" value="${r.w}" onchange="pubRows[${i}].w=parseFloat(this.value)||0" placeholder="جملة" style="background:rgba(0,0,0,.3);border:1px solid var(--stroke);border-radius:10px;padding:9px 4px;color:var(--gold2);font-family:'IBM Plex Mono';text-align:center;min-width:0">
+      <input type="text" inputmode="decimal" value="${r.r}" onchange="pubRows[${i}].r=parseFloat(this.value)||0" placeholder="تجزئة" style="background:rgba(0,0,0,.3);border:1px solid var(--stroke);border-radius:10px;padding:9px 4px;color:var(--txt);font-family:'IBM Plex Mono';text-align:center;min-width:0">
+      <input type="text" inputmode="decimal" value="${r.thr||0}" onchange="pubRows[${i}].thr=parseFloat(this.value)||0" placeholder="الحد" style="background:rgba(0,0,0,.3);border:1px solid var(--stroke);border-radius:10px;padding:9px 4px;color:var(--acc2);font-family:'IBM Plex Mono';text-align:center;min-width:0">
+      <button class="btn btn-line btn-sm" style="padding:5px 8px" onclick="pubRows.splice(${i},1);renderPub()">✕</button>
     </div>`).join('')||'<div class="empty" style="padding:14px 0;color:var(--dim)">أضف عملة لتسعيرها</div>';
 }
 function addPubRow(){
   /* أضف أول عملة غير مستخدمة */
   const used=new Set(pubRows.map(x=>x.ccy));
   const next=PUB_ALL.find(a=>!used.has(a.ccy))||PUB_ALL[0];
-  pubRows.push({ccy:next.ccy,w:0,r:0});
+  const defThr={AOA:5000000,CNY:10000,AED:5000,MAD:10000,USD:1000,EUR:1000,USDT:1000,SAR:5000,TRY:30000,EGP:50000};
+  pubRows.push({ccy:next.ccy,w:0,r:0,thr:defThr[next.ccy]||1000});
   renderPub();
 }
 function publishRates(){
@@ -3772,8 +3775,7 @@ function publishRates(){
   if(!valid.length){toast('سعّر عملة واحدة على الأقل');return;}
   localStorage.setItem('arkan-pubrates',JSON.stringify(pubRows));
   const wa=($('pubWa')?$('pubWa').value:'22236295050').replace(/[^0-9]/g,'')||'22236295050';
-  const thr=NV('pubThresh')||5000000;
-  const payload={r:valid,wa,thr,ts:Date.now()};
+  const payload={r:valid,wa,ts:Date.now()};
   const enc=btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
   const url=location.origin+location.pathname.replace(/settlement\.html$/,'')+'rates.html#'+enc;
   const el=$('pubLink');
