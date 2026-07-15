@@ -402,9 +402,7 @@ nav{position:fixed;bottom:0;left:0;right:0;z-index:90;
         </select></div>
     </div>
     <div class="row">
-      <div><label id="lblBAmt">مبلغ AOA من العميل</label>
-        <div style="display:flex;gap:6px"><input type="text" id="aoa" placeholder="850000" inputmode="decimal" style="flex:1">
-        <button class="btn btn-gold btn-sm" style="padding:0 12px;white-space:nowrap" onclick="smartFill('aoa')">📥</button></div></div>
+      <div><label id="lblBAmt">مبلغ AOA من العميل</label><input type="text" id="aoa" placeholder="850000" inputmode="decimal"></div>
       <div id="rcWrap"><label id="lblRc">سعر العميل AOA/USDT</label><input type="text" id="rClient" placeholder="1180" inputmode="decimal"></div>
     </div>
     <!-- دفعة إيصالات العميل: قراءة فقط، بلا حفظ ملفات -->
@@ -439,13 +437,7 @@ nav{position:fixed;bottom:0;left:0;right:0;z-index:90;
       <div><label>اسم المستفيد (Bankily)</label><input type="text" id="bName" class="ar" placeholder="محمد ولد ..."></div>
       <div><label>رقم Bankily / الحساب</label><input type="tel" id="bPhone" placeholder="36xxxxxx" inputmode="tel"></div>
     </div>
-    <div class="legform" style="margin-top:8px">
-      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
-        <span style="font-size:12px;color:var(--dim)">إيصال الدفع الموريتاني</span>
-        <button class="btn btn-gold btn-sm" onclick="uploadPayRcpt()">📥 قراءة إيصال (Bankily / السداد)</button>
-      </div>
-      <div id="payRcptInfo" style="margin-top:6px"></div>
-    </div>
+
     </div>
     <label>واتساب العميل (بالرمز الدولي، بدون +)</label>
     <input type="tel" id="cWa" placeholder="244xxxxxxxxx" inputmode="tel">
@@ -2042,6 +2034,7 @@ async function uploadOB(fid){
         if(sm.ccy&&ctx){const rt=routeReceipt(sm,ctx);if(rt&&OB[rt]){target=rt;if(rt!==fid)moved++;}}
         OB[target].push({name:f.name,amount:sm.amount,ccy:sm.ccy||obCcy(target),txn:sm.txn||null,acct:sm.acct||null});
         if(sm.amount!=null)ok++;
+        if(target==='brPay'&&sm.acct){const bp=$('bPhone');if(bp&&!bp.value)bp.value=sm.acct;}
         touched.add(target);
       }catch(e){OB[fid].push({name:f.name,amount:null,ccy,err:'لم يُقرأ'});touched.add(fid);}
     }
@@ -2537,12 +2530,10 @@ function uploadBatch(){
       i++;
       try{
         const dataUrl=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(f);});
-        let txt='';
-        if(f.type==='application/pdf')txt=await pdfText(dataUrl);
-        else{toast('OCR صورة '+i+'/'+files.length+'...');txt=await ocrImage(dataUrl);}
-        const ex=extractAmount(txt);
-        batch.push({name:f.name,amount:ex.value});
-        if(ex.value!=null)ok++;
+        const txt=await anyReceiptText(dataUrl,f.type);
+        const sm=smartRead(txt);
+        batch.push({name:f.name,amount:sm.amount,ccy:sm.ccy});
+        if(sm.amount!=null)ok++;
       }catch(e){batch.push({name:f.name,amount:null,err:(e&&e.message?String(e.message).slice(0,40):'فشل التحميل')});}
     }
     renderBatch(true);
