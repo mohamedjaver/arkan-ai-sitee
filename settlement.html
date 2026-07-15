@@ -1713,57 +1713,94 @@ function invRows(t){
 async function genInvoice(ref){
   const t=findTxAnywhere(ref);if(!t){toast('العملية غير موجودة');return null;}
   toast('جارٍ إنشاء الفاتورة...');
-  const rows=invRows(t).map(([k,v])=>`
+  const rows=invRows(t);
+  const client=t.contactName||t.name||'—';
+  const phone=t.phone&&t.phone!=='—'?t.phone:(t.cWa||'');
+  const dt=new Date(t.ts);
+  const dstr=dt.toLocaleDateString('en-GB')+' '+dt.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+  /* صفوف جدول التفاصيل */
+  const detRows=rows.map(([k,v])=>`
     <tr>
-      <td style="padding:16px 22px;color:#565b74;font-size:17px;font-weight:700;border-bottom:1px solid #ecebf5;font-family:'Tajawal'">${k}</td>
-      <td style="padding:16px 22px;font-weight:800;font-size:20px;color:#1C1D3C;border-bottom:1px solid #ecebf5;font-family:'IBM Plex Mono';direction:ltr;text-align:left">${v}</td>
+      <td style="padding:11px 14px;border:1px solid #c9ccd8;font-size:13px;color:#2b2e3f;font-weight:600;font-family:'Tajawal'">${k}</td>
+      <td style="padding:11px 14px;border:1px solid #c9ccd8;font-size:14px;font-weight:800;color:#0F1130;font-family:'IBM Plex Mono';direction:ltr;text-align:left">${v}</td>
     </tr>`).join('');
+  /* المبالغ الرئيسية للفوتر */
+  let mainAmt='',mainCcy='',subAmt='',subCcy='';
+  if(t.type==='bridge'){mainAmt=fmt((t.payout!=null?t.payout:t.mru),0);mainCcy=CCYI[t.toC||'MRU'];subAmt=fmt((t.amt!=null?t.amt:t.aoa),0);subCcy=CCYI[t.fromC||'AOA'];}
+  else if(t.type==='m2a'){mainAmt=fmt(t.dueAoa,0);mainCcy='AOA';subAmt=fmt(t.mruOld,0);subCcy='UM';}
+  else if(isTrade(t.type)){mainAmt=fmt(t.rSell?t.qty*t.rSell:t.cost,0);mainCcy=CCYI[trQ(t)];subAmt=fmt(t.qty,t.base==='USDT'?2:0);subCcy=t.base||'USDT';}
+  else if(t.type==='svc'){mainAmt=fmt(t.due,0);mainCcy=CCYI[t.payCcy];subAmt=fmt(t.invAmt,0);subCcy=t.invCcy;}
+  else if(t.type==='rcpt'){mainAmt=fmt(t.amount,0);mainCcy=CCYI[t.ccy];}
   const stage=$('pdfStage');
   stage.innerHTML=`
-  <div style="width:794px;min-height:1123px;display:flex;flex-direction:column;background:#fff;font-family:'Tajawal','IBM Plex Sans Arabic'">
-    <div style="background:linear-gradient(135deg,#2E2758,#1C1D3C 60%,#15172E);padding:32px 36px;display:flex;justify-content:space-between;align-items:center">
-      <div style="display:flex;align-items:center;gap:16px">
+  <div style="width:794px;min-height:1123px;display:flex;flex-direction:column;background:#fff;font-family:'Tajawal','IBM Plex Sans Arabic';color:#0F1130">
+    <!-- رأس رسمي -->
+    <div style="padding:26px 34px 0;display:flex;justify-content:space-between;align-items:flex-start">
+      <div style="display:flex;align-items:center;gap:14px">
         ${invLogoSVG()}
         <div>
-          <div style="color:#fff;font-size:24px;font-weight:800;letter-spacing:1px;font-family:'IBM Plex Mono'">ARKAN <span style="color:#A78BFF">SETTLEMENT</span></div>
-          <div style="color:#8B8FA8;font-size:12px;letter-spacing:3px;margin-top:4px;font-family:'IBM Plex Mono'">EXCHANGE RECEIPT — إيصال صرف</div>
+          <div style="font-size:26px;font-weight:800;letter-spacing:1px;font-family:'IBM Plex Mono';color:#1C1D3C">ARKAN<span style="color:#7C5CFF"> INTERNATIONAL</span></div>
+          <div style="font-size:11px;letter-spacing:4px;color:#8a8ea6;font-family:'IBM Plex Mono';margin-top:2px">TRADING · EXCHANGE · SETTLEMENT</div>
         </div>
       </div>
-      <div style="text-align:left">
-        <div style="color:#A78BFF;font-size:26px;font-weight:800;font-family:'IBM Plex Mono'">${t.ref}</div>
-        <div style="color:#8B8FA8;font-size:14px;margin-top:4px;font-family:'IBM Plex Mono'">${new Date(t.ts).toLocaleString('en-GB')}</div>
+      <div style="text-align:right;font-size:10.5px;color:#8a8ea6;font-family:'IBM Plex Mono';line-height:1.7">
+        ${dstr}<br>Nouakchott · Luanda · China
       </div>
     </div>
-    <div style="height:6px;background:linear-gradient(90deg,#B9A8FF,#8B72FF,#5B3FD1)"></div>
-    <div style="padding:30px 36px">
-      <div style="font-size:15px;color:#565b74;margin-bottom:6px;font-weight:700">العميل</div>
-      <div style="font-size:24px;font-weight:800;color:#1C1D3C;margin-bottom:20px">${t.contactName||t.name||'—'}</div>
-      ${(t.type==='bridge'||t.type==='m2a')?`
-      <div style="display:flex;gap:14px;align-items:stretch;margin-bottom:20px">
-        <div style="flex:1;background:linear-gradient(150deg,#F6F1FF,#EFE8FF);border:2px solid #D9CCFF;border-radius:16px;padding:18px;text-align:center">
-          <div style="font-size:13px;color:#6D5BB8;font-weight:800;margin-bottom:6px">المبلغ المستلم</div>
-          <div style="font-size:27px;font-weight:800;color:#4C1D95;font-family:'IBM Plex Mono';direction:ltr">${fmt(t.type==='m2a'?t.mruOld:(t.amt!=null?t.amt:t.aoa),0)}</div>
-          <div style="font-size:15px;color:#7C5CFF;font-weight:800;margin-top:3px">${t.type==='m2a'?'UM قديمة':(t.fromC||'AOA')}</div>
-        </div>
-        <div style="display:flex;align-items:center;font-size:30px;color:#8B72FF">⟵</div>
-        <div style="flex:1;background:linear-gradient(150deg,#EFF6FF,#E4F0FF);border:2px solid #BFDBFE;border-radius:16px;padding:18px;text-align:center">
-          <div style="font-size:13px;color:#1D4ED8;font-weight:800;margin-bottom:6px">المبلغ المدفوع</div>
-          <div style="font-size:27px;font-weight:800;color:#1E3A8A;font-family:'IBM Plex Mono';direction:ltr">${fmt(t.type==='m2a'?t.paidAoa:(t.payout!=null?t.payout:t.mru),0)}</div>
-          <div style="font-size:15px;color:#2F7BF6;font-weight:800;margin-top:3px">${t.type==='m2a'?'AOA':(t.toC||'MRU')}</div>
-        </div>
-      </div>`:''}
-      <table style="width:100%;border-collapse:collapse;background:#faf9fe;border-radius:16px;overflow:hidden">
-        ${rows}
+    <div style="height:3px;background:linear-gradient(90deg,#5B3FD1,#8B72FF,#B9A8FF);margin:14px 34px 0"></div>
+
+    <!-- CLIENT + REF -->
+    <div style="padding:20px 34px 0;display:flex;justify-content:space-between;align-items:flex-start">
+      <div>
+        <div style="font-size:11px;font-weight:800;color:#8a8ea6;letter-spacing:1px;font-family:'IBM Plex Mono'">CLIENT / العميل</div>
+        <div style="font-size:19px;font-weight:800;margin-top:5px">${client}</div>
+        ${phone?`<div style="font-size:13px;color:#565b74;font-family:'IBM Plex Mono';margin-top:2px">${phone}</div>`:''}
+      </div>
+      <div style="border:2px solid #1C1D3C;border-radius:8px;padding:10px 18px;text-align:center">
+        <div style="font-size:10px;color:#8a8ea6;font-weight:700;letter-spacing:1px">REF</div>
+        <div style="font-size:22px;font-weight:800;font-family:'IBM Plex Mono';color:#1C1D3C;letter-spacing:1px">${t.ref}</div>
+      </div>
+    </div>
+
+    <!-- نوع العملية -->
+    <div style="padding:18px 34px 0">
+      <div style="background:#1C1D3C;color:#fff;padding:9px 16px;font-size:13px;font-weight:800;letter-spacing:1px;border-radius:6px 6px 0 0;font-family:'Tajawal'">
+        تفاصيل العملية · ${typeLbl[t.type]||''}
+      </div>
+      <table style="width:100%;border-collapse:collapse;margin-top:-1px">
+        ${detRows}
       </table>
-      <div style="margin-top:22px;padding:18px 22px;border-radius:14px;background:#F3F0FF;border:2px solid #DDD4FF;
-        display:flex;justify-content:space-between;align-items:center">
-        <span style="font-size:17px;color:#5B3FD1;font-weight:800">شكرًا لتعاملكم مع أركان ✦</span>
-        <span style="font-size:14px;color:#8B72FF;font-family:'IBM Plex Mono';font-weight:700">ARKAN INTERNATIONAL TRADING</span>
+    </div>
+
+    <!-- بلوك المبالغ (RESTE A PAYER style) -->
+    <div style="padding:20px 34px 0">
+      <div style="border:1px solid #c9ccd8;border-radius:8px;overflow:hidden">
+        ${subAmt?`<div style="display:flex;justify-content:space-between;padding:11px 18px;background:#faf9fe;border-bottom:1px solid #ecebf5">
+          <span style="font-size:13px;color:#565b74;font-weight:700">القيمة المستلمة / المبلغ</span>
+          <span style="font-size:15px;font-weight:800;font-family:'IBM Plex Mono'">${subAmt} ${subCcy}</span></div>`:''}
+        <div style="display:flex;justify-content:space-between;padding:14px 18px;background:linear-gradient(90deg,#F3F0FF,#EEEAFF)">
+          <span style="font-size:15px;color:#4C1D95;font-weight:800">${t.type==='svc'?'المطلوب من العميل':(t.type==='bridge'||t.type==='m2a'?'المبلغ المدفوع':'الإجمالي')}</span>
+          <span style="font-size:22px;font-weight:800;font-family:'IBM Plex Mono';color:#4C1D95">${mainAmt} ${mainCcy}</span></div>
       </div>
     </div>
-    <div style="margin-top:auto;padding:16px 36px 22px;border-top:1px solid #ecebf5;display:flex;justify-content:space-between;font-size:12px;color:#9a9db2;font-family:'IBM Plex Mono'">
-      <span>WhatsApp 36295050 · Mohamedarbi0208@gmail.com</span>
-      <span>ARKAN SETTLEMENT FLOW</span>
+
+    <!-- شكر -->
+    <div style="padding:18px 34px 0">
+      <div style="font-size:13px;color:#5B3FD1;font-weight:700">✦ شكرًا لتعاملكم مع أركان — Merci de votre confiance</div>
+    </div>
+
+    <!-- تذييل رسمي -->
+    <div style="margin-top:auto;border-top:2px solid #1C1D3C;margin:24px 34px 0;padding-top:12px">
+      <div style="text-align:center;font-size:11px;font-weight:800;color:#1C1D3C;letter-spacing:.5px">
+        ARKAN INTERNATIONAL TRADING — EXCHANGE & INTERNATIONAL SETTLEMENT
+      </div>
+      <div style="text-align:center;font-size:10px;color:#8a8ea6;font-family:'IBM Plex Mono';margin-top:5px;line-height:1.7">
+        WhatsApp +222 36 29 50 50 · Mohamedarbi0208@gmail.com<br>
+        Nouakchott (Mauritania) · Luanda (Angola) · China Sourcing Office
+      </div>
+      <div style="text-align:center;font-size:9px;color:#b5b8c9;font-family:'IBM Plex Mono';margin-top:8px;padding-bottom:14px">
+        Document généré par ARKAN SETTLEMENT FLOW · ${t.ref}
+      </div>
     </div>
   </div>`;
   try{await document.fonts.ready;}catch(e){}
