@@ -258,18 +258,18 @@ nav{position:fixed;bottom:0;left:0;right:0;z-index:90;
 
 /* ===== E-BANK TILES ===== */
 .types{display:grid !important;grid-template-columns:1fr 1fr;gap:12px;padding:0 2px;overflow:visible !important}
-.type{display:flex !important;flex-direction:column;align-items:center;justify-content:center;gap:8px;
-  min-height:112px;padding:18px 12px !important;border-radius:22px !important;
-  background:linear-gradient(160deg,rgba(255,255,255,.07),rgba(255,255,255,.025)) !important;
-  border:1px solid rgba(255,255,255,.09) !important;
-  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
-  box-shadow:0 8px 28px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.08);
-  transition:.18s;cursor:pointer;width:auto !important;flex:none !important}
+.type{display:flex !important;flex-direction:column;align-items:center;justify-content:center;gap:9px;
+  min-height:116px;padding:20px 12px !important;border-radius:24px !important;
+  background:linear-gradient(150deg,rgba(255,255,255,.09),rgba(255,255,255,.02) 55%,rgba(139,114,255,.05)) !important;
+  border:1px solid rgba(255,255,255,.1) !important;
+  backdrop-filter:blur(22px) saturate(1.3);-webkit-backdrop-filter:blur(22px) saturate(1.3);
+  box-shadow:0 10px 34px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.12), inset 0 -20px 40px rgba(139,114,255,.03);
+  cursor:pointer;width:auto !important;flex:none !important}
 .type:active{transform:scale(.97)}
 .type.on{background:linear-gradient(160deg,rgba(139,114,255,.30),rgba(91,63,209,.14)) !important;
   border-color:rgba(183,163,255,.55) !important;
   box-shadow:0 10px 34px rgba(91,63,209,.45), inset 0 1px 0 rgba(255,255,255,.14)}
-.type .ico{font-size:26px;line-height:1}
+.type .ico{display:flex;align-items:center;justify-content:center;line-height:0}
 .type .t1{font-size:14.5px !important;font-weight:800;color:var(--txt)}
 .type .t2{font-size:10.5px !important;color:var(--dim);font-family:'IBM Plex Mono';letter-spacing:.5px}
 .type.wide{grid-column:1 / -1;min-height:78px;flex-direction:row;gap:14px;justify-content:flex-start;padding-inline:22px !important}
@@ -297,23 +297,6 @@ body{-webkit-overflow-scrolling:touch}
 </style>
 </head>
 <body>
-
-<!-- ================= GLOBAL LIVE TICKER ================= -->
-<div id="tickerBar">
-  <div class="tkHead">
-    <div class="tkLive"><span class="dot" id="tkDot"></span><span id="tkStatus">LIVE</span></div>
-    <div class="baseSel" id="tkBaseSel">
-      <button data-b="MRU" onclick="setTkBase('MRU')">MRU</button>
-      <button data-b="AOA" onclick="setTkBase('AOA')">AOA</button>
-      <button data-b="USDT" onclick="setTkBase('USDT')">USDT</button>
-      <button data-b="USD" onclick="setTkBase('USD')">USD</button>
-      <button data-b="EUR" onclick="setTkBase('EUR')">EUR</button>
-    </div>
-  </div>
-  <div class="tkTrack" id="tkTrack"></div>
-</div>
-
-
 <div id="lock">
   <div class="hex"></div>
   <h2>ARKAN <span>SETTLEMENT</span></h2>
@@ -398,11 +381,11 @@ body{-webkit-overflow-scrolling:touch}
 <section id="new" class="on">
   <div class="types">
     <div class="type on" data-ty="bridge"><div class="t1">جسر تحويل</div><div class="t2">AOA→MRU</div></div>
-    <div class="type" data-ty="trade"><div class="ico">💱</div><div class="t1">تداول</div><div class="t2">كل العملات</div></div>
-    <div class="type" data-ty="m2a"><div class="ico">🏦</div><div class="t1">بيع أوقية</div><div class="t2">UM → AOA</div></div>
-    <div class="type" data-ty="rcpt"><div class="ico">📥</div><div class="t1">الإيصالات</div><div class="t2">كل العملات</div></div>
-    <div class="type" data-ty="svc"><div class="ico">🧾</div><div class="t1">فاتورة مورد</div><div class="t2">دفع دولي</div></div>
-    <div class="type wide" data-ty="rep"><div class="ico">📊</div><div><div class="t1">التقارير</div><div class="t2">PDF · ربحية كل عملة · اليوم</div></div></div>
+    <div class="type" data-ty="trade"><div class="ico"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#B9A8FF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 10l-4 4 4 4M3 14h13M17 14l4-4-4-4M21 10H8"/></svg></div><div class="t1">تداول</div><div class="t2">كل العملات</div></div>
+    <div class="type" data-ty="m2a"><div class="ico"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#B9A8FF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M4 21V10l8-6 8 6v11M9 21v-6h6v6"/></svg></div><div class="t1">بيع أوقية</div><div class="t2">UM → AOA</div></div>
+    <div class="type" data-ty="rcpt"><div class="ico"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#B9A8FF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4v16l2-1 2 1 2-1 2 1 2-1 2 1 2-1V4l-2 1-2-1-2 1-2-1-2 1-2-1zM8 9h8M8 13h8"/></svg></div><div class="t1">الإيصالات</div><div class="t2">كل العملات</div></div>
+    <div class="type" data-ty="svc"><div class="ico"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#B9A8FF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h9l5 5v15H6zM15 2v5h5M9 13h6M9 17h6"/></svg></div><div class="t1">فاتورة مورد</div><div class="t2">دفع دولي</div></div>
+    <div class="type wide" data-ty="rep"><div class="ico"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#B9A8FF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18M8 16V9M13 16V5M18 16v-4"/></svg></div><div><div class="t1">التقارير</div><div class="t2">PDF · ربحية كل عملة · اليوم</div></div></div>
   </div>
 
   <!-- BRIDGE FORM -->
@@ -1308,7 +1291,7 @@ function load(){
     }
     $('partnerWa').value=localStorage.getItem('arkan-partner-wa')||'';
   }catch(e){}
-  buildStars();render();renderFaceUI();syncBridgeCcy();startTicker();
+  buildStars();render();renderFaceUI();syncBridgeCcy();
   /* تذكير أسبوعي بالنسخة الاحتياطية */
   setTimeout(()=>{
     const lb=+(localStorage.getItem('arkan-lastbackup')||0);
