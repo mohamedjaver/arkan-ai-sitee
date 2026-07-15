@@ -2078,22 +2078,37 @@ function writeSmart(targetId,amount,sm){
 function smartRead(txt){
   const t=(txt||'').replace(/\u00A0/g,' ');
   const low=t.toLowerCase();
-  if(/\bT[1-9A-HJ-NP-Za-km-z]{33}\b/.test(t)||/tronscan|usdt|trc20|binance/i.test(low)){
+  /* 1) USDT — بلوك تشين / Binance / نص */
+  if(/\bT[1-9A-HJ-NP-Za-km-z]{33}\b/.test(t)||/tronscan|usdt|trc20|binance|تيثر/i.test(low)){
     const ex=usdtExtract(t);
     if(ex.amount!=null)return {...ex,ccy:'USDT',src:'USDT'};
   }
+  /* 2) MRU — Bankily / السداد / مصرفي / أوقية */
   if(/sedad|bankily|peoples bank|masrvi|السداد|مصرفي/i.test(t)||/أوقي/.test(t)||/\bMRU\b/.test(t)){
     const ex=mruReceiptExtract(t);
     if(ex.amount!=null)return {amount:ex.amount,acct:ex.acct,txn:ex.txn,ccy:'MRU',src:ex.app};
   }
+  /* 3) AOA — BAI / Multicaixa / كوانزا */
   if(/\bKz\b|kwanza|multicaixa|comprovativo|montante|IBAN\s*:?\s*AO/i.test(t)){
     const ex=extractAmount(t);
     if(ex.value!=null)return {amount:ex.value,acct:null,txn:null,ccy:'AOA',src:'AOA'};
   }
-  const ex=extractAmount(t);
+  /* 4) عملات برموزها */
   let ccy=null;
-  if(/€|\bEUR\b/i.test(t))ccy='EUR';else if(/\$|\bUSD\b/i.test(t))ccy='USD';
-  else if(/AED/i.test(t))ccy='AED';else if(/CNY|RMB|¥/i.test(t))ccy='CNY';else if(/MAD/i.test(t))ccy='MAD';
+  if(/€|\bEUR\b|يورو/i.test(t))ccy='EUR';
+  else if(/\bUSD\b|دولار/i.test(t))ccy='USD';
+  else if(/AED|درهم إمارات/i.test(t))ccy='AED';
+  else if(/CNY|RMB|¥|يوان/i.test(t))ccy='CNY';
+  else if(/MAD|درهم مغرب/i.test(t))ccy='MAD';
+  /* 5) استخراج المبلغ بأي شكل — الطبقة الأخيرة الذكية */
+  let ex=extractAmount(t);
+  if(ex.value==null){
+    /* fallback نهائي: أكبر رقم منطقي في النص (>= 100) */
+    const nums=(t.match(/[0-9][0-9.,\s]{2,}/g)||[])
+      .map(s=>normNum(s.trim()))
+      .filter(v=>v!=null&&v>=100&&v<1e15);
+    if(nums.length)ex={value:Math.max(...nums)};
+  }
   return {amount:ex.value,acct:null,txn:null,ccy,src:'عام'};
 }
 function routeReceipt(r,ctx){
@@ -2338,7 +2353,7 @@ async function uploadRC(){
         let ex;
         if(ccy==='USDT')ex=usdtExtract(txt);
         else if(ccy==='MRU'){const e2=mruReceiptExtract(txt);ex={amount:e2.amount,txn:e2.txn,acct:e2.acct};}
-        else {const e3=extractAmount(txt);ex={amount:e3.value,txn:null,acct:null};}
+        else {const sm=smartRead(txt);ex={amount:sm.amount,txn:sm.txn,acct:sm.acct};}
         rc.push({name:f.name,amount:ex.amount,ccy,acct:ex.acct||null,txn:ex.txn||null,link:null});
         if(ex.amount!=null)ok++;
       }catch(e){rc.push({name:f.name,amount:null,ccy,err:'لم يُقرأ — أدخل يدويًا'});}
@@ -2487,9 +2502,9 @@ function uploadKB(){
       try{
         const dataUrl=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(f);});
         const txt=await anyReceiptText(dataUrl,f.type);
-        const ex=extractAmount(txt);
-        kb.push({name:f.name,amount:ex.value});
-        if(ex.value!=null)ok++;
+        const sm=smartRead(txt);
+        kb.push({name:f.name,amount:sm.amount});
+        if(sm.amount!=null)ok++;
       }catch(e){kb.push({name:f.name,amount:null,err:'لم يُقرأ'});}
     }
     renderKB();calc();
