@@ -992,7 +992,7 @@ async function faceUnlock(silent){
   }
 }
 /* أي لمسة على شاشة القفل تستدعي البصمة (إيماءة المستخدم المطلوبة في Safari) */
-document.getElementById('lock').addEventListener('click',e=>{
+if(document.getElementById('lock'))document.getElementById('lock').addEventListener('click',e=>{
   if(e.target&&e.target.id==='pin')return;
   if(_faceTried)return;
   if(localStorage.getItem('arkan-faceid')){_faceTried=true;faceUnlock(false);setTimeout(()=>{_faceTried=false;},1500);}
@@ -1347,7 +1347,7 @@ document.querySelectorAll('[data-ty]').forEach(el=>el.addEventListener('click',(
   if(curType==='trade')syncTradeCcy();
   hideTicket();renderChains();calc();
 }));
-$('pPay').addEventListener('change',()=>{
+if($('pPay'))$('pPay').addEventListener('change',()=>{
   $('dueRow').style.display=$('pPay').value==='settled'?'none':'flex';
 });
 
@@ -1399,8 +1399,8 @@ function syncBridgeCcy(){
 }
 /* ================= LIVE CALC ================= */
 const inputs=['aoa','rClient','rMarket','rMru','bName','bPhone','cWa','qty','rBuy','rSell','note'];
-inputs.forEach(i=>$(i).addEventListener('input',calc));
-['pContact','pPay','pDue'].forEach(i=>$(i).addEventListener('change',calc));
+inputs.forEach(i=>{const e=$(i);if(e)e.addEventListener('input',calc);});
+['pContact','pPay','pDue'].forEach(i=>{const e=$(i);if(e)e.addEventListener('change',calc);});
 function hideTicket(){$('ticket').style.display='none';$('waBox').style.display='none';$('waBox2').style.display='none';cur=null;}
 function metaOf(){
   const contactId=$('pContact').value||null;
