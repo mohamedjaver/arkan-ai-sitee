@@ -1930,6 +1930,38 @@ function settleDebt(ref){const t=txs.find(x=>x.ref===ref);if(!t)return;t.pay='se
 
 
 
+
+/* ================= UNIVERSAL SMART RECEIPT READER ================= */
+function smartRead(txt){
+  const t=(txt||'').replace(/\u00A0/g,' ');
+  const low=t.toLowerCase();
+  if(/\bT[1-9A-HJ-NP-Za-km-z]{33}\b/.test(t)||/tronscan|usdt|trc20|binance/i.test(low)){
+    const ex=usdtExtract(t);
+    if(ex.amount!=null)return {...ex,ccy:'USDT',src:'USDT'};
+  }
+  if(/sedad|bankily|peoples bank|masrvi|السداد|مصرفي/i.test(t)||/أوقي/.test(t)||/\bMRU\b/.test(t)){
+    const ex=mruReceiptExtract(t);
+    if(ex.amount!=null)return {amount:ex.amount,acct:ex.acct,txn:ex.txn,ccy:'MRU',src:ex.app};
+  }
+  if(/\bKz\b|kwanza|multicaixa|comprovativo|montante|IBAN\s*:?\s*AO/i.test(t)){
+    const ex=extractAmount(t);
+    if(ex.value!=null)return {amount:ex.value,acct:null,txn:null,ccy:'AOA',src:'AOA'};
+  }
+  const ex=extractAmount(t);
+  let ccy=null;
+  if(/€|\bEUR\b/i.test(t))ccy='EUR';else if(/\$|\bUSD\b/i.test(t))ccy='USD';
+  else if(/AED/i.test(t))ccy='AED';else if(/CNY|RMB|¥/i.test(t))ccy='CNY';else if(/MAD/i.test(t))ccy='MAD';
+  return {amount:ex.value,acct:null,txn:null,ccy,src:'عام'};
+}
+function routeReceipt(r,ctx){
+  if(ctx==='trade'){
+    const B=$('tBase')?$('tBase').value:'USDT', Q=$('tQuote')?$('tQuote').value:'AOA';
+    if(r.ccy===B)return 'trBuy';if(r.ccy===Q)return 'trSell';
+  }
+  if(ctx==='bridge'){const T=bToV();if(r.ccy===T)return 'brPay';}
+  return null;
+}
+
 /* ملء الخانات تلقائيًا من مجاميع الإيصالات */
 function syncOB(fid){
   const tot=obTotal(fid);
@@ -1967,21 +1999,22 @@ async function uploadOB(fid){
     const files=[...inp.files];if(!files.length)return;
     const ccy=obCcy(fid);
     toast('جارٍ قراءة '+files.length+' ملف...');
-    let ok=0;
+    let ok=0,moved=0;const touched=new Set([fid]);
     for(const f of files){
       try{
         const dataUrl=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(f);});
         const txt=await anyReceiptText(dataUrl,f.type);
-        let ex;
-        if(ccy==='USDT')ex=usdtExtract(txt);
-        else if(ccy==='MRU'){const e2=mruReceiptExtract(txt);ex={amount:e2.amount,txn:e2.txn,acct:e2.acct};}
-        else{const e3=extractAmount(txt);ex={amount:e3.value,txn:null,acct:null};}
-        OB[fid].push({name:f.name,amount:ex.amount,ccy,txn:ex.txn||null,acct:ex.acct||null});
-        if(ex.amount!=null)ok++;
-      }catch(e){OB[fid].push({name:f.name,amount:null,ccy,err:'لم يُقرأ'});}
+        const sm=smartRead(txt);
+        const ctx=curType==='trade'?'trade':(curType==='bridge'?'bridge':null);
+        let target=fid;
+        if(sm.ccy&&ctx){const rt=routeReceipt(sm,ctx);if(rt&&OB[rt]){target=rt;if(rt!==fid)moved++;}}
+        OB[target].push({name:f.name,amount:sm.amount,ccy:sm.ccy||obCcy(target),txn:sm.txn||null,acct:sm.acct||null});
+        if(sm.amount!=null)ok++;
+        touched.add(target);
+      }catch(e){OB[fid].push({name:f.name,amount:null,ccy,err:'لم يُقرأ'});touched.add(fid);}
     }
-    renderOB(fid);syncOB(fid);calc();
-    toast('قُرئ '+ok+'/'+files.length+' ✓ — عُبّئت الخانة');
+    touched.forEach(x=>{renderOB(x);syncOB(x);});calc();
+    toast('قُرئ '+ok+'/'+files.length+' ✓'+(moved?' · وُجّه '+moved+' تلقائيًا':''));
   };
   inp.click();
 }
@@ -2153,7 +2186,7 @@ async function uploadRC(){
     const files=[...inp.files];if(!files.length)return;
     const ccy=rcCcyV();
     toast('جارٍ قراءة '+files.length+' ملف...');
-    let ok=0;
+    let ok=0,moved=0;const touched=new Set([fid]);
     for(const f of files){
       try{
         const dataUrl=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(f);});
@@ -2305,7 +2338,7 @@ function uploadKB(){
     const files=[...inp.files];if(!files.length)return;
     if(kb.length+files.length>100){toast('الحد 100 إيصال');return;}
     toast('جارٍ قراءة '+files.length+' ملف...');
-    let ok=0;
+    let ok=0,moved=0;const touched=new Set([fid]);
     for(const f of files){
       try{
         const dataUrl=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(f);});
