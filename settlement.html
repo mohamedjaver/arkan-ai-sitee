@@ -3736,6 +3736,59 @@ function switchTab(t){
 }
 load();
 
+
+/* ================= SUPPLIER INVOICE (خدمات) ================= */
+let _svcRcpt=null;
+async function uploadSvc(){
+  const inp=document.createElement('input');
+  inp.type='file';inp.accept='image/*,application/pdf';
+  inp.onchange=async()=>{
+    const f=inp.files[0];if(!f)return;
+    toast('جارٍ قراءة الفاتورة...');
+    try{
+      const dataUrl=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(f);});
+      const txt=await anyReceiptText(dataUrl,f.type);
+      const sm=(typeof smartRead==='function')?smartRead(txt):{amount:(extractAmount(txt)||{}).value,ccy:null};
+      _svcRcpt={name:f.name,amount:sm.amount,ccy:sm.ccy,ts:Date.now()};
+      if(sm.amount&&$('svcAmt'))$('svcAmt').value=Math.round(sm.amount);
+      if(sm.ccy&&['USD','EUR','CNY','USDT'].includes(sm.ccy)&&$('svcCur'))$('svcCur').value=sm.ccy;
+      renderSvc();calcSvc();
+      toast('قُرئت الفاتورة'+(sm.amount?': '+fmt(sm.amount,0)+' '+(sm.ccy||''):'')+' ✓');
+    }catch(e){
+      const v=parseFloat(String(prompt('تعذّرت القراءة — أدخل قيمة الفاتورة:')||'').replace(/[^0-9.]/g,''));
+      if(v){if($('svcAmt'))$('svcAmt').value=Math.round(v);_svcRcpt={name:f.name,amount:v,ccy:$('svcCur')?$('svcCur').value:'USD',ts:Date.now()};renderSvc();calcSvc();}
+    }
+  };
+  inp.click();
+}
+function renderSvc(){
+  const el=$('svcInfo');if(!el)return;
+  if(!_svcRcpt){el.innerHTML='';return;}
+  el.innerHTML=`<div class="mini" style="flex-wrap:wrap;gap:6px">
+    <span class="badge b-paid">${_svcRcpt.name.slice(0,20)}</span>
+    ${_svcRcpt.amount?`<span><b class="lp">${fmt(_svcRcpt.amount,0)} ${_svcRcpt.ccy||''}</b></span>`:''}
+    <button class="btn btn-line btn-sm" style="padding:2px 8px;font-size:10px" onclick="_svcRcpt=null;renderSvc()">✕</button>
+  </div>`;
+}
+function calcSvc(){
+  const amt=NV('svcAmt'),rate=NV('svcRate');
+  const due=amt*rate;
+  const el=$('svcDue');
+  if(el)el.textContent=fmt(due,0)+' '+($('svcPay')?CCYI[$('svcPay').value]:'');
+}
+function saveSvc(){
+  const amt=NV('svcAmt');if(!amt){toast('أدخل قيمة الفاتورة');return;}
+  const rate=NV('svcRate'),due=amt*rate;
+  const ref=makeRef();
+  txs.push({type:'svc',ref,supplier:($('svcSup')?$('svcSup').value.trim():'')||'—',
+    invAmt:amt,invCcy:$('svcCur')?$('svcCur').value:'USD',payCcy:$('svcPay')?$('svcPay').value:'AOA',rate,due,
+    note:$('svcNote')?$('svcNote').value.trim():'',ts:Date.now()});
+  seq++;persist();
+  _svcRcpt=null;renderSvc();['svcSup','svcAmt','svcRate','svcNote'].forEach(id=>{if($(id))$(id).value='';});
+  calcSvc();render();
+  toast('سُجلت فاتورة المورد ✓');
+  if(typeof sendInvoice==='function')sendInvoice(ref);
+}
 /* ================= CLIENT PRICE GATE ================= */
 const PUB_ALL=[
   {ccy:'AOA',name:'كوانزا أنغولية'},{ccy:'CNY',name:'يوان صيني'},
