@@ -299,6 +299,23 @@ input::placeholder,textarea::placeholder,select::placeholder{color:rgba(139,143,
 body,input,select,textarea,button,.ar,h1,h2,h3{font-family:'Cairo','Tajawal','IBM Plex Sans Arabic',sans-serif !important}
 /* الأرقام والرموز اللاتينية تبقى Mono */
 .num,.tx-ref,[style*="IBM Plex Mono"]{font-family:'IBM Plex Mono',monospace !important}
+
+/* ===== STAGE TRACKER ===== */
+.stages{display:flex;align-items:center;gap:0;margin:12px 0 6px;padding:0 2px}
+.stg{flex:1;display:flex;flex-direction:column;align-items:center;position:relative;cursor:pointer}
+.stg .dot{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:12px;font-weight:800;background:rgba(255,255,255,.06);border:2px solid var(--stroke);color:var(--dim);
+  transition:.3s cubic-bezier(.34,1.56,.64,1);z-index:2}
+.stg .lbl{font-size:9px;color:var(--dim);margin-top:5px;font-weight:700;text-align:center;transition:.3s}
+.stg .line{position:absolute;top:13px;right:50%;width:100%;height:2px;background:var(--stroke);z-index:1;transition:.4s}
+.stg:first-child .line{display:none}
+.stg.done .dot{background:linear-gradient(135deg,#3DDC97,#2BB77E);border-color:#3DDC97;color:#0A0B1A}
+.stg.done .lbl{color:#3DDC97}
+.stg.done .line{background:#3DDC97}
+.stg.active .dot{background:linear-gradient(135deg,var(--acc),var(--accD));border-color:var(--acc2);color:#fff;
+  box-shadow:0 0 0 4px rgba(139,114,255,.2);animation:stgPulse 1.8s infinite}
+.stg.active .lbl{color:var(--acc2)}
+@keyframes stgPulse{0%,100%{box-shadow:0 0 0 4px rgba(139,114,255,.2)}50%{box-shadow:0 0 0 7px rgba(139,114,255,.05)}}
 </style>
 </head>
 <body>
@@ -1925,6 +1942,7 @@ function render(){
           <span>الربح <b class="${t.pUsdt>=0?'green':'red'}">${fmt(t.pUsdt)} $</b></span>
         </div>
         <div class="tx-mid"><span>${t.contactName||t.name} · <b>${t.phone}</b></span></div>
+        ${stageBar(t)}
         <div class="tx-acts">
           ${t.status==='wait'?`<button class="btn btn-gold btn-sm" onclick="setSt('${t.ref}','conf')">تأكيد AOA</button>`:''}
           ${t.status==='conf'?`<button class="btn btn-gold btn-sm" onclick="setSt('${t.ref}','paid')">تم دفع Bankily</button>`:''}
@@ -1947,6 +1965,7 @@ function render(){
           <span>الربح <b class="${!t.rSell?'':(t.profit>=0?'green':'red')}">${t.rSell?fmt(t.profit,0)+' '+ccy:'—'}</b></span>
         </div>
         ${(t.contactName||t.note!=='—')?`<div class="tx-mid"><span>${t.contactName||''}${t.contactName&&t.note!=='—'?' · ':''}${t.note!=='—'?t.note:''}</span></div>`:''}
+        ${stageBar(t)}
         <div class="tx-acts">
           ${t.status==='wait'?`<button class="btn btn-gold btn-sm" onclick="sellTrade('${t.ref}')">تسجيل البيع</button>`:''}
           ${t.pay&&t.pay!=='settled'?`<button class="btn btn-gold btn-sm" onclick="addPayment('${t.ref}')">دفعة (متبقٍ ${fmt(remaining(t),0)})</button>`:''}
@@ -1963,6 +1982,7 @@ function render(){
           <span>الفاتورة <b>${fmt(t.invAmt,0)} ${t.invCcy}</b></span>
           <span>المطلوب <b class="gold">${fmt(t.due,0)} ${CCYI[t.payCcy]}</b></span>
         </div>
+        ${stageBar(t)}
         <div class="tx-acts">
           <button class="btn btn-line btn-sm" onclick="sendInvoice('${t.ref}')">🧾 فاتورة</button>
           <button class="btn btn-line btn-sm" onclick="delTx('${t.ref}')">حذف</button>
@@ -1978,6 +1998,7 @@ function render(){
           <span>${t.count} إيصال</span>
           ${t.note?`<span style="color:var(--dim)">${t.note}</span>`:''}
         </div>
+        ${stageBar(t)}
         <div class="tx-acts">
           ${t.link?`<button class="btn btn-line btn-sm" onclick="window.open('${t.link}','_blank')">🔗 المعاملة</button>`:''}
           <button class="btn btn-line btn-sm" onclick="sendInvoice('${t.ref}')">🧾 فاتورة</button>
@@ -1996,6 +2017,7 @@ function render(){
           ${t.buyRate?`<span>الربح <b class="${(t.spread||0)>=0?'green':'red'}">${fmt(t.profitOld||0,0)} قديمة</b></span>`:''}
           ${Math.abs(t.diff)>=1?`<span><b class="${t.diff<0?'red':'gold'}">${t.diff<0?'ناقص':'زائد'} ${fmt(Math.abs(t.diff),0)} Kz</b></span>`:''}
         </div>
+        ${stageBar(t)}
         <div class="tx-acts">
           <button class="btn btn-line btn-sm" onclick="sendInvoice('${t.ref}')">🧾 فاتورة</button>
           <button class="btn btn-line btn-sm" onclick="delTx('${t.ref}')">حذف</button>
@@ -2011,6 +2033,7 @@ function render(){
           <span><b class="${t.pay==='owed_us'?'green':'red'}">${fmt(t.amount,0)} ${CCYI[t.ccy]}</b></span>
           ${t.note?`<span style="color:var(--dim)">${t.note}</span>`:''}
         </div>
+        ${stageBar(t)}
         <div class="tx-acts">
           ${!settled?`<button class="btn btn-gold btn-sm" onclick="addPayment('${t.ref}')">دفعة (متبقٍ ${fmt(remaining(t),0)})</button>`:''}
           <button class="btn btn-line btn-sm" onclick="delTx('${t.ref}')">حذف</button>
@@ -3550,6 +3573,43 @@ function renderDebts(){
 }
 
 /* ================= HISTORY ================= */
+
+/* ================= STAGE TRACKER ================= */
+const STAGES=[
+  {k:'req',lbl:'طلب',ic:'1'},
+  {k:'pay',lbl:'دفع',ic:'2'},
+  {k:'exec',lbl:'تحويل',ic:'3'},
+  {k:'done',lbl:'مكتمل',ic:'✓'}
+];
+/* خريطة status القديمة → مرحلة */
+function txStageIdx(t){
+  if(t.stage){const i=STAGES.findIndex(s=>s.k===t.stage);if(i>=0)return i;}
+  /* اشتقاق من status القديم */
+  if(t.status==='paid')return 3;
+  if(t.status==='conf')return 2;
+  if(t.status==='wait')return 1;
+  return 1;
+}
+function stageBar(t){
+  const cur=txStageIdx(t);
+  return `<div class="stages">`+STAGES.map((s,i)=>{
+    const cls=i<cur?'done':(i===cur?'active':'');
+    return `<div class="stg ${cls}" onclick="setStage('${t.ref}',${i})">
+      <div class="line"></div>
+      <div class="dot">${i<cur?'✓':s.ic}</div>
+      <div class="lbl">${s.lbl}</div>
+    </div>`;
+  }).join('')+`</div>`;
+}
+function setStage(ref,idx){
+  const t=findTxAnywhere(ref);if(!t)return;
+  t.stage=STAGES[idx].k;
+  /* مزامنة status القديم */
+  t.status=idx>=3?'paid':(idx>=2?'conf':'wait');
+  persist();render();
+  toast('المرحلة: '+STAGES[idx].lbl);
+}
+
 function txSummary(t){
   if(t.type==='bridge')return{info:(t.contactName||t.name||'')+' · '+fmt((t.payout!=null?t.payout:t.mru)||0,0)+' '+CCYI[t.toC||'MRU'],p:fmt(t.pUsdt||0)+' $'};
   if(isTrade(t.type))return{info:fmt(t.qty||0)+' '+(t.base||'$')+' @ '+t.rBuy+(t.rSell?'→'+t.rSell:''),p:t.rSell?fmt(t.profit,0)+' '+CCYI[trQ(t)]:'مفتوحة'};
