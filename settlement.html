@@ -2283,11 +2283,11 @@ async function genReport(){
   }).join('');
   const stage=$('pdfStage');
   stage.innerHTML=`
-  <div style="width:794px;min-height:1123px;display:flex;flex-direction:column;background:#fff;font-family:'Tajawal','IBM Plex Sans Arabic'">
+  <div style="width:794px;min-height:1123px;display:flex;flex-direction:column;background:#fff;font-family:'Cairo','Tajawal',sans-serif;direction:rtl">
     <div style="background:linear-gradient(135deg,#2E2758,#1C1D3C 60%,#15172E);padding:30px 36px;display:flex;justify-content:space-between;align-items:center">
       <div style="display:flex;align-items:center;gap:16px">${invLogoSVG()}
         <div><div style="color:#fff;font-size:23px;font-weight:800;font-family:'IBM Plex Mono'">ARKAN <span style="color:#A78BFF">SETTLEMENT</span></div>
-        <div style="color:#8B8FA8;font-size:12px;letter-spacing:2.5px;margin-top:4px;font-family:'IBM Plex Mono'">DAILY REPORT — تقرير يومي</div></div>
+        <div style="color:#8B8FA8;font-size:12px;margin-top:4px"><span style="letter-spacing:2.5px;font-family:'IBM Plex Mono'">DAILY REPORT</span> <span style="font-family:'Cairo',sans-serif;font-weight:700">— تقرير يومي</span></div></div>
       </div>
       <div style="text-align:left"><div style="color:#A78BFF;font-size:20px;font-weight:800;font-family:'IBM Plex Mono'">${new Date().toLocaleDateString('en-GB')}</div>
       <div style="color:#8B8FA8;font-size:13px;margin-top:4px;font-family:'IBM Plex Mono'">${txs.length} عملية</div></div>
@@ -2320,9 +2320,12 @@ async function genReport(){
       <span>WhatsApp 36295050 · ARKAN INTERNATIONAL TRADING</span><span>ARKAN SETTLEMENT FLOW</span>
     </div>
   </div>`;
-  try{await document.fonts.ready;}catch(e){}
-  await new Promise(r=>setTimeout(r,200));
-  const canvas=await html2canvas(stage,{scale:2.5,backgroundColor:'#ffffff',width:794});
+  try{
+    await Promise.all([document.fonts.load("700 16px Cairo"),document.fonts.load("800 16px Cairo")]);
+    await document.fonts.ready;
+  }catch(e){}
+  await new Promise(r=>setTimeout(r,350));
+  const canvas=await html2canvas(stage,{scale:2.5,backgroundColor:'#ffffff',width:794,useCORS:true});
   const doc=new jspdf.jsPDF('p','mm','a4');
   let iw=210,ih=canvas.height*210/canvas.width;
   if(ih>297){ih=297;iw=canvas.width*297/canvas.height;}
