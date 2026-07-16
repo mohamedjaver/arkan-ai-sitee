@@ -173,11 +173,20 @@ footer{margin-top:56px;border-top:1px solid var(--line-2);
   padding:26px 22px calc(30px + env(safe-area-inset-bottom));text-align:center}
 footer .fnote{font-family:'Space Grotesk',sans-serif;font-size:12px;letter-spacing:2px;color:var(--dim2)}
 footer .fsub{font-size:11.5px;color:var(--dim2);margin-top:7px;font-family:'Tajawal',sans-serif}
-.ops{display:inline-flex;align-items:center;gap:6px;margin-top:16px;
-  font-size:11px;color:var(--dim2);padding:6px 12px;border:1px solid var(--line-2);
-  border-radius:999px;transition:color .3s,border-color .3s}
-.ops:hover{color:var(--gold);border-color:rgba(232,194,74,.4)}
-.ops svg{width:12px;height:12px}
+.ops{display:inline-flex;align-items:center;gap:8px;margin-top:18px;
+  font-family:'Tajawal',sans-serif;font-weight:800;font-size:13.5px;color:var(--gold-l);
+  padding:11px 20px;border:1.5px solid rgba(232,194,74,.45);border-radius:999px;
+  background:linear-gradient(180deg,rgba(232,194,74,.10),rgba(232,194,74,.02));
+  box-shadow:0 8px 22px -12px rgba(232,194,74,.5);
+  transition:color .3s,border-color .3s,box-shadow .3s,transform .2s}
+.ops:hover{color:var(--ink);border-color:var(--gold);
+  background:linear-gradient(180deg,var(--gold-l),var(--gold));
+  box-shadow:0 12px 28px -12px rgba(232,194,74,.7);transform:translateY(-2px)}
+.ops svg{width:15px;height:15px}
+.ops .badge{font-family:'Space Grotesk',sans-serif;font-size:9px;font-weight:700;
+  letter-spacing:1px;padding:2px 7px;border-radius:999px;
+  background:rgba(232,194,74,.18);color:var(--gold-l)}
+.ops:hover .badge{background:rgba(5,7,14,.15);color:var(--ink)}
 
 /* ===== load animation ===== */
 .rise{animation:rise .8s cubic-bezier(.2,.8,.2,1) forwards}
@@ -281,9 +290,10 @@ footer .fsub{font-size:11.5px;color:var(--dim2);margin-top:7px;font-family:'Taja
 <footer>
   <div class="fnote grotesk">ARKAN INTERNATIONAL TRADING</div>
   <div class="fsub">الصرافة الرقمية · أنظمة التداول · موريتانيا · أنغولا</div>
-  <a class="ops" href="settlement.html" aria-label="لوحة التشغيل الخاصة">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
-    لوحة التشغيل</a>
+  <a class="ops" href="settlement.html" aria-label="لوحة التشغيل والتسوية — خاصة">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+    لوحة التشغيل والتسوية
+    <span class="badge">خاص</span></a>
 </footer>
 
 <script>
