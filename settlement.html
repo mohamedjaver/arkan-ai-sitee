@@ -3977,54 +3977,56 @@ async function genStatusImage(){
   if(!valid.length){toast('سعّر عملة أولًا');return;}
   toast('جارٍ إنشاء صورة الحالة...');
   const today=new Date().toLocaleDateString('en-GB');
+  const NAMES={AOA:'كوانزا',MRU:'أوقية',CNY:'يوان',AED:'درهم إماراتي',MAD:'درهم مغربي',USD:'دولار',EUR:'يورو',USDT:'تيثر',SAR:'ريال',TRY:'ليرة',EGP:'جنيه'};
   const priceRows=valid.map(x=>`
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 22px;border-bottom:1px solid rgba(255,255,255,.08)">
-      <div style="display:flex;align-items:center;gap:10px">
-        <span style="font-size:22px">${flagOf(x.ccy)}</span>
-        <span style="font-family:'IBM Plex Mono';font-size:20px;font-weight:800;color:#fff">${x.ccy}</span>
+    <div style="display:flex;flex-direction:row-reverse;justify-content:space-between;align-items:center;padding:16px 24px;border-bottom:1px solid rgba(255,255,255,.08)">
+      <div style="text-align:right">
+        <div style="font-family:'IBM Plex Mono';font-size:22px;font-weight:800;color:#fff;direction:ltr">${x.ccy}</div>
+        <div style="font-size:12px;color:#8B8FA8">${NAMES[x.ccy]||''}</div>
       </div>
-      <div style="text-align:left">
-        <div style="font-family:'IBM Plex Mono';font-size:22px;font-weight:800;color:#FFC94D">${x.w} <span style="font-size:13px;color:#8B8FA8">جملة</span></div>
-        <div style="font-family:'IBM Plex Mono';font-size:15px;color:#B9A8FF">${x.r} <span style="font-size:11px;color:#8B8FA8">تجزئة</span></div>
+      <div style="text-align:left;direction:ltr">
+        <div style="font-family:'IBM Plex Mono';font-size:24px;font-weight:800;color:#FFC94D">${x.w}</div>
+        <div style="font-family:'IBM Plex Mono';font-size:15px;color:#B9A8FF">${x.r}</div>
       </div>
     </div>`).join('');
   const stage=$('pdfStage');
   stage.innerHTML=`
-  <div style="width:600px;height:1067px;background:linear-gradient(165deg,#2E2758 0%,#1C1D3C 40%,#0F1130 100%);display:flex;flex-direction:column;font-family:'Cairo',sans-serif;position:relative;overflow:hidden">
-    <div style="position:absolute;top:-80px;right:-80px;width:300px;height:300px;background:radial-gradient(circle,rgba(139,114,255,.25),transparent 70%);border-radius:50%"></div>
-    <div style="padding:50px 40px 0;text-align:center;z-index:2">
-      <div style="display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:8px">
+  <div style="width:600px;height:1067px;background:linear-gradient(165deg,#2E2758 0%,#1C1D3C 40%,#0F1130 100%);display:flex;flex-direction:column;font-family:'Cairo',sans-serif;position:relative;overflow:hidden;direction:rtl">
+    <div style="position:absolute;top:-80px;left:-80px;width:300px;height:300px;background:radial-gradient(circle,rgba(139,114,255,.25),transparent 70%);border-radius:50%"></div>
+    <div style="padding:54px 40px 0;text-align:center;z-index:2">
+      <div style="display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:10px">
         ${invLogoSVG()}
-        <div style="font-family:'IBM Plex Mono';font-size:32px;font-weight:800;color:#fff">ARKAN</div>
+        <div style="font-family:'IBM Plex Mono';font-size:34px;font-weight:800;color:#fff">ARKAN</div>
       </div>
-      <div style="font-size:17px;color:#B9A8FF;font-weight:700;letter-spacing:0">أسعار الصرف اليوم</div>
-      <div style="font-family:'IBM Plex Mono';font-size:14px;color:#8B8FA8;margin-top:4px">${today}</div>
+      <div style="font-size:19px;color:#B9A8FF;font-weight:800">أسعار الصرف اليوم</div>
+      <div style="font-family:'IBM Plex Mono';font-size:15px;color:#8B8FA8;margin-top:5px">${today}</div>
     </div>
-    <div style="margin:34px 30px 0;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:24px;overflow:hidden;backdrop-filter:blur(10px);z-index:2">
-      <div style="display:flex;justify-content:space-between;padding:14px 22px;background:rgba(139,114,255,.15)">
-        <span style="font-size:14px;color:#B9A8FF;font-weight:800">العملة</span>
-        <span style="font-size:14px;color:#B9A8FF;font-weight:800">جملة / تجزئة (مقابل الأوقية)</span>
+    <div style="margin:36px 30px 0;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:24px;overflow:hidden;z-index:2">
+      <div style="display:flex;flex-direction:row-reverse;justify-content:space-between;padding:16px 24px;background:rgba(139,114,255,.15)">
+        <span style="font-size:15px;color:#B9A8FF;font-weight:800">العملة</span>
+        <span style="font-size:13px;color:#B9A8FF;font-weight:800;direction:ltr">جملة / تجزئة</span>
       </div>
       ${priceRows}
+      <div style="padding:12px 24px;text-align:center;font-size:12px;color:#8B8FA8">الأسعار مقابل الأوقية · جملة (أصفر) / تجزئة (بنفسجي)</div>
     </div>
-    <div style="margin-top:auto;padding:30px 40px 46px;text-align:center;z-index:2">
-      <div style="background:linear-gradient(135deg,#25D366,#128C7E);border-radius:16px;padding:16px;margin-bottom:16px">
-        <div style="font-size:15px;color:#fff;font-weight:800">📲 اطلب تحويلك عبر واتساب</div>
-        <div style="font-family:'IBM Plex Mono';font-size:22px;color:#fff;font-weight:800;margin-top:4px;direction:ltr">+222 36 29 50 50</div>
+    <div style="margin-top:auto;padding:30px 40px 48px;text-align:center;z-index:2">
+      <div style="background:linear-gradient(135deg,#25D366,#128C7E);border-radius:18px;padding:18px">
+        <div style="font-size:16px;color:#fff;font-weight:800">📲 اطلب تحويلك عبر واتساب</div>
+        <div style="font-family:'IBM Plex Mono';font-size:24px;color:#fff;font-weight:800;margin-top:5px;direction:ltr">+222 36 29 50 50</div>
       </div>
-      <div style="font-family:'IBM Plex Mono';font-size:11px;color:#8B8FA8">ARKAN INTERNATIONAL TRADING</div>
+      <div style="font-family:'IBM Plex Mono';font-size:12px;color:#8B8FA8;margin-top:16px">ARKAN INTERNATIONAL TRADING</div>
     </div>
   </div>`;
   try{await Promise.all([document.fonts.load("800 16px Cairo"),document.fonts.ready]);}catch(e){}
-  await new Promise(r=>setTimeout(r,300));
-  const canvas=await html2canvas(stage,{scale:2,backgroundColor:null,width:600,height:1067});
+  await new Promise(r=>setTimeout(r,350));
+  const canvas=await html2canvas(stage,{scale:2,backgroundColor:'#0F1130',width:600,height:1067,windowWidth:600});
   stage.innerHTML='';
   const img=canvas.toDataURL('image/png');
   $('mdlTitle').textContent='صورة الحالة';
   $('mdlBody').innerHTML=`<div class="card">
     <img src="${img}" style="width:100%;border-radius:16px;display:block">
     <button class="btn btn-gold" style="margin-top:12px" onclick="dlStatusImg('${'ARKAN_rates_'+today.replace(/\//g,'-')}')">💾 حفظ الصورة (للحالة)</button>
-    <div style="font-size:12px;color:var(--dim);margin-top:10px;text-align:center;line-height:1.7">احفظ الصورة ← افتح واتساب ← الحالة ← اختر الصورة.<br>خطوة واحدة يوميًا.</div>
+    <div style="font-size:12px;color:var(--dim);margin-top:10px;text-align:center;line-height:1.7">احفظ الصورة ← افتح واتساب ← الحالة ← اختر الصورة.</div>
   </div>`;
   window._statusImg=img;
   $('modal').style.display='block';window.scrollTo(0,0);
