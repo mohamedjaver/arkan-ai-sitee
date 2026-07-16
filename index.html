@@ -2,710 +2,202 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ARKAN AI Trading Systems — تداول بعين المؤسسات</title>
-<meta name="description" content="مؤشرات تداول مؤسساتية مبنية على تدفق الأوامر وذكاء السيولة. دفع USDT أو تواصل عبر Telegram.">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>ARKAN INTERNATIONAL TRADING — مجموعة أركان الدولية</title>
+<meta name="description" content="مجموعة أركان الدولية للتجارة — صرافة العملات والتسوية الدولية، وأنظمة تداول مؤسساتية. نواكشوط · لواندا · الصين">
+<link rel="icon" href="arkan-icon-512.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600;700&family=Cairo:wght@500;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#04060C; --bg-2:#070B14; --panel:#0A1020; --panel-2:#0E1528;
-  --line:rgba(124,140,255,.14); --line-2:rgba(255,255,255,.055);
-  --gold:#E8C24A; --gold-l:#F5DE8B; --cyan:#3DE0D0; --blue:#5B8DEF; --violet:#7C6CFF;
-  --red:#FF4D5E; --green:#1DD17F;
-  --txt:#EEF1FA; --muted:#8089A6; --muted-2:#4C5570;
-  --max:1220px;
+  --bg:#05060D; --bg2:#0A0C18; --bg3:#0F1130;
+  --gold:#E8C24A; --gold-l:#F5DE8B;
+  --violet:#8B72FF; --violet-l:#B9A8FF; --violet-d:#5B3FD1;
+  --cyan:#3DE0D0;
+  --txt:#EDEAFB; --dim:#8B8FA8; --stroke:rgba(255,255,255,.09);
 }
-*{margin:0;padding:0;box-sizing:border-box}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html{scroll-behavior:smooth}
-body{background:var(--bg);color:var(--txt);font-family:'IBM Plex Sans Arabic',sans-serif;line-height:1.7;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+body{background:var(--bg);color:var(--txt);font-family:'Cairo',sans-serif;line-height:1.7;overflow-x:hidden;-webkit-font-smoothing:antialiased}
 .mono{font-family:'IBM Plex Mono',monospace}
 .en{font-family:'Space Grotesk',sans-serif;direction:ltr;unicode-bidi:isolate}
-a{color:inherit;text-decoration:none}
-.wrap{max-width:var(--max);margin:0 auto;padding:0 26px}
-button{font-family:inherit;cursor:pointer}
+a{text-decoration:none;color:inherit}
+img{display:block;max-width:100%}
 
-/* ===== unique animated background ===== */
-#bgfx{position:fixed;inset:0;z-index:0;pointer-events:none}
-.bg-glow{position:fixed;inset:0;z-index:0;pointer-events:none;
-  background:radial-gradient(ellipse 70% 50% at 50% -5%,rgba(91,141,239,.16),transparent 55%),radial-gradient(ellipse 50% 40% at 85% 15%,rgba(61,224,208,.08),transparent 50%),radial-gradient(ellipse 50% 40% at 10% 25%,rgba(124,108,255,.08),transparent 50%)}
-.scanline{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.5;
-  background:repeating-linear-gradient(to bottom,transparent 0 3px,rgba(0,0,0,.18) 3px 4px)}
+/* ===== BACKGROUND FIELD ===== */
+.field{position:fixed;inset:0;z-index:0;overflow:hidden}
+.field::before{content:'';position:absolute;top:-20%;right:-10%;width:60vw;height:60vw;
+  background:radial-gradient(circle,rgba(139,114,255,.14),transparent 65%);border-radius:50%}
+.field::after{content:'';position:absolute;bottom:-25%;left:-15%;width:65vw;height:65vw;
+  background:radial-gradient(circle,rgba(232,194,74,.10),transparent 65%);border-radius:50%}
+.grid-lines{position:absolute;inset:0;background-image:
+  linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),
+  linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px);
+  background-size:64px 64px;mask-image:radial-gradient(ellipse 80% 60% at 50% 20%,#000,transparent)}
 
-/* ===== countdown bar ===== */
-.cdbar{position:relative;z-index:30;background:linear-gradient(90deg,rgba(124,108,255,.16),rgba(61,224,208,.12));border-bottom:1px solid var(--line);text-align:center;padding:9px 16px;font-size:13.5px;display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap}
-.cdbar .lbl{color:var(--txt)} .cdbar .lbl b{color:var(--gold-l)}
-.cd{display:flex;gap:7px;font-family:'IBM Plex Mono'}
-.cd .u{background:rgba(0,0,0,.35);border:1px solid var(--line);border-radius:6px;padding:3px 9px;font-size:13px;min-width:38px;text-align:center}
-.cd .u span{display:block;font-size:8px;color:var(--muted-2);letter-spacing:.08em}
+.wrap{position:relative;z-index:2;max-width:1080px;margin:0 auto;padding:0 22px}
 
-/* ===== nav ===== */
-nav{position:sticky;top:0;z-index:40;transition:.3s;border-bottom:1px solid transparent}
-nav.scrolled{background:rgba(4,6,12,.85);backdrop-filter:blur(16px);border-bottom:1px solid var(--line)}
-.nav-in{display:flex;align-items:center;justify-content:space-between;height:70px}
-.logo{display:flex;align-items:center;gap:11px;font-weight:700}
-.logo-mark{width:36px;height:36px;flex-shrink:0;filter:drop-shadow(0 0 10px rgba(232,194,74,.4))}
-.logo-mark svg{width:100%;height:100%;display:block}
-.logo-txt{font-family:'Space Grotesk';letter-spacing:.04em;font-size:18px}
-.logo-txt b{color:var(--gold)}
-.logo-sub{font-size:9px;letter-spacing:.34em;color:var(--muted-2);margin-top:-2px;font-family:'Space Grotesk'}
-.nav-links{display:flex;gap:28px;align-items:center}
-.nav-links a{font-size:14px;color:var(--muted);transition:.2s}.nav-links a:hover{color:var(--txt)}
-.nav-cta{padding:10px 20px;border:1px solid var(--gold);color:var(--gold)!important;border-radius:9px;font-size:13.5px;font-weight:600;transition:.25s}
-.nav-cta:hover{background:var(--gold);color:#0a0a0a!important;box-shadow:0 0 22px rgba(232,194,74,.4)}
-.burger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:6px}
-.burger span{width:24px;height:2px;background:var(--txt);transition:.3s}
+/* ===== NAV ===== */
+nav{display:flex;align-items:center;justify-content:space-between;padding:26px 22px;position:relative;z-index:3}
+.logo{display:flex;align-items:center;gap:11px}
+.logo img{width:34px;height:34px;border-radius:9px}
+.logo-txt{font-family:'Space Grotesk';font-weight:700;letter-spacing:.03em;font-size:18px}
+.logo-txt b{color:var(--gold-l);font-weight:700}
+.navlink{font-size:13px;color:var(--dim);font-weight:600}
 
-/* ===== hero ===== */
-.hero{position:relative;z-index:1;padding:90px 0 80px}
-.hero-grid{display:grid;grid-template-columns:1.08fr .92fr;gap:50px;align-items:center}
-.eyebrow{display:inline-flex;align-items:center;gap:9px;font-family:'IBM Plex Mono';font-size:12px;letter-spacing:.1em;color:var(--cyan);margin-bottom:24px;padding:7px 15px;border:1px solid rgba(61,224,208,.25);border-radius:100px;background:rgba(61,224,208,.05)}
-.eyebrow .dot{width:7px;height:7px;border-radius:50%;background:var(--cyan);box-shadow:0 0 10px var(--cyan);animation:pulse 1.8s infinite}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
-.hero h1{font-size:clamp(38px,5.4vw,66px);line-height:1.06;font-weight:700;letter-spacing:-.01em;margin-bottom:22px}
-.hero h1 .g{background:linear-gradient(120deg,var(--gold-l),var(--gold) 50%,var(--cyan));-webkit-background-clip:text;background-clip:text;color:transparent}
-.hero p.lead{font-size:17.5px;color:var(--muted);max-width:500px;margin-bottom:18px}
-.proof{display:flex;align-items:center;gap:12px;margin-bottom:30px;font-size:13.5px;color:var(--muted)}
-.proof .av{display:flex} .proof .av i{width:30px;height:30px;border-radius:50%;border:2px solid var(--bg);margin-right:-9px;background:linear-gradient(135deg,var(--violet),var(--cyan))}
-.proof b{color:var(--txt)}
-.hero-cta{display:flex;gap:13px;flex-wrap:wrap;margin-bottom:34px}
-.btn{display:inline-flex;align-items:center;gap:9px;padding:15px 28px;border-radius:11px;font-size:15px;font-weight:600;transition:.28s;border:1px solid transparent}
-.btn-usdt{background:linear-gradient(120deg,var(--gold-l),var(--gold));color:#0a0a0a}
-.btn-usdt:hover{box-shadow:0 0 32px rgba(232,194,74,.45);transform:translateY(-2px)}
-.btn-tg{background:#29A9E1;color:#fff}.btn-tg:hover{box-shadow:0 0 28px rgba(41,169,225,.4);transform:translateY(-2px)}
-.btn-ghost{border-color:var(--line);color:var(--txt);background:rgba(255,255,255,.02)}.btn-ghost:hover{border-color:var(--cyan);color:var(--cyan)}
-.hero-stats{display:flex;gap:30px}
-.hero-stats .s b{font-family:'IBM Plex Mono';font-size:23px;color:var(--txt);display:block;font-weight:600}
-.hero-stats .s b .u{color:var(--cyan);font-size:16px}
-.hero-stats .s span{font-size:12px;color:var(--muted-2)}
+/* ===== HERO ===== */
+.hero{padding:70px 22px 10px;text-align:center;position:relative}
+.eyebrow{display:inline-flex;align-items:center;gap:9px;font-family:'IBM Plex Mono';font-size:11.5px;letter-spacing:.14em;
+  color:var(--gold-l);margin-bottom:26px;padding:8px 18px;border:1px solid rgba(232,194,74,.25);border-radius:100px;
+  background:rgba(232,194,74,.05)}
+.hero h1{font-family:'Space Grotesk';font-weight:700;font-size:clamp(34px,7vw,58px);line-height:1.12;letter-spacing:-.01em}
+.hero h1 .g{background:linear-gradient(120deg,var(--violet-l),var(--violet) 45%,var(--gold-l));
+  -webkit-background-clip:text;background-clip:text;color:transparent}
+.hero p{margin:22px auto 0;max-width:520px;color:var(--dim);font-size:16px}
+.hero .cities{margin-top:18px;font-family:'IBM Plex Mono';font-size:11px;letter-spacing:.12em;color:#5c6080}
 
-/* ===== strategy result card (LuxAlgo-style proof) ===== */
-.scard{background:linear-gradient(165deg,var(--panel),var(--bg-2));border:1px solid var(--line);border-radius:18px;padding:22px;box-shadow:0 40px 110px rgba(0,0,0,.6);position:relative;overflow:hidden}
-.scard::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 70% 40% at 70% 0%,rgba(91,141,239,.1),transparent 60%);pointer-events:none}
-.scard-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;position:relative}
-.scard-head .agent{display:flex;align-items:center;gap:10px}
-.scard-head .agent .ai{width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,var(--violet),var(--cyan));display:grid;place-items:center;font-family:'Space Grotesk';font-weight:700;font-size:13px;color:#06070d}
-.scard-head .agent b{font-size:13.5px;font-family:'Space Grotesk'}
-.scard-head .live{font-family:'IBM Plex Mono';font-size:10.5px;color:var(--cyan);display:flex;align-items:center;gap:6px}
-.scard-head .live .d{width:6px;height:6px;border-radius:50%;background:var(--cyan);box-shadow:0 0 8px var(--cyan);animation:pulse 1.5s infinite}
-.scard .symbol{display:flex;align-items:center;gap:8px;font-family:'IBM Plex Mono';font-size:12.5px;color:var(--muted);margin-bottom:6px}
-.scard .symbol .badge{background:var(--red);color:#fff;font-size:9px;padding:2px 6px;border-radius:4px;font-weight:600}
-.scard .chartbox{height:120px;border-radius:11px;background:#070b16;border:1px solid var(--line-2);margin-bottom:14px;position:relative;overflow:hidden}
-.scard .chartbox canvas{width:100%;height:100%;display:block}
-.scard .metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
-.scard .metrics .m{background:rgba(255,255,255,.02);border:1px solid var(--line-2);border-radius:9px;padding:9px 8px;text-align:center}
-.scard .metrics .m span{font-size:9px;color:var(--muted-2);display:block;letter-spacing:.03em;margin-bottom:3px}
-.scard .metrics .m b{font-family:'IBM Plex Mono';font-size:13.5px}
-.scard .metrics .m b.up{color:var(--green)}.scard .metrics .m b.gd{color:var(--gold-l)}.scard .metrics .m b.dn{color:var(--red)}.scard .metrics .m b.bl{color:var(--blue)}
+/* ===== SIGNATURE: dual data stream ===== */
+.streams{position:relative;height:64px;margin:44px auto 0;max-width:640px;overflow:hidden;
+  mask-image:linear-gradient(90deg,transparent,#000 12%,#000 88%,transparent)}
+.streamRow{display:flex;gap:34px;white-space:nowrap;font-family:'IBM Plex Mono';font-size:13px;font-weight:600;
+  position:absolute;top:0}
+.streamRow.a{color:var(--violet-l);opacity:.55;animation:streamL 26s linear infinite;top:6px}
+.streamRow.b{color:var(--gold-l);opacity:.5;animation:streamR 30s linear infinite;top:34px}
+@keyframes streamL{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+@keyframes streamR{from{transform:translateX(-50%)}to{transform:translateX(0)}}
+.streams::before{content:'';position:absolute;left:50%;top:0;bottom:0;width:1px;
+  background:linear-gradient(180deg,transparent,rgba(255,255,255,.15),transparent);transform:translateX(-50%)}
 
-/* ===== sections ===== */
-.sec{position:relative;z-index:1;padding:80px 0}
-.sec-head{margin-bottom:46px;text-align:center}
-.sec-eyebrow{font-family:'IBM Plex Mono';font-size:12px;letter-spacing:.18em;color:var(--cyan);margin-bottom:12px}
-.sec-title{font-size:clamp(28px,3.6vw,42px);font-weight:700;letter-spacing:-.01em;line-height:1.15}
-.sec-desc{color:var(--muted);max-width:560px;margin:14px auto 0;font-size:16px}
+/* ===== DIVISIONS ===== */
+.divhead{text-align:center;margin:76px 0 34px}
+.divhead .k{font-family:'IBM Plex Mono';font-size:11px;letter-spacing:.16em;color:var(--dim)}
+.divhead h2{font-family:'Space Grotesk';font-size:24px;font-weight:600;margin-top:8px}
 
-/* indicators */
-.ind-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:22px}
-.ind{background:linear-gradient(160deg,var(--panel),var(--bg-2));border:1px solid var(--line-2);border-radius:16px;padding:28px;transition:.3s;position:relative;overflow:hidden}
-.ind::after{content:'';position:absolute;top:0;right:0;width:160px;height:160px;background:radial-gradient(circle at top right,rgba(232,194,74,.08),transparent 70%);pointer-events:none}
-.ind:hover{border-color:var(--line);transform:translateY(-4px);box-shadow:0 30px 70px rgba(0,0,0,.5)}
-.ind .tag{font-family:'IBM Plex Mono';font-size:10.5px;letter-spacing:.08em;color:var(--cyan);border:1px solid rgba(61,224,208,.25);padding:4px 10px;border-radius:6px;display:inline-block;margin-bottom:16px}
-.ind h3{font-family:'Space Grotesk';font-size:20px;font-weight:700;margin-bottom:9px}
-.ind p{color:var(--muted);font-size:14px;margin-bottom:18px;min-height:63px}
-.ind .feats{display:flex;flex-direction:column;gap:8px;margin-bottom:20px}
-.ind .feats .f{display:flex;align-items:center;gap:10px;font-size:13.5px}
-.ind .feats .f svg{flex-shrink:0;color:var(--gold)}
-.ind .ind-cta{display:flex;gap:9px}
-.ind .ind-cta a{flex:1;justify-content:center;padding:11px;font-size:13px}
+.divisions{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media(max-width:760px){.divisions{grid-template-columns:1fr}}
 
-/* pricing */
-.price-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;align-items:stretch}
-.plan{background:var(--panel);border:1px solid var(--line-2);border-radius:18px;padding:32px 28px;display:flex;flex-direction:column;position:relative;transition:.3s}
-.plan:hover{transform:translateY(-4px)}
-.plan.feat{border-color:var(--gold);background:linear-gradient(170deg,rgba(232,194,74,.06),var(--panel) 45%);box-shadow:0 30px 80px rgba(0,0,0,.5)}
-.plan .badge{position:absolute;top:-12px;right:28px;background:linear-gradient(120deg,var(--gold-l),var(--gold));color:#0a0a0a;font-size:11px;font-weight:700;padding:5px 14px;border-radius:100px}
-.plan h4{font-family:'Space Grotesk';font-size:14px;letter-spacing:.08em;color:var(--muted);margin-bottom:14px;text-transform:uppercase}
-.plan .price{display:flex;align-items:baseline;gap:6px;margin-bottom:5px}
-.plan .price .num{font-family:'IBM Plex Mono';font-size:44px;font-weight:600}
-.plan .price .cur{font-family:'IBM Plex Mono';font-size:17px;color:var(--muted)}
-.plan .price .old{font-family:'IBM Plex Mono';font-size:17px;color:var(--muted-2);text-decoration:line-through;margin-right:4px}
-.plan .per{font-size:13px;color:var(--muted-2)}
-.plan .note{font-size:12.5px;color:var(--muted-2);margin:6px 0 22px;min-height:18px}
-.plan ul{list-style:none;display:flex;flex-direction:column;gap:12px;margin-bottom:26px;flex:1}
-.plan ul li{display:flex;align-items:flex-start;gap:11px;font-size:14px}
-.plan ul li svg{flex-shrink:0;margin-top:4px;color:var(--cyan)}
-.plan ul li.off{color:var(--muted-2)}.plan ul li.off svg{color:var(--muted-2)}
-.plan .plan-cta{display:flex;flex-direction:column;gap:9px}
-.plan .plan-cta .btn{width:100%;justify-content:center;padding:13px}
+.dcard{position:relative;border-radius:26px;padding:34px 28px;overflow:hidden;
+  background:linear-gradient(160deg,rgba(255,255,255,.045),rgba(255,255,255,.012));
+  border:1px solid var(--stroke);backdrop-filter:blur(14px);transition:.3s cubic-bezier(.22,1,.36,1);
+  display:flex;flex-direction:column;min-height:300px}
+.dcard:hover{transform:translateY(-4px);border-color:rgba(255,255,255,.18)}
+.dcard .glow{position:absolute;top:-40%;left:-20%;width:70%;height:70%;border-radius:50%;filter:blur(50px);z-index:0;opacity:.5}
+.dcard.exch .glow{background:var(--violet)}
+.dcard.trad .glow{background:var(--cyan)}
+.dcard>*{position:relative;z-index:1}
+.dcard .k{font-family:'IBM Plex Mono';font-size:10.5px;letter-spacing:.14em;color:var(--dim);margin-bottom:14px}
+.dcard h3{font-family:'Space Grotesk';font-size:25px;font-weight:700;margin-bottom:10px}
+.dcard.exch h3{color:var(--violet-l)}
+.dcard.trad h3{color:var(--gold-l)}
+.dcard p{color:var(--dim);font-size:14.5px;flex:1}
+.mini-rates{margin:18px 0;display:flex;flex-direction:column;gap:7px}
+.mini-rates .r{display:flex;justify-content:space-between;align-items:center;font-family:'IBM Plex Mono';font-size:13px;
+  padding:9px 13px;background:rgba(0,0,0,.25);border-radius:10px;border:1px solid rgba(255,255,255,.06)}
+.mini-rates .r b{color:var(--gold-l)}
+.mini-chart{margin:18px 0;height:52px}
+.dbtn{display:inline-flex;align-items:center;gap:8px;margin-top:16px;padding:13px 22px;border-radius:13px;
+  font-weight:700;font-size:14px;width:fit-content;transition:.2s}
+.dcard.exch .dbtn{background:linear-gradient(135deg,var(--violet),var(--violet-d));color:#fff}
+.dcard.trad .dbtn{background:linear-gradient(135deg,var(--gold-l),var(--gold));color:#1a1400}
+.dbtn:active{transform:scale(.96)}
 
-/* trust strip */
-.trust{display:flex;justify-content:center;gap:40px;flex-wrap:wrap;padding:30px 0;border-top:1px solid var(--line-2);border-bottom:1px solid var(--line-2);margin-top:10px}
-.trust .t{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:13.5px}
-.trust .t svg{color:var(--cyan)}
+/* ===== CORPORATE STRIP ===== */
+.corp{margin:26px 0 0;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;
+  padding:22px 26px;border-radius:18px;border:1px solid var(--stroke);background:rgba(255,255,255,.02)}
+.corp .t{font-size:14.5px;color:var(--txt);font-weight:700}
+.corp .s{font-size:12.5px;color:var(--dim);margin-top:3px}
+.corp a{font-family:'IBM Plex Mono';font-size:12.5px;color:var(--violet-l);border:1px solid rgba(183,163,255,.3);
+  padding:9px 16px;border-radius:10px;white-space:nowrap}
 
-/* band */
-.band{position:relative;z-index:1}
-.band-in{background:linear-gradient(150deg,var(--panel-2),var(--bg-2));border:1px solid var(--line);border-radius:22px;padding:54px;text-align:center;position:relative;overflow:hidden}
-.band-in::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 50% 80% at 50% 0%,rgba(232,194,74,.1),transparent 60%)}
-.band-in h2{font-size:clamp(26px,3.4vw,38px);font-weight:700;margin-bottom:13px;position:relative}
-.band-in p{color:var(--muted);max-width:470px;margin:0 auto 28px;position:relative}
-.band-cta{display:flex;gap:13px;justify-content:center;flex-wrap:wrap;position:relative}
-
-/* footer */
-footer{position:relative;z-index:1;border-top:1px solid var(--line-2);padding:46px 0 30px;margin-top:70px}
-.foot-grid{display:flex;justify-content:space-between;gap:40px;flex-wrap:wrap;margin-bottom:28px}
-.foot-about{max-width:300px}.foot-about p{font-size:13px;color:var(--muted);margin-top:12px}
-.foot-links{display:flex;gap:50px;flex-wrap:wrap}
-.foot-col h6{font-size:12px;letter-spacing:.1em;color:var(--muted-2);margin-bottom:14px;font-family:'IBM Plex Mono'}
-.foot-col a{display:block;font-size:13.5px;color:var(--muted);margin-bottom:10px;transition:.2s}.foot-col a:hover{color:var(--gold)}
-.disclaimer{background:rgba(255,77,94,.05);border:1px solid rgba(255,77,94,.16);border-radius:12px;padding:16px 20px;margin-bottom:24px}
-.disclaimer p{font-size:12px;color:var(--muted);line-height:1.7}.disclaimer b{color:var(--red)}
-.foot-bottom{padding-top:22px;border-top:1px solid var(--line-2);display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px}
-.foot-bottom p{font-size:12px;color:var(--muted-2)}
-
-.reveal{opacity:0;transform:translateY(22px);transition:.7s cubic-bezier(.2,.7,.2,1)}.reveal.in{opacity:1;transform:none}
-
-/* ===== live ticker (Binance) ===== */
-.tickerbar{position:relative;z-index:31;background:rgba(4,6,12,.92);border-bottom:1px solid var(--line);height:42px;display:flex;align-items:center;overflow:hidden}
-.tickerbar .tlabel{flex-shrink:0;display:flex;align-items:center;gap:8px;padding:0 16px;height:100%;border-left:1px solid var(--line);font-family:'Space Grotesk';font-size:11.5px;letter-spacing:.12em;color:var(--gold);white-space:nowrap;background:linear-gradient(90deg,rgba(232,194,74,.07),transparent);z-index:2;direction:ltr}
-.tickerbar .tlabel .d{width:7px;height:7px;border-radius:50%;background:var(--cyan);box-shadow:0 0 9px var(--cyan);animation:pulse 1.6s infinite}
-.ttrack{display:flex;animation:tape 50s linear infinite;will-change:transform}
-.tickerbar:hover .ttrack{animation-play-state:paused}
-@keyframes tape{from{transform:translateX(0)}to{transform:translateX(50%)}}
-.tki{display:inline-flex;align-items:center;gap:9px;padding:0 20px;white-space:nowrap;font-family:'IBM Plex Mono';font-size:12.5px;border-left:1px solid var(--line-2);direction:ltr}
-.tki .s{color:var(--txt);font-weight:600}
-.tki .p{color:var(--muted)}
-.tki .c{font-weight:600;font-size:11.5px}
-.tki .c.up{color:var(--green)}.tki .c.dn{color:var(--red)}
-
-/* ===== price chip on indicator cards ===== */
-.ind .pfrom{display:flex;align-items:baseline;gap:7px;margin-bottom:16px}
-.ind .pfrom span{font-size:12px;color:var(--muted-2)}
-.ind .pfrom b{font-family:'IBM Plex Mono';font-size:22px;color:var(--gold-l)}
-.ind .pfrom small{font-size:11px;color:var(--muted-2)}
-
-/* ===== modals ===== */
-.overlay{position:fixed;inset:0;background:rgba(2,4,9,.82);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;z-index:100;padding:18px}
-.overlay.open{display:flex}
-.modal{background:linear-gradient(165deg,var(--panel),var(--bg-2));border:1px solid var(--line);border-radius:18px;width:100%;max-width:540px;max-height:92vh;overflow-y:auto;padding:28px;position:relative;box-shadow:0 40px 110px rgba(0,0,0,.7);animation:rise .25s ease}
-@keyframes rise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
-.mclose{position:absolute;top:14px;left:16px;color:var(--muted);font-size:20px;background:none;border:none;line-height:1}
-.mclose:hover{color:var(--txt)}
-.mtitle{font-family:'Space Grotesk';font-weight:700;font-size:18px;margin-bottom:4px;direction:ltr;text-align:right}
-.msub{font-size:13px;color:var(--muted);margin-bottom:22px}
-.pkg{border:1px solid var(--line-2);border-radius:13px;padding:17px;display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:12px;background:rgba(255,255,255,.015);transition:.25s}
-.pkg:hover{border-color:var(--line)}
-.pkg.best{border-color:var(--gold);background:linear-gradient(170deg,rgba(232,194,74,.06),transparent 60%)}
-.pkg .info b{font-size:14.5px;display:block}
-.pkg .info span{font-size:12px;color:var(--muted-2)}
-.pkg .tag{font-size:9.5px;background:linear-gradient(120deg,var(--gold-l),var(--gold));color:#0a0a0a;font-weight:700;border-radius:100px;padding:2px 9px;margin-right:7px;vertical-align:middle}
-.pkg .pr{font-family:'IBM Plex Mono';font-size:19px;font-weight:600;direction:ltr;white-space:nowrap}
-.pkg .pr small{font-size:10.5px;color:var(--muted-2)}
-.pkg .old{font-family:'IBM Plex Mono';font-size:12px;color:var(--muted-2);text-decoration:line-through;direction:ltr;text-align:left}
-.pkg .buy{background:linear-gradient(120deg,var(--gold-l),var(--gold));color:#0a0a0a;font-weight:700;font-size:13px;padding:10px 19px;border-radius:9px;border:none;white-space:nowrap;transition:.25s}
-.pkg .buy:hover{box-shadow:0 0 22px rgba(232,194,74,.4)}
-.paysum{background:rgba(255,255,255,.02);border:1px solid var(--line-2);border-radius:13px;padding:15px 17px;margin-bottom:18px;display:flex;justify-content:space-between;align-items:center;gap:10px}
-.paysum .what b{display:block;font-size:14px}.paysum .what span{font-size:11.5px;color:var(--muted-2)}
-.payamt{font-family:'IBM Plex Mono';font-size:21px;font-weight:600;color:var(--gold-l);direction:ltr;white-space:nowrap}
-.flabel{font-size:12px;color:var(--muted);margin:14px 0 7px}
-.cprow{display:flex;align-items:center;gap:10px;background:rgba(0,0,0,.4);border:1px solid var(--line-2);border-radius:10px;padding:12px 14px}
-.cprow code{font-family:'IBM Plex Mono';font-size:12.5px;color:var(--txt);word-break:break-all;flex:1;direction:ltr;text-align:left}
-.cpbtn{font-size:11.5px;color:var(--gold);border:1px solid rgba(232,194,74,.4);background:none;border-radius:7px;padding:6px 13px;white-space:nowrap;transition:.2s}
-.cpbtn:hover{background:var(--gold);color:#0a0a0a}
-.qrbox{display:flex;justify-content:center;margin:18px 0}
-.qrbox img{width:165px;height:165px;border-radius:13px;border:1px solid var(--line);background:#fff;padding:8px}
-.pwarn{font-size:12px;color:var(--gold-l);background:rgba(232,194,74,.06);border:1px solid rgba(232,194,74,.22);border-radius:11px;padding:11px 14px;margin-top:14px}
-.waiting{display:flex;align-items:center;gap:10px;justify-content:center;margin-top:18px;color:var(--muted);font-size:13px}
-.spinner{width:14px;height:14px;border:2px solid var(--line);border-top-color:var(--gold);border-radius:50%;animation:spin .9s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
-.ordid{text-align:center;font-family:'IBM Plex Mono';font-size:11px;color:var(--muted-2);margin-top:10px;direction:ltr}
-.toast{position:fixed;bottom:24px;right:50%;transform:translateX(50%);background:var(--panel-2);border:1px solid var(--cyan);color:var(--txt);padding:11px 22px;border-radius:11px;font-size:13px;z-index:200;opacity:0;pointer-events:none;transition:.3s}
-.toast.show{opacity:1}
-
-@media (max-width:920px){.hero-grid{grid-template-columns:1fr;gap:40px}.ind-grid,.price-grid{grid-template-columns:1fr}.nav-links{display:none}.burger{display:flex}
-  .nav-links.open{display:flex;position:absolute;top:70px;left:0;right:0;flex-direction:column;background:var(--bg-2);padding:22px 26px;gap:18px;border-bottom:1px solid var(--line)}}
-@media (max-width:560px){.wrap{padding:0 18px}.band-in{padding:36px 22px}.scard .metrics{grid-template-columns:repeat(2,1fr)}.hero-stats{gap:20px}.cdbar{font-size:12px}}
-@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.reveal{opacity:1;transform:none}}
+/* ===== FOOTER ===== */
+footer{margin-top:90px;padding:40px 22px 50px;border-top:1px solid var(--stroke);text-align:center}
+footer .wa{font-family:'IBM Plex Mono';font-size:15px;color:var(--gold-l);font-weight:700;direction:ltr;display:inline-block}
+footer .co{margin-top:10px;font-size:12px;color:var(--dim)}
+footer .cc{margin-top:4px;font-family:'IBM Plex Mono';font-size:10.5px;color:#4c5070;letter-spacing:.1em}
 </style>
 </head>
 <body>
-<canvas id="bgfx"></canvas>
-<div class="bg-glow"></div>
-<div class="scanline"></div>
 
-<!-- LIVE TICKER -->
-<div class="tickerbar" aria-label="أسعار العملات الحية">
-  <div class="tlabel"><span class="d"></span>ARKAN LIVE</div>
-  <div class="ttrack" id="ttrack"><div class="tki"><span class="s">LOADING</span><span class="p">···</span></div></div>
-</div>
+<div class="field"><div class="grid-lines"></div></div>
 
-<!-- COUNTDOWN -->
-<div class="cdbar">
-  <span class="lbl">⚡ عرض تأسيسي محدود — خصم حتى <b>40%</b> على خطة المؤسسين</span>
-  <span class="cd" id="cd"></span>
-</div>
-
-<!-- NAV -->
-<nav id="nav"><div class="wrap nav-in">
-  <a href="#" class="logo">
-    <span class="logo-mark"><svg viewBox="0 0 40 40" fill="none"><path d="M20 3 L34 34 L26 34 L20 18 L14 34 L6 34 Z" fill="url(#lg)"/><path d="M20 19 L24 28 L16 28 Z" fill="#04060C"/><defs><linearGradient id="lg" x1="6" y1="3" x2="34" y2="34"><stop stop-color="#F5DE8B"/><stop offset="1" stop-color="#E8C24A"/></linearGradient></defs></svg></span>
-    <span><span class="logo-txt en"><b>ARKAN</b> AI</span><span class="logo-sub en">TRADING SYSTEMS</span></span>
-  </a>
-  <div class="nav-links" id="navLinks">
-    <a href="#indicators">المؤشرات</a><a href="#pricing">الاشتراكات</a><a href="#how">كيف يعمل</a><a href="#contact">تواصل</a>
-    <a href="#pricing" class="nav-cta">ابدأ الآن</a>
-  </div>
-  <div class="burger" id="burger"><span></span><span></span><span></span></div>
-</div></nav>
-
-<!-- HERO -->
-<section class="hero"><div class="wrap hero-grid">
-  <div>
-    <span class="eyebrow"><span class="dot"></span><span class="en">ORDER FLOW · LIQUIDITY · SMART MONEY AI</span></span>
-    <h1>تداول بعين <span class="g">المؤسسات</span><br>لا بعين المتداول.</h1>
-    <p class="lead">منظومة مؤشرات مؤسساتية تكشف نية السيولة الحقيقية عبر تدفق الأوامر، الفوتبرنت، واكتشاف الاستنزاف — قبل أن تتحرك الشمعة.</p>
-    <div class="proof"><span class="av"><i></i><i></i><i></i></span><span>يثق بها <b>آلاف المتداولين</b> حول العالم</span></div>
-    <div class="hero-cta">
-      <a href="#pricing" class="btn btn-usdt">ادفع بـ USDT وابدأ الآن
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
-      <a href="https://t.me/ArkanAI_Access_Bot" target="_blank" rel="noopener" class="btn btn-tg">
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M21.95 4.3l-3.32 15.67c-.25 1.1-.9 1.38-1.83.86l-5.05-3.72-2.44 2.35c-.27.27-.5.5-1 .5l.36-5.13L17.4 6.6c.4-.36-.09-.56-.62-.2L6.9 12.7l-4.96-1.55c-1.08-.34-1.1-1.08.23-1.6l19.4-7.48c.9-.33 1.68.2 1.38 1.57z"/></svg>تواصل عبر Telegram</a>
-    </div>
-    <div class="hero-stats">
-      <div class="s"><b class="mono">11<span class="u">+</span></b><span>محرك تحليلي</span></div>
-      <div class="s"><b class="mono">TRC20</b><span>دفع آمن فوري</span></div>
-      <div class="s"><b class="mono">24/7</b><span>تنبيهات حية</span></div>
+<nav class="wrap">
+  <div class="logo">
+    <img src="arkan-icon-512.png" alt="ARKAN">
+    <div>
+      <div class="logo-txt en">ARKAN <b>INTERNATIONAL</b></div>
     </div>
   </div>
+  <a class="navlink en" href="https://wa.me/22236295050" target="_blank">WhatsApp ↗</a>
+</nav>
 
-  <!-- strategy result card -->
-  <div class="scard reveal">
-    <div class="scard-head">
-      <div class="agent"><span class="ai en">A</span><b class="en">ARKAN AI · Engine</b></div>
-      <span class="live"><span class="d"></span><span class="en">LIVE</span></span>
+<header class="hero wrap">
+  <div class="eyebrow">مجموعة تجارية · موريتانيا — أنغولا — الصين</div>
+  <h1>أركان الدولية <span class="g en">Trading Group</span></h1>
+  <p>جذر تجاري واحد، فرعان متخصصان: صرافة وتسوية دولية بثقة مؤسسية، وأنظمة تداول مبنية على منطق السوق الحقيقي.</p>
+  <div class="cities en">NOUAKCHOTT · LUANDA · CHINA SOURCING OFFICE</div>
+
+  <div class="streams">
+    <div class="streamRow a">
+      <span>AOA / MRU 0.360</span><span>USDT / AOA 1170</span><span>EUR / MRU 490</span><span>USD / MRU 425</span>
+      <span>AOA / MRU 0.360</span><span>USDT / AOA 1170</span><span>EUR / MRU 490</span><span>USD / MRU 425</span>
     </div>
-    <div class="symbol"><span class="badge en">PERP</span><span class="en">BTC / USDT · Order Flow Strategy</span></div>
-    <div class="chartbox"><canvas id="miniChart"></canvas></div>
-    <div class="metrics">
-      <div class="m"><span>NET PROFIT</span><b class="up mono" id="mNp">+$248k</b></div>
-      <div class="m"><span>WIN RATE</span><b class="gd mono" id="mWr">71.4%</b></div>
-      <div class="m"><span>TRADES</span><b class="bl mono">1,184</b></div>
-      <div class="m"><span>MAX DD</span><b class="dn mono">8.2%</b></div>
-    </div>
-  </div>
-</div></section>
-
-<!-- INDICATORS -->
-<section class="sec" id="indicators"><div class="wrap">
-  <div class="sec-head reveal">
-    <div class="sec-eyebrow en">// THE ENGINES</div>
-    <h2 class="sec-title">محركات تحليلية بمعايير المكاتب المؤسساتية</h2>
-    <p class="sec-desc">كل مؤشر مبني على Pine Script v6، مُحسّن بصريًا ليُقرأ في ثانية — ويُفعّل على حسابك فور الدفع.</p>
-  </div>
-  <div class="ind-grid" id="indGrid"></div>
-</div></section>
-
-<!-- PRICING -->
-<section class="sec" id="pricing"><div class="wrap">
-  <div class="sec-head reveal">
-    <div class="sec-eyebrow en">// ACCESS TIERS</div>
-    <h2 class="sec-title">خطط الوصول</h2>
-    <p class="sec-desc">دفع مباشر بـ USDT (TRC20) أو تواصل عبر Telegram — بلا وسطاء، بلا بطاقات، تفعيل فوري.</p>
-  </div>
-  <div class="price-grid" id="priceGrid"></div>
-  <div class="trust">
-    <div class="t"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>دفع آمن عبر TRC20</div>
-    <div class="t"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M13 2L3 14h7l-1 8 10-12h-7z"/></svg>تفعيل فوري بعد التأكيد</div>
-    <div class="t"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>دعم Telegram مباشر</div>
-  </div>
-</div></section>
-
-<!-- HOW -->
-<section class="sec" id="how"><div class="wrap">
-  <div class="sec-head reveal">
-    <div class="sec-eyebrow en">// THE FLOW</div>
-    <h2 class="sec-title">من الدفع إلى التفعيل في دقائق</h2>
-  </div>
-  <div class="ind-grid" style="grid-template-columns:repeat(4,1fr)">
-    <div class="ind reveal" style="padding:24px"><div class="mono" style="color:var(--gold);font-size:13px;margin-bottom:10px">01</div><h3 style="font-size:16px">اختر خطتك</h3><p style="min-height:auto;font-size:13px">حدّد الخطة وادفع بـ USDT TRC20 بمبلغ فريد لكل طلب.</p></div>
-    <div class="ind reveal" style="padding:24px"><div class="mono" style="color:var(--gold);font-size:13px;margin-bottom:10px">02</div><h3 style="font-size:16px">تأكيد آلي</h3><p style="min-height:auto;font-size:13px">المنظومة تطابق دفعتك على الشبكة خلال ثوانٍ.</p></div>
-    <div class="ind reveal" style="padding:24px"><div class="mono" style="color:var(--gold);font-size:13px;margin-bottom:10px">03</div><h3 style="font-size:16px">وصول فوري</h3><p style="min-height:auto;font-size:13px">رابط قناة الأعضاء + تفعيل المؤشر على TradingView.</p></div>
-    <div class="ind reveal" style="padding:24px"><div class="mono" style="color:var(--gold);font-size:13px;margin-bottom:10px">04</div><h3 style="font-size:16px">تنبيهات حية</h3><p style="min-height:auto;font-size:13px">إشارات وتحديثات عبر Telegram على مدار الساعة.</p></div>
-  </div>
-</div></section>
-
-<!-- CONTACT -->
-<section class="sec band" id="contact"><div class="wrap"><div class="band-in reveal">
-  <h2>جاهز لتقرأ السوق كالمؤسسات؟</h2>
-  <p>ابدأ اليوم — ادفع بـ USDT أو تواصل معنا مباشرة عبر Telegram.</p>
-  <div class="band-cta">
-    <a href="#pricing" class="btn btn-usdt">الخطط والدفع بـ USDT</a>
-    <a href="https://t.me/ArkanAI_Access_Bot" target="_blank" rel="noopener" class="btn btn-tg">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M21.95 4.3l-3.32 15.67c-.25 1.1-.9 1.38-1.83.86l-5.05-3.72-2.44 2.35c-.27.27-.5.5-1 .5l.36-5.13L17.4 6.6c.4-.36-.09-.56-.62-.2L6.9 12.7l-4.96-1.55c-1.08-.34-1.1-1.08.23-1.6l19.4-7.48c.9-.33 1.68.2 1.38 1.57z"/></svg>Telegram</a>
-  </div>
-</div></div></section>
-
-<!-- FOOTER -->
-<footer><div class="wrap">
-  <div class="disclaimer">
-    <p><b>إخلاء مسؤولية:</b> جميع مؤشرات ARKAN AI Trading Systems أدوات تحليلية وتعليمية فقط، ولا تُعد نصيحة مالية أو توصية بالشراء أو البيع. التداول ينطوي على مخاطر عالية قد تؤدي لخسارة رأس المال. الأرقام المعروضة لأغراض توضيحية. الأداء السابق لا يضمن النتائج المستقبلية.</p>
-  </div>
-  <div class="foot-grid">
-    <div class="foot-about">
-      <a href="#" class="logo"><span class="logo-mark"><svg viewBox="0 0 40 40" fill="none"><path d="M20 3 L34 34 L26 34 L20 18 L14 34 L6 34 Z" fill="url(#lg2)"/><path d="M20 19 L24 28 L16 28 Z" fill="#04060C"/><defs><linearGradient id="lg2" x1="6" y1="3" x2="34" y2="34"><stop stop-color="#F5DE8B"/><stop offset="1" stop-color="#E8C24A"/></linearGradient></defs></svg></span><span><span class="logo-txt en"><b>ARKAN</b> AI</span><span class="logo-sub en">TRADING SYSTEMS</span></span></a>
-      <p>هندسة تدفق الأوامر المؤسساتية في متناول المتداول الجاد.</p>
-    </div>
-    <div class="foot-links">
-      <div class="foot-col"><h6 class="en">PRODUCT</h6><a href="#indicators">المؤشرات</a><a href="#pricing">الاشتراكات</a><a href="#how">كيف يعمل</a></div>
-      <div class="foot-col"><h6 class="en">CONTACT</h6><a href="https://t.me/ArkanAI_Access_Bot" target="_blank" rel="noopener">Telegram</a><a href="https://wa.me/22236295050" target="_blank" rel="noopener">WhatsApp</a><a href="mailto:Mohamedarbi0208@gmail.com">Email</a></div>
+    <div class="streamRow b">
+      <span>WHALE RADAR · ACTIVE</span><span>BTC REGIME · BULLISH</span><span>ORDER FLOW · CONFIRMED</span><span>LIQUIDITY MAP · LIVE</span>
+      <span>WHALE RADAR · ACTIVE</span><span>BTC REGIME · BULLISH</span><span>ORDER FLOW · CONFIRMED</span><span>LIQUIDITY MAP · LIVE</span>
     </div>
   </div>
-  <div class="foot-bottom"><p class="en">© 2026 ARKAN AI Trading Systems. All rights reserved.</p><p>صُمّم لمتداولي تدفق الأوامر الجادّين.</p></div>
-</div></footer>
+</header>
 
-<!-- PACKAGES MODAL -->
-<div class="overlay" id="pkgOverlay" role="dialog" aria-modal="true">
-  <div class="modal">
-    <button class="mclose" onclick="closeModal('pkgOverlay')" aria-label="إغلاق">✕</button>
-    <div class="mtitle en" id="pkgTitle">—</div>
-    <div class="msub" id="pkgSub">اختر باقة الوصول المناسبة لك</div>
-    <div id="pkgList"></div>
+<main class="wrap">
+  <div class="divhead">
+    <div class="k en">TWO DIVISIONS · ONE STANDARD</div>
+    <h2>اختر بوابتك</h2>
   </div>
-</div>
 
-<!-- PAYMENT MODAL -->
-<div class="overlay" id="payOverlay" role="dialog" aria-modal="true">
-  <div class="modal">
-    <button class="mclose" onclick="closeModal('payOverlay')" aria-label="إغلاق">✕</button>
-    <div class="mtitle en">USDT · TRC20</div>
-    <div class="msub">حوّل <b style="color:var(--gold-l)">المبلغ بالضبط</b> (بما فيه الكسور) — هكذا نتعرّف على دفعتك آليًا.</div>
-    <div class="paysum">
-      <div class="what"><b id="payProduct">—</b><span class="en" id="payPlan">—</span></div>
-      <div class="payamt" id="payAmount">—</div>
-    </div>
-    <div class="flabel">المبلغ المطلوب</div>
-    <div class="cprow"><code id="amountCode">—</code><button class="cpbtn" onclick="copyText('amountCode','تم نسخ المبلغ')">نسخ المبلغ</button></div>
-    <div class="qrbox"><img id="qrImg" src="" alt="QR محفظة USDT"></div>
-    <div class="flabel">عنوان المحفظة (شبكة TRON TRC20)</div>
-    <div class="cprow"><code id="walletCode">—</code><button class="cpbtn" onclick="copyText('walletCode','تم نسخ العنوان')">نسخ العنوان</button></div>
-    <div class="pwarn">⚠️ شبكة <b>TRC20</b> فقط. الإرسال على شبكة أخرى = فقدان المبلغ نهائيًا.</div>
-    <div class="waiting"><span class="spinner"></span> بانتظار وصول التحويل…</div>
-    <div class="ordid" id="orderId">ORDER: —</div>
-  </div>
-</div>
+  <div class="divisions">
 
-<div class="toast" id="toast">تم النسخ</div>
-
-<script>
-/* ===== unique animated background: chart grid + drawing line + particles ===== */
-(function(){
-  const c=document.getElementById('bgfx'),x=c.getContext('2d');let W,H,t=0;
-  function size(){W=c.width=innerWidth;H=c.height=innerHeight}
-  size();addEventListener('resize',size);
-  const pts=[];for(let i=0;i<70;i++)pts.push({x:Math.random(),y:Math.random(),s:Math.random()*1.4+.4,v:Math.random()*.0004+.0001});
-  // a self-drawing price path
-  let series=[];for(let i=0;i<160;i++)series.push(.5+Math.sin(i*.18)*.12+(Math.random()-.5)*.05);
-  function loop(){
-    x.clearRect(0,0,W,H);t+=1;
-    // perspective grid
-    x.strokeStyle='rgba(124,140,255,0.05)';x.lineWidth=1;
-    const off=(t*.3)%48;
-    for(let gx=-off;gx<W;gx+=48){x.beginPath();x.moveTo(gx,0);x.lineTo(gx,H);x.stroke();}
-    for(let gy=-off;gy<H;gy+=48){x.beginPath();x.moveTo(0,gy);x.lineTo(W,gy);x.stroke();}
-    // glowing price line across upper area
-    const baseY=H*.30,amp=H*.10;
-    x.beginPath();
-    for(let i=0;i<series.length;i++){const px=(i/(series.length-1))*W;const py=baseY+(series[i]-.5)*amp*2 + Math.sin((i*.1)+(t*.01))*6;i?x.lineTo(px,py):x.moveTo(px,py);}
-    const grad=x.createLinearGradient(0,0,W,0);grad.addColorStop(0,'rgba(61,224,208,0)');grad.addColorStop(.5,'rgba(61,224,208,0.5)');grad.addColorStop(1,'rgba(232,194,74,0.6)');
-    x.strokeStyle=grad;x.lineWidth=2;x.shadowColor='rgba(61,224,208,.5)';x.shadowBlur=12;x.stroke();x.shadowBlur=0;
-    // moving scan dot on line
-    const idx=Math.floor((t*.4)%series.length);const dx=(idx/(series.length-1))*W;const dy=baseY+(series[idx]-.5)*amp*2;
-    x.beginPath();x.arc(dx,dy,3,0,7);x.fillStyle='#F5DE8B';x.shadowColor='#F5DE8B';x.shadowBlur=14;x.fill();x.shadowBlur=0;
-    // floating data particles
-    pts.forEach(p=>{p.y-=p.v;if(p.y<0)p.y=1;const px=p.x*W,py=p.y*H;x.beginPath();x.arc(px,py,p.s,0,7);x.fillStyle='rgba(124,140,255,0.4)';x.fill();});
-    requestAnimationFrame(loop);
-  }
-  loop();
-  // evolve the series slowly for life
-  setInterval(()=>{series.push(.5+Math.sin(t*.02)*.12+(Math.random()-.5)*.08);series.shift();},180);
-})();
-
-/* ===== mini strategy chart ===== */
-(function(){
-  const c=document.getElementById('miniChart');if(!c)return;const x=c.getContext('2d');
-  function size(){c.width=c.offsetWidth;c.height=c.offsetHeight}size();addEventListener('resize',size);
-  let d=[];let v=20;for(let i=0;i<60;i++){v+=Math.random()*4-1.4;d.push(v)}
-  function draw(){
-    x.clearRect(0,0,c.width,c.height);const W=c.width,H=c.height,mn=Math.min(...d),mx=Math.max(...d);
-    x.beginPath();
-    d.forEach((val,i)=>{const px=(i/(d.length-1))*W;const py=H-8-((val-mn)/(mx-mn||1))*(H-16);i?x.lineTo(px,py):x.moveTo(px,py);});
-    const g=x.createLinearGradient(0,0,W,0);g.addColorStop(0,'#FF4D5E');g.addColorStop(.4,'#E8C24A');g.addColorStop(1,'#1DD17F');
-    x.strokeStyle=g;x.lineWidth=2;x.shadowColor='rgba(29,209,127,.4)';x.shadowBlur=8;x.stroke();x.shadowBlur=0;
-    // area
-    x.lineTo(W,H);x.lineTo(0,H);x.closePath();const ag=x.createLinearGradient(0,0,0,H);ag.addColorStop(0,'rgba(29,209,127,.18)');ag.addColorStop(1,'rgba(29,209,127,0)');x.fillStyle=ag;x.fill();
-  }
-  draw();
-  setInterval(()=>{let n=d[d.length-1]+Math.random()*5-1.8;d.push(n);d.shift();draw();
-    document.getElementById('mNp').textContent='+$'+(238+Math.round(Math.random()*20))+'k';
-    document.getElementById('mWr').textContent=(69+Math.random()*4).toFixed(1)+'%';
-  },1600);
-})();
-
-/* ===== countdown ===== */
-(function(){
-  const el=document.getElementById('cd');let end=Date.now()+(2*864e5+13*36e5+18*6e4);
-  function tick(){let s=Math.max(0,Math.floor((end-Date.now())/1000));const d=Math.floor(s/86400);s%=86400;const h=Math.floor(s/3600);s%=3600;const m=Math.floor(s/60);const ss=s%60;
-    const p=n=>String(n).padStart(2,'0');
-    el.innerHTML=[[d,'يوم'],[h,'ساعة'],[m,'دقيقة'],[ss,'ثانية']].map(([v,l])=>`<span class="u">${p(v)}<span>${l}</span></span>`).join('');}
-  tick();setInterval(tick,1000);
-})();
-
-/* ╔════════════════════════════════════════╗
-   ║  CONFIG — عدّل هنا فقط                  ║
-   ╚════════════════════════════════════════╝ */
-const CONFIG={
-  WALLET:"TXxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",      // ← عنوان محفظتك USDT TRC20
-  BACKEND_CREATE_ORDER:"/api/orders",                // ← باك-اند إنشاء الطلب (اختياري)
-  BACKEND_CHECK_ORDER:"/api/orders/status",          // ← باك-اند فحص حالة الدفع (اختياري)
-  TICKER_REFRESH_MS:15000,
-  TICKER_SYMBOLS:["BTCUSDT","ETHUSDT","BNBUSDT","SOLUSDT","XRPUSDT","SUIUSDT","DOGEUSDT","ADAUSDT","AVAXUSDT","LINKUSDT"]
-};
-
-/* ===== indicators = منتجات المتجر، كل مؤشر بباقاته ===== */
-const check='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6L9 17l-5-5"/></svg>';
-const tg='https://t.me/ArkanAI_Access_Bot';
-const indicators=[
-  {id:'orderflow',tag:'FLAGSHIP · ORDER FLOW',name:'ARKAN ORDER FLOW ENGINE PRO',
-   desc:'محرك تدفق الأوامر الرئيسي مع اكتشاف الاستنزاف — يكشف امتصاص السيولة وانعكاسات الزخم قبل حدوثها.',
-   feats:['اكتشاف الاستنزاف (Exhaustion)','الدلتا التراكمية CVD','مناطق الامتصاص المؤسساتية'],
-   pkgs:[{id:'m',label:'شهري',note:'يتجدد شهريًا · إلغاء بأي وقت',price:39},
-         {id:'y',label:'سنوي',note:'شهران مجانًا + سعر مثبّت',price:179,old:299,best:true},
-         {id:'l',label:'مدى الحياة',note:'دفعة واحدة · كل التحديثات للأبد',price:499}]},
-  {id:'footprint',tag:'FOOTPRINT · HEATMAP',name:'ARKAN FOOTPRINT BOOKMAP ENGINE',
-   desc:'خريطة فوتبرنت حرارية تكشف حجم التداول عند كل سعر وجدران السيولة وطلبات الإيقاف المكدّسة.',
-   feats:['خريطة حرارية للسيولة','كشف جدران الأوامر','نقطة السيطرة الحجمية POC'],
-   pkgs:[{id:'m',label:'شهري',note:'يتجدد شهريًا · إلغاء بأي وقت',price:35},
-         {id:'y',label:'سنوي',note:'شهران مجانًا + سعر مثبّت',price:159,old:259,best:true},
-         {id:'l',label:'مدى الحياة',note:'دفعة واحدة · كل التحديثات للأبد',price:449}]},
-  {id:'liquidity',tag:'SMART MONEY · SMC',name:'ARKAN LIQUIDITY INTELLIGENCE',
-   desc:'ذكاء سيولة مؤسساتي يرصد Order Blocks وفجوات القيمة العادلة FVG ومناطق السيولة المستهدفة آليًا.',
-   feats:['Order Blocks آلية','Fair Value Gaps','مناطق صيد السيولة'],
-   pkgs:[{id:'m',label:'شهري',note:'يتجدد شهريًا · إلغاء بأي وقت',price:29},
-         {id:'y',label:'سنوي',note:'شهران مجانًا + سعر مثبّت',price:139,old:229,best:true},
-         {id:'l',label:'مدى الحياة',note:'دفعة واحدة · كل التحديثات للأبد',price:399}]},
-  {id:'vwap',tag:'MOMENTUM · VWAP',name:'ARKAN VWAP DEVIATION MATRIX',
-   desc:'مصفوفة انحرافات VWAP متعددة الجلسات مع نطاقات الانحراف المعياري لتحديد مناطق التشبّع بدقة.',
-   feats:['VWAP متعدد الجلسات','انحرافات معيارية ملوّنة','تنبيهات الارتداد'],
-   pkgs:[{id:'m',label:'شهري',note:'يتجدد شهريًا · إلغاء بأي وقت',price:19},
-         {id:'y',label:'سنوي',note:'شهران مجانًا + سعر مثبّت',price:89,old:149,best:true},
-         {id:'l',label:'مدى الحياة',note:'دفعة واحدة · كل التحديثات للأبد',price:249}]},
-];
-const PRODUCTS={};indicators.forEach(i=>PRODUCTS[i.id]=i);
-
-/* الباقة الكاملة — تستخدم قسم الأسعار الرئيسي */
-PRODUCTS.suite={id:'suite',name:'ARKAN FULL SUITE',desc:'كل المؤشرات في وصول واحد',
-  pkgs:[{id:'m',label:'PRO — شهري',note:'كل المؤشرات · يتجدد شهريًا',price:39},
-        {id:'y',label:'BETA FOUNDER — سنوي',note:'سعر تأسيسي مثبّت مدى الحياة',price:179,old:299,best:true},
-        {id:'l',label:'LIFETIME — مدى الحياة',note:'دفعة واحدة · للأبد',price:499}]};
-
-document.getElementById('indGrid').innerHTML=indicators.map(i=>`
-  <div class="ind reveal">
-    <span class="tag en">${i.tag}</span>
-    <h3 class="en">${i.name}</h3>
-    <p>${i.desc}</p>
-    <div class="feats">${i.feats.map(f=>`<div class="f">${check}<span>${f}</span></div>`).join('')}</div>
-    <div class="pfrom"><span>يبدأ من</span><b class="en">$${Math.min(...i.pkgs.map(p=>p.price))}</b><small>/ شهر · USDT</small></div>
-    <div class="ind-cta">
-      <button class="btn btn-usdt" onclick="openPackages('${i.id}')" style="flex:1;justify-content:center;padding:11px;font-size:13px;border:none">عرض الباقات</button>
-      <a href="${tg}" target="_blank" rel="noopener" class="btn btn-ghost">Telegram</a>
-    </div>
-  </div>`).join('');
-
-/* ===== pricing = باقات الـ FULL SUITE ===== */
-const plans=[
-  {pid:'suite',pkg:'m',h:'PRO',cur:'USDT',num:'39',per:'/ شهريًا',note:'يتجدد شهريًا · إلغاء بأي وقت',feat:false,
-   li:[[1,'مؤشر ARKAN كامل (Pine v6)'],[1,'لوحة القيادة + 11 محرك'],[1,'تنبيهات لحظية غير محدودة'],[1,'قناة الأعضاء على Telegram'],[0,'جلسة إعداد خاصة 1:1'],[0,'المؤشرات القادمة مجانًا']]},
-  {pid:'suite',pkg:'y',h:'BETA FOUNDER',cur:'USDT',num:'179',old:'299',per:'/ سنويًا',note:'سعر تأسيسي مثبّت مدى الحياة',feat:true,badge:'الأكثر طلبًا',
-   li:[[1,'كل ما في الخطة الشهرية'],[1,'شارة FOUNDER داخل المجتمع'],[1,'جلسة إعداد خاصة 1:1'],[1,'وصول مبكر لكل ميزة'],[1,'صوتك في خارطة التطوير'],[1,'دعم VIP ذو أولوية']]},
-  {pid:'suite',pkg:'l',h:'LIFETIME',cur:'USDT',num:'499',per:'دفعة واحدة',note:'وصول دائم · بلا تجديد',feat:false,
-   li:[[1,'كل ما في خطة Beta'],[1,'كل مؤشرات ARKAN القادمة مجانًا'],[1,'أولوية دعم VIP مباشرة'],[1,'دعوة لمجموعة Inner Circle'],[1,'وصول مدى الحياة'],[1,'تحديثات دائمة بلا رسوم']]},
-];
-const xx='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M18 6L6 18M6 6l12 12"/></svg>';
-document.getElementById('priceGrid').innerHTML=plans.map(p=>`
-  <div class="plan ${p.feat?'feat':''} reveal">
-    ${p.badge?`<span class="badge">${p.badge}</span>`:''}
-    <h4 class="en">${p.h}</h4>
-    <div class="price"><span class="cur en">${p.cur}</span>${p.old?`<span class="old en">${p.old}</span>`:''}<span class="num en">${p.num}</span></div>
-    <div class="per">${p.per}</div>
-    <p class="note">${p.note}</p>
-    <ul>${p.li.map(([on,t])=>`<li class="${on?'':'off'}">${on?check:xx}<span>${t}</span></li>`).join('')}</ul>
-    <div class="plan-cta">
-      <button class="btn btn-usdt" onclick="startPayment('${p.pid}','${p.pkg}')" style="border:none">اشترك الآن — USDT</button>
-      <a href="${tg}" target="_blank" rel="noopener" class="btn btn-ghost">استفسر عبر Telegram</a>
-    </div>
-  </div>`).join('');
-
-/* ===== packages modal ===== */
-function openPackages(key){
-  const p=PRODUCTS[key];
-  document.getElementById('pkgTitle').textContent=p.name;
-  document.getElementById('pkgSub').textContent='اختر باقة الوصول — التفعيل خلال دقائق بعد الدفع';
-  document.getElementById('pkgList').innerHTML=p.pkgs.map(pk=>`
-    <div class="pkg ${pk.best?'best':''}">
-      <div class="info"><b>${pk.label}${pk.best?'<span class="tag">الأوفر</span>':''}</b><span>${pk.note}</span></div>
-      <div style="display:flex;align-items:center;gap:14px">
-        <div style="text-align:left">
-          ${pk.old?`<div class="old">$${pk.old}</div>`:''}
-          <div class="pr">$${pk.price}<small> USDT</small></div>
-        </div>
-        <button class="buy" onclick="startPayment('${key}','${pk.id}')">شراء</button>
+    <a class="dcard exch" href="rates.html">
+      <div class="glow"></div>
+      <div class="k en">DIVISION — EXCHANGE</div>
+      <h3>أركان للصرافة</h3>
+      <p>أسعار صرف يومية محدّثة، جملة وتجزئة، وطلب تحويل مباشر عبر واتساب لكل عملياتك بين الأوقية والكوانزا واليوان والدولار.</p>
+      <div class="mini-rates">
+        <div class="r"><span>AOA</span><b>0.360</b></div>
+        <div class="r"><span>USDT</span><b>420</b></div>
+        <div class="r"><span>EUR</span><b>485</b></div>
       </div>
-    </div>`).join('');
-  document.getElementById('pkgOverlay').classList.add('open');
-  document.body.style.overflow='hidden';
-}
+      <span class="dbtn">افتح بوابة الأسعار ←</span>
+    </a>
 
-/* ===== payment flow (USDT TRC20) ===== */
-let pollTimer=null;
-async function startPayment(key,pkgId){
-  const p=PRODUCTS[key],pk=p.pkgs.find(x=>x.id===pkgId);
-  const cents=Math.floor(Math.random()*89)+10;
-  let amount=(pk.price+cents/100).toFixed(2);
-  let orderId='ARK-'+Date.now().toString(36).toUpperCase();
-  try{
-    const r=await fetch(CONFIG.BACKEND_CREATE_ORDER,{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({product:key,plan:pkgId,base:pk.price})});
-    if(r.ok){const d=await r.json();amount=d.amount??amount;orderId=d.orderId??orderId;}
-  }catch(e){/* وضع محلي بدون باك-اند */}
-  document.getElementById('payProduct').textContent=pk.label;
-  document.getElementById('payPlan').textContent=p.name;
-  document.getElementById('payAmount').textContent=amount+' USDT';
-  document.getElementById('amountCode').textContent=amount;
-  document.getElementById('walletCode').textContent=CONFIG.WALLET;
-  document.getElementById('orderId').textContent='ORDER: '+orderId;
-  document.getElementById('qrImg').src='https://api.qrserver.com/v1/create-qr-code/?size=340x340&data='+encodeURIComponent(CONFIG.WALLET);
-  closeModal('pkgOverlay');
-  document.getElementById('payOverlay').classList.add('open');
-  document.body.style.overflow='hidden';
-  clearInterval(pollTimer);
-  pollTimer=setInterval(async()=>{
-    try{
-      const r=await fetch(CONFIG.BACKEND_CHECK_ORDER+'?orderId='+orderId);
-      if(r.ok){const d=await r.json();
-        if(d.status==='paid'){clearInterval(pollTimer);
-          document.querySelector('.waiting').innerHTML='✅ تم تأكيد دفعتك! تفقّد Telegram — رابط دخولك في الطريق.';}}
-    }catch(e){}
-  },8000);
-}
-function closeModal(id){
-  document.getElementById(id).classList.remove('open');
-  document.body.style.overflow='';
-  if(id==='payOverlay')clearInterval(pollTimer);
-}
-document.querySelectorAll('.overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)closeModal(o.id)}));
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal('pkgOverlay');closeModal('payOverlay')}});
-function copyText(id,msg){
-  navigator.clipboard.writeText(document.getElementById(id).textContent.trim()).then(()=>{
-    const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');
-    setTimeout(()=>t.classList.remove('show'),1800);
-  });
-}
+    <a class="dcard trad" href="trading.html">
+      <div class="glow"></div>
+      <div class="k en">DIVISION — TRADING SYSTEMS</div>
+      <h3 class="en">ARKAN AI</h3>
+      <p>مؤشرات Pine Script مؤسسية على TradingView — تدفق الأوامر، خرائط السيولة، وقراءة نطاقات المؤسسات بدقة لحظية.</p>
+      <svg class="mini-chart" viewBox="0 0 260 52" preserveAspectRatio="none">
+        <polyline points="0,38 20,30 40,34 60,18 80,24 100,10 120,20 140,14 160,26 180,16 200,22 220,8 240,14 260,6"
+          fill="none" stroke="#3DE0D0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <span class="dbtn">استعرض الأنظمة ←</span>
+    </a>
 
-/* ===== live ticker (Binance · 10 coins) ===== */
-const COIN_NAMES={BTCUSDT:'BTC',ETHUSDT:'ETH',BNBUSDT:'BNB',SOLUSDT:'SOL',XRPUSDT:'XRP',SUIUSDT:'SUI',DOGEUSDT:'DOGE',ADAUSDT:'ADA',AVAXUSDT:'AVAX',LINKUSDT:'LINK'};
-function fmtPrice(p){p=parseFloat(p);if(p>=1000)return p.toLocaleString('en-US',{maximumFractionDigits:0});if(p>=1)return p.toFixed(2);return p.toFixed(4)}
-async function loadTicker(){
-  try{
-    const symbols=encodeURIComponent(JSON.stringify(CONFIG.TICKER_SYMBOLS));
-    const r=await fetch('https://api.binance.com/api/v3/ticker/24hr?symbols='+symbols);
-    if(!r.ok)throw 0;
-    const data=await r.json();
-    data.sort((a,b)=>CONFIG.TICKER_SYMBOLS.indexOf(a.symbol)-CONFIG.TICKER_SYMBOLS.indexOf(b.symbol));
-    const html=data.map(d=>{
-      const chg=parseFloat(d.priceChangePercent),cls=chg>=0?'up':'dn',ar=chg>=0?'▲':'▼';
-      return `<div class="tki"><span class="s">${COIN_NAMES[d.symbol]||d.symbol}</span><span class="p">$${fmtPrice(d.lastPrice)}</span><span class="c ${cls}">${ar} ${Math.abs(chg).toFixed(2)}%</span></div>`;
-    }).join('');
-    document.getElementById('ttrack').innerHTML=html+html;
-  }catch(e){
-    document.getElementById('ttrack').innerHTML='<div class="tki"><span class="p">تعذّر تحميل الأسعار — إعادة المحاولة…</span></div>';
-  }
-}
-loadTicker();setInterval(loadTicker,CONFIG.TICKER_REFRESH_MS);
+  </div>
 
-/* ===== misc ===== */
-const nav=document.getElementById('nav');addEventListener('scroll',()=>nav.classList.toggle('scrolled',scrollY>20));
-const burger=document.getElementById('burger'),navLinks=document.getElementById('navLinks');
-burger.onclick=()=>navLinks.classList.toggle('open');navLinks.querySelectorAll('a').forEach(a=>a.onclick=()=>navLinks.classList.remove('open'));
-const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}}),{threshold:.1});
-document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
-</script>
+  <div class="corp">
+    <div>
+      <div class="t">خدمات الشركات والتسوية الدولية</div>
+      <div class="s">طلب دفع فاتورة مورد أو تحويل مؤسسي بمرجع رسمي</div>
+    </div>
+    <a href="request.html">قدّم طلبًا ←</a>
+  </div>
+</main>
+
+<footer>
+  <a class="wa" href="https://wa.me/22236295050" target="_blank">+222 36 29 50 50</a>
+  <div class="co">ARKAN INTERNATIONAL TRADING</div>
+  <div class="cc">EXCHANGE · SETTLEMENT · AI TRADING SYSTEMS</div>
+</footer>
 
 </body>
 </html>
-
-<div id="arkanPay" style="display:none;position:fixed;inset:0;z-index:99999;background:#000c;backdrop-filter:blur(6px);align-items:center;justify-content:center;font-family:'Poppins','Tajawal',sans-serif" onclick="if(event.target===this)this.style.display='none'">
-  <div dir="rtl" style="max-width:440px;width:90%;padding:30px 26px;border:1px solid #E8C24A55;border-radius:20px;background:linear-gradient(180deg,#101014,#17171c);color:#fff;text-align:center;box-shadow:0 25px 70px #000c">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
-      <span style="font-size:12px;letter-spacing:2px;color:#E8C24A">// إتمام الاشتراك</span>
-      <span onclick="document.getElementById('arkanPay').style.display='none'" style="cursor:pointer;color:#777;font-size:24px;line-height:1">&times;</span>
-    </div>
-    <div style="color:#9a9aa2;font-size:13px;margin-bottom:4px">المبلغ المطلوب</div>
-    <div style="font-size:46px;font-weight:800;color:#E8C24A;line-height:1"><span id="arkanAmt">—</span> <span style="font-size:18px;color:#fff">USDT</span></div>
-    <div style="color:#9a9aa2;font-size:13px;margin:6px 0 22px">الشبكة: <b style="color:#E8C24A">TRON (TRC20)</b> فقط</div>
-
-    <div style="text-align:right;font-size:12px;color:#9a9aa2;margin-bottom:6px">عنوان المحفظة</div>
-    <div style="display:flex;align-items:center;gap:8px;background:#000;border:1px solid #2a2a30;border-radius:12px;padding:11px 12px;margin-bottom:18px">
-      <code style="flex:1;font-size:12px;word-break:break-all;direction:ltr;text-align:left;color:#fff">TTXUswnqmRPcqRRZkonxwpH2KDStAJm7td</code>
-      <button onclick="navigator.clipboard.writeText('TTXUswnqmRPcqRRZkonxwpH2KDStAJm7td');this.innerText='✓'" style="background:#E8C24A;color:#000;border:0;border-radius:9px;padding:9px 14px;font-weight:700;cursor:pointer;font-family:inherit">نسخ</button>
-    </div>
-
-    <div style="background:#E8C24A12;border:1px solid #E8C24A33;border-radius:10px;padding:10px;font-size:12px;color:#E8C24A;margin-bottom:18px">⚠️ حوّل <b>المبلغ بالضبط</b> على شبكة TRC20 فقط — أي خطأ في الشبكة يعني ضياع المبلغ.</div>
-
-    <a href="https://t.me/ArkanAI_Access_Bot" target="_blank" style="display:block;background:#E8C24A;color:#000;text-decoration:none;border-radius:12px;padding:14px;font-weight:700;font-size:15px">أرسلتُ الدفع — أكّد وفعل عبر Telegram</a>
-    <p style="margin:12px 0 0;color:#6b6b73;font-size:11px">أرسل صورة الإيصال في Telegram لتفعيل اشتراكك فورًا.</p>
-  </div>
-</div>
-<script>
-document.addEventListener('click',function(e){
-  var btn=e.target.closest('a,button,[role="button"]');
-  if(!btn||(btn.textContent||'').indexOf('اشترك الآن')===-1)return;
-  e.preventDefault();e.stopPropagation();
-  var node=btn.parentElement,amount='',t=0;
-  while(node&&t<10){
-    var txt=node.innerText||'';var idx=txt.indexOf('اشترك');
-    var head=idx>0?txt.slice(0,idx):'';
-    var m=head.match(/\d[\d,]{0,5}/);
-    if(m){amount=m[0].replace(/,/g,'');break;}
-    node=node.parentElement;t++;
-  }
-  document.getElementById('arkanAmt').textContent=amount||'—';
-  document.getElementById('arkanPay').style.display='flex';
-},true);
-</script>
-<section dir="rtl" style="max-width:900px;margin:50px auto;padding:0 16px;font-family:'Poppins',sans-serif">
-  <div style="text-align:center;margin-bottom:18px">
-    <div style="font-size:13px;letter-spacing:2px;color:#E8C24A">// MARKET NEWS</div>
-    <h2 style="margin:6px 0 0;color:#fff;font-size:26px">أهم أخبار السوق</h2>
-    <p style="color:#9a9aa2;font-size:14px;margin:6px 0 0">أحدث الأخبار المؤثرة على سوق الكريبتو — تُحدَّث لحظيًا</p>
-  </div>
-  <div style="border:1px solid #E8C24A33;border-radius:16px;overflow:hidden;box-shadow:0 10px 40px #0008">
-    <div class="tradingview-widget-container">
-      <div class="tradingview-widget-container__widget"></div>
-      <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-timeline.js" async>
-      {
-      "feedMode": "market",
-      "market": "crypto",
-      "isTransparent": true,
-      "displayMode": "regular",
-      "width": "100%",
-      "height": 560,
-      "colorTheme": "dark",
-      "locale": "ar_AE"
-      }
-      </script>
-    </div>
-  </div>
-</section>
-
-</script>
