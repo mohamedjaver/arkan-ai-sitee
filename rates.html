@@ -61,11 +61,18 @@ const SYM={AOA:'Kz',MRU:'UM',CNY:'¥',AED:'AED',EUR:'€',USD:'$',USDT:'₮',MAD
 const NAMES={AOA:'كوانزا أنغولية',MRU:'أوقية موريتانية',CNY:'يوان صيني',AED:'درهم إماراتي',EUR:'يورو',USD:'دولار',USDT:'تيثر',MAD:'درهم مغربي'};
 
 let DATA=null;
-try{
-  const hash=location.hash.slice(1);
-  if(hash)DATA=JSON.parse(decodeURIComponent(escape(atob(hash))));
-}catch(e){}
-
+async function loadData(){
+  /* أولًا: hash (رابط سريع) */
+  try{
+    const hash=location.hash.slice(1);
+    if(hash){DATA=JSON.parse(decodeURIComponent(escape(atob(hash))));return;}
+  }catch(e){}
+  /* ثانيًا: الملف الثابت (الرابط الثابت للبايو) */
+  try{
+    const r=await fetch('rates-data.json?t='+Date.now());
+    if(r.ok)DATA=await r.json();
+  }catch(e){}
+}
 function render(){
   const app=$('app');
   if(!DATA||!DATA.r||!DATA.r.length){
@@ -144,7 +151,7 @@ ${who?'الاسم: '+who+'\n':''}المبلغ: ${fmt(amt)} ${SYM[cc]||cc} (${cc}
 أؤكد رغبتي في التحويل.`;
   window.open('https://wa.me/'+DATA.wa+'?text='+encodeURIComponent(msg),'_blank');
 }
-render();
+loadData().then(render);
 </script>
 </body>
 </html>
