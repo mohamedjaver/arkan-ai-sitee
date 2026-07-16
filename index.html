@@ -6,6 +6,14 @@
 <title>ARKAN — الصرافة وأنظمة التداول</title>
 <meta name="description" content="أركان — منصة الصرافة الرقمية وأنظمة التداول المؤسساتية. أسعار الصرف اليوم، طلب صرف فوري، ومؤشرات ARKAN AI على TradingView.">
 <meta name="theme-color" content="#05070E">
+<link rel="manifest" href="app.webmanifest">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ARKAN">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="arkan-icon-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="arkan-icon-512.png">
 <meta property="og:title" content="ARKAN — الصرافة وأنظمة التداول">
 <meta property="og:description" content="أسعار الصرف اليوم وأنظمة تداول ARKAN AI في مكان واحد.">
 <meta property="og:type" content="website">
@@ -46,6 +54,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 
 /* ===== top bar ===== */
 .topbar{position:sticky;top:0;z-index:40;
+  padding-top:env(safe-area-inset-top);
   backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
   background:linear-gradient(180deg,rgba(5,7,14,.92),rgba(5,7,14,.72));
   border-bottom:1px solid var(--line-2)}
@@ -328,6 +337,80 @@ footer .fsub{font-size:11.5px;color:var(--dim2);margin-top:7px;font-family:'Taja
     .then(function(r){return r.ok?r.json():null;})
     .then(function(d){ if(d) paint(d); })
     .catch(function(){ /* keep static fallback */ });
+})();
+</script>
+<style>
+#installBar{position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));
+  z-index:60;display:none;align-items:center;gap:12px;padding:12px 14px;border-radius:18px;
+  background:linear-gradient(180deg,rgba(18,22,38,.86),rgba(10,14,26,.82));
+  border:1px solid rgba(232,194,74,.28);
+  backdrop-filter:blur(22px) saturate(1.4);-webkit-backdrop-filter:blur(22px) saturate(1.4);
+  box-shadow:0 20px 50px -20px rgba(0,0,0,.8),inset 0 1px 0 rgba(255,255,255,.06);
+  max-width:520px;margin:0 auto;animation:barUp .5s cubic-bezier(.2,.8,.2,1)}
+@keyframes barUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+#installBar img{width:42px;height:42px;border-radius:12px;flex:0 0 auto;
+  box-shadow:0 6px 18px -6px rgba(139,114,255,.6)}
+#installBar .ib-txt{flex:1;min-width:0}
+#installBar .ib-t{font-family:'Tajawal';font-weight:800;font-size:14px;color:var(--txt)}
+#installBar .ib-s{font-size:11.5px;color:var(--dim);margin-top:1px}
+#installBar .ib-go{flex:0 0 auto;font-family:'Tajawal';font-weight:800;font-size:13px;color:var(--ink);
+  padding:10px 16px;border-radius:12px;background:linear-gradient(180deg,var(--gold-l),var(--gold));
+  box-shadow:0 8px 20px -8px rgba(232,194,74,.7);white-space:nowrap}
+#installBar .ib-x{flex:0 0 auto;color:var(--dim2);font-size:20px;padding:4px 8px;line-height:1}
+</style>
+
+<div id="installBar" role="dialog" aria-label="تثبيت تطبيق أركان">
+  <img src="arkan-icon-192.png" alt="ARKAN">
+  <div class="ib-txt">
+    <div class="ib-t">ثبّت تطبيق أركان</div>
+    <div class="ib-s" id="ibSub">أضِفه لشاشتك الرئيسية — يفتح كتطبيق كامل.</div>
+  </div>
+  <button class="ib-go" id="ibGo">تثبيت</button>
+  <button class="ib-x" id="ibX" aria-label="إغلاق">×</button>
+</div>
+
+<script>
+(function(){
+  // register service worker (installability + offline, network-first so never stale)
+  if('serviceWorker' in navigator){
+    window.addEventListener('load',function(){
+      navigator.serviceWorker.register('sw.js',{scope:'./'}).catch(function(){});
+    });
+  }
+
+  var bar=document.getElementById('installBar'),
+      go=document.getElementById('ibGo'),
+      x=document.getElementById('ibX'),
+      sub=document.getElementById('ibSub');
+  function dismissed(){try{return localStorage.getItem('arkan-install-x')==='1';}catch(e){return false;}}
+  function dismiss(){try{localStorage.setItem('arkan-install-x','1');}catch(e){} bar.style.display='none';}
+  var standalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone===true;
+  var ua=navigator.userAgent||'';
+  var isIOS=/iphone|ipad|ipod/i.test(ua);
+  var isSafari=isIOS && /safari/i.test(ua) && !/crios|fxios|edgios/i.test(ua);
+
+  if(standalone || dismissed()){ /* already app or user closed */ }
+  else {
+    var deferred=null;
+    window.addEventListener('beforeinstallprompt',function(e){
+      e.preventDefault(); deferred=e;
+      sub.textContent='أضِفه لشاشتك الرئيسية — يفتح كتطبيق كامل.';
+      go.style.display=''; bar.style.display='flex';
+    });
+    go.addEventListener('click',function(){
+      if(deferred){ deferred.prompt(); deferred.userChoice.finally(function(){dismiss();}); }
+    });
+    // iOS Safari: no prompt event — show manual hint after a moment
+    if(isIOS){
+      setTimeout(function(){
+        if(standalone) return;
+        sub.innerHTML='اضغط زر المشاركة <b style="color:var(--cyan)">⎋</b> ثم «إضافة إلى الشاشة الرئيسية».';
+        go.style.display='none';
+        bar.style.display='flex';
+      }, 1800);
+    }
+  }
+  x.addEventListener('click',dismiss);
 })();
 </script>
 </body>
