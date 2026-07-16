@@ -88,7 +88,7 @@ header{padding:20px 18px 4px;position:relative;z-index:6}
 .donutC .t{font-size:52px;font-weight:700;font-family:'IBM Plex Sans Arabic',sans-serif;letter-spacing:-1px;white-space:nowrap;line-height:1.1}
 .donutC .t .cur{font-size:.42em;color:var(--dim);font-weight:500;vertical-align:.55em;margin-left:2px}
 .donutC .t .dec{font-size:.42em;color:var(--dim);font-weight:500}
-.donutC .s{font-size:11px;color:var(--dim);letter-spacing:2px;margin-top:4px}
+.donutC .s{font-size:11px;color:var(--dim);margin-top:4px}
 .assets{margin-top:18px;padding:0 0}
 .asset{display:flex;align-items:center;gap:14px;padding:18px 16px;border-radius:22px;
   background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.07);margin-bottom:12px}
@@ -113,7 +113,7 @@ section.on{display:block;animation:fadeUp .25s ease}
 .card{background:var(--glass);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
   border:1px solid var(--stroke);border-radius:22px;padding:18px;margin-bottom:14px;
   box-shadow:0 12px 34px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.06)}
-.card h3{font-size:12px;color:var(--acc2);letter-spacing:2px;margin-bottom:12px;font-weight:600}
+.card h3{font-size:13px;color:var(--acc2);margin-bottom:12px;font-weight:700}
 label{display:block;font-size:12px;color:var(--dim);margin:10px 0 6px}
 input,select{width:100%;padding:12px 13px;border-radius:14px;background:rgba(0,0,0,.28);
   border:1px solid var(--stroke);color:var(--txt);font-size:15px;
@@ -161,7 +161,7 @@ input.ar,select.ar{font-family:'IBM Plex Sans Arabic',sans-serif}
 .btn-row .btn{flex:1}
 .wa-box{background:rgba(18,54,38,.30);backdrop-filter:blur(14px);
   border:1px solid rgba(37,211,102,.3);border-radius:22px;padding:15px;margin-bottom:14px}
-.wa-box h3{color:var(--wa);font-size:12px;margin-bottom:10px;letter-spacing:2px}
+.wa-box h3{color:var(--wa);font-size:12px;margin-bottom:10px}
 .bubble{background:rgba(18,54,38,.55);border-radius:14px 14px 14px 4px;padding:13px;font-size:13px;
   line-height:1.9;white-space:pre-wrap;font-family:'IBM Plex Mono',monospace;color:#D7F5E3}
 .tx{background:var(--glass);backdrop-filter:blur(14px);border:1px solid var(--stroke);
@@ -1746,7 +1746,7 @@ async function genInvoice(ref){
   else if(t.type==='rcpt'){mainAmt=fmt(t.amount,0);mainCcy=CCYI[t.ccy];}
   const stage=$('pdfStage');
   stage.innerHTML=`
-  <div style="width:794px;min-height:1123px;display:flex;flex-direction:column;background:#fff;font-family:'Cairo','Tajawal',sans-serif;color:#0F1130;direction:rtl">
+  <div style="width:794px;min-height:1123px;display:flex;flex-direction:column;background:#fff;font-family:'Cairo','Cairo',sans-serif;color:#0F1130;direction:rtl">
     <!-- رأس رسمي -->
     <div style="padding:26px 34px 0;display:flex;justify-content:space-between;align-items:flex-start">
       <div style="display:flex;align-items:center;gap:14px">
@@ -1765,7 +1765,7 @@ async function genInvoice(ref){
     <!-- CLIENT + REF -->
     <div style="padding:20px 34px 0;display:flex;justify-content:space-between;align-items:flex-start">
       <div>
-        <div style="font-size:11px;font-weight:800;color:#8a8ea6;letter-spacing:1px;font-family:'IBM Plex Mono'">CLIENT / العميل</div>
+        <div style="font-size:11px;font-weight:800;color:#8a8ea6"><span style="letter-spacing:1px;font-family:'IBM Plex Mono'">CLIENT</span> <span style="font-family:'Cairo',sans-serif">/ العميل</span></div>
         <div style="font-size:19px;font-weight:800;margin-top:5px">${client}</div>
         ${phone?`<div style="font-size:13px;color:#565b74;font-family:'IBM Plex Mono';margin-top:2px">${phone}</div>`:''}
       </div>
@@ -1777,7 +1777,7 @@ async function genInvoice(ref){
 
     <!-- نوع العملية -->
     <div style="padding:18px 34px 0">
-      <div style="background:#1C1D3C;color:#fff;padding:9px 16px;font-size:13px;font-weight:800;letter-spacing:1px;border-radius:6px 6px 0 0;font-family:'Tajawal'">
+      <div style="background:#1C1D3C;color:#fff;padding:9px 16px;font-size:14px;font-weight:800;border-radius:6px 6px 0 0;font-family:'Cairo',sans-serif">
         تفاصيل العملية · ${typeLbl[t.type]||''}
       </div>
       <table style="width:100%;border-collapse:collapse;margin-top:-1px">
@@ -1816,9 +1816,16 @@ async function genInvoice(ref){
       </div>
     </div>
   </div>`;
-  try{await document.fonts.ready;}catch(e){}
-  await new Promise(r=>setTimeout(r,200));
-  const canvas=await html2canvas(stage,{scale:2.5,backgroundColor:'#ffffff',width:794});
+  try{
+    await Promise.all([
+      document.fonts.load("700 16px Cairo"),
+      document.fonts.load("800 16px Cairo"),
+      document.fonts.load("600 16px Cairo")
+    ]);
+    await document.fonts.ready;
+  }catch(e){}
+  await new Promise(r=>setTimeout(r,350));
+  const canvas=await html2canvas(stage,{scale:2.5,backgroundColor:'#ffffff',width:794,useCORS:true});
   const doc=new jspdf.jsPDF('p','mm','a4');
   let iw=210,ih=canvas.height*210/canvas.width;
   if(ih>297){ih=297;iw=canvas.width*297/canvas.height;}
