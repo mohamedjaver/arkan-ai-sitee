@@ -4087,26 +4087,37 @@ async function publishStatic(){
   }catch(e){toast('خطأ اتصال: '+e.message);}
 }
 
-function publishRates(){
+async function publishRates(){
   const valid=pubRows.filter(x=>x.ccy&&(x.w>0||x.m>0||x.r>0));
   if(!valid.length){toast('سعّر عملة واحدة على الأقل');return;}
   localStorage.setItem('arkan-pubrates',JSON.stringify(pubRows));
   const wa=($('pubWa')?$('pubWa').value:'22236295050').replace(/[^0-9]/g,'')||'22236295050';
   const payload={r:valid,wa,ts:Date.now()};
   const enc=btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
-  const url=location.origin+location.pathname.replace(/settlement\.html$/,'')+'rates.html#'+enc;
+  const longUrl=location.origin+location.pathname.replace(/settlement\.html$/,'')+'rates.html#'+enc;
   const el=$('pubLink');
+  el.innerHTML=`<div class="card" style="background:rgba(139,114,255,.1);margin-top:12px">
+    <div style="font-size:12px;color:var(--dim)">⏳ جارٍ اختصار الرابط...</div></div>`;
+  let shortUrl=null;
+  try{
+    const ctl=new AbortController();const to=setTimeout(()=>ctl.abort(),4000);
+    const r=await fetch('https://tinyurl.com/api-create.php?url='+encodeURIComponent(longUrl),{signal:ctl.signal});
+    clearTimeout(to);
+    if(r.ok){const t=await r.text();if(t.startsWith('http'))shortUrl=t.trim();}
+  }catch(e){}
+  const url=shortUrl||longUrl;
   el.innerHTML=`
     <div class="card" style="background:rgba(139,114,255,.1);margin-top:12px">
-      <div style="font-size:12px;color:var(--dim);margin-bottom:6px">✅ رابط العملاء جاهز:</div>
-      <div style="font-size:11px;font-family:'IBM Plex Mono';word-break:break-all;color:var(--acc2);background:rgba(0,0,0,.3);padding:10px;border-radius:10px">${url}</div>
+      <div style="font-size:12px;color:var(--dim);margin-bottom:6px">${shortUrl?'✅ رابط مختصر وآمن للإرسال:':'⚠️ تعذّر الاختصار — رابط كامل (استخدم الرابط الثابت إن أمكن):'}</div>
+      <div style="font-size:${shortUrl?'15px':'10px'};font-family:'IBM Plex Mono';word-break:break-all;color:var(--acc2);background:rgba(0,0,0,.3);padding:10px;border-radius:10px">${url}</div>
+      <div style="font-size:11px;color:var(--dim);margin-top:6px">⚠️ رابط لعرض لحظي واحد فقط — لا يتحدث لاحقًا. للبايو استخدم الرابط الثابت.</div>
       <div class="btn-row" style="margin-top:8px">
         <button class="btn btn-gold" onclick="(navigator.clipboard&&navigator.clipboard.writeText('${url}'));toast('نُسخ ✓')">📋 نسخ</button>
         <button class="btn btn-wa" onclick="window.open('https://wa.me/?text='+encodeURIComponent('💱 أسعار ARKAN اليوم:\n${url}'),'_blank')">مشاركة</button>
         <button class="btn btn-line" onclick="window.open('${url}','_blank')">معاينة</button>
       </div>
     </div>`;
-  toast('نُشرت الأسعار ✓');
+  toast(shortUrl?'رابط مختصر جاهز ✓':'رابط جاهز (بلا اختصار) ✓');
 }
 </script>
 </body>
