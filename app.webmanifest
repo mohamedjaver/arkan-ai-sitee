@@ -1,0 +1,24 @@
+{
+  "name": "ARKAN — الصرافة وأنظمة التداول",
+  "short_name": "ARKAN",
+  "description": "بوابة أركان — الصرافة الرقمية وأنظمة التداول المؤسساتية.",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": "./?src=pwa",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#05070E",
+  "theme_color": "#05070E",
+  "categories": ["finance", "business"],
+  "icons": [
+    { "src": "arkan-icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "arkan-icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "arkan-maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "arkan-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "الأسعار", "short_name": "أسعار", "url": "rates.html", "description": "أسعار الصرف اليوم" },
+    { "name": "لوحة التشغيل", "short_name": "التسوية", "url": "settlement.html", "description": "لوحة التسوية" }
+  ]
+}
