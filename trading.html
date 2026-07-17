@@ -228,6 +228,36 @@ footer{position:relative;z-index:1;border-top:1px solid var(--line-2);padding:46
 @media (max-width:560px){.wrap{padding:0 18px}.band-in{padding:36px 22px}.scard .metrics{grid-template-columns:repeat(2,1fr)}.hero-stats{gap:20px}.cdbar{font-size:12px}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.reveal{opacity:1;transform:none}}
 </style>
+
+<style id="pageTransition">
+/* ===== EXODUS-LIKE PAGE TRANSITIONS ===== */
+@view-transition{navigation:auto}
+::view-transition-old(root){animation:ptOut .28s cubic-bezier(.22,1,.36,1) forwards}
+::view-transition-new(root){animation:ptIn .38s cubic-bezier(.22,1,.36,1) forwards}
+@keyframes ptOut{to{opacity:0;transform:translateY(-8px) scale(.995)}}
+@keyframes ptIn{from{opacity:0;transform:translateY(12px) scale(.995)}to{opacity:1;transform:none}}
+/* fallback للمتصفحات الأقدم: تلاشٍ عند الدخول */
+html.pt-enter body{animation:ptIn .38s cubic-bezier(.22,1,.36,1)}
+</style>
+<script id="pageTransitionJS">
+(function(){
+  document.documentElement.classList.add('pt-enter');
+  /* اعتراض الروابط الداخلية لخروج ناعم في المتصفحات بلا View Transitions */
+  if(!document.startViewTransition){
+    document.addEventListener('click',function(e){
+      const a=e.target.closest('a[href]');
+      if(!a)return;
+      const href=a.getAttribute('href');
+      if(!href||href.startsWith('#')||href.startsWith('http')||href.startsWith('mailto')||a.target==='_blank')return;
+      e.preventDefault();
+      document.body.style.transition='opacity .22s ease, transform .22s ease';
+      document.body.style.opacity='0';
+      document.body.style.transform='translateY(-8px)';
+      setTimeout(()=>{location.href=href;},210);
+    });
+  }
+})();
+</script>
 </head>
 <body>
 <canvas id="bgfx"></canvas>
@@ -242,7 +272,7 @@ footer{position:relative;z-index:1;border-top:1px solid var(--line-2);padding:46
 
 <!-- COUNTDOWN -->
 <div class="cdbar">
-  <span class="lbl">⚡ عرض تأسيسي محدود — خصم حتى <b>40%</b> على خطة المؤسسين</span>
+  <span class="lbl">عرض تأسيسي محدود — خصم حتى <b>40%</b> على خطة المؤسسين</span>
   <span class="cd" id="cd"></span>
 </div>
 
@@ -594,7 +624,7 @@ async function startPayment(key,pkgId){
       const r=await fetch(CONFIG.BACKEND_CHECK_ORDER+'?orderId='+orderId);
       if(r.ok){const d=await r.json();
         if(d.status==='paid'){clearInterval(pollTimer);
-          document.querySelector('.waiting').innerHTML='✅ تم تأكيد دفعتك! تفقّد Telegram — رابط دخولك في الطريق.';}}
+          document.querySelector('.waiting').innerHTML='تم تأكيد دفعتك! تفقّد Telegram — رابط دخولك في الطريق.';}}
     }catch(e){}
   },8000);
 }
