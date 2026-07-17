@@ -239,25 +239,33 @@ footer{position:relative;z-index:1;border-top:1px solid var(--line-2);padding:46
 /* fallback للمتصفحات الأقدم: تلاشٍ عند الدخول */
 html.pt-enter body{animation:ptIn .38s cubic-bezier(.22,1,.36,1)}
 </style>
-<script id="pageTransitionJS">
-(function(){
+<script id="pageTransitionJS">(function(){
   document.documentElement.classList.add('pt-enter');
-  /* اعتراض الروابط الداخلية لخروج ناعم في المتصفحات بلا View Transitions */
-  if(!document.startViewTransition){
-    document.addEventListener('click',function(e){
-      const a=e.target.closest('a[href]');
-      if(!a)return;
-      const href=a.getAttribute('href');
-      if(!href||href.startsWith('#')||href.startsWith('http')||href.startsWith('mailto')||a.target==='_blank')return;
-      e.preventDefault();
-      document.body.style.transition='opacity .22s ease, transform .22s ease';
-      document.body.style.opacity='0';
-      document.body.style.transform='translateY(-8px)';
-      setTimeout(()=>{location.href=href;},210);
-    });
-  }
-})();
-</script>
+  var standalone=(window.matchMedia&&matchMedia('(display-mode: standalone)').matches)||(navigator.standalone===true);
+  document.addEventListener('click',function(e){
+    var a=e.target.closest?e.target.closest('a[href]'):null;
+    if(!a)return;
+    var href=a.getAttribute('href');
+    if(!href||href.charAt(0)==='#'||/^https?:/i.test(href)||href.indexOf('mailto')===0||a.target==='_blank')return;
+    e.preventDefault();
+    if(standalone||!document.startViewTransition){
+      /* standalone: انتقال فوري مباشر — الأكثر موثوقية داخل PWA على iOS */
+      if(!standalone){
+        document.body.style.transition='opacity .18s ease';
+        document.body.style.opacity='0';
+        setTimeout(function(){location.href=href;},170);
+      }else{
+        location.href=href;
+      }
+    }else{
+      location.href=href;
+    }
+  },true);
+})();</script>
+<link rel="manifest" href="site-manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ARKAN">
 </head>
 <body>
 <canvas id="bgfx"></canvas>
