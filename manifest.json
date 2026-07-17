@@ -3,6 +3,7 @@
   "short_name": "ARKAN",
   "description": "AOA · USDT · MRU — Bankily Bridge",
   "start_url": "settlement.html",
+  "scope": "./",
   "display": "standalone",
   "background_color": "#15172E",
   "theme_color": "#15172E",
