@@ -1,142 +1,225 @@
-/* ARKAN i18n — AR/FR/PT auto-detect + manual switch */
+/* ARKAN i18n v2 — FULL trilingual AR/FR/PT */
 (function(){
-  var DICT={
-  /* ===== NAV & COMMON ===== */
-  "الصرافة":{fr:"Change",pt:"Câmbio"},
-  "المؤشرات":{fr:"Indicateurs",pt:"Indicadores"},
-  "الاشتراكات":{fr:"Abonnements",pt:"Planos"},
-  "كيف يعمل":{fr:"Comment ça marche",pt:"Como funciona"},
-  "تواصل":{fr:"Contact",pt:"Contacto"},
-  "ابدأ الآن":{fr:"Commencer",pt:"Começar"},
-  "تواصل واتساب":{fr:"WhatsApp",pt:"WhatsApp"},
-  /* ===== HERO (trading) ===== */
-  "تداول بعين":{fr:"Tradez avec l'œil",pt:"Negocie com o olhar"},
-  "المؤسسات":{fr:"des institutions",pt:"das instituições"},
-  "لا بعين المتداول.":{fr:"pas celui du trader.",pt:"não do trader comum."},
-  /* ===== EXCHANGE SECTION ===== */
-  "أركان للصرافة والتسوية الدولية":{fr:"ARKAN Change & Règlement International",pt:"ARKAN Câmbio & Liquidação Internacional"},
-  "أسعار يومية محدّثة بين الأوقية والكوانزا واليوان والدولار واليورو — جملة وتجزئة، وطلب تحويل مباشر عبر واتساب.":{
-    fr:"Taux quotidiens actualisés entre Ouguiya, Kwanza, Yuan, Dollar et Euro — gros et détail, avec demande de transfert directe via WhatsApp.",
-    pt:"Taxas diárias atualizadas entre Ouguiya, Kwanza, Yuan, Dólar e Euro — grosso e retalho, com pedido de transferência direto via WhatsApp."},
-  "كوانزا أنغولية":{fr:"Kwanza angolais",pt:"Kwanza angolano"},
-  "تيثر":{fr:"Tether",pt:"Tether"},
-  "يورو":{fr:"Euro",pt:"Euro"},
-  "افتح بوابة الأسعار":{fr:"Ouvrir le portail des taux",pt:"Abrir portal de taxas"},
-  "جدول اليوم كاملًا بثلاث شرائح: جملة، متوسط، تجزئة — واحسب تحويلك فورًا.":{
-    fr:"Tableau du jour en trois paliers : gros, moyen, détail — calculez votre transfert instantanément.",
-    pt:"Tabela do dia em três níveis: grosso, médio, retalho — calcule a sua transferência na hora."},
-  "أرسل طلبك واتساب":{fr:"Envoyez via WhatsApp",pt:"Envie via WhatsApp"},
-  "رسالة جاهزة بالمبلغ والسعر ومرجع الطلب — تأكيد ودفع خلال دقائق.":{
-    fr:"Message prêt avec montant, taux et référence — confirmation et paiement en minutes.",
-    pt:"Mensagem pronta com valor, taxa e referência — confirmação e pagamento em minutos."},
-  "تسوية الشركات":{fr:"Règlement entreprises",pt:"Liquidação empresarial"},
-  "دفع فواتير الموردين الدوليين (الصين/أوروبا) بمرجع رسمي وفاتورة معتمدة.":{
-    fr:"Paiement des factures fournisseurs internationaux (Chine/Europe) avec référence officielle et facture certifiée.",
-    pt:"Pagamento de faturas de fornecedores internacionais (China/Europa) com referência oficial e fatura certificada."},
-  "بوابة الأسعار ←":{fr:"Portail des taux ←",pt:"Portal de taxas ←"},
-  "طلب مؤسسي ←":{fr:"Demande entreprise ←",pt:"Pedido empresarial ←"},
-  /* ===== RATES PAGE ===== */
-  "أسعار الصرف اليوم":{fr:"Taux de change du jour",pt:"Taxas de câmbio de hoje"},
-  "أسعار اليوم (مقابل الأوقية)":{fr:"Taux du jour (contre Ouguiya)",pt:"Taxas de hoje (contra Ouguiya)"},
-  "العملة":{fr:"Devise",pt:"Moeda"},
-  "جملة":{fr:"Gros",pt:"Grosso"},
-  "متوسط":{fr:"Moyen",pt:"Médio"},
-  "تجزئة":{fr:"Détail",pt:"Retalho"},
-  "احسب تحويلك":{fr:"Calculez votre transfert",pt:"Calcule a sua transferência"},
-  "العملة التي تريد تحويلها":{fr:"Devise à convertir",pt:"Moeda a converter"},
-  "المبلغ":{fr:"Montant",pt:"Montante"},
-  "تستلم بالأوقية":{fr:"Vous recevez en Ouguiya",pt:"Recebe em Ouguiya"},
-  "أرسل الطلب عبر واتساب":{fr:"Envoyer la demande via WhatsApp",pt:"Enviar pedido via WhatsApp"},
-  "بعد الإرسال، أكّد الدفع وسنحوّل لك المبلغ فورًا.":{
-    fr:"Après l'envoi, confirmez le paiement et nous transférons immédiatement.",
-    pt:"Após o envio, confirme o pagamento e transferimos de imediato."},
-  "لكل عملة حدّها — فوقه سعر الجملة، دونه التجزئة":{
-    fr:"Chaque devise a son seuil — au-dessus : gros, en dessous : détail",
-    pt:"Cada moeda tem o seu limite — acima: grosso, abaixo: retalho"},
-  "اسمك (اختياري)":{fr:"Votre nom (optionnel)",pt:"O seu nome (opcional)"},
-  /* ===== REQUEST PAGE ===== */
-  "تحويلات الشركات الدولية":{fr:"Transferts internationaux d'entreprise",pt:"Transferências empresariais internacionais"},
-  /* ===== FOOTER/MISC ===== */
-  "عرض تأسيسي محدود — خصم حتى":{fr:"Offre fondateurs limitée — jusqu'à",pt:"Oferta fundadores limitada — até"},
-  "على خطة المؤسسين":{fr:"sur le plan fondateurs",pt:"no plano fundadores"},
-  };
+var DICT={
+/* NAV */
+"الصرافة":{fr:"Change",pt:"Câmbio"},
+"المؤشرات":{fr:"Indicateurs",pt:"Indicadores"},
+"الاشتراكات":{fr:"Abonnements",pt:"Planos"},
+"كيف يعمل":{fr:"Comment ça marche",pt:"Como funciona"},
+"تواصل":{fr:"Contact",pt:"Contacto"},
+"ابدأ الآن":{fr:"Commencer",pt:"Começar"},
+"تواصل واتساب":{fr:"WhatsApp",pt:"WhatsApp"},
+/* HERO */
+"تداول بعين":{fr:"Tradez avec l'œil",pt:"Negocie com o olhar"},
+"المؤسسات":{fr:"des institutions",pt:"das instituições"},
+"لا بعين المتداول.":{fr:"pas celui du trader.",pt:"não do trader comum."},
+"منظومة مؤشرات مؤسساتية تكشف نية السيولة الحقيقية عبر تدفق الأوامر، الفوتبرنت، والفوليوم بروفايل — مباشرة على TradingView.":{
+ fr:"Une suite d'indicateurs institutionnels révélant l'intention réelle de la liquidité via l'order flow, le footprint et le volume profile — directement sur TradingView.",
+ pt:"Um conjunto de indicadores institucionais que revela a verdadeira intenção da liquidez através do order flow, footprint e volume profile — diretamente no TradingView."},
+"يثق بها":{fr:"Approuvé par",pt:"Confiado por"},
+"آلاف المتداولين":{fr:"des milliers de traders",pt:"milhares de traders"},
+"حول العالم":{fr:"dans le monde",pt:"no mundo"},
+"عرض الباقات":{fr:"Voir les plans",pt:"Ver planos"},
+"عرض تأسيسي محدود — خصم حتى":{fr:"Offre fondateurs limitée — jusqu'à",pt:"Oferta fundadores limitada — até"},
+"على خطة المؤسسين":{fr:"sur le plan fondateurs",pt:"no plano fundadores"},
+/* EXCHANGE SECTION */
+"أركان للصرافة والتسوية الدولية":{fr:"ARKAN Change & Règlement International",pt:"ARKAN Câmbio & Liquidação Internacional"},
+"أسعار يومية محدّثة بين الأوقية والكوانزا واليوان والدولار واليورو — جملة وتجزئة، وطلب تحويل مباشر عبر واتساب.":{
+ fr:"Taux quotidiens actualisés entre Ouguiya, Kwanza, Yuan, Dollar et Euro — gros et détail, demande de transfert directe via WhatsApp.",
+ pt:"Taxas diárias atualizadas entre Ouguiya, Kwanza, Yuan, Dólar e Euro — grosso e retalho, pedido de transferência direto via WhatsApp."},
+"كوانزا أنغولية":{fr:"Kwanza angolais",pt:"Kwanza angolano"},
+"تيثر":{fr:"Tether",pt:"Tether"},
+"يورو":{fr:"Euro",pt:"Euro"},
+"افتح بوابة الأسعار":{fr:"Ouvrir le portail des taux",pt:"Abrir portal de taxas"},
+"جدول اليوم كاملًا بثلاث شرائح: جملة، متوسط، تجزئة — واحسب تحويلك فورًا.":{
+ fr:"Tableau du jour en trois paliers : gros, moyen, détail — calculez instantanément.",
+ pt:"Tabela do dia em três níveis: grosso, médio, retalho — calcule na hora."},
+"أرسل طلبك واتساب":{fr:"Envoyez via WhatsApp",pt:"Envie via WhatsApp"},
+"رسالة جاهزة بالمبلغ والسعر ومرجع الطلب — تأكيد ودفع خلال دقائق.":{
+ fr:"Message prêt avec montant, taux et référence — confirmation et paiement en minutes.",
+ pt:"Mensagem pronta com valor, taxa e referência — confirmação e pagamento em minutos."},
+"تسوية الشركات":{fr:"Règlement entreprises",pt:"Liquidação empresarial"},
+"دفع فواتير الموردين الدوليين (الصين/أوروبا) بمرجع رسمي وفاتورة معتمدة.":{
+ fr:"Paiement des factures fournisseurs internationaux (Chine/Europe) avec référence officielle et facture certifiée.",
+ pt:"Pagamento de faturas de fornecedores internacionais (China/Europa) com referência oficial e fatura certificada."},
+"بوابة الأسعار ←":{fr:"Portail des taux ←",pt:"Portal de taxas ←"},
+"طلب مؤسسي ←":{fr:"Demande entreprise ←",pt:"Pedido empresarial ←"},
+/* INDICATORS SECTION */
+"محركات تحليلية بمعايير المكاتب المؤسساتية":{fr:"Moteurs analytiques aux standards des desks institutionnels",pt:"Motores analíticos com padrões de mesas institucionais"},
+"كل مؤشر مبني على Pine Script v6، مُحسّن بصريًا ليُقرأ في ثانية — ويُفعّل على حسابك في TradingView خلال دقائق.":{
+ fr:"Chaque indicateur est construit en Pine Script v6, optimisé visuellement pour une lecture instantanée — activé sur votre compte TradingView en minutes.",
+ pt:"Cada indicador é construído em Pine Script v6, otimizado visualmente para leitura instantânea — ativado na sua conta TradingView em minutos."},
+"محرك تحليلي":{fr:"Moteur analytique",pt:"Motor analítico"},
+"صُمّم لمتداولي تدفق الأوامر الجادّين.":{fr:"Conçu pour les traders d'order flow sérieux.",pt:"Concebido para traders sérios de order flow."},
+"هندسة تدفق الأوامر المؤسساتية في متناول المتداول الجاد.":{fr:"L'ingénierie d'order flow institutionnelle, accessible au trader sérieux.",pt:"Engenharia de order flow institucional ao alcance do trader sério."},
+"شراء":{fr:"Acheter",pt:"Comprar"},
+"يبدأ من":{fr:"À partir de",pt:"A partir de"},
+/* PRICING */
+"اختر خطتك":{fr:"Choisissez votre plan",pt:"Escolha o seu plano"},
+"خطط الوصول":{fr:"Plans d'accès",pt:"Planos de acesso"},
+"اختر باقة الوصول المناسبة لك":{fr:"Choisissez la formule qui vous convient",pt:"Escolha o pacote ideal para si"},
+"الخطط والدفع بـ USDT":{fr:"Plans & paiement en USDT",pt:"Planos & pagamento em USDT"},
+"الأوفر":{fr:"Meilleure offre",pt:"Melhor oferta"},
+"/ شهر · USDT":{fr:"/ mois · USDT",pt:"/ mês · USDT"},
+"اشترك الآن — USDT":{fr:"S'abonner — USDT",pt:"Subscrever — USDT"},
+"ادفع بـ USDT وابدأ الآن":{fr:"Payez en USDT et commencez",pt:"Pague em USDT e comece"},
+"دفع مباشر بـ USDT (TRC20) أو تواصل عبر Telegram — بلا وسطاء، بلا بطاقات، تفعيل فوري.":{
+ fr:"Paiement direct en USDT (TRC20) ou via Telegram — sans intermédiaires, sans cartes, activation immédiate.",
+ pt:"Pagamento direto em USDT (TRC20) ou via Telegram — sem intermediários, sem cartões, ativação imediata."},
+"إشارات وتحديثات عبر Telegram على مدار الساعة.":{fr:"Signaux et mises à jour via Telegram 24/7.",pt:"Sinais e atualizações via Telegram 24/7."},
+"دعم Telegram مباشر":{fr:"Support Telegram direct",pt:"Suporte Telegram direto"},
+"تفعيل فوري بعد التأكيد":{fr:"Activation immédiate après confirmation",pt:"Ativação imediata após confirmação"},
+"وصول فوري":{fr:"Accès immédiat",pt:"Acesso imediato"},
+"دفع آمن عبر TRC20":{fr:"Paiement sécurisé via TRC20",pt:"Pagamento seguro via TRC20"},
+"دفع آمن فوري":{fr:"Paiement sécurisé instantané",pt:"Pagamento seguro instantâneo"},
+/* HOW IT WORKS / PAYMENT FLOW */
+"من الدفع إلى التفعيل في دقائق":{fr:"Du paiement à l'activation en minutes",pt:"Do pagamento à ativação em minutos"},
+"// إتمام الاشتراك":{fr:"// Finaliser l'abonnement",pt:"// Concluir subscrição"},
+"حدّد الخطة وادفع بـ USDT TRC20 بمبلغ فريد لكل طلب.":{fr:"Choisissez le plan et payez en USDT TRC20 avec un montant unique par commande.",pt:"Escolha o plano e pague em USDT TRC20 com um valor único por pedido."},
+"المبلغ بالضبط":{fr:"Montant exact",pt:"Valor exato"},
+"(بما فيه الكسور) — هكذا نتعرّف على دفعتك آليًا.":{fr:"(décimales incluses) — c'est ainsi que nous identifions votre paiement automatiquement.",pt:"(incluindo decimais) — é assim que identificamos o seu pagamento automaticamente."},
+"عنوان المحفظة":{fr:"Adresse du portefeuille",pt:"Endereço da carteira"},
+"عنوان المحفظة (شبكة TRON TRC20)":{fr:"Adresse du portefeuille (réseau TRON TRC20)",pt:"Endereço da carteira (rede TRON TRC20)"},
+"الشبكة:":{fr:"Réseau :",pt:"Rede:"},
+"⚠️ حوّل":{fr:"⚠️ Envoyez",pt:"⚠️ Envie"},
+"⚠️ شبكة":{fr:"⚠️ Réseau",pt:"⚠️ Rede"},
+"حوّل":{fr:"Envoyez",pt:"Envie"},
+"فقط":{fr:"uniquement",pt:"apenas"},
+"فقط. الإرسال على شبكة أخرى = فقدان المبلغ نهائيًا.":{fr:"uniquement. Un envoi sur un autre réseau = perte définitive des fonds.",pt:"apenas. Envio noutra rede = perda definitiva dos fundos."},
+"على شبكة TRC20 فقط — أي خطأ في الشبكة يعني ضياع المبلغ.":{fr:"sur le réseau TRC20 uniquement — toute erreur de réseau entraîne la perte des fonds.",pt:"apenas na rede TRC20 — qualquer erro de rede significa perda dos fundos."},
+"نسخ":{fr:"Copier",pt:"Copiar"},
+"نسخ العنوان":{fr:"Copier l'adresse",pt:"Copiar endereço"},
+"نسخ المبلغ":{fr:"Copier le montant",pt:"Copiar valor"},
+"تم النسخ":{fr:"Copié",pt:"Copiado"},
+"بانتظار وصول التحويل…":{fr:"En attente du transfert…",pt:"A aguardar a transferência…"},
+"المنظومة تطابق دفعتك على الشبكة خلال ثوانٍ.":{fr:"Le système fait correspondre votre paiement sur la blockchain en quelques secondes.",pt:"O sistema corresponde o seu pagamento na blockchain em segundos."},
+"تأكيد آلي":{fr:"Confirmation automatique",pt:"Confirmação automática"},
+"أرسلتُ الدفع — أكّد وفعل عبر Telegram":{fr:"J'ai payé — confirmez et activez via Telegram",pt:"Paguei — confirme e ative via Telegram"},
+"أرسل صورة الإيصال في Telegram لتفعيل اشتراكك فورًا.":{fr:"Envoyez la capture du reçu sur Telegram pour une activation immédiate.",pt:"Envie a captura do recibo no Telegram para ativação imediata."},
+"رابط قناة الأعضاء + تفعيل المؤشر على TradingView.":{fr:"Lien du canal membres + activation de l'indicateur sur TradingView.",pt:"Link do canal de membros + ativação do indicador no TradingView."},
+"استفسر عبر Telegram":{fr:"Renseignez-vous via Telegram",pt:"Informe-se via Telegram"},
+"تواصل عبر Telegram":{fr:"Contact via Telegram",pt:"Contacto via Telegram"},
+"ابدأ اليوم — ادفع بـ USDT أو تواصل معنا مباشرة عبر Telegram.":{fr:"Commencez aujourd'hui — payez en USDT ou contactez-nous directement via Telegram.",pt:"Comece hoje — pague em USDT ou contacte-nos diretamente via Telegram."},
+"جاهز لتقرأ السوق كالمؤسسات؟":{fr:"Prêt à lire le marché comme les institutions ?",pt:"Pronto para ler o mercado como as instituições?"},
+/* NEWS */
+"أهم أخبار السوق":{fr:"Actualités du marché",pt:"Notícias do mercado"},
+"أحدث الأخبار المؤثرة على سوق الكريبتو — تُحدَّث لحظيًا":{fr:"Les dernières actualités impactant le marché crypto — mises à jour en temps réel",pt:"As últimas notícias que impactam o mercado cripto — atualizadas em tempo real"},
+"تنبيهات حية":{fr:"Alertes en direct",pt:"Alertas ao vivo"},
+/* DISCLAIMER */
+"إخلاء مسؤولية:":{fr:"Avertissement :",pt:"Aviso legal:"},
+"جميع مؤشرات ARKAN AI Trading Systems أدوات تحليلية وتعليمية فقط، ولا تُعد نصيحة استثمارية. التداول ينطوي على مخاطر عالية.":{
+ fr:"Tous les indicateurs ARKAN AI Trading Systems sont des outils analytiques et éducatifs uniquement, et ne constituent pas un conseil en investissement. Le trading comporte des risques élevés.",
+ pt:"Todos os indicadores ARKAN AI Trading Systems são ferramentas analíticas e educativas apenas, não constituindo aconselhamento de investimento. O trading envolve riscos elevados."},
+/* RATES PAGE */
+"أسعار الصرف اليوم":{fr:"Taux de change du jour",pt:"Taxas de câmbio de hoje"},
+"أسعار اليوم (مقابل الأوقية)":{fr:"Taux du jour (contre l'Ouguiya)",pt:"Taxas de hoje (contra o Ouguiya)"},
+"العملة":{fr:"Devise",pt:"Moeda"},
+"جملة":{fr:"Gros",pt:"Grosso"},
+"متوسط":{fr:"Moyen",pt:"Médio"},
+"تجزئة":{fr:"Détail",pt:"Retalho"},
+"احسب تحويلك":{fr:"Calculez votre transfert",pt:"Calcule a sua transferência"},
+"العملة التي تريد تحويلها":{fr:"Devise à convertir",pt:"Moeda a converter"},
+"المبلغ":{fr:"Montant",pt:"Montante"},
+"المبلغ المطلوب":{fr:"Montant requis",pt:"Montante necessário"},
+"تستلم بالأوقية":{fr:"Vous recevez en Ouguiya",pt:"Recebe em Ouguiya"},
+"MRU · أوقية":{fr:"MRU · Ouguiya",pt:"MRU · Ouguiya"},
+"أرسل الطلب عبر واتساب":{fr:"Envoyer via WhatsApp",pt:"Enviar via WhatsApp"},
+"بعد الإرسال، أكّد الدفع وسنحوّل لك المبلغ فورًا.":{fr:"Après l'envoi, confirmez le paiement et nous transférons immédiatement.",pt:"Após o envio, confirme o pagamento e transferimos de imediato."},
+"لكل عملة حدّها — فوقه سعر الجملة، دونه التجزئة":{fr:"Chaque devise a son seuil — au-dessus : gros, en dessous : détail",pt:"Cada moeda tem o seu limite — acima: grosso, abaixo: retalho"},
+"اسمك (اختياري)":{fr:"Votre nom (optionnel)",pt:"O seu nome (opcional)"},
+"لا توجد أسعار.":{fr:"Aucun taux disponible.",pt:"Sem taxas disponíveis."},
+"اطلب الرابط المحدّث من ARKAN.":{fr:"Demandez le lien actualisé à ARKAN.",pt:"Peça o link atualizado à ARKAN."},
+"تعذّر تحميل الأسعار — إعادة المحاولة…":{fr:"Échec du chargement — nouvelle tentative…",pt:"Falha ao carregar — a tentar novamente…"},
+/* REQUEST PAGE */
+"تحويلات الشركات الدولية":{fr:"Transferts internationaux d'entreprise",pt:"Transferências empresariais internacionais"},
+"تسديد فواتير الاستيراد بالعملة الصعبة — سرعة وموثوقية":{fr:"Règlement des factures d'importation en devises — rapidité et fiabilité",pt:"Pagamento de faturas de importação em divisas — rapidez e fiabilidade"},
+"Como funciona · كيف نعمل":{fr:"Comment ça marche",pt:"Como funciona"},
+"ترسل فاتورة المورد ووثائق الشركة":{fr:"Vous envoyez la facture fournisseur et les documents de l'entreprise",pt:"Envia a fatura do fornecedor e os documentos da empresa"},
+"تودع الكوانزا — سعر مثبت 30 دقيقة":{fr:"Vous déposez les Kwanzas — taux garanti 30 minutes",pt:"Deposita os Kwanzas — taxa garantida por 30 minutos"},
+"ندفع للمورد ونرسل إيصال التحويل الرسمي":{fr:"Nous payons le fournisseur et envoyons le reçu officiel",pt:"Pagamos ao fornecedor e enviamos o recibo oficial"},
+"الدفع مباشرة للمورد مقابل الفاتورة — وثائق KYC إلزامية":{fr:"Paiement direct au fournisseur contre facture — documents KYC obligatoires",pt:"Pagamento direto ao fornecedor contra fatura — documentos KYC obrigatórios"},
+"Nome da empresa · اسم الشركة":{fr:"Nom de l'entreprise",pt:"Nome da empresa"},
+"Montante necessário · المبلغ المطلوب":{fr:"Montant requis",pt:"Montante necessário"},
+"Moeda · العملة":{fr:"Devise",pt:"Moeda"},
+"País de pagamento · بلد الدفع":{fr:"Pays de paiement",pt:"País de pagamento"},
+"Finalidade · الغرض":{fr:"Objet",pt:"Finalidade"},
+"Seu nome e telefone · اسمك وهاتفك":{fr:"Votre nom et téléphone",pt:"Seu nome e telefone"},
+"أرسل طلبك — عرض السعر خلال دقائق":{fr:"Envoyez votre demande — devis en minutes",pt:"Envie o seu pedido — cotação em minutos"},
+"اطلب عرض سعر — الرد عبر واتساب فورًا":{fr:"Demandez un devis — réponse WhatsApp immédiate",pt:"Peça uma cotação — resposta WhatsApp imediata"},
+};
 
-  var LANGS=['ar','fr','pt'];
-  function detect(){
-    var saved=localStorage.getItem('arkan-lang');
-    if(saved&&LANGS.indexOf(saved)>=0)return saved;
-    var nav=(navigator.languages&&navigator.languages[0])||navigator.language||'ar';
-    nav=nav.toLowerCase();
-    if(nav.indexOf('pt')===0)return 'pt';
-    if(nav.indexOf('fr')===0)return 'fr';
-    return 'ar';
-  }
-  var cur=detect();
+var LANGS=['ar','fr','pt'];
+function detect(){
+  var saved=localStorage.getItem('arkan-lang');
+  if(saved&&LANGS.indexOf(saved)>=0)return saved;
+  var nav=(navigator.languages&&navigator.languages[0])||navigator.language||'ar';
+  nav=nav.toLowerCase();
+  if(nav.indexOf('pt')===0)return 'pt';
+  if(nav.indexOf('fr')===0)return 'fr';
+  return 'ar';
+}
+var cur=detect();
 
-  function apply(lang){
-    cur=lang;localStorage.setItem('arkan-lang',lang);
-    document.documentElement.lang=lang;
-    document.documentElement.dir=(lang==='ar')?'rtl':'ltr';
-    /* استبدال النصوص: نمشي على العقد النصية */
-    var walker=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT,null);
-    var nodes=[];while(walker.nextNode())nodes.push(walker.currentNode);
-    nodes.forEach(function(n){
-      var raw=n.nodeValue, t=raw.trim();
-      if(!t)return;
-      /* عند العودة للعربية: البحث العكسي */
-      if(lang==='ar'){
-        var orig=n._arkanAR;
-        if(orig!=null){n.nodeValue=orig;}
-        return;
+function translateNode(n,lang){
+  var raw=n.nodeValue,t=raw.trim();
+  if(!t)return;
+  if(lang==='ar'){if(n._aAR!=null)n.nodeValue=n._aAR;return;}
+  var src=(n._aAR!=null?n._aAR:raw).trim();
+  var d=DICT[src];
+  if(d&&d[lang]){if(n._aAR==null)n._aAR=raw;n.nodeValue=d[lang];}
+}
+function apply(lang){
+  cur=lang;localStorage.setItem('arkan-lang',lang);
+  document.documentElement.lang=lang;
+  document.documentElement.dir=(lang==='ar')?'rtl':'ltr';
+  var w=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT,null);
+  var ns=[];while(w.nextNode())ns.push(w.currentNode);
+  ns.forEach(function(n){translateNode(n,lang);});
+  document.querySelectorAll('[placeholder]').forEach(function(el){
+    var p=el.getAttribute('placeholder');if(!p)return;
+    if(lang==='ar'){if(el._aARP)el.setAttribute('placeholder',el._aARP);return;}
+    var src=el._aARP||p;var d=DICT[src.trim()];
+    if(d&&d[lang]){el._aARP=src;el.setAttribute('placeholder',d[lang]);}
+  });
+  document.querySelectorAll('.arkan-lang button').forEach(function(b){
+    var on=b.dataset.l===lang;
+    b.style.background=on?'linear-gradient(135deg,#8B72FF,#5B3FD1)':'transparent';
+    b.style.color=on?'#fff':'#8B8FA8';
+  });
+  document.dispatchEvent(new CustomEvent('arkan:lang',{detail:lang}));
+}
+window.arkanLang=function(){return cur;};
+window.arkanT=function(ar){var d=DICT[ar];return (cur!=='ar'&&d&&d[cur])?d[cur]:ar;};
+
+function mount(){
+  if(document.querySelector('.arkan-lang'))return;
+  var d=document.createElement('div');
+  d.className='arkan-lang';
+  d.style.cssText='position:fixed;bottom:16px;left:16px;z-index:99;display:flex;gap:4px;background:rgba(8,9,20,.88);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.12);border-radius:100px;padding:4px';
+  LANGS.forEach(function(l){
+    var b=document.createElement('button');
+    b.dataset.l=l;b.textContent=l.toUpperCase();
+    b.style.cssText='border:none;background:transparent;color:#8B8FA8;font-family:monospace;font-size:11px;font-weight:700;padding:7px 12px;border-radius:100px;cursor:pointer;letter-spacing:.05em';
+    b.onclick=function(){apply(l);};
+    d.appendChild(b);
+  });
+  document.body.appendChild(d);
+}
+function boot(){mount();apply(cur);}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
+/* المحتوى الديناميكي اللاحق (أسعار تُحقن بعد التحميل) */
+var mo=new MutationObserver(function(muts){
+  if(cur==='ar')return;
+  muts.forEach(function(m){
+    m.addedNodes&&m.addedNodes.forEach(function(node){
+      if(node.nodeType===3)translateNode(node,cur);
+      else if(node.nodeType===1){
+        var w=document.createTreeWalker(node,NodeFilter.SHOW_TEXT,null);
+        while(w.nextNode())translateNode(w.currentNode,cur);
       }
-      var src=n._arkanAR!=null?n._arkanAR.trim():t;
-      var d=DICT[src];
-      if(d&&d[lang]){
-        if(n._arkanAR==null)n._arkanAR=raw;
-        n.nodeValue=raw.replace(t,d[lang]).replace(src,d[lang]);
-        n.nodeValue=d[lang];
-      }
     });
-    /* placeholders */
-    document.querySelectorAll('input[placeholder],select').forEach(function(el){
-      var p=el.getAttribute('placeholder');if(!p)return;
-      if(lang==='ar'&&el._arkanARP){el.setAttribute('placeholder',el._arkanARP);return;}
-      var src=el._arkanARP||p;var d=DICT[src];
-      if(d&&d[lang]){el._arkanARP=src;el.setAttribute('placeholder',d[lang]);}
-    });
-    /* تحديث أزرار المبدل */
-    document.querySelectorAll('.arkan-lang button').forEach(function(b){
-      b.classList.toggle('on',b.dataset.l===lang);
-    });
-  }
-
-  /* مبدّل اللغة */
-  function mountSwitcher(){
-    if(document.querySelector('.arkan-lang'))return;
-    var d=document.createElement('div');
-    d.className='arkan-lang';
-    d.style.cssText='position:fixed;bottom:16px;left:16px;z-index:99;display:flex;gap:4px;background:rgba(10,11,26,.85);backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.12);border-radius:100px;padding:4px';
-    LANGS.forEach(function(l){
-      var b=document.createElement('button');
-      b.dataset.l=l;b.textContent=l.toUpperCase();
-      b.style.cssText='border:none;background:transparent;color:#8B8FA8;font-family:monospace;font-size:11px;font-weight:700;padding:7px 12px;border-radius:100px;cursor:pointer;letter-spacing:.05em';
-      b.onclick=function(){apply(l);style(b)};
-      d.appendChild(b);
-    });
-    function style(){
-      d.querySelectorAll('button').forEach(function(b){
-        var on=b.dataset.l===cur;
-        b.style.background=on?'linear-gradient(135deg,#8B72FF,#5B3FD1)':'transparent';
-        b.style.color=on?'#fff':'#8B8FA8';
-      });
-    }
-    document.body.appendChild(d);
-    var _apply=apply;
-    apply=function(l){_apply(l);style();};
-    style();
-  }
-
-  if(document.readyState==='loading'){
-    document.addEventListener('DOMContentLoaded',function(){mountSwitcher();if(cur!=='ar')apply(cur);});
-  }else{mountSwitcher();if(cur!=='ar')apply(cur);}
+  });
+});
+if(document.body)mo.observe(document.body,{childList:true,subtree:true});
+else document.addEventListener('DOMContentLoaded',function(){mo.observe(document.body,{childList:true,subtree:true});});
 })();
