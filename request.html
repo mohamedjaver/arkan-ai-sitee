@@ -82,6 +82,8 @@ html.pt-enter body{animation:ptIn .38s cubic-bezier(.22,1,.36,1)}
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="ARKAN">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.1.0/tesseract.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 </head>
 <body>
 
@@ -104,6 +106,12 @@ html.pt-enter body{animation:ptIn .38s cubic-bezier(.22,1,.36,1)}
   <div class="card">
     <h2>Solicitar cotação — Pagamento internacional</h2>
     <div class="h2ar">اطلب عرض سعر — الرد عبر واتساب فورًا</div>
+
+    <div id="invDrop" onclick="uploadInvoice()" style="border:2px dashed rgba(139,114,255,.4);border-radius:16px;padding:20px;text-align:center;cursor:pointer;margin-bottom:18px;background:rgba(139,114,255,.05);transition:.2s">
+      <div style="font-size:15px;font-weight:700;color:#B9A8FF" id="invDropTxt">Carregar fatura · ارفع الفاتورة (صورة / PDF)</div>
+      <div style="font-size:12px;color:#8B8FA8;margin-top:5px" id="invDropSub">Leitura automática do montante e da empresa · قراءة تلقائية للمبلغ واسم الشركة</div>
+      <div id="invResult" style="margin-top:8px"></div>
+    </div>
 
     <label>Nome da empresa · اسم الشركة</label>
     <input id="comp" placeholder="Ex: LUANDA IMPORT LDA">
@@ -179,5 +187,122 @@ Solicito cotação para pagamento internacional.`;
   window.open('https://wa.me/22236295050?text='+encodeURIComponent(msg),'_blank');
 }
 </script>
-<script src="i18n.js"></script></body>
+<script src="i18n.js"></script>
+<script>
+/* ============ UNIVERSAL INVOICE OCR ============ */
+async function pdfText(dataUrl){
+  const pdf=await pdfjsLib.getDocument({url:dataUrl}).promise;
+  let txt='';
+  for(let p=1;p<=Math.min(pdf.numPages,2);p++){
+    const page=await pdf.getPage(p);
+    const c=await page.getTextContent();
+    txt+=c.items.map(i=>i.str).join(' ')+'\n';
+  }
+  return txt;
+}
+async function ocrImage(dataUrl){
+  const worker=await Tesseract.createWorker(['eng','por','fra','ara'],1,{workerBlobURL:true});
+  const {data}=await worker.recognize(dataUrl);
+  await worker.terminate();
+  return data.text||'';
+}
+function normNum(raw){
+  raw=String(raw).replace(/\s/g,'');
+  var m=raw.match(/^(.*?)([.,])(\d{1,2})$/);
+  var i,d='';
+  if(m&&m[3].length<=2){i=m[1];d='.'+m[3];}else i=raw;
+  var v=parseFloat(i.replace(/[.,]/g,'')+d);
+  return isNaN(v)?null:v;
+}
+/* استخراج المبلغ: أولوية للكلمات المفتاحية المالية في الفواتير */
+function extractInvoiceAmount(t){
+  var keys=['TOTAL AMOUNT','GRAND TOTAL','AMOUNT DUE','TOTAL DUE','INVOICE TOTAL','TOTAL:',
+            'MONTANT TOTAL','TOTAL GÉNÉRAL','NET À PAYER','A PAYER',
+            'VALOR TOTAL','TOTAL A PAGAR','MONTANTE',
+            'الإجمالي','المجموع','المبلغ الإجمالي','إجمالي',
+            'TOTAL FOB','TOTAL CIF','TOTAL EXW','合计','总计','TOTAL USD','TOTAL EUR','TOTAL'];
+  var lines=t.split(/\n/);
+  var best=null,bestScore=-1;
+  lines.forEach(function(line){
+    var up=line.toUpperCase();
+    var score=0;
+    keys.forEach(function(k,i){if(up.indexOf(k)>=0)score=Math.max(score,keys.length-i);});
+    var nums=(line.match(/[0-9][0-9.,\s]{2,}/g)||[]).map(function(s){return normNum(s.trim());}).filter(function(v){return v&&v>=10&&v<1e12;});
+    if(!nums.length)return;
+    var mx=Math.max.apply(null,nums);
+    if(score>0&&(score>bestScore||(score===bestScore&&mx>(best||0)))){best=mx;bestScore=score;}
+  });
+  if(best)return best;
+  /* fallback: أكبر رقم منطقي في المستند */
+  var all=(t.match(/[0-9][0-9.,\s]{2,}/g)||[]).map(function(s){return normNum(s.trim());}).filter(function(v){return v&&v>=100&&v<1e12;});
+  return all.length?Math.max.apply(null,all):null;
+}
+/* استخراج العملة */
+function extractCurrency(t){
+  var up=t.toUpperCase();
+  if(/USDT|TRC20|TETHER/.test(up))return 'USDT';
+  if(/EUR|€|EURO/.test(up))return 'EUR';
+  if(/USD|US\$|DOLLAR|\$/.test(up))return 'USD';
+  if(/CNY|RMB|¥|YUAN/.test(up))return null; /* CNY غير معروض في الأزرار */
+  return null;
+}
+/* استخراج اسم الشركة: أول سطر بارز يشبه اسم شركة (كلمات كبيرة، LDA/LTD/CO/SARL) */
+function extractCompany(t){
+  var lines=t.split(/\n/).map(function(l){return l.trim();}).filter(function(l){return l.length>3;});
+  var suffixes=/\b(LDA|LTD|LLC|CO\.?,? ?LTD|COMPANY|SARL|SA|GMBH|INC|TRADING|IMPORT|EXPORT|INDUSTRY|FACTORY|GROUP|LIMITED|机械|有限公司)\b/i;
+  /* تجاهل كلمات الفاتورة العامة */
+  var skip=/INVOICE|FACTURE|FATURA|PROFORMA|COMMERCIAL|PACKING|DATE|N[oº°]|REF|TEL|FAX|EMAIL|WWW|HTTP|BANK|IBAN|SWIFT|ADDRESS|بنك|فاتورة|التاريخ/i;
+  for(var i=0;i<Math.min(lines.length,15);i++){
+    var l=lines[i];
+    if(skip.test(l))continue;
+    if(suffixes.test(l)&&l.length<70)return l.replace(/[^\w\s&.,\-\u4e00-\u9fff]/g,'').trim();
+  }
+  /* fallback: أول سطر بأحرف كبيرة متعددة الكلمات */
+  for(var j=0;j<Math.min(lines.length,8);j++){
+    var s=lines[j];
+    if(skip.test(s))continue;
+    var caps=s.replace(/[^A-Z]/g,'').length;
+    if(caps>=6&&s.split(/\s+/).length>=2&&s.length<60)return s.trim();
+  }
+  return null;
+}
+async function uploadInvoice(){
+  var inp=document.createElement('input');
+  inp.type='file';inp.accept='image/*,application/pdf';
+  inp.onchange=async function(){
+    var f=inp.files[0];if(!f)return;
+    var res=document.getElementById('invResult');
+    var txtEl=document.getElementById('invDropTxt');
+    txtEl.textContent='A ler… جارٍ القراءة…';
+    res.innerHTML='';
+    try{
+      var dataUrl=await new Promise(function(ok,err){var r=new FileReader();r.onload=function(){ok(r.result)};r.onerror=err;r.readAsDataURL(f);});
+      var txt='';
+      if(f.type==='application/pdf'){txt=await pdfText(dataUrl);}
+      else{txt=await ocrImage(dataUrl);}
+      var amount=extractInvoiceAmount(txt);
+      var ccy=extractCurrency(txt);
+      var company=extractCompany(txt);
+      var got=[];
+      if(company){document.getElementById('comp').value=company;got.push('✓ '+company.slice(0,28));}
+      if(amount){document.getElementById('amt').value=Math.round(amount).toLocaleString('en-US');got.push('✓ '+amount.toLocaleString('en-US'));}
+      if(ccy){document.querySelectorAll('.ccy button').forEach(function(b){b.classList.toggle('on',b.dataset.c===ccy);});got.push('✓ '+ccy);}
+      txtEl.textContent='Fatura lida · قُرئت الفاتورة';
+      res.innerHTML='<div style="font-family:monospace;font-size:12px;color:#3DDC97">'+
+        (got.length?got.join(' · '):'')+
+        (!amount?'<div style="color:#F4A50C;margin-top:4px">Insira o montante manualmente · أدخل المبلغ يدويًا</div>':'')+
+        (!company?'<div style="color:#F4A50C;margin-top:4px">Insira o nome da empresa · أدخل اسم الشركة</div>':'')+
+        '</div>';
+      [document.getElementById('comp'),document.getElementById('amt')].forEach(function(el){
+        if(el.value){el.style.transition='.3s';el.style.background='rgba(61,220,151,.12)';setTimeout(function(){el.style.background='';},900);}
+      });
+    }catch(e){
+      txtEl.textContent='Carregar fatura · ارفع الفاتورة (صورة / PDF)';
+      res.innerHTML='<div style="font-size:12px;color:#FF6B6B">Leitura falhou — insira manualmente · تعذّرت القراءة، أدخل يدويًا</div>';
+    }
+  };
+  inp.click();
+}
+</script>
+</body>
 </html>
