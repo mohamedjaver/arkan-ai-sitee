@@ -3,415 +3,309 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>ARKAN — الصرافة وأنظمة التداول</title>
-<meta name="description" content="أركان — منصة الصرافة الرقمية وأنظمة التداول المؤسساتية. أسعار الصرف اليوم، طلب صرف فوري، ومؤشرات ARKAN AI على TradingView.">
-<meta name="theme-color" content="#05070E">
-<link rel="manifest" href="app.webmanifest">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="ARKAN">
+<title>ARKAN INTERNATIONAL TRADING — مجموعة أركان الدولية</title>
+<meta name="description" content="مجموعة أركان الدولية للتجارة — صرافة العملات والتسوية الدولية، وأنظمة تداول مؤسساتية. نواكشوط · لواندا · الصين">
+<link rel="icon" href="arkan-icon-512.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="icon" type="image/png" sizes="192x192" href="arkan-icon-192.png">
-<link rel="icon" type="image/png" sizes="512x512" href="arkan-icon-512.png">
-<meta property="og:title" content="ARKAN — الصرافة وأنظمة التداول">
-<meta property="og:description" content="أسعار الصرف اليوم وأنظمة تداول ARKAN AI في مكان واحد.">
-<meta property="og:type" content="website">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600;700&family=Cairo:wght@500;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root{
-  --ink:#05070E; --ink2:#0A0E1A; --panel:rgba(255,255,255,.028);
-  --gold:#E8C24A; --gold-l:#F7E39C; --gold-d:#B8912F;
-  --violet:#8B72FF; --violet-l:#A78BFF;
-  --cyan:#3DE0D0; --blue:#5B8DEF;
-  --txt:#EEF1FA; --dim:#868DA6; --dim2:#565C77;
-  --green:#25D366; --up:#25D9A0; --down:#FF6B6B;
-  --line:rgba(255,255,255,.08); --line-2:rgba(255,255,255,.045);
-  --max:1120px;
+  --bg:#04060B; --bg2:#070914; --bg3:#0A0D1C;
+  --gold:#E8C24A; --gold-l:#F5DE8B;
+  --violet:#8B72FF; --violet-l:#B9A8FF; --violet-d:#5B3FD1;
+  --cyan:#3DE0D0;
+  --txt:#EDEAFB; --dim:#8B8FA8; --dim2:#565b7a;
+  --stroke:rgba(255,255,255,.08);
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html{scroll-behavior:smooth}
-body{
-  background:var(--ink);color:var(--txt);
-  font-family:'IBM Plex Sans Arabic',sans-serif;line-height:1.7;
-  min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased;
-  background-image:
-    radial-gradient(780px 520px at 26% -8%, rgba(139,114,255,.16), transparent 60%),
-    radial-gradient(680px 520px at 82% 4%, rgba(61,224,208,.10), transparent 58%),
-    radial-gradient(900px 700px at 50% 120%, rgba(232,194,74,.06), transparent 60%),
-    linear-gradient(180deg,#05070E 0%,#070A14 60%,#05070E 100%);
-  background-attachment:fixed;
-}
-.mono{font-family:'IBM Plex Mono',monospace;font-feature-settings:"tnum"}
-.grotesk{font-family:'Space Grotesk',sans-serif;direction:ltr;unicode-bidi:isolate}
-.disp{font-family:'Tajawal',sans-serif}
-.wrap{max-width:var(--max);margin:0 auto;padding:0 22px}
-a{color:inherit;text-decoration:none}
-button{font-family:inherit;cursor:pointer;border:none;background:none}
-:focus-visible{outline:2px solid var(--gold);outline-offset:3px;border-radius:8px}
+body{background:var(--bg);color:var(--txt);font-family:'Cairo',sans-serif;line-height:1.7;overflow-x:hidden;-webkit-font-smoothing:antialiased;position:relative}
+.mono{font-family:'IBM Plex Mono',monospace}
+.en{font-family:'Space Grotesk',sans-serif;direction:ltr;unicode-bidi:isolate}
+a{text-decoration:none;color:inherit}
+img{display:block;max-width:100%}
+::selection{background:rgba(139,114,255,.35)}
 
-/* ===== top bar ===== */
-.topbar{position:sticky;top:0;z-index:40;
-  padding-top:env(safe-area-inset-top);
-  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
-  background:linear-gradient(180deg,rgba(5,7,14,.92),rgba(5,7,14,.72));
-  border-bottom:1px solid var(--line-2)}
-.topbar .wrap{display:flex;align-items:center;justify-content:space-between;
-  height:60px;gap:14px}
-.brand{display:flex;align-items:center;gap:11px}
-.hex{width:34px;height:34px;flex:0 0 auto;position:relative;
-  filter:drop-shadow(0 0 14px rgba(232,194,74,.45))}
-.hex svg{display:block;width:100%;height:100%}
-.brand .name{font-family:'Space Grotesk',sans-serif;font-weight:700;
-  letter-spacing:5px;font-size:18px;
-  background:linear-gradient(90deg,var(--gold-l),var(--gold) 55%,var(--gold-d));
+#bg{position:fixed;inset:0;z-index:0;background:radial-gradient(ellipse 120% 80% at 50% -10%,#0D0F22,var(--bg) 60%)}
+#spot{position:fixed;inset:0;z-index:1;pointer-events:none;
+  background:radial-gradient(600px circle at var(--mx,50%) var(--my,20%),rgba(139,114,255,.10),transparent 45%)}
+#stars{position:fixed;inset:0;z-index:1;pointer-events:none}
+.st{position:absolute;border-radius:50%;background:#fff;opacity:.5;animation:tw ease-in-out infinite}
+@keyframes tw{0%,100%{opacity:.15}50%{opacity:.7}}
+.grid-lines{position:fixed;inset:0;z-index:1;pointer-events:none;background-image:
+  linear-gradient(rgba(255,255,255,.022) 1px,transparent 1px),
+  linear-gradient(90deg,rgba(255,255,255,.022) 1px,transparent 1px);
+  background-size:60px 60px;mask-image:radial-gradient(ellipse 70% 50% at 50% 15%,#000,transparent)}
+
+.wrap{position:relative;z-index:3;max-width:1100px;margin:0 auto;padding:0 22px}
+
+nav{position:sticky;top:0;z-index:20;transition:.35s}
+nav .in{display:flex;align-items:center;justify-content:space-between;padding:20px 22px;max-width:1100px;margin:0 auto}
+nav.scrolled{background:rgba(6,7,15,.72);backdrop-filter:blur(18px) saturate(1.3);border-bottom:1px solid var(--stroke)}
+.logo{display:flex;align-items:center;gap:11px}
+.logo img{width:32px;height:32px;border-radius:9px;box-shadow:0 4px 16px rgba(139,114,255,.35)}
+.logo-txt{font-family:'Space Grotesk';font-weight:700;letter-spacing:.02em;font-size:17px}
+.logo-txt b{color:var(--gold-l)}
+.navr{display:flex;align-items:center;gap:18px}
+.clock{font-family:'IBM Plex Mono';font-size:11px;color:var(--dim2);letter-spacing:.05em;display:none}
+@media(min-width:640px){.clock{display:block}}
+.navlink{font-size:13px;color:var(--gold-l);font-weight:700;border:1px solid rgba(232,194,74,.28);
+  padding:9px 17px;border-radius:11px;transition:.2s;background:rgba(232,194,74,.05)}
+.navlink:hover{background:rgba(232,194,74,.12)}
+
+.hero{padding:64px 22px 0;text-align:center;position:relative}
+.reveal{opacity:0;transform:translateY(18px);transition:.7s cubic-bezier(.22,1,.36,1)}
+.reveal.on{opacity:1;transform:none}
+.eyebrow{display:inline-flex;align-items:center;gap:9px;font-family:'IBM Plex Mono';font-size:11px;letter-spacing:.14em;
+  color:var(--gold-l);margin-bottom:28px;padding:8px 18px;border:1px solid rgba(232,194,74,.25);border-radius:100px;
+  background:rgba(232,194,74,.05)}
+.eyebrow .dot{width:6px;height:6px;border-radius:50%;background:#3DDC97;box-shadow:0 0 8px #3DDC97;animation:pulse 1.8s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.hero h1{font-family:'Space Grotesk';font-weight:700;font-size:clamp(36px,7.5vw,64px);line-height:1.1;letter-spacing:-.015em}
+.hero h1 .g{background:linear-gradient(120deg,var(--violet-l),var(--violet) 45%,var(--gold-l));
   -webkit-background-clip:text;background-clip:text;color:transparent}
-.wa-btn{display:inline-flex;align-items:center;gap:7px;
-  font-size:13px;font-weight:700;color:#062012;
-  background:linear-gradient(180deg,#2BE372,#17b657);
-  padding:8px 15px;border-radius:999px;
-  box-shadow:0 6px 18px -6px rgba(37,211,102,.6)}
-.wa-btn svg{width:15px;height:15px}
-.wa-btn span{display:inline}
+.hero p{margin:24px auto 0;max-width:540px;color:var(--dim);font-size:16.5px}
 
-/* ===== rates ticker ===== */
-.ticker{position:relative;overflow:hidden;border-bottom:1px solid var(--line-2);
-  background:linear-gradient(90deg,rgba(139,114,255,.05),rgba(61,224,208,.04));
-  height:42px;display:flex;align-items:center;z-index:30}
-.ticker::before,.ticker::after{content:"";position:absolute;top:0;bottom:0;width:60px;z-index:2;pointer-events:none}
-.ticker::before{right:0;background:linear-gradient(270deg,var(--ink),transparent)}
-.ticker::after{left:0;background:linear-gradient(90deg,var(--ink),transparent)}
-.ticker .tk-label{position:absolute;right:0;top:0;bottom:0;z-index:3;
-  display:flex;align-items:center;gap:6px;padding:0 14px;
-  background:linear-gradient(270deg,var(--ink) 70%,transparent);
-  font-size:11px;font-weight:800;color:var(--gold);letter-spacing:.5px}
-.tk-dot{width:6px;height:6px;border-radius:50%;background:var(--up);
-  box-shadow:0 0 8px var(--up);animation:pulse 1.8s infinite}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
-.tk-track{display:flex;gap:34px;white-space:nowrap;padding-right:120px;
-  animation:scroll 34s linear infinite;will-change:transform}
-.ticker:hover .tk-track{animation-play-state:paused}
-@keyframes scroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
-.tk-item{display:inline-flex;align-items:center;gap:9px;font-size:13px}
-.tk-item .c{font-family:'Space Grotesk',sans-serif;font-weight:600;color:var(--txt);letter-spacing:1px}
-.tk-item .v{font-family:'IBM Plex Mono',monospace;font-weight:600;color:var(--gold-l)}
-.tk-item .u{font-size:10px;color:var(--dim2)}
+.stats{display:flex;justify-content:center;gap:0;margin:40px auto 0;max-width:520px;
+  border-top:1px solid var(--stroke);border-bottom:1px solid var(--stroke)}
+.stat{flex:1;padding:20px 10px;text-align:center;border-left:1px solid var(--stroke)}
+.stat:first-child{border-left:none}
+.stat b{font-family:'IBM Plex Mono';font-size:26px;font-weight:700;color:var(--txt);display:block}
+.stat span{font-size:11px;color:var(--dim2);margin-top:4px;display:block}
 
-/* ===== hero ===== */
-.hero{text-align:center;padding:58px 22px 30px}
-.eyebrow{display:inline-flex;align-items:center;gap:8px;
-  font-size:11px;font-weight:700;letter-spacing:3px;color:var(--dim);
-  padding:6px 14px;border:1px solid var(--line);border-radius:999px;
-  margin-bottom:26px;opacity:0}
-.eyebrow .sq{width:5px;height:5px;background:var(--gold);transform:rotate(45deg)}
-.hero h1{font-family:'Space Grotesk',sans-serif;direction:ltr;
-  font-weight:700;letter-spacing:10px;line-height:1;
-  font-size:clamp(52px,15vw,104px);margin:0 0 4px;opacity:0;
-  background:linear-gradient(180deg,#fff 0%,var(--gold-l) 45%,var(--gold) 75%,var(--gold-d) 100%);
-  -webkit-background-clip:text;background-clip:text;color:transparent;
-  filter:drop-shadow(0 8px 40px rgba(232,194,74,.28))}
-.hero .sub{font-family:'Tajawal',sans-serif;font-weight:700;
-  font-size:clamp(16px,3.6vw,21px);color:var(--txt);opacity:0;margin-top:2px}
-.hero .sub b{color:var(--violet-l)}
-.hero .sub i{color:var(--cyan);font-style:normal}
-.hero .tag{font-size:13px;color:var(--dim);margin-top:10px;opacity:0;letter-spacing:.3px}
+.streams{position:relative;height:60px;margin:46px auto 0;max-width:680px;overflow:hidden;
+  mask-image:linear-gradient(90deg,transparent,#000 12%,#000 88%,transparent)}
+.streamRow{display:flex;gap:36px;white-space:nowrap;font-family:'IBM Plex Mono';font-size:13px;font-weight:600;position:absolute}
+.streamRow.a{color:var(--violet-l);opacity:.6;animation:streamL 26s linear infinite;top:2px}
+.streamRow.b{color:var(--gold-l);opacity:.55;animation:streamR 30s linear infinite;top:32px}
+@keyframes streamL{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+@keyframes streamR{from{transform:translateX(-50%)}to{transform:translateX(0)}}
+.streams::before{content:'';position:absolute;left:50%;top:0;bottom:0;width:1px;
+  background:linear-gradient(180deg,transparent,rgba(255,255,255,.15),transparent);transform:translateX(-50%)}
 
-/* ===== the two vault doors ===== */
-.doors{display:grid;grid-template-columns:1fr 1fr;gap:20px;
-  max-width:900px;margin:26px auto 0;padding:0 22px}
-.door{position:relative;display:flex;flex-direction:column;
-  min-height:340px;padding:30px 26px 26px;border-radius:22px;overflow:hidden;
-  background:linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,.012));
-  border:1px solid var(--line);opacity:0;transform:translateY(24px);
-  transition:transform .5s cubic-bezier(.2,.8,.2,1),border-color .4s,box-shadow .5s}
-.door::before{content:"";position:absolute;inset:0;z-index:0;opacity:.5;
-  transition:opacity .5s;background:radial-gradient(120% 70% at 50% -10%,var(--glow,transparent),transparent 62%)}
-.door::after{content:"";position:absolute;top:0;bottom:0;left:50%;width:1px;z-index:1;
-  transform:translateX(-50%) scaleY(0);transform-origin:top;
-  background:linear-gradient(180deg,var(--gold),transparent);
-  transition:transform .55s cubic-bezier(.2,.8,.2,1);opacity:.7}
-.door:hover,.door:focus-within{transform:translateY(-6px);
-  border-color:var(--edge,var(--line));box-shadow:0 30px 60px -30px var(--glow,#000)}
-.door:hover::before,.door:focus-within::before{opacity:.9}
-.door:hover::after,.door:focus-within::after{transform:translateX(-50%) scaleY(1)}
-.door.fx{--glow:rgba(139,114,255,.30);--edge:rgba(139,114,255,.5)}
-.door.ai{--glow:rgba(61,224,208,.24);--edge:rgba(61,224,208,.45)}
-.door>*{position:relative;z-index:2}
-.door .emblem{width:56px;height:56px;border-radius:16px;display:flex;
-  align-items:center;justify-content:center;margin-bottom:20px;
-  border:1px solid var(--edge)}
-.door.fx .emblem{background:rgba(139,114,255,.12);box-shadow:0 0 30px -6px rgba(139,114,255,.5)}
-.door.ai .emblem{background:rgba(61,224,208,.10);box-shadow:0 0 30px -6px rgba(61,224,208,.45)}
-.door .emblem svg{width:30px;height:30px}
-.door .kicker{font-size:11px;font-weight:700;letter-spacing:2px;color:var(--dim);margin-bottom:6px}
-.door h2{font-family:'Tajawal',sans-serif;font-weight:900;font-size:26px;line-height:1.2;margin-bottom:9px}
-.door.fx h2{color:#fff}
-.door.ai h2 .en{font-family:'Space Grotesk',sans-serif;letter-spacing:1px}
-.door p{font-size:14px;color:var(--dim);margin-bottom:16px;flex:0 0 auto}
-.door .stat{margin-top:auto;display:flex;align-items:baseline;gap:8px;
-  padding:12px 14px;border-radius:13px;margin-bottom:18px;
-  background:rgba(0,0,0,.28);border:1px solid var(--line-2)}
-.door .stat .k{font-size:11px;color:var(--dim2)}
-.door .stat .n{font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:19px}
-.door.fx .stat .n{color:var(--violet-l)}
-.door.ai .stat .n{color:var(--cyan)}
-.door .stat .u{font-size:11px;color:var(--dim)}
-.door .enter{display:flex;align-items:center;justify-content:center;gap:9px;
-  font-family:'Tajawal',sans-serif;font-weight:800;font-size:15px;
-  padding:13px;border-radius:13px;color:var(--ink);
-  background:linear-gradient(180deg,var(--gold-l),var(--gold));
-  box-shadow:0 10px 26px -12px rgba(232,194,74,.7);transition:transform .2s,box-shadow .3s}
-.door .enter svg{width:16px;height:16px;transition:transform .3s}
-.door:hover .enter{box-shadow:0 14px 32px -12px rgba(232,194,74,.85)}
-.door:hover .enter svg{transform:translateX(-4px)}
+.divhead{text-align:center;margin:100px 0 36px}
+.divhead .k{font-family:'IBM Plex Mono';font-size:11px;letter-spacing:.16em;color:var(--dim2)}
+.divhead h2{font-family:'Space Grotesk';font-size:26px;font-weight:600;margin-top:9px}
 
-/* ===== trust strip ===== */
-.trust{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;
-  margin:34px auto 0;max-width:900px;padding:0 22px;opacity:0}
-.chip{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;color:var(--dim);
-  padding:9px 15px;border:1px solid var(--line);border-radius:999px;
-  background:rgba(255,255,255,.02);transition:border-color .3s,color .3s}
-.chip:hover{border-color:var(--edge,var(--gold));color:var(--txt)}
-.chip.tg{--edge:#2AABEE}.chip.wa{--edge:var(--green)}
-.chip svg{width:14px;height:14px}
+.divisions{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+@media(max-width:760px){.divisions{grid-template-columns:1fr}}
 
-/* ===== footer ===== */
-footer{margin-top:56px;border-top:1px solid var(--line-2);
-  padding:26px 22px calc(30px + env(safe-area-inset-bottom));text-align:center}
-footer .fnote{font-family:'Space Grotesk',sans-serif;font-size:12px;letter-spacing:2px;color:var(--dim2)}
-footer .fsub{font-size:11.5px;color:var(--dim2);margin-top:7px;font-family:'Tajawal',sans-serif}
-.ops{display:inline-flex;align-items:center;gap:8px;margin-top:18px;
-  font-family:'Tajawal',sans-serif;font-weight:800;font-size:13.5px;color:var(--gold-l);
-  padding:11px 20px;border:1.5px solid rgba(232,194,74,.45);border-radius:999px;
-  background:linear-gradient(180deg,rgba(232,194,74,.10),rgba(232,194,74,.02));
-  box-shadow:0 8px 22px -12px rgba(232,194,74,.5);
-  transition:color .3s,border-color .3s,box-shadow .3s,transform .2s}
-.ops:hover{color:var(--ink);border-color:var(--gold);
-  background:linear-gradient(180deg,var(--gold-l),var(--gold));
-  box-shadow:0 12px 28px -12px rgba(232,194,74,.7);transform:translateY(-2px)}
-.ops svg{width:15px;height:15px}
-.ops .badge{font-family:'Space Grotesk',sans-serif;font-size:9px;font-weight:700;
-  letter-spacing:1px;padding:2px 7px;border-radius:999px;
-  background:rgba(232,194,74,.18);color:var(--gold-l)}
-.ops:hover .badge{background:rgba(5,7,14,.15);color:var(--ink)}
+.dcard{position:relative;border-radius:28px;padding:36px 30px;overflow:hidden;
+  background:linear-gradient(155deg,rgba(255,255,255,.055),rgba(255,255,255,.015) 55%,rgba(139,114,255,.03));
+  border:1px solid var(--stroke);backdrop-filter:blur(24px) saturate(1.3);-webkit-backdrop-filter:blur(24px) saturate(1.3);
+  box-shadow:0 16px 44px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.09);
+  transition:transform .35s cubic-bezier(.22,1,.36,1),box-shadow .35s,border-color .35s;
+  display:flex;flex-direction:column;min-height:320px;transform-style:preserve-3d;will-change:transform}
+.dcard:hover{border-color:rgba(255,255,255,.22);box-shadow:0 24px 60px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.14)}
+.dcard:active{transform:scale(.98) !important}
+.dcard .glow{position:absolute;top:-45%;left:-15%;width:75%;height:75%;border-radius:50%;filter:blur(60px);z-index:0;
+  opacity:.35;transition:opacity .35s}
+.dcard:hover .glow{opacity:.6}
+.dcard.exch .glow{background:var(--violet)}
+.dcard.trad .glow{background:var(--cyan)}
+.dcard>*{position:relative;z-index:1}
+.dcard .k{font-family:'IBM Plex Mono';font-size:10.5px;letter-spacing:.14em;color:var(--dim2);margin-bottom:15px}
+.dcard h3{font-family:'Space Grotesk';font-size:26px;font-weight:700;margin-bottom:11px}
+.dcard.exch h3{color:var(--violet-l)}
+.dcard.trad h3{color:var(--gold-l)}
+.dcard p{color:var(--dim);font-size:14.5px;flex:1}
+.mini-rates{margin:20px 0;display:flex;flex-direction:column;gap:8px}
+.mini-rates .r{display:flex;justify-content:space-between;align-items:center;font-family:'IBM Plex Mono';font-size:13px;
+  padding:10px 14px;background:rgba(0,0,0,.32);border-radius:11px;border:1px solid rgba(255,255,255,.055)}
+.mini-rates .r b{color:var(--gold-l)}
+.mini-chart{margin:20px 0;height:54px}
+.dbtn{display:inline-flex;align-items:center;gap:8px;margin-top:18px;padding:14px 24px;border-radius:14px;
+  font-weight:700;font-size:14px;width:fit-content;transition:transform .2s cubic-bezier(.34,1.56,.64,1)}
+.dcard.exch .dbtn{background:linear-gradient(135deg,var(--violet),var(--violet-d));color:#fff;
+  box-shadow:0 8px 24px rgba(139,114,255,.35)}
+.dcard.trad .dbtn{background:linear-gradient(135deg,var(--gold-l),var(--gold));color:#1a1400;
+  box-shadow:0 8px 24px rgba(232,194,74,.3)}
+.dcard:hover .dbtn{transform:translateX(-4px)}
 
-/* ===== load animation ===== */
-.rise{animation:rise .8s cubic-bezier(.2,.8,.2,1) forwards}
-@keyframes rise{to{opacity:1;transform:none}}
-.d1{animation-delay:.05s}.d2{animation-delay:.18s}.d3{animation-delay:.3s}
-.d4{animation-delay:.42s}.d5{animation-delay:.52s}.d6{animation-delay:.64s}
+.corp{margin:26px 0 0;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;
+  padding:24px 28px;border-radius:20px;border:1px solid var(--stroke);
+  background:linear-gradient(155deg,rgba(255,255,255,.03),rgba(255,255,255,.008));backdrop-filter:blur(16px)}
+.corp .t{font-size:15px;color:var(--txt);font-weight:700}
+.corp .s{font-size:12.5px;color:var(--dim);margin-top:3px}
+.corp a{font-family:'IBM Plex Mono';font-size:12.5px;color:var(--violet-l);border:1px solid rgba(183,163,255,.32);
+  padding:10px 18px;border-radius:11px;white-space:nowrap;transition:.2s}
+.corp a:hover{background:rgba(183,163,255,.1)}
 
-@media(max-width:720px){
-  .doors{grid-template-columns:1fr;gap:16px;max-width:440px}
-  .door{min-height:auto;padding:24px 20px}
-  .hero{padding:40px 20px 22px}
-  .brand .name{letter-spacing:4px;font-size:16px}
-  .wa-btn span{display:none}.wa-btn{padding:9px 11px}
-}
-@media(prefers-reduced-motion:reduce){
-  *{animation:none!important;transition:none!important}
-  .eyebrow,.hero h1,.hero .sub,.hero .tag,.door,.trust{opacity:1!important;transform:none!important}
-  .tk-track{animation:none;padding-right:14px}
-}
+footer{margin-top:100px;padding:44px 22px 54px;border-top:1px solid var(--stroke);text-align:center;position:relative;z-index:3}
+footer .wa{font-family:'IBM Plex Mono';font-size:16px;color:var(--gold-l);font-weight:700;direction:ltr;display:inline-block;
+  padding:12px 22px;border:1px solid rgba(232,194,74,.28);border-radius:13px;background:rgba(232,194,74,.05)}
+footer .co{margin-top:16px;font-size:12px;color:var(--dim)}
+footer .cc{margin-top:5px;font-family:'IBM Plex Mono';font-size:10.5px;color:var(--dim2);letter-spacing:.12em}
 </style>
+
+<style id="pageTransition">
+/* ===== EXODUS-LIKE PAGE TRANSITIONS ===== */
+@view-transition{navigation:auto}
+::view-transition-old(root){animation:ptOut .28s cubic-bezier(.22,1,.36,1) forwards}
+::view-transition-new(root){animation:ptIn .38s cubic-bezier(.22,1,.36,1) forwards}
+@keyframes ptOut{to{opacity:0;transform:translateY(-8px) scale(.995)}}
+@keyframes ptIn{from{opacity:0;transform:translateY(12px) scale(.995)}to{opacity:1;transform:none}}
+/* fallback للمتصفحات الأقدم: تلاشٍ عند الدخول */
+html.pt-enter body{animation:ptIn .38s cubic-bezier(.22,1,.36,1)}
+</style>
+<script id="pageTransitionJS">
+(function(){
+  document.documentElement.classList.add('pt-enter');
+  /* اعتراض الروابط الداخلية لخروج ناعم في المتصفحات بلا View Transitions */
+  if(!document.startViewTransition){
+    document.addEventListener('click',function(e){
+      const a=e.target.closest('a[href]');
+      if(!a)return;
+      const href=a.getAttribute('href');
+      if(!href||href.startsWith('#')||href.startsWith('http')||href.startsWith('mailto')||a.target==='_blank')return;
+      e.preventDefault();
+      document.body.style.transition='opacity .22s ease, transform .22s ease';
+      document.body.style.opacity='0';
+      document.body.style.transform='translateY(-8px)';
+      setTimeout(()=>{location.href=href;},210);
+    });
+  }
+})();
+</script>
 </head>
 <body>
 
-<header class="topbar">
-  <div class="wrap">
-    <a class="brand" href="/" aria-label="ARKAN الرئيسية">
-      <span class="hex" aria-hidden="true">
-        <svg viewBox="0 0 100 100"><defs><linearGradient id="hg" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stop-color="#F7E39C"/><stop offset="1" stop-color="#B8912F"/></linearGradient></defs>
-          <path d="M50 4 L88 27 L88 73 L50 96 L12 73 L12 27 Z" fill="none" stroke="url(#hg)" stroke-width="5"/>
-          <path d="M50 26 L36 72 M50 26 L64 72 M40 58 L60 58" fill="none" stroke="url(#hg)" stroke-width="6" stroke-linecap="round"/>
-        </svg>
-      </span>
-      <span class="name">ARKAN</span>
-    </a>
-    <a class="wa-btn" href="https://wa.me/22236295050" target="_blank" rel="noopener" aria-label="تواصل واتساب">
-      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.5 14.4c-.3-.2-1.7-.9-2-1-.3-.1-.5-.1-.6.2-.2.3-.7.9-.8 1-.2.2-.3.2-.6.1-1.6-.8-2.7-1.5-3.7-3.4-.3-.5.3-.5.8-1.5.1-.2 0-.4 0-.5-.1-.1-.6-1.5-.9-2-.2-.5-.4-.4-.6-.5h-.5c-.2 0-.5.1-.7.3-.9.9-1.1 2-.6 3.2.6 1.4 1.5 2.6 2.9 3.9 2 1.8 3.6 2.3 4.8 2.6.9.2 1.6.1 2.1-.1.6-.3 1.7-.9 1.9-1.8.2-.6.2-1.1.1-1.2 0-.1-.2-.2-.5-.3z"/><path d="M12 2C6.5 2 2 6.5 2 12c0 1.8.5 3.5 1.3 5L2 22l5.1-1.3c1.4.8 3.1 1.2 4.9 1.2 5.5 0 10-4.5 10-10S17.5 2 12 2zm0 18c-1.6 0-3.1-.4-4.4-1.2l-.3-.2-3 .8.8-2.9-.2-.3C4 14.8 3.5 13.4 3.5 12 3.5 7.3 7.3 3.5 12 3.5S20.5 7.3 20.5 12 16.7 20 12 20z"/></svg>
-      <span>واتساب</span>
-    </a>
+<div id="bg"></div>
+<div id="stars"></div>
+<div id="spot"></div>
+<div class="grid-lines"></div>
+
+<nav id="nav">
+  <div class="in">
+    <div class="logo">
+      <img src="arkan-icon-512.png" alt="ARKAN">
+      <div class="logo-txt en">ARKAN <b>INTERNATIONAL</b></div>
+    </div>
+    <div class="navr">
+      <div class="clock mono" id="clock">—</div>
+      <a class="navlink" href="https://wa.me/22236295050" target="_blank">تواصل واتساب</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero wrap">
+  <div class="eyebrow reveal"><span class="dot"></span> مجموعة تجارية نشطة · موريتانيا — أنغولا — الصين</div>
+  <h1 class="reveal">أركان الدولية <span class="g en">Trading Group</span></h1>
+  <p class="reveal">جذر تجاري واحد، فرعان متخصصان: صرافة وتسوية دولية بثقة مؤسسية، وأنظمة تداول مبنية على منطق السوق الحقيقي.</p>
+
+  <div class="stats reveal">
+    <div class="stat"><b class="en">03</b><span class="en">COUNTRIES</span></div>
+    <div class="stat"><b class="en">02</b><span class="en">DIVISIONS</span></div>
+    <div class="stat"><b class="en">24/7</b><span class="en">SETTLEMENT</span></div>
+  </div>
+
+  <div class="streams reveal">
+    <div class="streamRow a">
+      <span>AOA / MRU 0.360</span><span>USDT / AOA 1170</span><span>EUR / MRU 490</span><span>USD / MRU 425</span>
+      <span>AOA / MRU 0.360</span><span>USDT / AOA 1170</span><span>EUR / MRU 490</span><span>USD / MRU 425</span>
+    </div>
+    <div class="streamRow b">
+      <span>WHALE RADAR · ACTIVE</span><span>BTC REGIME · BULLISH</span><span>ORDER FLOW · CONFIRMED</span><span>LIQUIDITY MAP · LIVE</span>
+      <span>WHALE RADAR · ACTIVE</span><span>BTC REGIME · BULLISH</span><span>ORDER FLOW · CONFIRMED</span><span>LIQUIDITY MAP · LIVE</span>
+    </div>
   </div>
 </header>
 
-<div class="ticker" aria-label="أسعار الصرف اليوم">
-  <div class="tk-label"><span class="tk-dot"></span>أسعار اليوم</div>
-  <div class="tk-track" id="tkTrack">
-    <span class="tk-item"><span class="c">USDT</span><span class="v">421</span><span class="u">أوقية</span></span>
-    <span class="tk-item"><span class="c">EUR</span><span class="v">490</span><span class="u">أوقية</span></span>
-    <span class="tk-item"><span class="c">AOA</span><span class="v">0.36</span><span class="u">أوقية</span></span>
+<main class="wrap">
+  <div class="divhead reveal">
+    <div class="k en">TWO DIVISIONS · ONE STANDARD</div>
+    <h2>اختر بوابتك</h2>
   </div>
-</div>
 
-<main>
-  <section class="hero">
-    <span class="eyebrow rise d1"><span class="sq"></span>ARKAN INTERNATIONAL TRADING</span>
-    <h1 class="rise d2">ARKAN</h1>
-    <div class="sub rise d3">منصة <b>الصرافة الرقمية</b> وأنظمة <i>التداول المؤسساتية</i></div>
-    <div class="tag rise d3">اختر وجهتك للدخول</div>
-  </section>
+  <div class="divisions">
 
-  <section class="doors" aria-label="بوابات الدخول">
-    <!-- Door 1: Exchange -->
-    <a class="door fx rise d4" href="rates.html" aria-label="دخول الصرافة والأسعار">
-      <div class="emblem" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none" stroke="#A78BFF" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M4 8h13l-3-3M20 16H7l3 3"/><circle cx="12" cy="12" r="9" opacity=".25"/></svg>
+    <a class="dcard exch reveal" href="rates.html">
+      <div class="glow"></div>
+      <div class="k en">DIVISION — EXCHANGE</div>
+      <h3>أركان للصرافة</h3>
+      <p>أسعار صرف يومية محدّثة، جملة وتجزئة، وطلب تحويل مباشر عبر واتساب لكل عملياتك بين الأوقية والكوانزا واليوان والدولار.</p>
+      <div class="mini-rates">
+        <div class="r"><span>AOA</span><b>0.360</b></div>
+        <div class="r"><span>USDT</span><b>420</b></div>
+        <div class="r"><span>EUR</span><b>485</b></div>
       </div>
-      <div class="kicker">EXCHANGE · صرافة</div>
-      <h2>الصرافة والتحويل</h2>
-      <p>أسعار اليوم للدولار الرقمي واليورو والكونزا — وطلب صرف فوري عبر واتساب.</p>
-      <div class="stat"><span class="k">USDT اليوم</span><span class="n" id="stFx">—</span><span class="u">أوقية</span></div>
-      <div class="enter">دخول الأسعار
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>
-      </div>
+      <span class="dbtn">افتح بوابة الأسعار ←</span>
     </a>
 
-    <!-- Door 2: AI -->
-    <a class="door ai rise d5" href="ai.html" aria-label="دخول منصة ARKAN AI">
-      <div class="emblem" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none" stroke="#3DE0D0" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M4 18l4-8 4 5 3-6 5 9" opacity=".9"/><circle cx="8" cy="10" r="1.4"/><circle cx="15" cy="9" r="1.4"/></svg>
-      </div>
-      <div class="kicker">TRADING SYSTEMS · تداول</div>
-      <h2><span class="en">ARKAN</span> AI</h2>
-      <p>مؤشرات تداول مؤسساتية على TradingView — تدفق الأوامر، ذكاء السيولة، والمال الذكي.</p>
-      <div class="stat"><span class="k">أنظمة Pine v6</span><span class="n">مؤسساتية</span><span class="u">TradingView</span></div>
-      <div class="enter">دخول المنصة
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>
-      </div>
+    <a class="dcard trad reveal" href="trading.html">
+      <div class="glow"></div>
+      <div class="k en">DIVISION — TRADING SYSTEMS</div>
+      <h3 class="en">ARKAN AI</h3>
+      <p>مؤشرات Pine Script مؤسسية على TradingView — تدفق الأوامر، خرائط السيولة، وقراءة نطاقات المؤسسات بدقة لحظية.</p>
+      <svg class="mini-chart" viewBox="0 0 260 52" preserveAspectRatio="none">
+        <polyline points="0,38 20,30 40,34 60,18 80,24 100,10 120,20 140,14 160,26 180,16 200,22 220,8 240,14 260,6"
+          fill="none" stroke="#3DE0D0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <span class="dbtn">استعرض الأنظمة ←</span>
     </a>
-  </section>
 
-  <section class="trust rise d6">
-    <a class="chip wa" href="https://wa.me/22236295050" target="_blank" rel="noopener">
-      <svg viewBox="0 0 24 24" fill="#25D366"><path d="M12 2C6.5 2 2 6.5 2 12c0 1.8.5 3.5 1.3 5L2 22l5.1-1.3c1.4.8 3.1 1.2 4.9 1.2 5.5 0 10-4.5 10-10S17.5 2 12 2z"/></svg>
-      طلب صرف عبر واتساب</a>
-    <span class="chip">تسوية فورية · أسعار محدّثة يوميًا</span>
-    <span class="chip">دعم: العربية · الفرنسية · English</span>
-  </section>
+  </div>
+
+  <div class="corp reveal">
+    <div>
+      <div class="t">خدمات الشركات والتسوية الدولية</div>
+      <div class="s">طلب دفع فاتورة مورد أو تحويل مؤسسي بمرجع رسمي</div>
+    </div>
+    <a href="request.html">قدّم طلبًا ←</a>
+  </div>
 </main>
 
 <footer>
-  <div class="fnote grotesk">ARKAN INTERNATIONAL TRADING</div>
-  <div class="fsub">الصرافة الرقمية · أنظمة التداول · موريتانيا · أنغولا</div>
-  <a class="ops" href="settlement.html" aria-label="لوحة التشغيل والتسوية — خاصة">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
-    لوحة التشغيل والتسوية
-    <span class="badge">خاص</span></a>
+  <a class="wa" href="https://wa.me/22236295050" target="_blank">+222 36 29 50 50</a>
+  <div class="co">ARKAN INTERNATIONAL TRADING</div>
+  <div class="cc">EXCHANGE · SETTLEMENT · AI TRADING SYSTEMS</div>
 </footer>
 
 <script>
 (function(){
-  var CCY={ USDT:{ar:'USDT',u:'أوقية'}, EUR:{ar:'EUR',u:'أوقية'}, AOA:{ar:'AOA',u:'أوقية'},
-            USD:{ar:'USD',u:'أوقية'}, MRU:{ar:'MRU',u:''}, SAR:{ar:'SAR',u:'أوقية'}, AED:{ar:'AED',u:'أوقية'} };
-  function fmt(n){ if(n==null||isNaN(n))return '—';
-    n=+n; return n<1 ? n.toFixed(3).replace(/0+$/,'').replace(/\.$/,'') : (n%1?n.toFixed(2):n.toString()); }
-
-  function paint(data){
-    if(!data||!Array.isArray(data.r)||!data.r.length) return;
-    var rows=data.r.filter(function(x){return x.ccy && (x.r>0||x.w>0);});
-    if(!rows.length) return;
-    // ticker (duplicated for seamless loop)
-    function item(x){ var c=CCY[x.ccy]||{ar:x.ccy,u:''}; var val=x.r||x.w;
-      return '<span class="tk-item"><span class="c">'+c.ar+'</span><span class="v">'+fmt(val)+'</span><span class="u">'+c.u+'</span></span>'; }
-    var html=rows.map(item).join('');
-    // pad so the marquee always fills width, then duplicate
-    var track=document.getElementById('tkTrack');
-    track.innerHTML=html+html;
-    // hero door stat = USDT retail
-    var usdt=rows.find(function(x){return x.ccy==='USDT';})||rows[0];
-    var st=document.getElementById('stFx');
-    if(st&&usdt) st.textContent=fmt(usdt.r||usdt.w);
-    // wa number from data if present
-    if(data.wa){ document.querySelectorAll('a[href^="https://wa.me/"]').forEach(function(a){
-      a.href='https://wa.me/'+String(data.wa).replace(/[^0-9]/g,''); }); }
+  const el=document.getElementById('stars');
+  const n=innerWidth<640?36:60;
+  let h='';
+  for(let i=0;i<n;i++){
+    const s=Math.random()*2+.6, x=Math.random()*100, y=Math.random()*100, d=Math.random()*4+2, dl=Math.random()*4;
+    h+='<span class="st" style="width:'+s+'px;height:'+s+'px;left:'+x+'%;top:'+y+'%;animation-duration:'+d+'s;animation-delay:'+dl+'s"></span>';
   }
-
-  // live fetch (same-origin on arkanrates.com). Falls back silently to the markup already rendered.
-  fetch('rates-data.json?t='+Date.now(),{cache:'no-store'})
-    .then(function(r){return r.ok?r.json():null;})
-    .then(function(d){ if(d) paint(d); })
-    .catch(function(){ /* keep static fallback */ });
+  el.innerHTML=h;
 })();
-</script>
-<style>
-#installBar{position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));
-  z-index:60;display:none;align-items:center;gap:12px;padding:12px 14px;border-radius:18px;
-  background:linear-gradient(180deg,rgba(18,22,38,.86),rgba(10,14,26,.82));
-  border:1px solid rgba(232,194,74,.28);
-  backdrop-filter:blur(22px) saturate(1.4);-webkit-backdrop-filter:blur(22px) saturate(1.4);
-  box-shadow:0 20px 50px -20px rgba(0,0,0,.8),inset 0 1px 0 rgba(255,255,255,.06);
-  max-width:520px;margin:0 auto;animation:barUp .5s cubic-bezier(.2,.8,.2,1)}
-@keyframes barUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
-#installBar img{width:42px;height:42px;border-radius:12px;flex:0 0 auto;
-  box-shadow:0 6px 18px -6px rgba(139,114,255,.6)}
-#installBar .ib-txt{flex:1;min-width:0}
-#installBar .ib-t{font-family:'Tajawal';font-weight:800;font-size:14px;color:var(--txt)}
-#installBar .ib-s{font-size:11.5px;color:var(--dim);margin-top:1px}
-#installBar .ib-go{flex:0 0 auto;font-family:'Tajawal';font-weight:800;font-size:13px;color:var(--ink);
-  padding:10px 16px;border-radius:12px;background:linear-gradient(180deg,var(--gold-l),var(--gold));
-  box-shadow:0 8px 20px -8px rgba(232,194,74,.7);white-space:nowrap}
-#installBar .ib-x{flex:0 0 auto;color:var(--dim2);font-size:20px;padding:4px 8px;line-height:1}
-</style>
 
-<div id="installBar" role="dialog" aria-label="تثبيت تطبيق أركان">
-  <img src="arkan-icon-192.png" alt="ARKAN">
-  <div class="ib-txt">
-    <div class="ib-t">ثبّت تطبيق أركان</div>
-    <div class="ib-s" id="ibSub">أضِفه لشاشتك الرئيسية — يفتح كتطبيق كامل.</div>
-  </div>
-  <button class="ib-go" id="ibGo">تثبيت</button>
-  <button class="ib-x" id="ibX" aria-label="إغلاق">×</button>
-</div>
-
-<script>
 (function(){
-  // register service worker (installability + offline, network-first so never stale)
-  if('serviceWorker' in navigator){
-    window.addEventListener('load',function(){
-      navigator.serviceWorker.register('sw.js',{scope:'./'}).catch(function(){});
-    });
-  }
-
-  var bar=document.getElementById('installBar'),
-      go=document.getElementById('ibGo'),
-      x=document.getElementById('ibX'),
-      sub=document.getElementById('ibSub');
-  function dismissed(){try{return localStorage.getItem('arkan-install-x')==='1';}catch(e){return false;}}
-  function dismiss(){try{localStorage.setItem('arkan-install-x','1');}catch(e){} bar.style.display='none';}
-  var standalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone===true;
-  var ua=navigator.userAgent||'';
-  var isIOS=/iphone|ipad|ipod/i.test(ua);
-  var isSafari=isIOS && /safari/i.test(ua) && !/crios|fxios|edgios/i.test(ua);
-
-  if(standalone || dismissed()){ /* already app or user closed */ }
-  else {
-    var deferred=null;
-    window.addEventListener('beforeinstallprompt',function(e){
-      e.preventDefault(); deferred=e;
-      sub.textContent='أضِفه لشاشتك الرئيسية — يفتح كتطبيق كامل.';
-      go.style.display=''; bar.style.display='flex';
-    });
-    go.addEventListener('click',function(){
-      if(deferred){ deferred.prompt(); deferred.userChoice.finally(function(){dismiss();}); }
-    });
-    // iOS Safari: no prompt event — show manual hint after a moment
-    if(isIOS){
-      setTimeout(function(){
-        if(standalone) return;
-        sub.innerHTML='اضغط زر المشاركة <b style="color:var(--cyan)">⎋</b> ثم «إضافة إلى الشاشة الرئيسية».';
-        go.style.display='none';
-        bar.style.display='flex';
-      }, 1800);
-    }
-  }
-  x.addEventListener('click',dismiss);
+  const set=(x,y)=>{document.documentElement.style.setProperty('--mx',x+'px');document.documentElement.style.setProperty('--my',y+'px');};
+  addEventListener('mousemove',e=>set(e.clientX,e.clientY),{passive:true});
+  addEventListener('touchmove',e=>{if(e.touches[0])set(e.touches[0].clientX,e.touches[0].clientY);},{passive:true});
 })();
+
+addEventListener('scroll',()=>{
+  document.getElementById('nav').classList.toggle('scrolled',scrollY>10);
+},{passive:true});
+
+function tick(){
+  const d=new Date();
+  document.getElementById('clock').textContent=d.toLocaleDateString('en-GB')+' · '+d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+}
+tick();setInterval(tick,30000);
+
+const io=new IntersectionObserver((es)=>{
+  es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('on');io.unobserve(e.target);}});
+},{threshold:.15});
+document.querySelectorAll('.reveal').forEach((el,i)=>{
+  el.style.transitionDelay=(i%6)*0.06+'s';
+  io.observe(el);
+});
+
+document.querySelectorAll('.dcard').forEach(card=>{
+  card.addEventListener('mousemove',e=>{
+    const r=card.getBoundingClientRect();
+    const px=(e.clientX-r.left)/r.width-.5, py=(e.clientY-r.top)/r.height-.5;
+    card.style.transform='perspective(900px) rotateY('+(px*5)+'deg) rotateX('+(-py*5)+'deg) translateY(-4px)';
+  });
+  card.addEventListener('mouseleave',()=>{card.style.transform='';});
+});
 </script>
 </body>
 </html>
