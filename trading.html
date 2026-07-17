@@ -729,7 +729,7 @@ fetch('rates-data.json?t='+Date.now()).then(r=>r.ok?r.json():null).then(d=>{
   set('fxAOA',g('AOA'));set('fxUSDT',g('USDT'));set('fxEUR',g('EUR'));
 }).catch(()=>{});
 </script>
-</body>
+<script src="i18n.js"></script></body>
 </html>
 
 <div id="arkanPay" style="display:none;position:fixed;inset:0;z-index:99999;background:#000c;backdrop-filter:blur(6px);align-items:center;justify-content:center;font-family:'Poppins','Tajawal',sans-serif" onclick="if(event.target===this)this.style.display='none'">
