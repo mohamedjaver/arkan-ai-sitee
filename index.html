@@ -9,7 +9,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#04060C; --bg-2:#070B14; --panel:#0A1020; --panel-2:#0E1528;
+  --bg:#0F1130; --bg-2:#070B14; --panel:#0A1020; --panel-2:#0E1528;
   --line:rgba(124,140,255,.14); --line-2:rgba(255,255,255,.055);
   --gold:#E8C24A; --gold-l:#F5DE8B; --cyan:#3DE0D0; --blue:#5B8DEF; --violet:#8B72FF;
   --red:#FF4D5E; --green:#1DD17F;
@@ -18,7 +18,7 @@
 }
 *{margin:0;padding:0;box-sizing:border-box}
 html{scroll-behavior:smooth}
-body{background:var(--bg);color:var(--txt);font-family:'IBM Plex Sans Arabic',sans-serif;line-height:1.7;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+body{background:linear-gradient(180deg,#2E2758 0%,#1C1D3C 30%,#0F1130 68%,#0B0C24 100%);background-attachment:fixed;color:var(--txt);font-family:'IBM Plex Sans Arabic',sans-serif;line-height:1.7;overflow-x:hidden;-webkit-font-smoothing:antialiased}
 .mono{font-family:'IBM Plex Mono',monospace}
 .en{font-family:'Space Grotesk',sans-serif;direction:ltr;unicode-bidi:isolate}
 a{color:inherit;text-decoration:none}
@@ -108,7 +108,7 @@ nav.scrolled{background:rgba(4,6,12,.85);backdrop-filter:blur(16px);border-botto
 /* indicators */
 .ind-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:22px}
 .ind{background:linear-gradient(160deg,var(--panel),var(--bg-2));border:1px solid var(--line-2);border-radius:16px;padding:28px;transition:.3s;position:relative;overflow:hidden}
-.ind::after{content:'';position:absolute;top:0;right:0;width:160px;height:160px;background:radial-gradient(circle at top right,rgba(232,194,74,.08),transparent 70%);pointer-events:none}
+.ind::after{content:'';position:absolute;top:0;right:0;width:160px;height:160px;background:radial-gradient(circle at top right,rgba(63,182,249,.08),transparent 70%);pointer-events:none}
 .ind:hover{border-color:var(--line);transform:translateY(-4px);box-shadow:0 30px 70px rgba(0,0,0,.5)}
 .ind .tag{font-family:'IBM Plex Mono';font-size:10.5px;letter-spacing:.08em;color:var(--cyan);border:1px solid rgba(61,224,208,.25);padding:4px 10px;border-radius:6px;display:inline-block;margin-bottom:16px}
 .ind h3{font-family:'Space Grotesk';font-size:20px;font-weight:700;margin-bottom:9px}
@@ -147,7 +147,7 @@ nav.scrolled{background:rgba(4,6,12,.85);backdrop-filter:blur(16px);border-botto
 /* band */
 .band{position:relative;z-index:1}
 .band-in{background:linear-gradient(150deg,var(--panel-2),var(--bg-2));border:1px solid var(--line);border-radius:22px;padding:54px;text-align:center;position:relative;overflow:hidden}
-.band-in::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 50% 80% at 50% 0%,rgba(232,194,74,.1),transparent 60%)}
+.band-in::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 50% 80% at 50% 0%,rgba(124,92,255,.14),transparent 60%)}
 .band-in h2{font-size:clamp(26px,3.4vw,38px);font-weight:700;margin-bottom:13px;position:relative}
 .band-in p{color:var(--muted);max-width:470px;margin:0 auto 28px;position:relative}
 .band-cta{display:flex;gap:13px;justify-content:center;flex-wrap:wrap;position:relative}
@@ -286,9 +286,9 @@ html.pt-enter body{animation:ptIn .38s cubic-bezier(.22,1,.36,1)}
 
 <!-- NAV -->
 <nav id="nav"><div class="wrap nav-in">
-  <a href="#" class="logo">
-    <span class="logo-mark"><svg viewBox="0 0 40 40" fill="none"><path d="M20 3 L34 34 L26 34 L20 18 L14 34 L6 34 Z" fill="url(#lg)"/><path d="M20 19 L24 28 L16 28 Z" fill="#04060C"/><defs><linearGradient id="lg" x1="6" y1="3" x2="34" y2="34"><stop stop-color="#F5DE8B"/><stop offset="1" stop-color="#E8C24A"/></linearGradient></defs></svg></span>
-    <span><span class="logo-txt en"><b>ARKAN</b></span><span class="logo-sub en">SETTLEMENTS</span></span>
+  <a href="./" class="logo" style="display:flex;align-items:center;gap:12px;text-decoration:none">
+    <img src="arkan-logo.svg" alt="ARKAN" style="width:38px;height:38px;border-radius:10px;box-shadow:0 6px 20px rgba(124,92,255,.45)">
+    <span><span class="logo-txt en" style="display:block"><b>ARKAN</b> SETTLEMENTS</span><span class="logo-sub en" style="display:block">EXCHANGE · AI TRADING</span></span>
   </a>
   <div class="nav-links" id="navLinks">
     <a href="#exchange" style="color:var(--gold)">الصرافة</a>
