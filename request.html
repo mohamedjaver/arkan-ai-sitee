@@ -44,6 +44,36 @@ input:focus,select:focus,textarea:focus{border-color:var(--acc)}
 .step .t small{color:var(--dim);display:block;font-family:'Cairo'}
 footer{text-align:center;margin-top:30px;color:var(--dim);font-size:10.5px;letter-spacing:1.5px;font-family:'IBM Plex Mono'}
 </style>
+
+<style id="pageTransition">
+/* ===== EXODUS-LIKE PAGE TRANSITIONS ===== */
+@view-transition{navigation:auto}
+::view-transition-old(root){animation:ptOut .28s cubic-bezier(.22,1,.36,1) forwards}
+::view-transition-new(root){animation:ptIn .38s cubic-bezier(.22,1,.36,1) forwards}
+@keyframes ptOut{to{opacity:0;transform:translateY(-8px) scale(.995)}}
+@keyframes ptIn{from{opacity:0;transform:translateY(12px) scale(.995)}to{opacity:1;transform:none}}
+/* fallback للمتصفحات الأقدم: تلاشٍ عند الدخول */
+html.pt-enter body{animation:ptIn .38s cubic-bezier(.22,1,.36,1)}
+</style>
+<script id="pageTransitionJS">
+(function(){
+  document.documentElement.classList.add('pt-enter');
+  /* اعتراض الروابط الداخلية لخروج ناعم في المتصفحات بلا View Transitions */
+  if(!document.startViewTransition){
+    document.addEventListener('click',function(e){
+      const a=e.target.closest('a[href]');
+      if(!a)return;
+      const href=a.getAttribute('href');
+      if(!href||href.startsWith('#')||href.startsWith('http')||href.startsWith('mailto')||a.target==='_blank')return;
+      e.preventDefault();
+      document.body.style.transition='opacity .22s ease, transform .22s ease';
+      document.body.style.opacity='0';
+      document.body.style.transform='translateY(-8px)';
+      setTimeout(()=>{location.href=href;},210);
+    });
+  }
+})();
+</script>
 </head>
 <body>
 <a href="index.html" style="display:flex;align-items:center;justify-content:center;gap:10px;padding:22px 0 0">
@@ -57,9 +87,9 @@ footer{text-align:center;margin-top:30px;color:var(--dim);font-size:10.5px;lette
   <div class="sub-ar">تسديد فواتير الاستيراد بالعملة الصعبة — سرعة وموثوقية</div>
 
   <div class="badges">
-    <span class="badge">⚡ Execução 24–48h</span>
-    <span class="badge">🏦 Pagamento direto ao fornecedor</span>
-    <span class="badge">🔒 Comprovativo oficial</span>
+    <span class="badge"> Execução 24–48h</span>
+    <span class="badge">Pagamento direto ao fornecedor</span>
+    <span class="badge">Comprovativo oficial</span>
   </div>
 
   <div class="card">
@@ -98,7 +128,7 @@ footer{text-align:center;margin-top:30px;color:var(--dim);font-size:10.5px;lette
     <label>Seu nome e telefone · اسمك وهاتفك</label>
     <input id="who" placeholder="Ex: João — +244 9xx xxx xxx">
 
-    <button class="go" onclick="send()">📲 Enviar pedido via WhatsApp</button>
+    <button class="go" onclick="send()">Enviar pedido via WhatsApp</button>
     <div class="note">Pagamos diretamente ao seu fornecedor contra fatura.<br>
     Documentos necessários: fatura + registo comercial · KYC obrigatório<br>
     <span style="font-family:'Cairo'">الدفع مباشرة للمورد مقابل الفاتورة — وثائق KYC إلزامية</span></div>
@@ -127,7 +157,7 @@ function send(){
   if(!comp||!amt){alert('Preencha empresa e montante · أكمل اسم الشركة والمبلغ');return;}
   const ref='REQ-'+new Date().toISOString().slice(2,10).replace(/-/g,'')+'-'+Math.floor(100+Math.random()*900);
   const msg=
-`🏦 ARKAN PAYMENTS — NOVO PEDIDO
+`ARKAN PAYMENTS — NOVO PEDIDO
 ${ref}
 ———————————
 Empresa: ${comp}
