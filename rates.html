@@ -160,9 +160,9 @@ function calc(){
   const row=DATA.r.find(x=>x.ccy===cc);if(!row)return;
   const thr=row.thr||0, thrM=row.thrM||0;
   let tier,rate,tierLbl;
-  if(amt>=thr){tier='w';rate=row.w;tierLbl='جملة';}
-  else if(row.m&&amt>=thrM){tier='m';rate=row.m;tierLbl='متوسط';}
-  else{tier='r';rate=row.r;tierLbl='تجزئة';}
+  if(amt>=thr){tier='w';rate=row.w;tierLbl=window.arkanT?arkanT('جملة'):'جملة';}
+  else if(row.m&&amt>=thrM){tier='m';rate=row.m;tierLbl=window.arkanT?arkanT('متوسط'):'متوسط';}
+  else{tier='r';rate=row.r;tierLbl=window.arkanT?arkanT('تجزئة'):'تجزئة';}
   const out=amt*rate;
   $('tWv').textContent=row.w;$('tMv').textContent=row.m!=null?row.m:'—';$('tRv').textContent=row.r;
   $('tW').classList.toggle('on',tier==='w');$('tM').classList.toggle('on',tier==='m');$('tR').classList.toggle('on',tier==='r');
@@ -175,22 +175,26 @@ function send(){
   const row=DATA.r.find(x=>x.ccy===cc);
   const thr=row.thr||0, thrM=row.thrM||0;
   let rate,tierLbl;
-  if(amt>=thr){rate=row.w;tierLbl='جملة';}
-  else if(row.m&&amt>=thrM){rate=row.m;tierLbl='متوسط';}
-  else{rate=row.r;tierLbl='تجزئة';}
+  if(amt>=thr){rate=row.w;tierLbl=window.arkanT?arkanT('جملة'):'جملة';}
+  else if(row.m&&amt>=thrM){rate=row.m;tierLbl=window.arkanT?arkanT('متوسط'):'متوسط';}
+  else{rate=row.r;tierLbl=window.arkanT?arkanT('تجزئة'):'تجزئة';}
   const out=amt*rate;
   const who=$('who').value.trim();
   const ref='REQ-'+Date.now().toString().slice(-6);
+  const L=window.arkanLang?arkanLang():'ar';
+  const T={ar:{h:'ARKAN — طلب تحويل',n:'الاسم',a:'المبلغ',r:'السعر',d:'المطلوب استلامه',c:'أؤكد رغبتي في التحويل.',u:'أوقية'},
+           fr:{h:'ARKAN — Demande de transfert',n:'Nom',a:'Montant',r:'Taux',d:'À recevoir',c:'Je confirme ma demande de transfert.',u:'Ouguiya'},
+           pt:{h:'ARKAN — Pedido de transferência',n:'Nome',a:'Montante',r:'Taxa',d:'A receber',c:'Confirmo o meu pedido de transferência.',u:'Ouguiya'}}[L]||{};
   const msg=
-`ARKAN — طلب تحويل
+`${T.h}
 ${ref}
 ━━━━━━━━━━
-${who?'الاسم: '+who+'\n':''}المبلغ: ${fmt(amt)} ${SYM[cc]||cc} (${cc})
-السعر: ${rate} (${tierLbl})
+${who?T.n+': '+who+'\n':''}${T.a}: ${fmt(amt)} ${SYM[cc]||cc} (${cc})
+${T.r}: ${rate} (${tierLbl})
 ━━━━━━━━━━
-المطلوب استلامه: ${fmt(out,0)} أوقية (MRU)
+${T.d}: ${fmt(out,0)} ${T.u} (MRU)
 ━━━━━━━━━━
-أؤكد رغبتي في التحويل.`;
+${T.c}`;
   window.open('https://wa.me/'+DATA.wa+'?text='+encodeURIComponent(msg),'_blank');
 }
 loadData().then(render);
