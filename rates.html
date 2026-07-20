@@ -134,7 +134,7 @@ function render(){
     <div class="card">
       <h2>احسب تحويلك</h2>
       <label>العملة التي تريد تحويلها</label>
-      <select id="cc" onchange="calc()">${DATA.r.map(x=>`<option value="${x.ccy}">${SYM[x.ccy]||x.ccy} — ${NAMES[x.ccy]||x.ccy}</option>`).join('')}</select>
+      <select id="cc" onchange="calc()">${DATA.r.map(x=>`<option value="${x.ccy}">${SYM[x.ccy]||x.ccy} — ${window.arkanT?arkanT(NAMES[x.ccy]||x.ccy):(NAMES[x.ccy]||x.ccy)}</option>`).join('')}</select>
       <div id="modeToggle" style="display:flex;gap:8px;margin:14px 0 4px">
         <button id="btnFwd" onclick="setMode('fwd')" style="flex:1;padding:10px;border-radius:12px;border:1px solid rgba(61,220,151,.5);background:rgba(61,220,151,.12);color:#3DDC97;font-family:Cairo;font-size:13px;font-weight:700;cursor:pointer">أدفع عملة ← أستلم أوقية</button>
         <button id="btnRev" onclick="setMode('rev')" style="flex:1;padding:10px;border-radius:12px;border:1px solid rgba(255,255,255,.08);background:transparent;color:#8B8FA8;font-family:Cairo;font-size:13px;font-weight:700;cursor:pointer">أريد أوقية ← كم عملة؟</button>
@@ -167,11 +167,11 @@ function setMode(m){
   if(m==='fwd'){
     bF.style.cssText='flex:1;padding:10px;border-radius:12px;border:1px solid rgba(61,220,151,.5);background:rgba(61,220,151,.12);color:#3DDC97;font-family:Cairo;font-size:13px;font-weight:700;cursor:pointer';
     bR.style.cssText='flex:1;padding:10px;border-radius:12px;border:1px solid rgba(255,255,255,.08);background:transparent;color:#8B8FA8;font-family:Cairo;font-size:13px;font-weight:700;cursor:pointer';
-    if($('amtLabel'))$('amtLabel').textContent='المبلغ بـ '+cSym;
+    if($('amtLabel'))$('amtLabel').textContent=(window.arkanT?arkanT('المبلغ بـ'):'المبلغ بـ')+' '+cSym;
   } else {
     bR.style.cssText='flex:1;padding:10px;border-radius:12px;border:1px solid rgba(139,114,255,.5);background:rgba(139,114,255,.12);color:#B9A8FF;font-family:Cairo;font-size:13px;font-weight:700;cursor:pointer';
     bF.style.cssText='flex:1;padding:10px;border-radius:12px;border:1px solid rgba(255,255,255,.08);background:transparent;color:#8B8FA8;font-family:Cairo;font-size:13px;font-weight:700;cursor:pointer';
-    if($('amtLabel'))$('amtLabel').textContent='كم أوقية تريد استلامها؟';
+    if($('amtLabel'))$('amtLabel').textContent=window.arkanT?arkanT('كم أوقية تريد استلامها؟'):'كم أوقية تريد استلامها؟';
   }
   calc();
 }
@@ -192,8 +192,8 @@ function calc(){
     $('tW').classList.toggle('on',tier==='w');$('tM').classList.toggle('on',tier==='m');$('tR').classList.toggle('on',tier==='r');
     $('out').textContent=fmt(out,0);
     $('usedRate').textContent=`${fmt(raw)} ${cSym} × ${rate} = ${fmt(out,0)} UM (${tierLbl})`;
-    if($('resLbl'))$('resLbl').textContent='تستلم بالأوقية';
-    if($('resCur'))$('resCur').innerHTML=`<span style="opacity:.5;font-size:12px">${cSym} ← </span>MRU · أوقية`;
+    if($('resLbl'))$('resLbl').textContent=window.arkanT?arkanT('تستلم بالأوقية'):'تستلم بالأوقية';
+    if($('resCur'))$('resCur').innerHTML=`<span style="opacity:.5;font-size:12px">${cSym} ← </span>${window.arkanT?arkanT('MRU · أوقية'):'MRU · أوقية'}`;
   } else {
     /* عكسي: أريد X أوقية → أحتاج كم عملة؟ */
     const rR=row.r, rM=row.m||null, rW=row.w;
@@ -207,8 +207,9 @@ function calc(){
     $('tR').classList.toggle('on',tierLbl==='تجزئة');
     $('out').textContent=fmt(bestOut,0);
     $('usedRate').textContent=`${fmt(raw,0)} UM ÷ ${rate} = ${fmt(bestOut,0)} ${cSym} (${tierLbl})`;
-    if($('resLbl'))$('resLbl').textContent=`تحتاج من ${cName}`;
-    if($('resCur'))$('resCur').innerHTML=`<span style="opacity:.5;font-size:12px">MRU ← </span>${cSym} · ${cName}`;
+    const _tLabel=window.arkanT?arkanT('تحتاج من'):'تحتاج من';
+    if($('resLbl'))$('resLbl').textContent=_tLabel+' '+cName;
+    if($('resCur'))$('resCur').innerHTML=`<span style="opacity:.5;font-size:12px">${window.arkanT?arkanT('MRU · أوقية'):'MRU ←'} </span>${cSym} · ${cName}`;
   }
 }
 function send(){
@@ -265,6 +266,21 @@ ${T.c}`;
   window.open('https://wa.me/'+DATA.wa+'?text='+encodeURIComponent(msg),'_blank');
 }
 loadData().then(render);
+/* re-translate dynamic content on language switch */
+document.addEventListener('arkan:lang',function(){
+  /* update select options */
+  var cc_el=$('cc');
+  if(cc_el&&DATA){
+    Array.from(cc_el.options).forEach(function(opt){
+      var ccy=opt.value;
+      var tName=window.arkanT?arkanT(NAMES[ccy]||ccy):(NAMES[ccy]||ccy);
+      opt.textContent=(SYM[ccy]||ccy)+' — '+tName;
+    });
+  }
+  /* re-fire mode+calc to update labels */
+  if(typeof _mode!=='undefined'&&typeof setMode==='function')setMode(_mode);
+  if(typeof calc==='function')calc();
+});
 </script>
 <script src="i18n.js"></script></body>
 </html>
