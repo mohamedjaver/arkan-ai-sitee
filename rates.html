@@ -156,22 +156,28 @@ function render(){
       <button class="go" onclick="send()">أرسل الطلب عبر واتساب</button>
       <div class="note">بعد الإرسال، أكّد الدفع وسنحوّل لك المبلغ فورًا.</div>
     </div>`;
-  calc();
+  setMode('fwd');
 }
 let _mode='fwd';
 function setMode(m){
   _mode=m;
   const cc=$('cc')?$('cc').value:'AOA';
   const cSym=SYM[cc]||cc;
+  const T=window.arkanT||function(s){return s;};
   const bF=$('btnFwd'),bR=$('btnRev');
+  if(!bF||!bR)return;
   if(m==='fwd'){
     bF.style.cssText='flex:1;padding:10px;border-radius:12px;border:1px solid rgba(61,220,151,.5);background:rgba(61,220,151,.12);color:#3DDC97;font-family:Cairo;font-size:13px;font-weight:700;cursor:pointer';
     bR.style.cssText='flex:1;padding:10px;border-radius:12px;border:1px solid rgba(255,255,255,.08);background:transparent;color:#8B8FA8;font-family:Cairo;font-size:13px;font-weight:700;cursor:pointer';
-    if($('amtLabel'))$('amtLabel').textContent=(window.arkanT?arkanT('المبلغ بـ'):'المبلغ بـ')+' '+cSym;
+    bF.textContent=T('أدفع عملة ← أستلم أوقية');
+    bR.textContent=T('أريد أوقية ← كم عملة؟');
+    if($('amtLabel'))$('amtLabel').textContent=T('المبلغ بـ')+' '+cSym;
   } else {
     bR.style.cssText='flex:1;padding:10px;border-radius:12px;border:1px solid rgba(139,114,255,.5);background:rgba(139,114,255,.12);color:#B9A8FF;font-family:Cairo;font-size:13px;font-weight:700;cursor:pointer';
     bF.style.cssText='flex:1;padding:10px;border-radius:12px;border:1px solid rgba(255,255,255,.08);background:transparent;color:#8B8FA8;font-family:Cairo;font-size:13px;font-weight:700;cursor:pointer';
-    if($('amtLabel'))$('amtLabel').textContent=window.arkanT?arkanT('كم أوقية تريد استلامها؟'):'كم أوقية تريد استلامها؟';
+    bF.textContent=T('أدفع عملة ← أستلم أوقية');
+    bR.textContent=T('أريد أوقية ← كم عملة؟');
+    if($('amtLabel'))$('amtLabel').textContent=T('كم أوقية تريد استلامها؟');
   }
   calc();
 }
