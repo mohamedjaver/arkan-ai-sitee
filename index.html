@@ -354,7 +354,7 @@ html.pt-enter body{animation:ptIn .38s cubic-bezier(.22,1,.36,1)}
   </div>
 
   <div class="ind-grid" id="fxGrid">
-    <div class="ind reveal">
+    <div class="ind reveal in">
       <div class="fxlbl">AOA / MRU</div>
       <div class="fxnum" id="fxAOA">0.360</div>
       <div class="fxsub">كوانزا أنغولية</div>
@@ -611,7 +611,15 @@ function renderIndGrid(){
   </div>`).join('');
 }
 renderIndGrid();
-document.addEventListener('arkan:lang', renderIndGrid);
+document.addEventListener('arkan:lang', function(){
+  renderIndGrid();
+  /* re-show any reveal elements that lost .in on re-render */
+  setTimeout(function(){
+    document.querySelectorAll('.reveal:not(.in)').forEach(function(el){
+      el.classList.add('in');
+    });
+  }, 80);
+});
 
 /* ===== pricing = باقات الـ FULL SUITE ===== */
 const plans=[
@@ -730,6 +738,14 @@ const burger=document.getElementById('burger'),navLinks=document.getElementById(
 burger.onclick=()=>navLinks.classList.toggle('open');navLinks.querySelectorAll('a').forEach(a=>a.onclick=()=>navLinks.classList.remove('open'));
 const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}}),{threshold:.1});
 document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+/* safeguard: show any reveal elements not yet in viewport after 1.5s */
+setTimeout(function(){
+  document.querySelectorAll('.reveal:not(.in)').forEach(function(el){
+    var rect=el.getBoundingClientRect();
+    /* if already scrolled past, make visible immediately */
+    if(rect.bottom < window.innerHeight * 1.5) el.classList.add('in');
+  });
+}, 1500);
 </script>
 
 
