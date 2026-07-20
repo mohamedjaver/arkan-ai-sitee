@@ -179,6 +179,8 @@ function setMode(m){
     bR.textContent=T('أريد أوقية ← كم عملة؟');
     if($('amtLabel'))$('amtLabel').textContent=T('كم أوقية تريد استلامها؟');
   }
+  /* translate who placeholder */
+  if($('who'))$('who').placeholder=T('اسمك (اختياري)');
   calc();
 }
 function calc(){
