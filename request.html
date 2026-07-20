@@ -28,9 +28,16 @@ input,select,textarea{width:100%;background:rgba(0,0,0,.3);border:1px solid var(
 input:focus,select:focus,textarea:focus{border-color:var(--acc)}
 .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .ccy{display:flex;gap:8px;margin-top:6px}
-.ccy button{flex:1;padding:13px;border-radius:14px;border:1px solid var(--stroke);background:rgba(0,0,0,.25);
-  color:var(--dim);font-weight:800;font-size:15px;cursor:pointer;font-family:'IBM Plex Mono'}
+.ccy button{flex:1;padding:11px 6px;border-radius:14px;border:1px solid var(--stroke);background:rgba(0,0,0,.25);
+  color:var(--dim);font-weight:800;font-size:15px;cursor:pointer;font-family:'IBM Plex Mono';
+  display:flex;flex-direction:column;align-items:center;gap:3px;line-height:1.2}
+.ccy button .rt{font-size:11px;font-weight:700;color:var(--gold);letter-spacing:.3px}
 .ccy button.on{background:linear-gradient(135deg,var(--acc2),#5B3FD1);color:#fff;border-color:transparent}
+.ccy button.on .rt{color:#FFE9A6}
+.est{display:none;margin-top:10px;padding:12px 14px;border-radius:13px;background:rgba(232,194,74,.08);
+  border:1px solid rgba(232,194,74,.3);font-size:14px;font-weight:800;color:var(--gold);
+  font-family:'IBM Plex Mono';text-align:center;letter-spacing:.2px}
+.est small{display:block;font-family:'Cairo';font-size:11px;color:var(--dim);font-weight:600;margin-top:3px;letter-spacing:0}
 .go{width:100%;margin-top:22px;padding:17px;border:none;border-radius:16px;font-size:16.5px;font-weight:800;
   background:linear-gradient(135deg,#25D366,#128C7E);color:#fff;cursor:pointer;font-family:'Cairo','Tajawal';
   box-shadow:0 12px 30px rgba(37,211,102,.3)}
@@ -121,10 +128,11 @@ html.pt-enter body{animation:ptIn .38s cubic-bezier(.22,1,.36,1)}
 
     <label>Moeda · العملة</label>
     <div class="ccy">
-      <button class="on" data-c="EUR" onclick="pick(this)">EUR €</button>
-      <button data-c="USD" onclick="pick(this)">USD $</button>
-      <button data-c="USDT" onclick="pick(this)">USDT ₮</button>
+      <button class="on" data-c="EUR" onclick="pick(this)">EUR €<span class="rt" id="rtEUR">—</span></button>
+      <button data-c="USD" onclick="pick(this)">USD $<span class="rt" id="rtUSD">—</span></button>
+      <button data-c="USDT" onclick="pick(this)">USDT ₮<span class="rt" id="rtUSDT">—</span></button>
     </div>
+    <div class="est" id="estBox"></div>
 
     <div class="row">
       <div>
@@ -164,7 +172,44 @@ html.pt-enter body{animation:ptIn .38s cubic-bezier(.22,1,.36,1)}
 
 <script>
 let ccy='EUR';
-function pick(b){document.querySelectorAll('.ccy button').forEach(x=>x.classList.remove('on'));b.classList.add('on');ccy=b.dataset.c;}
+/* ===== أسعار حية من rates-data.json ===== */
+var LIVE=null;
+function tierRate(cc,amt){
+  if(!cc)return null;
+  if(amt>=cc.thr)return cc.w;
+  if(amt>=cc.thrM)return cc.m;
+  return cc.r;
+}
+function liveCcy(code){
+  if(!LIVE||!LIVE.r)return null;
+  var key=(code==='USD')?'USDT':code; /* USD يُسعَّر بسعر USDT */
+  for(var i=0;i<LIVE.r.length;i++)if(LIVE.r[i].ccy===key)return LIVE.r[i];
+  return null;
+}
+function updateEstimate(){
+  var raw=(document.getElementById('amt').value||'').replace(/[^0-9.]/g,'');
+  var amt=parseFloat(raw)||0;
+  var cc=liveCcy(ccy), box=document.getElementById('estBox');
+  if(!cc||!amt){box.style.display='none';return;}
+  var rate=tierRate(cc,amt);
+  box.style.display='block';
+  box.innerHTML='≈ '+Math.round(amt*rate).toLocaleString('en-US')+' MRU'
+    +'<small>سعر اليوم التقريبي · Taxa indicativa de hoje — 1 '+ccy+' = '+rate+' UM</small>';
+}
+fetch('rates-data.json?t='+Date.now()).then(function(r){return r.json()}).then(function(j){
+  LIVE=j;
+  var e=liveCcy('EUR'),u=liveCcy('USDT');
+  if(e){document.getElementById('rtEUR').textContent=e.r+' UM';}
+  if(u){document.getElementById('rtUSD').textContent=u.r+' UM';document.getElementById('rtUSDT').textContent=u.r+' UM';}
+  updateEstimate();
+}).catch(function(){});
+/* تنسيق آلاف أثناء الكتابة */
+document.getElementById('amt').addEventListener('input',function(){
+  var v=this.value.replace(/[^0-9]/g,'');
+  this.value=v?parseInt(v,10).toLocaleString('en-US'):'';
+  updateEstimate();
+});
+function pick(b){document.querySelectorAll('.ccy button').forEach(x=>x.classList.remove('on'));b.classList.add('on');ccy=b.dataset.c;updateEstimate();}
 function send(){
   const comp=document.getElementById('comp').value.trim();
   const amt=document.getElementById('amt').value.trim();
@@ -173,12 +218,15 @@ function send(){
   const who=document.getElementById('who').value.trim();
   if(!comp||!amt){alert('Preencha empresa e montante · أكمل اسم الشركة والمبلغ');return;}
   const ref='REQ-'+new Date().toISOString().slice(2,10).replace(/-/g,'')+'-'+Math.floor(100+Math.random()*900);
+  var estLine='';
+  var cc=liveCcy(ccy),a=parseFloat(amt.replace(/[^0-9.]/g,''))||0;
+  if(cc&&a){var rt=tierRate(cc,a);estLine='\nEstimativa: ≈ '+Math.round(a*rt).toLocaleString('en-US')+' MRU (1 '+ccy+' = '+rt+')';}
   const msg=
 `ARKAN PAYMENTS — NOVO PEDIDO
 ${ref}
 ———————————
 Empresa: ${comp}
-Montante: ${amt} ${ccy}
+Montante: ${amt} ${ccy}${estLine}
 Destino: ${dest||'—'}
 Finalidade: ${purp}
 Contacto: ${who||'—'}
@@ -354,12 +402,13 @@ async function uploadInvoice(){
       if(f.type==='application/pdf'){txt=await pdfText(dataUrl);}
       else{txt=await ocrImage(dataUrl);}
       var amount=extractInvoiceAmount(txt);
-      var ccy=extractCurrency(txt);
+      var dccy=extractCurrency(txt);
       var company=extractCompany(txt);
       var got=[];
       if(company){document.getElementById('comp').value=company;got.push('✓ '+company.slice(0,28));}
       if(amount){document.getElementById('amt').value=Math.round(amount).toLocaleString('en-US');got.push('✓ '+amount.toLocaleString('en-US'));}
-      if(ccy){document.querySelectorAll('.ccy button').forEach(function(b){b.classList.toggle('on',b.dataset.c===ccy);});got.push('✓ '+ccy);}
+      if(dccy){document.querySelectorAll('.ccy button').forEach(function(b){b.classList.toggle('on',b.dataset.c===dccy);});ccy=dccy;got.push('✓ '+dccy);}
+      if(typeof updateEstimate==='function')updateEstimate();
       txtEl.textContent='Fatura lida · قُرئت الفاتورة';
       res.innerHTML='<div style="font-family:monospace;font-size:12px;color:#3DDC97">'+
         (got.length?got.join(' · '):'')+
