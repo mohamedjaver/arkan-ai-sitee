@@ -143,9 +143,9 @@ function render(){
         <div class="tierbox" id="tR"><div class="t">تجزئة</div><div class="v" id="tRv">—</div></div>
       </div>
       <div class="res">
-        <div class="lbl">تستلم بالأوقية</div>
+        <div class="lbl" id="resLbl">تستلم بالأوقية</div>
         <div class="big" id="out">0</div>
-        <div class="cur">MRU · أوقية</div>
+        <div class="cur" id="resCur">MRU · أوقية</div>
         <div class="rate" id="usedRate"></div>
       </div>
       <input id="who" placeholder="اسمك (اختياري)" style="margin-top:14px;text-align:right;font-family:Tajawal;font-size:15px">
@@ -168,6 +168,10 @@ function calc(){
   $('tW').classList.toggle('on',tier==='w');$('tM').classList.toggle('on',tier==='m');$('tR').classList.toggle('on',tier==='r');
   $('out').textContent=fmt(out,0);
   $('usedRate').textContent=`${fmt(amt)} ${SYM[cc]||cc} × ${rate} = ${fmt(out,0)} UM (${tierLbl})`;
+  const _cName=NAMES[cc]||cc;
+  const _cSym=SYM[cc]||cc;
+  if($('resLbl'))$('resLbl').textContent=`تستلم بالأوقية · ${_cName}`;
+  if($('resCur'))$('resCur').innerHTML=`<span style="opacity:.6;font-size:12px">${_cSym} ←</span> MRU · أوقية`;
 }
 function send(){
   const cc=$('cc').value, amt=parseFloat(String($('amt').value||'').replace(/[^0-9.]/g,''))||0;
