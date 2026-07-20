@@ -135,7 +135,11 @@ function render(){
       <h2>احسب تحويلك</h2>
       <label>العملة التي تريد تحويلها</label>
       <select id="cc" onchange="calc()">${DATA.r.map(x=>`<option value="${x.ccy}">${SYM[x.ccy]||x.ccy} — ${NAMES[x.ccy]||x.ccy}</option>`).join('')}</select>
-      <label>المبلغ</label>
+      <div id="modeToggle" style="display:flex;gap:8px;margin:14px 0 4px">
+        <button id="btnFwd" onclick="setMode('fwd')" style="flex:1;padding:10px;border-radius:12px;border:1px solid rgba(61,220,151,.5);background:rgba(61,220,151,.12);color:#3DDC97;font-family:Cairo;font-size:13px;font-weight:700;cursor:pointer">أدفع عملة ← أستلم أوقية</button>
+        <button id="btnRev" onclick="setMode('rev')" style="flex:1;padding:10px;border-radius:12px;border:1px solid rgba(255,255,255,.08);background:transparent;color:#8B8FA8;font-family:Cairo;font-size:13px;font-weight:700;cursor:pointer">أريد أوقية ← كم عملة؟</button>
+      </div>
+      <label id="amtLabel">المبلغ</label>
       <input id="amt" inputmode="decimal" placeholder="1000000" oninput="calc()">
       <div class="tier">
         <div class="tierbox" id="tW"><div class="t">جملة</div><div class="v" id="tWv">—</div></div>
@@ -154,26 +158,85 @@ function render(){
     </div>`;
   calc();
 }
+let _mode='fwd';
+function setMode(m){
+  _mode=m;
+  const cc=$('cc')?$('cc').value:'AOA';
+  const cSym=SYM[cc]||cc;
+  const bF=$('btnFwd'),bR=$('btnRev');
+  if(m==='fwd'){
+    bF.style.cssText='flex:1;padding:10px;border-radius:12px;border:1px solid rgba(61,220,151,.5);background:rgba(61,220,151,.12);color:#3DDC97;font-family:Cairo;font-size:13px;font-weight:700;cursor:pointer';
+    bR.style.cssText='flex:1;padding:10px;border-radius:12px;border:1px solid rgba(255,255,255,.08);background:transparent;color:#8B8FA8;font-family:Cairo;font-size:13px;font-weight:700;cursor:pointer';
+    if($('amtLabel'))$('amtLabel').textContent='المبلغ بـ '+cSym;
+  } else {
+    bR.style.cssText='flex:1;padding:10px;border-radius:12px;border:1px solid rgba(139,114,255,.5);background:rgba(139,114,255,.12);color:#B9A8FF;font-family:Cairo;font-size:13px;font-weight:700;cursor:pointer';
+    bF.style.cssText='flex:1;padding:10px;border-radius:12px;border:1px solid rgba(255,255,255,.08);background:transparent;color:#8B8FA8;font-family:Cairo;font-size:13px;font-weight:700;cursor:pointer';
+    if($('amtLabel'))$('amtLabel').textContent='كم أوقية تريد استلامها؟';
+  }
+  calc();
+}
 function calc(){
   if(!DATA)return;
-  const cc=$('cc').value, amt=parseFloat(String($('amt').value||'').replace(/[^0-9.]/g,''))||0;
+  const cc=$('cc').value, raw=parseFloat(String($('amt').value||'').replace(/[^0-9.]/g,''))||0;
   const row=DATA.r.find(x=>x.ccy===cc);if(!row)return;
+  const cName=NAMES[cc]||cc, cSym=SYM[cc]||cc;
   const thr=row.thr||0, thrM=row.thrM||0;
-  let tier,rate,tierLbl;
-  if(amt>=thr){tier='w';rate=row.w;tierLbl=window.arkanT?arkanT('جملة'):'جملة';}
-  else if(row.m&&amt>=thrM){tier='m';rate=row.m;tierLbl=window.arkanT?arkanT('متوسط'):'متوسط';}
-  else{tier='r';rate=row.r;tierLbl=window.arkanT?arkanT('تجزئة'):'تجزئة';}
-  const out=amt*rate;
   $('tWv').textContent=row.w;$('tMv').textContent=row.m!=null?row.m:'—';$('tRv').textContent=row.r;
-  $('tW').classList.toggle('on',tier==='w');$('tM').classList.toggle('on',tier==='m');$('tR').classList.toggle('on',tier==='r');
-  $('out').textContent=fmt(out,0);
-  $('usedRate').textContent=`${fmt(amt)} ${SYM[cc]||cc} × ${rate} = ${fmt(out,0)} UM (${tierLbl})`;
-  const _cName=NAMES[cc]||cc;
-  const _cSym=SYM[cc]||cc;
-  if($('resLbl'))$('resLbl').textContent=`تستلم بالأوقية · ${_cName}`;
-  if($('resCur'))$('resCur').innerHTML=`<span style="opacity:.6;font-size:12px">${_cSym} ←</span> MRU · أوقية`;
+  if(_mode==='fwd'){
+    /* عادي: أدفع عملة → أستلم أوقية */
+    let tier,rate,tierLbl;
+    if(raw>=thr){tier='w';rate=row.w;tierLbl=window.arkanT?arkanT('جملة'):'جملة';}
+    else if(row.m&&raw>=thrM){tier='m';rate=row.m;tierLbl=window.arkanT?arkanT('متوسط'):'متوسط';}
+    else{tier='r';rate=row.r;tierLbl=window.arkanT?arkanT('تجزئة'):'تجزئة';}
+    const out=raw*rate;
+    $('tW').classList.toggle('on',tier==='w');$('tM').classList.toggle('on',tier==='m');$('tR').classList.toggle('on',tier==='r');
+    $('out').textContent=fmt(out,0);
+    $('usedRate').textContent=`${fmt(raw)} ${cSym} × ${rate} = ${fmt(out,0)} UM (${tierLbl})`;
+    if($('resLbl'))$('resLbl').textContent='تستلم بالأوقية';
+    if($('resCur'))$('resCur').innerHTML=`<span style="opacity:.5;font-size:12px">${cSym} ← </span>MRU · أوقية`;
+  } else {
+    /* عكسي: أريد X أوقية → أحتاج كم عملة؟ */
+    const rR=row.r, rM=row.m||null, rW=row.w;
+    const qR=raw/rR, qM=rM?raw/rM:null, qW=raw/rW;
+    let rate,bestOut,tierLbl;
+    if(qW>=thr){rate=rW;bestOut=qW;tierLbl='جملة';}
+    else if(rM&&qM&&qM>=thrM){rate=rM;bestOut=qM;tierLbl='متوسط';}
+    else{rate=rR;bestOut=qR;tierLbl='تجزئة';}
+    $('tW').classList.toggle('on',tierLbl==='جملة');
+    $('tM').classList.toggle('on',tierLbl==='متوسط');
+    $('tR').classList.toggle('on',tierLbl==='تجزئة');
+    $('out').textContent=fmt(bestOut,0);
+    $('usedRate').textContent=`${fmt(raw,0)} UM ÷ ${rate} = ${fmt(bestOut,0)} ${cSym} (${tierLbl})`;
+    if($('resLbl'))$('resLbl').textContent=`تحتاج من ${cName}`;
+    if($('resCur'))$('resCur').innerHTML=`<span style="opacity:.5;font-size:12px">MRU ← </span>${cSym} · ${cName}`;
+  }
 }
 function send(){
+  const cc=$('cc').value, raw=parseFloat(String($('amt').value||'').replace(/[^0-9.]/g,''))||0;
+  if(!raw){alert('أدخل المبلغ');return;}
+  const row=DATA.r.find(x=>x.ccy===cc);
+  const cSym=SYM[cc]||cc;
+  const thr=row.thr||0, thrM=row.thrM||0;
+  let rate,tierLbl,amtFgn,amtMRU;
+  if(_mode==='fwd'){
+    if(raw>=thr){rate=row.w;tierLbl='جملة';}
+    else if(row.m&&raw>=thrM){rate=row.m;tierLbl='متوسط';}
+    else{rate=row.r;tierLbl='تجزئة';}
+    amtFgn=raw; amtMRU=raw*rate;
+  } else {
+    const rR=row.r,rM=row.m,rW=row.w;
+    const qR=raw/rR,qM=rM?raw/rM:null,qW=raw/rW;
+    if(qW>=thr){rate=rW;tierLbl='جملة';amtFgn=qW;}
+    else if(rM&&qM&&qM>=thrM){rate=rM;tierLbl='متوسط';amtFgn=qM;}
+    else{rate=rR;tierLbl='تجزئة';amtFgn=qR;}
+    amtMRU=raw;
+  }
+  const who=$('who').value.trim();
+  const ref='REQ-'+Date.now().toString().slice(-6);
+  const msg=`ARKAN — طلب تحويل\n${ref}\n━━━━━━━━━━\n${who?'الاسم: '+who+'\n':''}المدفوع: ${fmt(amtFgn,0)} ${cSym} (${cc})\nالسعر: ${rate} (${tierLbl})\n━━━━━━━━━━\nالمستلَم: ${fmt(amtMRU,0)} أوقية (MRU)\n━━━━━━━━━━\nأؤكد رغبتي في التحويل.`;
+  window.open('https://wa.me/'+DATA.wa+'?text='+encodeURIComponent(msg),'_blank');
+}
+function _oldSend_unused(){
   const cc=$('cc').value, amt=parseFloat(String($('amt').value||'').replace(/[^0-9.]/g,''))||0;
   if(!amt){alert('أدخل المبلغ');return;}
   const row=DATA.r.find(x=>x.ccy===cc);
