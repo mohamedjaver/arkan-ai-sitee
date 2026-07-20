@@ -122,6 +122,7 @@ function render(){
     return;
   }
   const rows=DATA.r.map(x=>`<div class="cc">${SYM[x.ccy]||x.ccy} ${x.ccy}</div><div class="pw">${x.w}</div><div class="pr" style="color:#B9A8FF">${x.m!=null?x.m:'—'}</div><div class="pr">${x.r}</div>`).join('');
+  const _whoP=window.arkanT?arkanT('اسمك (اختياري)'):'اسمك (اختياري)';
   app.innerHTML=`
     <div class="card">
       <h2>أسعار اليوم (مقابل الأوقية)</h2>
@@ -152,7 +153,7 @@ function render(){
         <div class="cur" id="resCur">MRU · أوقية</div>
         <div class="rate" id="usedRate"></div>
       </div>
-      <input id="who" placeholder="اسمك (اختياري)" style="margin-top:14px;text-align:right;font-family:Tajawal;font-size:15px">
+      <input id="who" placeholder="${_whoP}" style="margin-top:14px;text-align:right;font-family:Tajawal;font-size:15px">
       <button class="go" onclick="send()">أرسل الطلب عبر واتساب</button>
       <div class="note">بعد الإرسال، أكّد الدفع وسنحوّل لك المبلغ فورًا.</div>
     </div>`;
