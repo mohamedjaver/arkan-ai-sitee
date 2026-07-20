@@ -387,7 +387,7 @@ html.pt-enter body{animation:ptIn .38s cubic-bezier(.22,1,.36,1)}
   <div class="sec-head reveal">
     <div class="sec-eyebrow en">// THE ENGINES</div>
     <h2 class="sec-title">محركات تحليلية بمعايير المكاتب المؤسساتية</h2>
-    <p class="sec-desc">كل مؤشر مبني على Pine Script v6، مُحسّن بصريًا ليُقرأ في ثانية — ويُفعّل على حسابك فور الدفع.</p>
+    <p class="sec-desc" id="pineDesc">كل مؤشر مبني على Pine Script v6، مُحسّن بصريًا ليُقرأ في ثانية — ويُفعّل على حسابك فور الدفع.</p>
   </div>
   <div class="ind-grid" id="indGrid"></div>
 </div></section>
@@ -397,7 +397,7 @@ html.pt-enter body{animation:ptIn .38s cubic-bezier(.22,1,.36,1)}
   <div class="sec-head reveal">
     <div class="sec-eyebrow en">// ACCESS TIERS</div>
     <h2 class="sec-title">خطط الوصول</h2>
-    <p class="sec-desc">دفع مباشر بـ USDT (TRC20) أو تواصل عبر Telegram — بلا وسطاء، بلا بطاقات، تفعيل فوري.</p>
+    <p class="sec-desc" id="usdtDesc">دفع مباشر بـ USDT (TRC20) أو تواصل عبر Telegram — بلا وسطاء، بلا بطاقات، تفعيل فوري.</p>
   </div>
   <div class="price-grid" id="priceGrid"></div>
   <div class="trust">
@@ -745,19 +745,23 @@ fetch('rates-data.json?t='+Date.now()).then(r=>r.ok?r.json():null).then(d=>{
 <script src="i18n.js"></script>
 <script>
 (function(){
-  var DISC_AR='جميع مؤشرات ARKAN AI Trading Systems أدوات تحليلية وتعليمية فقط، ولا تُعد نصيحة مالية أو توصية بالشراء أو البيع. التداول ينطوي على مخاطر عالية قد تؤدي لخسارة رأس المال. الأرقام المعروضة لأغراض توضيحية. الأداء السابق لا يضمن النتائج المستقبلية.';
-  var DISC_LBL='إخلاء مسؤولية:';
-  function updateDisc(){
+  var STATIC={
+    pineDesc:'كل مؤشر مبني على Pine Script v6، مُحسّن بصريًا ليُقرأ في ثانية — ويُفعّل على حسابك فور الدفع.',
+    usdtDesc:'دفع مباشر بـ USDT (TRC20) أو تواصل عبر Telegram — بلا وسطاء، بلا بطاقات، تفعيل فوري.',
+    discTxt:'جميع مؤشرات ARKAN AI Trading Systems أدوات تحليلية وتعليمية فقط، ولا تُعد نصيحة مالية أو توصية بالشراء أو البيع. التداول ينطوي على مخاطر عالية قد تؤدي لخسارة رأس المال. الأرقام المعروضة لأغراض توضيحية. الأداء السابق لا يضمن النتائج المستقبلية.',
+    discLbl:'إخلاء مسؤولية:'
+  };
+  function updateStatic(){
     var T=window.arkanT||(function(s){return s;});
-    var el=document.getElementById('discTxt');
-    var lb=document.getElementById('discLbl');
-    if(el) el.textContent=T(DISC_AR);
-    if(lb) lb.textContent=T(DISC_LBL);
+    Object.keys(STATIC).forEach(function(id){
+      var el=document.getElementById(id);
+      if(el) el.textContent=T(STATIC[id]);
+    });
   }
-  document.addEventListener('arkan:lang', updateDisc);
+  document.addEventListener('arkan:lang', updateStatic);
   if(document.readyState==='loading')
-    document.addEventListener('DOMContentLoaded', updateDisc);
-  else updateDisc();
+    document.addEventListener('DOMContentLoaded', updateStatic);
+  else updateStatic();
 })();
 </script>
 </body>
