@@ -252,6 +252,15 @@ var DICT={
 "ذكاء سيولة مؤسساتي يرصد Order Blocks وفجوات القيمة العادلة FVG ومناطق السيولة الخام.":{fr:"Intelligence de liquidité institutionnelle détectant les Order Blocks, les FVG et les zones de liquidité brute.",pt:"Inteligência de liquidez institucional que deteta Order Blocks, FVG e zonas de liquidez bruta."},
 "مصفوفة انحرافات VWAP متعددة الجلسات مع نطاقات الانحراف المعياري لتحديد مناطق التمدد والارتداد.":{fr:"Matrice d'écarts VWAP multi-sessions avec bandes d'écart-type pour identifier les zones d'extension et de rebond.",pt:"Matriz de desvios VWAP multi-sessões com bandas de desvio-padrão para identificar zonas de extensão e reversão."},
 "مؤشرات تداول مؤسساتية مبنية على تدفق الأوامر وذكاء السيولة. دفع USDT أو تواصل عبر Telegram.":{fr:"Indicateurs de trading institutionnels basés sur l'order flow et l'intelligence de liquidité. Paiement USDT ou contact Telegram.",pt:"Indicadores de trading institucionais baseados em order flow e inteligência de liquidez. Pagamento USDT ou contacto Telegram."},
+
+/* RATES PAGE — reverse calc & dynamic labels */
+"أدفع عملة ← أستلم أوقية":{fr:"Payer en devise → Recevoir Ouguiya",pt:"Pagar em divisa → Receber Ouguiya"},
+"أريد أوقية ← كم عملة؟":{fr:"Recevoir Ouguiya → Combien ?",pt:"Receber Ouguiya → Quanto ?"},
+"كم أوقية تريد استلامها؟":{fr:"Combien d'Ouguiya voulez-vous recevoir ?",pt:"Quantos Ouguiyas quer receber?"},
+"المبلغ بـ":{fr:"Montant en",pt:"Montante em"},
+"تحتاج من":{fr:"Vous avez besoin de",pt:"Precisa de"},
+"MRU · أوقية":{fr:"MRU · Ouguiya",pt:"MRU · Ouguiya"},
+
 "A ler… جارٍ القراءة… (قد تستغرق 20 ثانية)":{fr:"Lecture en cours… (jusqu'à 20 s)",pt:"A ler… (até 20 s)"},
 "Fatura lida · قُرئت الفاتورة":{fr:"Facture lue",pt:"Fatura lida"},
 "Preencha empresa e montante · أكمل اسم الشركة والمبلغ":{fr:"Complétez l'entreprise et le montant",pt:"Preencha empresa e montante"},
