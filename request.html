@@ -198,6 +198,18 @@ async function pdfText(dataUrl){
     const c=await page.getTextContent();
     txt+=c.items.map(i=>i.str).join(' ')+'\n';
   }
+  /* PDF ممسوح ضوئيًا (بلا طبقة نص): حوّل الصفحات إلى صور ثم OCR */
+  if(txt.replace(/\s/g,'').length<40){
+    txt='';
+    for(let p=1;p<=Math.min(pdf.numPages,2);p++){
+      const page=await pdf.getPage(p);
+      const vp=page.getViewport({scale:2.4});
+      const cv=document.createElement('canvas');
+      cv.width=vp.width;cv.height=vp.height;
+      await page.render({canvasContext:cv.getContext('2d'),viewport:vp}).promise;
+      txt+=await ocrImage(cv.toDataURL('image/png'))+'\n';
+    }
+  }
   return txt;
 }
 function preprocess(dataUrl){
@@ -233,7 +245,13 @@ function preprocess(dataUrl){
 }
 async function ocrImage(dataUrl){
   var pre=await preprocess(dataUrl);
-  var worker=await Tesseract.createWorker(['eng','por','fra','ara'],1,{workerBlobURL:true});
+  var st=document.getElementById('invDropTxt');
+  /* eng أولًا: أدق بكثير للأرقام والفواتير اللاتينية؛ ara تُضعف قراءة الأرقام */
+  var worker=await Tesseract.createWorker('eng',1,{
+    workerPath:'https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.1.0/worker.min.js',
+    corePath:'https://cdn.jsdelivr.net/npm/tesseract.js-core@5.1.0/tesseract-core-simd.wasm.js',
+    logger:function(m){if(m.status==='recognizing text'&&st)st.textContent='A ler… جارٍ القراءة… '+Math.round(m.progress*100)+'%';}
+  });
   var r1=await worker.recognize(pre);
   var txt=r1.data.text||'';
   /* إن كانت النتيجة هزيلة، جرّب الأصلية بلا معالجة */
@@ -242,6 +260,13 @@ async function ocrImage(dataUrl){
     if((r2.data.text||'').length>txt.length)txt=r2.data.text;
   }
   await worker.terminate();
+  /* آخر محاولة: فاتورة عربية بالكامل */
+  if(txt.replace(/\s/g,'').length<20){
+    var w2=await Tesseract.createWorker(['ara','fra'],1,{workerBlobURL:true});
+    var r3=await w2.recognize(pre);
+    if((r3.data.text||'').length>txt.length)txt=r3.data.text;
+    await w2.terminate();
+  }
   return txt;
 }
 function normNum(raw){
@@ -287,7 +312,17 @@ function extractCurrency(t){
 /* استخراج اسم الشركة: أول سطر بارز يشبه اسم شركة (كلمات كبيرة، LDA/LTD/CO/SARL) */
 function extractCompany(t){
   var lines=t.split(/\n/).map(function(l){return l.trim();}).filter(function(l){return l.length>3;});
-  var suffixes=/\b(LDA|LTD|LLC|CO\.?,? ?LTD|COMPANY|SARL|SA|GMBH|INC|TRADING|IMPORT|EXPORT|INDUSTRY|FACTORY|GROUP|LIMITED|机械|有限公司)\b/i;
+  var suffixes=/\b(LDA|LTD|LLC|CO\.?,? ?LTD|COMPANY|SARL|S\.?A\.?|S\.?K\.?A\.?|B\.?V\.?|S\.?L\.?|SP\.? ?Z ?O\.?O\.?|GMBH|INC|TRADING|IMPORT|EXPORT|INDUSTRY|FACTORY|GROUP|LIMITED|机械|有限公司)\b/i;
+  /* أولوية قصوى: السطر التالي لكلمة Seller / Exporter / Beneficiary / Vendedor */
+  for(var s=0;s<lines.length;s++){
+    if(/^(seller|exporter|beneficiary|vendedor|shipper)\b/i.test(lines[s])){
+      for(var k=s;k<Math.min(s+3,lines.length);k++){
+        var cand=lines[k].replace(/^(seller|exporter|beneficiary|vendedor|shipper)[:\s]*/i,'').trim();
+        if(cand.length>3&&!/address|country|phone|vat|bank/i.test(cand))
+          return cand.replace(/[^\w\s&.,\-\u4e00-\u9fff]/g,'').trim();
+      }
+    }
+  }
   /* تجاهل كلمات الفاتورة العامة */
   var skip=/INVOICE|FACTURE|FATURA|PROFORMA|COMMERCIAL|PACKING|DATE|N[oº°]|REF|TEL|FAX|EMAIL|WWW|HTTP|BANK|IBAN|SWIFT|ADDRESS|بنك|فاتورة|التاريخ/i;
   for(var i=0;i<Math.min(lines.length,15);i++){
