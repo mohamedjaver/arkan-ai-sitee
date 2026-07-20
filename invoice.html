@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>ARKAN — قارئ فواتير الموردين</title>
+<meta name="theme-color" content="#04060B">
+<link rel="icon" href="arkan-logo.svg">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=IBM+Plex+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#04060B;--bg2:#080916;--card:rgba(255,255,255,.035);--bd:rgba(255,255,255,.09);--gold:#E8C24A;--vio:#7C6CFF;--blu:#3B82F6;--txt:#EDF0F7;--mut:#8B93A7;--ok:#34D399;--err:#F87171}
+body{font-family:'Cairo',sans-serif;background:radial-gradient(1200px 600px at 80% -10%,rgba(124,108,255,.10),transparent 60%),radial-gradient(900px 500px at 10% 110%,rgba(232,194,74,.06),transparent 60%),linear-gradient(180deg,var(--bg),var(--bg2));min-height:100vh;color:var(--txt);padding:18px 14px 60px}
+.wrap{max-width:760px;margin:0 auto}
+.mono{font-family:'IBM Plex Mono',monospace}
+header{display:flex;align-items:center;gap:12px;margin-bottom:20px}
+.logo{width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,var(--vio),var(--blu));display:flex;align-items:center;justify-content:center;font-weight:900;font-size:22px;color:#fff;box-shadow:0 8px 24px rgba(124,108,255,.35)}
+header h1{font-size:19px;font-weight:800}
+header p{font-size:12px;color:var(--mut)}
+.badge{margin-inline-start:auto;font-size:11px;color:var(--gold);border:1px solid rgba(232,194,74,.35);border-radius:999px;padding:4px 12px;background:rgba(232,194,74,.07);white-space:nowrap}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:18px;padding:18px;backdrop-filter:blur(14px);margin-bottom:14px}
+.drop{border:2px dashed rgba(124,108,255,.45);border-radius:16px;padding:34px 16px;text-align:center;cursor:pointer;transition:.2s}
+.drop:hover,.drop.on{border-color:var(--gold);background:rgba(232,194,74,.05)}
+.drop .ic{font-size:38px;margin-bottom:8px}
+.drop b{display:block;font-size:15px;margin-bottom:4px}
+.drop span{font-size:12px;color:var(--mut)}
+.prog{display:none;margin-top:14px}
+.prog .bar{height:6px;border-radius:99px;background:rgba(255,255,255,.08);overflow:hidden}
+.prog .fill{height:100%;width:0;background:linear-gradient(90deg,var(--vio),var(--gold));transition:width .3s;border-radius:99px}
+.prog .lbl{font-size:12px;color:var(--mut);margin-top:6px;text-align:center}
+.res{display:none}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.f{grid-column:span 2}
+@media(min-width:560px){.f.half{grid-column:span 1}}
+label{font-size:11.5px;color:var(--mut);display:block;margin-bottom:5px;font-weight:600}
+input,select{width:100%;background:rgba(255,255,255,.05);border:1px solid var(--bd);border-radius:11px;padding:11px 12px;color:var(--txt);font-family:'Cairo';font-size:14px;font-weight:700;outline:none;transition:.2s}
+input:focus,select:focus{border-color:var(--vio)}
+input.mono{font-family:'IBM Plex Mono';direction:ltr;text-align:left}
+.sec{font-size:13px;font-weight:800;color:var(--gold);margin:4px 0 12px;display:flex;align-items:center;gap:8px}
+.sec::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,rgba(232,194,74,.4),transparent)}
+.total{background:linear-gradient(135deg,rgba(124,108,255,.14),rgba(232,194,74,.10));border:1px solid rgba(232,194,74,.35);border-radius:16px;padding:18px;text-align:center;margin-top:14px}
+.total .t1{font-size:12px;color:var(--mut)}
+.total .t2{font-size:32px;font-weight:900;color:var(--gold);letter-spacing:0}
+.total .t2 small{font-size:15px;color:var(--txt)}
+.total .t3{font-size:12px;color:var(--mut);margin-top:6px}
+.rrow{display:flex;justify-content:space-between;font-size:13px;padding:8px 2px;border-bottom:1px dashed rgba(255,255,255,.07)}
+.rrow:last-child{border:none}
+.rrow b{color:var(--txt)}
+.btns{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap}
+.btn{flex:1;min-width:130px;border:none;border-radius:12px;padding:13px;font-family:'Cairo';font-size:14px;font-weight:800;cursor:pointer;transition:.2s}
+.btn.g{background:linear-gradient(135deg,#25D366,#128C7E);color:#fff}
+.btn.v{background:linear-gradient(135deg,var(--vio),var(--blu));color:#fff}
+.btn.o{background:rgba(255,255,255,.06);color:var(--txt);border:1px solid var(--bd)}
+.btn:hover{transform:translateY(-1px);filter:brightness(1.1)}
+.note{font-size:11.5px;color:var(--mut);text-align:center;margin-top:10px}
+.rateline{display:inline-flex;gap:6px;align-items:center;font-size:12px;color:var(--mut);margin-top:4px}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--ok);box-shadow:0 0 8px var(--ok)}
+.err{color:var(--err);font-size:13px;text-align:center;margin-top:10px;display:none}
+.txtprev{display:none;margin-top:12px}
+.txtprev pre{background:rgba(0,0,0,.35);border:1px solid var(--bd);border-radius:12px;padding:12px;font-size:10.5px;color:var(--mut);max-height:180px;overflow:auto;direction:ltr;text-align:left;white-space:pre-wrap}
+.toggle{font-size:11.5px;color:var(--vio);cursor:pointer;text-align:center;margin-top:10px;user-select:none}
+a.back{color:var(--mut);font-size:12px;text-decoration:none;display:block;text-align:center;margin-top:24px}
+a.back:hover{color:var(--gold)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div class="logo">A</div>
+  <div><h1>قارئ فواتير الموردين</h1><p>OCR — استخراج تلقائي + تسعير فوري بالأوقية</p></div>
+  <div class="badge" id="rateBadge">جاري جلب الأسعار…</div>
+</header>
+
+<div class="card">
+  <div class="drop" id="drop">
+    <div class="ic">📄</div>
+    <b>اسحب الفاتورة هنا أو اضغط للاختيار</b>
+    <span>PDF أو صورة (JPG / PNG) — فواتير الموردين الأوروبية والصينية</span>
+    <input type="file" id="file" accept="application/pdf,image/*" hidden>
+  </div>
+  <div class="prog" id="prog">
+    <div class="bar"><div class="fill" id="fill"></div></div>
+    <div class="lbl" id="plbl">تحضير…</div>
+  </div>
+  <div class="err" id="errBox"></div>
+</div>
+
+<div class="card res" id="res">
+  <div class="sec">البيانات المستخرجة — عدّل أي حقل يدويًا</div>
+  <div class="grid">
+    <div class="f"><label>اسم الشركة (المورد)</label><input id="fCompany" placeholder="Seller name"></div>
+    <div class="f half"><label>تاريخ الفاتورة</label><input id="fDate" class="mono" placeholder="2026-03-28"></div>
+    <div class="f half"><label>رقم الفاتورة</label><input id="fNo" class="mono" placeholder="FSE-EXP/..."></div>
+    <div class="f half"><label>المبلغ الإجمالي</label><input id="fAmount" class="mono" inputmode="decimal" placeholder="0.00"></div>
+    <div class="f half"><label>العملة</label>
+      <select id="fCcy"><option value="EUR">EUR — يورو</option><option value="USDT">USD / USDT</option><option value="CNY">CNY — يوان</option><option value="AOA">AOA — كوانزا</option></select>
+    </div>
+    <div class="f half"><label>شريحة السعر</label>
+      <select id="fTier"><option value="auto">تلقائي حسب المبلغ</option><option value="w">جملة</option><option value="m">وسط</option><option value="r">تجزئة</option></select>
+    </div>
+    <div class="f half"><label>هامش الربح %</label><input id="fMargin" class="mono" inputmode="decimal" value="10"></div>
+  </div>
+
+  <div class="total">
+    <div class="t1">الإجمالي المطلوب من العميل</div>
+    <div class="t2 mono" id="tMRU">—<small> MRU</small></div>
+    <div class="t3" id="tDetail">—</div>
+  </div>
+
+  <div style="margin-top:14px">
+    <div class="rrow"><span>سعر الموقع اليوم</span><b class="mono" id="rBase">—</b></div>
+    <div class="rrow"><span>السعر المطبَّق (+ الهامش)</span><b class="mono" id="rApplied">—</b></div>
+    <div class="rrow"><span>تاريخ تحديث الأسعار</span><b class="mono" id="rDate">—</b></div>
+  </div>
+
+  <div class="btns">
+    <button class="btn g" id="btnWA">📲 إرسال واتساب</button>
+    <button class="btn v" id="btnCopy">📋 نسخ الملخص</button>
+    <button class="btn o" id="btnReset">↺ فاتورة جديدة</button>
+  </div>
+
+  <div class="toggle" id="tgTxt">عرض النص المستخرج ▾</div>
+  <div class="txtprev" id="txtPrev"><pre id="rawTxt"></pre></div>
+</div>
+
+<a class="back" href="index.html">‹ العودة إلى بوابة ARKAN</a>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.1.0/tesseract.min.js"></script>
+<script>
+pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+var RATES=null, RAW='', state={amount:0,ccy:'EUR'};
+
+/* ---------- rates ---------- */
+function loadRates(){
+  return fetch('rates-data.json?t='+Date.now()).then(function(r){return r.json()}).then(function(j){
+    RATES=j;
+    var e=findCcy('EUR');
+    document.getElementById('rateBadge').innerHTML='<span class="dot"></span> EUR اليوم: '+(e?e.r:'—')+' MRU';
+    document.getElementById('rDate').textContent=j.date||'—';
+  }).catch(function(){
+    document.getElementById('rateBadge').textContent='تعذر جلب الأسعار';
+  });
+}
+function findCcy(c){
+  if(!RATES||!RATES.r)return null;
+  for(var i=0;i<RATES.r.length;i++)if(RATES.r[i].ccy===c)return RATES.r[i];
+  return null;
+}
+function pickTier(cc,amt,mode){
+  if(mode==='w'||mode==='m'||mode==='r')return mode;
+  if(amt>=cc.thr)return 'w';
+  if(amt>=cc.thrM)return 'm';
+  return 'r';
+}
+var tierName={w:'جملة',m:'وسط',r:'تجزئة'};
+
+/* ---------- parsing ---------- */
+function parseNum(s){
+  s=s.replace(/\s/g,'');
+  // 125,922.72 | 125.922,72 | 125 922,72
+  if(/,\d{2}$/.test(s)) s=s.replace(/\./g,'').replace(',','.');
+  else s=s.replace(/,/g,'');
+  var n=parseFloat(s);
+  return isNaN(n)?0:n;
+}
+function extract(text){
+  RAW=text;
+  var lines=text.split(/\n/).map(function(l){return l.trim()}).filter(Boolean);
+  var out={company:'',date:'',no:'',amount:0,ccy:'EUR'};
+
+  /* currency */
+  if(/EUR|€/i.test(text))out.ccy='EUR';
+  else if(/USD|USDT|\$/i.test(text))out.ccy='USDT';
+  else if(/CNY|RMB|¥/i.test(text))out.ccy='CNY';
+  else if(/AOA|Kz/i.test(text))out.ccy='AOA';
+
+  /* amounts: prefer lines with total/incl, else global max */
+  var numRe=/\d{1,3}(?:[ .,]\d{3})*[.,]\d{2}/g, best=0, totalBest=0;
+  lines.forEach(function(l){
+    var m=l.match(numRe); if(!m)return;
+    m.forEach(function(x){
+      var v=parseNum(x);
+      if(v>best)best=v;
+      if(/total|incl|amount\s*due|razem|合计|总计/i.test(l)&&v>totalBest)totalBest=v;
+    });
+  });
+  out.amount=totalBest||best;
+
+  /* date: prefer near "issue"/"date" */
+  var dRe=/(\d{4}[-\/.]\d{2}[-\/.]\d{2})|(\d{2}[-\/.]\d{2}[-\/.]\d{4})/;
+  var dLine=lines.find(function(l){return /issue|date/i.test(l)&&dRe.test(l)})||lines.find(function(l){return dRe.test(l)});
+  if(dLine){var dm=dLine.match(dRe); out.date=dm?dm[0]:'';}
+
+  /* invoice number */
+  var noM=text.match(/(?:No\.?|Nr|Invoice|Faktura)[:\s]*([A-Z]{2,}[-\/A-Z0-9]{4,})/i)
+        ||text.match(/\b([A-Z]{2,4}-?[A-Z]{2,4}\/\d{4,}\/\d{2}\/\d{4})\b/);
+  if(noM)out.no=noM[1];
+
+  /* company: line after Seller, else corporate-suffix line */
+  var suffRe=/(S\.?K\.?A\.?|S\.?A\.?|Sp\.?\s*z|Ltd\.?|LLC|GmbH|B\.?V\.?|SARL|S\.?L\.?|Co\.?,?\s*Ltd|Group|Trading|Import|Export)/i;
+  var si=lines.findIndex(function(l){return /^seller\b/i.test(l)});
+  if(si>-1){
+    for(var k=si;k<Math.min(si+3,lines.length);k++){
+      var cand=lines[k].replace(/^seller[:\s]*/i,'').trim();
+      if(cand.length>3){out.company=cand;break;}
+    }
+  }
+  if(!out.company){
+    var cl=lines.find(function(l){return suffRe.test(l)&&l.length<70&&!/bank|iban|swift/i.test(l)});
+    if(cl)out.company=cl;
+  }
+  if(!out.company&&lines.length)out.company=lines[0];
+  return out;
+}
+
+/* ---------- OCR pipeline ---------- */
+function setP(p,t){
+  document.getElementById('prog').style.display='block';
+  document.getElementById('fill').style.width=p+'%';
+  document.getElementById('plbl').textContent=t;
+}
+function preprocess(canvas){
+  var w=canvas.width,h=canvas.height;
+  if(w<1600){var s=1600/w,c2=document.createElement('canvas');c2.width=1600;c2.height=Math.round(h*s);
+    c2.getContext('2d').drawImage(canvas,0,0,c2.width,c2.height);canvas=c2;w=canvas.width;h=canvas.height;}
+  var ctx=canvas.getContext('2d'),im=ctx.getImageData(0,0,w,h),d=im.data,sum=0;
+  for(var i=0;i<d.length;i+=4){var g=.299*d[i]+.587*d[i+1]+.114*d[i+2];d[i]=d[i+1]=d[i+2]=g;sum+=g;}
+  var avg=sum/(d.length/4);
+  for(var j=0;j<d.length;j+=4){var v=(d[j]-avg)*1.6+avg;v=v<0?0:v>255?255:v;d[j]=d[j+1]=d[j+2]=v;}
+  ctx.putImageData(im,0,0);
+  return canvas;
+}
+function pdfToCanvases(file){
+  return file.arrayBuffer().then(function(buf){
+    return pdfjsLib.getDocument({data:buf}).promise;
+  }).then(function(doc){
+    var pages=Math.min(doc.numPages,2),jobs=[];
+    for(var p=1;p<=pages;p++)(function(pn){
+      jobs.push(doc.getPage(pn).then(function(pg){
+        var vp=pg.getViewport({scale:2.4});
+        var c=document.createElement('canvas');c.width=vp.width;c.height=vp.height;
+        return pg.render({canvasContext:c.getContext('2d'),viewport:vp}).promise.then(function(){return c});
+      }));
+    })(p);
+    return Promise.all(jobs);
+  });
+}
+function imgToCanvas(file){
+  return new Promise(function(res,rej){
+    var img=new Image();
+    img.onload=function(){var c=document.createElement('canvas');c.width=img.width;c.height=img.height;
+      c.getContext('2d').drawImage(img,0,0);res([c]);};
+    img.onerror=rej;
+    img.src=URL.createObjectURL(file);
+  });
+}
+function runOCR(canvases){
+  var worker;
+  return Tesseract.createWorker('eng',1,{
+    workerPath:'https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.1.0/worker.min.js',
+    corePath:'https://cdn.jsdelivr.net/npm/tesseract.js-core@5.1.0/tesseract-core-simd.wasm.js',
+    logger:function(m){if(m.status==='recognizing text')setP(30+Math.round(m.progress*60),'قراءة النص… '+Math.round(m.progress*100)+'%');}
+  }).then(function(w){
+    worker=w;var txt='';
+    var chain=Promise.resolve();
+    canvases.forEach(function(c,i){
+      chain=chain.then(function(){
+        setP(30+i*30,'صفحة '+(i+1)+'…');
+        return worker.recognize(preprocess(c)).then(function(r){txt+='\n'+r.data.text;});
+      });
+    });
+    return chain.then(function(){worker.terminate();return txt;});
+  });
+}
+function handleFile(file){
+  document.getElementById('errBox').style.display='none';
+  document.getElementById('res').style.display='none';
+  setP(5,'تحميل الملف…');
+  var conv = file.type==='application/pdf' ? pdfToCanvases(file) : imgToCanvas(file);
+  conv.then(function(cs){setP(25,'تجهيز OCR…');return runOCR(cs);})
+  .then(function(text){
+    setP(95,'استخراج البيانات…');
+    var d=extract(text);
+    document.getElementById('fCompany').value=d.company;
+    document.getElementById('fDate').value=d.date;
+    document.getElementById('fNo').value=d.no;
+    document.getElementById('fAmount').value=d.amount?d.amount.toFixed(2):'';
+    document.getElementById('fCcy').value=d.ccy;
+    document.getElementById('rawTxt').textContent=text.trim();
+    setP(100,'تم ✓');
+    setTimeout(function(){document.getElementById('prog').style.display='none';},600);
+    document.getElementById('res').style.display='block';
+    compute();
+    document.getElementById('res').scrollIntoView({behavior:'smooth'});
+  })
+  .catch(function(e){
+    document.getElementById('prog').style.display='none';
+    var eb=document.getElementById('errBox');eb.style.display='block';
+    eb.textContent='تعذرت القراءة: '+(e&&e.message?e.message:'ملف غير مدعوم');
+  });
+}
+
+/* ---------- compute ---------- */
+function fmt(n){return n.toLocaleString('en-US',{maximumFractionDigits:0})}
+function compute(){
+  var amt=parseNum(String(document.getElementById('fAmount').value||'0'));
+  var ccy=document.getElementById('fCcy').value;
+  var tierMode=document.getElementById('fTier').value;
+  var margin=parseFloat(document.getElementById('fMargin').value)||0;
+  var cc=findCcy(ccy);
+  if(!cc||!amt){document.getElementById('tMRU').innerHTML='—<small> MRU</small>';return;}
+  var t=pickTier(cc,amt,tierMode);
+  var base=cc[t];
+  var applied=base*(1+margin/100);
+  var total=amt*applied;
+  document.getElementById('rBase').textContent=base+' MRU ('+tierName[t]+')';
+  document.getElementById('rApplied').textContent=applied.toFixed(2)+' MRU';
+  document.getElementById('tMRU').innerHTML=fmt(total)+'<small> MRU</small>';
+  document.getElementById('tDetail').textContent=fmt(amt)+' '+ccy+' × '+applied.toFixed(2)+' (سعر اليوم +'+margin+'%)';
+  state.amount=amt;state.ccy=ccy;state.total=total;state.applied=applied;state.base=base;state.margin=margin;state.tier=t;
+}
+function summary(){
+  var c=document.getElementById('fCompany').value;
+  var d=document.getElementById('fDate').value;
+  var no=document.getElementById('fNo').value;
+  return '📄 *فاتورة مورد — ARKAN*\n'
+    +'🏢 الشركة: '+c+'\n'
+    +(no?'🔢 رقم الفاتورة: '+no+'\n':'')
+    +'📅 التاريخ: '+d+'\n'
+    +'💶 المبلغ: '+fmt(state.amount)+' '+state.ccy+'\n'
+    +'📈 السعر المطبق: '+state.applied.toFixed(2)+' MRU (سعر اليوم +'+state.margin+'%)\n'
+    +'━━━━━━━━━━━━\n'
+    +'💰 *الإجمالي: '+fmt(state.total)+' MRU*\n'
+    +'\narkanrates.com';
+}
+
+/* ---------- events ---------- */
+var drop=document.getElementById('drop'),fi=document.getElementById('file');
+drop.onclick=function(){fi.click()};
+fi.onchange=function(){if(fi.files[0])handleFile(fi.files[0])};
+drop.ondragover=function(e){e.preventDefault();drop.classList.add('on')};
+drop.ondragleave=function(){drop.classList.remove('on')};
+drop.ondrop=function(e){e.preventDefault();drop.classList.remove('on');if(e.dataTransfer.files[0])handleFile(e.dataTransfer.files[0])};
+['fAmount','fCcy','fTier','fMargin'].forEach(function(id){document.getElementById(id).addEventListener('input',compute)});
+document.getElementById('btnWA').onclick=function(){window.open('https://wa.me/?text='+encodeURIComponent(summary()))};
+document.getElementById('btnCopy').onclick=function(){
+  navigator.clipboard.writeText(summary().replace(/\*/g,''));
+  this.textContent='✓ تم النسخ';var b=this;setTimeout(function(){b.textContent='📋 نسخ الملخص'},1500);
+};
+document.getElementById('btnReset').onclick=function(){location.reload()};
+document.getElementById('tgTxt').onclick=function(){
+  var p=document.getElementById('txtPrev');
+  p.style.display=p.style.display==='block'?'none':'block';
+};
+loadRates();
+</script>
+</body>
+</html>
