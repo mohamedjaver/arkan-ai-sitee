@@ -266,6 +266,13 @@ html.pt-enter body{animation:ptIn .38s cubic-bezier(.22,1,.36,1)}
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="ARKAN">
+<script src="config.js"></script>
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="ARKAN SETTLEMENTS">
+<meta property="og:title" content="ARKAN AI — أنظمة التداول المؤسسية">
+<meta property="og:description" content="مؤشرات Pine Script مؤسسية على TradingView: تدفق الأوامر وذكاء السيولة.">
+<meta property="og:image" content="https://arkanrates.com/arkan-icon-512.png">
+<meta name="twitter:card" content="summary_large_image">
 </head>
 <body>
 <canvas id="bgfx"></canvas>
@@ -729,6 +736,8 @@ fetch('rates-data.json?t='+Date.now()).then(r=>r.ok?r.json():null).then(d=>{
   set('fxAOA',g('AOA'));set('fxUSDT',g('USDT'));set('fxEUR',g('EUR'));
 }).catch(()=>{});
 </script>
+<script src="integrations.js"></script>
+<script src="auth.js"></script>
 <script src="i18n.js"></script></body>
 </html>
 
