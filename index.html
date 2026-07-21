@@ -290,6 +290,8 @@ footer{border-top:1px solid var(--line);margin-top:40px;padding:52px 0 34px;posi
 "availableLanguage":["ar","fr","pt"],
 "openingHoursSpecification":{"@type":"OpeningHoursSpecification","dayOfWeek":["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"],"opens":"00:00","closes":"23:59"}}
 </script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.1.0/tesseract.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="config.js"></script>
 </head>
 <body>
@@ -322,8 +324,9 @@ footer{border-top:1px solid var(--line);margin-top:40px;padding:52px 0 34px;posi
     <a href="./" class="mark" aria-label="ARKAN"><img src="arkan-logo.svg" alt="ARKAN" style="width:100%;height:100%;object-fit:cover;border-radius:50%"></a>
   </div>
   <nav class="menu" id="menu">
+    <a href="#calc" onclick="toggleMenu()">تبديل العملات</a>
+    <a href="#invoice" onclick="toggleMenu()">تسديد الفواتير</a>
     <a href="#rates" onclick="toggleMenu()">أسعار اليوم</a>
-    <a href="#calc" onclick="toggleMenu()">حاسبة التحويل</a>
     <a href="#engines" onclick="toggleMenu()">المحركات التحليلية</a>
     <a href="#pricing" onclick="toggleMenu()">خطط الوصول</a>
     <a href="#order" onclick="toggleMenu()">طلب تحويل</a>
@@ -352,30 +355,6 @@ footer{border-top:1px solid var(--line);margin-top:40px;padding:52px 0 34px;posi
 </div></section>
 
 <!-- 5. RATES -->
-<section class="sec layer" id="rates"><div class="wrap">
-  <div class="sec-h">
-    <div class="k en">// EXCHANGE DESK</div>
-    <h2>أسعار اليوم</h2>
-    <p>أسعار محدّثة يوميًا مقابل الأوقية الموريتانية — جملة وتجزئة، وتنفيذ مباشر عبر واتساب.</p>
-  </div>
-  <div class="rates">
-    <div class="rc"><div class="pair en">AOA / MRU</div><div class="val en" id="rAOA">0.360</div><div class="nm">كوانزا أنغولية</div><div class="live"><span class="dotp"></span>حي</div></div>
-    <div class="rc"><div class="pair en">USDT / MRU</div><div class="val en" id="rUSDT">420</div><div class="nm">تيثر</div><div class="live"><span class="dotp"></span>حي</div></div>
-    <div class="rc"><div class="pair en">EUR / MRU</div><div class="val en" id="rEUR">485</div><div class="nm">يورو</div><div class="live"><span class="dotp"></span>حي</div></div>
-  </div>
-  <div class="steps">
-    <div class="step"><div class="n en">01</div><h4>جدول بثلاث شرائح</h4></div>
-    <div class="step"><div class="n en">02</div><h4>أرسل طلبك واتساب</h4></div>
-    <div class="step"><div class="n en">03</div><h4>تسوية الشركات</h4></div>
-    <a href="settlement.html" class="step" style="border-color:rgba(139,92,246,.4);background:rgba(139,92,246,.06);display:block">
-      <div class="n en" style="color:var(--violet)">04 <i class="fa-solid fa-lock" style="font-size:9px;margin-right:4px"></i></div>
-      <h4>SETTLEMENT FLOW</h4>
-      <div style="font-size:11.5px;color:var(--mut2);margin-top:4px">لوحة التسوية الداخلية</div>
-    </a>
-  </div>
-</div></section>
-
-<!-- 6. CALCULATOR + CHART -->
 <section class="sec layer" id="calc"><div class="wrap">
   <div class="sec-h">
     <div class="k en">// CONVERTER</div>
@@ -432,6 +411,65 @@ footer{border-top:1px solid var(--line);margin-top:40px;padding:52px 0 34px;posi
     </div>
   </div>
 </div></section>
+<section class="sec layer" id="rates"><div class="wrap">
+  <div class="sec-h">
+    <div class="k en">// EXCHANGE DESK</div>
+    <h2>أسعار اليوم</h2>
+    <p>أسعار محدّثة يوميًا مقابل الأوقية الموريتانية — جملة وتجزئة، وتنفيذ مباشر عبر واتساب.</p>
+  </div>
+  <div class="rates">
+    <div class="rc"><div class="pair en">AOA / MRU</div><div class="val en" id="rAOA">0.360</div><div class="nm">كوانزا أنغولية</div><div class="live"><span class="dotp"></span>حي</div></div>
+    <div class="rc"><div class="pair en">USDT / MRU</div><div class="val en" id="rUSDT">420</div><div class="nm">تيثر</div><div class="live"><span class="dotp"></span>حي</div></div>
+    <div class="rc"><div class="pair en">EUR / MRU</div><div class="val en" id="rEUR">485</div><div class="nm">يورو</div><div class="live"><span class="dotp"></span>حي</div></div>
+  </div>
+  <div class="steps">
+    <div class="step"><div class="n en">01</div><h4>جدول بثلاث شرائح</h4></div>
+    <div class="step"><div class="n en">02</div><h4>أرسل طلبك واتساب</h4></div>
+    <div class="step"><div class="n en">03</div><h4>تسوية الشركات</h4></div>
+    <a href="settlement.html" class="step" style="border-color:rgba(139,92,246,.4);background:rgba(139,92,246,.06);display:block">
+      <div class="n en" style="color:var(--violet)">04 <i class="fa-solid fa-lock" style="font-size:9px;margin-right:4px"></i></div>
+      <h4>SETTLEMENT FLOW</h4>
+      <div style="font-size:11.5px;color:var(--mut2);margin-top:4px">لوحة التسوية الداخلية</div>
+    </a>
+  </div>
+</div></section>
+
+<!-- BILL PAYMENT (OCR) -->
+<section class="sec layer" id="invoice"><div class="wrap">
+  <div class="sec-h">
+    <div class="k en">// SUPPLIER INVOICES</div>
+    <h2>تسديد فواتير الموردين</h2>
+    <p>ارفع فاتورة موردك — نقرأ المبلغ واسم الشركة تلقائيًا، ونرد بعرض السعر خلال دقائق.</p>
+  </div>
+  <div class="card" style="max-width:720px;margin:0 auto">
+    <div id="invDrop" onclick="uploadInvoice()" style="border:2px dashed rgba(139,92,246,.42);border-radius:16px;padding:26px 20px;text-align:center;cursor:pointer;margin-bottom:18px;background:rgba(139,92,246,.05);transition:.25s">
+      <div style="font-size:26px;color:var(--violet);margin-bottom:8px"><i class="fa-solid fa-file-arrow-up"></i></div>
+      <div style="font-size:15px;font-weight:700;color:#B9A8FF" id="invDropTxt">ارفع الفاتورة (صورة أو PDF)</div>
+      <div style="font-size:12.5px;color:var(--mut2);margin-top:5px" id="invDropSub">قراءة تلقائية للمبلغ واسم الشركة</div>
+      <div id="invResult" style="margin-top:10px"></div>
+    </div>
+    <div class="row2">
+      <div class="fld"><label>اسم الشركة / المورد</label><input id="ivComp" placeholder="LUANDA IMPORT LDA"></div>
+      <div class="fld"><label>مبلغ الفاتورة</label><input id="ivAmt" inputmode="decimal" placeholder="250,000"></div>
+    </div>
+    <div class="row2">
+      <div class="fld"><label>عملة الفاتورة</label>
+        <select class="full" id="ivCcy"><option>USD</option><option>EUR</option><option>CNY</option><option>USDT</option><option>AED</option></select>
+      </div>
+      <div class="fld"><label>بلد المورد</label><input id="ivDest" placeholder="الصين / البرتغال"></div>
+    </div>
+    <div class="fld"><label>اسمك ورقم هاتفك</label><input id="ivWho" placeholder="محمد — +222 xx xx xx xx"></div>
+    <div style="display:flex;gap:11px;flex-wrap:wrap">
+      <button class="btn btn-gold" style="flex:1" onclick="submitInvoice()">أرسل الفاتورة للتسديد</button>
+      <a href="request.html" class="btn btn-line" style="flex:1">النموذج المفصّل</a>
+    </div>
+    <div class="form-note"><span>دفع مباشر للمورد</span><span>·</span><span>إيصال تحويل رسمي</span><span>·</span><span>سعر مثبّت 30 دقيقة</span></div>
+  </div>
+</div></section>
+
+
+<!-- 6. CALCULATOR + CHART -->
+
 
 <!-- 7. ENGINES -->
 <section class="sec layer" id="engines"><div class="wrap">
@@ -823,6 +861,155 @@ fetch('rates-data.json?t='+Date.now()).then(function(r){return r.ok?r.json():nul
   });
   calculate();
 }).catch(function(){});
+
+
+/* ================== 11. INVOICE OCR ================== */
+async function pdfText(dataUrl){
+  var pdf=await pdfjsLib.getDocument({url:dataUrl}).promise;
+  var txt='';
+  for(var p=1;p<=Math.min(pdf.numPages,2);p++){
+    var page=await pdf.getPage(p);
+    var c=await page.getTextContent();
+    txt+=c.items.map(function(i){return i.str;}).join(' ')+'\n';
+  }
+  return txt;
+}
+function preprocess(dataUrl){
+  return new Promise(function(ok){
+    var img=new Image();
+    img.onload=function(){
+      var scale=Math.max(1,Math.min(3,1600/img.width));
+      var c=document.createElement('canvas');
+      c.width=Math.round(img.width*scale);c.height=Math.round(img.height*scale);
+      var x=c.getContext('2d');
+      x.imageSmoothingEnabled=true;x.imageSmoothingQuality='high';
+      x.drawImage(img,0,0,c.width,c.height);
+      var d=x.getImageData(0,0,c.width,c.height),p=d.data,sum=0;
+      for(var i=0;i<p.length;i+=4)sum+=(p[i]*0.299+p[i+1]*0.587+p[i+2]*0.114);
+      var avg=sum/(p.length/4);
+      for(var j=0;j<p.length;j+=4){
+        var g=p[j]*0.299+p[j+1]*0.587+p[j+2]*0.114;
+        var v=(g-avg)*1.9+avg;v=v<0?0:(v>255?255:v);
+        p[j]=p[j+1]=p[j+2]=v;
+      }
+      x.putImageData(d,0,0);ok(c.toDataURL('image/png'));
+    };
+    img.onerror=function(){ok(dataUrl);};
+    img.src=dataUrl;
+  });
+}
+async function ocrImage(dataUrl){
+  var pre=await preprocess(dataUrl);
+  var worker=await Tesseract.createWorker(['eng','por','fra','ara'],1,{workerBlobURL:true});
+  var r1=await worker.recognize(pre);
+  var txt=r1.data.text||'';
+  if(txt.replace(/\s/g,'').length<20){
+    var r2=await worker.recognize(dataUrl);
+    if((r2.data.text||'').length>txt.length)txt=r2.data.text;
+  }
+  await worker.terminate();
+  return txt;
+}
+function normNum(raw){
+  raw=String(raw).replace(/\s/g,'');
+  var m=raw.match(/^(.*?)([.,])(\d{1,2})$/);
+  var i,d='';
+  if(m&&m[3].length<=2){i=m[1];d='.'+m[3];}else i=raw;
+  var v=parseFloat(i.replace(/[.,]/g,'')+d);
+  return isNaN(v)?null:v;
+}
+function extractInvoiceAmount(t){
+  var keys=['TOTAL AMOUNT','GRAND TOTAL','AMOUNT DUE','TOTAL DUE','INVOICE TOTAL','TOTAL:',
+    'MONTANT TOTAL','TOTAL GENERAL','NET A PAYER','A PAYER','VALOR TOTAL','TOTAL A PAGAR','MONTANTE',
+    'الإجمالي','المجموع','المبلغ الإجمالي','TOTAL FOB','TOTAL CIF','TOTAL EXW','合计','总计','TOTAL USD','TOTAL EUR','TOTAL'];
+  var lines=t.split(/\n/),best=null,bestScore=-1;
+  lines.forEach(function(line){
+    var up=line.toUpperCase(),score=0;
+    keys.forEach(function(k,i){if(up.indexOf(k)>=0)score=Math.max(score,keys.length-i);});
+    var nums=(line.match(/[0-9][0-9.,\s]{2,}/g)||[]).map(function(s){return normNum(s.trim());}).filter(function(v){return v&&v>=10&&v<1e12;});
+    if(!nums.length)return;
+    var mx=Math.max.apply(null,nums);
+    if(score>0&&(score>bestScore||(score===bestScore&&mx>(best||0)))){best=mx;bestScore=score;}
+  });
+  if(best)return best;
+  var all=(t.match(/[0-9][0-9.,\s]{2,}/g)||[]).map(function(s){return normNum(s.trim());}).filter(function(v){return v&&v>=100&&v<1e12;});
+  return all.length?Math.max.apply(null,all):null;
+}
+function extractCurrency(t){
+  var up=t.toUpperCase();
+  if(/USDT|TRC20|TETHER/.test(up))return 'USDT';
+  if(/EUR|€|EURO/.test(up))return 'EUR';
+  if(/CNY|RMB|¥|YUAN/.test(up))return 'CNY';
+  if(/AED|DIRHAM/.test(up))return 'AED';
+  if(/USD|US\$|DOLLAR|\$/.test(up))return 'USD';
+  return null;
+}
+function extractCompany(t){
+  var lines=t.split(/\n/).map(function(l){return l.trim();}).filter(function(l){return l.length>3;});
+  var suf=/\b(LDA|LTD|LLC|CO\.?,? ?LTD|COMPANY|SARL|SA|GMBH|INC|TRADING|IMPORT|EXPORT|INDUSTRY|FACTORY|GROUP|LIMITED|有限公司)\b/i;
+  var skip=/INVOICE|FACTURE|FATURA|PROFORMA|COMMERCIAL|PACKING|DATE|N[oº°]|REF|TEL|FAX|EMAIL|WWW|HTTP|BANK|IBAN|SWIFT|ADDRESS|فاتورة|التاريخ/i;
+  for(var i=0;i<Math.min(lines.length,15);i++){
+    var l=lines[i];
+    if(skip.test(l))continue;
+    if(suf.test(l)&&l.length<70)return l.replace(/[^\w\s&.,\-\u4e00-\u9fff]/g,'').trim();
+  }
+  for(var j=0;j<Math.min(lines.length,8);j++){
+    var s=lines[j];
+    if(skip.test(s))continue;
+    var caps=s.replace(/[^A-Z]/g,'').length;
+    if(caps>=6&&s.split(/\s+/).length>=2&&s.length<60)return s.trim();
+  }
+  return null;
+}
+function uploadInvoice(){
+  if(window.arkanTrack)arkanTrack('upload_invoice');
+  var inp=document.createElement('input');
+  inp.type='file';inp.accept='image/*,application/pdf';
+  inp.onchange=async function(){
+    var f=inp.files[0];if(!f)return;
+    var res=document.getElementById('invResult'), txtEl=document.getElementById('invDropTxt');
+    txtEl.textContent='جارٍ القراءة… (قد تستغرق 20 ثانية)';
+    res.innerHTML='';
+    try{
+      var dataUrl=await new Promise(function(ok,err){var r=new FileReader();r.onload=function(){ok(r.result)};r.onerror=err;r.readAsDataURL(f);});
+      var txt = f.type==='application/pdf' ? await pdfText(dataUrl) : await ocrImage(dataUrl);
+      var amount=extractInvoiceAmount(txt), ccy=extractCurrency(txt), company=extractCompany(txt);
+      var got=[];
+      if(company){document.getElementById('ivComp').value=company;got.push('✓ '+company.slice(0,26));}
+      if(amount){document.getElementById('ivAmt').value=Math.round(amount).toLocaleString('en-US');got.push('✓ '+amount.toLocaleString('en-US'));}
+      if(ccy){var s=document.getElementById('ivCcy');for(var i=0;i<s.options.length;i++)if(s.options[i].value===ccy||s.options[i].text===ccy)s.selectedIndex=i;got.push('✓ '+ccy);}
+      txtEl.textContent='قُرئت الفاتورة';
+      res.innerHTML='<div style="font-family:JetBrains Mono,monospace;font-size:12px;color:var(--ok)">'+
+        (got.length?got.join(' · '):'')+
+        (!amount?'<div style="color:var(--gold);margin-top:4px">أدخل المبلغ يدويًا</div>':'')+
+        (!company?'<div style="color:var(--gold);margin-top:4px">أدخل اسم الشركة</div>':'')+'</div>';
+      [document.getElementById('ivComp'),document.getElementById('ivAmt')].forEach(function(el){
+        if(el.value){el.style.transition='.3s';el.style.background='rgba(0,212,170,.13)';setTimeout(function(){el.style.background='';},900);}
+      });
+    }catch(e){
+      txtEl.textContent='ارفع الفاتورة (صورة أو PDF)';
+      res.innerHTML='<div style="font-size:12px;color:var(--bad)">تعذّرت القراءة — أدخل البيانات يدويًا</div>';
+    }
+  };
+  inp.click();
+}
+function submitInvoice(){
+  var comp=document.getElementById('ivComp').value.trim();
+  var amt=document.getElementById('ivAmt').value.trim();
+  var ccy=document.getElementById('ivCcy').value;
+  var dest=document.getElementById('ivDest').value.trim();
+  var who=document.getElementById('ivWho').value.trim();
+  if(!comp||!amt||!who){toast('أكمل اسم الشركة والمبلغ وبياناتك');return;}
+  var ref='INV-'+Date.now().toString().slice(-6);
+  var msg='ARKAN SETTLEMENTS — تسديد فاتورة مورد\n'+ref+'\n\n'+
+    'المورد: '+comp+'\nالمبلغ: '+amt+' '+ccy+
+    (dest?'\nبلد المورد: '+dest:'')+
+    '\nمقدّم الطلب: '+who+'\n\nأرجو تزويدي بعرض السعر.';
+  if(window.arkanTrack)arkanTrack('submit_invoice',{amount:amt,currency:ccy});
+  if(window.arkanSaveOrder)arkanSaveOrder({ref:ref,type:'invoice',company:comp,amount:amt,currency:ccy,dest:dest,who:who,status:'new'});
+  toast('تم إنشاء الطلب '+ref+' — يفتح واتساب…');
+  setTimeout(function(){window.open('https://wa.me/'+WA+'?text='+encodeURIComponent(msg),'_blank');},600);
+}
 
 /* ================== 10. LIVE CRYPTO PRICES (CoinGecko) ================== */
 (function(){
