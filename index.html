@@ -264,6 +264,33 @@ footer{border-top:1px solid var(--line);margin-top:40px;padding:52px 0 34px;posi
   #toast{left:14px;right:14px;bottom:14px;max-width:none}
 }
 </style>
+<meta name="keywords" content="صرافة موريتانيا, تحويل أموال أنغولا, كوانزا أوقية, ARKAN, تسوية دولية, USDT MRU, تحويل الصين">
+<meta name="author" content="ARKAN INTERNATIONAL TRADING">
+<meta name="robots" content="index,follow">
+<link rel="canonical" href="https://arkanrates.com/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="ARKAN SETTLEMENTS">
+<meta property="og:title" content="ARKAN SETTLEMENTS — تحويلات مالية وتسوية مؤسسية">
+<meta property="og:description" content="صرف العملات وتحويل الأموال بين موريتانيا وأنغولا والصين، وتسديد فواتير الموردين الدوليين.">
+<meta property="og:url" content="https://arkanrates.com/">
+<meta property="og:image" content="https://arkanrates.com/arkan-icon-512.png">
+<meta property="og:locale" content="ar_MR">
+<meta property="og:locale:alternate" content="pt_AO">
+<meta property="og:locale:alternate" content="fr_FR">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="ARKAN SETTLEMENTS">
+<meta name="twitter:description" content="صرف العملات والتسوية الدولية — موريتانيا · أنغولا · الصين">
+<meta name="twitter:image" content="https://arkanrates.com/arkan-icon-512.png">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FinancialService","name":"ARKAN SETTLEMENTS",
+"description":"صرف العملات وتحويل الأموال والتسوية الدولية بين موريتانيا وأنغولا والصين",
+"url":"https://arkanrates.com/","logo":"https://arkanrates.com/arkan-icon-512.png",
+"telephone":"+22236295050","areaServed":["MR","AO","CN"],
+"currenciesAccepted":"MRU, AOA, USD, EUR, CNY, USDT",
+"availableLanguage":["ar","fr","pt"],
+"openingHoursSpecification":{"@type":"OpeningHoursSpecification","dayOfWeek":["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"],"opens":"00:00","closes":"23:59"}}
+</script>
+<script src="config.js"></script>
 </head>
 <body>
 
@@ -659,6 +686,7 @@ function fillSel(id,val){
 fillSel('fromCcy','AOA');fillSel('toCcy','MRU');
 fillSel('oFrom','AOA');fillSel('oTo','MRU');
 function calculate(){
+  if(window.arkanTrack)arkanTrack('calculate');
   var a=parseFloat(document.getElementById('fromAmt').value)||0;
   var f=document.getElementById('fromCcy').value, t=document.getElementById('toCcy').value;
   var pct=parseFloat(document.getElementById('tier').value)||0;
@@ -731,15 +759,20 @@ function submitOrder(){
     all.push({ref:ref,name:name,phone:phone,amt:amt,from:from,to:to,method:method,note:note,ts:Date.now()});
     localStorage.setItem('arkan-orders',JSON.stringify(all));
   }catch(e){}
+  if(window.arkanTrack)arkanTrack('submit_order',{amount:amt,from:from,to:to});
+  if(window.arkanEmail)arkanEmail({ref:ref,name:name,phone:phone,amount:amt,from:from,to:to,method:method,note:note});
+  if(window.arkanSaveOrder)arkanSaveOrder({ref:ref,name:name,phone:phone,amount:amt,from:from,to:to,method:method,note:note,status:'new'});
   toast('تم إنشاء الطلب '+ref+' — يفتح واتساب…');
   setTimeout(function(){window.open('https://wa.me/'+WA+'?text='+encodeURIComponent(msg),'_blank');},600);
 }
 function sendWhatsApp(){
+  if(window.arkanTrack)arkanTrack('start_transfer');
   var a=document.getElementById('fromAmt').value, f=document.getElementById('fromCcy').value, t=document.getElementById('toCcy').value;
   var msg='مرحبًا ARKAN، أريد الاستفسار عن تحويل '+(a||'')+' '+f+' إلى '+t+'.';
   window.open('https://wa.me/'+WA+'?text='+encodeURIComponent(msg),'_blank');
 }
 function pick(plan,price){
+  if(window.arkanTrack)arkanTrack('view_pricing',{plan:plan});
   toast('اخترت خطة '+plan+' — '+price);
   var msg='مرحبًا ARKAN، أريد الاشتراك في خطة '+plan+' ('+price+').';
   setTimeout(function(){window.open('https://wa.me/'+WA+'?text='+encodeURIComponent(msg),'_blank');},600);
@@ -762,7 +795,50 @@ fetch('rates-data.json?t='+Date.now()).then(function(r){return r.ok?r.json():nul
   });
   calculate();
 }).catch(function(){});
+
+/* ================== 10. LIVE CRYPTO PRICES (CoinGecko) ================== */
+(function(){
+  var C=window.ARKAN_CONFIG||{};
+  if(C.livePrices===false)return;
+  var KEY='arkan-cg-cache', MIN=(C.priceCacheMinutes||5)*60000;
+  var IDS='bitcoin,ethereum,solana,dogecoin,sui,tether';
+  var MAP={bitcoin:'BTC',ethereum:'ETH',solana:'SOL',dogecoin:'DOGE',sui:'SUI',tether:'USDT'};
+
+  function paint(d){
+    /* تحديث شريط الأسعار */
+    var items=[];
+    for(var id in MAP){
+      if(!d[id])continue;
+      var p=d[id].usd, c=d[id].usd_24h_change||0;
+      var pv=p>=100?('$'+p.toLocaleString('en-US',{maximumFractionDigits:0})):('$'+p.toLocaleString('en-US',{maximumFractionDigits:4}));
+      var arrow=c>0?'<span class="up">▲ '+c.toFixed(2)+'%</span>':(c<0?'<span class="dn">▼ '+Math.abs(c).toFixed(2)+'%</span>':'');
+      items.push('<span class="tk"><b>'+MAP[id]+'</b> '+pv+' '+arrow+'</span>');
+    }
+    items.push('<span class="tk"><b>MRU</b> '+MRU_PER_USD+'</span>');
+    items.push('<span class="tk"><b>AOA</b> '+Math.round(1/(USD_VAL.AOA||1/1166))+'</span>');
+    if(items.length){var html=items.join('');document.getElementById('tickerIn').innerHTML=html+html;}
+    /* تحديث أسعار العملات الرقمية في الحاسبة */
+    if(d.bitcoin)USD_VAL.BTC=d.bitcoin.usd;
+    if(d.ethereum)USD_VAL.ETH=d.ethereum.usd;
+    if(typeof calculate==='function')calculate();
+  }
+  /* كاش */
+  try{
+    var c=JSON.parse(localStorage.getItem(KEY)||'null');
+    if(c&&Date.now()-c.ts<MIN){paint(c.d);return;}
+  }catch(e){}
+  /* جلب */
+  fetch('https://api.coingecko.com/api/v3/simple/price?ids='+IDS+'&vs_currencies=usd&include_24hr_change=true')
+    .then(function(r){return r.ok?r.json():null;})
+    .then(function(d){
+      if(!d)return;
+      try{localStorage.setItem(KEY,JSON.stringify({ts:Date.now(),d:d}));}catch(e){}
+      paint(d);
+    }).catch(function(){/* fallback: الأسعار الثابتة تبقى كما هي */});
+})();
 </script>
+<script src="config.js"></script>
+<script src="integrations.js"></script>
 <script src="i18n.js"></script>
 </body>
 </html>
