@@ -1,58 +1,27 @@
-/* ARKAN hub service worker — network-first (never stale), offline fallback */
-const VERSION = 'arkan-v903';
-const SHELL = [
-  './',
-  'index.html',
-  'app.webmanifest',
-  'arkan-icon-192.png',
-  'arkan-icon-512.png'
-];
+/* ARKAN SETTLEMENTS — Service Worker */
+const V='arkan-v1.2';
+const CORE=['./','./index.html','./rates.html','./request.html','./arkan-logo.svg','./arkan-icon-512.png','./apple-touch-icon.png','./i18n.js','./site-manifest.json'];
 
-self.addEventListener('install', (e) => {
-  self.skipWaiting();
-  e.waitUntil(
-    caches.open(VERSION).then((c) => c.addAll(SHELL).catch(() => {}))
-  );
+self.addEventListener('install',e=>{
+  e.waitUntil(caches.open(V).then(c=>c.addAll(CORE.map(u=>new Request(u,{cache:'reload'})))).then(()=>self.skipWaiting()).catch(()=>self.skipWaiting()));
 });
-
-self.addEventListener('activate', (e) => {
-  e.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(keys.filter((k) => k !== VERSION).map((k) => caches.delete(k)))
-    ).then(() => self.clients.claim())
-  );
+self.addEventListener('activate',e=>{
+  e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==V).map(k=>caches.delete(k)))).then(()=>self.clients.claim()));
 });
-
-self.addEventListener('fetch', (e) => {
-  const req = e.request;
-  if (req.method !== 'GET') return;
-  const url = new URL(req.url);
-  // only handle same-origin
-  if (url.origin !== self.location.origin) return;
-
-  // Documents / navigations: NETWORK-FIRST so content is always fresh.
-  const isDoc = req.mode === 'navigate' || req.destination === 'document' ||
-                url.pathname.endsWith('.html') || url.pathname.endsWith('/');
-  if (isDoc) {
-    e.respondWith(
-      fetch(req).then((res) => {
-        const copy = res.clone();
-        caches.open(VERSION).then((c) => c.put(req, copy)).catch(() => {});
-        return res;
-      }).catch(() => caches.match(req).then((r) => r || caches.match('index.html')))
-    );
+self.addEventListener('fetch',e=>{
+  const r=e.request;
+  if(r.method!=='GET')return;
+  const url=new URL(r.url);
+  /* لا تتدخل في الطلبات الخارجية (TradingView, CoinGecko, fonts) */
+  if(url.origin!==location.origin)return;
+  /* بيانات الأسعار: الشبكة أولًا (طازجة) ثم الكاش */
+  if(url.pathname.endsWith('rates-data.json')){
+    e.respondWith(fetch(r).then(res=>{const c=res.clone();caches.open(V).then(x=>x.put(r,c));return res;}).catch(()=>caches.match(r)));
     return;
   }
-
-  // Static assets (icons, json, fonts): stale-while-revalidate.
-  e.respondWith(
-    caches.match(req).then((cached) => {
-      const net = fetch(req).then((res) => {
-        const copy = res.clone();
-        caches.open(VERSION).then((c) => c.put(req, copy)).catch(() => {});
-        return res;
-      }).catch(() => cached);
-      return cached || net;
-    })
-  );
+  /* بقية الأصول: الكاش أولًا ثم الشبكة */
+  e.respondWith(caches.match(r).then(hit=>hit||fetch(r).then(res=>{
+    if(res.ok){const c=res.clone();caches.open(V).then(x=>x.put(r,c));}
+    return res;
+  }).catch(()=>caches.match('./index.html'))));
 });
