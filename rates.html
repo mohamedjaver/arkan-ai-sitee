@@ -80,6 +80,13 @@ html.pt-enter body{animation:ptIn .38s cubic-bezier(.22,1,.36,1)}
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="ARKAN">
+<script src="config.js"></script>
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="ARKAN SETTLEMENTS">
+<meta property="og:title" content="أسعار الصرف اليوم — ARKAN SETTLEMENTS">
+<meta property="og:description" content="جدول أسعار الصرف اليومي بثلاث شرائح وحاسبة تحويل فورية.">
+<meta property="og:image" content="https://arkanrates.com/arkan-icon-512.png">
+<meta name="twitter:card" content="summary_large_image">
 </head>
 <body>
 <div class="wrap">
@@ -185,6 +192,7 @@ function setMode(m){
   calc();
 }
 function calc(){
+  if(window.arkanTrack)arkanTrack('calculate',{page:'rates'});
   if(!DATA)return;
   const cc=$('cc').value, raw=parseFloat(String($('amt').value||'').replace(/[^0-9.]/g,''))||0;
   const row=DATA.r.find(x=>x.ccy===cc);if(!row)return;
@@ -222,6 +230,7 @@ function calc(){
   }
 }
 function send(){
+  if(window.arkanTrack)arkanTrack('submit_order',{page:'rates'});
   const cc=$('cc').value, raw=parseFloat(String($('amt').value||'').replace(/[^0-9.]/g,''))||0;
   if(!raw){alert('أدخل المبلغ');return;}
   const row=DATA.r.find(x=>x.ccy===cc);
@@ -291,5 +300,7 @@ document.addEventListener('arkan:lang',function(){
   if(typeof calc==='function')calc();
 });
 </script>
+<script src="integrations.js"></script>
+<script src="auth.js"></script>
 <script src="i18n.js"></script></body>
 </html>
