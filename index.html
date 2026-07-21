@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>ARKAN SETTLEMENTS — تحويلات مالية وتسوية مؤسسية</title>
+<title>ARKAN SETTLEMENTS — صرف العملات وتسديد فواتير الموردين</title>
 <meta name="description" content="ARKAN SETTLEMENTS — صرف العملات وتحويل الأموال بين موريتانيا وأنغولا والصين، وتسوية فواتير الموردين الدوليين.">
 <link rel="icon" href="arkan-icon-512.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -240,6 +240,32 @@ footer{border-top:1px solid var(--line);margin-top:40px;padding:52px 0 34px;posi
   box-shadow:0 20px 60px rgba(0,0,0,.5);opacity:0;transform:translateY(14px);pointer-events:none;transition:.3s cubic-bezier(.22,1,.36,1);max-width:320px}
 #toast.on{opacity:1;transform:none}
 
+
+/* ===== FLAG DROPDOWN (Wise-style) ===== */
+.fdd{position:relative;min-width:132px}
+.fdd-btn{width:100%;display:flex;align-items:center;gap:9px;background:rgba(0,0,0,.34);
+  border:1px solid var(--line2);border-radius:var(--r3);padding:12px 13px;cursor:pointer;
+  color:var(--txt);font-size:14px;font-weight:600;transition:.2s;font-family:inherit}
+.fdd-btn:hover{border-color:var(--line2)}
+.fdd.on .fdd-btn{border-color:var(--gold)}
+.fdd-flag{width:24px;height:18px;border-radius:3px;object-fit:cover;flex-shrink:0;
+  box-shadow:0 1px 4px rgba(0,0,0,.4)}
+.fdd-flag.crypto{display:grid;place-items:center;background:linear-gradient(135deg,#26A17B,#1a7a5c);
+  color:#fff;font-size:11px;font-weight:700}
+.fdd-code{flex:1;text-align:right;font-family:'JetBrains Mono',monospace}
+.fdd-car{color:var(--mut2);font-size:10px;transition:.25s}
+.fdd.on .fdd-car{transform:rotate(180deg)}
+.fdd-list{position:absolute;top:calc(100% + 6px);left:0;right:0;z-index:60;
+  background:#12121f;border:1px solid var(--line2);border-radius:var(--r2);
+  box-shadow:0 20px 50px rgba(0,0,0,.65);overflow:hidden;max-height:0;opacity:0;
+  transition:max-height .28s cubic-bezier(.22,1,.36,1),opacity .2s;pointer-events:none}
+.fdd.on .fdd-list{max-height:280px;opacity:1;pointer-events:auto;overflow-y:auto}
+.fdd-item{display:flex;align-items:center;gap:10px;padding:11px 13px;cursor:pointer;transition:.15s;border:none;background:none;width:100%;font-family:inherit;text-align:right}
+.fdd-item:hover{background:rgba(201,168,76,.1)}
+.fdd-item.sel{background:rgba(201,168,76,.14)}
+.fdd-item .c{font-family:'JetBrains Mono',monospace;font-size:13.5px;font-weight:600;color:var(--txt)}
+.fdd-item .n{font-size:11.5px;color:var(--mut2);flex:1;text-align:right}
+
 /* ===== RESPONSIVE ===== */
 @media(max-width:900px){
   .grid2{grid-template-columns:1fr}
@@ -270,7 +296,7 @@ footer{border-top:1px solid var(--line);margin-top:40px;padding:52px 0 34px;posi
 <link rel="canonical" href="https://arkanrates.com/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="ARKAN SETTLEMENTS">
-<meta property="og:title" content="ARKAN SETTLEMENTS — تحويلات مالية وتسوية مؤسسية">
+<meta property="og:title" content="ARKAN SETTLEMENTS — صرف العملات وتسديد فواتير الموردين">
 <meta property="og:description" content="صرف العملات وتحويل الأموال بين موريتانيا وأنغولا والصين، وتسديد فواتير الموردين الدوليين.">
 <meta property="og:url" content="https://arkanrates.com/">
 <meta property="og:image" content="https://arkanrates.com/arkan-icon-512.png">
@@ -327,9 +353,7 @@ footer{border-top:1px solid var(--line);margin-top:40px;padding:52px 0 34px;posi
     <a href="#calc" onclick="toggleMenu()">تبديل العملات</a>
     <a href="#invoice" onclick="toggleMenu()">تسديد الفواتير</a>
     <a href="#rates" onclick="toggleMenu()">أسعار اليوم</a>
-    <a href="#engines" onclick="toggleMenu()">المحركات التحليلية</a>
-    <a href="#pricing" onclick="toggleMenu()">خطط الوصول</a>
-    <a href="#order" onclick="toggleMenu()">طلب تحويل</a>
+            <a href="#order" onclick="toggleMenu()">طلب تحويل</a>
     <a href="settlement.html" style="color:var(--violet)"><i class="fa-solid fa-lock" style="font-size:10px;margin-left:6px"></i>لوحة التسوية (خاص)</a>
   </nav>
 </header>
@@ -360,13 +384,13 @@ footer{border-top:1px solid var(--line);margin-top:40px;padding:52px 0 34px;posi
     <div class="k en">// CONVERTER</div>
     <h2>حاسبة التحويل</h2>
   </div>
-  <div class="grid2">
+  <div style="max-width:560px;margin:0 auto">
     <div class="card">
       <div class="fld">
         <label>أرسل</label>
         <div class="io">
           <input type="number" id="fromAmt" value="1000" inputmode="decimal" oninput="calculate()">
-          <select id="fromCcy" onchange="calculate()"></select>
+          <div class="fdd" id="fddFrom"></div>
         </div>
       </div>
       <div class="swapw"><button class="swap" onclick="swapCurrencies()" aria-label="تبديل"><i class="fa-solid fa-arrow-right-arrow-left"></i></button></div>
@@ -374,7 +398,7 @@ footer{border-top:1px solid var(--line);margin-top:40px;padding:52px 0 34px;posi
         <label>يستلم</label>
         <div class="io">
           <input type="text" id="toAmt" readonly value="0">
-          <select id="toCcy" onchange="calculate()"></select>
+          <div class="fdd" id="fddTo"></div>
         </div>
       </div>
       <div class="fld">
@@ -397,20 +421,7 @@ footer{border-top:1px solid var(--line);margin-top:40px;padding:52px 0 34px;posi
       </div>
     </div>
 
-    <div class="chartbox">
-      <div class="chart-hd">
-        <h3>الرسم البياني</h3>
-        <select class="full" style="width:auto" id="pairSel" onchange="changeChart()">
-          <option value="BINANCE:BTCUSDT">BTC / USDT</option>
-          <option value="BINANCE:ETHUSDT">ETH / USDT</option>
-          <option value="BINANCE:SOLUSDT">SOL / USDT</option>
-          <option value="FX:EURUSD">EUR / USD</option>
-        </select>
-      </div>
-      <div id="tvHost"></div>
-    </div>
-  </div>
-</div></section>
+    </div></section>
 <section class="sec layer" id="rates"><div class="wrap">
   <div class="sec-h">
     <div class="k en">// EXCHANGE DESK</div>
@@ -471,110 +482,6 @@ footer{border-top:1px solid var(--line);margin-top:40px;padding:52px 0 34px;posi
 <!-- 6. CALCULATOR + CHART -->
 
 
-<!-- 7. ENGINES -->
-<section class="sec layer" id="engines"><div class="wrap">
-  <div class="sec-h">
-    <div class="k en">// THE ENGINES</div>
-    <h2>المحركات التحليلية</h2>
-    <p>أنظمة Pine Script v6 مبنية على تدفق الأوامر وذكاء السيولة — تُفعّل على TradingView خلال دقائق.</p>
-  </div>
-  <div class="eng">
-    <div class="ec">
-      <div class="k en">FLAGSHIP · ORDER FLOW</div>
-      <h3>محرك تدفق الأوامر</h3>
-      <p>يكشف امتصاص السيولة وانعكاسات المؤسسات قبل اكتمالها، مع اكتشاف الاستنزاف.</p>
-      <ul>
-        <li><i class="fa-solid fa-check"></i>الدلتا التراكمية CVD</li>
-        <li><i class="fa-solid fa-check"></i>اكتشاف الاستنزاف</li>
-        <li><i class="fa-solid fa-check"></i>مناطق الامتصاص المؤسساتية</li>
-      </ul>
-      <div class="pr"><b>$39</b><span>/ شهر</span></div>
-    </div>
-    <div class="ec">
-      <div class="k en">FOOTPRINT · HEATMAP</div>
-      <h3>خريطة الفوتبرنت</h3>
-      <p>حجم التداول عند كل سعر، جدران السيولة، وطلبات الإيقاف المخفية في خريطة حرارية.</p>
-      <ul>
-        <li><i class="fa-solid fa-check"></i>خريطة حرارية للسيولة</li>
-        <li><i class="fa-solid fa-check"></i>كشف جدران الأوامر</li>
-        <li><i class="fa-solid fa-check"></i>نقطة السيطرة الحجمية POC</li>
-      </ul>
-      <div class="pr"><b>$35</b><span>/ شهر</span></div>
-    </div>
-    <div class="ec">
-      <div class="k en">SMART MONEY · SMC</div>
-      <h3>ذكاء السيولة</h3>
-      <p>يرصد Order Blocks وفجوات القيمة العادلة FVG ومناطق السيولة الخام آليًا.</p>
-      <ul>
-        <li><i class="fa-solid fa-check"></i>Order Blocks آلية</li>
-        <li><i class="fa-solid fa-check"></i>فجوات القيمة العادلة FVG</li>
-        <li><i class="fa-solid fa-check"></i>مناطق صيد السيولة</li>
-      </ul>
-      <div class="pr"><b>$29</b><span>/ شهر</span></div>
-    </div>
-    <div class="ec">
-      <div class="k en">MOMENTUM · VWAP</div>
-      <h3>مصفوفة VWAP</h3>
-      <p>انحرافات VWAP متعددة الجلسات مع نطاقات الانحراف المعياري لمناطق التمدد والارتداد.</p>
-      <ul>
-        <li><i class="fa-solid fa-check"></i>VWAP متعدد الجلسات</li>
-        <li><i class="fa-solid fa-check"></i>انحرافات معيارية ملوّنة</li>
-        <li><i class="fa-solid fa-check"></i>تنبيهات الارتداد</li>
-      </ul>
-      <div class="pr"><b>$19</b><span>/ شهر</span></div>
-    </div>
-  </div>
-</div></section>
-
-<!-- 8. PRICING -->
-<section class="sec layer" id="pricing"><div class="wrap">
-  <div class="sec-h">
-    <div class="k en">// ACCESS PLANS</div>
-    <h2>خطط الوصول</h2>
-    <p>اختر باقة الوصول — التفعيل خلال دقائق بعد الدفع.</p>
-  </div>
-  <div class="plans">
-    <div class="pl">
-      <div class="nm en">PRO</div>
-      <div class="price en">$39</div>
-      <div class="per">يتجدد شهريًا · إلغاء بأي وقت</div>
-      <ul>
-        <li><i class="fa-solid fa-check"></i>كل المؤشرات في وصول واحد</li>
-        <li><i class="fa-solid fa-check"></i>تنبيهات لحظية غير محدودة</li>
-        <li><i class="fa-solid fa-check"></i>قناة الأعضاء على Telegram</li>
-        <li><i class="fa-solid fa-check"></i>تحديثات دائمة بلا رسوم</li>
-      </ul>
-      <button class="btn btn-line" style="width:100%" onclick="pick('PRO','$39 / شهر')">اشترك</button>
-    </div>
-    <div class="pl best">
-      <div class="badge">الأكثر طلبًا</div>
-      <div class="nm en">BETA FOUNDER</div>
-      <div class="price en">$299</div>
-      <div class="per">سنويًا · شهران مجانًا + سعر مثبّت</div>
-      <ul>
-        <li><i class="fa-solid fa-check"></i>كل ما في الخطة الشهرية</li>
-        <li><i class="fa-solid fa-check"></i>سعر تأسيسي مثبّت مدى الحياة</li>
-        <li><i class="fa-solid fa-check"></i>شارة FOUNDER داخل المجتمع</li>
-        <li><i class="fa-solid fa-check"></i>دعوة لمجموعة Inner Circle</li>
-        <li><i class="fa-solid fa-check"></i>صوتك في خارطة التطوير</li>
-      </ul>
-      <button class="btn btn-gold" style="width:100%" onclick="pick('BETA FOUNDER','$299 / سنة')">اشترك الآن</button>
-    </div>
-    <div class="pl">
-      <div class="nm en">LIFETIME</div>
-      <div class="price en">$499</div>
-      <div class="per">دفعة واحدة · وصول دائم بلا تجديد</div>
-      <ul>
-        <li><i class="fa-solid fa-check"></i>كل ما في خطة Beta</li>
-        <li><i class="fa-solid fa-check"></i>كل مؤشرات ARKAN القادمة مجانًا</li>
-        <li><i class="fa-solid fa-check"></i>دعم VIP ذو أولوية</li>
-        <li><i class="fa-solid fa-check"></i>جلسة إعداد خاصة 1:1</li>
-      </ul>
-      <button class="btn btn-line" style="width:100%" onclick="pick('LIFETIME','$499 مرة واحدة')">شراء</button>
-    </div>
-  </div>
-</div></section>
-
 <!-- 9. ORDER FORM -->
 <section class="sec layer" id="order"><div class="wrap">
   <div class="sec-h">
@@ -586,8 +493,8 @@ footer{border-top:1px solid var(--line);margin-top:40px;padding:52px 0 34px;posi
     <div class="fld"><label>الاسم الكامل</label><input id="oName" placeholder="محمد الأمين"></div>
     <div class="fld"><label>رقم الهاتف / واتساب</label><input id="oPhone" inputmode="tel" placeholder="+222 xx xx xx xx"></div>
     <div class="row2">
-      <div class="fld"><label>من عملة</label><select id="oFrom"></select></div>
-      <div class="fld"><label>إلى عملة</label><select id="oTo"></select></div>
+      <div class="fld"><label>من عملة</label><div class="fdd" id="fddOFrom"></div></div>
+      <div class="fld"><label>إلى عملة</label><div class="fdd" id="fddOTo"></div></div>
     </div>
     <div class="fld"><label>المبلغ</label><input id="oAmt" type="number" inputmode="decimal" placeholder="1000"></div>
     <div class="fld"><label>طريقة الاستلام</label>
@@ -623,10 +530,9 @@ footer{border-top:1px solid var(--line);margin-top:40px;padding:52px 0 34px;posi
       </div>
     </div>
     <div class="fcol"><h5>المنتج</h5>
-      <a href="#rates">أسعار اليوم</a><a href="#calc">حاسبة التحويل</a><a href="#engines">المحركات</a><a href="#pricing">الخطط</a>
-    </div>
+      <a href="#rates">أسعار اليوم</a><a href="#calc">حاسبة التحويل</a></div>
     <div class="fcol"><h5>الشركة</h5>
-      <a href="#order">طلب تحويل</a><a href="rates.html">بوابة الأسعار</a><a href="request.html">تحويلات الشركات</a><a href="trading.html">أنظمة التداول</a><a href="settlement.html"><i class="fa-solid fa-lock" style="font-size:9px;margin-left:5px;opacity:.6"></i>لوحة التسوية</a>
+      <a href="#order">طلب تحويل</a><a href="rates.html">بوابة الأسعار</a><a href="request.html">تحويلات الشركات</a><a href="settlement.html"><i class="fa-solid fa-lock" style="font-size:9px;margin-left:5px;opacity:.6"></i>لوحة التسوية</a>
     </div>
     <div class="fcol"><h5>المساعدة</h5>
       <a href="https://wa.me/22236295050" target="_blank" rel="noopener">واتساب الدعم</a>
@@ -687,28 +593,39 @@ footer{border-top:1px solid var(--line);margin-top:40px;padding:52px 0 34px;posi
   tick();setInterval(tick,1000);
 })();
 
-/* ================== 3. TICKER ================== */
+/* ================== 3. TICKER (عملات) ================== */
 (function(){
   var items=[
-    {s:'DOGE',p:'$0.0722',c:-0.36},{s:'SUI',p:'$0.72',c:2.48},
-    {s:'BTC',p:'$67,500',c:1.25},{s:'ETH',p:'$3,500',c:-0.82},
-    {s:'SOL',p:'$150',c:3.12},{s:'USDT',p:'$1.00',c:0},
-    {s:'MRU',p:'425',c:0},{s:'AOA',p:'850',c:0}
+    {s:'AOA',f:'ao',p:'0.360'},{s:'USD',f:'us',p:'420'},{s:'EUR',f:'eu',p:'485'},
+    {s:'CNY',f:'cn',p:'59'},{s:'AED',f:'ae',p:'114'},{s:'MAD',f:'ma',p:'42'},
+    {s:'USDT',f:null,p:'420'},{s:'SAR',f:'sa',p:'112'}
   ];
   function cell(i){
-    var arrow=i.c>0?'<span class="up">▲ '+i.c.toFixed(2)+'%</span>':(i.c<0?'<span class="dn">▼ '+Math.abs(i.c).toFixed(2)+'%</span>':'');
-    return '<span class="tk"><b>'+i.s+'</b> '+i.p+' '+arrow+'</span>';
+    var fl=i.f?'<img src="https://flagcdn.com/w20/'+i.f+'.png" alt="" style="width:16px;height:12px;border-radius:2px;object-fit:cover">':'<span style="font-size:11px">₮</span>';
+    return '<span class="tk">'+fl+'<b>'+i.s+'</b> '+i.p+' <span style="color:var(--mut2);font-size:10.5px">MRU</span></span>';
   }
   var html=items.map(cell).join('');
   document.getElementById('tickerIn').innerHTML=html+html;
 })();
 
 /* ================== 4. CALCULATOR ================== */
-var CCY=['MRU','AOA','USD','EUR','CNY','USDT','BTC','ETH'];
-var NAMES={MRU:'أوقية',AOA:'كوانزا',USD:'دولار',EUR:'يورو',CNY:'يوان',USDT:'تيثر',BTC:'بيتكوين',ETH:'إيثيريوم'};
-/* أسعار الوحدة بالدولار (أساس التحويل) */
+var CURRENCIES=[
+  {c:'MRU',f:'mr',n:'أوقية موريتانية'},
+  {c:'AOA',f:'ao',n:'كوانزا أنغولية'},
+  {c:'USD',f:'us',n:'دولار أمريكي'},
+  {c:'EUR',f:'eu',n:'يورو'},
+  {c:'CNY',f:'cn',n:'يوان صيني'},
+  {c:'AED',f:'ae',n:'درهم إماراتي'},
+  {c:'MAD',f:'ma',n:'درهم مغربي'},
+  {c:'SAR',f:'sa',n:'ريال سعودي'},
+  {c:'USDT',f:null,n:'تيثر — TRC20'}
+];
 var MRU_PER_USD=420;
-var USD_VAL={MRU:1/MRU_PER_USD,AOA:0.360/MRU_PER_USD,USD:1,EUR:485/MRU_PER_USD,CNY:1/7.15,USDT:1,BTC:67500,ETH:3500};
+var USD_VAL={
+  MRU:1/MRU_PER_USD, AOA:0.360/MRU_PER_USD, USD:1, EUR:485/MRU_PER_USD,
+  CNY:59/MRU_PER_USD, AED:114/MRU_PER_USD, MAD:42/MRU_PER_USD,
+  SAR:112/MRU_PER_USD, USDT:1
+};
 function rate(from,to){return USD_VAL[from]/USD_VAL[to];}
 function fmt(n){
   if(!isFinite(n))return '0';
@@ -716,17 +633,66 @@ function fmt(n){
   if(n>=1)return n.toLocaleString('en-US',{maximumFractionDigits:2});
   return n.toLocaleString('en-US',{maximumFractionDigits:6});
 }
-function fillSel(id,val){
-  var s=document.getElementById(id);
-  s.innerHTML=CCY.map(function(c){return '<option value="'+c+'">'+c+' · '+NAMES[c]+'</option>';}).join('');
-  s.value=val;
+function ccyMeta(code){
+  for(var i=0;i<CURRENCIES.length;i++)if(CURRENCIES[i].c===code)return CURRENCIES[i];
+  return CURRENCIES[0];
 }
-fillSel('fromCcy','AOA');fillSel('toCcy','MRU');
-fillSel('oFrom','AOA');fillSel('oTo','MRU');
+function flagHTML(m,cls){
+  cls=cls||'fdd-flag';
+  return m.f
+    ? '<img class="'+cls+'" src="https://flagcdn.com/w40/'+m.f+'.png" alt="'+m.c+'" loading="lazy">'
+    : '<span class="'+cls+' crypto">₮</span>';
+}
+/* ===== مكوّن اختيار العملة بالعلم ===== */
+var FDD={};
+function buildFdd(hostId,value,onChange){
+  var host=document.getElementById(hostId);
+  if(!host)return;
+  FDD[hostId]={value:value,onChange:onChange};
+  function render(){
+    var v=FDD[hostId].value, m=ccyMeta(v);
+    host.innerHTML=
+      '<button type="button" class="fdd-btn" aria-haspopup="listbox">'+
+        flagHTML(m)+
+        '<span class="fdd-code">'+m.c+'</span>'+
+        '<i class="fa-solid fa-chevron-down fdd-car"></i>'+
+      '</button>'+
+      '<div class="fdd-list" role="listbox">'+
+        CURRENCIES.map(function(x){
+          return '<button type="button" class="fdd-item'+(x.c===v?' sel':'')+'" data-c="'+x.c+'">'+
+                 flagHTML(x)+'<span class="c">'+x.c+'</span><span class="n">'+x.n+'</span></button>';
+        }).join('')+
+      '</div>';
+    host.querySelector('.fdd-btn').onclick=function(e){
+      e.stopPropagation();
+      document.querySelectorAll('.fdd.on').forEach(function(o){if(o!==host)o.classList.remove('on');});
+      host.classList.toggle('on');
+    };
+    host.querySelectorAll('.fdd-item').forEach(function(b){
+      b.onclick=function(e){
+        e.stopPropagation();
+        FDD[hostId].value=b.dataset.c;
+        host.classList.remove('on');
+        render();
+        if(FDD[hostId].onChange)FDD[hostId].onChange(b.dataset.c);
+      };
+    });
+  }
+  render();
+  FDD[hostId].set=function(val){FDD[hostId].value=val;render();};
+}
+function fddVal(id){return FDD[id]?FDD[id].value:null;}
+document.addEventListener('click',function(){document.querySelectorAll('.fdd.on').forEach(function(o){o.classList.remove('on');});});
+
+buildFdd('fddFrom','AOA',function(){calculate();});
+buildFdd('fddTo','MRU',function(){calculate();});
+buildFdd('fddOFrom','AOA',null);
+buildFdd('fddOTo','MRU',null);
+
 function calculate(){
   if(window.arkanTrack)arkanTrack('calculate');
   var a=parseFloat(document.getElementById('fromAmt').value)||0;
-  var f=document.getElementById('fromCcy').value, t=document.getElementById('toCcy').value;
+  var f=fddVal('fddFrom'), t=fddVal('fddTo');
   var pct=parseFloat(document.getElementById('tier').value)||0;
   var fee=a*pct/100;
   var r=rate(f,t);
@@ -736,56 +702,14 @@ function calculate(){
   document.getElementById('resSub').textContent='1 '+f+' = '+fmt(r)+' '+t+(pct?'  ·  رسوم '+pct+'% = '+fmt(fee)+' '+f:'  ·  بلا رسوم');
 }
 function swapCurrencies(){
-  var f=document.getElementById('fromCcy'), t=document.getElementById('toCcy');
-  var tmp=f.value;f.value=t.value;t.value=tmp;
+  var a=fddVal('fddFrom'), b=fddVal('fddTo');
+  FDD['fddFrom'].set(b);FDD['fddTo'].set(a);
   calculate();
 }
 calculate();
 
 /* ================== 5. TRADINGVIEW ================== */
-function changeChart(){
-  var sym=document.getElementById('pairSel').value;
-  var host=document.getElementById('tvHost');
-  host.innerHTML='<div id="tvLoad" style="height:100%;display:grid;place-items:center;color:var(--mut);font-size:13px">جارٍ تحميل الرسم البياني…</div>';
-  var qs='symbol='+encodeURIComponent(sym)+
-         '&interval=60&theme=dark&style=1&locale=ar'+
-         '&timezone=Etc%2FUTC'+
-         '&toolbarbg=0e0e18'+
-         '&hidesidetoolbar=1&hidetoptoolbar=0&symboledit=0&saveimage=0&studies=[]'+
-         '&withdateranges=1&hideideas=1'+
-         '&utm_source=arkanrates.com';
-  var fr=document.createElement('iframe');
-  fr.src='https://s.tradingview.com/widgetembed/?'+qs;
-  fr.style.cssText='width:100%;height:100%;border:0;border-radius:14px;display:block';
-  fr.setAttribute('allowtransparency','true');
-  fr.setAttribute('scrolling','no');
-  fr.setAttribute('frameborder','0');
-  fr.setAttribute('loading','lazy');
-  fr.setAttribute('title','TradingView Chart');
-  fr.onload=function(){
-    clearTimeout(window.__tvT);
-    var l=document.getElementById('tvLoad');
-    if(l)l.remove();
-    fr.style.opacity='1';
-  };
-  fr.onerror=fallback;
-  fr.style.opacity='0';
-  fr.style.transition='opacity .4s';
-  host.appendChild(fr);
 
-  function fallback(){
-    host.innerHTML='<div style="height:100%;display:grid;place-items:center;text-align:center;padding:22px;'+
-      'border:1px dashed var(--line2);border-radius:14px">'+
-      '<div><div style="font-size:13.5px;color:var(--mut);margin-bottom:14px">تعذّر تحميل الرسم البياني هنا</div>'+
-      '<a href="https://www.tradingview.com/chart/?symbol='+encodeURIComponent(sym)+'" target="_blank" rel="noopener" '+
-      'class="btn btn-gold" style="font-size:13px;padding:12px 22px">فتح الشارت في TradingView</a>'+
-      '<div style="margin-top:10px"><button class="btn btn-line" style="font-size:12.5px;padding:10px 20px" onclick="changeChart()">إعادة المحاولة</button></div>'+
-      '</div></div>';
-  }
-  clearTimeout(window.__tvT);
-  window.__tvT=setTimeout(function(){ if(!host.querySelector('iframe[style*="opacity: 1"]'))fallback(); },9000);
-}
-changeChart();
 
 /* ================== 6. MENU ================== */
 function toggleMenu(){
@@ -807,7 +731,7 @@ function submitOrder(){
   var name=document.getElementById('oName').value.trim();
   var phone=document.getElementById('oPhone').value.trim();
   var amt=document.getElementById('oAmt').value.trim();
-  var from=document.getElementById('oFrom').value, to=document.getElementById('oTo').value;
+  var from=fddVal('fddOFrom'), to=fddVal('fddOTo');
   var method=document.getElementById('oMethod').value;
   var note=document.getElementById('oNote').value.trim();
   if(!name||!phone||!amt){toast('أكمل الاسم والهاتف والمبلغ');return;}
@@ -833,15 +757,9 @@ function submitOrder(){
 }
 function sendWhatsApp(){
   if(window.arkanTrack)arkanTrack('start_transfer');
-  var a=document.getElementById('fromAmt').value, f=document.getElementById('fromCcy').value, t=document.getElementById('toCcy').value;
+  var a=document.getElementById('fromAmt').value, f=fddVal('fddFrom'), t=fddVal('fddTo');
   var msg='مرحبًا ARKAN، أريد الاستفسار عن تحويل '+(a||'')+' '+f+' إلى '+t+'.';
   window.open('https://wa.me/'+WA+'?text='+encodeURIComponent(msg),'_blank');
-}
-function pick(plan,price){
-  if(window.arkanTrack)arkanTrack('view_pricing',{plan:plan});
-  toast('اخترت خطة '+plan+' — '+price);
-  var msg='مرحبًا ARKAN، أريد الاشتراك في خطة '+plan+' ('+price+').';
-  setTimeout(function(){window.open('https://wa.me/'+WA+'?text='+encodeURIComponent(msg),'_blank');},600);
 }
 
 /* ================== 9. LIVE RATES (اختياري من الملف الثابت) ================== */
@@ -1011,46 +929,6 @@ function submitInvoice(){
   setTimeout(function(){window.open('https://wa.me/'+WA+'?text='+encodeURIComponent(msg),'_blank');},600);
 }
 
-/* ================== 10. LIVE CRYPTO PRICES (CoinGecko) ================== */
-(function(){
-  var C=window.ARKAN_CONFIG||{};
-  if(C.livePrices===false)return;
-  var KEY='arkan-cg-cache', MIN=(C.priceCacheMinutes||5)*60000;
-  var IDS='bitcoin,ethereum,solana,dogecoin,sui,tether';
-  var MAP={bitcoin:'BTC',ethereum:'ETH',solana:'SOL',dogecoin:'DOGE',sui:'SUI',tether:'USDT'};
-
-  function paint(d){
-    /* تحديث شريط الأسعار */
-    var items=[];
-    for(var id in MAP){
-      if(!d[id])continue;
-      var p=d[id].usd, c=d[id].usd_24h_change||0;
-      var pv=p>=100?('$'+p.toLocaleString('en-US',{maximumFractionDigits:0})):('$'+p.toLocaleString('en-US',{maximumFractionDigits:4}));
-      var arrow=c>0?'<span class="up">▲ '+c.toFixed(2)+'%</span>':(c<0?'<span class="dn">▼ '+Math.abs(c).toFixed(2)+'%</span>':'');
-      items.push('<span class="tk"><b>'+MAP[id]+'</b> '+pv+' '+arrow+'</span>');
-    }
-    items.push('<span class="tk"><b>MRU</b> '+MRU_PER_USD+'</span>');
-    items.push('<span class="tk"><b>AOA</b> '+Math.round(1/(USD_VAL.AOA||1/1166))+'</span>');
-    if(items.length){var html=items.join('');document.getElementById('tickerIn').innerHTML=html+html;}
-    /* تحديث أسعار العملات الرقمية في الحاسبة */
-    if(d.bitcoin)USD_VAL.BTC=d.bitcoin.usd;
-    if(d.ethereum)USD_VAL.ETH=d.ethereum.usd;
-    if(typeof calculate==='function')calculate();
-  }
-  /* كاش */
-  try{
-    var c=JSON.parse(localStorage.getItem(KEY)||'null');
-    if(c&&Date.now()-c.ts<MIN){paint(c.d);return;}
-  }catch(e){}
-  /* جلب */
-  fetch('https://api.coingecko.com/api/v3/simple/price?ids='+IDS+'&vs_currencies=usd&include_24hr_change=true')
-    .then(function(r){return r.ok?r.json():null;})
-    .then(function(d){
-      if(!d)return;
-      try{localStorage.setItem(KEY,JSON.stringify({ts:Date.now(),d:d}));}catch(e){}
-      paint(d);
-    }).catch(function(){/* fallback: الأسعار الثابتة تبقى كما هي */});
-})();
 </script>
 <script src="config.js"></script>
 <script src="integrations.js"></script>
