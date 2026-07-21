@@ -79,7 +79,7 @@ header{position:sticky;top:0;z-index:28;background:rgba(7,7,15,.85);backdrop-fil
 .brand .n{font-family:'Inter',sans-serif;font-weight:800;font-size:19px;letter-spacing:.02em;direction:ltr}
 .brand .n b{color:var(--gold);font-weight:800}
 .brand .s{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.22em;color:var(--mut2);direction:ltr}
-.mark{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;flex-shrink:0;
+.mark{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;flex-shrink:0;overflow:hidden;
   background:linear-gradient(135deg,#8b5cf6,#4f7ef7);box-shadow:0 0 20px rgba(139,92,246,.55);
   font-family:'Inter',sans-serif;font-weight:900;font-size:20px;color:#fff}
 nav.menu{max-height:0;overflow:hidden;transition:max-height .35s cubic-bezier(.22,1,.36,1);background:rgba(7,7,15,.97);border-bottom:1px solid transparent}
@@ -292,7 +292,7 @@ footer{border-top:1px solid var(--line);margin-top:40px;padding:52px 0 34px;posi
       <div class="n en"><b>ARKAN</b> SETTLEMENTS</div>
       <div class="s">EXCHANGE · AI TRADING</div>
     </div>
-    <div class="mark en">A</div>
+    <a href="./" class="mark" aria-label="ARKAN"><img src="arkan-logo.svg" alt="ARKAN" style="width:100%;height:100%;object-fit:cover;border-radius:50%"></a>
   </div>
   <nav class="menu" id="menu">
     <a href="#rates" onclick="toggleMenu()">أسعار اليوم</a>
@@ -300,6 +300,7 @@ footer{border-top:1px solid var(--line);margin-top:40px;padding:52px 0 34px;posi
     <a href="#engines" onclick="toggleMenu()">المحركات التحليلية</a>
     <a href="#pricing" onclick="toggleMenu()">خطط الوصول</a>
     <a href="#order" onclick="toggleMenu()">طلب تحويل</a>
+    <a href="settlement.html" style="color:var(--violet)"><i class="fa-solid fa-lock" style="font-size:10px;margin-left:6px"></i>لوحة التسوية (خاص)</a>
   </nav>
 </header>
 
@@ -339,7 +340,11 @@ footer{border-top:1px solid var(--line);margin-top:40px;padding:52px 0 34px;posi
     <div class="step"><div class="n en">01</div><h4>جدول بثلاث شرائح</h4></div>
     <div class="step"><div class="n en">02</div><h4>أرسل طلبك واتساب</h4></div>
     <div class="step"><div class="n en">03</div><h4>تسوية الشركات</h4></div>
-    <div class="step"><div class="n en">04</div><h4>تنبيهات حية</h4></div>
+    <a href="settlement.html" class="step" style="border-color:rgba(139,92,246,.4);background:rgba(139,92,246,.06);display:block">
+      <div class="n en" style="color:var(--violet)">04 <i class="fa-solid fa-lock" style="font-size:9px;margin-right:4px"></i></div>
+      <h4>SETTLEMENT FLOW</h4>
+      <div style="font-size:11.5px;color:var(--mut2);margin-top:4px">لوحة التسوية الداخلية</div>
+    </a>
   </div>
 </div></section>
 
@@ -556,7 +561,7 @@ footer{border-top:1px solid var(--line);margin-top:40px;padding:52px 0 34px;posi
       <a href="#rates">أسعار اليوم</a><a href="#calc">حاسبة التحويل</a><a href="#engines">المحركات</a><a href="#pricing">الخطط</a>
     </div>
     <div class="fcol"><h5>الشركة</h5>
-      <a href="#order">طلب تحويل</a><a href="rates.html">بوابة الأسعار</a><a href="request.html">تحويلات الشركات</a><a href="trading.html">أنظمة التداول</a>
+      <a href="#order">طلب تحويل</a><a href="rates.html">بوابة الأسعار</a><a href="request.html">تحويلات الشركات</a><a href="trading.html">أنظمة التداول</a><a href="settlement.html"><i class="fa-solid fa-lock" style="font-size:9px;margin-left:5px;opacity:.6"></i>لوحة التسوية</a>
     </div>
     <div class="fcol"><h5>المساعدة</h5>
       <a href="https://wa.me/22236295050" target="_blank" rel="noopener">واتساب الدعم</a>
