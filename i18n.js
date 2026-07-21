@@ -392,6 +392,14 @@ var DICT={
 "© 2026 ARKAN SETTLEMENTS. مرخصة ومنظمة.":{fr:"© 2026 ARKAN SETTLEMENTS. Licenciée et réglementée.",pt:"© 2026 ARKAN SETTLEMENTS. Licenciada e regulamentada."},
 "حوّل":{fr:"Transférez",pt:"Transfira"},
 "بثقة المؤسسات.":{fr:"avec la confiance des institutions.",pt:"com a confiança das instituições."},
+"أوقية موريتانية":{fr:"Ouguiya mauritanien",pt:"Ouguiya mauritano"},
+"كوانزا أنغولية":{fr:"Kwanza angolais",pt:"Kwanza angolano"},
+"دولار أمريكي":{fr:"Dollar américain",pt:"Dólar americano"},
+"يوان صيني":{fr:"Yuan chinois",pt:"Yuan chinês"},
+"درهم إماراتي":{fr:"Dirham émirati",pt:"Dirham dos Emirados"},
+"درهم مغربي":{fr:"Dirham marocain",pt:"Dirham marroquino"},
+"ريال سعودي":{fr:"Riyal saoudien",pt:"Riyal saudita"},
+"تيثر — TRC20":{fr:"Tether — TRC20",pt:"Tether — TRC20"},
 };
 
 var LANGS=['ar','fr','pt'];
