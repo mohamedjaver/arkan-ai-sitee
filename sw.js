@@ -1,6 +1,6 @@
 /* ARKAN SETTLEMENTS — Service Worker */
-const V='arkan-v1.2';
-const CORE=['./','./index.html','./rates.html','./request.html','./arkan-logo.svg','./arkan-icon-512.png','./apple-touch-icon.png','./i18n.js','./site-manifest.json'];
+const V='arkan-v1.3';
+const CORE=['./','./index.html','./rates.html','./request.html','./arkan-logo.svg','./arkan-icon-512.png','./apple-touch-icon.png','./i18n.js','./site-manifest.json','./offline.html','./config.js','./integrations.js'];
 
 self.addEventListener('install',e=>{
   e.waitUntil(caches.open(V).then(c=>c.addAll(CORE.map(u=>new Request(u,{cache:'reload'})))).then(()=>self.skipWaiting()).catch(()=>self.skipWaiting()));
@@ -23,5 +23,5 @@ self.addEventListener('fetch',e=>{
   e.respondWith(caches.match(r).then(hit=>hit||fetch(r).then(res=>{
     if(res.ok){const c=res.clone();caches.open(V).then(x=>x.put(r,c));}
     return res;
-  }).catch(()=>caches.match('./index.html'))));
+  }).catch(()=>caches.match('./offline.html')||caches.match('./index.html'))));
 });
