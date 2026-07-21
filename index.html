@@ -173,7 +173,6 @@ select.full{width:100%;background:rgba(0,0,0,.34);border:1px solid var(--line2);
 .chartbox{background:linear-gradient(160deg,var(--card),var(--card2));border:1px solid var(--line);border-radius:var(--r);padding:16px;height:100%}
 .chart-hd{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;flex-wrap:wrap}
 .chart-hd h3{font-size:15px;font-weight:600}
-#tvHost{height:390px;border-radius:var(--r2);overflow:hidden}
 
 /* ===== ENGINES ===== */
 .eng{display:grid;grid-template-columns:1fr 1fr;gap:18px}
@@ -266,6 +265,7 @@ footer{border-top:1px solid var(--line);margin-top:40px;padding:52px 0 34px;posi
 .fdd-item .c{font-family:'JetBrains Mono',monospace;font-size:13.5px;font-weight:600;color:var(--txt)}
 .fdd-item .n{font-size:11.5px;color:var(--mut2);flex:1;text-align:right}
 
+
 /* ===== RESPONSIVE ===== */
 @media(max-width:900px){
   .grid2{grid-template-columns:1fr}
@@ -286,8 +286,7 @@ footer{border-top:1px solid var(--line);margin-top:40px;padding:52px 0 34px;posi
   .hero-cta .btn{width:100%}
   .btn{width:100%}
   .offer-in{gap:11px}
-  #tvHost{height:300px}
-  #toast{left:14px;right:14px;bottom:14px;max-width:none}
+    #toast{left:14px;right:14px;bottom:14px;max-width:none}
 }
 </style>
 <meta name="keywords" content="صرافة موريتانيا, تحويل أموال أنغولا, كوانزا أوقية, ARKAN, تسوية دولية, USDT MRU, تحويل الصين">
@@ -309,7 +308,7 @@ footer{border-top:1px solid var(--line);margin-top:40px;padding:52px 0 34px;posi
 <meta name="twitter:image" content="https://arkanrates.com/arkan-icon-512.png">
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"FinancialService","name":"ARKAN SETTLEMENTS",
-"description":"صرف العملات وتحويل الأموال والتسوية الدولية بين موريتانيا وأنغولا والصين",
+"description":"صرف العملات وتسديد فواتير الموردين الدوليين بين موريتانيا وأنغولا والصين",
 "url":"https://arkanrates.com/","logo":"https://arkanrates.com/arkan-icon-512.png",
 "telephone":"+22236295050","areaServed":["MR","AO","CN"],
 "currenciesAccepted":"MRU, AOA, USD, EUR, CNY, USDT",
@@ -328,15 +327,9 @@ footer{border-top:1px solid var(--line);margin-top:40px;padding:52px 0 34px;posi
 <!-- 1. TICKER -->
 <div class="ticker"><div class="ticker-in" id="tickerIn"></div></div>
 
-<!-- 2. OFFER BAR -->
+<!-- 2. TRUST BAR -->
 <div class="offer"><div class="offer-in">
-  <div class="offer-txt">عرض تأسيسي محدود — خصم حتى <b>40%</b> على خطة المؤسسين</div>
-  <div class="cd">
-    <div class="cdb"><b id="cdD">00</b><span>يوم</span></div>
-    <div class="cdb"><b id="cdH">00</b><span>ساعة</span></div>
-    <div class="cdb"><b id="cdM">00</b><span>دقيقة</span></div>
-    <div class="cdb"><b id="cdS">00</b><span>ثانية</span></div>
-  </div>
+  <div class="offer-txt"><b>أسعار محدّثة اليوم</b> · سعر مثبّت 30 دقيقة عند التأكيد · تنفيذ خلال دقائق</div>
 </div></div>
 
 <!-- 3. HEADER -->
@@ -345,7 +338,7 @@ footer{border-top:1px solid var(--line);margin-top:40px;padding:52px 0 34px;posi
     <button class="burger" id="burger" onclick="toggleMenu()" aria-label="القائمة"><i></i><i></i><i></i></button>
     <div class="brand">
       <div class="n en"><b>ARKAN</b> SETTLEMENTS</div>
-      <div class="s">EXCHANGE · AI TRADING</div>
+      <div class="s">EXCHANGE · SETTLEMENT</div>
     </div>
     <a href="./" class="mark" aria-label="ARKAN"><img src="arkan-logo.svg" alt="ARKAN" style="width:100%;height:100%;object-fit:cover;border-radius:50%"></a>
   </div>
@@ -521,7 +514,7 @@ footer{border-top:1px solid var(--line);margin-top:40px;padding:52px 0 34px;posi
   <div class="fgrid">
     <div class="fcol fbrand">
       <div class="n en"><b>ARKAN</b> SETTLEMENTS</div>
-      <p style="color:var(--mut);font-size:13px">منصة صرافة وتسوية دولية بين موريتانيا وأنغولا والصين، وأنظمة تداول مؤسسية على TradingView.</p>
+      <p style="color:var(--mut);font-size:13px">منصة صرافة وتسوية دولية بين موريتانيا وأنغولا والصين — صرف العملات وتسديد فواتير الموردين.</p>
       <div class="social">
         <a href="https://t.me/ArkanAI_Access_Bot" target="_blank" rel="noopener" aria-label="Telegram"><i class="fa-brands fa-telegram"></i></a>
         <a href="https://wa.me/22236295050" target="_blank" rel="noopener" aria-label="WhatsApp"><i class="fa-brands fa-whatsapp"></i></a>
@@ -579,19 +572,6 @@ footer{border-top:1px solid var(--line);margin-top:40px;padding:52px 0 34px;posi
   loop();
 })();
 
-/* ================== 2. COUNTDOWN ================== */
-(function(){
-  var end=Date.now()+((24+13)*3600*1000);
-  function pad(n){return n<10?'0'+n:''+n;}
-  function tick(){
-    var d=Math.max(0,end-Date.now());
-    document.getElementById('cdD').textContent=pad(Math.floor(d/86400000));
-    document.getElementById('cdH').textContent=pad(Math.floor(d/3600000)%24);
-    document.getElementById('cdM').textContent=pad(Math.floor(d/60000)%60);
-    document.getElementById('cdS').textContent=pad(Math.floor(d/1000)%60);
-  }
-  tick();setInterval(tick,1000);
-})();
 
 /* ================== 3. TICKER (عملات) ================== */
 (function(){
