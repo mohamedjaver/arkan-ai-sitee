@@ -541,7 +541,7 @@ body,input,select,textarea,button,.ar,h1,h2,h3{font-family:'Cairo','Tajawal','IB
     <button class="btn btn-gold" style="width:100%;margin-top:12px" onclick="genReport()">📄 تقرير PDF مفصل</button>
   </div>
   <div class="card" id="fRcpt" style="display:none">
-    <h3>مركز الإيصالات — كل العملات</h3>
+    <h3>مركز المطابقة — إيصالات العميل × المورد</h3>
     <div class="row">
       <div><label>العملة</label>
         <select id="rcCcy" class="ar" onchange="renderRC()">
@@ -553,28 +553,71 @@ body,input,select,textarea,button,.ar,h1,h2,h3{font-family:'Cairo','Tajawal','IB
           <option value="AED">AED — درهم إماراتي</option>
           <option value="CNY">CNY — يوان</option>
         </select></div>
-      <div><label>الاتجاه</label>
-        <select id="rcDir" class="ar">
-          <option value="in">وارد (استلمنا)</option>
-          <option value="out">صادر (دفعنا)</option>
-        </select></div>
+      <div><label>هامش التطابق %</label>
+        <input type="number" id="rcTol" value="0.5" step="0.1" inputmode="decimal" onchange="runMatch()"></div>
     </div>
-    <label>رابط المعاملة (TRONSCAN / بلوك تشين) — اختياري</label>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px">
+      <!-- ===== العميل ===== -->
+      <div style="background:rgba(120,90,255,.07);border:1px solid var(--stroke);border-radius:14px;padding:10px">
+        <div style="font-weight:800;font-size:13px;color:#B9A8FF;margin-bottom:8px">👤 إيصالات العميل</div>
+        <button class="btn btn-gold btn-sm" style="width:100%;font-size:11px" onclick="uploadRC('cli')">📥 رفع دفعة</button>
+        <button class="btn btn-line btn-sm" style="width:100%;font-size:11px;margin-top:6px" onclick="addRCManual('cli')">✏️ يدوي</button>
+        <div class="sum" style="margin-top:8px;padding:8px">
+          <div class="k" style="font-size:10px">عدد <b id="rcCountC" class="num">0</b></div>
+          <div class="v gold num" id="rcSumC" style="font-size:16px">0</div>
+        </div>
+        <div id="rcListC" style="margin-top:6px;max-height:220px;overflow:auto"></div>
+      </div>
+      <!-- ===== المورد ===== -->
+      <div style="background:rgba(255,190,80,.06);border:1px solid var(--stroke);border-radius:14px;padding:10px">
+        <div style="font-weight:800;font-size:13px;color:#E8C24A;margin-bottom:8px">🏭 إيصالات المورد</div>
+        <button class="btn btn-gold btn-sm" style="width:100%;font-size:11px" onclick="uploadRC('sup')">📥 رفع دفعة</button>
+        <button class="btn btn-line btn-sm" style="width:100%;font-size:11px;margin-top:6px" onclick="addRCManual('sup')">✏️ يدوي</button>
+        <div class="sum" style="margin-top:8px;padding:8px">
+          <div class="k" style="font-size:10px">عدد <b id="rcCountS" class="num">0</b></div>
+          <div class="v gold num" id="rcSumS" style="font-size:16px">0</div>
+        </div>
+        <div id="rcListS" style="margin-top:6px;max-height:220px;overflow:auto"></div>
+      </div>
+    </div>
+
+    <div id="rcProg" style="display:none;margin-top:10px;font-size:11px;color:var(--dim);text-align:center"></div>
+
+    <button class="btn btn-gold" style="width:100%;margin-top:12px" onclick="runMatch(1)">🔍 مطابقة وجرد كامل</button>
+
+    <div id="rcRecon" style="display:none;margin-top:12px">
+      <div class="sum-grid">
+        <div class="sum"><div class="k">مطابق ✓</div><div class="v green num" id="rxOk">0</div></div>
+        <div class="sum"><div class="k">تقريبي ≈</div><div class="v num" id="rxApx">0</div></div>
+        <div class="sum"><div class="k">لم يصل للمورد</div><div class="v num" id="rxMissS" style="color:var(--red)">0</div></div>
+        <div class="sum"><div class="k">بلا إيصال عميل</div><div class="v num" id="rxMissC" style="color:var(--red)">0</div></div>
+        <div class="sum"><div class="k">مكرر ⚠️</div><div class="v num" id="rxDup">0</div></div>
+        <div class="sum"><div class="k">فرق الحساب</div><div class="v gold num" id="rxDiff">0</div></div>
+      </div>
+      <div class="btn-row" style="margin-top:10px;flex-wrap:wrap">
+        <button class="btn btn-line btn-sm" onclick="rcFilter('all')">الكل</button>
+        <button class="btn btn-line btn-sm" onclick="rcFilter('ok')">مطابق</button>
+        <button class="btn btn-line btn-sm" onclick="rcFilter('missS')">ناقص عند المورد</button>
+        <button class="btn btn-line btn-sm" onclick="rcFilter('missC')">زائد عند المورد</button>
+        <button class="btn btn-line btn-sm" onclick="rcFilter('dup')">مكرر</button>
+      </div>
+      <div id="rcReconList" style="margin-top:8px"></div>
+      <div class="btn-row" style="margin-top:10px">
+        <button class="btn btn-line" onclick="rcExportCSV()">⬇️ تصدير جرد Excel</button>
+        <button class="btn btn-line" onclick="rcCopySummary()">📋 نسخ الملخص</button>
+      </div>
+    </div>
+
+    <label style="margin-top:12px">رابط المعاملة (TRONSCAN / بلوك تشين) — اختياري</label>
     <input type="text" id="rcLink" placeholder="https://tronscan.org/#/transaction/55c44cc..." style="direction:ltr;font-size:12px">
-    <div class="btn-row" style="margin-top:10px">
-      <button class="btn btn-gold" onclick="uploadRC()">📥 رفع إيصالات (صور / PDF)</button>
-      <button class="btn btn-line" onclick="addRCManual()">✏️ إدخال يدوي</button>
-    </div>
-    <div class="sum" style="margin-top:12px">
-      <div class="k">إجمالي الإيصالات <b id="rcCount" class="num">0</b></div>
-      <div class="v gold num" id="rcSum" style="font-size:24px">0</div>
-    </div>
-    <div id="rcList" style="margin-top:8px"></div>
     <div class="row" style="margin-top:8px">
-      <div><label>الجهة / الطرف</label><input type="text" id="rcParty" class="ar" placeholder="اسم العميل أو الشريك"></div>
+      <div><label>الجهة / الطرف</label><input type="text" id="rcParty" class="ar" placeholder="اسم العميل أو المورد"></div>
       <div><label>ملاحظة</label><input type="text" id="rcNote" class="ar" placeholder="—"></div>
     </div>
-    <button class="btn btn-gold" style="width:100%;margin-top:10px" onclick="saveRC()">💾 تسجيل الإيصالات في السجل</button>
+    <select id="rcDir" style="display:none"><option value="in">وارد</option><option value="out">صادر</option></select>
+    <button class="btn btn-gold" style="width:100%;margin-top:10px" onclick="saveRC()">💾 تسجيل الجرد في السجل</button>
+    <button class="btn btn-line" style="width:100%;margin-top:8px" onclick="rcClearAll()">🗑️ تفريغ الدفعة</button>
   </div>
   <div class="card" id="fM2A" style="display:none">
     <h3>بيع أوقية ← كوانزا</h3>
@@ -1711,6 +1754,13 @@ function invRows(t){
       ['الإجمالي',fmt(t.amount,t.ccy==='USDT'?2:0)+' '+CCYI[t.ccy]],
       ...(t.accts&&t.accts.length?[['الحساب',t.accts[0]]]:[]),
       ...(t.txns&&t.txns.length?[['مرجع المعاملة',String(t.txns[0]).slice(0,24)+'…']]:[]),
+      ...(t.recon?[['إيصالات العميل',t.recon.nA+' = '+fmt(t.recon.sA,t.ccy==='USDT'?2:0)],
+                   ['إيصالات المورد',t.recon.nB+' = '+fmt(t.recon.sB,t.ccy==='USDT'?2:0)],
+                   ['مطابق',t.recon.ok+(t.recon.apx?' (+'+t.recon.apx+' تقريبي)':'')],
+                   ...(t.recon.missS?[['⚠️ لم يصل للمورد',t.recon.missS+' = '+fmt(t.recon.sMissS,0)]]:[]),
+                   ...(t.recon.missC?[['⚠️ بلا إيصال عميل',t.recon.missC+' = '+fmt(t.recon.sMissC,0)]]:[]),
+                   ...(t.recon.dup?[['مكرر',String(t.recon.dup)]]:[]),
+                   ['الفرق',(t.recon.diff>0?'+':'')+fmt(t.recon.diff,t.ccy==='USDT'?2:0)]]:[]),
       ...(t.note?[['ملاحظة',t.note]]:[])
     ];
   }
@@ -2370,7 +2420,7 @@ async function genReport(){
   $('modal').style.display='block';window.scrollTo(0,0);
 }
 /* ================= RECEIPTS HUB (all currencies + USDT chain) ================= */
-let rc=[]; /* {name,amount,ccy,acct,txn,link,err} */
+let rc=[]; /* {name,amount,ccy,acct,txn,link,err,side:'cli'|'sup'} */
 /* استخراج بيانات USDT من نص TRONSCAN/Binance */
 function usdtExtract(txt){
   const t=(txt||'').replace(/\u00A0/g,' ');
@@ -2389,15 +2439,30 @@ function usdtExtract(txt){
   return {amount,txn:hash,acct:to,ok};
 }
 function rcCcyV(){return $('rcCcy')?$('rcCcy').value:'USDT';}
-async function uploadRC(){
+function rcDec(c){return c==='USDT'?2:0;}
+function rcNorm(t){return String(t||'').toLowerCase().replace(/[^a-z0-9]/g,'');}
+function rcTolV(){const v=parseFloat($('rcTol')?$('rcTol').value:'0');return isNaN(v)?0:v;}
+let _rcLoaded=false, rxRes=null, rxFilter='all';
+function rcPersist(){try{localStorage.setItem('arkan_rc_batch',JSON.stringify(rc.map(x=>({name:x.name,amount:x.amount,ccy:x.ccy,acct:x.acct,txn:x.txn,link:x.link,err:x.err,side:x.side||'cli',date:x.date||null}))));}catch(e){}}
+function rcLoad(){if(_rcLoaded)return;_rcLoaded=true;try{const s=localStorage.getItem('arkan_rc_batch');if(s){const a=JSON.parse(s);if(Array.isArray(a))rc=a.map(x=>({...x,side:x.side||'cli'}));}}catch(e){}}
+function rcSideList(s){const c=rcCcyV();return rc.filter(x=>x.ccy===c&&(x.side||'cli')===s);}
+function rcSideSum(s){return rcSideList(s).filter(x=>x.amount).reduce((a,x)=>a+x.amount,0);}
+function rcTotal(){return rcSideSum('cli');}
+
+/* ============ رفع دفعة إيصالات (عميل / مورد) ============ */
+async function uploadRC(side){
+  side=side||'cli';
   const inp=document.createElement('input');
   inp.type='file';inp.accept='image/*,application/pdf';inp.multiple=true;
   inp.onchange=async()=>{
     const files=[...inp.files];if(!files.length)return;
-    const ccy=rcCcyV();
-    toast('جارٍ قراءة '+files.length+' ملف...');
-    let ok=0,moved=0;const touched=new Set([fid]);
+    const ccy=rcCcyV(), pg=$('rcProg');
+    const lbl=side==='cli'?'العميل':'المورد';
+    if(pg){pg.style.display='block';}
+    let ok=0,n=0;
     for(const f of files){
+      n++;
+      if(pg)pg.textContent='قراءة إيصالات '+lbl+' — '+n+'/'+files.length+' ('+f.name.slice(0,18)+')';
       try{
         const dataUrl=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(f);});
         const txt=await anyReceiptText(dataUrl,f.type);
@@ -2405,63 +2470,206 @@ async function uploadRC(){
         if(ccy==='USDT')ex=usdtExtract(txt);
         else if(ccy==='MRU'){const e2=mruReceiptExtract(txt);ex={amount:e2.amount,txn:e2.txn,acct:e2.acct};}
         else {const sm=smartRead(txt);ex={amount:sm.amount,txn:sm.txn,acct:sm.acct};}
-        rc.push({name:f.name,amount:ex.amount,ccy,acct:ex.acct||null,txn:ex.txn||null,link:null});
+        rc.push({name:f.name,amount:ex.amount,ccy,acct:ex.acct||null,txn:ex.txn||null,link:null,side});
         if(ex.amount!=null)ok++;
-      }catch(e){rc.push({name:f.name,amount:null,ccy,err:'لم يُقرأ — أدخل يدويًا'});}
+      }catch(e){rc.push({name:f.name,amount:null,ccy,err:'لم يُقرأ — أدخل يدويًا',side});}
+      if(n%5===0)renderRC();
     }
-    renderRC();
-    toast('قُرئ '+ok+'/'+files.length+' ✓');
+    if(pg){pg.textContent='اكتمل: '+ok+'/'+files.length+' مقروء ✓';setTimeout(()=>{pg.style.display='none';},4000);}
+    rcPersist();renderRC();
+    toast('إيصالات '+lbl+': قُرئ '+ok+'/'+files.length+' ✓');
   };
   inp.click();
 }
-function addRCManual(){
+function addRCManual(side){
+  side=side||'cli';
   const ccy=rcCcyV();
-  const v=parseFloat(String(prompt('المبلغ ('+ccy+'):')||'').replace(/[^0-9.]/g,''));
-  if(!v||v<=0)return;
+  const raw=String(prompt('المبلغ ('+ccy+') — يمكن إدخال عدة مبالغ مفصولة بفاصلة أو سطر:')||'');
+  if(!raw.trim())return;
+  const parts=raw.split(/[\n,;]+/).map(s=>parseFloat(String(s).replace(/[^0-9.]/g,''))).filter(v=>v>0);
+  if(!parts.length)return;
   const link=$('rcLink')?$('rcLink').value.trim():'';
-  rc.push({name:'يدوي',amount:v,ccy,acct:null,txn:null,link:link||null});
-  renderRC();
+  parts.forEach(v=>rc.push({name:'يدوي',amount:v,ccy,acct:null,txn:null,link:link||null,side}));
+  rcPersist();renderRC();
 }
 function editRC(i){
   const v=parseFloat(String(prompt('المبلغ ('+rc[i].ccy+'):',rc[i].amount||'')||'').replace(/[^0-9.]/g,''));
-  if(!v||v<=0)return;rc[i].amount=v;rc[i].err=null;renderRC();
+  if(!v||v<=0)return;rc[i].amount=v;rc[i].err=null;rcPersist();renderRC();
 }
-function dropRC(i){rc.splice(i,1);renderRC();}
-function rcTotal(){const c=rcCcyV();return rc.filter(x=>x.ccy===c&&x.amount).reduce((s,x)=>s+x.amount,0);}
-function renderRC(){
-  const l=$('rcList');if(!l)return;
+function editRCTxn(i){
+  const v=String(prompt('مرجع/رقم المعاملة:',rc[i].txn||'')||'').trim();
+  rc[i].txn=v||null;rcPersist();renderRC();
+}
+function dropRC(i){rc.splice(i,1);rcPersist();renderRC();}
+function moveRC(i){rc[i].side=(rc[i].side==='cli')?'sup':'cli';rcPersist();renderRC();}
+function rcClearAll(){
   const c=rcCcyV();
-  const list=rc.filter(x=>x.ccy===c);
-  $('rcCount').textContent=list.length;
-  $('rcSum').textContent=fmt(rcTotal(),c==='USDT'?2:0)+' '+CCYI[c];
-  l.innerHTML=list.map(b=>{
-    const i=rc.indexOf(b);
-    return `<div class="leg" style="flex-wrap:wrap">
-      <span style="font-size:10px">${b.name.slice(0,20)}
-        ${b.txn?`<br><span style="color:var(--dim);font-size:8.5px;font-family:'IBM Plex Mono'">${String(b.txn).slice(0,18)}…</span>`:''}
-        ${b.err?`<br><span style="color:var(--red);font-size:8.5px">${b.err}</span>`:''}</span>
-      <span>${b.amount!=null
-        ?'<b class="lp" style="cursor:pointer" onclick="editRC('+i+')">'+fmt(b.amount,b.ccy==='USDT'?2:0)+'</b>'
-        :'<button class="btn btn-gold btn-sm" style="padding:2px 10px;font-size:10px" onclick="editRC('+i+')">أدخل المبلغ</button>'}
-        <button class="btn btn-line btn-sm" style="padding:2px 8px;font-size:10px;margin-right:6px" onclick="dropRC(${i})">✕</button></span>
-    </div>`;
-  }).join('')||'<div class="empty" style="padding:14px 0">لا إيصالات بعد</div>';
+  if(!confirm('تفريغ كل إيصالات '+c+' من الدفعة الحالية؟'))return;
+  rc=rc.filter(x=>x.ccy!==c);rxRes=null;$('rcRecon').style.display='none';rcPersist();renderRC();
+}
+
+/* ============ العرض ============ */
+function rcRow(b){
+  const i=rc.indexOf(b), st=rxRes?(rxRes.stat[i]||null):null;
+  const badge=st? (st.k==='ok'?'<span style="color:var(--green,#2ecc71);font-size:9px">✓ مطابق</span>'
+    :st.k==='apx'?'<span style="color:#E8C24A;font-size:9px">≈ تقريبي</span>'
+    :st.k==='dup'?'<span style="color:#ff9f43;font-size:9px">⚠️ مكرر</span>'
+    :'<span style="color:var(--red);font-size:9px">✕ بلا مطابقة</span>') : '';
+  return `<div class="leg" style="flex-wrap:wrap;padding:6px 8px">
+    <span style="font-size:9.5px;line-height:1.5">${String(b.name||'').slice(0,16)}
+      ${badge?'<br>'+badge:''}
+      ${b.txn?`<br><span style="color:var(--dim);font-size:8px;font-family:'IBM Plex Mono';cursor:pointer" onclick="editRCTxn(${i})">${String(b.txn).slice(0,14)}…</span>`:`<br><span style="color:var(--dim);font-size:8px;cursor:pointer" onclick="editRCTxn(${i})">+ مرجع</span>`}
+      ${b.err?`<br><span style="color:var(--red);font-size:8px">${b.err}</span>`:''}</span>
+    <span style="white-space:nowrap">${b.amount!=null
+      ?'<b class="lp" style="cursor:pointer;font-size:11px" onclick="editRC('+i+')">'+fmt(b.amount,rcDec(b.ccy))+'</b>'
+      :'<button class="btn btn-gold btn-sm" style="padding:1px 6px;font-size:9px" onclick="editRC('+i+')">مبلغ</button>'}
+      <button class="btn btn-line btn-sm" style="padding:1px 5px;font-size:9px;margin-right:4px" onclick="moveRC(${i})">⇄</button>
+      <button class="btn btn-line btn-sm" style="padding:1px 5px;font-size:9px;margin-right:3px" onclick="dropRC(${i})">✕</button></span>
+  </div>`;
+}
+function renderRC(){
+  rcLoad();
+  const l1=$('rcListC');if(!l1)return;
+  const c=rcCcyV(), d=rcDec(c);
+  const A=rcSideList('cli'), B=rcSideList('sup');
+  $('rcCountC').textContent=A.length; $('rcCountS').textContent=B.length;
+  $('rcSumC').textContent=fmt(rcSideSum('cli'),d);
+  $('rcSumS').textContent=fmt(rcSideSum('sup'),d);
+  l1.innerHTML=A.map(rcRow).join('')||'<div class="empty" style="padding:10px 0;font-size:10px">—</div>';
+  $('rcListS').innerHTML=B.map(rcRow).join('')||'<div class="empty" style="padding:10px 0;font-size:10px">—</div>';
+}
+
+/* ============ محرك المطابقة ============ */
+function runMatch(show){
+  rcLoad();
+  const c=rcCcyV(), d=rcDec(c), tol=rcTolV()/100;
+  const A=rcSideList('cli').filter(x=>x.amount!=null);
+  const B=rcSideList('sup').filter(x=>x.amount!=null);
+  if(!A.length&&!B.length){if(show)toast('لا إيصالات للمطابقة');return;}
+  const ia=A.map(x=>rc.indexOf(x)), ib=B.map(x=>rc.indexOf(x));
+  const usedB=new Array(B.length).fill(false), stat={}, pairs=[];
+  /* تكرار داخل نفس الجهة (نفس المرجع) */
+  const dups=[];
+  [[A,ia,'العميل'],[B,ib,'المورد']].forEach(([L,IX,lbl])=>{
+    const seen={};
+    L.forEach((x,k)=>{const h=rcNorm(x.txn);if(!h)return;
+      if(seen[h]!=null){dups.push({side:lbl,a:x,amount:x.amount,txn:x.txn});stat[IX[k]]={k:'dup'};}
+      else seen[h]=k;});
+  });
+  /* 1) مطابقة بالمرجع/الهاش */
+  A.forEach((a,k)=>{
+    if(stat[ia[k]])return;
+    const h=rcNorm(a.txn); if(!h)return;
+    const j=B.findIndex((b,m)=>!usedB[m]&&rcNorm(b.txn)===h);
+    if(j>=0){usedB[j]=true;stat[ia[k]]={k:'ok'};stat[ib[j]]={k:'ok'};pairs.push({a,b:B[j],kind:'مرجع',diff:(a.amount||0)-(B[j].amount||0)});}
+  });
+  /* 2) مطابقة بالمبلغ التام */
+  A.forEach((a,k)=>{
+    if(stat[ia[k]])return;
+    const j=B.findIndex((b,m)=>!usedB[m]&&Math.abs((b.amount||0)-(a.amount||0))<0.005);
+    if(j>=0){usedB[j]=true;stat[ia[k]]={k:'ok'};stat[ib[j]]={k:'ok'};pairs.push({a,b:B[j],kind:'مبلغ',diff:0});}
+  });
+  /* 3) مطابقة ضمن الهامش */
+  if(tol>0){
+    A.forEach((a,k)=>{
+      if(stat[ia[k]])return;
+      let best=-1,bd=Infinity;
+      B.forEach((b,m)=>{if(usedB[m])return;const df=Math.abs((b.amount||0)-(a.amount||0));if(df<=Math.abs(a.amount||0)*tol&&df<bd){bd=df;best=m;}});
+      if(best>=0){usedB[best]=true;stat[ia[k]]={k:'apx'};stat[ib[best]]={k:'apx'};pairs.push({a,b:B[best],kind:'تقريبي',diff:(a.amount||0)-(B[best].amount||0)});}
+    });
+  }
+  const missS=[],missC=[];
+  A.forEach((a,k)=>{if(!stat[ia[k]]){stat[ia[k]]={k:'miss'};missS.push(a);}});
+  B.forEach((b,m)=>{if(!usedB[m]&&(!stat[ib[m]]||stat[ib[m]].k!=='dup')){stat[ib[m]]={k:'miss'};missC.push(b);}});
+  const sum=l=>l.reduce((s,x)=>s+(x.amount||0),0);
+  rxRes={ccy:c,dec:d,pairs,missS,missC,dups,stat,
+    nA:A.length,nB:B.length,sA:sum(A),sB:sum(B),
+    ok:pairs.filter(p=>p.kind!=='تقريبي').length, apx:pairs.filter(p=>p.kind==='تقريبي').length,
+    sMissS:sum(missS),sMissC:sum(missC),diff:sum(A)-sum(B)};
+  $('rxOk').textContent=rxRes.ok;
+  $('rxApx').textContent=rxRes.apx;
+  $('rxMissS').textContent=missS.length;
+  $('rxMissC').textContent=missC.length;
+  $('rxDup').textContent=dups.length;
+  $('rxDiff').textContent=(rxRes.diff>0?'+':'')+fmt(rxRes.diff,d);
+  $('rcRecon').style.display='block';
+  rcFilter(rxFilter);renderRC();
+  if(show)toast('الجرد: '+(rxRes.ok+rxRes.apx)+' مطابق · '+missS.length+' ناقص · فرق '+fmt(rxRes.diff,d));
+}
+function rcFilter(f){
+  rxFilter=f||'all';
+  if(!rxRes)return;
+  const d=rxRes.dec, L=$('rcReconList');
+  let rows=[];
+  const line=(t,s,cl)=>`<div class="leg" style="padding:7px 9px"><span style="font-size:10.5px;line-height:1.6">${t}</span><span class="num" style="font-size:12px;color:${cl}">${s}</span></div>`;
+  if(rxFilter==='all'||rxFilter==='ok')
+    rows=rows.concat(rxRes.pairs.map(p=>line(
+      (p.kind==='تقريبي'?'≈ ':'✓ ')+String(p.a.name||'').slice(0,14)+' ⟷ '+String(p.b.name||'').slice(0,14)+' <span style="color:var(--dim);font-size:9px">('+p.kind+(Math.abs(p.diff)>0.005?' · فرق '+fmt(p.diff,d):'')+')</span>',
+      fmt(p.a.amount,d), p.kind==='تقريبي'?'#E8C24A':'#2ecc71')));
+  if(rxFilter==='all'||rxFilter==='missS')
+    rows=rows.concat(rxRes.missS.map(x=>line('✕ من العميل — لم يصل للمورد: '+String(x.name||'').slice(0,20)+(x.txn?' <span style="color:var(--dim);font-size:8px">'+String(x.txn).slice(0,12)+'…</span>':''),fmt(x.amount,d),'var(--red)')));
+  if(rxFilter==='all'||rxFilter==='missC')
+    rows=rows.concat(rxRes.missC.map(x=>line('✕ عند المورد — بلا إيصال عميل: '+String(x.name||'').slice(0,20),fmt(x.amount,d),'var(--red)')));
+  if(rxFilter==='all'||rxFilter==='dup')
+    rows=rows.concat(rxRes.dups.map(x=>line('⚠️ مكرر ('+x.side+'): '+String(x.a.name||'').slice(0,20),fmt(x.amount,d),'#ff9f43')));
+  L.innerHTML=rows.join('')||'<div class="empty" style="padding:12px 0">لا نتائج في هذا التصنيف</div>';
+}
+function rcSummaryText(){
+  if(!rxRes)return '';
+  const d=rxRes.dec,C=CCYI[rxRes.ccy]||rxRes.ccy;
+  return ['🧾 جرد مطابقة الإيصالات — '+C,
+  '——————————',
+  'إيصالات العميل: '+rxRes.nA+' = '+fmt(rxRes.sA,d),
+  'إيصالات المورد: '+rxRes.nB+' = '+fmt(rxRes.sB,d),
+  'مطابق تام: '+rxRes.ok+'  |  تقريبي: '+rxRes.apx,
+  'لم يصل للمورد: '+rxRes.missS.length+' إيصال = '+fmt(rxRes.sMissS,d),
+  'بلا إيصال عميل: '+rxRes.missC.length+' إيصال = '+fmt(rxRes.sMissC,d),
+  'مكرر: '+rxRes.dups.length,
+  '——————————',
+  'الفرق النهائي: '+(rxRes.diff>0?'+':'')+fmt(rxRes.diff,d)+' '+C].join('\n');
+}
+function rcCopySummary(){
+  const t=rcSummaryText();if(!t){toast('نفّذ المطابقة أولًا');return;}
+  navigator.clipboard.writeText(t).then(()=>toast('نُسخ الملخص ✓'),()=>toast('تعذّر النسخ'));
+}
+function rcExportCSV(){
+  if(!rxRes){toast('نفّذ المطابقة أولًا');return;}
+  const d=rxRes.dec, q=s=>'"'+String(s==null?'':s).replace(/"/g,'""')+'"';
+  let L=['الحالة,الجهة,الملف,المبلغ,المرجع,مقابل (مورد),مبلغ المورد,الفرق'];
+  rxRes.pairs.forEach(p=>L.push([q(p.kind==='تقريبي'?'تقريبي':'مطابق'),q('عميل↔مورد'),q(p.a.name),p.a.amount,q(p.a.txn),q(p.b.name),p.b.amount,(p.diff||0)].join(',')));
+  rxRes.missS.forEach(x=>L.push([q('لم يصل للمورد'),q('عميل'),q(x.name),x.amount,q(x.txn),'','',''].join(',')));
+  rxRes.missC.forEach(x=>L.push([q('بلا إيصال عميل'),q('مورد'),q(x.name),x.amount,q(x.txn),'','',''].join(',')));
+  rxRes.dups.forEach(x=>L.push([q('مكرر'),q(x.side),q(x.a.name),x.amount,q(x.txn),'','',''].join(',')));
+  L.push('');L.push(q('إجمالي العميل')+','+rxRes.sA+','+q('عدد')+','+rxRes.nA);
+  L.push(q('إجمالي المورد')+','+rxRes.sB+','+q('عدد')+','+rxRes.nB);
+  L.push(q('الفرق')+','+rxRes.diff);
+  const blob=new Blob(['\uFEFF'+L.join('\n')],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download='ARKAN_جرد_الإيصالات_'+rxRes.ccy+'_'+new Date().toISOString().slice(0,10)+'.csv';
+  a.click();toast('تم تصدير الجرد ✓');
 }
 function saveRC(){
-  const c=rcCcyV(),list=rc.filter(x=>x.ccy===c&&x.amount);
-  if(!list.length){toast('لا إيصالات مقروءة');return;}
-  const dir=$('rcDir').value, total=rcTotal();
+  const c=rcCcyV(), d=rcDec(c);
+  const A=rcSideList('cli').filter(x=>x.amount), B=rcSideList('sup').filter(x=>x.amount);
+  if(!A.length&&!B.length){toast('لا إيصالات مقروءة');return;}
+  if(!rxRes||rxRes.ccy!==c)runMatch();
   const ref=makeRef();
   const party=$('rcParty').value.trim()||'—', note=$('rcNote').value.trim();
   const link=$('rcLink')?$('rcLink').value.trim():'';
-  txs.push({type:'rcpt',ref,ccy:c,dir,amount:total,count:list.length,
+  const list=A.length?A:B, dir=A.length?'in':'out';
+  txs.push({type:'rcpt',ref,ccy:c,dir,amount:A.length?rxRes.sA:rxRes.sB,count:A.length+B.length,
     txns:list.filter(x=>x.txn).map(x=>x.txn),accts:[...new Set(list.filter(x=>x.acct).map(x=>x.acct))],
-    link:link||null,contactName:party,note,ts:Date.now()});
+    link:link||null,contactName:party,note,
+    recon:{nA:rxRes.nA,nB:rxRes.nB,sA:rxRes.sA,sB:rxRes.sB,ok:rxRes.ok,apx:rxRes.apx,
+      missS:rxRes.missS.length,sMissS:rxRes.sMissS,missC:rxRes.missC.length,sMissC:rxRes.sMissC,
+      dup:rxRes.dups.length,diff:rxRes.diff},
+    ts:Date.now()});
   seq++;persist();
-  rc=rc.filter(x=>x.ccy!==c);renderRC();
+  rc=rc.filter(x=>x.ccy!==c);rxRes=null;$('rcRecon').style.display='none';
+  rcPersist();renderRC();
   $('rcParty').value='';$('rcNote').value='';if($('rcLink'))$('rcLink').value='';
   render();
-  toast('سُجل '+list.length+' إيصال · '+fmt(total,0)+' '+CCYI[c]+' ✓');
+  toast('سُجل الجرد: '+(A.length+B.length)+' إيصال ✓');
 }
 /* ================= UM→AOA (بيع أوقية) ================= */
 let _payRcpt2=null,kb=[],mb=[]; /* mb: دفعة إيصالات الأوقية {app,amount,acct,txn,manual,excluded} */
