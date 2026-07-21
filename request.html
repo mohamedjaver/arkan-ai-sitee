@@ -91,6 +91,13 @@ html.pt-enter body{animation:ptIn .38s cubic-bezier(.22,1,.36,1)}
 <meta name="apple-mobile-web-app-title" content="ARKAN">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.1.0/tesseract.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="config.js"></script>
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="ARKAN SETTLEMENTS">
+<meta property="og:title" content="تحويلات الشركات الدولية — ARKAN SETTLEMENTS">
+<meta property="og:description" content="تسديد فواتير الموردين الدوليين بقراءة تلقائية للفاتورة ومرجع رسمي.">
+<meta property="og:image" content="https://arkanrates.com/arkan-icon-512.png">
+<meta name="twitter:card" content="summary_large_image">
 </head>
 <body>
 
@@ -235,6 +242,8 @@ Solicito cotação para pagamento internacional.`;
   window.open('https://wa.me/22236295050?text='+encodeURIComponent(msg),'_blank');
 }
 </script>
+<script src="integrations.js"></script>
+<script src="auth.js"></script>
 <script src="i18n.js"></script>
 <script>
 /* ============ UNIVERSAL INVOICE OCR ============ */
@@ -388,6 +397,7 @@ function extractCompany(t){
   return null;
 }
 async function uploadInvoice(){
+  if(window.arkanTrack)arkanTrack('upload_invoice');
   var inp=document.createElement('input');
   inp.type='file';inp.accept='image/*,application/pdf';
   inp.onchange=async function(){
