@@ -2,849 +2,762 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ARKAN INTERNATIONAL — الصرافة وأنظمة التداول المؤسسية</title>
-<meta name="description" content="مؤشرات تداول مؤسساتية مبنية على تدفق الأوامر وذكاء السيولة. دفع USDT أو تواصل عبر Telegram.">
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
-<style>
-:root{
-  --bg:#080916; --bg-2:#070B14; --panel:#0A1020; --panel-2:#0E1528;
-  --line:rgba(124,140,255,.14); --line-2:rgba(255,255,255,.055);
-  --gold:#E8C24A; --gold-l:#F5DE8B; --cyan:#3DE0D0; --blue:#5B8DEF; --violet:#8B72FF;
-  --red:#FF4D5E; --green:#1DD17F;
-  --txt:#EEF1FA; --muted:#8089A6; --muted-2:#4C5570;
-  --max:1220px;
-}
-*{margin:0;padding:0;box-sizing:border-box}
-html{scroll-behavior:smooth}
-body{background:linear-gradient(180deg,#14122B 0%,#0D0E20 30%,#080916 68%,#050610 100%);background-attachment:fixed;color:var(--txt);font-family:'IBM Plex Sans Arabic',sans-serif;line-height:1.7;overflow-x:hidden;-webkit-font-smoothing:antialiased}
-.mono{font-family:'IBM Plex Mono',monospace}
-.en{font-family:'Space Grotesk',sans-serif;direction:ltr;unicode-bidi:isolate}
-a{color:inherit;text-decoration:none}
-.wrap{max-width:var(--max);margin:0 auto;padding:0 26px}
-button{font-family:inherit;cursor:pointer}
-
-/* ===== unique animated background ===== */
-#bgfx{position:fixed;inset:0;z-index:0;pointer-events:none}
-.bg-glow{position:fixed;inset:0;z-index:0;pointer-events:none;
-  background:radial-gradient(ellipse 70% 50% at 50% -5%,rgba(91,141,239,.16),transparent 55%),radial-gradient(ellipse 50% 40% at 85% 15%,rgba(61,224,208,.08),transparent 50%),radial-gradient(ellipse 50% 40% at 10% 25%,rgba(124,108,255,.08),transparent 50%)}
-.scanline{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.5;
-  background:repeating-linear-gradient(to bottom,transparent 0 3px,rgba(0,0,0,.18) 3px 4px)}
-
-/* ===== countdown bar ===== */
-.cdbar{position:relative;z-index:30;background:linear-gradient(90deg,rgba(124,108,255,.16),rgba(61,224,208,.12));border-bottom:1px solid var(--line);text-align:center;padding:9px 16px;font-size:13.5px;display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap}
-.cdbar .lbl{color:var(--txt)} .cdbar .lbl b{color:var(--gold-l)}
-.cd{display:flex;gap:7px;font-family:'IBM Plex Mono'}
-.cd .u{background:rgba(0,0,0,.35);border:1px solid var(--line);border-radius:6px;padding:3px 9px;font-size:13px;min-width:38px;text-align:center}
-.cd .u span{display:block;font-size:8px;color:var(--muted-2);letter-spacing:.08em}
-
-/* ===== nav ===== */
-nav{position:sticky;top:0;z-index:40;transition:.3s;border-bottom:1px solid transparent}
-nav.scrolled{background:rgba(4,6,12,.85);backdrop-filter:blur(16px);border-bottom:1px solid var(--line)}
-.nav-in{display:flex;align-items:center;justify-content:space-between;height:70px}
-.logo{display:flex;align-items:center;gap:11px;font-weight:700}
-.logo-mark{width:36px;height:36px;flex-shrink:0;filter:drop-shadow(0 0 10px rgba(232,194,74,.4))}
-.logo-mark svg{width:100%;height:100%;display:block}
-.logo-txt{font-family:'Space Grotesk';letter-spacing:.04em;font-size:18px}
-.logo-txt b{color:var(--gold)}
-.logo-sub{font-size:9px;letter-spacing:.34em;color:var(--muted-2);margin-top:-2px;font-family:'Space Grotesk'}
-.nav-links{display:flex;gap:28px;align-items:center}
-.nav-links a{font-size:14px;color:var(--muted);transition:.2s}.nav-links a:hover{color:var(--txt)}
-.nav-cta{padding:10px 20px;border:1px solid var(--gold);color:var(--gold)!important;border-radius:9px;font-size:13.5px;font-weight:600;transition:.25s}
-.nav-cta:hover{background:var(--gold);color:#0a0a0a!important;box-shadow:0 0 22px rgba(232,194,74,.4)}
-.burger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:6px}
-.burger span{width:24px;height:2px;background:var(--txt);transition:.3s}
-
-/* ===== hero ===== */
-.hero{position:relative;z-index:1;padding:90px 0 80px}
-.hero-grid{display:grid;grid-template-columns:1.08fr .92fr;gap:50px;align-items:center}
-.eyebrow{display:inline-flex;align-items:center;gap:9px;font-family:'IBM Plex Mono';font-size:12px;letter-spacing:.1em;color:var(--cyan);margin-bottom:24px;padding:7px 15px;border:1px solid rgba(61,224,208,.25);border-radius:100px;background:rgba(61,224,208,.05)}
-.eyebrow .dot{width:7px;height:7px;border-radius:50%;background:var(--cyan);box-shadow:0 0 10px var(--cyan);animation:pulse 1.8s infinite}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
-.hero h1{font-size:clamp(38px,5.4vw,66px);line-height:1.06;font-weight:700;letter-spacing:-.01em;margin-bottom:22px}
-.hero h1 .g{background:linear-gradient(120deg,var(--gold-l),var(--gold) 50%,var(--cyan));-webkit-background-clip:text;background-clip:text;color:transparent}
-.hero p.lead{font-size:17.5px;color:var(--muted);max-width:500px;margin-bottom:18px}
-.proof{display:flex;align-items:center;gap:12px;margin-bottom:30px;font-size:13.5px;color:var(--muted)}
-.proof .av{display:flex} .proof .av i{width:30px;height:30px;border-radius:50%;border:2px solid var(--bg);margin-right:-9px;background:linear-gradient(135deg,var(--violet),var(--cyan))}
-.proof b{color:var(--txt)}
-.hero-cta{display:flex;gap:13px;flex-wrap:wrap;margin-bottom:34px}
-.btn{display:inline-flex;align-items:center;gap:9px;padding:15px 28px;border-radius:11px;font-size:15px;font-weight:600;transition:.28s;border:1px solid transparent}
-.btn-usdt{background:linear-gradient(120deg,var(--gold-l),var(--gold));color:#0a0a0a}
-.btn-usdt:hover{box-shadow:0 0 32px rgba(232,194,74,.45);transform:translateY(-2px)}
-.btn-tg{background:#29A9E1;color:#fff}.btn-tg:hover{box-shadow:0 0 28px rgba(41,169,225,.4);transform:translateY(-2px)}
-.btn-ghost{border-color:var(--line);color:var(--txt);background:rgba(255,255,255,.02)}.btn-ghost:hover{border-color:var(--cyan);color:var(--cyan)}
-.hero-stats{display:flex;gap:30px}
-.hero-stats .s b{font-family:'IBM Plex Mono';font-size:23px;color:var(--txt);display:block;font-weight:600}
-.hero-stats .s b .u{color:var(--cyan);font-size:16px}
-.hero-stats .s span{font-size:12px;color:var(--muted-2)}
-
-/* ===== strategy result card (LuxAlgo-style proof) ===== */
-.scard{background:linear-gradient(165deg,var(--panel),var(--bg-2));border:1px solid var(--line);border-radius:18px;padding:22px;box-shadow:0 40px 110px rgba(0,0,0,.6);position:relative;overflow:hidden}
-.scard::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 70% 40% at 70% 0%,rgba(91,141,239,.1),transparent 60%);pointer-events:none}
-.scard-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;position:relative}
-.scard-head .agent{display:flex;align-items:center;gap:10px}
-.scard-head .agent .ai{width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,var(--violet),var(--cyan));display:grid;place-items:center;font-family:'Space Grotesk';font-weight:700;font-size:13px;color:#06070d}
-.scard-head .agent b{font-size:13.5px;font-family:'Space Grotesk'}
-.scard-head .live{font-family:'IBM Plex Mono';font-size:10.5px;color:var(--cyan);display:flex;align-items:center;gap:6px}
-.scard-head .live .d{width:6px;height:6px;border-radius:50%;background:var(--cyan);box-shadow:0 0 8px var(--cyan);animation:pulse 1.5s infinite}
-.scard .symbol{display:flex;align-items:center;gap:8px;font-family:'IBM Plex Mono';font-size:12.5px;color:var(--muted);margin-bottom:6px}
-.scard .symbol .badge{background:var(--red);color:#fff;font-size:9px;padding:2px 6px;border-radius:4px;font-weight:600}
-.scard .chartbox{height:120px;border-radius:11px;background:#070b16;border:1px solid var(--line-2);margin-bottom:14px;position:relative;overflow:hidden}
-.scard .chartbox canvas{width:100%;height:100%;display:block}
-.scard .metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
-.scard .metrics .m{background:rgba(255,255,255,.02);border:1px solid var(--line-2);border-radius:9px;padding:9px 8px;text-align:center}
-.scard .metrics .m span{font-size:9px;color:var(--muted-2);display:block;letter-spacing:.03em;margin-bottom:3px}
-.scard .metrics .m b{font-family:'IBM Plex Mono';font-size:13.5px}
-.scard .metrics .m b.up{color:var(--green)}.scard .metrics .m b.gd{color:var(--gold-l)}.scard .metrics .m b.dn{color:var(--red)}.scard .metrics .m b.bl{color:var(--blue)}
-
-/* ===== sections ===== */
-.sec{position:relative;z-index:1;padding:80px 0}
-.sec-head{margin-bottom:46px;text-align:center}
-.sec-eyebrow{font-family:'IBM Plex Mono';font-size:12px;letter-spacing:.18em;color:var(--cyan);margin-bottom:12px}
-.sec-title{font-size:clamp(28px,3.6vw,42px);font-weight:700;letter-spacing:-.01em;line-height:1.15}
-.sec-desc{color:var(--muted);max-width:560px;margin:14px auto 0;font-size:16px}
-
-/* indicators */
-.ind-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:22px}
-/* بطاقات أسعار الصرف: 3 أعمدة دائمًا بمقاسات مرنة بلا قص */
-#fxGrid{grid-template-columns:repeat(3,1fr)!important;gap:clamp(8px,2.4vw,18px)}
-#fxGrid .ind{padding:clamp(14px,3.5vw,26px) clamp(6px,2vw,14px);text-align:center}
-.fxlbl{font-family:'IBM Plex Mono';color:var(--gold);font-size:clamp(9.5px,2.8vw,12px);letter-spacing:.1em;margin-bottom:clamp(6px,2vw,12px);white-space:nowrap}
-.fxnum{font-family:'IBM Plex Mono';font-size:clamp(19px,5.6vw,34px);font-weight:700;direction:ltr;white-space:nowrap;letter-spacing:-.01em;line-height:1.1}
-.fxsub{color:var(--muted-2);font-size:clamp(9.5px,2.9vw,12px);margin-top:6px;white-space:nowrap}
-.sec-brandline{color:var(--gold);font-size:clamp(15px,2.2vw,19px);font-weight:800;margin-top:10px;letter-spacing:.01em}
-.ind{background:linear-gradient(160deg,var(--panel),var(--bg-2));border:1px solid var(--line-2);border-radius:16px;padding:28px;transition:.3s;position:relative;overflow:hidden}
-.ind::after{content:'';position:absolute;top:0;right:0;width:160px;height:160px;background:radial-gradient(circle at top right,rgba(63,182,249,.08),transparent 70%);pointer-events:none}
-.ind:hover{border-color:var(--line);transform:translateY(-4px);box-shadow:0 30px 70px rgba(0,0,0,.5)}
-.ind .tag{font-family:'IBM Plex Mono';font-size:10.5px;letter-spacing:.08em;color:var(--cyan);border:1px solid rgba(61,224,208,.25);padding:4px 10px;border-radius:6px;display:inline-block;margin-bottom:16px}
-.ind h3{font-family:'Space Grotesk';font-size:20px;font-weight:700;margin-bottom:9px}
-.ind p{color:var(--muted);font-size:14px;margin-bottom:18px;min-height:63px}
-.ind .feats{display:flex;flex-direction:column;gap:8px;margin-bottom:20px}
-.ind .feats .f{display:flex;align-items:center;gap:10px;font-size:13.5px}
-.ind .feats .f svg{flex-shrink:0;color:var(--gold)}
-.ind .ind-cta{display:flex;gap:9px}
-.ind .ind-cta a{flex:1;justify-content:center;padding:11px;font-size:13px}
-
-/* pricing */
-.price-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;align-items:stretch}
-.plan{background:var(--panel);border:1px solid var(--line-2);border-radius:18px;padding:32px 28px;display:flex;flex-direction:column;position:relative;transition:.3s}
-.plan:hover{transform:translateY(-4px)}
-.plan.feat{border-color:var(--gold);background:linear-gradient(170deg,rgba(232,194,74,.06),var(--panel) 45%);box-shadow:0 30px 80px rgba(0,0,0,.5)}
-.plan .badge{position:absolute;top:-12px;right:28px;background:linear-gradient(120deg,var(--gold-l),var(--gold));color:#0a0a0a;font-size:11px;font-weight:700;padding:5px 14px;border-radius:100px}
-.plan h4{font-family:'Space Grotesk';font-size:14px;letter-spacing:.08em;color:var(--muted);margin-bottom:14px;text-transform:uppercase}
-.plan .price{display:flex;align-items:baseline;gap:6px;margin-bottom:5px}
-.plan .price .num{font-family:'IBM Plex Mono';font-size:44px;font-weight:600}
-.plan .price .cur{font-family:'IBM Plex Mono';font-size:17px;color:var(--muted)}
-.plan .price .old{font-family:'IBM Plex Mono';font-size:17px;color:var(--muted-2);text-decoration:line-through;margin-right:4px}
-.plan .per{font-size:13px;color:var(--muted-2)}
-.plan .note{font-size:12.5px;color:var(--muted-2);margin:6px 0 22px;min-height:18px}
-.plan ul{list-style:none;display:flex;flex-direction:column;gap:12px;margin-bottom:26px;flex:1}
-.plan ul li{display:flex;align-items:flex-start;gap:11px;font-size:14px}
-.plan ul li svg{flex-shrink:0;margin-top:4px;color:var(--cyan)}
-.plan ul li.off{color:var(--muted-2)}.plan ul li.off svg{color:var(--muted-2)}
-.plan .plan-cta{display:flex;flex-direction:column;gap:9px}
-.plan .plan-cta .btn{width:100%;justify-content:center;padding:13px}
-
-/* trust strip */
-.trust{display:flex;justify-content:center;gap:40px;flex-wrap:wrap;padding:30px 0;border-top:1px solid var(--line-2);border-bottom:1px solid var(--line-2);margin-top:10px}
-.trust .t{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:13.5px}
-.trust .t svg{color:var(--cyan)}
-
-/* band */
-.band{position:relative;z-index:1}
-.band-in{background:linear-gradient(150deg,var(--panel-2),var(--bg-2));border:1px solid var(--line);border-radius:22px;padding:54px;text-align:center;position:relative;overflow:hidden}
-.band-in::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 50% 80% at 50% 0%,rgba(124,92,255,.14),transparent 60%)}
-.band-in h2{font-size:clamp(26px,3.4vw,38px);font-weight:700;margin-bottom:13px;position:relative}
-.band-in p{color:var(--muted);max-width:470px;margin:0 auto 28px;position:relative}
-.band-cta{display:flex;gap:13px;justify-content:center;flex-wrap:wrap;position:relative}
-
-/* footer */
-footer{position:relative;z-index:1;border-top:1px solid var(--line-2);padding:46px 0 30px;margin-top:70px}
-.foot-grid{display:flex;justify-content:space-between;gap:40px;flex-wrap:wrap;margin-bottom:28px}
-.foot-about{max-width:300px}.foot-about p{font-size:13px;color:var(--muted);margin-top:12px}
-.foot-links{display:flex;gap:50px;flex-wrap:wrap}
-.foot-col h6{font-size:12px;letter-spacing:.1em;color:var(--muted-2);margin-bottom:14px;font-family:'IBM Plex Mono'}
-.foot-col a{display:block;font-size:13.5px;color:var(--muted);margin-bottom:10px;transition:.2s}.foot-col a:hover{color:var(--gold)}
-.disclaimer{background:rgba(255,77,94,.05);border:1px solid rgba(255,77,94,.16);border-radius:12px;padding:16px 20px;margin-bottom:24px}
-.disclaimer p{font-size:12px;color:var(--muted);line-height:1.7}.disclaimer b{color:var(--red)}
-.foot-bottom{padding-top:22px;border-top:1px solid var(--line-2);display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px}
-.foot-bottom p{font-size:12px;color:var(--muted-2)}
-
-.reveal{opacity:0;transform:translateY(22px);transition:.7s cubic-bezier(.2,.7,.2,1)}.reveal.in{opacity:1;transform:none}
-
-/* ===== live ticker (Binance) ===== */
-.tickerbar{position:relative;z-index:31;background:rgba(4,6,12,.92);border-bottom:1px solid var(--line);height:42px;display:flex;align-items:center;overflow:hidden}
-.tickerbar .tlabel{flex-shrink:0;display:flex;align-items:center;gap:8px;padding:0 16px;height:100%;border-left:1px solid var(--line);font-family:'Space Grotesk';font-size:11.5px;letter-spacing:.12em;color:var(--gold);white-space:nowrap;background:linear-gradient(90deg,rgba(232,194,74,.07),transparent);z-index:2;direction:ltr}
-.tickerbar .tlabel .d{width:7px;height:7px;border-radius:50%;background:var(--cyan);box-shadow:0 0 9px var(--cyan);animation:pulse 1.6s infinite}
-.ttrack{display:flex;animation:tape 50s linear infinite;will-change:transform}
-.tickerbar:hover .ttrack{animation-play-state:paused}
-@keyframes tape{from{transform:translateX(0)}to{transform:translateX(50%)}}
-.tki{display:inline-flex;align-items:center;gap:9px;padding:0 20px;white-space:nowrap;font-family:'IBM Plex Mono';font-size:12.5px;border-left:1px solid var(--line-2);direction:ltr}
-.tki .s{color:var(--txt);font-weight:600}
-.tki .p{color:var(--muted)}
-.tki .c{font-weight:600;font-size:11.5px}
-.tki .c.up{color:var(--green)}.tki .c.dn{color:var(--red)}
-
-/* ===== price chip on indicator cards ===== */
-.ind .pfrom{display:flex;align-items:baseline;gap:7px;margin-bottom:16px}
-.ind .pfrom span{font-size:12px;color:var(--muted-2)}
-.ind .pfrom b{font-family:'IBM Plex Mono';font-size:22px;color:var(--gold-l)}
-.ind .pfrom small{font-size:11px;color:var(--muted-2)}
-
-/* ===== modals ===== */
-.overlay{position:fixed;inset:0;background:rgba(2,4,9,.82);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;z-index:100;padding:18px}
-.overlay.open{display:flex}
-.modal{background:linear-gradient(165deg,var(--panel),var(--bg-2));border:1px solid var(--line);border-radius:18px;width:100%;max-width:540px;max-height:92vh;overflow-y:auto;padding:28px;position:relative;box-shadow:0 40px 110px rgba(0,0,0,.7);animation:rise .25s ease}
-@keyframes rise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
-.mclose{position:absolute;top:14px;left:16px;color:var(--muted);font-size:20px;background:none;border:none;line-height:1}
-.mclose:hover{color:var(--txt)}
-.mtitle{font-family:'Space Grotesk';font-weight:700;font-size:18px;margin-bottom:4px;direction:ltr;text-align:right}
-.msub{font-size:13px;color:var(--muted);margin-bottom:22px}
-.pkg{border:1px solid var(--line-2);border-radius:13px;padding:17px;display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:12px;background:rgba(255,255,255,.015);transition:.25s}
-.pkg:hover{border-color:var(--line)}
-.pkg.best{border-color:var(--gold);background:linear-gradient(170deg,rgba(232,194,74,.06),transparent 60%)}
-.pkg .info b{font-size:14.5px;display:block}
-.pkg .info span{font-size:12px;color:var(--muted-2)}
-.pkg .tag{font-size:9.5px;background:linear-gradient(120deg,var(--gold-l),var(--gold));color:#0a0a0a;font-weight:700;border-radius:100px;padding:2px 9px;margin-right:7px;vertical-align:middle}
-.pkg .pr{font-family:'IBM Plex Mono';font-size:19px;font-weight:600;direction:ltr;white-space:nowrap}
-.pkg .pr small{font-size:10.5px;color:var(--muted-2)}
-.pkg .old{font-family:'IBM Plex Mono';font-size:12px;color:var(--muted-2);text-decoration:line-through;direction:ltr;text-align:left}
-.pkg .buy{background:linear-gradient(120deg,var(--gold-l),var(--gold));color:#0a0a0a;font-weight:700;font-size:13px;padding:10px 19px;border-radius:9px;border:none;white-space:nowrap;transition:.25s}
-.pkg .buy:hover{box-shadow:0 0 22px rgba(232,194,74,.4)}
-.paysum{background:rgba(255,255,255,.02);border:1px solid var(--line-2);border-radius:13px;padding:15px 17px;margin-bottom:18px;display:flex;justify-content:space-between;align-items:center;gap:10px}
-.paysum .what b{display:block;font-size:14px}.paysum .what span{font-size:11.5px;color:var(--muted-2)}
-.payamt{font-family:'IBM Plex Mono';font-size:21px;font-weight:600;color:var(--gold-l);direction:ltr;white-space:nowrap}
-.flabel{font-size:12px;color:var(--muted);margin:14px 0 7px}
-.cprow{display:flex;align-items:center;gap:10px;background:rgba(0,0,0,.4);border:1px solid var(--line-2);border-radius:10px;padding:12px 14px}
-.cprow code{font-family:'IBM Plex Mono';font-size:12.5px;color:var(--txt);word-break:break-all;flex:1;direction:ltr;text-align:left}
-.cpbtn{font-size:11.5px;color:var(--gold);border:1px solid rgba(232,194,74,.4);background:none;border-radius:7px;padding:6px 13px;white-space:nowrap;transition:.2s}
-.cpbtn:hover{background:var(--gold);color:#0a0a0a}
-.qrbox{display:flex;justify-content:center;margin:18px 0}
-.qrbox img{width:165px;height:165px;border-radius:13px;border:1px solid var(--line);background:#fff;padding:8px}
-.pwarn{font-size:12px;color:var(--gold-l);background:rgba(232,194,74,.06);border:1px solid rgba(232,194,74,.22);border-radius:11px;padding:11px 14px;margin-top:14px}
-.waiting{display:flex;align-items:center;gap:10px;justify-content:center;margin-top:18px;color:var(--muted);font-size:13px}
-.spinner{width:14px;height:14px;border:2px solid var(--line);border-top-color:var(--gold);border-radius:50%;animation:spin .9s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
-.ordid{text-align:center;font-family:'IBM Plex Mono';font-size:11px;color:var(--muted-2);margin-top:10px;direction:ltr}
-.toast{position:fixed;bottom:24px;right:50%;transform:translateX(50%);background:var(--panel-2);border:1px solid var(--cyan);color:var(--txt);padding:11px 22px;border-radius:11px;font-size:13px;z-index:200;opacity:0;pointer-events:none;transition:.3s}
-.toast.show{opacity:1}
-
-@media (max-width:920px){.hero-grid{grid-template-columns:1fr;gap:40px}.ind-grid,.price-grid{grid-template-columns:1fr}.nav-links{display:none}.burger{display:flex}
-  .nav-links.open{display:flex;position:absolute;top:70px;left:0;right:0;flex-direction:column;background:var(--bg-2);padding:22px 26px;gap:18px;border-bottom:1px solid var(--line)}}
-@media (max-width:560px){.wrap{padding:0 18px}.band-in{padding:36px 22px}.scard .metrics{grid-template-columns:repeat(2,1fr)}.hero-stats{gap:20px}.cdbar{font-size:12px}}
-@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.reveal{opacity:1;transform:none}}
-</style>
-
-<style id="pageTransition">
-/* ===== EXODUS-LIKE PAGE TRANSITIONS ===== */
-@view-transition{navigation:auto}
-::view-transition-old(root){animation:ptOut .28s cubic-bezier(.22,1,.36,1) forwards}
-::view-transition-new(root){animation:ptIn .38s cubic-bezier(.22,1,.36,1) forwards}
-@keyframes ptOut{to{opacity:0;transform:translateY(-8px) scale(.995)}}
-@keyframes ptIn{from{opacity:0;transform:translateY(12px) scale(.995)}to{opacity:1;transform:none}}
-/* fallback للمتصفحات الأقدم: تلاشٍ عند الدخول */
-html.pt-enter body{animation:ptIn .38s cubic-bezier(.22,1,.36,1)}
-</style>
-<script id="pageTransitionJS">(function(){
-  document.documentElement.classList.add('pt-enter');
-  var standalone=(window.matchMedia&&matchMedia('(display-mode: standalone)').matches)||(navigator.standalone===true);
-  document.addEventListener('click',function(e){
-    var a=e.target.closest?e.target.closest('a[href]'):null;
-    if(!a)return;
-    var href=a.getAttribute('href');
-    if(!href||href.charAt(0)==='#'||/^https?:/i.test(href)||href.indexOf('mailto')===0||a.target==='_blank')return;
-    e.preventDefault();
-    if(standalone||!document.startViewTransition){
-      /* standalone: انتقال فوري مباشر — الأكثر موثوقية داخل PWA على iOS */
-      if(!standalone){
-        document.body.style.transition='opacity .18s ease';
-        document.body.style.opacity='0';
-        setTimeout(function(){location.href=href;},170);
-      }else{
-        location.href=href;
-      }
-    }else{
-      location.href=href;
-    }
-  },true);
-})();</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>ARKAN SETTLEMENTS — تحويلات مالية وتسوية مؤسسية</title>
+<meta name="description" content="ARKAN SETTLEMENTS — صرف العملات وتحويل الأموال بين موريتانيا وأنغولا والصين، وتسوية فواتير الموردين الدوليين.">
+<link rel="icon" href="arkan-icon-512.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="manifest" href="site-manifest.json">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="ARKAN">
+<meta name="theme-color" content="#07070f">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+:root{
+  --bg:#07070f; --card:#0e0e18; --card2:#141420;
+  --line:#1e1e2e; --line2:#2a2a40;
+  --violet:#8b5cf6; --cyan:#00d4aa; --gold:#c9a84c;
+  --txt:#f0f0f5; --mut:#9ca3af; --mut2:#6b7280;
+  --ok:#00d4aa; --bad:#ff4757;
+  --r:20px; --r2:14px; --r3:10px;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--txt);font-family:'IBM Plex Sans Arabic',sans-serif;line-height:1.7;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+.mono{font-family:'JetBrains Mono',monospace}
+.en{font-family:'Inter',sans-serif;direction:ltr;unicode-bidi:isolate}
+a{text-decoration:none;color:inherit}
+button,input,select{font-family:inherit}
+::selection{background:rgba(139,92,246,.35)}
+.wrap{max-width:1180px;margin:0 auto;padding:0 20px}
+
+/* ===== BACKGROUND ===== */
+#bgGrid{position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:linear-gradient(rgba(139,92,246,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(139,92,246,.06) 1px,transparent 1px);
+  background-size:60px 60px;animation:gridMove 20s linear infinite}
+@keyframes gridMove{from{background-position:0 0}to{background-position:60px 60px}}
+#glow1,#glow2{position:fixed;border-radius:50%;z-index:0;pointer-events:none;filter:blur(40px)}
+#glow1{top:-10%;right:-5%;width:60vw;height:60vw;background:radial-gradient(circle,rgba(139,92,246,.12),transparent 65%);animation:pulse1 8s ease-in-out infinite}
+#glow2{bottom:-15%;left:-10%;width:65vw;height:65vw;background:radial-gradient(circle,rgba(0,212,170,.08),transparent 65%);animation:pulse2 10s ease-in-out infinite}
+@keyframes pulse1{0%,100%{transform:scale(1);opacity:.8}50%{transform:scale(1.18);opacity:1}}
+@keyframes pulse2{0%,100%{transform:scale(1.1);opacity:1}50%{transform:scale(.92);opacity:.7}}
+#particles{position:fixed;inset:0;z-index:1;pointer-events:none}
+.layer{position:relative;z-index:2}
+
+/* ===== TICKER ===== */
+.ticker{background:rgba(7,7,15,.95);border-bottom:1px solid var(--line);overflow:hidden;position:relative;z-index:30}
+.ticker-in{display:flex;gap:34px;white-space:nowrap;padding:9px 0;animation:tick 30s linear infinite;width:max-content}
+@keyframes tick{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+.tk{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--mut);display:inline-flex;gap:7px;align-items:center}
+.tk b{color:var(--txt);font-weight:600}
+.tk .up{color:var(--ok)}.tk .dn{color:var(--bad)}
+
+/* ===== OFFER BAR ===== */
+.offer{position:relative;overflow:hidden;background:linear-gradient(135deg,rgba(139,92,246,.10),rgba(0,212,170,.05));border-bottom:1px solid var(--line);z-index:29}
+.offer::after{content:'';position:absolute;top:0;bottom:0;width:45%;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.07),transparent);animation:shim 4s linear infinite}
+@keyframes shim{from{left:-50%}to{left:105%}}
+.offer-in{display:flex;align-items:center;justify-content:center;gap:18px;flex-wrap:wrap;padding:11px 20px;position:relative;z-index:2}
+.offer-txt{font-size:13px;color:var(--txt)}
+.offer-txt b{color:var(--gold)}
+.cd{display:flex;gap:7px}
+.cdb{background:rgba(255,255,255,.05);border:1px solid var(--line2);border-radius:9px;padding:5px 10px;text-align:center;min-width:50px}
+.cdb b{font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:600;color:var(--txt);display:block;line-height:1.2}
+.cdb span{font-size:9px;color:var(--mut2)}
+
+/* ===== HEADER ===== */
+header{position:sticky;top:0;z-index:28;background:rgba(7,7,15,.85);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-bottom:1px solid var(--line)}
+.hd{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 20px;max-width:1180px;margin:0 auto}
+.burger{width:38px;height:38px;display:flex;flex-direction:column;justify-content:center;gap:5px;cursor:pointer;background:none;border:none;padding:0}
+.burger i{display:block;height:2px;width:22px;background:var(--txt);border-radius:2px;transition:.3s}
+.burger.on i:nth-child(1){transform:translateY(7px) rotate(45deg)}
+.burger.on i:nth-child(2){opacity:0}
+.burger.on i:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
+.brand{text-align:center;line-height:1.25}
+.brand .n{font-family:'Inter',sans-serif;font-weight:800;font-size:19px;letter-spacing:.02em;direction:ltr}
+.brand .n b{color:var(--gold);font-weight:800}
+.brand .s{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.22em;color:var(--mut2);direction:ltr}
+.mark{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;flex-shrink:0;
+  background:linear-gradient(135deg,#8b5cf6,#4f7ef7);box-shadow:0 0 20px rgba(139,92,246,.55);
+  font-family:'Inter',sans-serif;font-weight:900;font-size:20px;color:#fff}
+nav.menu{max-height:0;overflow:hidden;transition:max-height .35s cubic-bezier(.22,1,.36,1);background:rgba(7,7,15,.97);border-bottom:1px solid transparent}
+nav.menu.on{max-height:320px;border-bottom-color:var(--line)}
+nav.menu a{display:block;padding:13px 20px;font-size:14px;color:var(--mut);border-bottom:1px solid var(--line);max-width:1180px;margin:0 auto}
+nav.menu a:hover{color:var(--gold)}
+
+/* ===== SHARED ===== */
+.sec{padding:76px 0}
+.sec-h{text-align:center;margin-bottom:38px}
+.sec-h .k{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.2em;color:var(--cyan);margin-bottom:11px}
+.sec-h h2{font-size:clamp(23px,3.6vw,32px);font-weight:700;letter-spacing:-.01em}
+.sec-h p{color:var(--mut);font-size:14.5px;max-width:560px;margin:12px auto 0}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:9px;padding:15px 30px;border-radius:var(--r);
+  font-weight:700;font-size:14.5px;cursor:pointer;border:none;transition:transform .2s cubic-bezier(.34,1.56,.64,1),box-shadow .25s,background .25s}
+.btn:active{transform:scale(.97)}
+.btn-gold{background:linear-gradient(135deg,#e0c268,var(--gold));color:#151005;box-shadow:0 10px 30px rgba(201,168,76,.28)}
+.btn-gold:hover{box-shadow:0 14px 40px rgba(201,168,76,.4)}
+.btn-cyan{background:linear-gradient(135deg,#1ae3bb,var(--cyan));color:#04211b;box-shadow:0 10px 30px rgba(0,212,170,.25)}
+.btn-wa{background:linear-gradient(135deg,#2ee07a,#16a34a);color:#04210f;box-shadow:0 10px 30px rgba(34,197,94,.22)}
+.btn-line{background:transparent;border:1px solid var(--line2);color:var(--txt)}
+.btn-line:hover{border-color:var(--gold);color:var(--gold)}
+.card{background:linear-gradient(160deg,var(--card),var(--card2));border:1px solid var(--line);border-radius:var(--r);padding:26px}
+
+/* ===== HERO ===== */
+.hero{padding:70px 0 20px;text-align:center}
+.pill{display:inline-flex;align-items:center;gap:10px;font-family:'JetBrains Mono',monospace;font-size:11.5px;letter-spacing:.09em;
+  color:var(--cyan);padding:9px 20px;border:1px solid rgba(0,212,170,.32);border-radius:100px;background:rgba(0,212,170,.05);margin-bottom:30px}
+.dotp{width:7px;height:7px;border-radius:50%;background:var(--ok);box-shadow:0 0 9px var(--ok);animation:blink 1.8s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+.hero h1{font-size:clamp(34px,7vw,60px);font-weight:700;line-height:1.18;letter-spacing:-.02em;margin-bottom:22px}
+.hero h1 .g{color:var(--gold)}.hero h1 .c{color:var(--cyan)}
+.hero .lead{color:var(--mut);font-size:16px;max-width:560px;margin:0 auto 26px}
+.trust{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;margin-bottom:30px}
+.avs{display:flex}
+.avs i{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-size:12px;font-weight:700;
+  border:2px solid var(--bg);margin-left:-11px;color:#fff}
+.avs i:nth-child(1){background:linear-gradient(135deg,#8b5cf6,#6d3fd6);margin-left:0}
+.avs i:nth-child(2){background:linear-gradient(135deg,#00d4aa,#0a9c80)}
+.avs i:nth-child(3){background:linear-gradient(135deg,#c9a84c,#9a7c2c)}
+.trust span{font-size:13.5px;color:var(--mut)}
+.trust b{color:var(--txt)}
+.hero-cta{display:flex;gap:13px;justify-content:center;flex-wrap:wrap;margin-bottom:38px}
+.stats{display:flex;justify-content:center;gap:0;max-width:460px;margin:0 auto;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.stat{flex:1;padding:17px 8px;text-align:center;border-left:1px solid var(--line)}
+.stat:first-child{border-left:none}
+.stat b{font-family:'JetBrains Mono',monospace;font-size:19px;font-weight:600;display:block;color:var(--txt)}
+.stat span{font-size:10.5px;color:var(--mut2);margin-top:2px;display:block}
+
+/* ===== RATES ===== */
+.rates{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.rc{position:relative;background:linear-gradient(160deg,var(--card),var(--card2));border:1px solid var(--line);border-radius:var(--r);
+  padding:28px 24px;text-align:center;overflow:hidden;transition:transform .35s cubic-bezier(.22,1,.36,1),box-shadow .35s,border-color .35s}
+.rc::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;opacity:0;transition:.35s;
+  background:linear-gradient(90deg,var(--violet),var(--cyan),var(--gold))}
+.rc:hover{transform:translateY(-8px);box-shadow:0 20px 60px rgba(0,0,0,.5);border-color:var(--line2)}
+.rc:hover::before{opacity:1}
+.rc .pair{font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.13em;color:var(--gold);margin-bottom:14px}
+.rc .val{font-family:'JetBrains Mono',monospace;font-size:38px;font-weight:700;letter-spacing:-.02em}
+.rc .nm{font-size:12.5px;color:var(--mut2);margin-top:6px}
+.live{display:inline-flex;align-items:center;gap:6px;font-size:10px;color:var(--ok);
+  background:rgba(0,212,170,.1);border:1px solid rgba(0,212,170,.28);border-radius:100px;padding:3px 11px;margin-top:14px}
+.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:20px}
+.step{background:rgba(255,255,255,.02);border:1px solid var(--line);border-radius:var(--r2);padding:20px 18px;transition:.25s}
+.step:hover{border-color:var(--line2);background:rgba(255,255,255,.035)}
+.step .n{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--gold);margin-bottom:9px}
+.step h4{font-size:14.5px;font-weight:600}
+
+/* ===== CALC + CHART ===== */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start}
+.fld{margin-bottom:14px}
+.fld label{display:block;font-size:12px;color:var(--mut);margin-bottom:7px;font-weight:500}
+.io{display:flex;gap:9px}
+.io input{flex:1;min-width:0;background:rgba(0,0,0,.34);border:1px solid var(--line2);border-radius:var(--r3);
+  padding:14px 15px;color:var(--txt);font-family:'JetBrains Mono',monospace;font-size:17px;font-weight:600;outline:none;transition:.2s}
+.io input:focus{border-color:var(--gold)}
+.io input[readonly]{color:var(--gold)}
+.io select{background:rgba(0,0,0,.34);border:1px solid var(--line2);border-radius:var(--r3);padding:14px 11px;color:var(--txt);
+  font-size:13.5px;font-weight:600;outline:none;cursor:pointer;min-width:104px}
+.swapw{display:flex;justify-content:center;margin:-4px 0 10px}
+.swap{width:44px;height:44px;border-radius:50%;background:var(--card2);border:1px solid var(--line2);color:var(--cyan);
+  display:grid;place-items:center;cursor:pointer;transition:transform .35s cubic-bezier(.34,1.56,.64,1),border-color .25s;font-size:15px}
+.swap:hover{transform:rotate(180deg);border-color:var(--cyan)}
+select.full{width:100%;background:rgba(0,0,0,.34);border:1px solid var(--line2);border-radius:var(--r3);
+  padding:13px 14px;color:var(--txt);font-size:13.5px;outline:none;cursor:pointer}
+.res{margin:16px 0;padding:20px;border-radius:var(--r2);border:1px solid rgba(201,168,76,.4);
+  background:linear-gradient(140deg,rgba(201,168,76,.09),rgba(139,92,246,.05));text-align:center}
+.res .lbl{font-size:11.5px;color:var(--mut);margin-bottom:7px}
+.res .amt{font-family:'JetBrains Mono',monospace;font-size:29px;font-weight:700;color:var(--gold);word-break:break-all}
+.res .sub{font-size:11.5px;color:var(--mut2);margin-top:7px;font-family:'JetBrains Mono',monospace}
+.chartbox{background:linear-gradient(160deg,var(--card),var(--card2));border:1px solid var(--line);border-radius:var(--r);padding:16px;height:100%}
+.chart-hd{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;flex-wrap:wrap}
+.chart-hd h3{font-size:15px;font-weight:600}
+#tvHost{height:390px;border-radius:var(--r2);overflow:hidden}
+
+/* ===== ENGINES ===== */
+.eng{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.ec{position:relative;background:linear-gradient(160deg,var(--card),var(--card2));border:1px solid var(--line);
+  border-radius:var(--r);padding:26px 26px 26px 30px;overflow:hidden;transition:transform .3s cubic-bezier(.22,1,.36,1),border-color .3s,box-shadow .3s}
+.ec::before{content:'';position:absolute;top:0;bottom:0;right:0;width:3px;opacity:0;transition:.3s;
+  background:linear-gradient(180deg,var(--gold),var(--violet))}
+.ec:hover{transform:translateY(-5px);border-color:var(--line2);box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.ec:hover::before{opacity:1}
+.ec .k{font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.15em;color:var(--cyan);margin-bottom:11px}
+.ec h3{font-size:19px;font-weight:700;margin-bottom:8px}
+.ec p{color:var(--mut);font-size:13.5px;margin-bottom:15px}
+.ec ul{list-style:none;margin-bottom:18px}
+.ec li{font-size:13px;color:var(--mut);padding:5px 0;display:flex;gap:9px;align-items:center}
+.ec li i{color:var(--gold);font-size:11px}
+.ec .pr{display:flex;align-items:baseline;gap:7px;font-family:'JetBrains Mono',monospace}
+.ec .pr b{font-size:25px;font-weight:700;color:var(--gold)}
+.ec .pr span{font-size:12px;color:var(--mut2)}
+
+/* ===== PRICING ===== */
+.plans{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;align-items:center}
+.pl{background:linear-gradient(160deg,var(--card),var(--card2));border:1px solid var(--line);border-radius:var(--r);
+  padding:30px 26px;text-align:center;transition:transform .3s cubic-bezier(.22,1,.36,1),box-shadow .3s;position:relative}
+.pl:hover{transform:translateY(-5px);box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.pl.best{border-color:rgba(201,168,76,.55);transform:scale(1.05);
+  background:linear-gradient(160deg,rgba(201,168,76,.09),var(--card2));box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.pl.best:hover{transform:scale(1.05) translateY(-5px)}
+.badge{position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#e0c268,var(--gold));
+  color:#151005;font-size:11px;font-weight:700;padding:5px 15px;border-radius:100px;white-space:nowrap}
+.pl .nm{font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.15em;color:var(--mut);margin-bottom:14px}
+.pl .price{font-family:'JetBrains Mono',monospace;font-size:38px;font-weight:700;line-height:1}
+.pl.best .price{color:var(--gold)}
+.pl .per{font-size:12px;color:var(--mut2);margin:7px 0 20px}
+.pl ul{list-style:none;text-align:right;margin-bottom:22px}
+.pl li{font-size:13px;color:var(--mut);padding:6px 0;display:flex;gap:9px;align-items:center}
+.pl li i{color:var(--cyan);font-size:11px}
+
+/* ===== ORDER FORM ===== */
+.form{max-width:720px;margin:0 auto}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.form input,.form select,.form textarea{width:100%;background:rgba(0,0,0,.34);border:1px solid var(--line2);
+  border-radius:var(--r3);padding:13px 15px;color:var(--txt);font-size:14px;outline:none;transition:.2s}
+.form input:focus,.form select:focus,.form textarea:focus{border-color:var(--gold)}
+.form textarea{resize:vertical;min-height:80px;font-family:inherit}
+.form-note{text-align:center;font-size:12px;color:var(--mut2);margin-top:16px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+
+/* ===== FOOTER ===== */
+footer{border-top:1px solid var(--line);margin-top:40px;padding:52px 0 34px;position:relative;z-index:2}
+.fgrid{display:grid;grid-template-columns:1.6fr 1fr 1fr 1fr;gap:34px;margin-bottom:36px}
+.fcol h5{font-size:13px;font-weight:700;margin-bottom:14px;color:var(--txt)}
+.fcol a,.fcol p{display:block;font-size:13px;color:var(--mut);padding:5px 0;transition:.2s}
+.fcol a:hover{color:var(--gold)}
+.fbrand .n{font-family:'Inter',sans-serif;font-weight:800;font-size:18px;direction:ltr;margin-bottom:9px}
+.fbrand .n b{color:var(--gold)}
+.social{display:flex;gap:10px;margin-top:14px}
+.social a{width:38px;height:38px;border-radius:11px;border:1px solid var(--line2);display:grid;place-items:center;
+  color:var(--mut);font-size:15px;transition:.2s;padding:0}
+.social a:hover{border-color:var(--gold);color:var(--gold)}
+.fbot{border-top:1px solid var(--line);padding-top:22px;text-align:center;font-size:12px;color:var(--mut2)}
+
+/* ===== TOAST ===== */
+#toast{position:fixed;bottom:22px;left:22px;z-index:200;background:var(--card2);border:1px solid var(--line2);
+  border-right:3px solid var(--cyan);border-radius:var(--r2);padding:14px 20px;font-size:13.5px;
+  box-shadow:0 20px 60px rgba(0,0,0,.5);opacity:0;transform:translateY(14px);pointer-events:none;transition:.3s cubic-bezier(.22,1,.36,1);max-width:320px}
+#toast.on{opacity:1;transform:none}
+
+/* ===== RESPONSIVE ===== */
+@media(max-width:900px){
+  .grid2{grid-template-columns:1fr}
+  .rates{grid-template-columns:repeat(2,1fr)}
+  .steps{grid-template-columns:repeat(2,1fr)}
+  .plans{grid-template-columns:1fr;max-width:420px;margin:0 auto}
+  .pl.best{transform:none}.pl.best:hover{transform:translateY(-5px)}
+  .fgrid{grid-template-columns:1fr 1fr;gap:26px}
+}
+@media(max-width:600px){
+  .sec{padding:54px 0}
+  .rates{grid-template-columns:1fr}
+  .steps{grid-template-columns:1fr}
+  .eng{grid-template-columns:1fr}
+  .row2{grid-template-columns:1fr}
+  .fgrid{grid-template-columns:1fr}
+  .hero-cta{flex-direction:column}
+  .hero-cta .btn{width:100%}
+  .btn{width:100%}
+  .offer-in{gap:11px}
+  #tvHost{height:300px}
+  #toast{left:14px;right:14px;bottom:14px;max-width:none}
+}
+</style>
 </head>
 <body>
-<canvas id="bgfx"></canvas>
-<div class="bg-glow"></div>
-<div class="scanline"></div>
 
-<!-- LIVE TICKER -->
-<div class="tickerbar" aria-label="أسعار العملات الحية">
-  <div class="tlabel"><span class="d"></span>ARKAN LIVE</div>
-  <div class="ttrack" id="ttrack"><div class="tki"><span class="s">LOADING</span><span class="p">···</span></div></div>
-</div>
+<div id="bgGrid"></div><div id="glow1"></div><div id="glow2"></div>
+<canvas id="particles"></canvas>
 
-<!-- COUNTDOWN -->
-<div class="cdbar">
-  <span class="lbl">عرض تأسيسي محدود — خصم حتى <b>40%</b> على خطة المؤسسين</span>
-  <span class="cd" id="cd"></span>
-</div>
+<!-- 1. TICKER -->
+<div class="ticker"><div class="ticker-in" id="tickerIn"></div></div>
 
-<!-- NAV -->
-<nav id="nav"><div class="wrap nav-in">
-  <a href="./" class="logo" style="display:flex;align-items:center;gap:12px;text-decoration:none">
-    <svg width="38" height="38" viewBox="0 0 512 512" style="border-radius:10px;box-shadow:0 6px 20px rgba(124,92,255,.45);flex-shrink:0" aria-label="ARKAN"><defs><radialGradient id="albg" cx="0.5" cy="0.42" r="0.75"><stop offset="0" stop-color="#141A45"/><stop offset="1" stop-color="#080B22"/></radialGradient><linearGradient id="almk" x1="0" y1="0.2" x2="1" y2="0.8"><stop offset="0" stop-color="#C24DF5"/><stop offset="0.42" stop-color="#7C5CFF"/><stop offset="0.72" stop-color="#2F7BF6"/><stop offset="1" stop-color="#3FB6F9"/></linearGradient><linearGradient id="alsf" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#9F5CF0"/><stop offset="1" stop-color="#3E8DF7"/></linearGradient></defs><rect width="512" height="512" rx="96" fill="url(#albg)"/><path fill="url(#almk)" d="M256 84 L394 428 L338 428 L256 222 L174 428 L118 428 Z"/><path d="M256 84 L124 424 L118 428 L252 88 Z" fill="#EDE0FF" opacity="0.55"/><path d="M256 84 L390 424 L394 428 L260 88 Z" fill="#BFE3FF" opacity="0.45"/><path fill="url(#almk)" d="M78 384 Q 256 258 434 350 Q 300 306 174 352 Q 118 372 78 384 Z"/><path fill="url(#alsf)" opacity="0.85" d="M112 414 Q 244 344 342 366 Q 240 372 148 406 Q 126 412 112 414 Z"/></svg>
-    <span><span class="logo-txt en" style="display:block"><b>ARKAN</b> SETTLEMENTS</span><span class="logo-sub en" style="display:block">EXCHANGE · AI TRADING</span></span>
-  </a>
-  <div class="nav-links" id="navLinks">
-    <a href="#exchange" style="color:var(--gold)">الصرافة</a>
-    <a href="#indicators">المؤشرات</a><a href="#pricing">الاشتراكات</a><a href="#how">كيف يعمل</a><a href="#contact">تواصل</a>
-    <a href="#pricing" class="nav-cta">ابدأ الآن</a>
+<!-- 2. OFFER BAR -->
+<div class="offer"><div class="offer-in">
+  <div class="offer-txt">عرض تأسيسي محدود — خصم حتى <b>40%</b> على خطة المؤسسين</div>
+  <div class="cd">
+    <div class="cdb"><b id="cdD">00</b><span>يوم</span></div>
+    <div class="cdb"><b id="cdH">00</b><span>ساعة</span></div>
+    <div class="cdb"><b id="cdM">00</b><span>دقيقة</span></div>
+    <div class="cdb"><b id="cdS">00</b><span>ثانية</span></div>
   </div>
-  <div class="burger" id="burger"><span></span><span></span><span></span></div>
-</div></nav>
+</div></div>
 
-<!-- HERO -->
-<section class="hero"><div class="wrap hero-grid">
-  <div>
-    <span class="eyebrow"><span class="dot"></span><span class="en">MRU · AOA · USD · EUR · CNY — EXCHANGE & SETTLEMENT</span></span>
-    <h1>حوّل أموالك إلى <span class="g">أي مكان في العالم</span><br>بثقة المؤسسات.</h1>
-    <p class="lead">صرف العملات وتحويل الأموال بين موريتانيا وأنغولا والصين، وتسديد فواتير الموردين الدوليين — بمرجع رسمي وتنفيذ خلال دقائق.</p>
-    <div class="proof"><span class="av"><i></i><i></i><i></i></span><span>يثق بها <b>مئات العملاء والشركات</b> في ثلاث قارات</span></div>
-    <div class="hero-cta">
-      <a href="rates.html" class="btn btn-usdt" style="font-size:15.5px">أسعار اليوم
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
-      <a href="request.html" class="btn btn-tg" style="font-size:15.5px;font-weight:800;color:#fff">
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18M8 15h4"/></svg>تسديد فاتورة مورد</a>
+<!-- 3. HEADER -->
+<header>
+  <div class="hd">
+    <button class="burger" id="burger" onclick="toggleMenu()" aria-label="القائمة"><i></i><i></i><i></i></button>
+    <div class="brand">
+      <div class="n en"><b>ARKAN</b> SETTLEMENTS</div>
+      <div class="s">EXCHANGE · AI TRADING</div>
     </div>
-    <div class="hero-stats">
-      <div class="s"><b class="mono">11<span class="u">+</span></b><span>عملة مدعومة</span></div>
-      <div class="s"><b class="mono">TRC20</b><span>دفع آمن فوري</span></div>
-      <div class="s"><b class="mono">24/7</b><span>تنبيهات حية</span></div>
-    </div>
+    <div class="mark en">A</div>
   </div>
+  <nav class="menu" id="menu">
+    <a href="#rates" onclick="toggleMenu()">أسعار اليوم</a>
+    <a href="#calc" onclick="toggleMenu()">حاسبة التحويل</a>
+    <a href="#engines" onclick="toggleMenu()">المحركات التحليلية</a>
+    <a href="#pricing" onclick="toggleMenu()">خطط الوصول</a>
+    <a href="#order" onclick="toggleMenu()">طلب تحويل</a>
+  </nav>
+</header>
 
-  <!-- strategy result card -->
-  <div class="scard reveal">
-    <div class="scard-head">
-      <div class="agent"><span class="ai en">A</span><b class="en">ARKAN AI · Engine</b></div>
-      <span class="live"><span class="d"></span><span class="en">LIVE</span></span>
-    </div>
-    <div class="symbol"><span class="badge en">PERP</span><span class="en">BTC / USDT · Order Flow Strategy</span></div>
-    <div class="chartbox"><canvas id="miniChart"></canvas></div>
-    <div class="metrics">
-      <div class="m"><span>NET PROFIT</span><b class="up mono" id="mNp">+$248k</b></div>
-      <div class="m"><span>WIN RATE</span><b class="gd mono" id="mWr">71.4%</b></div>
-      <div class="m"><span>TRADES</span><b class="bl mono">1,184</b></div>
-      <div class="m"><span>MAX DD</span><b class="dn mono">8.2%</b></div>
-    </div>
-  </div>
-</div></section>
-
-<!-- INDICATORS -->
-
-<!-- EXCHANGE DIVISION -->
-<section class="sec" id="exchange"><div class="wrap">
-  <div class="sec-head reveal">
-    <div class="sec-eyebrow en">// EXCHANGE DESK</div>
-    <h2 class="sec-title">أسعار اليوم</h2>
-    <div class="sec-brandline">أركان للصرافة والتسوية الدولية</div>
-    <p style="color:var(--muted);max-width:560px;margin:14px auto 0;font-size:15px">أسعار يومية محدّثة بين الأوقية والكوانزا واليوان والدولار واليورو — جملة وتجزئة، وطلب تحويل مباشر عبر واتساب.</p>
-  </div>
-
-  <div class="ind-grid" id="fxGrid">
-    <div class="ind reveal in">
-      <div class="fxlbl">AOA / MRU</div>
-      <div class="fxnum" id="fxAOA">0.360</div>
-      <div class="fxsub">كوانزا أنغولية</div>
-    </div>
-    <div class="ind reveal">
-      <div class="fxlbl">USDT / MRU</div>
-      <div class="fxnum" id="fxUSDT">420</div>
-      <div class="fxsub">تيثر</div>
-    </div>
-    <div class="ind reveal">
-      <div class="fxlbl">EUR / MRU</div>
-      <div class="fxnum" id="fxEUR">485</div>
-      <div class="fxsub">يورو</div>
-    </div>
-  </div>
-
-  <div class="ind-grid" style="grid-template-columns:repeat(3,1fr);margin-top:18px">
-    <div class="ind reveal" style="padding:24px"><div class="mono" style="color:var(--gold);font-size:13px;margin-bottom:10px">01</div><h3 style="font-size:16px">جدول بثلاث شرائح</h3><p style="min-height:auto;font-size:13px">جدول اليوم كاملًا بثلاث شرائح: جملة، متوسط، تجزئة — واحسب تحويلك فورًا.</p></div>
-    <div class="ind reveal" style="padding:24px"><div class="mono" style="color:var(--gold);font-size:13px;margin-bottom:10px">02</div><h3 style="font-size:16px">أرسل طلبك واتساب</h3><p style="min-height:auto;font-size:13px">رسالة جاهزة بالمبلغ والسعر ومرجع الطلب — تأكيد ودفع خلال دقائق.</p></div>
-    <div class="ind reveal" style="padding:24px"><div class="mono" style="color:var(--gold);font-size:13px;margin-bottom:10px">03</div><h3 style="font-size:16px">تسوية الشركات</h3><p style="min-height:auto;font-size:13px">دفع فواتير الموردين الدوليين (الصين/أوروبا) بمرجع رسمي وفاتورة معتمدة.</p></div>
-  </div>
-
-  <div style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-top:34px">
-    <a href="rates.html" class="reveal" style="display:inline-flex;align-items:center;gap:9px;padding:15px 30px;border-radius:12px;background:linear-gradient(135deg,var(--gold-l),var(--gold));color:#141001;font-weight:700;font-size:15px">احسب تحويلك الآن ←</a>
-    <a href="request.html" class="reveal" style="display:inline-flex;align-items:center;gap:9px;padding:15px 30px;border-radius:12px;border:1px solid var(--line);color:var(--txt);font-weight:600;font-size:15px">ارفع فاتورتك — قراءة تلقائية ←</a>
-  </div>
-</div></section>
-
-<section class="sec" id="indicators"><div class="wrap">
-  <div class="sec-head reveal">
-    <div class="sec-eyebrow en">// THE ENGINES</div>
-    <h2 class="sec-title">محركات تحليلية بمعايير المكاتب المؤسساتية</h2>
-    <p class="sec-desc" id="pineDesc">كل مؤشر مبني على Pine Script v6، مُحسّن بصريًا ليُقرأ في ثانية — ويُفعّل على حسابك فور الدفع.</p>
-  </div>
-  <div class="ind-grid" id="indGrid"></div>
-</div></section>
-
-<!-- PRICING -->
-<section class="sec" id="pricing"><div class="wrap">
-  <div class="sec-head reveal">
-    <div class="sec-eyebrow en">// ACCESS TIERS</div>
-    <h2 class="sec-title">خطط الوصول</h2>
-    <p class="sec-desc" id="usdtDesc">دفع مباشر بـ USDT (TRC20) أو تواصل عبر Telegram — بلا وسطاء، بلا بطاقات، تفعيل فوري.</p>
-  </div>
-  <div class="price-grid" id="priceGrid"></div>
+<!-- 4. HERO -->
+<section class="hero layer"><div class="wrap">
+  <div class="pill"><span class="dotp"></span><span class="en">MRU · AOA · USD · EUR · CNY — EXCHANGE &amp; SETTLEMENT</span></div>
+  <h1><span class="g">حوّل</span> أموالك<br><span class="c">إلى أي مكان</span> في العالم<br><span class="g">بثقة المؤسسات.</span></h1>
+  <p class="lead">صرف العملات وتحويل الأموال بين موريتانيا وأنغولا والصين، وتسديد فواتير الموردين الدوليين — بمرجع رسمي وتنفيذ خلال دقائق.</p>
   <div class="trust">
-    <div class="t"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>دفع آمن عبر TRC20</div>
-    <div class="t"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M13 2L3 14h7l-1 8 10-12h-7z"/></svg>تفعيل فوري بعد التأكيد</div>
-    <div class="t"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>دعم Telegram مباشر</div>
+    <span class="avs"><i>م</i><i>أ</i><i>ف</i></span>
+    <span>يثق بها <b>مئات العملاء والشركات</b> في ثلاث قارات</span>
+  </div>
+  <div class="hero-cta">
+    <a href="#rates" class="btn btn-gold">أسعار اليوم <i class="fa-solid fa-arrow-left"></i></a>
+    <a href="#order" class="btn btn-cyan"><i class="fa-regular fa-credit-card"></i> تسديد فاتورة مورد</a>
+  </div>
+  <div class="stats">
+    <div class="stat"><b class="en">+11</b><span>عملة</span></div>
+    <div class="stat"><b class="en">TRC20</b><span>دفع آمن</span></div>
+    <div class="stat"><b class="en">24/7</b><span>تسوية</span></div>
   </div>
 </div></section>
 
-<!-- HOW -->
-<section class="sec" id="how"><div class="wrap">
-  <div class="sec-head reveal">
-    <div class="sec-eyebrow en">// THE FLOW</div>
-    <h2 class="sec-title">من الدفع إلى التفعيل في دقائق</h2>
+<!-- 5. RATES -->
+<section class="sec layer" id="rates"><div class="wrap">
+  <div class="sec-h">
+    <div class="k en">// EXCHANGE DESK</div>
+    <h2>أسعار اليوم</h2>
+    <p>أسعار محدّثة يوميًا مقابل الأوقية الموريتانية — جملة وتجزئة، وتنفيذ مباشر عبر واتساب.</p>
   </div>
-  <div class="ind-grid" style="grid-template-columns:repeat(4,1fr)">
-    <div class="ind reveal" style="padding:24px"><div class="mono" style="color:var(--gold);font-size:13px;margin-bottom:10px">01</div><h3 style="font-size:16px">اختر خطتك</h3><p style="min-height:auto;font-size:13px">حدّد الخطة وادفع بـ USDT TRC20 بمبلغ فريد لكل طلب.</p></div>
-    <div class="ind reveal" style="padding:24px"><div class="mono" style="color:var(--gold);font-size:13px;margin-bottom:10px">02</div><h3 style="font-size:16px">تأكيد آلي</h3><p style="min-height:auto;font-size:13px">المنظومة تطابق دفعتك على الشبكة خلال ثوانٍ.</p></div>
-    <div class="ind reveal" style="padding:24px"><div class="mono" style="color:var(--gold);font-size:13px;margin-bottom:10px">03</div><h3 style="font-size:16px">وصول فوري</h3><p style="min-height:auto;font-size:13px">رابط قناة الأعضاء + تفعيل المؤشر على TradingView.</p></div>
-    <div class="ind reveal" style="padding:24px"><div class="mono" style="color:var(--gold);font-size:13px;margin-bottom:10px">04</div><h3 style="font-size:16px">تنبيهات حية</h3><p style="min-height:auto;font-size:13px">إشارات وتحديثات عبر Telegram على مدار الساعة.</p></div>
+  <div class="rates">
+    <div class="rc"><div class="pair en">AOA / MRU</div><div class="val en" id="rAOA">0.360</div><div class="nm">كوانزا أنغولية</div><div class="live"><span class="dotp"></span>حي</div></div>
+    <div class="rc"><div class="pair en">USDT / MRU</div><div class="val en" id="rUSDT">420</div><div class="nm">تيثر</div><div class="live"><span class="dotp"></span>حي</div></div>
+    <div class="rc"><div class="pair en">EUR / MRU</div><div class="val en" id="rEUR">485</div><div class="nm">يورو</div><div class="live"><span class="dotp"></span>حي</div></div>
+  </div>
+  <div class="steps">
+    <div class="step"><div class="n en">01</div><h4>جدول بثلاث شرائح</h4></div>
+    <div class="step"><div class="n en">02</div><h4>أرسل طلبك واتساب</h4></div>
+    <div class="step"><div class="n en">03</div><h4>تسوية الشركات</h4></div>
+    <div class="step"><div class="n en">04</div><h4>تنبيهات حية</h4></div>
   </div>
 </div></section>
 
-<!-- CONTACT -->
-<section class="sec band" id="contact"><div class="wrap"><div class="band-in reveal">
-  <h2>جاهز لتقرأ السوق كالمؤسسات؟</h2>
-  <p>ابدأ اليوم — ادفع بـ USDT أو تواصل معنا مباشرة عبر Telegram.</p>
-  <div class="band-cta">
-    <a href="#pricing" class="btn btn-usdt">الخطط والدفع بـ USDT</a>
-    <a href="https://t.me/ArkanAI_Access_Bot" target="_blank" rel="noopener" class="btn btn-tg">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M21.95 4.3l-3.32 15.67c-.25 1.1-.9 1.38-1.83.86l-5.05-3.72-2.44 2.35c-.27.27-.5.5-1 .5l.36-5.13L17.4 6.6c.4-.36-.09-.56-.62-.2L6.9 12.7l-4.96-1.55c-1.08-.34-1.1-1.08.23-1.6l19.4-7.48c.9-.33 1.68.2 1.38 1.57z"/></svg>Telegram</a>
+<!-- 6. CALCULATOR + CHART -->
+<section class="sec layer" id="calc"><div class="wrap">
+  <div class="sec-h">
+    <div class="k en">// CONVERTER</div>
+    <h2>حاسبة التحويل</h2>
   </div>
-</div></div></section>
+  <div class="grid2">
+    <div class="card">
+      <div class="fld">
+        <label>أرسل</label>
+        <div class="io">
+          <input type="number" id="fromAmt" value="1000" inputmode="decimal" oninput="calculate()">
+          <select id="fromCcy" onchange="calculate()"></select>
+        </div>
+      </div>
+      <div class="swapw"><button class="swap" onclick="swapCurrencies()" aria-label="تبديل"><i class="fa-solid fa-arrow-right-arrow-left"></i></button></div>
+      <div class="fld">
+        <label>يستلم</label>
+        <div class="io">
+          <input type="text" id="toAmt" readonly value="0">
+          <select id="toCcy" onchange="calculate()"></select>
+        </div>
+      </div>
+      <div class="fld">
+        <label>الشريحة</label>
+        <select class="full" id="tier" onchange="calculate()">
+          <option value="0">جملة (0%)</option>
+          <option value="1.5">متوسط (1.5%)</option>
+          <option value="3" selected>تجزئة (3%)</option>
+          <option value="5">مؤسسي (5%)</option>
+        </select>
+      </div>
+      <div class="res">
+        <div class="lbl">المبلغ المستلم</div>
+        <div class="amt en" id="resAmt">0</div>
+        <div class="sub en" id="resSub">—</div>
+      </div>
+      <div style="display:flex;gap:11px;flex-wrap:wrap">
+        <a href="#order" class="btn btn-gold" style="flex:1">طلب تحويل</a>
+        <button class="btn btn-wa" style="flex:1" onclick="sendWhatsApp()"><i class="fa-brands fa-whatsapp"></i> واتساب</button>
+      </div>
+    </div>
 
-<!-- FOOTER -->
+    <div class="chartbox">
+      <div class="chart-hd">
+        <h3>الرسم البياني</h3>
+        <select class="full" style="width:auto" id="pairSel" onchange="changeChart()">
+          <option value="BINANCE:BTCUSDT">BTC / USDT</option>
+          <option value="BINANCE:ETHUSDT">ETH / USDT</option>
+          <option value="BINANCE:SOLUSDT">SOL / USDT</option>
+          <option value="FX:EURUSD">EUR / USD</option>
+        </select>
+      </div>
+      <div id="tvHost"></div>
+    </div>
+  </div>
+</div></section>
+
+<!-- 7. ENGINES -->
+<section class="sec layer" id="engines"><div class="wrap">
+  <div class="sec-h">
+    <div class="k en">// THE ENGINES</div>
+    <h2>المحركات التحليلية</h2>
+    <p>أنظمة Pine Script v6 مبنية على تدفق الأوامر وذكاء السيولة — تُفعّل على TradingView خلال دقائق.</p>
+  </div>
+  <div class="eng">
+    <div class="ec">
+      <div class="k en">FLAGSHIP · ORDER FLOW</div>
+      <h3>محرك تدفق الأوامر</h3>
+      <p>يكشف امتصاص السيولة وانعكاسات المؤسسات قبل اكتمالها، مع اكتشاف الاستنزاف.</p>
+      <ul>
+        <li><i class="fa-solid fa-check"></i>الدلتا التراكمية CVD</li>
+        <li><i class="fa-solid fa-check"></i>اكتشاف الاستنزاف</li>
+        <li><i class="fa-solid fa-check"></i>مناطق الامتصاص المؤسساتية</li>
+      </ul>
+      <div class="pr"><b>$39</b><span>/ شهر</span></div>
+    </div>
+    <div class="ec">
+      <div class="k en">FOOTPRINT · HEATMAP</div>
+      <h3>خريطة الفوتبرنت</h3>
+      <p>حجم التداول عند كل سعر، جدران السيولة، وطلبات الإيقاف المخفية في خريطة حرارية.</p>
+      <ul>
+        <li><i class="fa-solid fa-check"></i>خريطة حرارية للسيولة</li>
+        <li><i class="fa-solid fa-check"></i>كشف جدران الأوامر</li>
+        <li><i class="fa-solid fa-check"></i>نقطة السيطرة الحجمية POC</li>
+      </ul>
+      <div class="pr"><b>$35</b><span>/ شهر</span></div>
+    </div>
+    <div class="ec">
+      <div class="k en">SMART MONEY · SMC</div>
+      <h3>ذكاء السيولة</h3>
+      <p>يرصد Order Blocks وفجوات القيمة العادلة FVG ومناطق السيولة الخام آليًا.</p>
+      <ul>
+        <li><i class="fa-solid fa-check"></i>Order Blocks آلية</li>
+        <li><i class="fa-solid fa-check"></i>فجوات القيمة العادلة FVG</li>
+        <li><i class="fa-solid fa-check"></i>مناطق صيد السيولة</li>
+      </ul>
+      <div class="pr"><b>$29</b><span>/ شهر</span></div>
+    </div>
+    <div class="ec">
+      <div class="k en">MOMENTUM · VWAP</div>
+      <h3>مصفوفة VWAP</h3>
+      <p>انحرافات VWAP متعددة الجلسات مع نطاقات الانحراف المعياري لمناطق التمدد والارتداد.</p>
+      <ul>
+        <li><i class="fa-solid fa-check"></i>VWAP متعدد الجلسات</li>
+        <li><i class="fa-solid fa-check"></i>انحرافات معيارية ملوّنة</li>
+        <li><i class="fa-solid fa-check"></i>تنبيهات الارتداد</li>
+      </ul>
+      <div class="pr"><b>$19</b><span>/ شهر</span></div>
+    </div>
+  </div>
+</div></section>
+
+<!-- 8. PRICING -->
+<section class="sec layer" id="pricing"><div class="wrap">
+  <div class="sec-h">
+    <div class="k en">// ACCESS PLANS</div>
+    <h2>خطط الوصول</h2>
+    <p>اختر باقة الوصول — التفعيل خلال دقائق بعد الدفع.</p>
+  </div>
+  <div class="plans">
+    <div class="pl">
+      <div class="nm en">PRO</div>
+      <div class="price en">$39</div>
+      <div class="per">يتجدد شهريًا · إلغاء بأي وقت</div>
+      <ul>
+        <li><i class="fa-solid fa-check"></i>كل المؤشرات في وصول واحد</li>
+        <li><i class="fa-solid fa-check"></i>تنبيهات لحظية غير محدودة</li>
+        <li><i class="fa-solid fa-check"></i>قناة الأعضاء على Telegram</li>
+        <li><i class="fa-solid fa-check"></i>تحديثات دائمة بلا رسوم</li>
+      </ul>
+      <button class="btn btn-line" style="width:100%" onclick="pick('PRO','$39 / شهر')">اشترك</button>
+    </div>
+    <div class="pl best">
+      <div class="badge">الأكثر طلبًا</div>
+      <div class="nm en">BETA FOUNDER</div>
+      <div class="price en">$299</div>
+      <div class="per">سنويًا · شهران مجانًا + سعر مثبّت</div>
+      <ul>
+        <li><i class="fa-solid fa-check"></i>كل ما في الخطة الشهرية</li>
+        <li><i class="fa-solid fa-check"></i>سعر تأسيسي مثبّت مدى الحياة</li>
+        <li><i class="fa-solid fa-check"></i>شارة FOUNDER داخل المجتمع</li>
+        <li><i class="fa-solid fa-check"></i>دعوة لمجموعة Inner Circle</li>
+        <li><i class="fa-solid fa-check"></i>صوتك في خارطة التطوير</li>
+      </ul>
+      <button class="btn btn-gold" style="width:100%" onclick="pick('BETA FOUNDER','$299 / سنة')">اشترك الآن</button>
+    </div>
+    <div class="pl">
+      <div class="nm en">LIFETIME</div>
+      <div class="price en">$499</div>
+      <div class="per">دفعة واحدة · وصول دائم بلا تجديد</div>
+      <ul>
+        <li><i class="fa-solid fa-check"></i>كل ما في خطة Beta</li>
+        <li><i class="fa-solid fa-check"></i>كل مؤشرات ARKAN القادمة مجانًا</li>
+        <li><i class="fa-solid fa-check"></i>دعم VIP ذو أولوية</li>
+        <li><i class="fa-solid fa-check"></i>جلسة إعداد خاصة 1:1</li>
+      </ul>
+      <button class="btn btn-line" style="width:100%" onclick="pick('LIFETIME','$499 مرة واحدة')">شراء</button>
+    </div>
+  </div>
+</div></section>
+
+<!-- 9. ORDER FORM -->
+<section class="sec layer" id="order"><div class="wrap">
+  <div class="sec-h">
+    <div class="k en">// NEW REQUEST</div>
+    <h2>طلب تحويل</h2>
+    <p>أرسل تفاصيل تحويلك أو فاتورة موردك — نرد بعرض السعر خلال دقائق.</p>
+  </div>
+  <div class="card form">
+    <div class="fld"><label>الاسم الكامل</label><input id="oName" placeholder="محمد الأمين"></div>
+    <div class="fld"><label>رقم الهاتف / واتساب</label><input id="oPhone" inputmode="tel" placeholder="+222 xx xx xx xx"></div>
+    <div class="row2">
+      <div class="fld"><label>من عملة</label><select id="oFrom"></select></div>
+      <div class="fld"><label>إلى عملة</label><select id="oTo"></select></div>
+    </div>
+    <div class="fld"><label>المبلغ</label><input id="oAmt" type="number" inputmode="decimal" placeholder="1000"></div>
+    <div class="fld"><label>طريقة الاستلام</label>
+      <select class="full" id="oMethod">
+        <option>تحويل بنكي</option>
+        <option>Bankily / Masrvi</option>
+        <option>نقدًا — نواكشوط</option>
+        <option>نقدًا — لواندا</option>
+        <option>USDT (TRC20)</option>
+        <option>تحويل للمورد مباشرة</option>
+      </select>
+    </div>
+    <div class="fld"><label>ملاحظات (اختياري)</label><textarea id="oNote" placeholder="رقم الفاتورة، اسم المورد، أي تفاصيل إضافية…"></textarea></div>
+    <div style="display:flex;gap:11px;flex-wrap:wrap">
+      <button class="btn btn-gold" style="flex:1" onclick="submitOrder()">إرسال الطلب</button>
+      <button class="btn btn-wa" style="flex:1" onclick="sendWhatsApp()"><i class="fa-brands fa-whatsapp"></i> واتساب مباشر</button>
+    </div>
+    <div class="form-note"><span>دفع آمن عبر TRC20</span><span>·</span><span>تفعيل فوري</span><span>·</span><span>دعم Telegram</span></div>
+  </div>
+</div></section>
+
+<!-- 10. FOOTER -->
 <footer><div class="wrap">
-  <div class="disclaimer">
-    <p><b id="discLbl">إخلاء مسؤولية:</b> <span id="discTxt">جميع مؤشرات ARKAN AI Trading Systems أدوات تحليلية وتعليمية فقط، ولا تُعد نصيحة مالية أو توصية بالشراء أو البيع. التداول ينطوي على مخاطر عالية قد تؤدي لخسارة رأس المال. الأرقام المعروضة لأغراض توضيحية. الأداء السابق لا يضمن النتائج المستقبلية.</span></p>
-  </div>
-  <div class="foot-grid">
-    <div class="foot-about">
-      <a href="#" class="logo"><span class="logo-mark"><svg viewBox="0 0 40 40" fill="none"><path d="M20 3 L34 34 L26 34 L20 18 L14 34 L6 34 Z" fill="url(#lg2)"/><path d="M20 19 L24 28 L16 28 Z" fill="#04060C"/><defs><linearGradient id="lg2" x1="6" y1="3" x2="34" y2="34"><stop stop-color="#F5DE8B"/><stop offset="1" stop-color="#E8C24A"/></linearGradient></defs></svg></span><span><span class="logo-txt en"><b>ARKAN</b></span><span class="logo-sub en">SETTLEMENTS</span></span></a>
-      <p>هندسة تدفق الأوامر المؤسساتية في متناول المتداول الجاد.</p>
+  <div class="fgrid">
+    <div class="fcol fbrand">
+      <div class="n en"><b>ARKAN</b> SETTLEMENTS</div>
+      <p style="color:var(--mut);font-size:13px">منصة صرافة وتسوية دولية بين موريتانيا وأنغولا والصين، وأنظمة تداول مؤسسية على TradingView.</p>
+      <div class="social">
+        <a href="https://t.me/ArkanAI_Access_Bot" target="_blank" rel="noopener" aria-label="Telegram"><i class="fa-brands fa-telegram"></i></a>
+        <a href="https://wa.me/22236295050" target="_blank" rel="noopener" aria-label="WhatsApp"><i class="fa-brands fa-whatsapp"></i></a>
+        <a href="https://twitter.com" target="_blank" rel="noopener" aria-label="Twitter"><i class="fa-brands fa-x-twitter"></i></a>
+        <a href="https://wa.me/22236295050" target="_blank" rel="noopener" aria-label="Email"><i class="fa-solid fa-envelope"></i></a>
+      </div>
     </div>
-    <div class="foot-links">
-      <div class="foot-col"><h6 class="en">PRODUCT</h6><a href="#indicators">المؤشرات</a><a href="#pricing">الاشتراكات</a><a href="#how">كيف يعمل</a></div>
-      <div class="foot-col"><h6 class="en">CONTACT</h6><a href="https://t.me/ArkanAI_Access_Bot" target="_blank" rel="noopener">Telegram</a><a href="https://wa.me/22236295050" target="_blank" rel="noopener">WhatsApp</a><a href="mailto:Mohamedarbi0208@gmail.com">Email</a></div>
+    <div class="fcol"><h5>المنتج</h5>
+      <a href="#rates">أسعار اليوم</a><a href="#calc">حاسبة التحويل</a><a href="#engines">المحركات</a><a href="#pricing">الخطط</a>
+    </div>
+    <div class="fcol"><h5>الشركة</h5>
+      <a href="#order">طلب تحويل</a><a href="rates.html">بوابة الأسعار</a><a href="request.html">تحويلات الشركات</a><a href="trading.html">أنظمة التداول</a>
+    </div>
+    <div class="fcol"><h5>المساعدة</h5>
+      <a href="https://wa.me/22236295050" target="_blank" rel="noopener">واتساب الدعم</a>
+      <a href="https://t.me/ArkanAI_Access_Bot" target="_blank" rel="noopener">Telegram</a>
+      <a href="#order">استفسار</a>
     </div>
   </div>
-  <div class="foot-bottom"><p class="en">© 2026 ARKAN AI Trading Systems. All rights reserved.</p><p>صُمّم لمتداولي تدفق الأوامر الجادّين.</p></div>
+  <div class="fbot">© 2026 ARKAN SETTLEMENTS. مرخصة ومنظمة.</div>
 </div></footer>
 
-<!-- PACKAGES MODAL -->
-<div class="overlay" id="pkgOverlay" role="dialog" aria-modal="true">
-  <div class="modal">
-    <button class="mclose" onclick="closeModal('pkgOverlay')" aria-label="إغلاق">✕</button>
-    <div class="mtitle en" id="pkgTitle">—</div>
-    <div class="msub" id="pkgSub">اختر باقة الوصول المناسبة لك</div>
-    <div id="pkgList"></div>
-  </div>
-</div>
-
-<!-- PAYMENT MODAL -->
-<div class="overlay" id="payOverlay" role="dialog" aria-modal="true">
-  <div class="modal">
-    <button class="mclose" onclick="closeModal('payOverlay')" aria-label="إغلاق">✕</button>
-    <div class="mtitle en">USDT · TRC20</div>
-    <div class="msub">حوّل <b style="color:var(--gold-l)">المبلغ بالضبط</b> (بما فيه الكسور) — هكذا نتعرّف على دفعتك آليًا.</div>
-    <div class="paysum">
-      <div class="what"><b id="payProduct">—</b><span class="en" id="payPlan">—</span></div>
-      <div class="payamt" id="payAmount">—</div>
-    </div>
-    <div class="flabel">المبلغ المطلوب</div>
-    <div class="cprow"><code id="amountCode">—</code><button class="cpbtn" onclick="copyText('amountCode','تم نسخ المبلغ')">نسخ المبلغ</button></div>
-    <div class="qrbox"><img id="qrImg" src="" alt="QR محفظة USDT"></div>
-    <div class="flabel">عنوان المحفظة (شبكة TRON TRC20)</div>
-    <div class="cprow"><code id="walletCode">—</code><button class="cpbtn" onclick="copyText('walletCode','تم نسخ العنوان')">نسخ العنوان</button></div>
-    <div class="pwarn">⚠️ شبكة <b>TRC20</b> فقط. الإرسال على شبكة أخرى = فقدان المبلغ نهائيًا.</div>
-    <div class="waiting"><span class="spinner"></span> بانتظار وصول التحويل…</div>
-    <div class="ordid" id="orderId">ORDER: —</div>
-  </div>
-</div>
-
-<div class="toast" id="toast">تم النسخ</div>
+<div id="toast"></div>
 
 <script>
-/* ===== unique animated background: chart grid + drawing line + particles ===== */
+/* ================== 1. PARTICLES ================== */
 (function(){
-  const c=document.getElementById('bgfx'),x=c.getContext('2d');let W,H,t=0;
-  function size(){W=c.width=innerWidth;H=c.height=innerHeight}
-  size();addEventListener('resize',size);
-  const pts=[];for(let i=0;i<70;i++)pts.push({x:Math.random(),y:Math.random(),s:Math.random()*1.4+.4,v:Math.random()*.0004+.0001});
-  // a self-drawing price path
-  let series=[];for(let i=0;i<160;i++)series.push(.5+Math.sin(i*.18)*.12+(Math.random()-.5)*.05);
+  var cv=document.getElementById('particles'), ctx=cv.getContext('2d'), ps=[], W, H;
+  function size(){W=cv.width=innerWidth;H=cv.height=innerHeight;}
+  size();addEventListener('resize',size,{passive:true});
+  var COLORS=['139,92,246','0,212,170'];
+  for(var i=0;i<80;i++){
+    ps.push({x:Math.random()*W,y:Math.random()*H,size:Math.random()*1.8+.6,
+      speedX:(Math.random()-.5)*.35,speedY:(Math.random()-.5)*.35,
+      opacity:Math.random()*.5+.2,color:COLORS[Math.floor(Math.random()*2)]});
+  }
   function loop(){
-    x.clearRect(0,0,W,H);t+=1;
-    // perspective grid
-    x.strokeStyle='rgba(124,140,255,0.05)';x.lineWidth=1;
-    const off=(t*.3)%48;
-    for(let gx=-off;gx<W;gx+=48){x.beginPath();x.moveTo(gx,0);x.lineTo(gx,H);x.stroke();}
-    for(let gy=-off;gy<H;gy+=48){x.beginPath();x.moveTo(0,gy);x.lineTo(W,gy);x.stroke();}
-    // glowing price line across upper area
-    const baseY=H*.30,amp=H*.10;
-    x.beginPath();
-    for(let i=0;i<series.length;i++){const px=(i/(series.length-1))*W;const py=baseY+(series[i]-.5)*amp*2 + Math.sin((i*.1)+(t*.01))*6;i?x.lineTo(px,py):x.moveTo(px,py);}
-    const grad=x.createLinearGradient(0,0,W,0);grad.addColorStop(0,'rgba(61,224,208,0)');grad.addColorStop(.5,'rgba(61,224,208,0.5)');grad.addColorStop(1,'rgba(232,194,74,0.6)');
-    x.strokeStyle=grad;x.lineWidth=2;x.shadowColor='rgba(61,224,208,.5)';x.shadowBlur=12;x.stroke();x.shadowBlur=0;
-    // moving scan dot on line
-    const idx=Math.floor((t*.4)%series.length);const dx=(idx/(series.length-1))*W;const dy=baseY+(series[idx]-.5)*amp*2;
-    x.beginPath();x.arc(dx,dy,3,0,7);x.fillStyle='#F5DE8B';x.shadowColor='#F5DE8B';x.shadowBlur=14;x.fill();x.shadowBlur=0;
-    // floating data particles
-    pts.forEach(p=>{p.y-=p.v;if(p.y<0)p.y=1;const px=p.x*W,py=p.y*H;x.beginPath();x.arc(px,py,p.s,0,7);x.fillStyle='rgba(124,140,255,0.4)';x.fill();});
+    ctx.clearRect(0,0,W,H);
+    for(var i=0;i<ps.length;i++){
+      var p=ps[i];
+      p.x+=p.speedX;p.y+=p.speedY;
+      if(p.x<0)p.x=W;if(p.x>W)p.x=0;if(p.y<0)p.y=H;if(p.y>H)p.y=0;
+      ctx.beginPath();ctx.arc(p.x,p.y,p.size,0,Math.PI*2);
+      ctx.fillStyle='rgba('+p.color+','+p.opacity+')';ctx.fill();
+      for(var j=i+1;j<ps.length;j++){
+        var q=ps[j],dx=p.x-q.x,dy=p.y-q.y,d=Math.sqrt(dx*dx+dy*dy);
+        if(d<100){
+          ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(q.x,q.y);
+          ctx.strokeStyle='rgba('+p.color+','+(.12*(1-d/100))+')';
+          ctx.lineWidth=.6;ctx.stroke();
+        }
+      }
+    }
     requestAnimationFrame(loop);
   }
   loop();
-  // evolve the series slowly for life
-  setInterval(()=>{series.push(.5+Math.sin(t*.02)*.12+(Math.random()-.5)*.08);series.shift();},180);
 })();
 
-/* ===== mini strategy chart ===== */
+/* ================== 2. COUNTDOWN ================== */
 (function(){
-  const c=document.getElementById('miniChart');if(!c)return;const x=c.getContext('2d');
-  function size(){c.width=c.offsetWidth;c.height=c.offsetHeight}size();addEventListener('resize',size);
-  let d=[];let v=20;for(let i=0;i<60;i++){v+=Math.random()*4-1.4;d.push(v)}
-  function draw(){
-    x.clearRect(0,0,c.width,c.height);const W=c.width,H=c.height,mn=Math.min(...d),mx=Math.max(...d);
-    x.beginPath();
-    d.forEach((val,i)=>{const px=(i/(d.length-1))*W;const py=H-8-((val-mn)/(mx-mn||1))*(H-16);i?x.lineTo(px,py):x.moveTo(px,py);});
-    const g=x.createLinearGradient(0,0,W,0);g.addColorStop(0,'#FF4D5E');g.addColorStop(.4,'#E8C24A');g.addColorStop(1,'#1DD17F');
-    x.strokeStyle=g;x.lineWidth=2;x.shadowColor='rgba(29,209,127,.4)';x.shadowBlur=8;x.stroke();x.shadowBlur=0;
-    // area
-    x.lineTo(W,H);x.lineTo(0,H);x.closePath();const ag=x.createLinearGradient(0,0,0,H);ag.addColorStop(0,'rgba(29,209,127,.18)');ag.addColorStop(1,'rgba(29,209,127,0)');x.fillStyle=ag;x.fill();
+  var end=Date.now()+((24+13)*3600*1000);
+  function pad(n){return n<10?'0'+n:''+n;}
+  function tick(){
+    var d=Math.max(0,end-Date.now());
+    document.getElementById('cdD').textContent=pad(Math.floor(d/86400000));
+    document.getElementById('cdH').textContent=pad(Math.floor(d/3600000)%24);
+    document.getElementById('cdM').textContent=pad(Math.floor(d/60000)%60);
+    document.getElementById('cdS').textContent=pad(Math.floor(d/1000)%60);
   }
-  draw();
-  setInterval(()=>{let n=d[d.length-1]+Math.random()*5-1.8;d.push(n);d.shift();draw();
-    document.getElementById('mNp').textContent='+$'+(238+Math.round(Math.random()*20))+'k';
-    document.getElementById('mWr').textContent=(69+Math.random()*4).toFixed(1)+'%';
-  },1600);
-})();
-
-/* ===== countdown ===== */
-(function(){
-  const el=document.getElementById('cd');let end=Date.now()+(2*864e5+13*36e5+18*6e4);
-  function tick(){let s=Math.max(0,Math.floor((end-Date.now())/1000));const d=Math.floor(s/86400);s%=86400;const h=Math.floor(s/3600);s%=3600;const m=Math.floor(s/60);const ss=s%60;
-    const p=n=>String(n).padStart(2,'0');
-    el.innerHTML=[[d,'يوم'],[h,'ساعة'],[m,'دقيقة'],[ss,'ثانية']].map(([v,l])=>`<span class="u">${p(v)}<span>${l}</span></span>`).join('');}
   tick();setInterval(tick,1000);
 })();
 
-/* ╔════════════════════════════════════════╗
-   ║  CONFIG — عدّل هنا فقط                  ║
-   ╚════════════════════════════════════════╝ */
-const CONFIG={
-  WALLET:"TXxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",      // ← عنوان محفظتك USDT TRC20
-  BACKEND_CREATE_ORDER:"/api/orders",                // ← باك-اند إنشاء الطلب (اختياري)
-  BACKEND_CHECK_ORDER:"/api/orders/status",          // ← باك-اند فحص حالة الدفع (اختياري)
-  TICKER_REFRESH_MS:15000,
-  TICKER_SYMBOLS:["BTCUSDT","ETHUSDT","BNBUSDT","SOLUSDT","XRPUSDT","SUIUSDT","DOGEUSDT","ADAUSDT","AVAXUSDT","LINKUSDT"]
-};
-
-/* ===== indicators = منتجات المتجر، كل مؤشر بباقاته ===== */
-const check='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6L9 17l-5-5"/></svg>';
-const tg='https://t.me/ArkanAI_Access_Bot';
-const indicators=[
-  {id:'orderflow',tag:'FLAGSHIP · ORDER FLOW',name:'ARKAN ORDER FLOW ENGINE PRO',
-   desc:'محرك تدفق الأوامر الرئيسي مع اكتشاف الاستنزاف — يكشف امتصاص السيولة وانعكاسات الزخم قبل حدوثها.',
-   feats:['اكتشاف الاستنزاف (Exhaustion)','الدلتا التراكمية CVD','مناطق الامتصاص المؤسساتية'],
-   pkgs:[{id:'m',label:'شهري',note:'يتجدد شهريًا · إلغاء بأي وقت',price:39},
-         {id:'y',label:'سنوي',note:'شهران مجانًا + سعر مثبّت',price:179,old:299,best:true},
-         {id:'l',label:'مدى الحياة',note:'دفعة واحدة · كل التحديثات للأبد',price:499}]},
-  {id:'footprint',tag:'FOOTPRINT · HEATMAP',name:'ARKAN FOOTPRINT BOOKMAP ENGINE',
-   desc:'خريطة فوتبرنت حرارية تكشف حجم التداول عند كل سعر وجدران السيولة وطلبات الإيقاف المكدّسة.',
-   feats:['خريطة حرارية للسيولة','كشف جدران الأوامر','نقطة السيطرة الحجمية POC'],
-   pkgs:[{id:'m',label:'شهري',note:'يتجدد شهريًا · إلغاء بأي وقت',price:35},
-         {id:'y',label:'سنوي',note:'شهران مجانًا + سعر مثبّت',price:159,old:259,best:true},
-         {id:'l',label:'مدى الحياة',note:'دفعة واحدة · كل التحديثات للأبد',price:449}]},
-  {id:'liquidity',tag:'SMART MONEY · SMC',name:'ARKAN LIQUIDITY INTELLIGENCE',
-   desc:'ذكاء سيولة مؤسساتي يرصد Order Blocks وفجوات القيمة العادلة FVG ومناطق السيولة المستهدفة آليًا.',
-   feats:['Order Blocks آلية','Fair Value Gaps','مناطق صيد السيولة'],
-   pkgs:[{id:'m',label:'شهري',note:'يتجدد شهريًا · إلغاء بأي وقت',price:29},
-         {id:'y',label:'سنوي',note:'شهران مجانًا + سعر مثبّت',price:139,old:229,best:true},
-         {id:'l',label:'مدى الحياة',note:'دفعة واحدة · كل التحديثات للأبد',price:399}]},
-  {id:'vwap',tag:'MOMENTUM · VWAP',name:'ARKAN VWAP DEVIATION MATRIX',
-   desc:'مصفوفة انحرافات VWAP متعددة الجلسات مع نطاقات الانحراف المعياري لتحديد مناطق التشبّع بدقة.',
-   feats:['VWAP متعدد الجلسات','انحرافات معيارية ملوّنة','تنبيهات الارتداد'],
-   pkgs:[{id:'m',label:'شهري',note:'يتجدد شهريًا · إلغاء بأي وقت',price:19},
-         {id:'y',label:'سنوي',note:'شهران مجانًا + سعر مثبّت',price:89,old:149,best:true},
-         {id:'l',label:'مدى الحياة',note:'دفعة واحدة · كل التحديثات للأبد',price:249}]},
-];
-const PRODUCTS={};indicators.forEach(i=>PRODUCTS[i.id]=i);
-
-/* الباقة الكاملة — تستخدم قسم الأسعار الرئيسي */
-PRODUCTS.suite={id:'suite',name:'ARKAN FULL SUITE',desc:'كل المؤشرات في وصول واحد',
-  pkgs:[{id:'m',label:'PRO — شهري',note:'كل المؤشرات · يتجدد شهريًا',price:39},
-        {id:'y',label:'BETA FOUNDER — سنوي',note:'سعر تأسيسي مثبّت مدى الحياة',price:179,old:299,best:true},
-        {id:'l',label:'LIFETIME — مدى الحياة',note:'دفعة واحدة · للأبد',price:499}]};
-
-function renderIndGrid(){
-  const T=window.arkanT||(s=>s);
-  document.getElementById('indGrid').innerHTML=indicators.map(i=>`
-  <div class="ind reveal">
-    <span class="tag en">${i.tag}</span>
-    <h3 class="en">${i.name}</h3>
-    <p>${T(i.desc)}</p>
-    <div class="feats">${i.feats.map(f=>`<div class="f">${check}<span>${T(f)}</span></div>`).join('')}</div>
-    <div class="pfrom"><span>${T('يبدأ من')}</span><b class="en">$${Math.min(...i.pkgs.map(p=>p.price))}</b><small>${T('/ شهر · USDT')}</small></div>
-    <div class="ind-cta">
-      <button class="btn btn-usdt" onclick="openPackages('${i.id}')" style="flex:1;justify-content:center;padding:11px;font-size:13px;border:none">${T('عرض الباقات')}</button>
-      <a href="${tg}" target="_blank" rel="noopener" class="btn btn-ghost">Telegram</a>
-    </div>
-  </div>`).join('');
-}
-renderIndGrid();
-document.addEventListener('arkan:lang', function(){
-  renderIndGrid();
-  /* re-show any reveal elements that lost .in on re-render */
-  setTimeout(function(){
-    document.querySelectorAll('.reveal:not(.in)').forEach(function(el){
-      el.classList.add('in');
-    });
-  }, 80);
-});
-
-/* ===== pricing = باقات الـ FULL SUITE ===== */
-const plans=[
-  {pid:'suite',pkg:'m',h:'PRO',cur:'USDT',num:'39',per:'/ شهريًا',note:'يتجدد شهريًا · إلغاء بأي وقت',feat:false,
-   li:[[1,'مؤشر ARKAN كامل (Pine v6)'],[1,'لوحة القيادة + 11 محرك'],[1,'تنبيهات لحظية غير محدودة'],[1,'قناة الأعضاء على Telegram'],[0,'جلسة إعداد خاصة 1:1'],[0,'المؤشرات القادمة مجانًا']]},
-  {pid:'suite',pkg:'y',h:'BETA FOUNDER',cur:'USDT',num:'179',old:'299',per:'/ سنويًا',note:'سعر تأسيسي مثبّت مدى الحياة',feat:true,badge:'الأكثر طلبًا',
-   li:[[1,'كل ما في الخطة الشهرية'],[1,'شارة FOUNDER داخل المجتمع'],[1,'جلسة إعداد خاصة 1:1'],[1,'وصول مبكر لكل ميزة'],[1,'صوتك في خارطة التطوير'],[1,'دعم VIP ذو أولوية']]},
-  {pid:'suite',pkg:'l',h:'LIFETIME',cur:'USDT',num:'499',per:'دفعة واحدة',note:'وصول دائم · بلا تجديد',feat:false,
-   li:[[1,'كل ما في خطة Beta'],[1,'كل مؤشرات ARKAN القادمة مجانًا'],[1,'أولوية دعم VIP مباشرة'],[1,'دعوة لمجموعة Inner Circle'],[1,'وصول مدى الحياة'],[1,'تحديثات دائمة بلا رسوم']]},
-];
-const xx='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M18 6L6 18M6 6l12 12"/></svg>';
-document.getElementById('priceGrid').innerHTML=plans.map(p=>`
-  <div class="plan ${p.feat?'feat':''} reveal">
-    ${p.badge?`<span class="badge">${p.badge}</span>`:''}
-    <h4 class="en">${p.h}</h4>
-    <div class="price"><span class="cur en">${p.cur}</span>${p.old?`<span class="old en">${p.old}</span>`:''}<span class="num en">${p.num}</span></div>
-    <div class="per">${p.per}</div>
-    <p class="note">${p.note}</p>
-    <ul>${p.li.map(([on,t])=>`<li class="${on?'':'off'}">${on?check:xx}<span>${t}</span></li>`).join('')}</ul>
-    <div class="plan-cta">
-      <button class="btn btn-usdt" onclick="startPayment('${p.pid}','${p.pkg}')" style="border:none">اشترك الآن — USDT</button>
-      <a href="${tg}" target="_blank" rel="noopener" class="btn btn-ghost">استفسر عبر Telegram</a>
-    </div>
-  </div>`).join('');
-
-/* ===== packages modal ===== */
-function openPackages(key){
-  const p=PRODUCTS[key];
-  document.getElementById('pkgTitle').textContent=p.name;
-  document.getElementById('pkgSub').textContent='اختر باقة الوصول — التفعيل خلال دقائق بعد الدفع';
-  document.getElementById('pkgList').innerHTML=p.pkgs.map(pk=>`
-    <div class="pkg ${pk.best?'best':''}">
-      <div class="info"><b>${pk.label}${pk.best?'<span class="tag">الأوفر</span>':''}</b><span>${pk.note}</span></div>
-      <div style="display:flex;align-items:center;gap:14px">
-        <div style="text-align:left">
-          ${pk.old?`<div class="old">$${pk.old}</div>`:''}
-          <div class="pr">$${pk.price}<small> USDT</small></div>
-        </div>
-        <button class="buy" onclick="startPayment('${key}','${pk.id}')">شراء</button>
-      </div>
-    </div>`).join('');
-  document.getElementById('pkgOverlay').classList.add('open');
-  document.body.style.overflow='hidden';
-}
-
-/* ===== payment flow (USDT TRC20) ===== */
-let pollTimer=null;
-async function startPayment(key,pkgId){
-  const p=PRODUCTS[key],pk=p.pkgs.find(x=>x.id===pkgId);
-  const cents=Math.floor(Math.random()*89)+10;
-  let amount=(pk.price+cents/100).toFixed(2);
-  let orderId='ARK-'+Date.now().toString(36).toUpperCase();
-  try{
-    const r=await fetch(CONFIG.BACKEND_CREATE_ORDER,{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({product:key,plan:pkgId,base:pk.price})});
-    if(r.ok){const d=await r.json();amount=d.amount??amount;orderId=d.orderId??orderId;}
-  }catch(e){/* وضع محلي بدون باك-اند */}
-  document.getElementById('payProduct').textContent=pk.label;
-  document.getElementById('payPlan').textContent=p.name;
-  document.getElementById('payAmount').textContent=amount+' USDT';
-  document.getElementById('amountCode').textContent=amount;
-  document.getElementById('walletCode').textContent=CONFIG.WALLET;
-  document.getElementById('orderId').textContent='ORDER: '+orderId;
-  document.getElementById('qrImg').src='https://api.qrserver.com/v1/create-qr-code/?size=340x340&data='+encodeURIComponent(CONFIG.WALLET);
-  closeModal('pkgOverlay');
-  document.getElementById('payOverlay').classList.add('open');
-  document.body.style.overflow='hidden';
-  clearInterval(pollTimer);
-  pollTimer=setInterval(async()=>{
-    try{
-      const r=await fetch(CONFIG.BACKEND_CHECK_ORDER+'?orderId='+orderId);
-      if(r.ok){const d=await r.json();
-        if(d.status==='paid'){clearInterval(pollTimer);
-          document.querySelector('.waiting').innerHTML='تم تأكيد دفعتك! تفقّد Telegram — رابط دخولك في الطريق.';}}
-    }catch(e){}
-  },8000);
-}
-function closeModal(id){
-  document.getElementById(id).classList.remove('open');
-  document.body.style.overflow='';
-  if(id==='payOverlay')clearInterval(pollTimer);
-}
-document.querySelectorAll('.overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)closeModal(o.id)}));
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal('pkgOverlay');closeModal('payOverlay')}});
-function copyText(id,msg){
-  navigator.clipboard.writeText(document.getElementById(id).textContent.trim()).then(()=>{
-    const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');
-    setTimeout(()=>t.classList.remove('show'),1800);
-  });
-}
-
-/* ===== live ticker (Binance · 10 coins) ===== */
-const COIN_NAMES={BTCUSDT:'BTC',ETHUSDT:'ETH',BNBUSDT:'BNB',SOLUSDT:'SOL',XRPUSDT:'XRP',SUIUSDT:'SUI',DOGEUSDT:'DOGE',ADAUSDT:'ADA',AVAXUSDT:'AVAX',LINKUSDT:'LINK'};
-function fmtPrice(p){p=parseFloat(p);if(p>=1000)return p.toLocaleString('en-US',{maximumFractionDigits:0});if(p>=1)return p.toFixed(2);return p.toFixed(4)}
-async function loadTicker(){
-  try{
-    const symbols=encodeURIComponent(JSON.stringify(CONFIG.TICKER_SYMBOLS));
-    const r=await fetch('https://api.binance.com/api/v3/ticker/24hr?symbols='+symbols);
-    if(!r.ok)throw 0;
-    const data=await r.json();
-    data.sort((a,b)=>CONFIG.TICKER_SYMBOLS.indexOf(a.symbol)-CONFIG.TICKER_SYMBOLS.indexOf(b.symbol));
-    const html=data.map(d=>{
-      const chg=parseFloat(d.priceChangePercent),cls=chg>=0?'up':'dn',ar=chg>=0?'▲':'▼';
-      return `<div class="tki"><span class="s">${COIN_NAMES[d.symbol]||d.symbol}</span><span class="p">$${fmtPrice(d.lastPrice)}</span><span class="c ${cls}">${ar} ${Math.abs(chg).toFixed(2)}%</span></div>`;
-    }).join('');
-    document.getElementById('ttrack').innerHTML=html+html;
-  }catch(e){
-    document.getElementById('ttrack').innerHTML='<div class="tki"><span class="p">تعذّر تحميل الأسعار — إعادة المحاولة…</span></div>';
+/* ================== 3. TICKER ================== */
+(function(){
+  var items=[
+    {s:'DOGE',p:'$0.0722',c:-0.36},{s:'SUI',p:'$0.72',c:2.48},
+    {s:'BTC',p:'$67,500',c:1.25},{s:'ETH',p:'$3,500',c:-0.82},
+    {s:'SOL',p:'$150',c:3.12},{s:'USDT',p:'$1.00',c:0},
+    {s:'MRU',p:'425',c:0},{s:'AOA',p:'850',c:0}
+  ];
+  function cell(i){
+    var arrow=i.c>0?'<span class="up">▲ '+i.c.toFixed(2)+'%</span>':(i.c<0?'<span class="dn">▼ '+Math.abs(i.c).toFixed(2)+'%</span>':'');
+    return '<span class="tk"><b>'+i.s+'</b> '+i.p+' '+arrow+'</span>';
   }
+  var html=items.map(cell).join('');
+  document.getElementById('tickerIn').innerHTML=html+html;
+})();
+
+/* ================== 4. CALCULATOR ================== */
+var CCY=['MRU','AOA','USD','EUR','CNY','USDT','BTC','ETH'];
+var NAMES={MRU:'أوقية',AOA:'كوانزا',USD:'دولار',EUR:'يورو',CNY:'يوان',USDT:'تيثر',BTC:'بيتكوين',ETH:'إيثيريوم'};
+/* أسعار الوحدة بالدولار (أساس التحويل) */
+var MRU_PER_USD=420;
+var USD_VAL={MRU:1/MRU_PER_USD,AOA:0.360/MRU_PER_USD,USD:1,EUR:485/MRU_PER_USD,CNY:1/7.15,USDT:1,BTC:67500,ETH:3500};
+function rate(from,to){return USD_VAL[from]/USD_VAL[to];}
+function fmt(n){
+  if(!isFinite(n))return '0';
+  if(n>=1000)return n.toLocaleString('en-US',{maximumFractionDigits:0});
+  if(n>=1)return n.toLocaleString('en-US',{maximumFractionDigits:2});
+  return n.toLocaleString('en-US',{maximumFractionDigits:6});
 }
-loadTicker();setInterval(loadTicker,CONFIG.TICKER_REFRESH_MS);
+function fillSel(id,val){
+  var s=document.getElementById(id);
+  s.innerHTML=CCY.map(function(c){return '<option value="'+c+'">'+c+' · '+NAMES[c]+'</option>';}).join('');
+  s.value=val;
+}
+fillSel('fromCcy','AOA');fillSel('toCcy','MRU');
+fillSel('oFrom','AOA');fillSel('oTo','MRU');
+function calculate(){
+  var a=parseFloat(document.getElementById('fromAmt').value)||0;
+  var f=document.getElementById('fromCcy').value, t=document.getElementById('toCcy').value;
+  var pct=parseFloat(document.getElementById('tier').value)||0;
+  var fee=a*pct/100;
+  var r=rate(f,t);
+  var out=(a-fee)*r;
+  document.getElementById('toAmt').value=fmt(out);
+  document.getElementById('resAmt').textContent=fmt(out)+' '+t;
+  document.getElementById('resSub').textContent='1 '+f+' = '+fmt(r)+' '+t+(pct?'  ·  رسوم '+pct+'% = '+fmt(fee)+' '+f:'  ·  بلا رسوم');
+}
+function swapCurrencies(){
+  var f=document.getElementById('fromCcy'), t=document.getElementById('toCcy');
+  var tmp=f.value;f.value=t.value;t.value=tmp;
+  calculate();
+}
+calculate();
 
-/* ===== misc ===== */
-const nav=document.getElementById('nav');addEventListener('scroll',()=>nav.classList.toggle('scrolled',scrollY>20));
-const burger=document.getElementById('burger'),navLinks=document.getElementById('navLinks');
-burger.onclick=()=>navLinks.classList.toggle('open');navLinks.querySelectorAll('a').forEach(a=>a.onclick=()=>navLinks.classList.remove('open'));
-const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}}),{threshold:.1});
-document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
-/* safeguard: show any reveal elements not yet in viewport after 1.5s */
-setTimeout(function(){
-  document.querySelectorAll('.reveal:not(.in)').forEach(function(el){
-    var rect=el.getBoundingClientRect();
-    /* if already scrolled past, make visible immediately */
-    if(rect.bottom < window.innerHeight * 1.5) el.classList.add('in');
+/* ================== 5. TRADINGVIEW ================== */
+function changeChart(){
+  var sym=document.getElementById('pairSel').value;
+  var host=document.getElementById('tvHost');
+  host.innerHTML='<div class="tradingview-widget-container" style="height:100%"><div id="tvInner" style="height:100%"></div></div>';
+  var s=document.createElement('script');
+  s.src='https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js';
+  s.async=true;
+  s.innerHTML=JSON.stringify({
+    autosize:true,symbol:sym,interval:'60',timezone:'Etc/UTC',theme:'dark',style:'1',
+    locale:'ar',hide_top_toolbar:false,hide_legend:false,allow_symbol_change:false,
+    backgroundColor:'rgba(14,14,24,1)',gridColor:'rgba(139,92,246,0.06)',save_image:false
   });
-}, 1500);
-</script>
+  host.querySelector('.tradingview-widget-container').appendChild(s);
+}
+changeChart();
 
+/* ================== 6. MENU ================== */
+function toggleMenu(){
+  document.getElementById('menu').classList.toggle('on');
+  document.getElementById('burger').classList.toggle('on');
+}
 
-<script>
-/* أسعار الصرافة الحية من الملف الثابت */
-fetch('rates-data.json?t='+Date.now()).then(r=>r.ok?r.json():null).then(d=>{
+/* ================== 7. TOAST ================== */
+var _tt;
+function toast(msg){
+  var el=document.getElementById('toast');
+  el.textContent=msg;el.classList.add('on');
+  clearTimeout(_tt);_tt=setTimeout(function(){el.classList.remove('on');},3000);
+}
+
+/* ================== 8. ORDER ================== */
+var WA='22236295050';
+function submitOrder(){
+  var name=document.getElementById('oName').value.trim();
+  var phone=document.getElementById('oPhone').value.trim();
+  var amt=document.getElementById('oAmt').value.trim();
+  var from=document.getElementById('oFrom').value, to=document.getElementById('oTo').value;
+  var method=document.getElementById('oMethod').value;
+  var note=document.getElementById('oNote').value.trim();
+  if(!name||!phone||!amt){toast('أكمل الاسم والهاتف والمبلغ');return;}
+  var ref='ARK-'+Date.now().toString().slice(-6);
+  var r=rate(from,to), out=parseFloat(amt)*r;
+  var msg='ARKAN SETTLEMENTS — طلب تحويل\n'+ref+'\n\n'+
+    'الاسم: '+name+'\nالهاتف: '+phone+'\n'+
+    'المبلغ: '+fmt(parseFloat(amt))+' '+from+'\n'+
+    'إلى: '+fmt(out)+' '+to+'\n'+
+    'طريقة الاستلام: '+method+
+    (note?'\nملاحظات: '+note:'')+
+    '\n\nأؤكد رغبتي في التحويل.';
+  try{
+    var all=JSON.parse(localStorage.getItem('arkan-orders')||'[]');
+    all.push({ref:ref,name:name,phone:phone,amt:amt,from:from,to:to,method:method,note:note,ts:Date.now()});
+    localStorage.setItem('arkan-orders',JSON.stringify(all));
+  }catch(e){}
+  toast('تم إنشاء الطلب '+ref+' — يفتح واتساب…');
+  setTimeout(function(){window.open('https://wa.me/'+WA+'?text='+encodeURIComponent(msg),'_blank');},600);
+}
+function sendWhatsApp(){
+  var a=document.getElementById('fromAmt').value, f=document.getElementById('fromCcy').value, t=document.getElementById('toCcy').value;
+  var msg='مرحبًا ARKAN، أريد الاستفسار عن تحويل '+(a||'')+' '+f+' إلى '+t+'.';
+  window.open('https://wa.me/'+WA+'?text='+encodeURIComponent(msg),'_blank');
+}
+function pick(plan,price){
+  toast('اخترت خطة '+plan+' — '+price);
+  var msg='مرحبًا ARKAN، أريد الاشتراك في خطة '+plan+' ('+price+').';
+  setTimeout(function(){window.open('https://wa.me/'+WA+'?text='+encodeURIComponent(msg),'_blank');},600);
+}
+
+/* ================== 9. LIVE RATES (اختياري من الملف الثابت) ================== */
+fetch('rates-data.json?t='+Date.now()).then(function(r){return r.ok?r.json():null;}).then(function(d){
   if(!d||!d.r)return;
-  const g=c=>d.r.find(x=>x.ccy===c);
-  const set=(id,row)=>{const el=document.getElementById(id);if(el&&row&&row.w)el.textContent=row.w;};
-  set('fxAOA',g('AOA'));set('fxUSDT',g('USDT'));set('fxEUR',g('EUR'));
-}).catch(()=>{});
+  function g(c){for(var i=0;i<d.r.length;i++)if(d.r[i].ccy===c)return d.r[i];return null;}
+  /* USDT/MRU يحدد قيمة الأوقية مقابل الدولار */
+  var u=g('USDT');
+  if(u&&u.w){MRU_PER_USD=u.w;USD_VAL.MRU=1/MRU_PER_USD;document.getElementById('rUSDT').textContent=u.w;}
+  /* باقي العملات: سعرها بالأوقية ÷ الأوقية لكل دولار */
+  [['AOA','rAOA'],['EUR','rEUR'],['CNY',null],['USD',null]].forEach(function(pair){
+    var row=g(pair[0]);
+    if(row&&row.w){
+      USD_VAL[pair[0]]=row.w/MRU_PER_USD;
+      if(pair[1])document.getElementById(pair[1]).textContent=row.w;
+    }
+  });
+  calculate();
+}).catch(function(){});
 </script>
 <script src="i18n.js"></script>
-<script>
-(function(){
-  var STATIC={
-    pineDesc:'كل مؤشر مبني على Pine Script v6، مُحسّن بصريًا ليُقرأ في ثانية — ويُفعّل على حسابك فور الدفع.',
-    usdtDesc:'دفع مباشر بـ USDT (TRC20) أو تواصل عبر Telegram — بلا وسطاء، بلا بطاقات، تفعيل فوري.',
-    discTxt:'جميع مؤشرات ARKAN AI Trading Systems أدوات تحليلية وتعليمية فقط، ولا تُعد نصيحة مالية أو توصية بالشراء أو البيع. التداول ينطوي على مخاطر عالية قد تؤدي لخسارة رأس المال. الأرقام المعروضة لأغراض توضيحية. الأداء السابق لا يضمن النتائج المستقبلية.',
-    discLbl:'إخلاء مسؤولية:'
-  };
-  function updateStatic(){
-    var T=window.arkanT||(function(s){return s;});
-    Object.keys(STATIC).forEach(function(id){
-      var el=document.getElementById(id);
-      if(el) el.textContent=T(STATIC[id]);
-    });
-  }
-  document.addEventListener('arkan:lang', updateStatic);
-  if(document.readyState==='loading')
-    document.addEventListener('DOMContentLoaded', updateStatic);
-  else updateStatic();
-})();
-</script>
 </body>
 </html>
-
-<div id="arkanPay" style="display:none;position:fixed;inset:0;z-index:99999;background:#000c;backdrop-filter:blur(6px);align-items:center;justify-content:center;font-family:'Poppins','Tajawal',sans-serif" onclick="if(event.target===this)this.style.display='none'">
-  <div dir="rtl" style="max-width:440px;width:90%;padding:30px 26px;border:1px solid #E8C24A55;border-radius:20px;background:linear-gradient(180deg,#101014,#17171c);color:#fff;text-align:center;box-shadow:0 25px 70px #000c">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
-      <span style="font-size:12px;letter-spacing:2px;color:#E8C24A">// إتمام الاشتراك</span>
-      <span onclick="document.getElementById('arkanPay').style.display='none'" style="cursor:pointer;color:#777;font-size:24px;line-height:1">&times;</span>
-    </div>
-    <div style="color:#9a9aa2;font-size:13px;margin-bottom:4px">المبلغ المطلوب</div>
-    <div style="font-size:46px;font-weight:800;color:#E8C24A;line-height:1"><span id="arkanAmt">—</span> <span style="font-size:18px;color:#fff">USDT</span></div>
-    <div style="color:#9a9aa2;font-size:13px;margin:6px 0 22px">الشبكة: <b style="color:#E8C24A">TRON (TRC20)</b> فقط</div>
-
-    <div style="text-align:right;font-size:12px;color:#9a9aa2;margin-bottom:6px">عنوان المحفظة</div>
-    <div style="display:flex;align-items:center;gap:8px;background:#000;border:1px solid #2a2a30;border-radius:12px;padding:11px 12px;margin-bottom:18px">
-      <code style="flex:1;font-size:12px;word-break:break-all;direction:ltr;text-align:left;color:#fff">TTXUswnqmRPcqRRZkonxwpH2KDStAJm7td</code>
-      <button onclick="navigator.clipboard.writeText('TTXUswnqmRPcqRRZkonxwpH2KDStAJm7td');this.innerText='✓'" style="background:#E8C24A;color:#000;border:0;border-radius:9px;padding:9px 14px;font-weight:700;cursor:pointer;font-family:inherit">نسخ</button>
-    </div>
-
-    <div style="background:#E8C24A12;border:1px solid #E8C24A33;border-radius:10px;padding:10px;font-size:12px;color:#E8C24A;margin-bottom:18px">⚠️ حوّل <b>المبلغ بالضبط</b> على شبكة TRC20 فقط — أي خطأ في الشبكة يعني ضياع المبلغ.</div>
-
-    <a href="https://t.me/ArkanAI_Access_Bot" target="_blank" style="display:block;background:#E8C24A;color:#000;text-decoration:none;border-radius:12px;padding:14px;font-weight:700;font-size:15px">أرسلتُ الدفع — أكّد وفعل عبر Telegram</a>
-    <p style="margin:12px 0 0;color:#6b6b73;font-size:11px">أرسل صورة الإيصال في Telegram لتفعيل اشتراكك فورًا.</p>
-  </div>
-</div>
-<script>
-document.addEventListener('click',function(e){
-  var btn=e.target.closest('a,button,[role="button"]');
-  if(!btn||(btn.textContent||'').indexOf('اشترك الآن')===-1)return;
-  e.preventDefault();e.stopPropagation();
-  var node=btn.parentElement,amount='',t=0;
-  while(node&&t<10){
-    var txt=node.innerText||'';var idx=txt.indexOf('اشترك');
-    var head=idx>0?txt.slice(0,idx):'';
-    var m=head.match(/\d[\d,]{0,5}/);
-    if(m){amount=m[0].replace(/,/g,'');break;}
-    node=node.parentElement;t++;
-  }
-  document.getElementById('arkanAmt').textContent=amount||'—';
-  document.getElementById('arkanPay').style.display='flex';
-},true);
-</script>
-<section dir="rtl" style="max-width:900px;margin:50px auto;padding:0 16px;font-family:'Poppins',sans-serif">
-  <div style="text-align:center;margin-bottom:18px">
-    <div style="font-size:13px;letter-spacing:2px;color:#E8C24A">// MARKET NEWS</div>
-    <h2 style="margin:6px 0 0;color:#fff;font-size:26px">أهم أخبار السوق</h2>
-    <p style="color:#9a9aa2;font-size:14px;margin:6px 0 0">أحدث الأخبار المؤثرة على سوق الكريبتو — تُحدَّث لحظيًا</p>
-  </div>
-  <div style="border:1px solid #E8C24A33;border-radius:16px;overflow:hidden;box-shadow:0 10px 40px #0008">
-    <div class="tradingview-widget-container">
-      <div class="tradingview-widget-container__widget"></div>
-      <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-timeline.js" async>
-      {
-      "feedMode": "market",
-      "market": "crypto",
-      "isTransparent": true,
-      "displayMode": "regular",
-      "width": "100%",
-      "height": 560,
-      "colorTheme": "dark",
-      "locale": "ar_AE"
-      }
-      </script>
-    </div>
-  </div>
-</section>
-
-</script>
