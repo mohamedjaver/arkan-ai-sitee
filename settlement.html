@@ -607,6 +607,7 @@ body,input,select,textarea,button,.ar,h1,h2,h3{font-family:'Cairo','Tajawal','IB
       </div>
       <div id="rcReconList" style="margin-top:8px"></div>
       <div class="btn-row" style="margin-top:10px">
+        <button class="btn btn-gold" onclick="rcExportPDF()">تقرير جرد PDF</button>
         <button class="btn btn-line" onclick="rcExportCSV()">تصدير جرد Excel</button>
         <button class="btn btn-line" onclick="rcCopySummary()">نسخ الملخص</button>
       </div>
@@ -2421,7 +2422,7 @@ async function genReport(){
   $('mdlTitle').textContent='تقرير اليوم';
   $('mdlBody').innerHTML=`<div class="card">
     <img src="${canvas.toDataURL('image/jpeg',0.9)}" style="width:100%;border-radius:12px;display:block;background:#fff">
-    <button class="btn btn-gold" onclick="shareInvFile()" style="margin-top:10px">📤 مشاركة التقرير</button>
+    <button class="btn btn-gold" onclick="shareInvFile()" style="margin-top:10px">مشاركة التقرير</button>
     <button class="btn btn-line" onclick="dlInvFile()">تنزيل PDF</button>
   </div>`;
   $('modal').style.display='block';window.scrollTo(0,0);
@@ -2791,6 +2792,118 @@ function rcExportCSV(){
   a.download='ARKAN_جرد_الإيصالات_'+rxRes.ccy+'_'+new Date().toISOString().slice(0,10)+'.csv';
   a.click();toast('تم تصدير الجرد');
 }
+
+/* ============ تقرير جرد PDF احترافي (متعدد الصفحات) ============ */
+function rcBankGroups(){
+  const g={};
+  const add=(x,side)=>{const b=x.bank||'غير محدد';
+    g[b]=g[b]||{bank:b,nC:0,sC:0,nS:0,sS:0};
+    if(side==='cli'){g[b].nC++;g[b].sC+=(x.amount||0);}else{g[b].nS++;g[b].sS+=(x.amount||0);}};
+  rcSideList('cli').filter(x=>x.amount!=null).forEach(x=>add(x,'cli'));
+  rcSideList('sup').filter(x=>x.amount!=null).forEach(x=>add(x,'sup'));
+  return Object.values(g).sort((a,b)=>(b.sC+b.sS)-(a.sC+a.sS));
+}
+function rcAuditRows(){
+  const R=rxRes,d=R.dec,out=[];
+  R.pairs.forEach(p=>out.push({st:p.kind==='تقريبي'?'تقريبي':'مطابق',c:p.kind==='تقريبي'?'#B7791F':'#0F9D6B',
+    side:'عميل ⟷ مورد',nm:(p.a.name||'')+' / '+(p.b.name||''),meta:[p.a.bank,p.a.date].filter(Boolean).join(' · '),
+    txn:p.a.txn||'—',amt:fmt(p.a.amount,d),df:Math.abs(p.diff)>0.005?fmt(p.diff,d):'—'}));
+  R.missS.forEach(x=>out.push({st:'لم يصل للمورد',c:'#D93838',side:'عميل',nm:x.name||'',
+    meta:[x.bank,x.date,x.ben].filter(Boolean).join(' · '),txn:x.txn||'—',amt:fmt(x.amount,d),df:'—'}));
+  R.missC.forEach(x=>out.push({st:'بلا إيصال عميل',c:'#D93838',side:'مورد',nm:x.name||'',
+    meta:[x.bank,x.date,x.ben].filter(Boolean).join(' · '),txn:x.txn||'—',amt:fmt(x.amount,d),df:'—'}));
+  R.dups.forEach(x=>out.push({st:'مكرر',c:'#B7791F',side:x.side,nm:x.a.name||'',
+    meta:[x.a.bank,x.a.date].filter(Boolean).join(' · '),txn:x.txn||'—',amt:fmt(x.amount,d),df:'—'}));
+  return out;
+}
+function rcPdfShell(inner,pg,tot,C){
+  return '<div style="width:794px;min-height:1123px;display:flex;flex-direction:column;background:#fff;font-family:\'Cairo\',\'Tajawal\',sans-serif;direction:rtl">'
+  +'<div style="background:linear-gradient(135deg,#2E2758,#1C1D3C 60%,#15172E);padding:26px 34px;display:flex;justify-content:space-between;align-items:center">'
+  +'<div style="display:flex;align-items:center;gap:14px">'+(typeof invLogoSVG==='function'?invLogoSVG():'')
+  +'<div><div style="color:#fff;font-size:21px;font-weight:800;font-family:\'IBM Plex Mono\'">ARKAN <span style="color:#A78BFF">SETTLEMENT</span></div>'
+  +'<div style="color:#8B8FA8;font-size:12px;margin-top:4px"><span style="letter-spacing:2.5px;font-family:\'IBM Plex Mono\'">RECONCILIATION</span> <span style="font-weight:700">— تقرير جرد الإيصالات</span></div></div></div>'
+  +'<div style="text-align:left"><div style="color:#A78BFF;font-size:18px;font-weight:800;font-family:\'IBM Plex Mono\'">'+new Date().toLocaleDateString('en-GB')+'</div>'
+  +'<div style="color:#8B8FA8;font-size:12px;margin-top:4px;font-family:\'IBM Plex Mono\'">'+C+' · '+pg+'/'+tot+'</div></div></div>'
+  +'<div style="height:6px;background:linear-gradient(90deg,#B9A8FF,#8B72FF,#5B3FD1)"></div>'
+  +'<div style="padding:24px 34px;flex:1">'+inner+'</div>'
+  +'<div style="padding:14px 34px 20px;border-top:1px solid #ecebf5;display:flex;justify-content:space-between;font-size:11px;color:#9a9db2;font-family:\'IBM Plex Mono\'">'
+  +'<span>WhatsApp 36295050 · ARKAN INTERNATIONAL TRADING</span><span>ARKAN SETTLEMENT FLOW</span></div></div>';
+}
+async function rcExportPDF(){
+  if(!rxRes){toast('نفّذ المطابقة أولًا');return;}
+  const R=rxRes,d=R.dec,C=CCYI[R.ccy]||R.ccy;
+  const kpi=(t,v,c,bg)=>'<div style="flex:1;padding:13px;border-radius:13px;background:'+bg+';border:1px solid #ecebf5">'
+    +'<div style="font-size:11.5px;color:#565b74;font-weight:700">'+t+'</div>'
+    +'<div style="font-size:20px;font-weight:800;font-family:\'IBM Plex Mono\';color:'+c+';margin-top:4px">'+v+'</div></div>';
+  const bg=rcBankGroups();
+  let cover='<div style="display:flex;gap:10px;margin-bottom:12px">'
+   +kpi('إيصالات العميل',R.nA+' · '+fmt(R.sA,d),'#1C1D3C','#F3F0FF')
+   +kpi('إيصالات المورد',R.nB+' · '+fmt(R.sB,d),'#1C1D3C','#faf9fe')
+   +kpi('الفرق',(R.diff>0?'+':'')+fmt(R.diff,d),Math.abs(R.diff)<0.01?'#0F9D6B':'#D93838',Math.abs(R.diff)<0.01?'#EAFBF3':'#FFF0F0')+'</div>'
+   +'<div style="display:flex;gap:10px;margin-bottom:20px">'
+   +kpi('مطابق تام',String(R.ok),'#0F9D6B','#EAFBF3')
+   +kpi('مطابق تقريبي',String(R.apx),'#B7791F','#FFF9EC')
+   +kpi('لم يصل للمورد',R.missS.length+' · '+fmt(R.sMissS,d),'#D93838','#FFF0F0')
+   +kpi('بلا إيصال عميل',R.missC.length+' · '+fmt(R.sMissC,d),'#D93838','#FFF0F0')+'</div>';
+  cover+='<div style="font-size:15px;font-weight:800;color:#1C1D3C;margin-bottom:9px">التوزيع حسب البنك</div>'
+   +'<table style="width:100%;border-collapse:collapse;background:#faf9fe;border-radius:12px;overflow:hidden;font-size:12px">'
+   +'<tr style="background:#EFEBFF"><th style="padding:9px 12px;text-align:right;color:#5B3FD1">البنك</th>'
+   +'<th style="padding:9px 12px;text-align:left;color:#5B3FD1">عميل</th><th style="padding:9px 12px;text-align:left;color:#5B3FD1">مبلغ العميل</th>'
+   +'<th style="padding:9px 12px;text-align:left;color:#5B3FD1">مورد</th><th style="padding:9px 12px;text-align:left;color:#5B3FD1">مبلغ المورد</th>'
+   +'<th style="padding:9px 12px;text-align:left;color:#5B3FD1">الفرق</th></tr>'
+   +bg.map(g=>{const df=g.sC-g.sS;return '<tr style="border-top:1px solid #eee">'
+     +'<td style="padding:8px 12px;font-weight:700">'+g.bank+'</td>'
+     +'<td style="padding:8px 12px;text-align:left;font-family:\'IBM Plex Mono\'">'+g.nC+'</td>'
+     +'<td style="padding:8px 12px;text-align:left;font-family:\'IBM Plex Mono\'">'+fmt(g.sC,d)+'</td>'
+     +'<td style="padding:8px 12px;text-align:left;font-family:\'IBM Plex Mono\'">'+g.nS+'</td>'
+     +'<td style="padding:8px 12px;text-align:left;font-family:\'IBM Plex Mono\'">'+fmt(g.sS,d)+'</td>'
+     +'<td style="padding:8px 12px;text-align:left;font-family:\'IBM Plex Mono\';color:'+(Math.abs(df)<0.01?'#0F9D6B':'#D93838')+'">'+fmt(df,d)+'</td></tr>';}).join('')
+   +'</table>';
+  const rows=rcAuditRows(), PER=22, chunks=[];
+  for(let i=0;i<rows.length;i+=PER)chunks.push(rows.slice(i,i+PER));
+  const pages=[cover].concat(chunks.map((ch,ix)=>{
+    return '<div style="font-size:15px;font-weight:800;color:#1C1D3C;margin-bottom:9px">تفصيل الجرد '+(ix?'(تابع)':'')+'</div>'
+    +'<table style="width:100%;border-collapse:collapse;font-size:11px">'
+    +'<tr style="background:#EFEBFF"><th style="padding:8px 10px;text-align:right;color:#5B3FD1">الحالة</th>'
+    +'<th style="padding:8px 10px;text-align:right;color:#5B3FD1">الجهة</th>'
+    +'<th style="padding:8px 10px;text-align:right;color:#5B3FD1">الإيصال</th>'
+    +'<th style="padding:8px 10px;text-align:right;color:#5B3FD1">المرجع</th>'
+    +'<th style="padding:8px 10px;text-align:left;color:#5B3FD1">المبلغ</th>'
+    +'<th style="padding:8px 10px;text-align:left;color:#5B3FD1">فرق</th></tr>'
+    +ch.map(r=>'<tr style="border-top:1px solid #f0f0f5">'
+      +'<td style="padding:7px 10px;font-weight:700;color:'+r.c+'">'+r.st+'</td>'
+      +'<td style="padding:7px 10px;color:#565b74">'+r.side+'</td>'
+      +'<td style="padding:7px 10px">'+String(r.nm).slice(0,34)+(r.meta?'<div style="color:#9a9db2;font-size:9.5px">'+r.meta.slice(0,44)+'</div>':'')+'</td>'
+      +'<td style="padding:7px 10px;font-family:\'IBM Plex Mono\';font-size:9.5px;color:#565b74">'+String(r.txn).slice(0,20)+'</td>'
+      +'<td style="padding:7px 10px;text-align:left;font-family:\'IBM Plex Mono\';font-weight:700">'+r.amt+'</td>'
+      +'<td style="padding:7px 10px;text-align:left;font-family:\'IBM Plex Mono\';color:#D93838">'+r.df+'</td></tr>').join('')
+    +'</table>';
+  }));
+  const stage=$('pdfStage');
+  toast('توليد التقرير — '+pages.length+' صفحة...');
+  try{await document.fonts.load("800 16px Cairo");await document.fonts.ready;}catch(e){}
+  const doc=new jspdf.jsPDF('p','mm','a4');
+  let first=null;
+  for(let i=0;i<pages.length;i++){
+    stage.innerHTML=rcPdfShell(pages[i],i+1,pages.length,C);
+    await new Promise(r=>setTimeout(r,320));
+    const cv=await html2canvas(stage,{scale:2,backgroundColor:'#ffffff',width:794,useCORS:true});
+    if(!first)first=cv.toDataURL('image/jpeg',0.85);
+    let iw=210,ih=cv.height*210/cv.width;
+    if(ih>297){ih=297;iw=cv.width*297/cv.height;}
+    if(i)doc.addPage();
+    doc.addImage(cv.toDataURL('image/jpeg',0.94),'JPEG',(210-iw)/2,0,iw,ih);
+  }
+  stage.innerHTML='';
+  const blob=doc.output('blob');
+  _lastInv={ref:'AUDIT',blob,name:'ARKAN_Jard_'+R.ccy+'_'+new Date().toISOString().slice(0,10)+'.pdf',cWa:''};
+  $('mdlTitle').textContent='تقرير جرد الإيصالات';
+  $('mdlBody').innerHTML='<div class="card"><img src="'+first+'" style="width:100%;border-radius:12px;display:block;background:#fff">'
+    +'<button class="btn btn-gold" onclick="shareInvFile()" style="margin-top:10px">مشاركة التقرير</button>'
+    +'<button class="btn btn-line" onclick="dlInvFile()">تنزيل PDF</button></div>';
+  $('modal').style.display='block';window.scrollTo(0,0);
+}
+
 function saveRC(){
   const c=rcCcyV(), d=rcDec(c);
   const A=rcSideList('cli').filter(x=>x.amount), B=rcSideList('sup').filter(x=>x.amount);
@@ -3364,7 +3477,7 @@ async function imageText(dataUrl){
   return data.text||'';
 }
 /* ================= BUILD / AUTO-UPDATE ================= */
-const ARKAN_BUILD='1002';
+const ARKAN_BUILD='1003';
 function arkanVerLabel(){const e=$('verLbl');if(e)e.textContent=ARKAN_BUILD;}
 function arkanUpdateBanner(b){
   if(document.getElementById('updBar'))return;
