@@ -842,7 +842,17 @@ function vOtsu(img,scale){
   g.ctx.putImageData(g.img,0,0);
   return c.toDataURL('image/png');
 }
-/* 3) الأصلية مكبّرة فقط */
+/* 3) عكس الألوان — للقطات الداكنة أو الفواتير المصوّرة بإضاءة خلفية */
+function vInvert(img,scale){
+  var c=toCanvas(img,scale), g=grayData(c), p=g.p;
+  for(var i=0;i<p.length;i+=4){
+    var v=255-Math.round(p[i]*0.299+p[i+1]*0.587+p[i+2]*0.114);
+    p[i]=p[i+1]=p[i+2]=v;
+  }
+  g.ctx.putImageData(g.img,0,0);
+  return c.toDataURL('image/png');
+}
+/* 4) الأصلية مكبّرة فقط */
 function vPlain(img,scale){ return toCanvas(img,scale).toDataURL('image/png'); }
 
 function loadImg(src){
@@ -893,39 +903,76 @@ async function pdfExtract(dataUrl,onProgress){
 
 /* ===== OCR متعدد المحاولات: يجرّب 3 معالجات ويأخذ الأفضل ===== */
 async function ocrBest(dataUrl,onProgress){
-  if(!window.Tesseract)return '';
+  if(!window.Tesseract){
+    onProgress&&onProgress('محرك القراءة غير متاح — تحقق من الاتصال');
+    return '';
+  }
   var img;
   try{ img=await loadImg(dataUrl); }catch(e){ return ''; }
-  var scale=Math.max(1,Math.min(3.2,1800/img.width));
-  var variants=[
-    {name:'تباين',  make:function(){return vContrast(img,scale);}},
-    {name:'أبيض/أسود', make:function(){return vOtsu(img,scale);}},
-    {name:'أصلية',  make:function(){return vPlain(img,scale);}}
-  ];
-  var worker=await Tesseract.createWorker(['eng','fra','por','ara'],1,{
-    workerBlobURL:true,
-    logger:function(m){
-      if(m.status==='recognizing text'&&onProgress)
-        onProgress('جارٍ القراءة… '+Math.round((m.progress||0)*100)+'%');
-    }
-  });
-  try{
-    await worker.setParameters({preserve_interword_spaces:'1'});
-  }catch(e){}
+  var scale=Math.max(1,Math.min(3.4,1900/img.width));
+
+  /* المعالجات مُجهَّزة مسبقًا مرة واحدة (توفير وقت) */
+  var prepared=[];
+  try{ prepared.push({n:'أبيض/أسود', u:vOtsu(img,scale)}); }catch(e){}
+  try{ prepared.push({n:'تباين',     u:vContrast(img,scale)}); }catch(e){}
+  try{ prepared.push({n:'أصلية',     u:vPlain(img,scale)}); }catch(e){}
+
   var best='', bestScore=-1;
-  for(var i=0;i<variants.length;i++){
-    onProgress&&onProgress('محاولة '+(i+1)+'/3 — '+variants[i].name);
+
+  /* مراحل اللغة: نبدأ بالإنجليزية وحدها (أسرع وأدق للفواتير)،
+     ثم نضيف الفرنسية والبرتغالية فقط إن لزم. العربية أخيرًا وعند الحاجة. */
+  var stages=[
+    {langs:['eng'],              psms:['6','4'],  label:'سريع'},
+    {langs:['eng','fra','por'],  psms:['6','11'], label:'موسّع'}
+  ];
+
+  for(var s=0;s<stages.length;s++){
+    var stage=stages[s], worker=null;
     try{
-      var url=variants[i].make();
-      var r=await worker.recognize(url);
-      var t=(r.data&&r.data.text)||'';
-      var s=scoreText(t);
-      if(s>bestScore){bestScore=s;best=t;}
-      /* نتيجة ممتازة مبكرًا؟ نتوقف لتوفير الوقت */
-      if(s>320)break;
-    }catch(e){}
+      onProgress&&onProgress('تهيئة المحرك ('+stage.label+')…');
+      worker=await Tesseract.createWorker(stage.langs,1,{
+        workerBlobURL:true,
+        logger:function(m){
+          if(m.status==='recognizing text'&&onProgress)
+            onProgress('جارٍ القراءة… '+Math.round((m.progress||0)*100)+'%');
+        }
+      });
+      try{ await worker.setParameters({preserve_interword_spaces:'1'}); }catch(e){}
+
+      for(var v=0;v<prepared.length;v++){
+        for(var pi=0;pi<stage.psms.length;pi++){
+          try{ await worker.setParameters({tessedit_pageseg_mode:stage.psms[pi]}); }catch(e){}
+          onProgress&&onProgress('محاولة '+(v*stage.psms.length+pi+1)+' — '+prepared[v].n);
+          try{
+            var r=await worker.recognize(prepared[v].u);
+            var t=(r.data&&r.data.text)||'';
+            var sc=scoreText(t);
+            if(sc>bestScore){bestScore=sc;best=t;}
+            if(sc>320){ v=99; pi=99; break; }   /* ممتاز: توقف */
+          }catch(e){}
+        }
+        if(bestScore>320)break;
+      }
+
+      /* لم نصل لشيء مفيد؟ جرّب عكس الألوان */
+      if(bestScore<45){
+        try{
+          onProgress&&onProgress('محاولة إضافية — عكس الألوان');
+          await worker.setParameters({tessedit_pageseg_mode:'6'});
+          var ri=await worker.recognize(vInvert(img,scale));
+          var ti=(ri.data&&ri.data.text)||'';
+          var si=scoreText(ti);
+          if(si>bestScore){bestScore=si;best=ti;}
+        }catch(e){}
+      }
+    }catch(e){
+      onProgress&&onProgress('تعذّرت تهيئة المحرك — إعادة المحاولة…');
+    } finally {
+      if(worker){ try{ await worker.terminate(); }catch(e){} }
+    }
+    /* نتيجة كافية؟ لا داعي للمرحلة التالية */
+    if(bestScore>150)break;
   }
-  await worker.terminate();
   return best;
 }
 
@@ -938,31 +985,44 @@ function normNum(raw){
   return isNaN(v)?null:v;
 }
 function extractAmount(t){
-  var keys=['GRAND TOTAL','TOTAL AMOUNT','AMOUNT DUE','TOTAL DUE','BALANCE DUE','INVOICE TOTAL',
-    'TOTAL GENERAL','MONTANT TOTAL','NET A PAYER','NET \u00c0 PAYER','A PAYER','TOTAL TTC',
-    'VALOR TOTAL','TOTAL A PAGAR','TOTAL GERAL','MONTANTE TOTAL','IMPORTE TOTAL',
-    'المبلغ الاجمالي','المبلغ الإجمالي','الاجمالي','الإجمالي','المجموع الكلي','المجموع','صافي',
-    'TOTAL FOB','TOTAL CIF','TOTAL EXW','TOTAL USD','TOTAL EUR','TOTAL CNY','SUBTOTAL','TOTAL'];
-  var lines=t.split(/\n/), best=null, bestScore=-1;
-  lines.forEach(function(line,li){
-    var up=line.toUpperCase(), score=0;
-    keys.forEach(function(k,i){ if(up.indexOf(k)>=0)score=Math.max(score,keys.length-i); });
-    if(!score)return;
-    /* أرقام في نفس السطر، وإن خلا فالسطر التالي */
-    var pool=line+' '+((lines[li+1]||'').match(/^[\s\d.,]+$/)?lines[li+1]:'');
-    var nums=(pool.match(/[0-9][0-9.,\s\u00a0]{1,}/g)||[])
-      .map(function(s){return normNum(s.trim());})
-      .filter(function(v){return v&&v>=5&&v<1e12;});
-    if(!nums.length)return;
+  if(!t)return null;
+  /* توحيد: إزالة أسطر فارغة وتوحيد المسافات */
+  var lines=t.split(/[\n\r]+/).map(function(l){return l.replace(/\s+/g,' ').trim();}).filter(Boolean);
+  var keys=['TOTAL AMOUNT','GRAND TOTAL','AMOUNT DUE','TOTAL DUE','BALANCE DUE','INVOICE TOTAL',
+    'TOTAL INVOICE','TOTAL PRICE','TOTAL VALUE','TOTAL PAYABLE','SAY TOTAL','TOTAL:',
+    'MONTANT TOTAL','TOTAL GENERAL','TOTAL GÉNÉRAL','NET A PAYER','NET À PAYER','A PAYER','TOTAL TTC','MONTANT',
+    'VALOR TOTAL','TOTAL A PAGAR','TOTAL GERAL','MONTANTE','IMPORTE TOTAL',
+    'الاجمالي','الإجمالي','المجموع','المبلغ الاجمالي','المبلغ الإجمالي','اجمالي','الصافي','القيمة',
+    'TOTAL FOB','TOTAL CIF','TOTAL EXW','TOTAL CFR','TOTAL CNF','TOTAL USD','TOTAL EUR','TOTAL CNY','TOTAL'];
+  function numsIn(line){
+    /* يدعم: 41,860.00 · 25 400,00 · USD41860 · 1.234.567,89 */
+    return (line.match(/[0-9][0-9.,\s\u00a0']{0,22}[0-9]|[0-9]{3,}/g)||[])
+      .map(function(s){return normNum(s);})
+      .filter(function(v){return v!==null&&v>=10&&v<1e12;});
+  }
+  var best=null,bestScore=-1;
+  for(var i=0;i<lines.length;i++){
+    var up=lines[i].toUpperCase(), score=0;
+    for(var k=0;k<keys.length;k++){
+      if(up.indexOf(keys[k])>=0){score=Math.max(score,keys.length-k);break;}
+    }
+    if(!score)continue;
+    var nums=numsIn(lines[i]);
+    /* الرقم قد يكون في السطر التالي (جداول الفواتير) */
+    if(!nums.length&&i+1<lines.length)nums=numsIn(lines[i+1]);
+    if(!nums.length)continue;
     var mx=Math.max.apply(null,nums);
     if(score>bestScore||(score===bestScore&&mx>(best||0))){best=mx;bestScore=score;}
-  });
+  }
   if(best)return best;
-  /* احتياطي: رقم بجوار رمز عملة */
-  var cur=t.match(/(?:USD|EUR|CNY|RMB|AED|MRU|AOA|\$|€|\u00a5)\s*([0-9][0-9.,\s]{2,})/i);
-  if(cur){var v=normNum(cur[1]); if(v)return v;}
-  var all=(t.match(/[0-9][0-9.,\s]{3,}/g)||[]).map(function(s){return normNum(s.trim());})
-    .filter(function(v){return v&&v>=100&&v<1e12;});
+  /* بديل 1: رقم ملاصق لرمز عملة */
+  var m2=t.match(/(?:USD|EUR|CNY|RMB|AED|GBP|MRU|AOA|US\$|\$|€|£|¥)\s*([0-9][0-9.,\s]{2,})/i);
+  if(m2){var v2=normNum(m2[1]); if(v2&&v2>=10)return v2;}
+  var m3=t.match(/([0-9][0-9.,\s]{2,})\s*(?:USD|EUR|CNY|RMB|AED|GBP|MRU|AOA|\$|€|£|¥)/i);
+  if(m3){var v3=normNum(m3[1]); if(v3&&v3>=10)return v3;}
+  /* بديل 2: أكبر رقم منطقي في المستند */
+  var all=(t.match(/[0-9][0-9.,\s]{2,}/g)||[]).map(function(s){return normNum(s);})
+    .filter(function(v){return v!==null&&v>=100&&v<1e12;});
   return all.length?Math.max.apply(null,all):null;
 }
 function extractCompany(t){
@@ -995,26 +1055,20 @@ function extractCompany(t){
   return null;
 }
 function extractCcy(t){
+  if(!t)return null;
   var up=t.toUpperCase();
-  if(/\bEUR\b|€|EURO/.test(up))return 'EUR';
-  if(/\bCNY\b|\bRMB\b|YUAN|\u00a5/.test(up))return 'CNY';
-  if(/\bAED\b|DIRHAM|DHS/.test(up))return 'AED';
-  if(/\bMAD\b/.test(up))return 'MAD';
-  if(/\bGBP\b|£/.test(up))return 'GBP';
-  if(/\bUSD\b|US\$|DOLLAR|\$/.test(up))return 'USD';
-  /* أسماء العملات بالعربية */
-  if(/يورو/.test(t))return 'EUR';
-  if(/يوان|رنمينبي/.test(t))return 'CNY';
-  if(/درهم\s*(إمارات|اماراتي)/.test(t))return 'AED';
-  if(/درهم\s*مغرب/.test(t))return 'MAD';
-  if(/أوقية|اوقية/.test(t))return 'MRU';
-  if(/كوانزا/.test(t))return 'AOA';
-  if(/ريال\s*سعود/.test(t))return 'SAR';
-  if(/دولار/.test(t))return 'USD';
+  /* (?![A-Z]) بدل \b ليعمل مع الملاصق للأرقام: USD12,300 */
+  if(/(?:^|[^A-Z])EUR(?![A-Z])|€|EURO/.test(up))return 'EUR';
+  if(/(?:^|[^A-Z])(CNY|RMB)(?![A-Z])|YUAN|¥/.test(up))return 'CNY';
+  if(/(?:^|[^A-Z])AED(?![A-Z])|DIRHAM|DHS/.test(up))return 'AED';
+  if(/(?:^|[^A-Z])GBP(?![A-Z])|£|STERLING/.test(up))return 'GBP';
+  if(/(?:^|[^A-Z])MAD(?![A-Z])/.test(up))return 'MAD';
+  if(/(?:^|[^A-Z])SAR(?![A-Z])|RIYAL/.test(up))return 'SAR';
+  if(/(?:^|[^A-Z])AOA(?![A-Z])|KWANZA/.test(up))return 'AOA';
+  if(/(?:^|[^A-Z])MRU(?![A-Z])|OUGUIYA/.test(up))return 'MRU';
+  if(/(?:^|[^A-Z])USD(?![A-Z])|US\$|DOLLAR|\$/.test(up))return 'USD';
   return null;
 }
-
-/* ===== التدفق الرئيسي ===== */
 function ocrEngineReady(){ return !!window.Tesseract; }
 function pasteInvoiceText(){
   var t=prompt('الصق نص الفاتورة هنا (انسخه من ملف PDF أو من تطبيق آخر):');
