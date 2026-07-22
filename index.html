@@ -778,137 +778,326 @@ function openWA(msg){
   setTimeout(function(){window.open('https://wa.me/'+WA+'?text='+encodeURIComponent(msg),'_blank');},520);
 }
 
-/* ---------- 6) قراءة الفواتير تلقائيًا (OCR) ---------- */
+/* ---------- 6) محرك قراءة الفواتير — نسخة مطوّرة ---------- */
+var OCR_STATE={raw:'',busy:false};
+
 function pickInvoice(){
+  if(OCR_STATE.busy){toast('القراءة جارية…');return;}
   var inp=document.createElement('input');
   inp.type='file'; inp.accept='image/*,application/pdf';
   inp.onchange=function(){ if(inp.files[0])readInvoice(inp.files[0]); };
   inp.click();
 }
-function preprocess(dataUrl){
-  return new Promise(function(ok){
-    var img=new Image();
-    img.onload=function(){
-      var scale=Math.max(1,Math.min(3,1600/img.width));
-      var c=document.createElement('canvas');
-      c.width=Math.round(img.width*scale); c.height=Math.round(img.height*scale);
-      var x=c.getContext('2d');
-      x.imageSmoothingEnabled=true; x.imageSmoothingQuality='high';
-      x.drawImage(img,0,0,c.width,c.height);
-      var d=x.getImageData(0,0,c.width,c.height), p=d.data, sum=0;
-      for(var i=0;i<p.length;i+=4)sum+=(p[i]*0.299+p[i+1]*0.587+p[i+2]*0.114);
-      var avg=sum/(p.length/4);
-      for(var j=0;j<p.length;j+=4){
-        var g=p[j]*0.299+p[j+1]*0.587+p[j+2]*0.114;
-        var v=(g-avg)*1.9+avg; v=v<0?0:(v>255?255:v);
-        p[j]=p[j+1]=p[j+2]=v;
-      }
-      x.putImageData(d,0,0);
-      ok(c.toDataURL('image/png'));
-    };
-    img.onerror=function(){ok(dataUrl);};
-    img.src=dataUrl;
+
+/* ===== معالجات صور متعددة: كل واحدة تُجرَّب وتُقيَّم ===== */
+function toCanvas(img,scale){
+  var c=document.createElement('canvas');
+  c.width=Math.round(img.width*scale); c.height=Math.round(img.height*scale);
+  var x=c.getContext('2d',{willReadFrequently:true});
+  x.imageSmoothingEnabled=true; x.imageSmoothingQuality='high';
+  x.fillStyle='#fff'; x.fillRect(0,0,c.width,c.height);
+  x.drawImage(img,0,0,c.width,c.height);
+  return c;
+}
+function grayData(c){
+  var x=c.getContext('2d',{willReadFrequently:true});
+  var d=x.getImageData(0,0,c.width,c.height);
+  return {ctx:x,img:d,p:d.data};
+}
+/* 1) تباين تكيفي */
+function vContrast(img,scale){
+  var c=toCanvas(img,scale), g=grayData(c), p=g.p, sum=0;
+  for(var i=0;i<p.length;i+=4)sum+=(p[i]*0.299+p[i+1]*0.587+p[i+2]*0.114);
+  var avg=sum/(p.length/4);
+  for(var j=0;j<p.length;j+=4){
+    var v=(p[j]*0.299+p[j+1]*0.587+p[j+2]*0.114-avg)*2.0+avg;
+    v=v<0?0:(v>255?255:v);
+    p[j]=p[j+1]=p[j+2]=v;
+  }
+  g.ctx.putImageData(g.img,0,0);
+  return c.toDataURL('image/png');
+}
+/* 2) عتبة Otsu (أبيض/أسود نقي) — الأفضل للقطات الشاشة */
+function vOtsu(img,scale){
+  var c=toCanvas(img,scale), g=grayData(c), p=g.p;
+  var hist=new Array(256).fill(0), n=p.length/4, i, gv;
+  for(i=0;i<p.length;i+=4){
+    gv=Math.round(p[i]*0.299+p[i+1]*0.587+p[i+2]*0.114);
+    p[i]=p[i+1]=p[i+2]=gv; hist[gv]++;
+  }
+  var sumAll=0; for(i=0;i<256;i++)sumAll+=i*hist[i];
+  var sumB=0,wB=0,mx=0,thr=128;
+  for(i=0;i<256;i++){
+    wB+=hist[i]; if(!wB)continue;
+    var wF=n-wB; if(!wF)break;
+    sumB+=i*hist[i];
+    var mB=sumB/wB, mF=(sumAll-sumB)/wF;
+    var between=wB*wF*(mB-mF)*(mB-mF);
+    if(between>mx){mx=between;thr=i;}
+  }
+  for(i=0;i<p.length;i+=4){
+    var b=p[i]>thr?255:0;
+    p[i]=p[i+1]=p[i+2]=b;
+  }
+  g.ctx.putImageData(g.img,0,0);
+  return c.toDataURL('image/png');
+}
+/* 3) الأصلية مكبّرة فقط */
+function vPlain(img,scale){ return toCanvas(img,scale).toDataURL('image/png'); }
+
+function loadImg(src){
+  return new Promise(function(ok,bad){
+    var im=new Image();
+    im.onload=function(){ok(im);};
+    im.onerror=bad;
+    im.src=src;
   });
 }
+
+/* ===== تقييم جودة النص المستخرج ===== */
+function scoreText(t){
+  if(!t)return 0;
+  var clean=t.replace(/\s/g,'');
+  if(clean.length<12)return 0;
+  var digits=(t.match(/\d/g)||[]).length;
+  var letters=(t.match(/[A-Za-z\u0600-\u06FF]/g)||[]).length;
+  var junk=(t.match(/[^\w\s\u0600-\u06FF.,:%\/()\-+\u00a0€$£¥]/g)||[]).length;
+  var kw=/TOTAL|MONTANT|VALOR|INVOICE|FACTURE|FATURA|AMOUNT|الإجمالي|المجموع|فاتورة/i.test(t)?60:0;
+  return letters*1 + digits*1.6 + kw - junk*1.4;
+}
+
+/* ===== PDF: نص مباشر، وإن فشل نُحوّل الصفحات لصور ونقرأها ===== */
+async function pdfExtract(dataUrl,onProgress){
+  if(!window.pdfjsLib)return '';
+  var pdf=await pdfjsLib.getDocument({url:dataUrl}).promise;
+  var pages=Math.min(pdf.numPages,3), txt='';
+  for(var i=1;i<=pages;i++){
+    var pg=await pdf.getPage(i);
+    var tc=await pg.getTextContent();
+    txt+=tc.items.map(function(x){return x.str;}).join(' ')+'\n';
+  }
+  if(txt.replace(/\s/g,'').length>40)return txt;
+  /* PDF ممسوح ضوئيًا: نرسم الصفحات ونقرأها بـ OCR */
+  onProgress&&onProgress('PDF ممسوح — جارٍ التحويل لصورة…');
+  var out='';
+  for(var k=1;k<=pages;k++){
+    var page=await pdf.getPage(k);
+    var vp=page.getViewport({scale:2.2});
+    var cv=document.createElement('canvas');
+    cv.width=vp.width; cv.height=vp.height;
+    await page.render({canvasContext:cv.getContext('2d'),viewport:vp}).promise;
+    out+=await ocrBest(cv.toDataURL('image/png'),onProgress)+'\n';
+  }
+  return out;
+}
+
+/* ===== OCR متعدد المحاولات: يجرّب 3 معالجات ويأخذ الأفضل ===== */
+async function ocrBest(dataUrl,onProgress){
+  if(!window.Tesseract)return '';
+  var img;
+  try{ img=await loadImg(dataUrl); }catch(e){ return ''; }
+  var scale=Math.max(1,Math.min(3.2,1800/img.width));
+  var variants=[
+    {name:'تباين',  make:function(){return vContrast(img,scale);}},
+    {name:'أبيض/أسود', make:function(){return vOtsu(img,scale);}},
+    {name:'أصلية',  make:function(){return vPlain(img,scale);}}
+  ];
+  var worker=await Tesseract.createWorker(['eng','fra','por','ara'],1,{
+    workerBlobURL:true,
+    logger:function(m){
+      if(m.status==='recognizing text'&&onProgress)
+        onProgress('جارٍ القراءة… '+Math.round((m.progress||0)*100)+'%');
+    }
+  });
+  try{
+    await worker.setParameters({preserve_interword_spaces:'1'});
+  }catch(e){}
+  var best='', bestScore=-1;
+  for(var i=0;i<variants.length;i++){
+    onProgress&&onProgress('محاولة '+(i+1)+'/3 — '+variants[i].name);
+    try{
+      var url=variants[i].make();
+      var r=await worker.recognize(url);
+      var t=(r.data&&r.data.text)||'';
+      var s=scoreText(t);
+      if(s>bestScore){bestScore=s;best=t;}
+      /* نتيجة ممتازة مبكرًا؟ نتوقف لتوفير الوقت */
+      if(s>320)break;
+    }catch(e){}
+  }
+  await worker.terminate();
+  return best;
+}
+
+/* ===== مستخرجات ===== */
 function normNum(raw){
-  raw=String(raw).replace(/\s/g,'');
+  raw=String(raw).replace(/[\s\u00a0'`]/g,'');
   var m=raw.match(/^(.*?)([.,])(\d{1,2})$/), i, d='';
   if(m&&m[3].length<=2){i=m[1];d='.'+m[3];}else i=raw;
   var v=parseFloat(i.replace(/[.,]/g,'')+d);
   return isNaN(v)?null:v;
 }
 function extractAmount(t){
-  var keys=['TOTAL AMOUNT','GRAND TOTAL','AMOUNT DUE','TOTAL DUE','INVOICE TOTAL','TOTAL:',
-    'MONTANT TOTAL','TOTAL GENERAL','NET A PAYER','A PAYER',
-    'VALOR TOTAL','TOTAL A PAGAR','MONTANTE',
-    'الاجمالي','الإجمالي','المجموع','المبلغ الاجمالي','المبلغ الإجمالي',
-    'TOTAL FOB','TOTAL CIF','TOTAL EXW','TOTAL USD','TOTAL EUR','TOTAL'];
-  var best=null,bestScore=-1;
-  t.split(/\n/).forEach(function(line){
+  var keys=['GRAND TOTAL','TOTAL AMOUNT','AMOUNT DUE','TOTAL DUE','BALANCE DUE','INVOICE TOTAL',
+    'TOTAL GENERAL','MONTANT TOTAL','NET A PAYER','NET \u00c0 PAYER','A PAYER','TOTAL TTC',
+    'VALOR TOTAL','TOTAL A PAGAR','TOTAL GERAL','MONTANTE TOTAL','IMPORTE TOTAL',
+    'المبلغ الاجمالي','المبلغ الإجمالي','الاجمالي','الإجمالي','المجموع الكلي','المجموع','صافي',
+    'TOTAL FOB','TOTAL CIF','TOTAL EXW','TOTAL USD','TOTAL EUR','TOTAL CNY','SUBTOTAL','TOTAL'];
+  var lines=t.split(/\n/), best=null, bestScore=-1;
+  lines.forEach(function(line,li){
     var up=line.toUpperCase(), score=0;
     keys.forEach(function(k,i){ if(up.indexOf(k)>=0)score=Math.max(score,keys.length-i); });
-    var nums=(line.match(/[0-9][0-9.,\s]{2,}/g)||[]).map(function(s){return normNum(s.trim());})
-      .filter(function(v){return v&&v>=10&&v<1e12;});
+    if(!score)return;
+    /* أرقام في نفس السطر، وإن خلا فالسطر التالي */
+    var pool=line+' '+((lines[li+1]||'').match(/^[\s\d.,]+$/)?lines[li+1]:'');
+    var nums=(pool.match(/[0-9][0-9.,\s\u00a0]{1,}/g)||[])
+      .map(function(s){return normNum(s.trim());})
+      .filter(function(v){return v&&v>=5&&v<1e12;});
     if(!nums.length)return;
     var mx=Math.max.apply(null,nums);
-    if(score>0&&(score>bestScore||(score===bestScore&&mx>(best||0)))){best=mx;bestScore=score;}
+    if(score>bestScore||(score===bestScore&&mx>(best||0))){best=mx;bestScore=score;}
   });
   if(best)return best;
-  var all=(t.match(/[0-9][0-9.,\s]{2,}/g)||[]).map(function(s){return normNum(s.trim());})
+  /* احتياطي: رقم بجوار رمز عملة */
+  var cur=t.match(/(?:USD|EUR|CNY|RMB|AED|MRU|AOA|\$|€|\u00a5)\s*([0-9][0-9.,\s]{2,})/i);
+  if(cur){var v=normNum(cur[1]); if(v)return v;}
+  var all=(t.match(/[0-9][0-9.,\s]{3,}/g)||[]).map(function(s){return normNum(s.trim());})
     .filter(function(v){return v&&v>=100&&v<1e12;});
   return all.length?Math.max.apply(null,all):null;
 }
 function extractCompany(t){
-  var lines=t.split(/\n/).map(function(l){return l.trim();}).filter(function(l){return l.length>3;});
-  var suf=/\b(LDA|LTD|LLC|CO\.?,? ?LTD|COMPANY|SARL|SA|GMBH|INC|TRADING|IMPORT|EXPORT|INDUSTRY|FACTORY|GROUP|LIMITED)\b/i;
-  var skip=/INVOICE|FACTURE|FATURA|PROFORMA|COMMERCIAL|PACKING|DATE|N[o\u00ba\u00b0]|REF|TEL|FAX|EMAIL|WWW|HTTP|BANK|IBAN|SWIFT|ADDRESS|فاتورة|التاريخ/i;
-  for(var i=0;i<Math.min(lines.length,15);i++){
+  var lines=t.split(/\n/).map(function(l){return l.replace(/\s+/g,' ').trim();})
+    .filter(function(l){return l.length>3;});
+  var suf=/\b(LDA|LTD|LLC|CO\.?,? ?LTD|COMPANY|SARL|S\.A\.R\.L|SA|SAS|GMBH|INC|BV|PTE|TRADING|IMPORT|EXPORT|INDUSTR|FACTORY|GROUP|LIMITED|ENTERPRISE|MACHINERY|TECHNOLOG)\b/i;
+  var skip=/^(INVOICE|FACTURE|FATURA|PROFORMA|COMMERCIAL|PACKING|DATE|N[o\u00ba\u00b0]|REF|TEL|FAX|E-?MAIL|WWW|HTTP|BANK|IBAN|SWIFT|ADDRESS|BILL TO|SHIP TO|فاتورة|التاريخ|رقم)/i;
+  for(var i=0;i<Math.min(lines.length,20);i++){
     if(skip.test(lines[i]))continue;
-    if(suf.test(lines[i])&&lines[i].length<70)
-      return lines[i].replace(/[^\w\s&.,\-]/g,'').trim();
+    if(suf.test(lines[i])&&lines[i].length<80)
+      return lines[i].replace(/[^\w\s&.,\-\u0600-\u06FF]/g,'').trim();
   }
-  for(var j=0;j<Math.min(lines.length,8);j++){
+  for(var j=0;j<Math.min(lines.length,10);j++){
     if(skip.test(lines[j]))continue;
     var caps=lines[j].replace(/[^A-Z]/g,'').length;
-    if(caps>=6&&lines[j].split(/\s+/).length>=2&&lines[j].length<60)return lines[j].trim();
+    if(caps>=5&&lines[j].split(/\s+/).length>=2&&lines[j].length<70)return lines[j].trim();
+  }
+  for(i=0;i<Math.min(lines.length,20);i++){
+    var L=lines[i];
+    if(/^(شركة|مؤسسة|مجموعة|مصنع|معمل|مكتب|متجر)\s/.test(L)&&L.length<70)
+      return L.replace(/[^\w\s&.,\-\u0600-\u06FF]/g,'').trim();
+  }
+  /* سطر يلي كلمة المورد */
+  for(i=0;i<lines.length-1;i++){
+    if(/\b(SUPPLIER|SELLER|VENDOR|SHIPPER|FOURNISSEUR|EXPORTADOR|المورد|البائع)\b/i.test(lines[i])){
+      var nx=lines[i+1];
+      if(nx&&!skip.test(nx)&&nx.length<80)return nx.replace(/[^\w\s&.,\-\u0600-\u06FF]/g,'').trim();
+    }
   }
   return null;
 }
 function extractCcy(t){
   var up=t.toUpperCase();
   if(/\bEUR\b|€|EURO/.test(up))return 'EUR';
-  if(/\bCNY\b|RMB|YUAN/.test(up))return 'CNY';
-  if(/\bAED\b|DIRHAM/.test(up))return 'AED';
+  if(/\bCNY\b|\bRMB\b|YUAN|\u00a5/.test(up))return 'CNY';
+  if(/\bAED\b|DIRHAM|DHS/.test(up))return 'AED';
+  if(/\bMAD\b/.test(up))return 'MAD';
+  if(/\bGBP\b|£/.test(up))return 'GBP';
   if(/\bUSD\b|US\$|DOLLAR|\$/.test(up))return 'USD';
+  /* أسماء العملات بالعربية */
+  if(/يورو/.test(t))return 'EUR';
+  if(/يوان|رنمينبي/.test(t))return 'CNY';
+  if(/درهم\s*(إمارات|اماراتي)/.test(t))return 'AED';
+  if(/درهم\s*مغرب/.test(t))return 'MAD';
+  if(/أوقية|اوقية/.test(t))return 'MRU';
+  if(/كوانزا/.test(t))return 'AOA';
+  if(/ريال\s*سعود/.test(t))return 'SAR';
+  if(/دولار/.test(t))return 'USD';
   return null;
+}
+
+/* ===== التدفق الرئيسي ===== */
+function ocrEngineReady(){ return !!window.Tesseract; }
+function pasteInvoiceText(){
+  var t=prompt('الصق نص الفاتورة هنا (انسخه من ملف PDF أو من تطبيق آخر):');
+  if(!t||t.length<10)return;
+  applyExtract(t);
+}
+function applyExtract(txt){
+  var amount=extractAmount(txt), company=extractCompany(txt), ccy=extractCcy(txt);
+  var got=[];
+  if(company){document.getElementById('ivComp').value=company;got.push(company.slice(0,28));}
+  if(amount){document.getElementById('ivAmt').value=fmt(amount,2);got.push(fmt(amount,2));}
+  if(ccy&&window.FDD&&FDD['fddIvCcy']){FDD['fddIvCcy'].set(ccy);got.push(ccy);}
+  var T=document.getElementById('dropT'), R=document.getElementById('dropR');
+  if(got.length){
+    T.textContent='قُرئت الفاتورة';
+    R.innerHTML='<span style="color:#4ade80">'+got.join(' \u00b7 ')+'</span>';
+    ['ivComp','ivAmt'].forEach(function(id){
+      var el=document.getElementById(id);
+      if(el&&el.value){el.style.transition='background .4s';el.style.background='rgba(74,222,128,.14)';
+        setTimeout(function(){el.style.background='';},1100);}
+    });
+  }else{
+    R.innerHTML='<span style="color:#f87171">لم أتعرّف على المبلغ أو اسم الشركة</span>';
+  }
+  return got.length;
 }
 async function readInvoice(file){
   var T=document.getElementById('dropT'), R=document.getElementById('dropR');
-  T.textContent='جارٍ قراءة الفاتورة… قد تستغرق 20 ثانية';
-  R.textContent='';
+  var setP=function(m){T.textContent=m;};
+  OCR_STATE.busy=true;
+  setP('جارٍ التحضير…'); R.textContent='';
   if(window.arkanTrack)arkanTrack('upload_invoice');
   try{
     var dataUrl=await new Promise(function(ok,bad){
       var fr=new FileReader(); fr.onload=function(){ok(fr.result);}; fr.onerror=bad; fr.readAsDataURL(file);
     });
     var txt='';
-    if(file.type==='application/pdf'&&window.pdfjsLib){
-      var pdf=await pdfjsLib.getDocument({url:dataUrl}).promise;
-      for(var i=1;i<=Math.min(pdf.numPages,2);i++){
-        var pg=await pdf.getPage(i), c=await pg.getTextContent();
-        txt+=c.items.map(function(x){return x.str;}).join(' ')+'\n';
-      }
-    }else if(window.Tesseract){
-      var pre=await preprocess(dataUrl);
-      var w=await Tesseract.createWorker(['eng','por','fra'],1,{workerBlobURL:true});
-      var r1=await w.recognize(pre); txt=r1.data.text||'';
-      if(txt.replace(/\s/g,'').length<20){
-        var r2=await w.recognize(dataUrl);
-        if((r2.data.text||'').length>txt.length)txt=r2.data.text;
-      }
-      await w.terminate();
+    if(file.type==='application/pdf'){
+      txt=await pdfExtract(dataUrl,setP);
+    }else{
+      txt=await ocrBest(dataUrl,setP);
     }
+    OCR_STATE.raw=txt||'';
     var amount=extractAmount(txt), company=extractCompany(txt), ccy=extractCcy(txt);
     var got=[];
-    if(company){document.getElementById('ivComp').value=company;got.push(company.slice(0,26));}
+    if(company){document.getElementById('ivComp').value=company;got.push(company.slice(0,28));}
     if(amount){document.getElementById('ivAmt').value=fmt(amount,2);got.push(fmt(amount,2));}
     if(ccy&&FDD['fddIvCcy']){FDD['fddIvCcy'].set(ccy);got.push(ccy);}
-    T.textContent='قُرئت الفاتورة';
-    R.innerHTML=got.length
-      ? '<span style="color:#4ade80">'+got.join(' · ')+'</span>'
-      : '<span style="color:#f87171">تعذّرت القراءة — أدخل البيانات يدويًا</span>';
+
+    T.textContent = got.length ? 'قُرئت الفاتورة' : 'ارفع الفاتورة — صورة أو PDF';
+    var html='';
+    if(got.length)html+='<span style="color:#4ade80">'+got.join(' · ')+'</span>';
+    var missing=[];
+    if(!company)missing.push('اسم الشركة');
+    if(!amount)missing.push('المبلغ');
+    if(missing.length)html+='<div style="color:#f87171;margin-top:6px;font-size:.8rem">تعذّر استخراج: '+missing.join(' و')+' — أدخله يدويًا</div>';
+    if(OCR_STATE.raw.replace(/\s/g,'').length>15){
+      html+='<div style="margin-top:10px"><button type="button" class="btn btn-ghost" style="padding:8px 16px;font-size:.78rem" onclick="event.stopPropagation();showRaw()">عرض النص المقروء</button></div>';
+    }else{
+      html+='<div style="color:#f87171;margin-top:6px;font-size:.8rem">لم يُقرأ أي نص — جرّب صورة أوضح أو أقرب</div>';
+    }
+    R.innerHTML=html;
     ['ivComp','ivAmt'].forEach(function(id){
       var el=document.getElementById(id);
       if(el&&el.value){
         el.style.transition='background .4s';
-        el.style.background='rgba(74,222,128,.12)';
-        setTimeout(function(){el.style.background='';},1000);
+        el.style.background='rgba(74,222,128,.13)';
+        setTimeout(function(){el.style.background='';},1100);
       }
     });
   }catch(e){
     T.textContent='ارفع الفاتورة — صورة أو PDF';
     R.innerHTML='<span style="color:#f87171">تعذّرت القراءة — أدخل البيانات يدويًا</span>';
   }
+  OCR_STATE.busy=false;
+}
+function showRaw(){
+  var w=window.open('','_blank');
+  if(!w){toast('اسمح بالنوافذ المنبثقة لعرض النص');return;}
+  w.document.write('<meta charset="utf-8"><title>النص المقروء</title>'+
+    '<body style="background:#0B0F19;color:#e8ecf1;font-family:monospace;padding:24px;white-space:pre-wrap;line-height:1.8;font-size:13px">'+
+    (OCR_STATE.raw||'').replace(/[<>&]/g,function(c){return {'<':'&lt;','>':'&gt;','&':'&amp;'}[c];})+'</body>');
+  w.document.close();
 }
 </script>
 <script src="config.js"></script>
