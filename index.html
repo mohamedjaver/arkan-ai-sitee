@@ -482,7 +482,7 @@ footer{border-top:1px solid var(--stroke);margin-top:60px;padding:52px 0 40px;po
       <a href="settlement.html">لوحة التسوية</a>
     </div>
   </div>
-  <div class="f-bot">ARKAN Rates © 2026 — منصة التحويلات المالية الذكية</div>
+  <div class="f-bot">ARKAN Rates © 2026 — منصة التحويلات المالية الذكية<br><span style="font-size:.72rem;opacity:.5" class="ltr">v2.0 · 2026-07-22</span></div>
 </div></footer>
 
 <div id="toast"></div>
@@ -495,6 +495,30 @@ footer{border-top:1px solid var(--stroke);margin-top:60px;padding:52px 0 40px;po
    ============================================================ */
 var WA='22236295050';
 
+
+
+/* ---------- تحديث تلقائي: يكتشف نسخة جديدة ويحمّلها فورًا ---------- */
+(function(){
+  if(!('serviceWorker' in navigator))return;
+  navigator.serviceWorker.getRegistrations().then(function(regs){
+    regs.forEach(function(reg){
+      reg.update();
+      reg.addEventListener('updatefound',function(){
+        var nw=reg.installing;
+        if(!nw)return;
+        nw.addEventListener('statechange',function(){
+          if(nw.state==='installed'&&navigator.serviceWorker.controller){
+            nw.postMessage('skipWaiting');
+          }
+        });
+      });
+    });
+  }).catch(function(){});
+  var reloaded=false;
+  navigator.serviceWorker.addEventListener('controllerchange',function(){
+    if(reloaded)return; reloaded=true; location.reload();
+  });
+})();
 
 /* ---------- 0) الخلفية الحية: جسيمات مترابطة ---------- */
 (function(){
