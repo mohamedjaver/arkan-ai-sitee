@@ -853,6 +853,10 @@ body,input,select,textarea,button,.ar,h1,h2,h3{font-family:'Cairo','Tajawal','IB
       <button class="btn btn-line btn-sm" onclick="cleanReceipts()">حذف إيصالات قبل 60 يوم</button>
     </div>
     <div class="tx-mid" style="margin-top:10px">
+      <span>إصدار التطبيق: <b id="verLbl" class="num" style="color:var(--gold2)">—</b></span>
+      <button class="btn btn-line btn-sm" onclick="arkanCheckUpdate(1)">فحص التحديث</button>
+    </div>
+    <div class="tx-mid" style="margin-top:10px">
       <span>حماية الذاكرة: <b id="memStatus" style="color:var(--dim)">فحص...</b></span>
       <span>المرآة: <b id="mirStatus" style="color:var(--dim)">—</b></span>
     </div>
@@ -3249,7 +3253,22 @@ async function pdfText(dataUrl){
     const c=await page.getTextContent();
     txt+=' '+c.items.map(i=>i.str).join(' ');
   }
-  return txt;
+  if(txt.replace(/\s/g,'').length>=40)return txt;
+  /* PDF ممسوح ضوئيًا (بلا طبقة نص) → تحويل الصفحات لصور ثم OCR */
+  if(!window.Tesseract)return txt;
+  let out='';
+  const N=Math.min(pdf.numPages,3);
+  for(let p=1;p<=N;p++){
+    try{
+      const page=await pdf.getPage(p);
+      const vp=page.getViewport({scale:2.2});
+      const cv=document.createElement('canvas');
+      cv.width=vp.width;cv.height=vp.height;
+      await page.render({canvasContext:cv.getContext('2d'),viewport:vp}).promise;
+      out+=' '+(await imageText(cv.toDataURL('image/png')).catch(()=>''));
+    }catch(e){}
+  }
+  return (out.trim().length>txt.trim().length)?out:txt;
 }
 
 /* ================= IMAGE OCR (Tesseract) ================= */
@@ -3344,6 +3363,35 @@ async function imageText(dataUrl){
   const {data}=await w.recognize(pre);
   return data.text||'';
 }
+/* ================= BUILD / AUTO-UPDATE ================= */
+const ARKAN_BUILD='1002';
+function arkanVerLabel(){const e=$('verLbl');if(e)e.textContent=ARKAN_BUILD;}
+function arkanUpdateBanner(b){
+  if(document.getElementById('updBar'))return;
+  const d=document.createElement('div');d.id='updBar';
+  d.style.cssText='position:fixed;left:0;right:0;bottom:74px;z-index:9999;margin:0 12px;padding:11px 14px;border-radius:14px;background:linear-gradient(135deg,#7B5CFF,#5B3EE8);color:#fff;font-size:12.5px;font-weight:700;display:flex;justify-content:space-between;align-items:center;gap:10px;box-shadow:0 8px 26px rgba(90,60,230,.45)';
+  d.innerHTML='<span>تتوفر نسخة أحدث ('+b+')</span><span style="display:flex;gap:6px"><button style="background:#fff;color:#3B2A9E;border:0;border-radius:9px;padding:6px 12px;font-weight:800;font-size:12px">تحديث</button><button style="background:transparent;color:#fff;border:1px solid rgba(255,255,255,.5);border-radius:9px;padding:6px 10px;font-size:12px">لاحقًا</button></span>';
+  const bt=d.querySelectorAll('button');
+  bt[0].onclick=()=>arkanHardReload(b);
+  bt[1].onclick=()=>d.remove();
+  document.body.appendChild(d);
+}
+function arkanHardReload(b){
+  try{if(window.caches&&caches.keys)caches.keys().then(k=>k.forEach(n=>caches.delete(n)));}catch(e){}
+  const u=location.pathname+'?v='+(b||Date.now());
+  setTimeout(()=>location.replace(u),250);
+}
+async function arkanCheckUpdate(manual){
+  try{
+    const r=await fetch('build.json?t='+Date.now(),{cache:'no-store'});
+    if(!r.ok)throw 0;
+    const j=await r.json();
+    if(j&&j.build&&String(j.build)!==ARKAN_BUILD){arkanUpdateBanner(j.build);return;}
+    if(manual)toast('أنت على أحدث نسخة ('+ARKAN_BUILD+') ✓');
+  }catch(e){if(manual)toast('تعذّر فحص التحديث');}
+}
+setTimeout(()=>{arkanVerLabel();arkanCheckUpdate(false);},2500);
+
 async function anyReceiptText(dataUrl,type){
   if(type==='application/pdf')return await pdfText(dataUrl);
   if(window.Tesseract)return await imageText(dataUrl);
