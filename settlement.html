@@ -2186,8 +2186,9 @@ async function smartFill(targetId){
     const f=inp.files[0];if(!f)return;
     toast('جارٍ قراءة الإيصال...');
     try{
-      const dataUrl=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(f);});
-      const txt=await anyReceiptText(dataUrl,f.type,f.name);
+      const _R=await arkanRead(f);
+      const txt=_R.text;
+      if(!_R.ok&&_R.err&&!txt)throw new Error(_R.err);
       const sm=smartRead(txt);
       if(sm.amount==null){
         const v=parseFloat(String(prompt('تعذّرت القراءة — أدخل المبلغ:')||'').replace(/[^0-9.]/g,''));
@@ -2216,42 +2217,190 @@ function writeSmart(targetId,amount,sm){
   setTimeout(()=>{el.style.background='';},700);
 }
 /* ================= UNIVERSAL SMART RECEIPT READER ================= */
+/* ================= ARKAN UNIVERSAL RECEIPT ENGINE v1 =================
+   محرك واحد لكل الخانات: يقرأ PDF وصور، كل البنوك، كل العملات.
+   المخرج الموحّد: {ok,amount,ccy,txn,acct,date,bank,app,src,name,err,text}
+====================================================================== */
+const ARK_AR_DIG={'٠':'0','١':'1','٢':'2','٣':'3','٤':'4','٥':'5','٦':'6','٧':'7','٨':'8','٩':'9','۰':'0','۱':'1','۲':'2','۳':'3','۴':'4','۵':'5','۶':'6','۷':'7','۸':'8','۹':'9'};
+function arkNorm(t){
+  t=(t||'')+'';
+  t=t.replace(/[\u00A0\u202F\u2007\u2009\u2060]/g,' ');
+  t=t.replace(/[\u200e\u200f\u061c\u202a-\u202e]/g,'');
+  t=t.replace(/[٠-٩۰-۹]/g,d=>ARK_AR_DIG[d]||d);
+  t=t.replace(/[\u066B]/g,',').replace(/[\u066C]/g,' ');
+  return t.replace(/[ \t]+/g,' ');
+}
+/* قص التذييل القانوني للبنوك (رأس المال/الترويسة) */
+function arkStripFooter(t){
+  const cuts=['Este documento foi gerado','Documento processado pelo','Capital Social','Em caso de d','Para valida','Banco Angolano de Investimentos, S.A','Registo no BNA','Sociedade Aberta'];
+  let end=t.length;
+  for(const c of cuts){const i=t.indexOf(c);if(i>150&&i<end)end=i;}
+  return t.slice(0,end);
+}
+const ARK_BANKS=[
+  [/bai\s*directo|banco angolano de investimentos|\bBAI\b/i,'BAI','AOA'],
+  [/\bBFA\b|banco de fomento angola/i,'BFA','AOA'],
+  [/\bBCI\b|banco de com[eé]rcio e ind[uú]stria/i,'BCI','AOA'],
+  [/atl[aâ]ntico/i,'ATLANTICO','AOA'],
+  [/banco sol/i,'SOL','AOA'],
+  [/\bkeve\b/i,'KEVE','AOA'],
+  [/\byetu\b/i,'YETU','AOA'],
+  [/standard bank/i,'STANDARD','AOA'],
+  [/multicaixa|\bemis\b/i,'MULTICAIXA','AOA'],
+  [/peoples bank|bpm\b/i,'Peoples Bank','MRU'],
+  [/bankily|بنكيلي/i,'Bankily','MRU'],
+  [/masrvi|مصرفي/i,'Masrvi','MRU'],
+  [/sedad|السداد/i,'Sedad','MRU'],
+  [/bimbank|بيم بنك/i,'BIM','MRU'],
+  [/binance/i,'Binance','USDT'],
+  [/tronscan|trc-?20|\btron\b/i,'TRON','USDT']
+];
+const ARK_CCY=[
+  {c:'USDT',hint:/usdt|tether|trc-?20|tronscan|binance|تيثر|\bT[1-9A-HJ-NP-Za-km-z]{33}\b/i,sym:'(?:USDT|₮)',dec:2},
+  {c:'MRU', hint:/bankily|sedad|masrvi|peoples bank|السداد|مصرفي|بنكيلي|أوقي|ouguiya|\bMRU\b/i,sym:'(?:MRU|UM|أوقية)',dec:0},
+  {c:'AOA', hint:/\bKz\b|kwanza|multicaixa|comprovativo|movimento|montante|IBAN\s*:?\s*AO|bai directo|banco angolano|\bBFA\b|\bBCI\b|atl[aâ]ntico/i,sym:'(?:Kz|KZ|AOA)',dec:0},
+  {c:'EUR', hint:/€|\bEUR\b|يورو/i,sym:'(?:€|EUR)',dec:2},
+  {c:'USD', hint:/\bUSD\b|US\$|دولار/i,sym:'(?:USD|US\\$|\\$)',dec:2},
+  {c:'CNY', hint:/\bCNY\b|\bRMB\b|¥|يوان/i,sym:'(?:CNY|RMB|¥)',dec:2},
+  {c:'AED', hint:/\bAED\b|درهم إمارات/i,sym:'(?:AED|د\\.إ)',dec:2},
+  {c:'MAD', hint:/\bMAD\b|درهم مغرب/i,sym:'(?:MAD|د\\.م)',dec:2}
+];
+const ARK_MONEY='([0-9]{1,3}(?:[ .,][0-9]{3})+(?:[.,][0-9]{1,2})?|[0-9]+[.,][0-9]{1,2}|[0-9]{2,12})';
+const ARK_LABELS=['amount sent','importancia a transferir','importância a transferir','importancia','importância','montante','valor transferido','valor','importe','total a pagar','quantia','montant','amount','total','débito','debito','crédito','credito','المبلغ','مبلغ','القيمة','قيمة التحويل'];
+const ARK_BLOCK=/(iban|conta|receiver|account|txn|chave|\bpin\b|nif|refer[eê]ncia do|telefone|phone|swift|n\.?[ºo°]|هاتف|حساب)[^0-9]{0,12}$/i;
+
+function arkNum(raw){
+  raw=(raw+'').replace(/\s/g,'');
+  const m=raw.match(/^(.*?)([.,])(\d{1,2})$/);
+  let ip,dec='';
+  if(m&&m[1].length){ip=m[1];dec='.'+m[3];}else ip=raw;
+  const v=parseFloat(ip.replace(/[.,]/g,'')+dec);
+  return isNaN(v)?null:v;
+}
+function arkPlausible(raw){
+  const d=raw.replace(/[^0-9]/g,'');
+  if(!d||d.length>12)return false;
+  if(/^0/.test(d))return false;                     /* أرقام حسابات تبدأ بصفر */
+  if(!/[.,\s]/.test(raw)&&d.length>=10)return false;/* رقم طويل بلا فاصل = مرجع */
+  return true;
+}
+function arkDetectCcy(t){
+  for(const c of ARK_CCY)if(c.hint.test(t))return c;
+  return null;
+}
+function arkBank(t){
+  for(const [re,name,ccy] of ARK_BANKS)if(re.test(t))return {bank:name,ccy};
+  return {bank:null,ccy:null};
+}
+/* المبلغ: تسلسل من 4 طبقات */
+function arkAmount(t,ccyDef){
+  const sym=ccyDef?ccyDef.sym:'(?:Kz|MRU|UM|USDT|USD|EUR|AOA|₮|€|\\$)';
+  const tryMatch=(re)=>{
+    let m,best=null;const R=new RegExp(re,'gi');
+    while((m=R.exec(t))!==null){
+      const raw=m[1];if(!arkPlausible(raw))continue;
+      const pre=t.slice(Math.max(0,m.index-26),m.index);
+      if(ARK_BLOCK.test(pre))continue;
+      const v=arkNum(raw);
+      if(v!=null&&v>0){best={v,raw};break;}
+    }
+    return best;
+  };
+  /* 1) وسم صريح (Montante / Amount Sent / المبلغ ...) */
+  for(const lbl of ARK_LABELS){
+    const i=t.toLowerCase().indexOf(lbl);
+    if(i===-1)continue;
+    const seg=t.slice(i,i+90);
+    const r=tryMatch('(?:'+sym+')?\\s*:?=?\\s*'+ARK_MONEY);
+    const rr=(function(){let m;const R=new RegExp('(?:'+sym+')?\\s*:?=?\\s*'+ARK_MONEY,'i');m=seg.match(R);
+      if(m&&arkPlausible(m[1])){const v=arkNum(m[1]);if(v!=null&&v>0)return {v,raw:m[1],src:'label:'+lbl};}return null;})();
+    if(rr)return rr;
+  }
+  /* 2) ملتصق برمز العملة: Kz 4 000 000,00  /  MRU 2400000 */
+  let r=tryMatch(sym+'\\s*'+ARK_MONEY);
+  if(r)return {...r,src:'sym-pre'};
+  /* 3) الرمز بعد الرقم: 4.000.000,00 Kz */
+  r=tryMatch(ARK_MONEY+'\\s*'+sym);
+  if(r)return {...r,src:'sym-post'};
+  /* 4) أكبر رقم منطقي */
+  const all=[];let m;const R=new RegExp(ARK_MONEY,'g');
+  while((m=R.exec(t))!==null){
+    if(!arkPlausible(m[1]))continue;
+    const pre=t.slice(Math.max(0,m.index-26),m.index);
+    if(ARK_BLOCK.test(pre))continue;
+    const v=arkNum(m[1]);if(v!=null&&v>=100)all.push(v);
+  }
+  if(all.length)return {v:Math.max(...all),raw:null,src:'max'};
+  return null;
+}
+function arkTxn(t,ccy){
+  let m;
+  if(ccy==='AOA'){
+    m=t.match(/N[uú]mero de Opera[cç][aã]o\s*:?\s*([0-9]{6,})/i)||t.match(/Movimento\s*:?\s*([0-9]{6,})/i)
+     ||t.match(/Refer[eê]ncia\s*:?\s*([0-9]{6,})/i)||t.match(/CHAVE\s*:?\s*([0-9]{6,})/i);
+    if(m)return m[1];
+  }
+  m=t.match(/\b([a-f0-9]{64})\b/i);if(m)return m[1];
+  m=t.match(/\b(TR[0-9]{6,})\b/i);if(m)return m[1];
+  m=t.match(/Txn\s*ID\s*:?\s*([0-9A-Za-z]{8,})/i);if(m)return m[1];
+  m=t.match(/(?:Transaction|Trans|Order|Opera[cç][aã]o|رقم العملية|المرجع)\s*(?:ID|N[ºo°]|:)?\s*:?\s*([0-9A-Za-z]{8,})/i);
+  return m?m[1]:null;
+}
+function arkAcct(t){
+  let m=t.match(/\b(AO06\s*[0-9\s]{15,30})\b/i);if(m)return m[1].replace(/\s/g,'');
+  m=t.match(/Receiver\s*:?[\s]*([0-9 ]{8,30})/i);if(m)return m[1].replace(/\s/g,'');
+  m=t.match(/(?:Conta\s*\/?\s*IBAN|IBAN|حساب\s*بنكي)\s*:?\s*([A-Z0-9 ]{10,34})/i);if(m)return m[1].replace(/\s/g,'');
+  m=t.match(/\b(2[0-9]{7})\b/);return m?m[1]:null;
+}
+function arkDate(t){
+  let m=t.match(/\b([0-3]?[0-9][\/\-\.][0-1]?[0-9][\/\-\.](?:20)?[0-9]{2})\b/);
+  if(m)return m[1];
+  m=t.match(/\b(20[0-9]{2}[\/\-][0-1][0-9][\/\-][0-3][0-9])\b/);
+  return m?m[1]:null;
+}
+/* ================= النواة ================= */
+function arkanCore(rawText){
+  const t0=arkNorm(rawText);
+  if(!t0||t0.replace(/\s/g,'').length<12)
+    return {ok:false,amount:null,ccy:null,txn:null,acct:null,date:null,bank:null,app:null,src:null,name:null,err:'لا يوجد نص مقروء',text:t0};
+  const t=arkStripFooter(t0);
+  const b=arkBank(t);
+  let cd=arkDetectCcy(t);
+  if(!cd&&b.ccy)cd=ARK_CCY.find(x=>x.c===b.ccy)||null;
+  const a=arkAmount(t,cd);
+  const ccy=cd?cd.c:(b.ccy||null);
+  let amount=a?a.v:null;
+  /* USDT: مبالغ ضخمة بلا كسور غالبًا خطأ قراءة */
+  if(ccy==='USDT'&&amount!=null&&amount>1e7)amount=null;
+  let name=null;const nm=t.match(/(?:Nome|PARA|Benefici[aá]rio|إلى)\s*:?\s*([A-ZÀ-Ú][A-ZÀ-Ú .]{4,45})/);
+  if(nm)name=nm[1].trim();
+  return {
+    ok:amount!=null, amount, ccy,
+    txn:arkTxn(t,ccy), acct:arkAcct(t), date:arkDate(t),
+    bank:b.bank, app:b.bank, name,
+    src:a?a.src:null,
+    err:amount==null?'لم يُعثر على المبلغ':null,
+    text:t
+  };
+}
+
+/* قارئ الملف الموحّد — نقطة الدخول الوحيدة لكل الخانات */
+async function arkanRead(file){
+  try{
+    const dataUrl=await new Promise((res,rej)=>{const r=new FileReader();
+      r.onload=()=>res(r.result);r.onerror=()=>rej(new Error('تعذّر فتح الملف'));r.readAsDataURL(file);});
+    const txt=await anyReceiptText(dataUrl,file.type,file.name);
+    const r=arkanCore(txt);r.file=file.name;return r;
+  }catch(e){
+    return {ok:false,amount:null,ccy:null,txn:null,acct:null,date:null,bank:null,app:null,
+            name:null,src:null,file:file.name,text:'',
+            err:(e&&e.message)?e.message:'تعذّرت القراءة'};
+  }
+}
+/* أغلفة التوافق مع الواجهات القائمة */
 function smartRead(txt){
-  const t=(txt||'').replace(/\u00A0/g,' ');
-  const low=t.toLowerCase();
-  /* 1) USDT — بلوك تشين / Binance / نص */
-  if(/\bT[1-9A-HJ-NP-Za-km-z]{33}\b/.test(t)||/tronscan|usdt|trc20|binance|تيثر/i.test(low)){
-    const ex=usdtExtract(t);
-    if(ex.amount!=null)return {...ex,ccy:'USDT',src:'USDT'};
-  }
-  /* 2) MRU — Bankily / السداد / مصرفي / أوقية */
-  if(/sedad|bankily|peoples bank|masrvi|السداد|مصرفي/i.test(t)||/أوقي/.test(t)||/\bMRU\b/.test(t)){
-    const ex=mruReceiptExtract(t);
-    if(ex.amount!=null)return {amount:ex.amount,acct:ex.acct,txn:ex.txn,ccy:'MRU',src:ex.app};
-  }
-  /* 3) AOA — BAI / Multicaixa / كوانزا */
-  if(/\bKz\b|kwanza|multicaixa|comprovativo|montante|IBAN\s*:?\s*AO/i.test(t)){
-    const body=stripBankFooter(t);
-    const ex=extractAmount(body);
-    if(ex.value!=null)return {amount:ex.value,acct:null,txn:aoaTxn(body),ccy:'AOA',src:'AOA'};
-  }
-  /* 4) عملات برموزها */
-  let ccy=null;
-  if(/€|\bEUR\b|يورو/i.test(t))ccy='EUR';
-  else if(/\bUSD\b|دولار/i.test(t))ccy='USD';
-  else if(/AED|درهم إمارات/i.test(t))ccy='AED';
-  else if(/CNY|RMB|¥|يوان/i.test(t))ccy='CNY';
-  else if(/MAD|درهم مغرب/i.test(t))ccy='MAD';
-  /* 5) استخراج المبلغ بأي شكل — الطبقة الأخيرة الذكية */
-  let ex=extractAmount(t);
-  if(ex.value==null){
-    /* fallback نهائي: أكبر رقم منطقي في النص (>= 100) */
-    const nums=(t.match(/[0-9][0-9.,\s]{2,}/g)||[])
-      .map(s=>normNum(s.trim()))
-      .filter(v=>v!=null&&v>=100&&v<1e15);
-    if(nums.length)ex={value:Math.max(...nums)};
-  }
-  return {amount:ex.value,acct:null,txn:null,ccy,src:'عام'};
+  const r=arkanCore(txt);
+  return {amount:r.amount,acct:r.acct,txn:r.txn,ccy:r.ccy,bank:r.bank,src:r.bank||r.ccy||'عام'};
 }
 function routeReceipt(r,ctx){
   if(ctx==='trade'){
@@ -2302,8 +2451,9 @@ async function uploadOB(fid){
     let ok=0,dup=0,moved=0;const touched=new Set([fid]);
     for(const f of files){
       try{
-        const dataUrl=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(f);});
-        const txt=await anyReceiptText(dataUrl,f.type,f.name);
+        const _R=await arkanRead(f);
+        const txt=_R.text;
+        if(!_R.ok&&_R.err&&!txt)throw new Error(_R.err);
         const sm=smartRead(txt);
         const ctx=curType==='trade'?'trade':(curType==='bridge'?'bridge':null);
         let target=fid;
@@ -2628,8 +2778,9 @@ async function uploadRC(side){
       n++;
       if(pg)pg.textContent='قراءة إيصالات '+lbl+' — '+n+'/'+files.length+'  ·  '+String(f.name).slice(0,22);
       try{
-        const dataUrl=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(f);});
-        const txt=await anyReceiptText(dataUrl,f.type,f.name);
+        const _R=await arkanRead(f);
+        const txt=_R.text;
+        if(!_R.ok&&_R.err&&!txt)throw new Error(_R.err);
         const p=arkanParse(txt,f.name);
         const ccy=p.ccy||(sel!=='AUTO'?sel:null)||'AOA';
         rc.push({name:f.name,amount:p.amount,ccy,acct:p.acct||null,txn:p.txn||null,date:p.date||null,
@@ -2982,8 +3133,9 @@ function uploadPayRcpt2(){
     let ok=0;
     for(const f of files){
       try{
-        const dataUrl=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(f);});
-        const txt=await anyReceiptText(dataUrl,f.type,f.name);
+        const _R=await arkanRead(f);
+        const txt=_R.text;
+        if(!_R.ok&&_R.err&&!txt)throw new Error(_R.err);
         if(!txt||txt.replace(/\s/g,'').length<15)throw new Error('لا يوجد نص مقروء في الملف');
         const ex=mruReceiptExtract(txt);
         if(!ex.amount)throw new Error('لم يُعثر على المبلغ');
@@ -3052,8 +3204,9 @@ function uploadKB(){
     let ok=0,moved=0;const touched=new Set([fid]);
     for(const f of files){
       try{
-        const dataUrl=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(f);});
-        const txt=await anyReceiptText(dataUrl,f.type,f.name);
+        const _R=await arkanRead(f);
+        const txt=_R.text;
+        if(!_R.ok&&_R.err&&!txt)throw new Error(_R.err);
         if(!txt||txt.replace(/\s/g,'').length<20)throw new Error('لا يوجد نص مقروء');
         const sm=smartRead(txt);
         if(sm.txn&&kb.some(x=>x.txn&&x.txn===sm.txn)){dup++;continue;}
@@ -3130,31 +3283,8 @@ function calcM2A(){
 /* ================= MAURITANIAN PAYOUT RECEIPT (Bankily / Sedad) ================= */
 let _payRcpt=null;
 function mruReceiptExtract(txt){
-  const t=(txt||'').replace(/\u00A0/g,' ');
-  const low=t.toLowerCase();
-  let app='بنك موريتاني';
-  if(low.includes('sedad')||t.includes('السداد'))app='السداد';
-  else if(low.includes('peoples bank')||low.includes('bankily')||low.includes('txn id'))app='Bankily';
-  else if(low.includes('masrvi')||low.includes('مصرفي'))app='مصرفي';
-  let amount=null,m;
-  m=t.match(/Amount\s*Sent\s*:?\s*MRU\s*([\d.,\s]+?)(?:\n|$|[A-Za-z])/i);
-  if(!m)m=t.match(/MRU\s*([0-9][\d.,\s]*)/i);
-  if(!m)m=t.match(/بإرسال\s*([\d.,\s]+?)\s*أوقي/);
-  if(!m)m=t.match(/([\d][\d.,\s]*)\s*أوقي/);
-  if(m){const v=normNum(m[1].trim());if(v&&v>10)amount=v;}
-  let acct=null;
-  m=t.match(/Receiver\s*:?[\s\n]*([0-9 ]{8,30})/i);
-  if(!m)m=t.match(/حساب\s*بنكي\s*:?\s*([0-9]{6,20})/);
-  if(m)acct=m[1].replace(/\s/g,'');
-  let txnPre=null;{const tm=t.match(/Txn\s*ID\s*:?\s*([0-9]{8,})/i);if(tm)txnPre=tm[1];}
-  if(!acct){const longs=(t.match(/\b[0-9]{10,24}\b/g)||[]).filter(x=>x!==txnPre);if(longs.length)acct=longs[0];}
-  let name=null;
-  m=t.match(/إلى\s+([A-Z][A-Z .]{4,40})/);
-  if(m)name=m[1].trim();
-  let txn=null;
-  m=t.match(/TR[0-9]{6,}/);
-  if(m)txn=m[0];else{m=t.match(/Txn\s*ID\s*:?\s*([0-9]{8,})/i);if(m)txn=m[1];}
-  return {app,amount,acct,name,txn};
+  const r=arkanCore(txt);
+  return {app:r.bank||'بنك موريتاني',amount:r.amount,acct:r.acct,name:r.name,txn:r.txn,ccy:r.ccy};
 }
 function uploadPayRcpt(){
   const inp=document.createElement('input');
@@ -3165,9 +3295,9 @@ function uploadPayRcpt(){
     r.onload=async()=>{
       toast('جارٍ قراءة الإيصال...');
       try{
-        const txt=await anyReceiptText(r.result,f.type,f.name);
-        const ex=mruReceiptExtract(txt);
-        if(!ex.amount&&!ex.acct){toast('لم يُقرأ — أدخل البيانات يدويًا');return;}
+        const _R=await arkanRead(f);
+        const ex={app:_R.bank||'بنك موريتاني',amount:_R.amount,acct:_R.acct,name:_R.name,txn:_R.txn,ccy:_R.ccy};
+        if(!ex.amount&&!ex.acct){toast(_R.err||'لم يُقرأ — أدخل البيانات يدويًا');return;}
         _payRcpt={...ex,amountOld:ex.amount?ex.amount*10:null,ts:Date.now()};
         /* تعبئة الحقول */
         if(ex.acct)$('bPhone').value=ex.acct;
@@ -3218,8 +3348,9 @@ function uploadBatch(){
     for(const f of files){
       i++;
       try{
-        const dataUrl=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(f);});
-        const txt=await anyReceiptText(dataUrl,f.type,f.name);
+        const _R=await arkanRead(f);
+        const txt=_R.text;
+        if(!_R.ok&&_R.err&&!txt)throw new Error(_R.err);
         const sm=smartRead(txt);
         batch.push({name:f.name,amount:sm.amount,ccy:sm.ccy});
         if(sm.amount!=null)ok++;
@@ -3533,7 +3664,7 @@ async function imageText(dataUrl){
   return data.text||'';
 }
 /* ================= BUILD / AUTO-UPDATE ================= */
-const ARKAN_BUILD='1008';
+const ARKAN_BUILD='1009';
 function arkanVerLabel(){const e=$('verLbl');if(e)e.textContent=ARKAN_BUILD;}
 function arkanUpdateBanner(b){
   if(document.getElementById('updBar'))return;
@@ -4460,7 +4591,7 @@ async function scanAllToday(){
   toast('جارٍ تحليل '+rs.length+' PDF...');
   for(const r of rs){
     if(r.amount!=null||!r.data)continue;
-    try{const txt=await pdfText(r.data);const ex=extractAmount(txt);r.amount=ex.value;r.amountLabel=ex.label;r.amounts=allCandidates(txt).slice(0,20);}catch(e){}
+    try{const txt=await pdfText(r.data);const k=arkanCore(txt);r.amount=k.amount;r.amountLabel=k.src;r.ccy=k.ccy;r.txn=k.txn;r.amounts=allCandidates(txt).slice(0,20);}catch(e){}
   }
   saveReceipts();renderReceiptTotals();toast('اكتمل التحليل ✓');
 }
@@ -4500,8 +4631,9 @@ async function uploadSvc(){
     const f=inp.files[0];if(!f)return;
     toast('جارٍ قراءة الفاتورة...');
     try{
-      const dataUrl=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(f);});
-      const txt=await anyReceiptText(dataUrl,f.type,f.name);
+      const _R=await arkanRead(f);
+      const txt=_R.text;
+      if(!_R.ok&&_R.err&&!txt)throw new Error(_R.err);
       const sm=(typeof smartRead==='function')?smartRead(txt):{amount:(extractAmount(txt)||{}).value,ccy:null};
       _svcRcpt={name:f.name,amount:sm.amount,ccy:sm.ccy,ts:Date.now()};
       if(sm.amount&&$('svcAmt'))$('svcAmt').value=Math.round(sm.amount);
