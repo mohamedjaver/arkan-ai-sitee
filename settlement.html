@@ -18,27 +18,38 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.1.0/tesseract.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.1.0/tesseract.min.js"></script>
+<script src="vendor/pdf.min.js"></script>
+<script src="vendor/tesseract.min.js"></script>
+<script>
+/* سقوط احتياطي إلى CDN إن تعذّر تحميل النسخة المحلية */
+(function(){
+  function inj(u){var s=document.createElement('script');s.src=u;s.async=false;document.head.appendChild(s);}
+  if(!window.pdfjsLib)inj('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js');
+  if(!window.Tesseract)inj('https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.1.0/tesseract.min.js');
+})();
+</script>
 <script>
 /* كتم تحذير fake worker */
 (function(){const _w=console.warn;console.warn=function(){const s=(arguments[0]||'')+'';if(s.indexOf('fake worker')>-1||s.indexOf('Setting up fake')>-1)return;_w.apply(console,arguments);};})();
 /* عامل pdf.js عبر blob محلي — يتجاوز حجب Safari للعمال الخارجيين */
+window.ARK_LOCAL=false;
 window._pdfReady=(async function(){
   if(!window.pdfjsLib)return false;
-  var U=["https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js",
-         "https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js",
-         "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js"];
-  for(var i=0;i<U.length;i++){
-    try{
-      var r=await fetch(U[i]);if(!r.ok)continue;
-      var t=await r.text();
-      pdfjsLib.GlobalWorkerOptions.workerSrc=URL.createObjectURL(new Blob([t],{type:"text/javascript"}));
-      return true;
-    }catch(e){}
+  /* 1) نسخة المستودع — نفس النطاق، لا حجب ولا CORS */
+  try{
+    const r=await fetch('vendor/pdf.worker.min.js',{method:'HEAD'});
+    if(r.ok){pdfjsLib.GlobalWorkerOptions.workerSrc='vendor/pdf.worker.min.js';window.ARK_LOCAL=true;return true;}
+  }catch(e){}
+  /* 2) CDN احتياطي عبر blob */
+  const U=["https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js",
+           "https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js",
+           "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js"];
+  for(let i=0;i<U.length;i++){
+    try{const r=await fetch(U[i]);if(!r.ok)continue;
+      pdfjsLib.GlobalWorkerOptions.workerSrc=URL.createObjectURL(new Blob([await r.text()],{type:"text/javascript"}));
+      return true;}catch(e){}
   }
-  /* لا عامل خارجي متاح → pdf.js يعمل على الخيط الرئيسي (أبطأ لكنه لا يفشل) */
+  /* 3) الخيط الرئيسي */
   pdfjsLib.GlobalWorkerOptions.workerSrc="";
   return false;
 })();
@@ -3601,32 +3612,36 @@ async function ocrImage(dataUrl){
 let _ocrWorker=null,_ocrWurl=null;
 async function ocrWorker(){
   if(_ocrWorker)return _ocrWorker;
-  toast('تحميل محرك قراءة الصور (مرة واحدة ~2MB)...');
+  /* هل النسخة المحلية متاحة؟ */
+  let local=false;
+  try{const r=await fetch('vendor/eng.traineddata.gz',{method:'HEAD'});local=r.ok;}catch(e){}
+  toast(local?'تحميل محرك القراءة من خادمك (مرة واحدة)...':'تحميل محرك القراءة من CDN...');
+  const build=async(cfg)=>await Promise.race([
+    Tesseract.createWorker('eng',1,cfg),
+    new Promise((_,rej)=>setTimeout(()=>rej(new Error('انتهت المهلة — الشبكة بطيئة')),120000))
+  ]);
   try{
-    /* جلب سكربت العامل وتحويله blob محلي — يتجاوز حجب Safari للعمال الخارجيين */
-    if(!_ocrWurl){
-      const WU=['https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.1.0/worker.min.js',
-                'https://unpkg.com/tesseract.js@5.1.0/dist/worker.min.js',
-                'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.0/dist/worker.min.js'];
-      for(const u of WU){
-        try{const r=await fetch(u);if(!r.ok)continue;
-            _ocrWurl=URL.createObjectURL(new Blob([await r.text()],{type:'text/javascript'}));break;}catch(e){}
+    if(local){
+      _ocrWorker=await build({workerPath:'vendor/worker.min.js',corePath:'vendor/',langPath:'vendor',
+                              workerBlobURL:false,gzip:true});
+    }else{
+      if(!_ocrWurl){
+        const WU=['https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.1.0/worker.min.js',
+                  'https://unpkg.com/tesseract.js@5.1.0/dist/worker.min.js',
+                  'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.0/dist/worker.min.js'];
+        for(const u of WU){try{const r=await fetch(u);if(!r.ok)continue;
+          _ocrWurl=URL.createObjectURL(new Blob([await r.text()],{type:'text/javascript'}));break;}catch(e){}}
+        if(!_ocrWurl)throw new Error('تعذّر تحميل محرك القراءة — الشبكة تحجب CDN');
       }
-      if(!_ocrWurl)throw new Error('تعذّر تحميل محرك القراءة — الشبكة تحجب CDN');
-    }
-    _ocrWorker=await Promise.race([
-      Tesseract.createWorker('eng',1,{
-        workerPath:_ocrWurl,
-        workerBlobURL:false,
+      _ocrWorker=await build({workerPath:_ocrWurl,workerBlobURL:false,
         corePath:'https://cdn.jsdelivr.net/npm/tesseract.js-core@5.1.0/tesseract-core-simd.wasm.js',
-        langPath:'https://tessdata.projectnaptha.com/4.0.0'
-      }),
-      new Promise((_,rej)=>setTimeout(()=>rej(new Error('انتهت المهلة — الشبكة بطيئة (المحرك ~7MB)')),90000))
-    ]);
+        langPath:'https://tessdata.projectnaptha.com/4.0.0'});
+    }
     await _ocrWorker.setParameters({tessedit_pageseg_mode:'6'});
+    window.ARK_LOCAL=local;
   }catch(e){
     _ocrWorker=null;
-    toast((e&&e.message)?('OCR: '+e.message):'محرك القراءة محجوب هنا — أدخل البيانات يدويًا');
+    toast((e&&e.message)?('OCR: '+e.message):'محرك القراءة محجوب — أدخل البيانات يدويًا');
     throw e;
   }
   return _ocrWorker;
@@ -3664,7 +3679,7 @@ async function imageText(dataUrl){
   return data.text||'';
 }
 /* ================= BUILD / AUTO-UPDATE ================= */
-const ARKAN_BUILD='1009';
+const ARKAN_BUILD='1010';
 function arkanVerLabel(){const e=$('verLbl');if(e)e.textContent=ARKAN_BUILD;}
 function arkanUpdateBanner(b){
   if(document.getElementById('updBar'))return;
