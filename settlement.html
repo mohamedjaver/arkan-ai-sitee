@@ -2220,8 +2220,9 @@ function smartRead(txt){
   }
   /* 3) AOA — BAI / Multicaixa / كوانزا */
   if(/\bKz\b|kwanza|multicaixa|comprovativo|montante|IBAN\s*:?\s*AO/i.test(t)){
-    const ex=extractAmount(t);
-    if(ex.value!=null)return {amount:ex.value,acct:null,txn:null,ccy:'AOA',src:'AOA'};
+    const body=stripBankFooter(t);
+    const ex=extractAmount(body);
+    if(ex.value!=null)return {amount:ex.value,acct:null,txn:aoaTxn(body),ccy:'AOA',src:'AOA'};
   }
   /* 4) عملات برموزها */
   let ccy=null;
@@ -2287,7 +2288,7 @@ async function uploadOB(fid){
     const files=[...inp.files];if(!files.length)return;
     const ccy=obCcy(fid);
     toast('جارٍ قراءة '+files.length+' ملف...');
-    let ok=0,moved=0;const touched=new Set([fid]);
+    let ok=0,dup=0,moved=0;const touched=new Set([fid]);
     for(const f of files){
       try{
         const dataUrl=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(f);});
@@ -3040,14 +3041,17 @@ function uploadKB(){
     for(const f of files){
       try{
         const dataUrl=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(f);});
-        const txt=await anyReceiptText(dataUrl,f.type);
+        const txt=await anyReceiptText(dataUrl,f.type,f.name);
+        if(!txt||txt.replace(/\s/g,'').length<20)throw new Error('لا يوجد نص مقروء');
         const sm=smartRead(txt);
-        kb.push({name:f.name,amount:sm.amount});
+        if(sm.txn&&kb.some(x=>x.txn&&x.txn===sm.txn)){dup++;continue;}
+        kb.push({name:f.name,amount:sm.amount,txn:sm.txn||null,ccy:sm.ccy||null,
+                 err:sm.amount==null?'لم يُقرأ المبلغ':(sm.ccy&&sm.ccy!=='AOA'?'عملة '+sm.ccy+' — ليست كوانزا':null)});
         if(sm.amount!=null)ok++;
-      }catch(e){kb.push({name:f.name,amount:null,err:'لم يُقرأ'});}
+      }catch(e){kb.push({name:f.name,amount:null,txn:null,err:(e&&e.message)?e.message:'لم يُقرأ'});}
     }
     renderKB();calc();
-    toast('قُرئ '+ok+'/'+files.length+' ✓');
+    toast('قُرئ '+ok+'/'+files.length+(dup?' · مكرر '+dup:'')+' ✓');
   };
   inp.click();
 }
@@ -3062,7 +3066,7 @@ function renderKB(){
   const c=$('kbCount'),s=$('kbSum'),l=$('kbList');if(!c)return;
   c.textContent=kb.length;s.textContent=fmt(kbTotal(),0);
   l.innerHTML=kb.map((b,i)=>`
-    <div class="leg"><span style="font-size:10px">${b.name.slice(0,24)}</span>
+    <div class="leg"><span style="font-size:10px">${b.name.slice(0,22)}${b.txn?' <span style="opacity:.55">#'+b.txn.slice(-6)+'</span>':''}${b.err?'<br><span style="color:var(--red);font-size:9px">'+b.err+'</span>':''}</span>
       <span>${b.amount!=null?'<b class="lp" style="cursor:pointer" onclick="editKB('+i+')">'+fmt(b.amount,0)+'</b>':'<button class="btn btn-gold btn-sm" style="padding:2px 10px;font-size:10px" onclick="editKB('+i+')">أدخل المبلغ</button>'}
       <button class="btn btn-line btn-sm" style="padding:2px 8px;font-size:10px;margin-right:6px" onclick="dropKB(${i})">✕</button></span>
     </div>`).join('');
@@ -3501,7 +3505,7 @@ async function imageText(dataUrl){
   return data.text||'';
 }
 /* ================= BUILD / AUTO-UPDATE ================= */
-const ARKAN_BUILD='1006';
+const ARKAN_BUILD='1007';
 function arkanVerLabel(){const e=$('verLbl');if(e)e.textContent=ARKAN_BUILD;}
 function arkanUpdateBanner(b){
   if(document.getElementById('updBar'))return;
@@ -3529,10 +3533,34 @@ async function arkanCheckUpdate(manual){
 }
 setTimeout(()=>{arkanVerLabel();arkanCheckUpdate(false);},2500);
 
-async function anyReceiptText(dataUrl,type){
-  if(type==='application/pdf')return await pdfText(dataUrl);
+function isPdfFile(dataUrl,type,name){
+  if(/pdf/i.test(type||''))return true;
+  if(/\.pdf$/i.test(name||''))return true;
+  const b=(dataUrl||'').split(',')[1]||'';
+  return b.slice(0,8)==='JVBERi0x'||b.slice(0,6)==='JVBERi';
+}
+async function anyReceiptText(dataUrl,type,name){
+  if(isPdfFile(dataUrl,type,name)){
+    if(!window.pdfjsLib)throw new Error('محرك PDF لم يُحمَّل');
+    return await pdfText(dataUrl);
+  }
   if(window.Tesseract)return await imageText(dataUrl);
-  return '';
+  throw new Error('محرك الصور لم يُحمَّل');
+}
+/* قص تذييل البنك القانوني (رأس المال/الترويسة) قبل استخراج المبلغ */
+function stripBankFooter(t){
+  const cuts=['Este documento foi gerado','Documento processado pelo','Capital Social','Em caso de d','Para valida'];
+  let end=t.length;
+  for(const c of cuts){const i=t.indexOf(c);if(i>200&&i<end)end=i;}
+  return t.slice(0,end);
+}
+/* رقم العملية لإيصالات الكوانزا */
+function aoaTxn(t){
+  const m=t.match(/N[uú]mero de Opera[cç][aã]o\s*:?\s*([0-9]{6,})/i)
+       ||t.match(/Movimento\s*:?\s*([0-9]{6,})/i)
+       ||t.match(/Refer[eê]ncia\s*:?\s*([0-9]{6,})/i)
+       ||t.match(/CHAVE\s*:?\s*([0-9]{6,})/i);
+  return m?m[1]:null;
 }
 /* ================= AMOUNT EXTRACTION (bank-field targeted) ================= */
 function normNum(raw){
