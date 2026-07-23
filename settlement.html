@@ -34,23 +34,34 @@ if(window.pdfjsLib){
 </script>
 <style>
 :root{
-  --bg:#15172E;--bg2:#1B1D38;
-  --glass:rgba(255,255,255,.045);--glass2:rgba(255,255,255,.07);
-  --stroke:rgba(255,255,255,.09);--stroke-acc:rgba(139,114,255,.45);
-  --acc:#8B72FF;--acc2:#A78BFF;--accD:#6C4FE0;
+  --bg:#0B0F19;--bg2:#121829;
+  --glass:rgba(30,41,59,.40);--glass2:rgba(30,41,59,.55);
+  --stroke:rgba(255,255,255,.08);--stroke-acc:rgba(59,130,246,.45);
+  --acc:#3B82F6;--acc2:#60A5FA;--accD:#2563EB;
   --gold:#F4A50C;--gold2:#FFC94D;
-  --txt:#F2F2F7;--dim:#9BA0B8;
+  --txt:#F8FAFC;--dim:#94A3B8;
   --green:#3DDC97;--red:#FF6B6B;--wa:#25D366;--blue:#4DA3FF;--teal:#26A17B;
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 body{background:var(--bg);color:var(--txt);
   font-family:'IBM Plex Sans Arabic',sans-serif;min-height:100vh;
   padding-bottom:calc(88px + env(safe-area-inset-bottom));
-  background-image:
-    radial-gradient(720px 460px at 50% -10%, rgba(139,114,255,.32), transparent 62%),
-    radial-gradient(560px 380px at 108% 22%, rgba(77,163,255,.08), transparent 60%),
-    linear-gradient(180deg,#1A1C38 0%,#15172E 34%,#121327 100%);
-  background-repeat:no-repeat;background-attachment:scroll}
+  background-image:linear-gradient(160deg,#0B0F19 0%,#121829 40%,#1a1f35 100%);
+  background-repeat:no-repeat;background-attachment:fixed}
+
+/* ===== طبقات الخلفية الثابتة (موحّدة مع الصفحة الرئيسية) ===== */
+.orb{position:fixed;border-radius:50%;filter:blur(90px);pointer-events:none;z-index:0}
+.orb-1{top:-16%;right:-8%;width:56vw;height:56vw;max-width:760px;max-height:760px;
+  background:radial-gradient(circle,rgba(59,130,246,.16),transparent 68%)}
+.orb-2{bottom:-20%;left:-12%;width:60vw;height:60vw;max-width:820px;max-height:820px;
+  background:radial-gradient(circle,rgba(139,92,246,.11),transparent 68%)}
+#particles{position:fixed;inset:0;z-index:0;pointer-events:none}
+.grid-bg{position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:linear-gradient(rgba(59,130,246,.045) 1px,transparent 1px),
+                   linear-gradient(90deg,rgba(59,130,246,.045) 1px,transparent 1px);
+  background-size:64px 64px}
+/* المحتوى يطفو فوق الخلفية */
+.card,nav,#lock,#modal,.toast,header,section{position:relative;z-index:1}
 .num{font-family:'IBM Plex Mono',monospace;font-feature-settings:"tnum"}
 #lock{position:fixed;inset:0;z-index:1000;background:var(--bg);
   background-image:radial-gradient(620px 420px at 50% 28%, rgba(139,114,255,.30), transparent 65%);
@@ -110,15 +121,19 @@ header{padding:20px 18px 4px;position:relative;z-index:6}
 section{padding:16px 18px;display:none}
 section.on{display:block;animation:fadeUp .25s ease}
 @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
-.card{background:var(--glass);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
-  border:1px solid var(--stroke);border-radius:22px;padding:18px;margin-bottom:14px;
-  box-shadow:0 12px 34px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.06)}
+.card{background:var(--glass);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border:1px solid var(--stroke);border-radius:20px;padding:24px;margin-bottom:14px;
+  box-shadow:0 8px 32px rgba(0,0,0,.3), inset 0 1px 0 rgba(255,255,255,.05);contain:layout;
+  transition:border-color .3s,box-shadow .3s}
+.card:hover{border-color:rgba(96,165,250,.3);
+  box-shadow:0 12px 40px rgba(59,130,246,.15), inset 0 1px 0 rgba(255,255,255,.1)}
 .card h3{font-size:13px;color:var(--acc2);margin-bottom:12px;font-weight:700}
 label{display:block;font-size:12px;color:var(--dim);margin:10px 0 6px}
-input,select{width:100%;padding:12px 13px;border-radius:14px;background:rgba(0,0,0,.28);
-  border:1px solid var(--stroke);color:var(--txt);font-size:16px;
+input,select,textarea{width:100%;padding:14px 16px;border-radius:12px;background:rgba(15,23,42,.6);
+  border:1px solid rgba(255,255,255,.1);color:#FFFFFF;font-size:16px;
   font-family:'IBM Plex Mono',monospace;outline:none;transition:.15s;appearance:none}
-input:focus,select:focus{border-color:var(--stroke-acc);box-shadow:0 0 0 3px rgba(139,114,255,.12)}
+input::placeholder,textarea::placeholder{color:#64748B}
+input:focus,select:focus,textarea:focus{border-color:#3B82F6;box-shadow:0 0 0 3px rgba(59,130,246,.2);outline:none}
 input.ar,select.ar{font-family:'IBM Plex Sans Arabic',sans-serif}
 .row{display:flex;gap:10px}
 .row>div{flex:1}
@@ -149,12 +164,13 @@ input.ar,select.ar{font-family:'IBM Plex Sans Arabic',sans-serif}
 .timer{position:absolute;top:16px;left:16px;font-size:12px;color:var(--dim);
   background:rgba(0,0,0,.35);padding:5px 11px;border-radius:20px;border:1px solid var(--stroke)}
 .timer.hot{color:var(--red);border-color:rgba(255,107,107,.5)}
-.btn{width:100%;padding:14px;border:none;border-radius:16px;font-size:14px;font-weight:700;
+.btn{width:100%;padding:14px 28px;border:none;border-radius:12px;font-size:16px;font-weight:600;
   cursor:pointer;font-family:'IBM Plex Sans Arabic',sans-serif;transition:.15s;margin-top:10px}
-.btn-gold{background:linear-gradient(135deg,var(--acc2),var(--acc) 55%,var(--accD));color:#fff;
-  box-shadow:0 10px 28px rgba(139,114,255,.35)}
+.btn-gold{background:linear-gradient(135deg,#3B82F6,#60A5FA);color:#fff;font-weight:600;
+  box-shadow:0 4px 16px rgba(59,130,246,.3)}
+.btn-gold:hover{box-shadow:0 8px 24px rgba(59,130,246,.4)}
 .btn:active{transform:scale(.97)}
-.btn-line{background:rgba(139,114,255,.08);color:var(--acc2);border:1px solid var(--stroke-acc)}
+.btn-line{background:rgba(59,130,246,.08);color:var(--acc2);border:1px solid var(--stroke-acc)}
 .btn-wa{background:linear-gradient(135deg,#3BE07F,var(--wa));color:#062b14;box-shadow:0 8px 22px rgba(37,211,102,.25)}
 .btn-sm{padding:8px 13px;font-size:12px;width:auto;margin:0;border-radius:11px}
 .btn-row{display:flex;gap:8px}
@@ -316,19 +332,27 @@ body,input,select,textarea,button,.ar,h1,h2,h3{font-family:'Cairo','Tajawal','IB
   box-shadow:0 0 0 4px rgba(139,114,255,.2);animation:stgPulse 1.8s infinite}
 .stg.active .lbl{color:var(--acc2)}
 @keyframes stgPulse{0%,100%{box-shadow:0 0 0 4px rgba(139,114,255,.2)}50%{box-shadow:0 0 0 7px rgba(139,114,255,.05)}}
+
+@media (max-width:768px){
+  .card{border-radius:16px;padding:16px;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+  .btn{width:100%;padding:16px}
+}
 </style>
 </head>
 <body>
+<div class="grid-bg"></div>
+<canvas id="particles" aria-hidden="true"></canvas>
+<div class="orb orb-1"></div><div class="orb orb-2"></div>
 <div id="lock">
   <div class="hex"></div>
   <h2>ARKAN <span>SETTLEMENT</span></h2>
   <div id="pinStage">
     <input type="password" id="pin" inputmode="numeric" maxlength="6" placeholder="••••">
-    <button id="faceBtn" class="btn btn-line" style="display:none;width:210px;margin-top:12px" onclick="faceUnlock(false)">🔓 الدخول ببصمة الوجه</button>
+    <button id="faceBtn" class="btn btn-line" style="display:none;width:210px;margin-top:12px" onclick="faceUnlock(false)">الدخول ببصمة الوجه</button>
   </div>
   <div id="enrollStage" style="display:none;width:270px;text-align:center">
     <div style="font-size:13px;color:var(--dim);line-height:1.8;margin-bottom:10px">
-      🔐 تسجيل بصمة الوجه <b style="color:var(--txt)">إلزامي</b> لدخول النظام<br>أدخل بياناتك ثم سجّل بصمتك
+      تسجيل بصمة الوجه <b style="color:var(--txt)">إلزامي</b> لدخول النظام<br>أدخل بياناتك ثم سجّل بصمتك
     </div>
     <input type="email" id="lEmail" placeholder="البريد الإلكتروني" style="direction:ltr;margin-bottom:8px">
     <input type="tel" id="lPhone" placeholder="رقم الهاتف" inputmode="tel" style="margin-bottom:8px">
@@ -435,9 +459,9 @@ body,input,select,textarea,button,.ar,h1,h2,h3{font-family:'Cairo','Tajawal','IB
     <!-- دفعة إيصالات العميل: قراءة فقط، بلا حفظ ملفات -->
     <div class="legform" id="batchBox" style="margin-top:10px">
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
-        <span style="font-size:12px;color:var(--dim)">📥 إيصالات العميل (وارد): <b id="batchCount" class="num" style="color:var(--txt)">0</b> · المجموع: <b id="batchSum" class="num" style="color:var(--gold2)">0</b></span>
+        <span style="font-size:12px;color:var(--dim)">إيصالات العميل (وارد): <b id="batchCount" class="num" style="color:var(--txt)">0</b> · المجموع: <b id="batchSum" class="num" style="color:var(--gold2)">0</b></span>
         <span>
-          <button class="btn btn-gold btn-sm" onclick="uploadBatch()">📥 رفع</button>
+          <button class="btn btn-gold btn-sm" onclick="uploadBatch()">رفع</button>
           <button class="btn btn-line btn-sm" onclick="clearBatch()">تصفير</button>
         </span>
       </div>
@@ -451,9 +475,9 @@ body,input,select,textarea,button,.ar,h1,h2,h3{font-family:'Cairo','Tajawal','IB
     <div id="bankWrap">
     <div class="legform" style="margin-top:10px">
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
-        <span style="font-size:12px;color:var(--dim)">📤 إيصالات دفعنا للعميل (صادر): <b id="brPayCount" class="num" style="color:var(--txt)">0</b> · المجموع: <b id="brPaySum" class="num" style="color:var(--gold2)">0</b></span>
+        <span style="font-size:12px;color:var(--dim)">إيصالات دفعنا للعميل (صادر): <b id="brPayCount" class="num" style="color:var(--txt)">0</b> · المجموع: <b id="brPaySum" class="num" style="color:var(--gold2)">0</b></span>
         <span>
-          <button class="btn btn-gold btn-sm" onclick="uploadOB('brPay')">📥 رفع</button>
+          <button class="btn btn-gold btn-sm" onclick="uploadOB('brPay')">رفع</button>
           <button class="btn btn-line btn-sm" onclick="clearOB('brPay')">تصفير</button>
         </span>
       </div>
@@ -491,8 +515,8 @@ body,input,select,textarea,button,.ar,h1,h2,h3{font-family:'Cairo','Tajawal','IB
       <div><label>واتساب الاستقبال</label><input type="tel" id="pubWa" placeholder="22236295050" inputmode="tel"></div>
     </div>
     <div class="btn-row" style="margin-top:12px">
-      <button class="btn btn-gold" style="flex:1" onclick="genStatusImage()">📸 صورة للحالة</button>
-      <button class="btn btn-wa" style="flex:1" onclick="publishStatic()">🔗 نشر للرابط الثابت</button>
+      <button class="btn btn-gold" style="flex:1" onclick="genStatusImage()">صورة للحالة</button>
+      <button class="btn btn-wa" style="flex:1" onclick="publishStatic()">نشر للرابط الثابت</button>
     </div>
     <button class="btn btn-line" style="width:100%;margin-top:8px" onclick="publishRates()">رابط سريع (يحمل الأسعار)</button>
     <div id="pubLink" style="margin-top:10px"></div>
@@ -501,8 +525,8 @@ body,input,select,textarea,button,.ar,h1,h2,h3{font-family:'Cairo','Tajawal','IB
     <h3>خدمات — فاتورة مورد (دفع دولي)</h3>
     <div class="legform">
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
-        <span style="font-size:12px;color:var(--dim)">🧾 فاتورة المورد (صورة / PDF)</span>
-        <button class="btn btn-gold btn-sm" onclick="uploadSvc()">📥 رفع الفاتورة</button>
+        <span style="font-size:12px;color:var(--dim)">فاتورة المورد (صورة / PDF)</span>
+        <button class="btn btn-gold btn-sm" onclick="uploadSvc()">رفع الفاتورة</button>
       </div>
       <div id="svcInfo" style="margin-top:6px"></div>
     </div>
@@ -529,7 +553,7 @@ body,input,select,textarea,button,.ar,h1,h2,h3{font-family:'Cairo','Tajawal','IB
     </div>
     <label>ملاحظة / رقم الفاتورة</label>
     <input type="text" id="svcNote" class="ar" placeholder="—">
-    <button class="btn btn-gold" style="width:100%;margin-top:10px" onclick="saveSvc()">💾 تسجيل + فاتورة العميل</button>
+    <button class="btn btn-gold" style="width:100%;margin-top:10px" onclick="saveSvc()">تسجيل + فاتورة العميل</button>
   </div>
   <div class="card" id="fRep" style="display:none">
     <h3>التقارير</h3>
@@ -538,7 +562,7 @@ body,input,select,textarea,button,.ar,h1,h2,h3{font-family:'Cairo','Tajawal','IB
       <div class="sum"><div class="k">ربح اليوم</div><div class="v num green" id="repP">0 $</div></div>
     </div>
     <div id="repBreak" style="margin-top:10px"></div>
-    <button class="btn btn-gold" style="width:100%;margin-top:12px" onclick="genReport()">📄 تقرير PDF مفصل</button>
+    <button class="btn btn-gold" style="width:100%;margin-top:12px" onclick="genReport()">تقرير PDF مفصل</button>
   </div>
   <div class="card" id="fRcpt" style="display:none">
     <h3>مركز المطابقة — إيصالات العميل × المورد</h3>
@@ -629,14 +653,14 @@ body,input,select,textarea,button,.ar,h1,h2,h3{font-family:'Cairo','Tajawal','IB
     <div class="legform">
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
         <span style="font-size:12px;color:var(--dim)">① إيصال استلام الأوقية (Bankily / السداد)</span>
-        <button class="btn btn-gold btn-sm" onclick="uploadPayRcpt2()">📥 قراءة الإيصال</button>
+        <button class="btn btn-gold btn-sm" onclick="uploadPayRcpt2()">قراءة الإيصال</button>
       </div>
       <div id="m2aRcptInfo" style="margin-top:6px"></div>
     </div>
     <div class="row" style="margin-top:10px">
       <div><label>المبلغ بالقديمة (أوقية)</label>
         <div style="display:flex;gap:6px"><input type="text" id="m2aOld" placeholder="5000000" inputmode="decimal" oninput="calcM2A()" style="flex:1">
-        <button class="btn btn-gold btn-sm" style="padding:0 12px;white-space:nowrap" onclick="smartFill('m2aOld')">📥</button></div></div>
+        <button class="btn btn-gold btn-sm" style="padding:0 12px;white-space:nowrap" onclick="smartFill('m2aOld')"></button></div></div>
       <div><label>② سعر بيع الأوقية (قديمة/Kz)</label><input type="text" id="m2aRate" placeholder="0.36" inputmode="decimal" oninput="calcM2A()"></div>
     </div>
     <div class="row">
@@ -652,7 +676,7 @@ body,input,select,textarea,button,.ar,h1,h2,h3{font-family:'Cairo','Tajawal','IB
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
         <span style="font-size:12px;color:var(--dim)">④ إيصالات الكوانزا المدفوعة: <b id="kbCount" class="num" style="color:var(--txt)">0</b> · المجموع: <b id="kbSum" class="num" style="color:var(--gold2)">0</b></span>
         <span>
-          <button class="btn btn-gold btn-sm" onclick="uploadKB()">📥 رفع إيصالات</button>
+          <button class="btn btn-gold btn-sm" onclick="uploadKB()">رفع إيصالات</button>
           <button class="btn btn-line btn-sm" onclick="clearKB()">تصفير</button>
         </span>
       </div>
@@ -686,7 +710,7 @@ body,input,select,textarea,button,.ar,h1,h2,h3{font-family:'Cairo','Tajawal','IB
     </div>
     <label id="qtyLbl">كمية USDT</label>
     <div style="display:flex;gap:6px"><input type="text" id="qty" placeholder="1000" inputmode="decimal" style="flex:1">
-      <button class="btn btn-gold btn-sm" style="padding:0 12px;white-space:nowrap" onclick="smartFill('qty')">📥</button></div>
+      <button class="btn btn-gold btn-sm" style="padding:0 12px;white-space:nowrap" onclick="smartFill('qty')"></button></div>
     <div class="row">
       <div><label id="lblBuy">سعر الشراء (AOA)</label><input type="text" id="rBuy" placeholder="1160" inputmode="decimal"></div>
       <div><label id="lblSell">سعر البيع (AOA)</label><input type="text" id="rSell" placeholder="1170" inputmode="decimal"></div>
@@ -694,9 +718,9 @@ body,input,select,textarea,button,.ar,h1,h2,h3{font-family:'Cairo','Tajawal','IB
     <div class="alertline" id="rateAlertT"></div>
     <div class="legform" style="margin-top:10px">
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
-        <span style="font-size:12px;color:var(--dim)">📎 إيصالات الشراء: <b id="trBuyCount" class="num" style="color:var(--txt)">0</b> · المجموع: <b id="trBuySum" class="num" style="color:var(--gold2)">0</b></span>
+        <span style="font-size:12px;color:var(--dim)">إيصالات الشراء: <b id="trBuyCount" class="num" style="color:var(--txt)">0</b> · المجموع: <b id="trBuySum" class="num" style="color:var(--gold2)">0</b></span>
         <span>
-          <button class="btn btn-gold btn-sm" onclick="uploadOB('trBuy')">📥 رفع</button>
+          <button class="btn btn-gold btn-sm" onclick="uploadOB('trBuy')">رفع</button>
           <button class="btn btn-line btn-sm" onclick="clearOB('trBuy')">تصفير</button>
         </span>
       </div>
@@ -704,9 +728,9 @@ body,input,select,textarea,button,.ar,h1,h2,h3{font-family:'Cairo','Tajawal','IB
     </div>
     <div class="legform" style="margin-top:10px">
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
-        <span style="font-size:12px;color:var(--dim)">📎 إيصالات البيع: <b id="trSellCount" class="num" style="color:var(--txt)">0</b> · المجموع: <b id="trSellSum" class="num" style="color:var(--gold2)">0</b></span>
+        <span style="font-size:12px;color:var(--dim)">إيصالات البيع: <b id="trSellCount" class="num" style="color:var(--txt)">0</b> · المجموع: <b id="trSellSum" class="num" style="color:var(--gold2)">0</b></span>
         <span>
-          <button class="btn btn-gold btn-sm" onclick="uploadOB('trSell')">📥 رفع</button>
+          <button class="btn btn-gold btn-sm" onclick="uploadOB('trSell')">رفع</button>
           <button class="btn btn-line btn-sm" onclick="clearOB('trSell')">تصفير</button>
         </span>
       </div>
@@ -820,7 +844,7 @@ body,input,select,textarea,button,.ar,h1,h2,h3{font-family:'Cairo','Tajawal','IB
       <div class="sum"><div class="k">إجمالي مبالغ اليوم</div><div class="v gold" id="rcptTotal">0</div></div>
       <div class="sum"><div class="k">إيصالات محللة</div><div class="v" id="rcptScanned">0</div></div>
     </div>
-    <button class="btn btn-line" onclick="scanAllToday()" style="margin-top:10px">🧮 تحليل كل إيصالات اليوم</button>
+    <button class="btn btn-line" onclick="scanAllToday()" style="margin-top:10px">تحليل كل إيصالات اليوم</button>
   </div>
 
   <div class="wa-box">
@@ -847,7 +871,7 @@ body,input,select,textarea,button,.ar,h1,h2,h3{font-family:'Cairo','Tajawal','IB
       <option value="off">إيقاف</option>
       <option value="partner">للشريك (تأكيد العملية)</option>
       <option value="client">للعميل (نص — عمليات الجسر)</option>
-      <option value="invoice">🧾 فاتورة PDF للعميل (مشاركة واتساب)</option>
+      <option value="invoice">فاتورة PDF للعميل (مشاركة واتساب)</option>
     </select>
     <div class="tx-mid" style="margin-top:14px;padding-top:14px;border-top:1px solid var(--stroke)">
       <span>الإيصالات المحفوظة: <b id="rcptCount">0</b></span>
@@ -863,8 +887,8 @@ body,input,select,textarea,button,.ar,h1,h2,h3{font-family:'Cairo','Tajawal','IB
     </div>
     <h3 style="margin-top:16px">النسخة الاحتياطية</h3>
     <div class="btn-row">
-      <button class="btn btn-gold" onclick="exportBackup()">⬇️ تصدير نسخة كاملة</button>
-      <button class="btn btn-line" onclick="importBackup()">⬆️ استعادة نسخة</button>
+      <button class="btn btn-gold" onclick="exportBackup()">تصدير نسخة كاملة</button>
+      <button class="btn btn-line" onclick="importBackup()">استعادة نسخة</button>
     </div>
     <div style="color:var(--dim);font-size:11px;margin-top:6px">ملف JSON يشمل كل شيء: العمليات، الجهات، الديون، المحفظة، الإعدادات. احفظه دوريًا أو انقله لجهاز آخر.</div>
     <h3 style="margin-top:16px">المحفظة — أرصدة الافتتاح</h3>
@@ -1110,7 +1134,7 @@ const TK_ASSETS=[
   {c:'MAD', flag:'🇲🇦', name:'درهم مغربي'},
   {c:'AOA', flag:'🇦🇴', name:'كوانزا أنغولية'},
   {c:'MRU', flag:'🇲🇷', name:'أوقية موريتانية'},
-  {c:'USDT',flag:'🪙', name:'تيثر'},
+  {c:'USDT',flag:'', name:'تيثر'},
 ];
 let tkBase=localStorage.getItem('arkan-tkbase')||'MRU';
 let tkRates=JSON.parse(localStorage.getItem('arkan-tkrates')||'null')||{ts:0,usd:{},prev:{},hist:{}};
@@ -1231,7 +1255,7 @@ function openTkDetail(c){
   const inBase=h.map(v=>{const u=tkRates.usd||{};return u[tkBase]?u[tkBase]/v:0;}).filter(Boolean);
   const hi=inBase.length?Math.max(...inBase):px, lo=inBase.length?Math.min(...inBase):px;
   const op=inBase.length?inBase[0]:px;
-  const trend=Math.abs(ch)<0.05?['🟡','الاتجاه عرضي','var(--gold2)']:(ch>0?['🟢','الاتجاه صاعد','var(--green)']:['🔴','الاتجاه هابط','var(--red)']);
+  const trend=Math.abs(ch)<0.05?['','الاتجاه عرضي','var(--gold2)']:(ch>0?['','الاتجاه صاعد','var(--green)']:['','الاتجاه هابط','var(--red)']);
   const color=ch>0?'#3DDC97':(ch<0?'#FF6B6B':'#F4A50C');
   $('mdlTitle').textContent=a.flag+' '+a.c+' / '+tkBase;
   $('mdlBody').innerHTML=`
@@ -1924,7 +1948,7 @@ async function sendInvoice(ref){ /* توليد + معاينة */
   $('mdlBody').innerHTML=`
     <div class="card">
       <img src="${img}" style="width:100%;border-radius:12px;display:block;background:#fff">
-      <button class="btn btn-gold" onclick="shareInvFile()">📤 مشاركة الفاتورة (واتساب)</button>
+      <button class="btn btn-gold" onclick="shareInvFile()">مشاركة الفاتورة (واتساب)</button>
       <div class="btn-row">
         <button class="btn btn-line" onclick="dlInvFile()">تنزيل PDF</button>
         ${_lastInv.cWa?`<button class="btn btn-wa" onclick="window.open('https://wa.me/${_lastInv.cWa}','_blank')">فتح محادثة العميل</button>`:''}
@@ -2010,8 +2034,8 @@ function render(){
           ${t.status==='conf'?`<button class="btn btn-gold btn-sm" onclick="setSt('${t.ref}','paid')">تم دفع Bankily</button>`:''}
           ${t.pay&&t.pay!=='settled'?`<button class="btn btn-gold btn-sm" onclick="addPayment('${t.ref}')">دفعة (متبقٍ ${fmt(remaining(t),0)})</button>`:''}
           ${t.cWa?`<button class="btn btn-wa btn-sm" onclick="notifyClient('${t.ref}')">إشعار العميل</button>`:''}
-          <button class="btn btn-line btn-sm" onclick="sendInvoice('${t.ref}')">🧾 فاتورة</button>
-          <button class="btn btn-line btn-sm" onclick="openReceipts('${t.ref}')">📎 إيصال${receiptsOf(t.ref).length?' ('+receiptsOf(t.ref).length+')':''}</button>
+          <button class="btn btn-line btn-sm" onclick="sendInvoice('${t.ref}')">فاتورة</button>
+          <button class="btn btn-line btn-sm" onclick="openReceipts('${t.ref}')">إيصال${receiptsOf(t.ref).length?' ('+receiptsOf(t.ref).length+')':''}</button>
           <button class="btn btn-line btn-sm" onclick="delTx('${t.ref}')">حذف</button>
         </div>`;
     }else if(isTrade(t.type)){
@@ -2031,8 +2055,8 @@ function render(){
         <div class="tx-acts">
           ${t.status==='wait'?`<button class="btn btn-gold btn-sm" onclick="sellTrade('${t.ref}')">تسجيل البيع</button>`:''}
           ${t.pay&&t.pay!=='settled'?`<button class="btn btn-gold btn-sm" onclick="addPayment('${t.ref}')">دفعة (متبقٍ ${fmt(remaining(t),0)})</button>`:''}
-          <button class="btn btn-line btn-sm" onclick="sendInvoice('${t.ref}')">🧾 فاتورة</button>
-          <button class="btn btn-line btn-sm" onclick="openReceipts('${t.ref}')">📎 إيصال${receiptsOf(t.ref).length?' ('+receiptsOf(t.ref).length+')':''}</button>
+          <button class="btn btn-line btn-sm" onclick="sendInvoice('${t.ref}')">فاتورة</button>
+          <button class="btn btn-line btn-sm" onclick="openReceipts('${t.ref}')">إيصال${receiptsOf(t.ref).length?' ('+receiptsOf(t.ref).length+')':''}</button>
           <button class="btn btn-line btn-sm" onclick="delTx('${t.ref}')">حذف</button>
         </div>`;
     }else if(t.type==='svc'){
@@ -2046,7 +2070,7 @@ function render(){
         </div>
         ${stageBar(t)}
         <div class="tx-acts">
-          <button class="btn btn-line btn-sm" onclick="sendInvoice('${t.ref}')">🧾 فاتورة</button>
+          <button class="btn btn-line btn-sm" onclick="sendInvoice('${t.ref}')">فاتورة</button>
           <button class="btn btn-line btn-sm" onclick="delTx('${t.ref}')">حذف</button>
         </div>`;
     }else if(t.type==='rcpt'){
@@ -2062,8 +2086,8 @@ function render(){
         </div>
         ${stageBar(t)}
         <div class="tx-acts">
-          ${t.link?`<button class="btn btn-line btn-sm" onclick="window.open('${t.link}','_blank')">🔗 المعاملة</button>`:''}
-          <button class="btn btn-line btn-sm" onclick="sendInvoice('${t.ref}')">🧾 فاتورة</button>
+          ${t.link?`<button class="btn btn-line btn-sm" onclick="window.open('${t.link}','_blank')">المعاملة</button>`:''}
+          <button class="btn btn-line btn-sm" onclick="sendInvoice('${t.ref}')">فاتورة</button>
           <button class="btn btn-line btn-sm" onclick="delTx('${t.ref}')">حذف</button>
         </div>`;
     }else if(t.type==='m2a'){
@@ -2081,7 +2105,7 @@ function render(){
         </div>
         ${stageBar(t)}
         <div class="tx-acts">
-          <button class="btn btn-line btn-sm" onclick="sendInvoice('${t.ref}')">🧾 فاتورة</button>
+          <button class="btn btn-line btn-sm" onclick="sendInvoice('${t.ref}')">فاتورة</button>
           <button class="btn btn-line btn-sm" onclick="delTx('${t.ref}')">حذف</button>
         </div>`;
     }else if(t.type==='ledger'){
@@ -2433,7 +2457,7 @@ let rc=[]; /* {name,amount,ccy,acct,txn,link,err,side:'cli'|'sup'} */
 function usdtExtract(txt){
   const t=(txt||'').replace(/\u00A0/g,' ');
   let amount=null,m;
-  m=t.match(/transferred\s*([\d.,]+)\s*(?:🪙|\S{0,3})?\s*USDT/i);
+  m=t.match(/transferred\s*([\d.,]+)\s*(?:|\S{0,3})?\s*USDT/i);
   if(!m)m=t.match(/USDT\s*([\d.,]+)/i);
   if(!m)m=t.match(/([\d][\d.,]*)\s*USDT/i);
   if(m)amount=normNum(m[1]);
@@ -3309,8 +3333,8 @@ function askKeepMode(meta,dataUrl,amount){
     <div class="card">
       ${amtTxt}
       <div style="color:var(--dim);font-size:12px;margin-bottom:6px">${meta.name} · ${(meta.size/1024).toFixed(0)}KB</div>
-      <button class="btn btn-gold" onclick="commitReceipt('scan')">🧮 قراءة المبلغ فقط (بلا حفظ الملف)</button>
-      <button class="btn btn-line" onclick="commitReceipt('keep')">📎 حفظ الملف كاملًا</button>
+      <button class="btn btn-gold" onclick="commitReceipt('scan')">قراءة المبلغ فقط (بلا حفظ الملف)</button>
+      <button class="btn btn-line" onclick="commitReceipt('keep')">حفظ الملف كاملًا</button>
       <label style="margin-top:14px"><input type="checkbox" id="rememberMode" style="width:auto;display:inline;margin-left:6px">تذكّر اختياري دائمًا</label>
     </div>`;
   window._pendingReceipt={meta,dataUrl};
@@ -3477,7 +3501,7 @@ async function imageText(dataUrl){
   return data.text||'';
 }
 /* ================= BUILD / AUTO-UPDATE ================= */
-const ARKAN_BUILD='1005';
+const ARKAN_BUILD='1006';
 function arkanVerLabel(){const e=$('verLbl');if(e)e.textContent=ARKAN_BUILD;}
 function arkanUpdateBanner(b){
   if(document.getElementById('updBar'))return;
@@ -3609,12 +3633,12 @@ function openReceipts(ref){
   $('mdlTitle').textContent='إيصالات '+ref;
   $('mdlBody').innerHTML=`
     <div class="card">
-      <button class="btn btn-gold" onclick="attachReceipt('${ref}')">📎 إرفاق إيصال (صورة / PDF)</button>
-      <button class="btn btn-line" onclick="scanReceipts('${ref}')">🧮 جمع مبالغ الـ PDF تلقائيًا</button>
+      <button class="btn btn-gold" onclick="attachReceipt('${ref}')">إرفاق إيصال (صورة / PDF)</button>
+      <button class="btn btn-line" onclick="scanReceipts('${ref}')">جمع مبالغ الـ PDF تلقائيًا</button>
       <div style="margin-top:12px">
         ${rs.length?rs.map(r=>`
           <div class="tx" style="display:flex;justify-content:space-between;align-items:center">
-            <span style="font-size:13px">${r.type==='application/pdf'?'📄':'🖼️'} ${r.name.slice(0,24)}${r.scannedOnly?' <span class="badge b-paid" style="font-size:9px">قراءة فقط</span>':''}<br>
+            <span style="font-size:13px">${r.type==='application/pdf'?'':''} ${r.name.slice(0,24)}${r.scannedOnly?' <span class="badge b-paid" style="font-size:9px">قراءة فقط</span>':''}<br>
               <span style="color:var(--dim);font-size:11px">${new Date(r.ts).toLocaleString('en-GB')}${r.amount!=null?' · <b style="color:var(--gold2)">'+fmt(r.amount,0)+'</b>':''}</span></span>
             <span>
               ${r.data?`<button class="btn btn-line btn-sm" onclick="viewReceipt('${r.id}')">عرض</button>`:''}
@@ -3639,7 +3663,7 @@ function openStatement(cid){
     const rcpt=receiptsOf(t.ref).length;
     return `<div class="mini" style="flex-wrap:wrap">
       <span class="r">${t.ref}</span>
-      <span style="flex:1;text-align:center;color:var(--dim);font-size:11px">${s.info}${rcpt?' 📎'+rcpt:''}</span>
+      <span style="flex:1;text-align:center;color:var(--dim);font-size:11px">${s.info}${rcpt?' '+rcpt:''}</span>
       <span class="${dir==='لنا'?'p':''}" style="color:${dir==='علينا'?'var(--red)':(dir==='لنا'?'var(--green)':'var(--dim)')}">${dir?dir+' '+fmt(delta,0)+' '+CCYI[ccy]:s.p}</span>
     </div>`;
   }).join('');
@@ -3930,7 +3954,7 @@ function renderSettle(){
   $('sPMru').textContent=fmt(T.pM,0)+' MRU';
   let msg='';
   if(T.brCount){
-    msg+=`📊 ARKAN — تسوية ${d.toLocaleDateString('en-GB')}
+    msg+=`ARKAN — تسوية ${d.toLocaleDateString('en-GB')}
 — جسر التحويل —
 العمليات: ${T.brCount}
 إجمالي AOA: ${fmt(T.aoa,0)}
@@ -3940,14 +3964,14 @@ MRU مدفوع Bankily: ${fmt(T.mru,0)}
 ربح الجسر: ${fmt(T.pUsdt)} $`;
   }
   if(T.nA||T.nM){
-    msg+=(msg?'\n':`📊 ARKAN — تسوية ${d.toLocaleDateString('en-GB')}\n`)+`— تداول USDT —`;
+    msg+=(msg?'\n':`ARKAN — تسوية ${d.toLocaleDateString('en-GB')}\n`)+`— تداول USDT —`;
     if(T.nA)msg+=`\nAOA/USDT: ${T.nA} صفقة · حجم ${fmt(T.volA)} $ · ربح ${fmt(T.pA,0)} KWZ`;
     if(T.nM)msg+=`\nMRU/USDT: ${T.nM} صفقة · حجم ${fmt(T.volM)} $ · ربح ${fmt(T.pM,0)} MRU`;
   }
   const openDebts=txs.filter(t=>t.pay&&t.pay!=='settled');
   if(openDebts.length)msg+=`\n⚠️ ديون مفتوحة: ${openDebts.length}`;
   const openCh=chains.filter(c=>c.status==='open');
-  if(openCh.length)msg+=`\n🔗 سلاسل مفتوحة: ${openCh.map(c=>c.ref+' ('+fmt(c.curAmt,0)+' '+CCYI[c.curCcy]+')').join(' · ')}`;
+  if(openCh.length)msg+=`\nسلاسل مفتوحة: ${openCh.map(c=>c.ref+' ('+fmt(c.curAmt,0)+' '+CCYI[c.curCcy]+')').join(' · ')}`;
   $('settleMsg').textContent=msg||'لا عمليات مؤكدة بعد';
 }
 
@@ -4058,7 +4082,7 @@ function renderContacts(){
         ${c.bank?`<span>Bankily <b>${c.bank}</b></span>`:''}
         ${c.ccy?`<span>${c.ccy}</span>`:''}
       </div>
-      ${c.note?`<div class="tx-mid"><span>📝 ${c.note}</span></div>`:''}
+      ${c.note?`<div class="tx-mid"><span>${c.note}</span></div>`:''}
       <div class="tx-acts">
         <button class="btn btn-gold btn-sm" onclick="useContact('${c.id}')">عملية بهذه الجهة</button>
         <button class="btn btn-line btn-sm" onclick="openStatement('${c.id}')">كشف الحساب</button>
@@ -4545,7 +4569,7 @@ async function genStatusImage(){
     </div>
     <div style="margin-top:auto;padding:30px 40px 48px;text-align:center;z-index:2">
       <div style="background:linear-gradient(135deg,#25D366,#128C7E);border-radius:18px;padding:18px">
-        <div style="font-size:16px;color:#fff;font-weight:800">📲 اطلب تحويلك عبر واتساب</div>
+        <div style="font-size:16px;color:#fff;font-weight:800">اطلب تحويلك عبر واتساب</div>
         <div style="font-family:'IBM Plex Mono';font-size:24px;color:#fff;font-weight:800;margin-top:5px;direction:ltr">+222 36 29 50 50</div>
       </div>
       <div style="font-family:'IBM Plex Mono';font-size:12px;color:#8B8FA8;margin-top:16px">ARKAN INTERNATIONAL TRADING</div>
@@ -4562,7 +4586,7 @@ async function genStatusImage(){
   $('mdlTitle').textContent='صورة الحالة';
   $('mdlBody').innerHTML=`<div class="card">
     <img src="${img}" style="width:100%;border-radius:16px;display:block">
-    <button class="btn btn-gold" style="margin-top:12px" onclick="dlStatusImg('${'ARKAN_rates_'+today.replace(/\//g,'-')}')">💾 حفظ الصورة (للحالة)</button>
+    <button class="btn btn-gold" style="margin-top:12px" onclick="dlStatusImg('${'ARKAN_rates_'+today.replace(/\//g,'-')}')">حفظ الصورة (للحالة)</button>
     <div style="font-size:12px;color:var(--dim);margin-top:10px;text-align:center;line-height:1.7">احفظ الصورة ← افتح واتساب ← الحالة ← اختر الصورة.</div>
   </div>`;
   window._statusImg=img;
@@ -4572,7 +4596,7 @@ function dlStatusImg(name){
   const a=document.createElement('a');a.href=window._statusImg;a.download=name+'.png';a.click();
   toast('حُفظت — انشرها في حالة واتساب');
 }
-function flagOf(c){return {AOA:'🇦🇴',MRU:'🇲🇷',CNY:'🇨🇳',AED:'🇦🇪',MAD:'🇲🇦',USD:'🇺🇸',EUR:'🇪🇺',USDT:'🪙',SAR:'🇸🇦',TRY:'🇹🇷',EGP:'🇪🇬'}[c]||'💱';}
+function flagOf(c){return {AOA:'🇦🇴',MRU:'🇲🇷',CNY:'🇨🇳',AED:'🇦🇪',MAD:'🇲🇦',USD:'🇺🇸',EUR:'🇪🇺',USDT:'',SAR:'🇸🇦',TRY:'🇹🇷',EGP:'🇪🇬'}[c]||'';}
 
 
 /* نشر للرابط الثابت — يحدّث ملف JSON على GitHub، الرابط يبقى ثابتًا */
@@ -4608,7 +4632,7 @@ async function publishStatic(){
         <div style="font-size:12px;color:var(--dim);margin-bottom:6px">هذا الرابط ثابت — ضعه في بايو واتساب مرة واحدة، ويعرض أحدث أسعار دائمًا:</div>
         <div style="font-size:12px;font-family:'IBM Plex Mono';word-break:break-all;color:var(--acc2);background:rgba(0,0,0,.3);padding:10px;border-radius:10px">${staticUrl}</div>
         <div class="btn-row" style="margin-top:8px">
-          <button class="btn btn-gold" onclick="(navigator.clipboard&&navigator.clipboard.writeText('${staticUrl}'));toast('نُسخ ✓')">📋 نسخ الرابط الثابت</button>
+          <button class="btn btn-gold" onclick="(navigator.clipboard&&navigator.clipboard.writeText('${staticUrl}'));toast('نُسخ ✓')">نسخ الرابط الثابت</button>
           <button class="btn btn-line" onclick="window.open('${staticUrl}','_blank')">معاينة</button>
         </div>
       </div>`;
@@ -4646,13 +4670,51 @@ async function publishRates(){
       <div style="font-size:${shortUrl?'15px':'10px'};font-family:'IBM Plex Mono';word-break:break-all;color:var(--acc2);background:rgba(0,0,0,.3);padding:10px;border-radius:10px">${url}</div>
       <div style="font-size:11px;color:var(--dim);margin-top:6px">⚠️ رابط لعرض لحظي واحد فقط — لا يتحدث لاحقًا. للبايو استخدم الرابط الثابت.</div>
       <div class="btn-row" style="margin-top:8px">
-        <button class="btn btn-gold" onclick="(navigator.clipboard&&navigator.clipboard.writeText('${url}'));toast('نُسخ ✓')">📋 نسخ</button>
-        <button class="btn btn-wa" onclick="window.open('https://wa.me/?text='+encodeURIComponent('💱 أسعار ARKAN اليوم:\n${url}'),'_blank')">مشاركة</button>
+        <button class="btn btn-gold" onclick="(navigator.clipboard&&navigator.clipboard.writeText('${url}'));toast('نُسخ ✓')">نسخ</button>
+        <button class="btn btn-wa" onclick="window.open('https://wa.me/?text='+encodeURIComponent('أسعار ARKAN اليوم:\n${url}'),'_blank')">مشاركة</button>
         <button class="btn btn-line" onclick="window.open('${url}','_blank')">معاينة</button>
       </div>
     </div>`;
   toast(shortUrl?'رابط مختصر جاهز ✓':'رابط جاهز (بلا اختصار) ✓');
 }
+</script>
+
+<script>
+/* ARKAN — جسيمات خلفية ثابتة (بلا حركة، بلا parallax) */
+(function(){
+  var cv=document.getElementById('particles'); if(!cv)return;
+  var ctx=cv.getContext('2d'), ps=[], W, H;
+  var COLORS=['59,130,246','96,165,250','139,92,246'];
+  function seed(){
+    ps=[];
+    var COUNT=innerWidth<700?42:80;
+    for(var i=0;i<COUNT;i++){
+      ps.push({x:Math.random()*W,y:Math.random()*H,
+        size:Math.random()*1.7+.5,
+        op:Math.random()*.45+.18,
+        col:COLORS[Math.floor(Math.random()*COLORS.length)]});
+    }
+  }
+  function size(){W=cv.width=innerWidth;H=cv.height=innerHeight;seed();}
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    for(var i=0;i<ps.length;i++){
+      var p=ps[i];
+      ctx.beginPath(); ctx.arc(p.x,p.y,p.size,0,Math.PI*2);
+      ctx.fillStyle='rgba('+p.col+','+p.op+')'; ctx.fill();
+      for(var j=i+1;j<ps.length;j++){
+        var q=ps[j], dx=p.x-q.x, dy=p.y-q.y, d=Math.sqrt(dx*dx+dy*dy);
+        if(d<110){
+          ctx.beginPath(); ctx.moveTo(p.x,p.y); ctx.lineTo(q.x,q.y);
+          ctx.strokeStyle='rgba('+p.col+','+(.10*(1-d/110))+')';
+          ctx.lineWidth=.6; ctx.stroke();
+        }
+      }
+    }
+  }
+  size(); draw();
+  addEventListener('resize',function(){size();draw();},{passive:true});
+})();
 </script>
 </body>
 </html>
