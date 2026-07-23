@@ -25,12 +25,23 @@
 /* كتم تحذير fake worker */
 (function(){const _w=console.warn;console.warn=function(){const s=(arguments[0]||'')+'';if(s.indexOf('fake worker')>-1||s.indexOf('Setting up fake')>-1)return;_w.apply(console,arguments);};})();
 /* عامل pdf.js عبر blob محلي — يتجاوز حجب Safari للعمال الخارجيين */
-if(window.pdfjsLib){
-  fetch("https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js")
-    .then(r=>r.text())
-    .then(t=>{pdfjsLib.GlobalWorkerOptions.workerSrc=URL.createObjectURL(new Blob([t],{type:"text/javascript"}));})
-    .catch(()=>{pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";});
-}
+window._pdfReady=(async function(){
+  if(!window.pdfjsLib)return false;
+  var U=["https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js",
+         "https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js",
+         "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js"];
+  for(var i=0;i<U.length;i++){
+    try{
+      var r=await fetch(U[i]);if(!r.ok)continue;
+      var t=await r.text();
+      pdfjsLib.GlobalWorkerOptions.workerSrc=URL.createObjectURL(new Blob([t],{type:"text/javascript"}));
+      return true;
+    }catch(e){}
+  }
+  /* لا عامل خارجي متاح → pdf.js يعمل على الخيط الرئيسي (أبطأ لكنه لا يفشل) */
+  pdfjsLib.GlobalWorkerOptions.workerSrc="";
+  return false;
+})();
 </script>
 <style>
 :root{
@@ -2176,7 +2187,7 @@ async function smartFill(targetId){
     toast('جارٍ قراءة الإيصال...');
     try{
       const dataUrl=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(f);});
-      const txt=await anyReceiptText(dataUrl,f.type);
+      const txt=await anyReceiptText(dataUrl,f.type,f.name);
       const sm=smartRead(txt);
       if(sm.amount==null){
         const v=parseFloat(String(prompt('تعذّرت القراءة — أدخل المبلغ:')||'').replace(/[^0-9.]/g,''));
@@ -2292,7 +2303,7 @@ async function uploadOB(fid){
     for(const f of files){
       try{
         const dataUrl=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(f);});
-        const txt=await anyReceiptText(dataUrl,f.type);
+        const txt=await anyReceiptText(dataUrl,f.type,f.name);
         const sm=smartRead(txt);
         const ctx=curType==='trade'?'trade':(curType==='bridge'?'bridge':null);
         let target=fid;
@@ -2618,7 +2629,7 @@ async function uploadRC(side){
       if(pg)pg.textContent='قراءة إيصالات '+lbl+' — '+n+'/'+files.length+'  ·  '+String(f.name).slice(0,22);
       try{
         const dataUrl=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(f);});
-        const txt=await anyReceiptText(dataUrl,f.type);
+        const txt=await anyReceiptText(dataUrl,f.type,f.name);
         const p=arkanParse(txt,f.name);
         const ccy=p.ccy||(sel!=='AUTO'?sel:null)||'AOA';
         rc.push({name:f.name,amount:p.amount,ccy,acct:p.acct||null,txn:p.txn||null,date:p.date||null,
@@ -2972,12 +2983,13 @@ function uploadPayRcpt2(){
     for(const f of files){
       try{
         const dataUrl=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(f);});
-        const txt=await anyReceiptText(dataUrl,f.type);
+        const txt=await anyReceiptText(dataUrl,f.type,f.name);
+        if(!txt||txt.replace(/\s/g,'').length<15)throw new Error('لا يوجد نص مقروء في الملف');
         const ex=mruReceiptExtract(txt);
-        if(!ex.amount)throw new Error('no amount');
+        if(!ex.amount)throw new Error('لم يُعثر على المبلغ');
         mb.push({app:ex.app,amount:ex.amount,acct:ex.acct||null,txn:ex.txn||null});
         ok++;
-      }catch(e){mb.push({app:'؟',amount:null,acct:null,txn:null,err:(e&&/insecure|Worker|SecurityError/i.test(String(e))?'المتصفح يحجب القراءة — افتح في Safari':'لم يُقرأ')});}
+      }catch(e){mb.push({app:'؟',amount:null,acct:null,txn:null,err:(e&&e.message)?e.message:'لم يُقرأ'});}
     }
     reconcileMB();renderPayRcpt2();syncM2AOld();
     toast('قُرئ '+ok+'/'+files.length+' ✓');
@@ -3153,7 +3165,7 @@ function uploadPayRcpt(){
     r.onload=async()=>{
       toast('جارٍ قراءة الإيصال...');
       try{
-        const txt=await anyReceiptText(r.result,f.type);
+        const txt=await anyReceiptText(r.result,f.type,f.name);
         const ex=mruReceiptExtract(txt);
         if(!ex.amount&&!ex.acct){toast('لم يُقرأ — أدخل البيانات يدويًا');return;}
         _payRcpt={...ex,amountOld:ex.amount?ex.amount*10:null,ts:Date.now()};
@@ -3207,7 +3219,7 @@ function uploadBatch(){
       i++;
       try{
         const dataUrl=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(f);});
-        const txt=await anyReceiptText(dataUrl,f.type);
+        const txt=await anyReceiptText(dataUrl,f.type,f.name);
         const sm=smartRead(txt);
         batch.push({name:f.name,amount:sm.amount,ccy:sm.ccy});
         if(sm.amount!=null)ok++;
@@ -3387,7 +3399,14 @@ async function pdfText(dataUrl){
   const bytes=atob(dataUrl.split(',')[1]);
   const arr=new Uint8Array(bytes.length);
   for(let i=0;i<bytes.length;i++)arr[i]=bytes.charCodeAt(i);
-  const pdf=await pdfjsLib.getDocument({data:arr}).promise;
+  try{await Promise.race([window._pdfReady,new Promise(r=>setTimeout(r,6000))]);}catch(e){}
+  let pdf;
+  try{ pdf=await pdfjsLib.getDocument({data:arr.slice()}).promise; }
+  catch(e){
+    /* فشل العامل → إعادة المحاولة على الخيط الرئيسي */
+    pdfjsLib.GlobalWorkerOptions.workerSrc="";
+    pdf=await pdfjsLib.getDocument({data:arr.slice()}).promise;
+  }
   let txt='';
   for(let p=1;p<=pdf.numPages;p++){
     const page=await pdf.getPage(p);
@@ -3455,19 +3474,28 @@ async function ocrWorker(){
   try{
     /* جلب سكربت العامل وتحويله blob محلي — يتجاوز حجب Safari للعمال الخارجيين */
     if(!_ocrWurl){
-      const wtxt=await fetch('https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.1.0/worker.min.js').then(r=>r.text());
-      _ocrWurl=URL.createObjectURL(new Blob([wtxt],{type:'text/javascript'}));
+      const WU=['https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.1.0/worker.min.js',
+                'https://unpkg.com/tesseract.js@5.1.0/dist/worker.min.js',
+                'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.0/dist/worker.min.js'];
+      for(const u of WU){
+        try{const r=await fetch(u);if(!r.ok)continue;
+            _ocrWurl=URL.createObjectURL(new Blob([await r.text()],{type:'text/javascript'}));break;}catch(e){}
+      }
+      if(!_ocrWurl)throw new Error('تعذّر تحميل محرك القراءة — الشبكة تحجب CDN');
     }
-    _ocrWorker=await Tesseract.createWorker('eng',1,{
-      workerPath:_ocrWurl,
-      workerBlobURL:false,
-      corePath:'https://cdn.jsdelivr.net/npm/tesseract.js-core@5.1.0/tesseract-core-simd.wasm.js',
-      langPath:'https://tessdata.projectnaptha.com/4.0.0'
-    });
+    _ocrWorker=await Promise.race([
+      Tesseract.createWorker('eng',1,{
+        workerPath:_ocrWurl,
+        workerBlobURL:false,
+        corePath:'https://cdn.jsdelivr.net/npm/tesseract.js-core@5.1.0/tesseract-core-simd.wasm.js',
+        langPath:'https://tessdata.projectnaptha.com/4.0.0'
+      }),
+      new Promise((_,rej)=>setTimeout(()=>rej(new Error('انتهت المهلة — الشبكة بطيئة (المحرك ~7MB)')),90000))
+    ]);
     await _ocrWorker.setParameters({tessedit_pageseg_mode:'6'});
   }catch(e){
     _ocrWorker=null;
-    toast('محرك القراءة محجوب هنا — أدخل البيانات يدويًا أو افتح في Safari');
+    toast((e&&e.message)?('OCR: '+e.message):'محرك القراءة محجوب هنا — أدخل البيانات يدويًا');
     throw e;
   }
   return _ocrWorker;
@@ -3505,7 +3533,7 @@ async function imageText(dataUrl){
   return data.text||'';
 }
 /* ================= BUILD / AUTO-UPDATE ================= */
-const ARKAN_BUILD='1007';
+const ARKAN_BUILD='1008';
 function arkanVerLabel(){const e=$('verLbl');if(e)e.textContent=ARKAN_BUILD;}
 function arkanUpdateBanner(b){
   if(document.getElementById('updBar'))return;
@@ -4473,7 +4501,7 @@ async function uploadSvc(){
     toast('جارٍ قراءة الفاتورة...');
     try{
       const dataUrl=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(f);});
-      const txt=await anyReceiptText(dataUrl,f.type);
+      const txt=await anyReceiptText(dataUrl,f.type,f.name);
       const sm=(typeof smartRead==='function')?smartRead(txt):{amount:(extractAmount(txt)||{}).value,ccy:null};
       _svcRcpt={name:f.name,amount:sm.amount,ccy:sm.ccy,ts:Date.now()};
       if(sm.amount&&$('svcAmt'))$('svcAmt').value=Math.round(sm.amount);
