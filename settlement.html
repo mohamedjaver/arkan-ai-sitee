@@ -50,7 +50,7 @@ body{background:var(--bg);color:var(--txt);
     radial-gradient(720px 460px at 50% -10%, rgba(139,114,255,.32), transparent 62%),
     radial-gradient(560px 380px at 108% 22%, rgba(77,163,255,.08), transparent 60%),
     linear-gradient(180deg,#1A1C38 0%,#15172E 34%,#121327 100%);
-  background-attachment:fixed}
+  background-repeat:no-repeat;background-attachment:scroll}
 .num{font-family:'IBM Plex Mono',monospace;font-feature-settings:"tnum"}
 #lock{position:fixed;inset:0;z-index:1000;background:var(--bg);
   background-image:radial-gradient(620px 420px at 50% 28%, rgba(139,114,255,.30), transparent 65%);
@@ -3477,7 +3477,7 @@ async function imageText(dataUrl){
   return data.text||'';
 }
 /* ================= BUILD / AUTO-UPDATE ================= */
-const ARKAN_BUILD='1004';
+const ARKAN_BUILD='1005';
 function arkanVerLabel(){const e=$('verLbl');if(e)e.textContent=ARKAN_BUILD;}
 function arkanUpdateBanner(b){
   if(document.getElementById('updBar'))return;
