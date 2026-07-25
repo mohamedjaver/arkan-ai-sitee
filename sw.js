@@ -1,7 +1,7 @@
 /* ARKAN Rates — Service Worker v2.0
    إستراتيجية: الشبكة أولًا لصفحات HTML والبيانات (لا محتوى قديم أبدًا)
               الكاش أولًا للأصول الثابتة فقط (صور، أيقونات، شعار) */
-const V='arkan-v2.0';
+const V='arkan-v2.1';
 const STATIC=['./arkan-logo.svg','./arkan-icon-512.png','./apple-touch-icon.png','./site-manifest.json'];
 
 self.addEventListener('install',e=>{
@@ -21,8 +21,41 @@ self.addEventListener('activate',e=>{
   );
 });
 
+
+/* ===== Web Share Target: استقبال إيصالات الواتساب (POST محلي) ===== */
+const SHARE_CACHE='arkan-share-v1';
+
+async function arkHandleShare(req){
+  try{
+    const form=await req.formData();
+    const files=[...form.getAll('receipts')].filter(f=>f&&f.size>0);
+    const note=String(form.get('text')||'');
+    const cache=await caches.open(SHARE_CACHE);
+    const idx=[];
+    for(const file of files){
+      const id='r_'+Date.now()+'_'+Math.random().toString(36).slice(2,8);
+      const ext=file.type==='application/pdf'?'.pdf':'.jpg';
+      const name=(file.name&&file.name.length>3)?file.name:(id+ext);
+      await cache.put(arkUrl('__shared__/'+id),
+        new Response(file,{headers:{'Content-Type':file.type||'application/octet-stream'}}));
+      idx.push({id:id,name:name,type:file.type||'',size:file.size});
+    }
+    await cache.put(arkUrl('__shared__/index.json'),
+      new Response(JSON.stringify({note:note,files:idx,at:Date.now()}),
+        {headers:{'Content-Type':'application/json'}}));
+    return Response.redirect(arkUrl('settlement.html?shared='+idx.length),303);
+  }catch(err){
+    return Response.redirect(arkUrl('settlement.html?shared=error'),303);
+  }
+}
+function arkUrl(p){return new URL(p,self.registration.scope).href;}
+
 self.addEventListener('fetch',e=>{
   const r=e.request;
+  const u0=new URL(r.url);
+  if(r.method==='POST'&&u0.pathname.replace(/\/+$/,'').endsWith('/share-target')){
+    e.respondWith(arkHandleShare(r));return;
+  }
   if(r.method!=='GET')return;
   const url=new URL(r.url);
   if(url.origin!==location.origin)return;

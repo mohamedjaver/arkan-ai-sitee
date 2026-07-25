@@ -2781,6 +2781,17 @@ async function uploadRC(side){
   inp.type='file';inp.accept='image/*,application/pdf';inp.multiple=true;
   inp.onchange=async()=>{
     const files=[...inp.files];if(!files.length)return;
+    await ingestRC(files,side);
+  };
+  inp.click();
+}
+
+/* ============ المحرك المشترك: يقبل ملفات من أي مصدر ============ */
+async function ingestRC(files,side){
+  side=side||'cli';
+  files=[...files].filter(f=>f&&f.size>0);
+  if(!files.length)return {ok:0,fail:0};
+  {
     const sel=rcCcyV(), pg=$('rcProg');
     const lbl=side==='cli'?'العميل':'المورد';
     if(pg)pg.style.display='block';
@@ -2804,8 +2815,8 @@ async function uploadRC(side){
     if(pg){pg.textContent='اكتمل: '+ok+' مقروء'+(fail?'  ·  '+fail+' يحتاج إدخال يدوي':'');setTimeout(()=>{pg.style.display='none';},6000);}
     rcPersist();renderRC();
     toast('إيصالات '+lbl+': '+ok+'/'+files.length+' مقروء');
-  };
-  inp.click();
+    return {ok:ok,fail:fail};
+  }
 }
 function reparseAll(){
   let n=0;
@@ -4919,5 +4930,151 @@ async function publishRates(){
   addEventListener('resize',function(){size();draw();},{passive:true});
 })();
 </script>
+
+<!-- ================= ARKAN INTAKE — واتساب / لصق / سحب ================= -->
+<style>
+#arkShareBx{position:fixed;inset:0;z-index:99998;display:none;align-items:center;justify-content:center;
+  background:rgba(6,8,20,.82);backdrop-filter:blur(6px)}
+#arkShareBx.on{display:flex}
+#arkShareBx .cd{width:min(420px,92vw);background:linear-gradient(160deg,#1b1e3a,#12142a);
+  border:1px solid rgba(212,175,55,.35);border-radius:20px;padding:22px 20px;
+  box-shadow:0 30px 70px rgba(0,0,0,.6);text-align:center;font-family:'IBM Plex Sans Arabic',sans-serif}
+#arkShareBx h4{margin:0 0 4px;color:#E8C766;font-size:16px;font-weight:700}
+#arkShareBx p{margin:0 0 18px;color:#9aa3c7;font-size:12.5px}
+#arkShareBx .rw{display:flex;gap:10px}
+#arkShareBx button{flex:1;padding:13px 0;border-radius:13px;border:1px solid rgba(212,175,55,.4);
+  background:rgba(212,175,55,.10);color:#E8C766;font:700 14px 'IBM Plex Sans Arabic',sans-serif;cursor:pointer;
+  transition:.18s}
+#arkShareBx button:hover{background:rgba(212,175,55,.22)}
+#arkShareBx .cx{margin-top:12px;background:none;border:none;color:#6b7399;font-size:12px;width:100%;padding:6px}
+body.ark-drag:after{content:'أفلت الإيصالات هنا';position:fixed;inset:14px;z-index:99997;
+  border:2px dashed rgba(212,175,55,.7);border-radius:22px;background:rgba(10,12,26,.72);
+  display:flex;align-items:center;justify-content:center;color:#E8C766;
+  font:800 20px 'IBM Plex Sans Arabic',sans-serif;pointer-events:none}
+</style>
+
+<div id="arkShareBx"><div class="cd">
+  <h4>إيصالات واردة</h4>
+  <p id="arkShareTxt">اختر جهة القيد</p>
+  <div class="rw">
+    <button onclick="ArkanIntake.pick('cli')">العميل</button>
+    <button onclick="ArkanIntake.pick('sup')">المورد</button>
+  </div>
+  <button class="cx" onclick="ArkanIntake.pick(null)">إلغاء</button>
+</div></div>
+
+<script>
+(function(){
+'use strict';
+
+var SHARE_CACHE='arkan-share-v1';
+var INBOX_URL='data/receipts-inbox.json';
+var POLL_MS=25000;
+var queue=[];
+
+/* ---------- تسجيل عامل الخدمة ---------- */
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('sw.js',{scope:'./'}).catch(function(){});
+}
+
+/* ---------- اختيار الجهة (عميل / مورد) ---------- */
+function ask(files,label){
+  queue=files;
+  var bx=document.getElementById('arkShareBx');
+  var tx=document.getElementById('arkShareTxt');
+  if(tx)tx.textContent=(label||'')+' — '+files.length+' إيصال · اختر جهة القيد';
+  if(bx)bx.classList.add('on');
+}
+
+function pick(side){
+  var bx=document.getElementById('arkShareBx');
+  if(bx)bx.classList.remove('on');
+  var files=queue;queue=[];
+  if(!side||!files.length)return;
+  if(typeof switchTab==='function')switchTab('new');
+  if(typeof ingestRC==='function')ingestRC(files,side);
+}
+
+/* ---------- 1) ملفات مُشارَكة من الواتساب ---------- */
+async function pullShared(){
+  var p=new URLSearchParams(location.search);
+  if(!p.has('shared'))return;
+  if(p.get('shared')==='error'){clean();return t('تعذّر استقبال الملف المُشارَك');}
+  if(!('caches' in window)){clean();return;}
+  try{
+    var cache=await caches.open(SHARE_CACHE);
+    var idx=await cache.match('__shared__/index.json');
+    if(!idx){clean();return;}
+    var data=await idx.json(), out=[];
+    for(var i=0;i<(data.files||[]).length;i++){
+      var it=data.files[i];
+      var res=await cache.match('__shared__/'+it.id);
+      if(!res)continue;
+      var blob=await res.blob();
+      out.push(new File([blob],it.name,{type:it.type||blob.type}));
+      await cache.delete('__shared__/'+it.id);
+    }
+    await cache.delete('__shared__/index.json');
+    clean();
+    if(out.length)ask(out,'من الواتساب');
+  }catch(e){clean();}
+}
+function clean(){try{history.replaceState({},'',location.pathname);}catch(e){}}
+
+/* ---------- 2) اللصق ---------- */
+document.addEventListener('paste',function(e){
+  var f=[].slice.call((e.clipboardData&&e.clipboardData.files)||[])
+          .filter(function(x){return /^image\//.test(x.type)||x.type==='application/pdf';});
+  if(f.length)ask(f,'لصق');
+});
+
+/* ---------- 3) السحب والإفلات ---------- */
+['dragenter','dragover'].forEach(function(ev){
+  document.addEventListener(ev,function(e){e.preventDefault();document.body.classList.add('ark-drag');});
+});
+['dragleave','drop'].forEach(function(ev){
+  document.addEventListener(ev,function(e){e.preventDefault();document.body.classList.remove('ark-drag');});
+});
+document.addEventListener('drop',function(e){
+  var f=[].slice.call((e.dataTransfer&&e.dataTransfer.files)||[])
+          .filter(function(x){return /^image\//.test(x.type)||x.type==='application/pdf';});
+  if(f.length)ask(f,'سحب وإفلات');
+});
+
+/* ---------- 4) صندوق الويب هوك (اختياري) ---------- */
+var seen={};
+async function poll(){
+  try{
+    var r=await fetch(INBOX_URL+'?t='+Date.now(),{cache:'no-store'});
+    if(!r.ok)return;
+    var arr=await r.json();
+    if(!Array.isArray(arr))return;
+    var fresh=arr.filter(function(x){return x.id&&!seen[x.id];});
+    arr.forEach(function(x){if(x.id)seen[x.id]=1;});
+    if(!fresh.length)return;
+    if(typeof rc!=='undefined'&&Array.isArray(rc)){
+      fresh.forEach(function(x){
+        rc.push({name:x.fileName||('واتساب · '+(x.bank||'')),amount:x.amount,ccy:x.currency||'AOA',
+                 acct:null,txn:x.reference||null,date:x.date||null,ben:x.recipient||null,
+                 bank:x.bank||null,ok:x.status==='parsed',src:'whatsapp',link:null,side:'cli'});
+      });
+      if(typeof rcPersist==='function')rcPersist();
+      if(typeof renderRC==='function')renderRC();
+    }
+    t('وصل '+fresh.length+' إيصال من الواتساب');
+  }catch(e){}
+}
+
+function t(m){if(typeof toast==='function')toast(m);}
+
+window.ArkanIntake={pick:pick,ask:ask,poll:poll};
+
+window.addEventListener('load',function(){
+  pullShared();
+  poll();setInterval(poll,POLL_MS);
+});
+})();
+</script>
+
 </body>
 </html>
