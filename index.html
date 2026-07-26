@@ -1227,6 +1227,47 @@ function showPinModal(pin, ref, waUrl){
   wrap.querySelector('#arkClose').onclick = function(){ wrap.remove(); };
 }
 
+// ═══ محرك الأسعار والربح ═══
+let ARK_RATES = {};   // ccy -> {w,m,r,thr,thrM,buy}
+async function loadArkRates(){
+  try {
+    const res = await fetch('rates-data.json?t='+Date.now(), {cache:'no-store'});
+    const d = await res.json();
+    ARK_RATES = { MRU:{w:1,m:1,r:1,thr:0,thrM:0,buy:1} };
+    (d.r||[]).forEach(x => ARK_RATES[x.ccy] = {w:+x.w,m:+x.m,r:+x.r,thr:+x.thr||0,thrM:+x.thrM||0,buy:+x.buy||0});
+    if (!ARK_RATES.USD && ARK_RATES.USDT) ARK_RATES.USD = {...ARK_RATES.USDT};
+  } catch(e){ console.warn('rates load failed', e); }
+}
+loadArkRates();
+
+// اختيار الشريحة حسب المبلغ + حساب الربح بالأوقية
+function arkTier(cc, amt){
+  const r = ARK_RATES[cc]; if(!r) return 'r';
+  if (r.thr && amt >= r.thr) return 'w';
+  if (r.thrM && amt >= r.thrM) return 'm';
+  return 'r';
+}
+function arkCompute(from, to, amount){
+  // نحسب دائماً بالنسبة للعملة غير الأوقية (المصدر أو الوجهة)
+  const src = (from !== 'MRU') ? from : to;
+  const R = ARK_RATES[src];
+  if (!R){ return { tier:'r', sellRate:0, buyRate:0, received:0, profit:0 }; }
+  const tier = arkTier(src, amount);
+  const sell = R[tier];        // سعر البيع (أوقية لكل وحدة)
+  const buy  = R.buy || 0;     // سعر الشراء
+  let received, profit;
+  if (from !== 'MRU'){
+    // العميل يرسل عملة أجنبية → يستلم أوقية (أو العكس عبر الوسيط)
+    received = to === 'MRU' ? amount * sell : amount * (sell / (ARK_RATES[to]?.[tier]||1));
+    profit   = amount * (sell - buy);          // ربحك بالأوقية = الفرق × الكمية
+  } else {
+    // العميل يرسل أوقية → يستلم عملة أجنبية
+    received = amount / sell;
+    profit   = received * (sell - buy);
+  }
+  return { tier, sellRate:sell, buyRate:buy, received, profit: Math.max(0, profit) };
+}
+
 window.arkanSubmit = async function(){
   const g = id => document.getElementById(id);
   const name = (g('rName')?.value||'').trim();
@@ -1237,8 +1278,8 @@ window.arkanSubmit = async function(){
 
   const from = (window.fddVal ? fddVal('fddRFrom') : 'USDT') || 'USDT';
   const to   = (window.fddVal ? fddVal('fddRTo')   : 'MRU')  || 'MRU';
-  const r    = (window.rate ? rate(from,to) : 0);
-  const out  = r ? amount*r : 0;
+  const comp = arkCompute(from, to, amount);
+  const out  = comp.received;
   const fm   = window.fmt || (v => v.toLocaleString('en-US',{maximumFractionDigits:2}));
 
   try {
@@ -1251,7 +1292,9 @@ window.arkanSubmit = async function(){
       await setDoc(uref, { name, phone, pin, ref, balance:0, role:'client', status:'pending', createdAt: serverTimestamp() });
     }
     await setDoc(doc(collection(db,'transactions')), {
-      uid: phone, clientName: name, clientRef: ref, from, to, amount, received: out, profit: 0,
+      uid: phone, clientName: name, clientRef: ref, from, to, amount, received: out,
+      tier: comp.tier, sellRate: comp.sellRate, buyRate: comp.buyRate,
+      profit: Math.round(comp.profit),
       type:'out', dp:2, status:'pending', createdAt: serverTimestamp()
     });
     const msg = 'ARKAN SETTLEMENTS — طلب تحويل\nالاسم: '+name+'\nرمز دخولي: '+pin+'\nرقمي المرجعي: '+ref+'\n\nأرسل: '+fm(amount)+' '+from+'\nيستلم: '+(out?fm(out):'?')+' '+to;
