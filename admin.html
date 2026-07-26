@@ -108,10 +108,16 @@ body{ margin:0; color:var(--txt); font-family:'Tajawal',system-ui,sans-serif; mi
   </div>
 
   <div class="kpis">
-    <div class="kpi cyan"><div class="v mono" id="kToday">0</div><div class="l">معاملات اليوم</div></div>
-    <div class="kpi gold"><div class="v mono" id="kProfit">0</div><div class="l">أرباح اليوم MRU</div></div>
+    <div class="kpi gold"><div class="v mono" id="kProfit">0</div><div class="l">ربح اليوم MRU</div></div>
+    <div class="kpi cyan"><div class="v mono" id="kProfitW">0</div><div class="l">ربح الأسبوع</div></div>
+    <div class="kpi"><div class="v mono" id="kProfitM">0</div><div class="l">ربح الشهر</div></div>
     <div class="kpi pend"><div class="v mono" id="kPending">0</div><div class="l">قيد الانتظار</div></div>
+  </div>
+  <div class="kpis" style="margin-top:-8px">
+    <div class="kpi"><div class="v mono" id="kToday">0</div><div class="l">معاملات اليوم</div></div>
     <div class="kpi"><div class="v mono" id="kTotal">0</div><div class="l">إجمالي المعاملات</div></div>
+    <div class="kpi"><div class="v mono" id="kDone">0</div><div class="l">مكتملة</div></div>
+    <div class="kpi"><div class="v mono" id="kProfitAll">0</div><div class="l">ربح إجمالي</div></div>
   </div>
 
   <div class="filters" id="filters">
@@ -191,11 +197,25 @@ function listen(){
   });
 }
 
+function inRange(ts, days){
+  if(!ts?.toDate) return false;
+  const d = ts.toDate(), now = new Date();
+  return (now - d) <= days*86400000;
+}
 function computeKPIs(){
+  const done = ALL.filter(t=>t.status==='done');
   const today = ALL.filter(t => isToday(t.createdAt));
-  const profitToday = today.filter(t=>t.status==='done').reduce((s,t)=>s+(+t.profit||0),0);
-  $('kToday').textContent   = today.length;
-  $('kProfit').textContent  = fmt(profitToday);
+  const sumP = arr => arr.reduce((s,t)=>s+(+t.profit||0),0);
+  const profitToday = sumP(today.filter(t=>t.status==='done'));
+  const profitWeek  = sumP(done.filter(t=>inRange(t.createdAt,7)));
+  const profitMonth = sumP(done.filter(t=>inRange(t.createdAt,30)));
+  const profitAll   = sumP(done);
+  $('kProfit').textContent   = fmt(profitToday);
+  $('kProfitW').textContent  = fmt(profitWeek);
+  $('kProfitM').textContent  = fmt(profitMonth);
+  $('kProfitAll').textContent= fmt(profitAll);
+  $('kDone').textContent     = done.length;
+  $('kToday').textContent    = today.length;
   $('kPending').textContent = ALL.filter(t=>t.status==='pending').length;
   $('kTotal').textContent   = ALL.length;
 }
@@ -218,7 +238,7 @@ function render(){
       <div class="tx-top">
         <div class="tx-main">
           <div class="who">${t.clientName||t.clientEmail||'عميل'} <span class="badge ${st[0]}">${st[1]}</span></div>
-          <div class="pair mono">${t.from} → ${t.to} · ${dt} · ${(t.clientRef||t.id.slice(-6)).toUpperCase()}</div>
+          <div class="pair mono">${t.from} → ${t.to} · ${dt} · ${(t.clientRef||t.id.slice(-6)).toUpperCase()}${t.tier?' · '+({w:'جملة',m:'وسيط',r:'تجزئة'}[t.tier]||''):''}</div>
         </div>
         <div class="tx-amt">
           <div class="n mono">${fmt(+t.amount,2)} ${t.from}</div>
