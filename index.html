@@ -1171,7 +1171,25 @@ function showRaw(){
 <script src="integrations.js"></script>
 <script src="i18n.js"></script>
 
-<!-- ARKAN Firebase registration hook — يُدرج قبل </body> -->
+<!-- ARKAN Firebase registration hook v3 -->
+<script>
+/* ربط الزر فوراً (سكربت عادي — لا يعتمد على module) */
+(function(){
+  function bindBtn(){
+    var btns = document.querySelectorAll('button[onclick*="sendRequest"]');
+    btns.forEach(function(b){
+      b.removeAttribute('onclick');
+      b.addEventListener('click', function(e){
+        e.preventDefault();
+        if (window.arkanSubmit) window.arkanSubmit();
+        else alert('جاري تحميل النظام... أعد المحاولة بعد ثانية');
+      });
+    });
+  }
+  if (document.readyState !== 'loading') bindBtn();
+  else document.addEventListener('DOMContentLoaded', bindBtn);
+})();
+</script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
 import { getFirestore, doc, setDoc, getDoc, collection, serverTimestamp }
@@ -1191,105 +1209,61 @@ const normPhone = p => (p||'').replace(/[^\d]/g,'');
 const makePin = () => String(Math.floor(1000 + Math.random()*9000));
 const makeRef = () => 'AK' + Date.now().toString(36).toUpperCase().slice(-6);
 
-// نافذة عرض الرمز بعد التسجيل
-function showPinModal(pin, ref, waMsg){
+function showPinModal(pin, ref, waUrl){
   const wrap = document.createElement('div');
   wrap.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.72);backdrop-filter:blur(6px);padding:22px;font-family:inherit';
-  wrap.innerHTML = `
-    <div style="width:100%;max-width:380px;background:#0E1322;border:1px solid rgba(245,201,76,.3);border-radius:24px;padding:28px 22px;text-align:center;color:#F4F6FB">
-      <div style="width:60px;height:60px;margin:0 auto 16px;border-radius:50%;background:rgba(47,208,140,.14);display:grid;place-items:center">
-        <svg width="30" height="30" fill="none" stroke="#2FD08C" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M9 12l2 2 4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/></svg>
-      </div>
-      <h3 style="margin:0 0 6px;font-size:19px;font-weight:700">تم إنشاء حسابك</h3>
-      <p style="margin:0 0 20px;font-size:13px;color:#8A93A8;line-height:1.7">احفظ رمزك للدخول لاحقاً إلى حسابك على <b style="color:#F5C94C">account.html</b></p>
-      <div style="background:#131A2E;border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:16px;margin-bottom:12px">
-        <div style="font-size:12px;color:#8A93A8;margin-bottom:6px">رمزك الشخصي</div>
-        <div style="font-size:38px;font-weight:800;letter-spacing:.3em;color:#F5C94C;direction:ltr">${pin}</div>
-      </div>
-      <div style="background:#131A2E;border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:12px;margin-bottom:20px">
-        <div style="font-size:12px;color:#8A93A8;margin-bottom:4px">رقمك المرجعي</div>
-        <div style="font-size:16px;font-weight:700;letter-spacing:.1em;color:#6C5CE7;direction:ltr">${ref}</div>
-      </div>
-      <button id="arkWaGo" style="width:100%;padding:15px;border:0;border-radius:14px;cursor:pointer;background:linear-gradient(135deg,#2FD08C,#25b378);color:#04150d;font-weight:700;font-size:15px;font-family:inherit;margin-bottom:10px">
-        إرسال الطلب عبر واتساب
-      </button>
-      <button id="arkClose" style="width:100%;padding:13px;border:1px solid rgba(255,255,255,.1);border-radius:14px;cursor:pointer;background:transparent;color:#8A93A8;font-weight:600;font-family:inherit">
-        حفظت الرمز — إغلاق
-      </button>
-    </div>`;
+  wrap.innerHTML = '<div style="width:100%;max-width:380px;background:#0E1322;border:1px solid rgba(245,201,76,.3);border-radius:24px;padding:28px 22px;text-align:center;color:#F4F6FB">'
+    + '<div style="width:60px;height:60px;margin:0 auto 16px;border-radius:50%;background:rgba(47,208,140,.14);display:grid;place-items:center;font-size:28px">✓</div>'
+    + '<h3 style="margin:0 0 6px;font-size:19px;font-weight:700">تم إنشاء حسابك</h3>'
+    + '<p style="margin:0 0 20px;font-size:13px;color:#8A93A8;line-height:1.7">احفظ رمزك للدخول لاحقاً على <b style="color:#F5C94C">account.html</b></p>'
+    + '<div style="background:#131A2E;border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:16px;margin-bottom:12px"><div style="font-size:12px;color:#8A93A8;margin-bottom:6px">رمزك الشخصي</div><div style="font-size:38px;font-weight:800;letter-spacing:.3em;color:#F5C94C;direction:ltr">'+pin+'</div></div>'
+    + '<div style="background:#131A2E;border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:12px;margin-bottom:20px"><div style="font-size:12px;color:#8A93A8;margin-bottom:4px">رقمك المرجعي</div><div style="font-size:16px;font-weight:700;letter-spacing:.1em;color:#6C5CE7;direction:ltr">'+ref+'</div></div>'
+    + '<button id="arkWaGo" style="width:100%;padding:15px;border:0;border-radius:14px;cursor:pointer;background:linear-gradient(135deg,#2FD08C,#25b378);color:#04150d;font-weight:700;font-size:15px;font-family:inherit;margin-bottom:10px">إرسال الطلب عبر واتساب</button>'
+    + '<button id="arkClose" style="width:100%;padding:13px;border:1px solid rgba(255,255,255,.1);border-radius:14px;cursor:pointer;background:transparent;color:#8A93A8;font-weight:600;font-family:inherit">حفظت الرمز — إغلاق</button>'
+    + '</div>';
   document.body.appendChild(wrap);
-  wrap.querySelector('#arkWaGo').onclick = () => { window.open(waMsg, '_blank'); };
-  wrap.querySelector('#arkClose').onclick = () => wrap.remove();
+  wrap.querySelector('#arkWaGo').onclick = function(){ window.open(waUrl, '_blank'); };
+  wrap.querySelector('#arkClose').onclick = function(){ wrap.remove(); };
 }
 
-// ربط مباشر بزر الإرسال (أضمن من استبدال الدالة)
-async function arkanSubmit(){
-    const g = id => document.getElementById(id);
-    const name = (g('rName')?.value||'').trim();
-    const phoneRaw = (g('rPhone')?.value||'').trim();
-    const phone = normPhone(phoneRaw);
-    const amount = parseFloat((g('rAmt')?.value||'').replace(/[^\d.]/g,''))||0;
+window.arkanSubmit = async function(){
+  const g = id => document.getElementById(id);
+  const name = (g('rName')?.value||'').trim();
+  const phone = normPhone((g('rPhone')?.value||'').trim());
+  const amount = parseFloat((g('rAmt')?.value||'').replace(/[^\d.]/g,''))||0;
+  if (!name || !phone || !amount){ if(window.toast) toast('أكمل الاسم ورقم الهاتف والمبلغ'); else alert('أكمل الاسم ورقم الهاتف والمبلغ'); return; }
+  if (phone.length < 8){ if(window.toast) toast('أدخل رقم واتساب صحيحاً'); return; }
 
-    if (!name || !phone || !amount){
-      if (window.toast) toast('أكمل الاسم ورقم الهاتف والمبلغ');
-      return;
+  const from = (window.fddVal ? fddVal('fddRFrom') : 'USDT') || 'USDT';
+  const to   = (window.fddVal ? fddVal('fddRTo')   : 'MRU')  || 'MRU';
+  const r    = (window.rate ? rate(from,to) : 0);
+  const out  = r ? amount*r : 0;
+  const fm   = window.fmt || (v => v.toLocaleString('en-US',{maximumFractionDigits:2}));
+
+  try {
+    const uref = doc(db,'users',phone);
+    const snap = await getDoc(uref);
+    let pin, ref;
+    if (snap.exists()){ pin = snap.data().pin; ref = snap.data().ref; }
+    else {
+      pin = makePin(); ref = makeRef();
+      await setDoc(uref, { name, phone, pin, ref, balance:0, role:'client', status:'pending', createdAt: serverTimestamp() });
     }
-    if (phone.length < 8){ if(window.toast) toast('أدخل رقم واتساب صحيحاً'); return; }
-
-    const from = (window.fddVal ? fddVal('fddRFrom') : 'USDT') || 'USDT';
-    const to   = (window.fddVal ? fddVal('fddRTo')   : 'MRU')  || 'MRU';
-    const rate = (window.rate ? rate(from,to) : 0);
-    const out  = rate ? amount*rate : 0;
-    const fm   = window.fmt || (v => v.toLocaleString('en-US',{maximumFractionDigits:2}));
-
-    try {
-      const uref = doc(db,'users',phone);
-      const snap = await getDoc(uref);
-      let pin, ref;
-      if (snap.exists()){ pin = snap.data().pin; ref = snap.data().ref; }
-      else {
-        pin = makePin(); ref = makeRef();
-        await setDoc(uref, { name, phone, pin, ref, balance:0, role:'client', status:'pending', createdAt: serverTimestamp() });
-      }
-      await setDoc(doc(collection(db,'transactions')), {
-        uid: phone, clientName: name, clientRef: ref,
-        from, to, amount, received: out, profit: 0,
-        type:'out', dp:2, status:'pending', createdAt: serverTimestamp()
-      });
-
-      const msg = `ARKAN SETTLEMENTS — طلب تحويل
-الاسم: ${name}
-رمز دخولي: ${pin}
-رقمي المرجعي: ${ref}
-
-أرسل: ${fm(amount)} ${from}
-يستلم: ${out?fm(out):'?'} ${to}`;
-      const waUrl = `https://wa.me/22236295050?text=${encodeURIComponent(msg)}`;
-
-      if (window.toast) toast('تم إنشاء الطلب — احفظ رمزك');
-      showPinModal(pin, ref, waUrl);
-    } catch(e){
-      console.error('ARKAN reg error:', e);
-      if (window.toast) toast('تعذّر الاتصال — تأكد من نشر قواعد Firestore');
-      alert('تعذّر الاتصال بقاعدة البيانات.\nتأكد أن قواعد Firestore منشورة.\n\n' + (e.code||e.message||e));
-    }
-}
-
-function hookSendRequest(){
-  // اعترض زر الإرسال مباشرة
-  const btns = document.querySelectorAll('button[onclick*="sendRequest"]');
-  btns.forEach(b => {
-    b.removeAttribute('onclick');
-    b.addEventListener('click', function(e){ e.preventDefault(); arkanSubmit(); });
-  });
-  // أتح استدعاءها يدوياً أيضاً
-  window.arkanSubmit = arkanSubmit;
-  window.sendRequest = arkanSubmit;
-}
-
-if (document.readyState !== 'loading') hookSendRequest();
-else document.addEventListener('DOMContentLoaded', hookSendRequest);
+    await setDoc(doc(collection(db,'transactions')), {
+      uid: phone, clientName: name, clientRef: ref, from, to, amount, received: out, profit: 0,
+      type:'out', dp:2, status:'pending', createdAt: serverTimestamp()
+    });
+    const msg = 'ARKAN SETTLEMENTS — طلب تحويل\nالاسم: '+name+'\nرمز دخولي: '+pin+'\nرقمي المرجعي: '+ref+'\n\nأرسل: '+fm(amount)+' '+from+'\nيستلم: '+(out?fm(out):'?')+' '+to;
+    const waUrl = 'https://wa.me/22236295050?text=' + encodeURIComponent(msg);
+    if (window.toast) toast('تم إنشاء الطلب — احفظ رمزك');
+    showPinModal(pin, ref, waUrl);
+  } catch(e){
+    console.error('ARKAN reg error:', e);
+    alert('تعذّر الاتصال بقاعدة البيانات.\nالسبب: ' + (e.code||e.message||e) + '\n\nتأكد أن قواعد Firestore منشورة.');
+  }
+};
 </script>
+
 
 </body>
 </html>
