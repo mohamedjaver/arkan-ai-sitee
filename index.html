@@ -1170,5 +1170,200 @@ function showRaw(){
 <script src="config.js"></script>
 <script src="integrations.js"></script>
 <script src="i18n.js"></script>
+
+<!-- ═══════════════════════════════════════════════
+  ARKAN — ترقية تسجيل العميل عبر واتساب
+  ضع هذا الكود قبل </body> مباشرة في index.html
+  يعمل فوق دالة sendRequest الحالية دون حذفها
+  ═══════════════════════════════════════════════ -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
+import { getFirestore, doc, setDoc, getDoc, collection, query, where, getDocs, serverTimestamp }
+  from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCtL-OySTK9FeyD0h-31BiupYFtGBxbJ_U",
+  authDomain: "arkan-rates-prod.firebaseapp.com",
+  projectId: "arkan-rates-prod",
+  storageBucket: "arkan-rates-prod.firebasestorage.app",
+  messagingSenderId: "1039254650364",
+  appId: "1:1039254650364:web:7972ce9eb77c24004d0679"
+};
+const db = getFirestore(initializeApp(firebaseConfig, 'arkan-req'));
+const WA = '22236295050';
+
+// توحيد رقم الهاتف (أرقام فقط) ليصبح مفتاحاً ثابتاً
+function normPhone(p){ return (p||'').replace(/[^\d]/g,''); }
+// رمز شخصي من 4 أرقام
+function makePin(){ return String(Math.floor(1000 + Math.random()*9000)); }
+// رقم مرجعي
+function makeRef(){ return 'AK' + Date.now().toString(36).toUpperCase().slice(-6); }
+
+// قراءة قيم الحاسبة الحالية بمرونة (تدعم أكثر من بنية)
+function readCalc(){
+  const g = id => document.getElementById(id);
+  const num = el => el ? (parseFloat((el.value||el.textContent||'').replace(/[^\d.]/g,'')) || 0) : 0;
+  // الحقول الشائعة في نسختك
+  const amount = num(g('rAmt')) || num(g('sendAmount'));
+  const from = (window.fddVal && (fddVal('fddRFrom')||fddVal('from'))) || (g('fromCode')?.textContent) || 'USDT';
+  const to   = (window.fddVal && (fddVal('fddRTo')||fddVal('to')))   || (g('toCode')?.textContent)   || 'MRU';
+  return { amount, from, to };
+}
+
+// النافذة المنبثقة للتسجيل
+function buildModal(){
+  if (document.getElementById('arkanReqModal')) return;
+  const wrap = document.createElement('div');
+  wrap.id = 'arkanReqModal';
+  wrap.innerHTML = `
+  <style>
+    #arkanReqModal{position:fixed;inset:0;z-index:9999;display:none;align-items:flex-end;justify-content:center;
+      background:rgba(0,0,0,.6);backdrop-filter:blur(4px);font-family:'Tajawal',sans-serif}
+    #arkanReqModal.on{display:flex}
+    #arkanReqModal .sheet{width:100%;max-width:480px;border-radius:24px 24px 0 0;
+      background:#0f0d24;border:1px solid rgba(255,255,255,.09);color:#eef0ff;
+      padding:24px 20px calc(24px + env(safe-area-inset-bottom));max-height:92dvh;overflow:auto}
+    #arkanReqModal h3{margin:0 0 4px;font-size:19px;font-weight:800}
+    #arkanReqModal .sub{margin:0 0 18px;font-size:13px;color:#9aa0c0}
+    #arkanReqModal label{display:block;font-size:12px;color:#9aa0c0;margin:0 0 7px}
+    #arkanReqModal input{width:100%;box-sizing:border-box;background:rgba(8,7,20,.7);
+      border:1px solid rgba(255,255,255,.1);border-radius:13px;padding:14px;color:#eef0ff;
+      font-size:16px;outline:0;margin-bottom:14px;font-family:'Tajawal',sans-serif}
+    #arkanReqModal input:focus{border-color:rgba(245,215,110,.5)}
+    #arkanReqModal .go{width:100%;padding:16px;border:0;border-radius:14px;cursor:pointer;
+      background:linear-gradient(180deg,#f5d76e,#d4a94a);color:#1a1400;font-weight:800;font-size:16px;
+      display:flex;align-items:center;justify-content:center;gap:9px}
+    #arkanReqModal .cancel{width:100%;margin-top:9px;padding:13px;border:1px solid rgba(255,255,255,.1);
+      border-radius:14px;background:transparent;color:#9aa0c0;cursor:pointer;font-weight:700;font-family:'Tajawal',sans-serif}
+    #arkanReqModal .sum{background:rgba(245,215,110,.06);border:1px solid rgba(245,215,110,.2);
+      border-radius:13px;padding:13px 15px;margin-bottom:16px;font-size:13px;color:#e8d5a3;
+      font-family:'JetBrains Mono',monospace;direction:ltr;text-align:right}
+    #arkanReqModal .err{color:#fca5a5;font-size:13px;margin-bottom:12px;display:none}
+    #arkanReqModal .err.on{display:block}
+  </style>
+  <div class="sheet">
+    <h3>تأكيد الطلب</h3>
+    <p class="sub">أدخل بياناتك — سيصلك رمز دخول شخصي عبر واتساب.</p>
+    <div class="sum" id="arkanReqSum">—</div>
+    <label>الاسم الكامل</label>
+    <input id="arkanReqName" type="text" placeholder="محمد الأمين">
+    <label>رقم واتساب</label>
+    <input id="arkanReqPhone" type="tel" inputmode="tel" placeholder="+222 XX XX XX XX">
+    <div class="err" id="arkanReqErr"></div>
+    <button class="go" id="arkanReqGo">
+      <i class="fa-brands fa-whatsapp"></i> إرسال عبر واتساب
+    </button>
+    <button class="cancel" id="arkanReqCancel">إلغاء</button>
+  </div>`;
+  document.body.appendChild(wrap);
+
+  document.getElementById('arkanReqCancel').onclick = () => wrap.classList.remove('on');
+  wrap.onclick = e => { if (e.target === wrap) wrap.classList.remove('on'); };
+  document.getElementById('arkanReqGo').onclick = submitReq;
+}
+
+let CURRENT = { amount:0, from:'USDT', to:'MRU' };
+
+function openReq(){
+  buildModal();
+  CURRENT = readCalc();
+  const rate = (window.rate && CURRENT.from && CURRENT.to) ? rate(CURRENT.from, CURRENT.to) : 0;
+  const out = rate ? CURRENT.amount * rate : 0;
+  const fm = window.fmt || (v => v.toLocaleString('en-US',{maximumFractionDigits:2}));
+  document.getElementById('arkanReqSum').textContent =
+    `${fm(CURRENT.amount)} ${CURRENT.from}  →  ${out?fm(out):'?'} ${CURRENT.to}`;
+  document.getElementById('arkanReqErr').classList.remove('on');
+  document.getElementById('arkanReqModal').classList.add('on');
+}
+
+async function submitReq(){
+  const name = document.getElementById('arkanReqName').value.trim();
+  const phoneRaw = document.getElementById('arkanReqPhone').value.trim();
+  const phone = normPhone(phoneRaw);
+  const err = document.getElementById('arkanReqErr');
+  const showErr = m => { err.textContent = m; err.classList.add('on'); };
+
+  if (!name){ showErr('أدخل اسمك الكامل'); return; }
+  if (phone.length < 8){ showErr('أدخل رقم واتساب صحيحاً'); return; }
+  if (!CURRENT.amount){ showErr('حدّد مبلغ التحويل من الحاسبة أولاً'); return; }
+
+  const btn = document.getElementById('arkanReqGo');
+  btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جارٍ…';
+
+  try {
+    // هل العميل مسجّل من قبل؟ (نفس الرقم = نفس الحساب)
+    const uref = doc(db, 'users', phone);
+    const snap = await getDoc(uref);
+    let pin, ref;
+
+    if (snap.exists()){
+      // عميل موجود — نستخدم رمزه ورقمه المرجعي
+      pin = snap.data().pin;
+      ref = snap.data().ref;
+    } else {
+      // عميل جديد — ننشئ حساباً معلّقاً
+      pin = makePin();
+      ref = makeRef();
+      await setDoc(uref, {
+        name, phone, pin, ref,
+        balance: 0, role: 'client', status: 'pending',
+        createdAt: serverTimestamp()
+      });
+    }
+
+    // سجّل الطلب كمعاملة معلّقة
+    const rate = (window.rate) ? rate(CURRENT.from, CURRENT.to) : 0;
+    const out = rate ? CURRENT.amount * rate : 0;
+    await setDoc(doc(collection(db, 'transactions')), {
+      uid: phone, clientName: name, clientRef: ref,
+      from: CURRENT.from, to: CURRENT.to,
+      amount: CURRENT.amount, received: out, profit: 0,
+      type: 'out', dp: 2, status: 'pending',
+      createdAt: serverTimestamp()
+    });
+
+    // رسالة واتساب جاهزة
+    const fm = window.fmt || (v => v.toLocaleString('en-US',{maximumFractionDigits:2}));
+    const msg =
+`ARKAN SETTLEMENTS — طلب تحويل
+الاسم: ${name}
+رمز دخولي: ${pin}
+رقمي المرجعي: ${ref}
+
+أرسل: ${fm(CURRENT.amount)} ${CURRENT.from}
+يستلم: ${out?fm(out):'?'} ${CURRENT.to}`;
+
+    document.getElementById('arkanReqModal').classList.remove('on');
+    if (window.toast) toast('تم — احفظ رمزك: ' + pin);
+
+    // نافذة الرمز للعميل + فتح واتساب
+    setTimeout(() => {
+      alert('رمز دخولك الشخصي: ' + pin + '\nرقمك المرجعي: ' + ref + '\n\nاحفظهما للدخول لحسابك لاحقاً على account.html');
+      window.open(`https://wa.me/${WA}?text=${encodeURIComponent(msg)}`, '_blank');
+    }, 250);
+
+  } catch(e){
+    console.error(e);
+    showErr('تعذّر الإرسال — تحقّق من اتصالك وحاول ثانية');
+  } finally {
+    btn.disabled = false; btn.innerHTML = '<i class="fa-brands fa-whatsapp"></i> إرسال عبر واتساب';
+  }
+}
+
+// اربط أزرار "بدء التحويل" الموجودة بالنافذة الجديدة
+function hook(){
+  buildModal();
+  // استبدل sendRequest القديمة
+  window.sendRequest = openReq;
+  window.arkanOpenRequest = openReq;
+  // اربط أي زر يحمل هذه العلامات
+  document.querySelectorAll('[data-arkan-transfer], #startBtn, .btn-transfer').forEach(b => {
+    b.addEventListener('click', e => { e.preventDefault(); openReq(); });
+  });
+}
+if (document.readyState !== 'loading') hook();
+else document.addEventListener('DOMContentLoaded', hook);
+</script>
+
 </body>
 </html>
