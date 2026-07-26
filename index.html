@@ -1222,10 +1222,8 @@ function showPinModal(pin, ref, waMsg){
   wrap.querySelector('#arkClose').onclick = () => wrap.remove();
 }
 
-// اعتراض دالة sendRequest الأصلية
-function hookSendRequest(){
-  const original = window.sendRequest;
-  window.sendRequest = async function(){
+// ربط مباشر بزر الإرسال (أضمن من استبدال الدالة)
+async function arkanSubmit(){
     const g = id => document.getElementById(id);
     const name = (g('rName')?.value||'').trim();
     const phoneRaw = (g('rPhone')?.value||'').trim();
@@ -1272,11 +1270,21 @@ function hookSendRequest(){
       showPinModal(pin, ref, waUrl);
     } catch(e){
       console.error('ARKAN reg error:', e);
-      // احتياط: نفّذ السلوك الأصلي إن فشل Firebase
-      if (typeof original === 'function') original();
-      else if (window.toast) toast('تعذّر الاتصال — حاول ثانية');
+      if (window.toast) toast('تعذّر الاتصال — تأكد من نشر قواعد Firestore');
+      alert('تعذّر الاتصال بقاعدة البيانات.\nتأكد أن قواعد Firestore منشورة.\n\n' + (e.code||e.message||e));
     }
-  };
+}
+
+function hookSendRequest(){
+  // اعترض زر الإرسال مباشرة
+  const btns = document.querySelectorAll('button[onclick*="sendRequest"]');
+  btns.forEach(b => {
+    b.removeAttribute('onclick');
+    b.addEventListener('click', function(e){ e.preventDefault(); arkanSubmit(); });
+  });
+  // أتح استدعاءها يدوياً أيضاً
+  window.arkanSubmit = arkanSubmit;
+  window.sendRequest = arkanSubmit;
 }
 
 if (document.readyState !== 'loading') hookSendRequest();
