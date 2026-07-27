@@ -94,6 +94,34 @@ body{ margin:0; color:var(--txt); font-family:'Tajawal',system-ui,sans-serif; mi
 .toast.show{ display:flex; } .toast i{ color:var(--gold); }
 @media (max-width:600px){ .kpis{ grid-template-columns:repeat(2,1fr); } }
 :focus-visible{ outline:2px solid var(--gold); outline-offset:2px; }
+
+.main-tabs{ display:flex; gap:8px; margin-bottom:18px; }
+.main-tabs .mt{ flex:1; padding:14px; border-radius:15px; border:1px solid var(--line); background:var(--panel);
+  color:var(--mute); cursor:pointer; font-family:'Tajawal',sans-serif; font-weight:700; font-size:14px;
+  display:inline-flex; align-items:center; justify-content:center; gap:8px; transition:.2s; position:relative; }
+.main-tabs .mt.on{ background:linear-gradient(135deg,var(--violet),#4f46e5); color:#fff; border-color:transparent; }
+.mt-badge{ min-width:20px; height:20px; padding:0 6px; border-radius:99px; background:var(--pend); color:#1a1400;
+  font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:800; display:none; align-items:center; justify-content:center; }
+.mt-badge.on{ display:inline-flex; }
+.acc{ border:1px solid var(--line); border-radius:16px; background:var(--panel); backdrop-filter:blur(10px); padding:16px; margin-bottom:10px; }
+.acc-top{ display:flex; align-items:center; gap:12px; }
+.acc-ic{ width:44px; height:44px; border-radius:13px; display:grid; place-items:center; flex:0 0 auto;
+  background:linear-gradient(135deg,var(--violet),#8B7BFF); color:#fff; font-weight:800; font-size:18px; }
+.acc-main{ flex:1; min-width:0; }
+.acc-main .nm{ font-size:15px; font-weight:700; }
+.acc-main .meta{ font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--mute); margin-top:3px; direction:ltr; }
+.acc-pin{ text-align:left; }
+.acc-pin .k{ font-size:10px; color:var(--dim); }
+.acc-pin .v{ font-family:'JetBrains Mono',monospace; font-weight:800; font-size:18px; color:var(--gold); letter-spacing:2px; }
+.acc-actions{ display:flex; gap:8px; margin-top:13px; padding-top:13px; border-top:1px solid rgba(255,255,255,.06); }
+.acc-actions button{ flex:1; padding:11px; border:1px solid var(--line); border-radius:11px; background:transparent;
+  cursor:pointer; font-family:'Tajawal',sans-serif; font-weight:700; font-size:13px; color:var(--mute); transition:.2s; }
+.acc-actions .activate:hover{ background:rgba(52,211,153,.14); color:var(--up); border-color:rgba(52,211,153,.3); }
+.acc-actions .suspend:hover{ background:rgba(251,191,36,.14); color:var(--pend); border-color:rgba(251,191,36,.3); }
+.acc-actions .remove:hover{ background:rgba(248,113,113,.14); color:var(--down); border-color:rgba(248,113,113,.3); }
+.acc-status{ padding:3px 10px; border-radius:99px; font-size:10.5px; font-weight:700; }
+.acc-status.pending{ background:rgba(251,191,36,.14); color:var(--pend); }
+.acc-status.active{ background:rgba(52,211,153,.14); color:var(--up); }
 </style>
 </head>
 <body>
@@ -107,6 +135,13 @@ body{ margin:0; color:var(--txt); font-family:'Tajawal',system-ui,sans-serif; mi
     <button class="logout" id="logoutBtn" aria-label="خروج"><i class="fa-solid fa-arrow-right-from-bracket"></i></button>
   </div>
 
+  <div class="main-tabs">
+    <button class="mt on" data-mt="tx"><i class="fa-solid fa-right-left"></i> المعاملات <span class="mt-badge" id="mtTxBadge"></span></button>
+    <button class="mt" data-mt="accounts"><i class="fa-solid fa-user-plus"></i> الحسابات الجديدة <span class="mt-badge" id="mtAccBadge"></span></button>
+  </div>
+
+  <!-- قسم المعاملات -->
+  <div id="view-tx">
   <div class="kpis">
     <div class="kpi gold"><div class="v mono" id="kProfit">0</div><div class="l">ربح اليوم MRU</div></div>
     <div class="kpi cyan"><div class="v mono" id="kProfitW">0</div><div class="l">ربح الأسبوع</div></div>
@@ -129,6 +164,22 @@ body{ margin:0; color:var(--txt); font-family:'Tajawal',system-ui,sans-serif; mi
   </div>
 
   <div id="txList"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div>
+  </div><!-- /view-tx -->
+
+  <!-- قسم الحسابات الجديدة -->
+  <div id="view-accounts" style="display:none">
+    <div class="kpis" style="grid-template-columns:repeat(3,1fr)">
+      <div class="kpi pend"><div class="v mono" id="kAccPending">0</div><div class="l">قيد التفعيل</div></div>
+      <div class="kpi cyan"><div class="v mono" id="kAccActive">0</div><div class="l">مفعّلة</div></div>
+      <div class="kpi"><div class="v mono" id="kAccTotal">0</div><div class="l">إجمالي العملاء</div></div>
+    </div>
+    <div class="filters" id="accFilters">
+      <button data-af="pending" class="on">قيد التفعيل</button>
+      <button data-af="active">مفعّلة</button>
+      <button data-af="all">الكل</button>
+    </div>
+    <div id="accList"><div class="skeleton"></div><div class="skeleton"></div></div>
+  </div><!-- /view-accounts -->
 </div>
 
 <button class="fab" id="addBtn" aria-label="معاملة جديدة"><i class="fa-solid fa-plus"></i></button>
@@ -164,11 +215,24 @@ body{ margin:0; color:var(--txt); font-family:'Tajawal',system-ui,sans-serif; mi
 <div class="toast" id="toast"><i class="fa-solid fa-circle-check"></i><span id="toastMsg"></span></div>
 
 <script type="module">
-import {
-  auth, db, ADMIN_EMAILS, onAuthStateChanged, signOut,
-  collection, query, orderBy, onSnapshot, addDoc, updateDoc, deleteDoc, doc,
-  getDocs, where, serverTimestamp
-} from './firebase-init.js';
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js";
+import { getFirestore, collection, query, orderBy, onSnapshot, addDoc, updateDoc, deleteDoc, doc, getDoc, getDocs, where, serverTimestamp }
+  from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCtL-OySTK9FeyD0h-31BiupYFtGBxbJ_U",
+  authDomain: "arkan-rates-prod.firebaseapp.com",
+  projectId: "arkan-rates-prod",
+  storageBucket: "arkan-rates-prod.firebasestorage.app",
+  messagingSenderId: "1039254650364",
+  appId: "1:1039254650364:web:7972ce9eb77c24004d0679"
+};
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const ADMIN_EMAILS = ["mohamedarbi0208@gmail.com"];
+const isAdminEmail = e => !!e && ADMIN_EMAILS.includes(e.toLowerCase());
 
 const $ = id => document.getElementById(id);
 const fmt = (v,dp=0) => Number.isFinite(v) ? v.toLocaleString('en-US',{minimumFractionDigits:dp,maximumFractionDigits:dp}) : '0';
@@ -180,11 +244,38 @@ const isToday = ts => { if(!ts?.toDate) return false; const d=ts.toDate(), n=new
 
 // حماية: أدمن فقط
 onAuthStateChanged(auth, user => {
-  if (!user){ location.href='login.html'; return; }
-  if (!ADMIN_EMAILS.includes(user.email)){ location.href='dashboard.html'; return; }
+  if (!user){ showAdminLogin(); return; }
+  if (!isAdminEmail(user.email)){ toast('هذا الحساب ليس أدمن'); signOut(auth); return; }
   $('adminEmail').textContent = user.email;
+  const lg = document.getElementById('adminGate'); if(lg) lg.style.display='none';
   listen();
+  listenAccounts();
 });
+
+// بوابة دخول الأدمن (بريد + كلمة مرور) — مدمجة
+async function showAdminLogin(){
+  if (document.getElementById('adminGate')) { document.getElementById('adminGate').style.display='grid'; return; }
+  const { signInWithEmailAndPassword } = await import("https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js");
+  const g = document.createElement('div');
+  g.id = 'adminGate';
+  g.style.cssText = 'position:fixed;inset:0;z-index:200;display:grid;place-items:center;background:var(--bg);padding:24px';
+  g.innerHTML = `<div style="width:100%;max-width:360px;background:var(--panel);border:1px solid var(--line);border-radius:24px;padding:30px 24px">
+    <div style="width:56px;height:56px;margin:0 auto 16px;border-radius:16px;background:linear-gradient(135deg,var(--violet),#4f46e5);display:grid;place-items:center;color:#fff;font-family:'JetBrains Mono',monospace;font-weight:800;font-size:24px">A</div>
+    <h2 style="text-align:center;margin:0 0 4px;font-size:19px">لوحة أركان</h2>
+    <p style="text-align:center;margin:0 0 22px;font-size:13px;color:var(--mute)">دخول الأدمن</p>
+    <input id="agEmail" type="email" placeholder="البريد" style="width:100%;box-sizing:border-box;background:rgba(8,7,20,.7);border:1px solid var(--line);border-radius:12px;padding:13px;color:var(--txt);font-size:15px;outline:0;margin-bottom:12px">
+    <input id="agPass" type="password" placeholder="كلمة المرور" style="width:100%;box-sizing:border-box;background:rgba(8,7,20,.7);border:1px solid var(--line);border-radius:12px;padding:13px;color:var(--txt);font-size:15px;outline:0;margin-bottom:16px">
+    <button id="agBtn" style="width:100%;padding:15px;border:0;border-radius:14px;cursor:pointer;background:linear-gradient(135deg,var(--gold),#d4a94a);color:#1a1400;font-weight:800;font-size:15px;font-family:'Tajawal',sans-serif">دخول</button>
+    <div id="agErr" style="margin-top:12px;font-size:13px;color:#fca5a5;display:none;text-align:center"></div>
+  </div>`;
+  document.body.appendChild(g);
+  document.getElementById('agBtn').onclick = async () => {
+    const em = document.getElementById('agEmail').value.trim(), pw = document.getElementById('agPass').value;
+    try { await signInWithEmailAndPassword(auth, em, pw); }
+    catch(e){ const er=document.getElementById('agErr'); er.style.display='block'; er.textContent='بريد أو كلمة مرور غير صحيحة'; }
+  };
+  document.getElementById('agPass').addEventListener('keydown', e=>{ if(e.key==='Enter') document.getElementById('agBtn').click(); });
+}
 
 function listen(){
   const q = query(collection(db,'transactions'), orderBy('createdAt','desc'));
@@ -309,7 +400,83 @@ $('saveBtn').onclick = async () => {
   finally { $('saveBtn').disabled=false; $('saveBtn').textContent='حفظ المعاملة'; }
 };
 
-$('logoutBtn').onclick = async () => { await signOut(auth); location.href='login.html'; };
+// ═══ تبديل التبويبين الرئيسيين ═══
+document.querySelectorAll('.main-tabs .mt').forEach(b => b.onclick = () => {
+  document.querySelectorAll('.main-tabs .mt').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on');
+  const mt = b.dataset.mt;
+  document.getElementById('view-tx').style.display = mt==='tx' ? 'block' : 'none';
+  document.getElementById('view-accounts').style.display = mt==='accounts' ? 'block' : 'none';
+  document.getElementById('addBtn').style.display = mt==='tx' ? 'grid' : 'none';
+});
+
+// ═══ الحسابات الجديدة ═══
+let ACCOUNTS = [];
+let accFilter = 'pending';
+function listenAccounts(){
+  const q = query(collection(db,'users'), orderBy('createdAt','desc'));
+  onSnapshot(q, snap => {
+    ACCOUNTS = []; snap.forEach(d => ACCOUNTS.push({ id:d.id, ...d.data() }));
+    computeAccKPIs(); renderAccounts();
+  }, err => {
+    console.error(err);
+    document.getElementById('accList').innerHTML = '<div class="empty"><i class="fa-solid fa-triangle-exclamation"></i><div>تعذّر تحميل الحسابات</div></div>';
+  });
+}
+function computeAccKPIs(){
+  const pending = ACCOUNTS.filter(a=>a.status==='pending').length;
+  const active  = ACCOUNTS.filter(a=>a.status==='active').length;
+  $('kAccPending').textContent = pending;
+  $('kAccActive').textContent  = active;
+  $('kAccTotal').textContent   = ACCOUNTS.length;
+  // شارة عدد الحسابات المعلّقة على التبويب
+  const badge = $('mtAccBadge');
+  if (pending>0){ badge.textContent = pending; badge.classList.add('on'); }
+  else badge.classList.remove('on');
+}
+function renderAccounts(){
+  const list = accFilter==='all' ? ACCOUNTS : ACCOUNTS.filter(a=>a.status===accFilter || (accFilter==='pending'&&!a.status));
+  const box = $('accList');
+  if (!list.length){ box.innerHTML='<div class="empty"><i class="fa-regular fa-user"></i><div>لا توجد حسابات</div></div>'; return; }
+  box.innerHTML = list.map(a => {
+    const st = (a.status==='active') ? ['active','مفعّل'] : ['pending','قيد التفعيل'];
+    const dt = a.createdAt?.toDate ? a.createdAt.toDate().toLocaleDateString('en-GB') : '—';
+    const isPending = a.status !== 'active';
+    return `<div class="acc">
+      <div class="acc-top">
+        <div class="acc-ic">${(a.name||'؟').charAt(0)}</div>
+        <div class="acc-main">
+          <div class="nm">${a.name||'عميل'} <span class="acc-status ${st[0]}">${st[1]}</span></div>
+          <div class="meta">+${a.phone||a.id} · ${a.ref||'—'} · ${dt}</div>
+        </div>
+        <div class="acc-pin"><div class="k">الرمز</div><div class="v">${a.pin||'••••'}</div></div>
+      </div>
+      <div class="acc-actions">
+        ${isPending
+          ? `<button class="activate" data-aact="active" data-id="${a.id}"><i class="fa-solid fa-check"></i> تفعيل الحساب</button>`
+          : `<button class="suspend" data-aact="pending" data-id="${a.id}"><i class="fa-solid fa-pause"></i> تعليق</button>`}
+        <button class="remove" data-aact="delete" data-id="${a.id}"><i class="fa-solid fa-trash"></i></button>
+      </div>
+    </div>`;
+  }).join('');
+  box.querySelectorAll('[data-aact]').forEach(b => b.onclick = () => accAction(b.dataset.aact, b.dataset.id));
+}
+async function accAction(act, id){
+  try {
+    if (act==='delete'){
+      if(!confirm('حذف هذا الحساب نهائياً؟ لا يمكن التراجع.')) return;
+      await deleteDoc(doc(db,'users',id)); toast('حُذف الحساب'); return;
+    }
+    await updateDoc(doc(db,'users',id), { status: act, updatedAt: serverTimestamp() });
+    toast(act==='active' ? 'تم تفعيل الحساب ✓' : 'عُلّق الحساب');
+  } catch(e){ console.error(e); toast('فشلت العملية'); }
+}
+document.querySelectorAll('#accFilters button').forEach(b => b.onclick = () => {
+  document.querySelectorAll('#accFilters button').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on'); accFilter=b.dataset.af; renderAccounts();
+});
+
+$('logoutBtn').onclick = async () => { await signOut(auth); location.reload(); };
 </script>
 </body>
 </html>
