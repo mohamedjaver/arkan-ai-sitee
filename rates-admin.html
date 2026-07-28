@@ -5,15 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>ARKAN · لوحة الأسعار</title>
 <meta name="robots" content="noindex,nofollow">
-<meta name="theme-color" content="#0a0918">
+<meta name="theme-color" content="#070A14">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='24' fill='%237c5cff'/><path d='M50 20 L74 78 H60 L50 52 L40 78 H26 Z' fill='%23fff'/></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&family=JetBrains+Mono:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 <style>
 :root{
-  --bg:#0a0918; --bg2:#12102a; --bg3:#1a1638;
+  --bg:#070A14; --bg2:#12102a; --bg3:#0E1322;
   --panel:rgba(23,20,50,.62); --line:rgba(255,255,255,.08);
   --violet:#7c5cff; --violet-2:#a78bfa; --cyan:#22d3ee; --cyan-2:#67e8f9;
   --gold:#f5d76e; --gold-2:#d4a94a; --txt:#eef0ff; --mute:#9aa0c0; --dim:#6b7096;
@@ -24,11 +24,11 @@
 html{ -webkit-text-size-adjust:100%; }
 body{
   margin:0; background:var(--bg); color:var(--txt);
-  font-family:'Tajawal',system-ui,sans-serif; min-height:100dvh;
+  font-family:'IBM Plex Sans Arabic',system-ui,sans-serif; min-height:100dvh;
   background:
     radial-gradient(60vw 50vw at 82% -8%, rgba(124,92,255,.28), transparent 62%),
     radial-gradient(50vw 44vw at 6% 10%, rgba(34,211,238,.16), transparent 64%),
-    linear-gradient(180deg,#0a0918,#12102a 60%,#1a1638);
+    linear-gradient(180deg,#070A14,#12102a 60%,#0E1322);
   background-attachment:fixed;
 }
 .mono{ font-family:'JetBrains Mono',monospace; font-variant-numeric:tabular-nums; direction:ltr; unicode-bidi:plaintext; }
@@ -123,17 +123,17 @@ body{
 }
 .add-row button{
   flex:0 0 auto; padding:0 18px; border-radius:12px; border:1px solid rgba(124,92,255,.4);
-  background:rgba(124,92,255,.14); color:var(--violet-2); cursor:pointer; font-weight:700; font-family:'Tajawal',sans-serif;
+  background:rgba(124,92,255,.14); color:var(--violet-2); cursor:pointer; font-weight:700; font-family:'IBM Plex Sans Arabic',sans-serif;
 }
 
 /* buttons bar */
 .bar{
   position:fixed; inset-inline:0; bottom:0; z-index:30;
-  background:linear-gradient(0deg,#0a0918 70%,transparent); padding:14px 16px calc(14px + env(safe-area-inset-bottom));
+  background:linear-gradient(0deg,#070A14 70%,transparent); padding:14px 16px calc(14px + env(safe-area-inset-bottom));
 }
 .bar-in{ max-width:680px; margin:0 auto; display:grid; grid-template-columns:1fr 1.6fr; gap:10px; }
 .btn{
-  border:0; cursor:pointer; padding:16px; border-radius:15px; font-family:'Tajawal',sans-serif;
+  border:0; cursor:pointer; padding:16px; border-radius:15px; font-family:'IBM Plex Sans Arabic',sans-serif;
   font-weight:800; font-size:15px; display:inline-flex; align-items:center; justify-content:center; gap:9px; transition:.25s;
 }
 .btn:disabled{ opacity:.5; cursor:not-allowed; }
