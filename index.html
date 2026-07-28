@@ -383,7 +383,7 @@ footer{border-top:1px solid var(--stroke);margin-top:60px;padding:52px 0 40px;po
       <div class="big num" id="outBig">0</div>
       <div class="rate"><span class="live-dot"></span><span id="rateTxt">—</span></div>
     </div>
-    <button class="btn btn-primary" style="width:100%" onclick="scrollTo_('#request')">طلب تحويل</button>
+    <button class="btn btn-primary" style="width:100%" onclick="goToRequest()">طلب تحويل</button>
     <div class="conv-note">السعر مثبّت 30 دقيقة بعد تأكيد الطلب</div>
   </div>
 </div></section>
@@ -451,6 +451,17 @@ footer{border-top:1px solid var(--stroke);margin-top:60px;padding:52px 0 40px;po
   <div class="sec-head">
     <div class="kicker">NEW REQUEST</div>
     <h2>طلب تحويل</h2>
+    <div id="reqSummary" style="display:none;background:var(--glass);border:1px solid var(--stroke-2);border-radius:16px;padding:16px;margin-bottom:16px">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span style="color:var(--txt-2);font-size:13px">تحوّل</span>
+        <b id="reqSumFrom" style="font-size:15px">—</b>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px">
+        <span style="color:var(--txt-2);font-size:13px">يستلم</span>
+        <b id="reqSumTo" style="font-size:15px;color:var(--gold)">—</b>
+      </div>
+      <div onclick="scrollTo_('.conv')" style="text-align:center;margin-top:12px;color:var(--blue-live);font-size:12px;cursor:pointer">✎ تعديل المبلغ أو العملة</div>
+    </div>
     <p>أرسل تفاصيل تحويلك — نرد بعرض السعر والتأكيد خلال دقائق.</p>
   </div>
   <div class="card" style="max-width:720px">
@@ -459,10 +470,10 @@ footer{border-top:1px solid var(--stroke);margin-top:60px;padding:52px 0 40px;po
       <div class="field"><label for="rPhone">رقم الهاتف / واتساب</label><input id="rPhone" inputmode="tel" placeholder="+222 36 29 50 50"></div>
     </div>
     <div class="grid-2">
-      <div class="field"><label for="rFrom">من عملة</label><div class="fdd" id="fddRFrom"></div></div>
-      <div class="field"><label for="rTo">إلى عملة</label><div class="fdd" id="fddRTo"></div></div>
+      <div class="field" id="rFromWrap" style="display:none"><label for="rFrom">من عملة</label><div class="fdd" id="fddRFrom"></div></div>
+      <div class="field" id="rToWrap" style="display:none"><label for="rTo">إلى عملة</label><div class="fdd" id="fddRTo"></div></div>
     </div>
-    <div class="field"><label for="rAmt">المبلغ</label><input id="rAmt" type="number" inputmode="decimal" placeholder="1000"></div>
+    <div class="field" id="rAmtWrap" style="display:none"><label for="rAmt">المبلغ</label><input id="rAmt" type="number" inputmode="decimal" placeholder="1000"></div>
     <div class="field"><label for="rMethod">طريقة الاستلام</label>
       <select id="rMethod">
         <option>تحويل بنكي</option>
@@ -745,6 +756,29 @@ function toggleDrawer(){
   document.getElementById('drawer').classList.toggle('on');
   document.getElementById('mBtn').classList.toggle('on');
 }
+
+/* نقل قيم الحاسبة إلى نموذج الطلب (بلا تكرار كتابة) */
+function goToRequest(){
+  var amt = document.getElementById('amtIn').value;
+  var from = (window.fddVal?fddVal('fddFrom'):'AOA');
+  var to = (window.fddVal?fddVal('fddTo'):'MRU');
+  // انسخ للنموذج المخفي
+  var rAmt = document.getElementById('rAmt'); if(rAmt) rAmt.value = amt;
+  // اضبط قوائم النموذج المخفية إن أمكن
+  try{ if(window.FDD){ if(FDD['fddRFrom'])FDD['fddRFrom'].set(from); if(FDD['fddRTo'])FDD['fddRTo'].set(to); } }catch(e){}
+  window.__reqFrom = from; window.__reqTo = to; window.__reqAmt = amt;
+  // اعرض الملخص
+  var out = document.getElementById('outBig') ? document.getElementById('outBig').textContent : '';
+  var sum = document.getElementById('reqSummary');
+  if(sum){
+    sum.style.display='block';
+    document.getElementById('reqSumFrom').textContent = amt + ' ' + from;
+    document.getElementById('reqSumTo').textContent = out + ' ' + to;
+  }
+  scrollTo_('#request');
+  setTimeout(function(){ var n=document.getElementById('rName'); if(n) n.focus(); }, 400);
+}
+
 function scrollTo_(sel){
   var el=document.querySelector(sel);
   if(el)el.scrollIntoView({behavior:'smooth',block:'start'});
