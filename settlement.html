@@ -2475,9 +2475,10 @@ async function uploadOB(fid){
     for(const f of files){
       try{
         const _R=await arkanRead(f);
-        const txt=_R.text;
-        if(!_R.ok&&_R.err&&!txt)throw new Error(_R.err);
-        const sm=smartRead(txt);
+        const txt=_R.text||'';
+        // استخدم نتيجة arkanRead مباشرة، واحتياط smartRead على النص
+        let sm={amount:_R.amount,txn:_R.txn,ccy:_R.ccy,acct:_R.acct,bank:_R.bank};
+        if(sm.amount==null && txt){ const s2=smartRead(txt); sm={amount:s2.amount,txn:s2.txn||sm.txn,ccy:s2.ccy||sm.ccy,acct:s2.acct||sm.acct,bank:s2.bank}; }
         const ctx=curType==='trade'?'trade':(curType==='bridge'?'bridge':null);
         let target=fid;
         if(sm.ccy&&ctx){const rt=routeReceipt(sm,ctx);if(rt&&OB[rt]){target=rt;if(rt!==fid)moved++;}}
@@ -3217,25 +3218,26 @@ function renderPayRcpt2(){
     </div>`;
 }
 function uploadKB(){
-  if(!window.pdfjsLib&&!window.Tesseract){toast('محرك القراءة غير متاح');return;}
+  const hasGem = !!(window.ARKAN_GEMINI && ARKAN_GEMINI.getKey());
+  if(!hasGem && !window.pdfjsLib && !window.Tesseract){toast('محرك القراءة غير متاح');return;}
   const inp=document.createElement('input');
   inp.type='file';inp.accept='application/pdf,image/*';inp.multiple=true;
   inp.onchange=async()=>{
     const files=[...inp.files];if(!files.length)return;
     if(kb.length+files.length>100){toast('الحد 100 إيصال');return;}
     toast('جارٍ قراءة '+files.length+' ملف...');
-    let ok=0,moved=0;const touched=new Set([fid]);
+    let ok=0,dup=0;
     for(const f of files){
       try{
-        const _R=await arkanRead(f);
-        const txt=_R.text;
-        if(!_R.ok&&_R.err&&!txt)throw new Error(_R.err);
-        if(!txt||txt.replace(/\s/g,'').length<20)throw new Error('لا يوجد نص مقروء');
-        const sm=smartRead(txt);
-        if(sm.txn&&kb.some(x=>x.txn&&x.txn===sm.txn)){dup++;continue;}
-        kb.push({name:f.name,amount:sm.amount,txn:sm.txn||null,ccy:sm.ccy||null,
-                 err:sm.amount==null?'لم يُقرأ المبلغ':(sm.ccy&&sm.ccy!=='AOA'?'عملة '+sm.ccy+' — ليست كوانزا':null)});
-        if(sm.amount!=null)ok++;
+        const _R=await arkanRead(f);            // يقرأ ويحلّل (amount جاهز)
+        // استخدم نتيجة arkanRead مباشرة (لا إعادة تحليل)
+        let amount=_R.amount, txn=_R.txn||null, ccy=_R.ccy||null;
+        // احتياط: إن لم يُقرأ المبلغ، جرّب smartRead على النص الخام
+        if(amount==null && _R.text){ const sm=smartRead(_R.text); amount=sm.amount; txn=txn||sm.txn; ccy=ccy||sm.ccy; }
+        if(txn && kb.some(x=>x.txn&&x.txn===txn)){dup++;continue;}
+        kb.push({name:f.name,amount:amount,txn:txn,ccy:ccy,
+                 err:amount==null?('لم يُقرأ المبلغ'+(_R.err?' — '+_R.err:'')):(ccy&&ccy!=='AOA'?'عملة '+ccy+' — ليست كوانزا':null)});
+        if(amount!=null)ok++;
       }catch(e){kb.push({name:f.name,amount:null,txn:null,err:(e&&e.message)?e.message:'لم يُقرأ'});}
     }
     renderKB();calc();
