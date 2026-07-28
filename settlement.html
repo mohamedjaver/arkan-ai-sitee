@@ -446,7 +446,9 @@
           <div style="border:1.5px dashed var(--line);border-radius:18px;padding:36px 16px;margin-bottom:14px;color:var(--muted);font-size:13px">
             ارفع صورة الإيصال هنا — يقرأها المحرك ويستخرج المبلغ والعملة تلقائياً
           </div>
-          <button class="cta">رفع إيصال وتحليله</button>
+          <input type="file" id="ocrFile" accept="image/*" style="display:none" onchange="runOCR(this)">
+          <button class="cta" onclick="document.getElementById('ocrFile').click()">رفع إيصال وتحليله</button>
+          <div id="ocrResult" style="margin-top:16px;text-align:right;display:none"></div>
         </div>
       </div>
 
@@ -514,8 +516,12 @@ USDT المستحق من أنغولا: $0
 
       <div class="sec"><h2>الإعدادات</h2></div>
       <div class="glass" style="padding:18px">
-        <div class="fld" style="margin-bottom:0"><label>واتساب شريك أنغولا (بالرمز الدولي، بدون +)</label>
+        <div class="fld"><label>واتساب شريك أنغولا (بالرمز الدولي، بدون +)</label>
           <input type="text" inputmode="tel" value="244957995536"></div>
+        <div class="fld" style="margin-bottom:0"><label>مفتاح Gemini API (لقراءة الإيصالات — يُحفظ على جهازك فقط)</label>
+          <input type="password" id="gemKey" placeholder="AIza..." autocomplete="off">
+          <small style="font-size:11px;color:var(--muted);display:block;margin-top:6px">احصل عليه مجاناً من aistudio.google.com/apikey</small>
+        </div>
       </div>
     </section>
 
@@ -593,6 +599,56 @@ USDT المستحق من أنغولا: $0
     p.style.display='block';
     setTimeout(()=>p.scrollIntoView({behavior:'smooth',block:'start'}),60);
   }
+
+/* ═══ محرك OCR موحّد — Gemini ═══ */
+window.runOCR = async function(input){
+  const file = input.files[0]; if(!file) return;
+  const key = (localStorage.getItem('gemKey')||'').trim();
+  const box = document.getElementById('ocrResult');
+  const show = (html) => { if(box){ box.style.display='block'; box.innerHTML = html; } };
+
+  if(!key){ show('<div class="glass" style="padding:14px;color:var(--gold)">⚠️ أدخل مفتاح Gemini في الإعدادات أولاً</div>'); return; }
+  show('<div class="glass" style="padding:14px;color:var(--muted)">⏳ جارٍ قراءة الإيصال...</div>');
+
+  try {
+    const b64 = await new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(r.result.split(',')[1]); r.onerror=rej; r.readAsDataURL(file); });
+    const prompt = 'اقرأ هذا الإيصال المالي واستخرج البيانات بصيغة JSON فقط بلا أي نص إضافي: {"amount":الرقم,"currency":"العملة MRU/AOA/USDT/USD/EUR/CNY/AED","bank":"اسم البنك","date":"التاريخ","txn":"رقم العملية","sender":"المرسل","receiver":"المستقبل"}. إن غاب حقل ضع null.';
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ contents:[{ parts:[ {text:prompt}, {inline_data:{mime_type:file.type, data:b64}} ] }] })
+    });
+    const data = await res.json();
+    if(data.error){ show(`<div class="glass" style="padding:14px;color:var(--red)">خطأ: ${data.error.message||'تعذّر الاتصال'}</div>`); return; }
+    let txt = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    txt = txt.replace(/```json|```/g,'').trim();
+    let parsed; try { parsed = JSON.parse(txt); } catch { show(`<div class="glass" style="padding:14px"><b>النص المستخرج:</b><br>${txt}</div>`); return; }
+
+    const row = (k,v)=> v ? `<div style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--line)"><span style="color:var(--muted)">${k}</span><b class="num">${v}</b></div>` : '';
+    show(`<div class="glass" style="padding:18px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px"><span style="color:var(--green);font-size:20px">✓</span><b>قُرئ الإيصال</b></div>
+      ${row('المبلغ', parsed.amount)}
+      ${row('العملة', parsed.currency)}
+      ${row('البنك', parsed.bank)}
+      ${row('التاريخ', parsed.date)}
+      ${row('رقم العملية', parsed.txn)}
+      ${row('المرسل', parsed.sender)}
+      ${row('المستقبل', parsed.receiver)}
+    </div>`);
+  } catch(e){
+    console.error(e);
+    show(`<div class="glass" style="padding:14px;color:var(--red)">تعذّر قراءة الإيصال — تحقق من المفتاح والاتصال</div>`);
+  }
+};
+
+/* حفظ/تحميل مفتاح Gemini */
+(function(){
+  const gk = document.getElementById('gemKey');
+  if(gk){
+    gk.value = localStorage.getItem('gemKey') || '';
+    gk.addEventListener('input', e => localStorage.setItem('gemKey', e.target.value.trim()));
+  }
+})();
+
 </script>
 </body>
 </html>
