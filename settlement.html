@@ -62,7 +62,7 @@ window._pdfReady=(async function(){
   --acc:#6C5CE7;--acc2:#8B7BFF;--accD:#5A4BD6;
   --gold:#F5C94C;--gold2:#FFD97D;
   --txt:#F8FAFC;--dim:#94A3B8;
-  --green:#2FD08C;--red:#FF6B6B;--wa:#25D366;--blue:#4DA3FF;--teal:#26A17B;
+  --green:#2FD08C;--red:#FF6B6B;--wa:#25D366;--blue:#8B7BFF;--teal:#26A17B;
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 .cflag{display:inline-block;width:1.5em;height:1.5em;border-radius:50%;background-size:cover;background-position:center;vertical-align:middle;border:1.5px solid rgba(255,255,255,.14);box-shadow:0 2px 6px rgba(0,0,0,.3)}
@@ -75,13 +75,13 @@ body{background:var(--bg);color:var(--txt);
 /* ===== طبقات الخلفية الثابتة (موحّدة مع الصفحة الرئيسية) ===== */
 .orb{position:fixed;border-radius:50%;filter:blur(90px);pointer-events:none;z-index:0}
 .orb-1{top:-16%;right:-8%;width:56vw;height:56vw;max-width:760px;max-height:760px;
-  background:radial-gradient(circle,rgba(59,130,246,.16),transparent 68%)}
+  background:radial-gradient(circle,rgba(108,92,231,.16),transparent 68%)}
 .orb-2{bottom:-20%;left:-12%;width:60vw;height:60vw;max-width:820px;max-height:820px;
   background:radial-gradient(circle,rgba(139,92,246,.11),transparent 68%)}
 #particles{position:fixed;inset:0;z-index:0;pointer-events:none}
 .grid-bg{position:fixed;inset:0;z-index:0;pointer-events:none;
-  background-image:linear-gradient(rgba(59,130,246,.045) 1px,transparent 1px),
-                   linear-gradient(90deg,rgba(59,130,246,.045) 1px,transparent 1px);
+  background-image:linear-gradient(rgba(108,92,231,.045) 1px,transparent 1px),
+                   linear-gradient(90deg,rgba(108,92,231,.045) 1px,transparent 1px);
   background-size:64px 64px}
 /* المحتوى يطفو فوق الخلفية */
 .card,nav,#lock,#modal,.toast,header,section{position:relative;z-index:1}
@@ -149,14 +149,14 @@ section.on{display:block;animation:fadeUp .25s ease}
   box-shadow:0 8px 32px rgba(0,0,0,.3), inset 0 1px 0 rgba(255,255,255,.05);contain:layout;
   transition:border-color .3s,box-shadow .3s}
 .card:hover{border-color:rgba(96,165,250,.3);
-  box-shadow:0 12px 40px rgba(59,130,246,.15), inset 0 1px 0 rgba(255,255,255,.1)}
+  box-shadow:0 12px 40px rgba(108,92,231,.15), inset 0 1px 0 rgba(255,255,255,.1)}
 .card h3{font-size:13px;color:var(--acc2);margin-bottom:12px;font-weight:700}
 label{display:block;font-size:12px;color:var(--dim);margin:10px 0 6px}
 input,select,textarea{width:100%;padding:14px 16px;border-radius:12px;background:rgba(15,23,42,.6);
   border:1px solid rgba(255,255,255,.1);color:#FFFFFF;font-size:16px;
   font-family:'IBM Plex Mono',monospace;outline:none;transition:.15s;appearance:none}
 input::placeholder,textarea::placeholder{color:#64748B}
-input:focus,select:focus,textarea:focus{border-color:#3B82F6;box-shadow:0 0 0 3px rgba(59,130,246,.2);outline:none}
+input:focus,select:focus,textarea:focus{border-color:#6C5CE7;box-shadow:0 0 0 3px rgba(108,92,231,.2);outline:none}
 input.ar,select.ar{font-family:'IBM Plex Sans Arabic',sans-serif}
 .row{display:flex;gap:10px}
 .row>div{flex:1}
@@ -189,11 +189,11 @@ input.ar,select.ar{font-family:'IBM Plex Sans Arabic',sans-serif}
 .timer.hot{color:var(--red);border-color:rgba(255,107,107,.5)}
 .btn{width:100%;padding:14px 28px;border:none;border-radius:12px;font-size:16px;font-weight:600;
   cursor:pointer;font-family:'IBM Plex Sans Arabic',sans-serif;transition:.15s;margin-top:10px}
-.btn-gold{background:linear-gradient(135deg,#3B82F6,#60A5FA);color:#fff;font-weight:600;
-  box-shadow:0 4px 16px rgba(59,130,246,.3)}
-.btn-gold:hover{box-shadow:0 8px 24px rgba(59,130,246,.4)}
+.btn-gold{background:linear-gradient(135deg,#6C5CE7,#8B7BFF);color:#fff;font-weight:600;
+  box-shadow:0 4px 16px rgba(108,92,231,.3)}
+.btn-gold:hover{box-shadow:0 8px 24px rgba(108,92,231,.4)}
 .btn:active{transform:scale(.97)}
-.btn-line{background:rgba(59,130,246,.08);color:var(--acc2);border:1px solid var(--stroke-acc)}
+.btn-line{background:rgba(108,92,231,.08);color:var(--acc2);border:1px solid var(--stroke-acc)}
 .btn-wa{background:linear-gradient(135deg,#3BE07F,var(--wa));color:#062b14;box-shadow:0 8px 22px rgba(37,211,102,.25)}
 .btn-sm{padding:8px 13px;font-size:12px;width:auto;margin:0;border-radius:11px}
 .btn-row{display:flex;gap:8px}
@@ -228,8 +228,8 @@ input.ar,select.ar{font-family:'IBM Plex Sans Arabic',sans-serif}
 .sum .v.red{color:var(--red)}
 .empty{text-align:center;color:var(--dim);padding:36px 0;font-size:13px}
 .chain{border-radius:20px;padding:15px;margin-bottom:12px;
-  background:linear-gradient(150deg, rgba(77,163,255,.14), rgba(255,255,255,.03));
-  border:1px solid rgba(77,163,255,.35);backdrop-filter:blur(14px)}
+  background:linear-gradient(150deg, rgba(139,123,255,.14), rgba(255,255,255,.03));
+  border:1px solid rgba(139,123,255,.35);backdrop-filter:blur(14px)}
 .chain .c-top{display:flex;justify-content:space-between;align-items:center}
 .chain .c-ref{font-family:'IBM Plex Mono',monospace;color:var(--blue);font-weight:700;font-size:14px}
 .chain .c-cap{font-family:'IBM Plex Mono',monospace;font-size:16px;font-weight:700;margin-top:8px}
@@ -407,7 +407,7 @@ body,input,select,textarea,button,.ar,h1,h2,h3{font-family:'Cairo','Tajawal','IB
       <g transform="rotate(-90 172 172)">
         <circle id="arcU" cx="172" cy="172" r="150" fill="none" stroke="#26A17B" stroke-width="11" stroke-linecap="round" stroke-dasharray="0 943" style="transition:.25s"/>
         <circle id="arcA" cx="172" cy="172" r="150" fill="none" stroke="#F4A50C" stroke-width="11" stroke-linecap="round" stroke-dasharray="0 943" style="transition:.25s"/>
-        <circle id="arcM" cx="172" cy="172" r="150" fill="none" stroke="#4DA3FF" stroke-width="11" stroke-linecap="round" stroke-dasharray="0 943" style="transition:.25s"/>
+        <circle id="arcM" cx="172" cy="172" r="150" fill="none" stroke="#8B7BFF" stroke-width="11" stroke-linecap="round" stroke-dasharray="0 943" style="transition:.25s"/>
         <circle id="arcE" cx="172" cy="172" r="150" fill="none" stroke="#A78BFF" stroke-width="11" stroke-linecap="round" stroke-dasharray="0 943" style="transition:.25s"/>
         <circle id="hitU" cx="172" cy="172" r="150" fill="none" stroke="rgba(0,0,0,0)" stroke-width="38" stroke-dasharray="0 943" onclick="selectAsset('U')"/>
         <circle id="hitA" cx="172" cy="172" r="150" fill="none" stroke="rgba(0,0,0,0)" stroke-width="38" stroke-dasharray="0 943" onclick="selectAsset('A')"/>
@@ -429,7 +429,7 @@ body,input,select,textarea,button,.ar,h1,h2,h3{font-family:'Cairo','Tajawal','IB
     <div class="asset" id="cardA" onclick="selectAsset('A')" style="cursor:pointer"><div class="ic" style="background:#F4A50C;color:#15172E;font-weight:800;font-size:14px;letter-spacing:-.5px">Kz</div>
       <div class="nm"><div class="n1">AOA</div><div class="n2" id="rateA">— Kz/USDT</div></div>
       <div class="am"><div class="a1 num" id="balA" style="color:#FFC94D">0</div><div class="a2 num" id="balAu">$0</div></div></div>
-    <div class="asset" id="cardM" onclick="selectAsset('M')" style="cursor:pointer"><div class="ic" style="background:#4DA3FF;color:#0e2544;font-weight:800;font-size:13px;letter-spacing:-.5px">UM</div>
+    <div class="asset" id="cardM" onclick="selectAsset('M')" style="cursor:pointer"><div class="ic" style="background:#8B7BFF;color:#0e2544;font-weight:800;font-size:13px;letter-spacing:-.5px">UM</div>
       <div class="nm"><div class="n1">MRU</div><div class="n2" id="rateM">— UM/USDT</div></div>
       <div class="am"><div class="a1 num" id="balM" style="color:#7FB8FF">0</div><div class="a2 num" id="balMu">$0</div></div></div>
   <div class="asset" id="cardE" onclick="selectAsset('E')" style="cursor:pointer"><div class="ic" style="background:#A78BFF;color:#1C1D3C;font-weight:800;font-size:17px">€</div>
@@ -688,14 +688,13 @@ body,input,select,textarea,button,.ar,h1,h2,h3{font-family:'Cairo','Tajawal','IB
     <div class="legform">
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
         <span style="font-size:12px;color:var(--dim)">① إيصال استلام الأوقية (Bankily / السداد)</span>
-        <button class="btn btn-gold btn-sm" onclick="uploadPayRcpt2()">قراءة الإيصال</button>
+        <button class="btn btn-gold btn-sm" onclick="uploadPayRcpt2()">📷 رفع إيصال الاستلام</button>
       </div>
       <div id="m2aRcptInfo" style="margin-top:6px"></div>
     </div>
     <div class="row" style="margin-top:10px">
       <div><label>المبلغ بالقديمة (أوقية)</label>
-        <div style="display:flex;gap:6px"><input type="text" id="m2aOld" placeholder="5000000" inputmode="decimal" oninput="calcM2A()" style="flex:1">
-        <button class="btn btn-gold btn-sm" style="padding:0 12px;white-space:nowrap" onclick="smartFill('m2aOld')"></button></div></div>
+        <div style="display:flex;gap:6px"><input type="text" id="m2aOld" placeholder="5000000" inputmode="decimal" oninput="calcM2A()" style="flex:1"></div></div>
       <div><label>② سعر بيع الأوقية (قديمة/Kz)</label><input type="text" id="m2aRate" placeholder="0.36" inputmode="decimal" oninput="calcM2A()"></div>
     </div>
     <div class="row">
@@ -711,7 +710,7 @@ body,input,select,textarea,button,.ar,h1,h2,h3{font-family:'Cairo','Tajawal','IB
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
         <span style="font-size:12px;color:var(--dim)">④ إيصالات الكوانزا المدفوعة: <b id="kbCount" class="num" style="color:var(--txt)">0</b> · المجموع: <b id="kbSum" class="num" style="color:var(--gold2)">0</b></span>
         <span>
-          <button class="btn btn-gold btn-sm" onclick="uploadKB()">رفع إيصالات</button>
+          <button class="btn btn-gold btn-sm" onclick="uploadKB()">📷 رفع إيصالات الدفع</button>
           <button class="btn btn-line btn-sm" onclick="clearKB()">تصفير</button>
         </span>
       </div>
