@@ -443,6 +443,11 @@
       <div class="tpanel" id="t-rcpt" style="display:none">
         <div class="sec"><h2>قراءة الإيصالات</h2><a>محرك OCR</a></div>
         <div class="glass" style="padding:20px 18px;text-align:center">
+          <div class="fld" style="margin-bottom:14px;text-align:right">
+            <label>مفتاح Gemini API <span style="color:var(--muted);font-weight:400">(مرة واحدة — يُحفظ على جهازك)</span></label>
+            <input type="password" id="gemKey2" placeholder="AIza..." autocomplete="off" style="direction:ltr">
+            <small style="font-size:11px;color:var(--muted);display:block;margin-top:5px">مجاناً من aistudio.google.com/apikey</small>
+          </div>
           <div style="border:1.5px dashed var(--line);border-radius:18px;padding:36px 16px;margin-bottom:14px;color:var(--muted);font-size:13px">
             ارفع صورة الإيصال هنا — يقرأها المحرك ويستخرج المبلغ والعملة تلقائياً
           </div>
@@ -646,6 +651,19 @@ window.runOCR = async function(input){
   if(gk){
     gk.value = localStorage.getItem('gemKey') || '';
     gk.addEventListener('input', e => localStorage.setItem('gemKey', e.target.value.trim()));
+  }
+})();
+
+
+/* مزامنة حقل المفتاح الثاني (في قسم OCR) */
+(function(){
+  const k2 = document.getElementById('gemKey2');
+  if(k2){
+    k2.value = localStorage.getItem('gemKey') || '';
+    k2.addEventListener('input', e => {
+      localStorage.setItem('gemKey', e.target.value.trim());
+      const k1 = document.getElementById('gemKey'); if(k1) k1.value = e.target.value;
+    });
   }
 })();
 
