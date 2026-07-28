@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <meta name="description" content="صرف العملات وتسديد فواتير الموردين — بمرجع رسمي وتنفيذ خلال دقائق. موريتانيا · أنغولا · الصين.">
-<meta name="theme-color" content="#0B0F19">
+<meta name="theme-color" content="#070A14">
 <link rel="icon" href="arkan-icon-512.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="manifest" href="site-manifest.json">
@@ -161,7 +161,7 @@ nav.bar{position:sticky;top:0;z-index:40;background:rgba(11,15,25,.72);
   padding:0 16px;color:var(--txt);font-size:16px;font-weight:700;outline:none;cursor:pointer;
   min-width:112px;transition:.22s;letter-spacing:.04em}
 .conv-input select:focus{border-color:rgba(59,130,246,.5);box-shadow:0 0 0 4px rgba(59,130,246,.1)}
-.conv-input select option{background:#121829;color:#fff}
+.conv-input select option{background:#0E1322;color:#fff}
 .swap-wrap{display:flex;justify-content:center;margin:2px 0 8px}
 .swap{width:44px;height:44px;border-radius:50%;background:rgba(59,130,246,.1);
   border:1px solid rgba(59,130,246,.28);color:var(--blue-live);display:grid;place-items:center;
@@ -248,7 +248,7 @@ nav.bar{position:sticky;top:0;z-index:40;background:rgba(11,15,25,.72);
 .field input:focus,.field select:focus,.field textarea:focus{
   border-color:rgba(59,130,246,.5);box-shadow:0 0 0 4px rgba(59,130,246,.1)}
 .field textarea{resize:vertical;min-height:88px}
-.field select option{background:#121829;color:#fff}
+.field select option{background:#0E1322;color:#fff}
 .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 
 /* ===== UPLOAD (invoice) ===== */
@@ -1166,7 +1166,7 @@ function showRaw(){
   var w=window.open('','_blank');
   if(!w){toast('اسمح بالنوافذ المنبثقة لعرض النص');return;}
   w.document.write('<meta charset="utf-8"><title>النص المقروء</title>'+
-    '<body style="background:#0B0F19;color:#e8ecf1;font-family:monospace;padding:24px;white-space:pre-wrap;line-height:1.8;font-size:13px">'+
+    '<body style="background:#070A14;color:#e8ecf1;font-family:monospace;padding:24px;white-space:pre-wrap;line-height:1.8;font-size:13px">'+
     (OCR_STATE.raw||'').replace(/[<>&]/g,function(c){return {'<':'&lt;','>':'&gt;','&':'&amp;'}[c];})+'</body>');
   w.document.close();
 }
