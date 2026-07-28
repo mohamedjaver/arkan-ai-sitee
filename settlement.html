@@ -2408,25 +2408,12 @@ function arkanCore(rawText){
 
 /* قارئ الملف الموحّد — نقطة الدخول الوحيدة لكل الخانات */
 async function arkanRead(file){
-  // جرّب Gemini أولاً إن وُجد مفتاح (أدق مع PDF والبنوك الأجنبية)
-  try{
-    if(window.ARKAN_GEMINI && ARKAN_GEMINI.getKey()){
-      const g = await ARKAN_GEMINI.readReceipt(file);
-      if(g && g.parsed && (g.parsed.amount||g.parsed.txn)){
-        const p=g.parsed;
-        return {ok:true, amount:p.amount?Number(String(p.amount).replace(/[^\d.]/g,'')):null,
-          ccy:p.currency||null, txn:p.txn||null, acct:null, date:p.date||null,
-          bank:p.bank||null, app:null, name:p.sender||null, src:'Gemini',
-          file:file.name, text:g.raw||'', _gemini:true};
-      }
-    }
-  }catch(ge){ console.warn('Gemini fallback:', ge.message); }
-  // المحرك المحلي (احتياط)
+  // مسار موحّد: anyReceiptText يجرّب Gemini أولاً (نص خام) ثم المحلي
   try{
     const dataUrl=await new Promise((res,rej)=>{const r=new FileReader();
       r.onload=()=>res(r.result);r.onerror=()=>rej(new Error('تعذّر فتح الملف'));r.readAsDataURL(file);});
     const txt=await anyReceiptText(dataUrl,file.type,file.name);
-    const r=arkanCore(txt);r.file=file.name;return r;
+    const r=arkanCore(txt);r.file=file.name;r.text=txt;return r;
   }catch(e){
     return {ok:false,amount:null,ccy:null,txn:null,acct:null,date:null,bank:null,app:null,
             name:null,src:null,file:file.name,text:'',
@@ -3739,14 +3726,14 @@ function isPdfFile(dataUrl,type,name){
   return b.slice(0,8)==='JVBERi0x'||b.slice(0,6)==='JVBERi';
 }
 async function anyReceiptText(dataUrl,type,name){
-  // ═══ أولاً: Gemini (إن وُجد مفتاح) — أدق، يدعم PDF والصور وكل البنوك ═══
+  // ═══ Gemini أولاً (إن وُجد مفتاح) — أدق، يدعم PDF وكل البنوك ═══
   try{
     if(window.ARKAN_GEMINI && ARKAN_GEMINI.getKey()){
-      const txt = await geminiToText(dataUrl, type, name);
-      if(txt && txt.length > 10) return txt;
+      const gtxt = await geminiToText(dataUrl, type, name);
+      if(gtxt && gtxt.replace(/\s/g,'').length > 15) return gtxt;
     }
-  }catch(ge){ console.warn('Gemini→محلي:', ge.message); }
-  // ═══ احتياط: المحرك المحلي ═══
+  }catch(ge){ console.warn('Gemini→محلي:', ge && ge.message); }
+  // ═══ احتياط محلي ═══
   if(isPdfFile(dataUrl,type,name)){
     if(!window.pdfjsLib)throw new Error('محرك PDF لم يُحمَّل');
     return await pdfText(dataUrl);
@@ -3755,12 +3742,13 @@ async function anyReceiptText(dataUrl,type,name){
   throw new Error('محرك الصور لم يُحمَّل');
 }
 
-/* Gemini → نص منسّق يفهمه arkanCore */
+/* Gemini → نص خام حرفي يفهمه arkanCore (يحافظ على Montante/Número/etc) */
 async function geminiToText(dataUrl, type, name){
   const key = ARKAN_GEMINI.getKey();
   const b64 = dataUrl.split(',')[1];
-  const mime = type || (String(name||'').toLowerCase().endsWith('.pdf') ? 'application/pdf' : 'image/jpeg');
-  const prompt = 'استخرج النص الكامل من هذا الإيصال المالي حرفياً كما هو (عربي/برتغالي/فرنسي، بنوك أنغولا BCI/BAI/BFA/ATLANTICO أو Bankily). أرجع النص الخام فقط بلا تفسير، واحرص على إظهار: المبلغ بالأرقام، العملة، رقم العملية/المرجع، التاريخ، اسم المرسل والمستقبل، اسم البنك.';
+  const lname = String(name||'').toLowerCase();
+  const mime = type || (lname.endsWith('.pdf') ? 'application/pdf' : 'image/jpeg');
+  const prompt = 'Extract ALL text from this financial receipt VERBATIM, exactly as written. Preserve original field labels and language (Portuguese/Arabic/French; Angolan banks BCI/BAI/BFA/ATLANTICO/Bankily). Keep labels like Montante, Numero de Operacao, Movimento, Data, Referencia, IBAN, importancia, Valor. Return ONLY the raw text, no translation, no JSON, no commentary.';
   const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key='+encodeURIComponent(key);
   const resp = await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},
     body:JSON.stringify({contents:[{parts:[{text:prompt},{inline_data:{mime_type:mime,data:b64}}]}],generationConfig:{temperature:0.1}})});
