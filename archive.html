@@ -1,0 +1,1178 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+<meta name="theme-color" content="#0a0b0d" />
+<title>ARKAN Intelligence Archive · أرشيف أركان الذكي</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<style>
+:root{
+  --bg:#0a0b0d; --bg2:#0e1013; --panel:rgba(22,24,28,.72); --panel-solid:#16181c;
+  --stroke:rgba(255,255,255,.08); --stroke-strong:rgba(255,255,255,.14);
+  --text:#eef0f2; --muted:#9298a1; --faint:#5c6169;
+  --gold:#e4c97e; --gold-2:#c9a24b; --gold-deep:#8a6d2a;
+  --emerald:#4ade80; --amber:#fbbf24; --red:#f87171; --blue:#7dd3fc;
+  --grad-gold:linear-gradient(135deg,#f4e2a8 0%,#e4c97e 40%,#c9a24b 100%);
+  --shadow:0 24px 60px -20px rgba(0,0,0,.65);
+  --r:18px; --r-sm:12px;
+  --ff-display:'Space Grotesk','IBM Plex Sans Arabic',sans-serif;
+  --ff-body:'Inter','IBM Plex Sans Arabic',sans-serif;
+  --ff-ar:'IBM Plex Sans Arabic',sans-serif;
+}
+[data-theme="light"]{
+  --bg:#f6f5f1; --bg2:#efeee9; --panel:rgba(255,255,255,.82); --panel-solid:#ffffff;
+  --stroke:rgba(15,17,20,.08); --stroke-strong:rgba(15,17,20,.14);
+  --text:#15181c; --muted:#5a616b; --gold:#a9823a; --gold-2:#8a6d2a;
+  --shadow:0 20px 50px -22px rgba(30,25,10,.28);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  font-family:var(--ff-body); background:var(--bg); color:var(--text);
+  -webkit-font-smoothing:antialiased; overflow:hidden;
+}
+body::before{ /* ambient */
+  content:""; position:fixed; inset:0; z-index:-1; pointer-events:none;
+  background:
+   radial-gradient(1100px 600px at 88% -8%, rgba(228,201,126,.10), transparent 60%),
+   radial-gradient(900px 520px at 6% 110%, rgba(228,201,126,.06), transparent 60%);
+}
+[dir="rtl"]{font-family:var(--ff-ar)}
+::selection{background:rgba(228,201,126,.28)}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-thumb{background:var(--stroke-strong);border-radius:20px}
+input,button,select,textarea{font-family:inherit;color:inherit}
+
+/* ---------- shell ---------- */
+.app{display:grid;grid-template-columns:264px 1fr;height:100vh}
+.side{
+  background:linear-gradient(180deg,var(--bg2),transparent);
+  border-inline-end:1px solid var(--stroke); display:flex;flex-direction:column;
+  padding:22px 16px; gap:6px; overflow-y:auto;
+}
+.brand{display:flex;align-items:center;gap:12px;padding:6px 8px 18px}
+.brand .arch{width:40px;height:40px;flex:none}
+.brand .txt b{font-family:var(--ff-display);font-weight:700;font-size:16px;letter-spacing:.3px;display:block;line-height:1}
+.brand .txt span{font-size:11px;color:var(--muted);letter-spacing:2px}
+.nav{display:flex;flex-direction:column;gap:2px;margin-top:4px}
+.nav a{
+  display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:var(--r-sm);
+  color:var(--muted);cursor:pointer;font-weight:500;font-size:14px;position:relative;
+  transition:.18s; text-decoration:none; user-select:none;
+}
+.nav a svg{width:19px;height:19px;opacity:.85}
+.nav a:hover{background:var(--stroke);color:var(--text)}
+.nav a.on{color:var(--text);background:linear-gradient(90deg,rgba(228,201,126,.16),rgba(228,201,126,.03))}
+.nav a.on::before{content:"";position:absolute;inset-inline-start:0;top:9px;bottom:9px;width:3px;border-radius:4px;background:var(--grad-gold)}
+.side .spacer{flex:1}
+.side-foot{border-top:1px solid var(--stroke);padding-top:12px;font-size:11px;color:var(--muted);line-height:1.7}
+
+.main{overflow-y:auto;position:relative}
+.top{
+  position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:14px;
+  padding:16px 26px;background:color-mix(in oklab,var(--bg) 78%,transparent);
+  backdrop-filter:blur(18px);border-bottom:1px solid var(--stroke);
+}
+.top h1{font-family:var(--ff-display);font-size:19px;font-weight:600;letter-spacing:.2px}
+.top .sub{font-size:12px;color:var(--muted)}
+.top .grow{flex:1}
+.searchbar{
+  display:flex;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--stroke);
+  border-radius:12px;padding:9px 14px;min-width:min(420px,42vw);backdrop-filter:blur(12px);
+}
+.searchbar input{background:none;border:none;outline:none;flex:1;font-size:13.5px}
+.searchbar svg{width:17px;height:17px;color:var(--muted)}
+.searchbar kbd{font-size:10px;color:var(--muted);border:1px solid var(--stroke-strong);border-radius:5px;padding:1px 5px}
+.iconbtn{
+  width:40px;height:40px;display:grid;place-items:center;border-radius:11px;
+  border:1px solid var(--stroke);background:var(--panel);cursor:pointer;transition:.18s;
+}
+.iconbtn:hover{border-color:var(--gold-2);color:var(--gold)}
+.iconbtn svg{width:18px;height:18px}
+.btn{
+  display:inline-flex;align-items:center;gap:8px;border:none;cursor:pointer;font-weight:600;
+  font-size:13.5px;padding:10px 18px;border-radius:11px;transition:.18s;
+}
+.btn-gold{background:var(--grad-gold);color:#1a1608;box-shadow:0 8px 22px -8px rgba(228,201,126,.5)}
+.btn-gold:hover{transform:translateY(-1px);box-shadow:0 12px 28px -8px rgba(228,201,126,.6)}
+.btn-ghost{background:var(--panel);border:1px solid var(--stroke);color:var(--text)}
+.btn-ghost:hover{border-color:var(--gold-2)}
+.btn svg{width:16px;height:16px}
+
+.view{padding:24px 26px 60px;display:none;animation:fade .35s}
+.view.on{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.select-lang{background:var(--panel);border:1px solid var(--stroke);border-radius:10px;padding:8px 10px;font-size:12.5px;cursor:pointer}
+
+/* ---------- cards / grid ---------- */
+.grid{display:grid;gap:16px}
+.kpis{grid-template-columns:repeat(auto-fill,minmax(200px,1fr))}
+.card{
+  background:var(--panel);border:1px solid var(--stroke);border-radius:var(--r);
+  padding:18px 20px;backdrop-filter:blur(14px);box-shadow:var(--shadow);position:relative;overflow:hidden;
+}
+.kpi .lbl{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:7px;letter-spacing:.3px}
+.kpi .lbl svg{width:15px;height:15px}
+.kpi .val{font-family:var(--ff-display);font-size:30px;font-weight:600;margin-top:8px;letter-spacing:.5px}
+.kpi .val small{font-size:14px;color:var(--muted);font-weight:400}
+.kpi .foot{font-size:11.5px;color:var(--muted);margin-top:4px}
+.kpi .glow{position:absolute;inset-inline-end:-30px;top:-30px;width:120px;height:120px;border-radius:50%;filter:blur(30px);opacity:.16}
+.kpi.g-gold .glow{background:var(--gold)} .kpi.g-em .glow{background:var(--emerald)}
+.kpi.g-am .glow{background:var(--amber)} .kpi.g-rd .glow{background:var(--red)}
+
+.section-h{display:flex;align-items:center;gap:12px;margin:26px 0 14px}
+.section-h h2{font-family:var(--ff-display);font-size:15px;font-weight:600;letter-spacing:.4px}
+.section-h .rule{flex:1;height:1px;background:linear-gradient(90deg,var(--stroke-strong),transparent)}
+.section-h .cnt{font-size:12px;color:var(--muted)}
+
+/* dropzone */
+.dz{
+  border:1.5px dashed var(--stroke-strong);border-radius:var(--r);padding:34px;text-align:center;
+  cursor:pointer;transition:.2s;background:var(--panel);
+}
+.dz:hover,.dz.drag{border-color:var(--gold);background:color-mix(in oklab,var(--gold) 6%,var(--panel))}
+.dz .ring{width:56px;height:56px;margin:0 auto 12px;border-radius:16px;display:grid;place-items:center;background:color-mix(in oklab,var(--gold) 14%,transparent);border:1px solid var(--stroke)}
+.dz .ring svg{width:26px;height:26px;color:var(--gold)}
+.dz b{font-family:var(--ff-display);font-size:15px}
+.dz p{color:var(--muted);font-size:12.5px;margin-top:4px}
+
+/* doc grid */
+.docs{grid-template-columns:repeat(auto-fill,minmax(280px,1fr))}
+.doc{
+  background:var(--panel);border:1px solid var(--stroke);border-radius:var(--r);overflow:hidden;
+  cursor:pointer;transition:.18s;backdrop-filter:blur(12px);
+}
+.doc:hover{transform:translateY(-3px);border-color:var(--gold-2);box-shadow:var(--shadow)}
+.doc .thumb{height:150px;background:#0a0b0d;position:relative;display:grid;place-items:center;overflow:hidden}
+.doc .thumb img{width:100%;height:100%;object-fit:cover}
+.doc .thumb .ph{color:var(--muted);font-size:34px;font-family:var(--ff-display)}
+.doc .thumb .risk{position:absolute;top:10px;inset-inline-start:10px;font-size:10.5px;font-weight:600;padding:3px 9px;border-radius:20px;backdrop-filter:blur(6px)}
+.risk.low{background:rgba(74,222,128,.16);color:var(--emerald)}
+.risk.med{background:rgba(251,191,36,.16);color:var(--amber)}
+.risk.high{background:rgba(248,113,113,.18);color:var(--red)}
+.doc .body{padding:14px 16px}
+.doc .amt{font-family:var(--ff-display);font-size:19px;font-weight:600}
+.doc .amt .cur{font-size:12px;color:var(--gold);margin-inline-start:4px}
+.doc .meta{font-size:12px;color:var(--muted);margin-top:3px;display:flex;justify-content:space-between}
+.tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:11px}
+.tag{font-size:10.5px;padding:3px 9px;border-radius:20px;background:var(--stroke);color:var(--muted);border:1px solid transparent}
+.tag.bank{color:var(--gold);background:color-mix(in oklab,var(--gold) 12%,transparent)}
+.tag.dir-in{color:var(--emerald);background:rgba(74,222,128,.1)}
+.tag.dir-out{color:var(--blue);background:rgba(125,211,252,.1)}
+
+/* empty */
+.empty{text-align:center;padding:60px 20px;color:var(--muted)}
+.empty svg{width:52px;height:52px;opacity:.4;margin-bottom:14px}
+.empty b{display:block;color:var(--text);font-family:var(--ff-display);font-size:16px;margin-bottom:5px}
+
+/* drawer */
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(3px);z-index:60;opacity:0;pointer-events:none;transition:.25s}
+.scrim.on{opacity:1;pointer-events:auto}
+.drawer{
+  position:fixed;top:0;inset-inline-end:0;height:100%;width:min(560px,94vw);z-index:61;
+  background:var(--bg2);border-inline-start:1px solid var(--stroke);box-shadow:var(--shadow);
+  transform:translateX(var(--off,100%));transition:.3s cubic-bezier(.4,0,.2,1);overflow-y:auto;
+}
+[dir="rtl"] .drawer{--off:-100%}
+.drawer.on{transform:translateX(0)}
+.dh{position:sticky;top:0;background:color-mix(in oklab,var(--bg2) 88%,transparent);backdrop-filter:blur(12px);
+  padding:18px 22px;border-bottom:1px solid var(--stroke);display:flex;align-items:center;gap:12px;z-index:2}
+.dh .amt{font-family:var(--ff-display);font-size:24px;font-weight:600}
+.dh .grow{flex:1}
+.db{padding:20px 22px}
+.preview{width:100%;border-radius:var(--r-sm);border:1px solid var(--stroke);margin-bottom:18px;background:#0a0b0d}
+.kv{display:grid;grid-template-columns:130px 1fr;gap:2px 14px;font-size:13px}
+.kv dt{color:var(--muted);padding:7px 0}
+.kv dd{padding:7px 0;font-weight:500;word-break:break-word}
+.kv dd.copy{cursor:pointer} .kv dd.copy:hover{color:var(--gold)}
+.ai-box{background:color-mix(in oklab,var(--gold) 6%,var(--panel));border:1px solid var(--stroke);border-radius:var(--r-sm);padding:14px 16px;margin:16px 0;font-size:13px;line-height:1.7}
+.ai-box .h{display:flex;align-items:center;gap:8px;font-family:var(--ff-display);font-size:12.5px;color:var(--gold);margin-bottom:8px;font-weight:600}
+.ai-box .h svg{width:15px;height:15px}
+.flags{margin-top:6px}
+.flag{display:flex;gap:9px;align-items:flex-start;font-size:12.5px;padding:7px 0;border-top:1px solid var(--stroke)}
+.flag .dot{width:8px;height:8px;border-radius:50%;margin-top:5px;flex:none}
+.flag.high .dot{background:var(--red)} .flag.med .dot{background:var(--amber)} .flag.ok .dot{background:var(--emerald)}
+.ocr-raw{font-size:11.5px;color:var(--muted);white-space:pre-wrap;max-height:180px;overflow:auto;background:var(--bg);border:1px solid var(--stroke);border-radius:10px;padding:12px;margin-top:8px;font-family:ui-monospace,monospace;direction:ltr;text-align:left}
+
+/* filters */
+.filters{display:flex;flex-wrap:wrap;gap:9px;margin-bottom:6px}
+.chip{font-size:12.5px;padding:7px 13px;border-radius:20px;border:1px solid var(--stroke);background:var(--panel);cursor:pointer;transition:.15s;color:var(--muted)}
+.chip:hover{border-color:var(--gold-2)}
+.chip.on{background:var(--grad-gold);color:#1a1608;border-color:transparent;font-weight:600}
+
+/* progress toast */
+.toasts{position:fixed;bottom:22px;inset-inline-end:22px;z-index:80;display:flex;flex-direction:column;gap:10px;max-width:340px}
+.toast{background:var(--panel-solid);border:1px solid var(--stroke);border-radius:var(--r-sm);padding:13px 16px;box-shadow:var(--shadow);animation:slideIn .3s;font-size:13px}
+@keyframes slideIn{from{transform:translateY(12px);opacity:0}to{transform:none;opacity:1}}
+.toast .t-h{display:flex;align-items:center;gap:9px;font-weight:600;margin-bottom:2px}
+.toast .t-h svg{width:16px;height:16px;color:var(--gold)}
+.bar{height:5px;border-radius:20px;background:var(--stroke);overflow:hidden;margin-top:9px}
+.bar i{display:block;height:100%;background:var(--grad-gold);width:0;transition:.3s}
+.spin{animation:spin 1s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
+
+/* reports table */
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{text-align:start;padding:11px 12px;border-bottom:1px solid var(--stroke)}
+th{color:var(--muted);font-weight:500;font-size:12px;letter-spacing:.3px}
+tbody tr:hover{background:var(--stroke)}
+.money{font-family:var(--ff-display);font-weight:600}
+.pill{font-size:11px;padding:2px 9px;border-radius:20px}
+.pill.completed{background:rgba(74,222,128,.14);color:var(--emerald)}
+.pill.pending{background:rgba(251,191,36,.14);color:var(--amber)}
+.pill.rejected{background:rgba(248,113,113,.16);color:var(--red)}
+
+/* settings */
+.setrow{display:flex;justify-content:space-between;align-items:center;padding:15px 0;border-bottom:1px solid var(--stroke);gap:20px}
+.setrow .info b{display:block;font-size:14px} .setrow .info span{font-size:12.5px;color:var(--muted)}
+.inp{background:var(--bg);border:1px solid var(--stroke);border-radius:10px;padding:10px 13px;font-size:13px;outline:none;min-width:260px}
+.inp:focus{border-color:var(--gold-2)}
+.switch{width:46px;height:26px;border-radius:20px;background:var(--stroke);position:relative;cursor:pointer;transition:.2s;flex:none}
+.switch.on{background:var(--grad-gold)}
+.switch i{position:absolute;top:3px;inset-inline-start:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:.2s}
+.switch.on i{inset-inline-start:23px}
+
+.bank-badge{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;font-family:var(--ff-display);font-weight:700;font-size:12px;background:var(--grad-gold);color:#1a1608;flex:none}
+
+@media(max-width:880px){
+  .app{grid-template-columns:1fr}
+  .side{position:fixed;z-index:70;width:264px;transform:translateX(-100%);transition:.28s;height:100vh}
+  [dir="rtl"] .side{transform:translateX(100%)}
+  .side.open{transform:none}
+  .searchbar{min-width:auto;flex:1}
+  .top h1{font-size:16px}
+  .menu-btn{display:grid!important}
+}
+.menu-btn{display:none}
+
+/* selection */
+.selbox{position:absolute;top:10px;inset-inline-end:10px;width:24px;height:24px;border-radius:7px;
+  border:1.5px solid var(--stroke-strong);background:rgba(0,0,0,.4);backdrop-filter:blur(6px);
+  display:grid;place-items:center;cursor:pointer;transition:.15s;z-index:2}
+.selbox svg{width:15px;height:15px;color:#1a1608}
+.selbox:hover{border-color:var(--gold)}
+.selbox.on{background:var(--grad-gold);border-color:transparent}
+.doc.sel{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold)}
+.selbar{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(30px);z-index:75;
+  background:var(--panel-solid);border:1px solid var(--gold-2);border-radius:14px;padding:11px 14px;
+  display:flex;align-items:center;gap:14px;box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:.25s}
+.selbar.on{opacity:1;pointer-events:auto;transform:translateX(-50%)}
+.selbar b{font-family:var(--ff-display);color:var(--gold)}
+
+/* settlement card */
+.scard{background:var(--panel);border:1px solid var(--stroke);border-radius:var(--r);padding:18px 20px;
+  cursor:pointer;transition:.18s;backdrop-filter:blur(12px)}
+.scard:hover{transform:translateY(-3px);border-color:var(--gold-2);box-shadow:var(--shadow)}
+.scard .code{font-family:ui-monospace,monospace;font-size:11px;color:var(--gold);letter-spacing:.5px}
+.scard h3{font-family:var(--ff-display);font-size:16px;margin:4px 0 10px}
+.legs{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:13px;margin:10px 0}
+.leg{padding:4px 10px;border-radius:8px;background:var(--stroke);font-family:var(--ff-display);font-weight:600;font-size:12.5px}
+.leg.neg{color:var(--red)} .leg.pos{color:var(--emerald)}
+.legarrow{color:var(--muted)}
+.profit{font-family:var(--ff-display);font-weight:600}
+.profit.pos{color:var(--emerald)} .profit.neg{color:var(--red)}
+
+/* timeline */
+.tl{display:flex;justify-content:space-between;margin:22px 0 8px;position:relative}
+.tl::before{content:"";position:absolute;top:13px;inset-inline-start:8%;inset-inline-end:8%;height:2px;background:var(--stroke)}
+.tl .st{display:flex;flex-direction:column;align-items:center;gap:7px;flex:1;position:relative;z-index:1;cursor:pointer}
+.tl .st .node{width:28px;height:28px;border-radius:50%;background:var(--bg2);border:2px solid var(--stroke-strong);
+  display:grid;place-items:center;transition:.2s;font-size:12px}
+.tl .st .node svg{width:14px;height:14px}
+.tl .st.done .node{background:var(--grad-gold);border-color:transparent;color:#1a1608}
+.tl .st.active .node{border-color:var(--gold);color:var(--gold);box-shadow:0 0 0 4px rgba(228,201,126,.14)}
+.tl .st span{font-size:10.5px;color:var(--muted);text-align:center}
+.tl .st.done span,.tl .st.active span{color:var(--text)}
+
+/* builder */
+.builder-doc{display:flex;align-items:center;gap:12px;padding:11px;border:1px solid var(--stroke);border-radius:12px;margin-bottom:8px;cursor:pointer;transition:.15s}
+.builder-doc:hover{border-color:var(--gold-2)}
+.builder-doc.picked{border-color:var(--gold);background:color-mix(in oklab,var(--gold) 7%,transparent)}
+.builder-doc img{width:44px;height:44px;border-radius:8px;object-fit:cover;flex:none;background:#0a0b0d}
+.builder-doc .info{flex:1;min-width:0}
+.builder-doc .info b{font-family:var(--ff-display);font-size:14px}
+.builder-doc .info span{font-size:11.5px;color:var(--muted);display:block}
+.builder-doc .ord{width:26px;height:26px;border-radius:50%;background:var(--grad-gold);color:#1a1608;display:grid;place-items:center;font-weight:700;font-size:12px;flex:none}
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- SIDEBAR -->
+  <aside class="side" id="side">
+    <div class="brand">
+      <svg class="arch" viewBox="0 0 48 48" fill="none">
+        <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#f4e2a8"/><stop offset="1" stop-color="#c9a24b"/></linearGradient></defs>
+        <path d="M8 42V22C8 13.16 15.16 6 24 6s16 7.16 16 16v20h-7V22a9 9 0 0 0-18 0v20H8Z" fill="url(#g)"/>
+        <rect x="21" y="30" width="6" height="12" fill="url(#g)"/>
+      </svg>
+      <div class="txt"><b>ARKAN</b><span>INTELLIGENCE</span></div>
+    </div>
+    <nav class="nav" id="nav">
+      <a data-v="dash" class="on"><span data-ic="grid"></span><span data-i18n="nav_dash">لوحة التحكم</span></a>
+      <a data-v="archive"><span data-ic="doc"></span><span data-i18n="nav_archive">المستندات</span></a>
+      <a data-v="vault"><span data-ic="layers"></span><span data-i18n="nav_vault">الأرشيف</span></a>
+      <a data-v="settlements"><span data-ic="link"></span><span data-i18n="nav_settle">التسويات</span></a>
+      <a data-v="reports"><span data-ic="chart"></span><span data-i18n="nav_reports">التقارير</span></a>
+      <a data-v="settings"><span data-ic="gear"></span><span data-i18n="nav_settings">الإعدادات</span></a>
+    </nav>
+    <div class="spacer"></div>
+    <div class="side-foot">
+      ARKAN INTERNATIONAL TRADING<br>
+      Mauritania · Angola · China<br>
+      <span style="color:var(--gold)">arkanrates.com</span>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="top">
+      <button class="iconbtn menu-btn" onclick="document.getElementById('side').classList.toggle('open')"><span data-ic="menu"></span></button>
+      <div>
+        <h1 id="viewTitle" data-i18n="nav_dash">لوحة التحكم</h1>
+        <div class="sub" id="viewSub" data-i18n="sub_dash">نظرة عامة على العمليات والمستندات</div>
+      </div>
+      <div class="grow"></div>
+      <div class="searchbar">
+        <span data-ic="search"></span>
+        <input id="globalSearch" placeholder="ابحث: مبلغ، مرجع، بنك، اسم، أو أمر ذكي…" data-i18n-ph="search_ph">
+        <kbd>/</kbd>
+      </div>
+      <select class="select-lang" id="langSel">
+        <option value="ar">🇲🇷 عربي</option>
+        <option value="pt">🇦🇴 Português</option>
+        <option value="fr">🇫🇷 Français</option>
+        <option value="en">🇬🇧 English</option>
+      </select>
+      <button class="iconbtn" id="themeBtn" title="Theme"><span data-ic="moon"></span></button>
+      <button class="btn btn-gold" onclick="document.getElementById('fileInput').click()">
+        <span data-ic="upload"></span><span data-i18n="btn_upload">رفع مستند</span>
+      </button>
+      <input type="file" id="fileInput" hidden multiple accept="image/*,application/pdf">
+    </div>
+
+    <!-- DASHBOARD -->
+    <section class="view on" id="v-dash">
+      <div class="grid kpis" id="kpis"></div>
+      <div class="section-h"><h2 data-i18n="recent">أحدث المستندات</h2><div class="rule"></div>
+        <a class="cnt" style="cursor:pointer;color:var(--gold)" onclick="go('archive')" data-i18n="viewall">عرض الكل ←</a></div>
+      <div class="grid docs" id="recentDocs"></div>
+    </section>
+
+    <!-- ARCHIVE -->
+    <section class="view" id="v-archive">
+      <div class="dz" id="dropzone">
+        <div class="ring"><span data-ic="cloud"></span></div>
+        <b data-i18n="dz_title">اسحب المستندات هنا أو اضغط للرفع</b>
+        <p data-i18n="dz_sub">PDF · صور · لقطات واتساب · إشعارات تحويل — يُقرأ تلقائياً بالـ OCR</p>
+      </div>
+      <div class="filters" id="filters" style="margin-top:18px"></div>
+      <div class="section-h"><h2 data-i18n="nav_archive">الأرشيف</h2><div class="rule"></div><span class="cnt" id="archiveCount"></span></div>
+      <div class="grid docs" id="allDocs"></div>
+    </section>
+
+    <!-- SETTLEMENTS -->
+    <section class="view" id="v-settlements">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px">
+        <div><h2 style="font-family:var(--ff-display);font-size:16px" data-i18n="nav_settle">التسويات</h2>
+          <div class="sub" data-i18n="settle_desc">اربط عدة إيصالات في تسوية واحدة: شراء AOA ← شراء USDT ← تحويل ← دفع MRU</div></div>
+        <div class="grow" style="flex:1"></div>
+        <button class="btn btn-gold" onclick="openBuilder()"><span data-ic="link"></span><span data-i18n="new_settle">تسوية جديدة</span></button>
+      </div>
+      <div class="grid" id="settleList" style="grid-template-columns:repeat(auto-fill,minmax(340px,1fr));margin-top:16px"></div>
+    </section>
+
+    <!-- ARCHIVE VAULT -->
+    <section class="view" id="v-vault">
+      <div class="searchbar" style="max-width:420px;margin-bottom:16px">
+        <span data-ic="search"></span>
+        <input id="vaultSearch" placeholder="ابحث في المحفوظات…">
+      </div>
+      <div id="vaultBody"></div>
+    </section>
+
+    <!-- REPORTS -->
+    <section class="view" id="v-reports">
+      <div class="filters" id="reportFilters"></div>
+      <div class="card" style="margin-top:16px;overflow-x:auto">
+        <table><thead><tr>
+          <th data-i18n="th_date">التاريخ</th><th data-i18n="th_bank">البنك</th>
+          <th data-i18n="th_amount">المبلغ</th><th data-i18n="th_cur">العملة</th>
+          <th data-i18n="th_type">النوع</th><th data-i18n="th_ref">المرجع</th><th data-i18n="th_status">الحالة</th>
+        </tr></thead><tbody id="reportRows"></tbody></table>
+      </div>
+      <div style="margin-top:16px;display:flex;gap:10px">
+        <button class="btn btn-ghost" onclick="exportData('csv')"><span data-ic="download"></span><span>CSV</span></button>
+        <button class="btn btn-ghost" onclick="exportData('json')"><span data-ic="download"></span><span>JSON</span></button>
+      </div>
+    </section>
+
+    <!-- SETTINGS -->
+    <section class="view" id="v-settings">
+      <div class="card" style="max-width:720px">
+        <div class="setrow">
+          <div class="info"><b data-i18n="set_ocr">لغات قراءة الـ OCR</b><span data-i18n="set_ocr_d">أضف العربية لقراءة الإيصالات الموريتانية (أبطأ قليلاً)</span></div>
+          <div class="switch" id="sw-ar" onclick="toggleSetting('ocrArabic',this)"><i></i></div>
+        </div>
+        <div class="setrow">
+          <div class="info"><b>AI Endpoint</b><span data-i18n="set_ai_d">رابط Supabase Edge Function للتلخيص وكشف الشذوذ (يبقى المفتاح في الخادم)</span></div>
+          <input class="inp" id="aiEndpoint" placeholder="https://xxxx.functions.supabase.co/analyze">
+        </div>
+        <div class="setrow">
+          <div class="info"><b data-i18n="set_dedup">منع الرفع المكرر</b><span data-i18n="set_dedup_d">رفض الملفات ذات نفس بصمة SHA-256</span></div>
+          <div class="switch on" id="sw-dedup" onclick="toggleSetting('dedup',this)"><i></i></div>
+        </div>
+        <div class="setrow" style="border:none">
+          <div class="info"><b style="color:var(--red)" data-i18n="set_wipe">مسح كل البيانات المحلية</b><span data-i18n="set_wipe_d">يحذف الأرشيف من هذا المتصفح نهائياً</span></div>
+          <button class="btn btn-ghost" style="color:var(--red)" onclick="wipeAll()" data-i18n="wipe_btn">مسح</button>
+        </div>
+      </div>
+      <div class="card" style="max-width:720px;margin-top:16px">
+        <div class="ai-box" style="margin:0">
+          <div class="h"><span data-ic="spark"></span><span data-i18n="upgrade">مسار الترقية إلى السحابة</span></div>
+          <span data-i18n="upgrade_d">هذا الإصدار يخزّن كل شيء داخل متصفحك (IndexedDB). لتفعيل التعدد على الأجهزة، الأدوار، المصادقة الثنائية، والتشفير AES-256 — فعّل Supabase وسيتصل نفس الكود بها دون إعادة كتابة. مخطط قاعدة البيانات جاهز في ملف settlements-schema.sql.</span>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<!-- DRAWER -->
+<div class="scrim" id="scrim" onclick="closeDrawer()"></div>
+<div class="drawer" id="drawer"></div>
+<div class="toasts" id="toasts"></div>
+<div class="selbar" id="selbar">
+  <b id="selCount">0</b><span data-i18n="selected">محدّد</span>
+  <button class="btn btn-gold" onclick="openBuilder(true)"><span data-ic="link"></span><span data-i18n="link_settle">ربط كتسوية</span></button>
+  <button class="iconbtn" onclick="clearSel()" title="إلغاء">✕</button>
+</div>
+
+<script>
+pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+/* ============ ICONS ============ */
+function ic(n){const p={
+ grid:'<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/>',
+ folder:'<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z"/>',
+ link:'<path d="M9 12h6M8 7h-1a5 5 0 0 0 0 10h1m8-10h1a5 5 0 0 1 0 10h-1"/>',
+ chart:'<path d="M4 20V10M10 20V4M16 20v-6M22 20H2"/>',
+ gear:'<circle cx="12" cy="12" r="3.2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/>',
+ search:'<circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/>',
+ upload:'<path d="M12 16V4M7 9l5-5 5 5M4 20h16"/>',
+ cloud:'<path d="M12 13v7M9 16l3-3 3 3M7 18a4 4 0 0 1-.5-8A6 6 0 0 1 18 9a3.5 3.5 0 0 1 .5 7"/>',
+ moon:'<path d="M21 12.8A8 8 0 1 1 11 3a6 6 0 0 0 10 9.8Z"/>',
+ sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5 19 19M19 5l-1.5 1.5M6.5 17.5 5 19"/>',
+ menu:'<path d="M3 6h18M3 12h18M3 18h18"/>',
+ download:'<path d="M12 4v11M8 11l4 4 4-4M4 20h16"/>',
+ spark:'<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3Z"/>',
+ doc:'<path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9l-6-6Z"/><path d="M14 3v6h6"/>',
+ alert:'<path d="M12 9v4M12 17h.01M10.3 3.9 2.4 18a2 2 0 0 0 1.7 3h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/>',
+ check:'<path d="M20 6 9 17l-5-5"/>',
+ clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+ layers:'<path d="M12 2 2 7l10 5 10-5-10-5ZM2 17l10 5 10-5M2 12l10 5 10-5"/>',
+ wallet:'<path d="M3 7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z"/><path d="M16 12h.01M3 9h18"/>'
+ };
+ return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${p[n]||''}</svg>`;
+}
+// render icons placed as ${ic('..')} inside innerHTML strings already resolved at build below
+
+/* ============ I18N ============ */
+const I18N={
+ ar:{nav_dash:'لوحة التحكم',nav_archive:'المستندات',nav_vault:'الأرشيف',sub_vault:'المحفوظات المكتملة — مرتّبة شهرياً',nav_settle:'التسويات',nav_reports:'التقارير',nav_settings:'الإعدادات',
+   sub_dash:'نظرة عامة على العمليات والمستندات',search_ph:'ابحث: مبلغ، مرجع، بنك، اسم، أو أمر ذكي…',btn_upload:'رفع مستند',
+   recent:'أحدث المستندات',viewall:'عرض الكل ←',dz_title:'اسحب المستندات هنا أو اضغط للرفع',
+   dz_sub:'PDF · صور · لقطات واتساب · إشعارات تحويل — يُقرأ تلقائياً بالـ OCR',
+   settle_soon:'محرّك ربط التسويات',settle_desc:'اربط عدة إيصالات في تسوية واحدة: شراء AOA ← شراء USDT ← تحويل ← دفع MRU.',
+   go_archive:'الذهاب للأرشيف',new_settle:'تسوية جديدة',selected:'محدّد',link_settle:'ربط كتسوية',th_date:'التاريخ',th_bank:'البنك',th_amount:'المبلغ',th_cur:'العملة',th_type:'النوع',th_ref:'المرجع',th_status:'الحالة',
+   set_ocr:'لغات قراءة الـ OCR',set_ocr_d:'أضف العربية لقراءة الإيصالات الموريتانية (أبطأ قليلاً)',
+   set_ai_d:'رابط Supabase Edge Function للتلخيص وكشف الشذوذ',set_dedup:'منع الرفع المكرر',set_dedup_d:'رفض الملفات ذات نفس بصمة SHA-256',
+   set_wipe:'مسح كل البيانات المحلية',set_wipe_d:'يحذف الأرشيف من هذا المتصفح نهائياً',wipe_btn:'مسح',
+   upgrade:'مسار الترقية إلى السحابة',upgrade_d:'هذا الإصدار يخزّن كل شيء داخل متصفحك (IndexedDB). فعّل Supabase للتعدد والأدوار والتشفير دون إعادة كتابة.',
+   k_today:'تحويلات اليوم',k_pending:'قيد الانتظار',k_done:'مكتملة',k_ocr:'دقة الـ OCR',k_fraud:'تنبيهات الاحتيال',k_vol:'حجم اليوم',
+   empty_docs:'لا مستندات بعد',empty_sub:'ارفع أول إيصال ليبدأ التحليل الذكي',viewall_:'الكل',
+   ocr_summary:'ملخّص ذكي',flags_h:'فحص السلامة',rawtext:'النص المستخرج',fraud_score:'مؤشر المخاطرة'},
+ pt:{nav_dash:'Painel',nav_archive:'Documentos',nav_vault:'Arquivo',sub_vault:'Registos concluídos — por mês',nav_settle:'Liquidações',nav_reports:'Relatórios',nav_settings:'Definições',
+   sub_dash:'Visão geral de operações e documentos',search_ph:'Pesquisar: valor, ref, banco, nome…',btn_upload:'Carregar',
+   recent:'Documentos recentes',viewall:'Ver todos →',dz_title:'Arraste documentos ou clique para carregar',
+   dz_sub:'PDF · imagens · capturas WhatsApp — lidos por OCR automaticamente',
+   settle_soon:'Motor de liquidações',settle_desc:'Ligue vários comprovativos numa liquidação: AOA → USDT → transferência → MRU.',
+   go_archive:'Ir para Arquivo',new_settle:'Nova liquidação',selected:'selecionado(s)',link_settle:'Ligar em liquidação',th_date:'Data',th_bank:'Banco',th_amount:'Valor',th_cur:'Moeda',th_type:'Tipo',th_ref:'Ref',th_status:'Estado',
+   set_ocr:'Idiomas OCR',set_ocr_d:'Adicionar árabe para recibos mauritanos',set_ai_d:'URL da Supabase Edge Function',
+   set_dedup:'Impedir duplicados',set_dedup_d:'Rejeitar ficheiros com o mesmo SHA-256',set_wipe:'Apagar dados locais',
+   set_wipe_d:'Remove o arquivo deste navegador',wipe_btn:'Apagar',upgrade:'Caminho para a nuvem',
+   upgrade_d:'Esta versão guarda tudo no navegador. Ative Supabase para multi-utilizador sem reescrever.',
+   k_today:'Hoje',k_pending:'Pendentes',k_done:'Concluídas',k_ocr:'Precisão OCR',k_fraud:'Alertas',k_vol:'Volume hoje',
+   empty_docs:'Sem documentos',empty_sub:'Carregue o primeiro comprovativo',ocr_summary:'Resumo',flags_h:'Verificação',rawtext:'Texto extraído',fraud_score:'Risco'},
+ fr:{nav_dash:'Tableau de bord',nav_archive:'Documents',nav_vault:'Archive',sub_vault:'Dossiers clôturés — par mois',nav_settle:'Règlements',nav_reports:'Rapports',nav_settings:'Réglages',
+   sub_dash:'Aperçu des opérations et documents',search_ph:'Rechercher : montant, réf, banque, nom…',btn_upload:'Importer',
+   recent:'Documents récents',viewall:'Tout voir →',dz_title:'Déposez des documents ou cliquez',
+   dz_sub:'PDF · images · captures WhatsApp — lus par OCR automatiquement',
+   settle_soon:'Moteur de règlements',settle_desc:'Liez plusieurs reçus en un règlement : AOA → USDT → virement → MRU.',
+   go_archive:'Aller à l’archive',new_settle:'Nouveau règlement',selected:'sélectionné(s)',link_settle:'Lier en règlement',th_date:'Date',th_bank:'Banque',th_amount:'Montant',th_cur:'Devise',th_type:'Type',th_ref:'Réf',th_status:'Statut',
+   set_ocr:'Langues OCR',set_ocr_d:'Ajouter l’arabe pour les reçus mauritaniens',set_ai_d:'URL Supabase Edge Function',
+   set_dedup:'Bloquer doublons',set_dedup_d:'Rejeter les fichiers au même SHA-256',set_wipe:'Effacer données locales',
+   set_wipe_d:'Supprime l’archive de ce navigateur',wipe_btn:'Effacer',upgrade:'Vers le cloud',
+   upgrade_d:'Cette version stocke tout dans le navigateur. Activez Supabase pour le multi-utilisateur.',
+   k_today:'Aujourd’hui',k_pending:'En attente',k_done:'Terminés',k_ocr:'Précision OCR',k_fraud:'Alertes',k_vol:'Volume du jour',
+   empty_docs:'Aucun document',empty_sub:'Importez le premier reçu',ocr_summary:'Résumé',flags_h:'Contrôle',rawtext:'Texte extrait',fraud_score:'Risque'},
+ en:{nav_dash:'Dashboard',nav_archive:'Documents',nav_vault:'Archive',sub_vault:'Completed records — grouped by month',nav_settle:'Settlements',nav_reports:'Reports',nav_settings:'Settings',
+   sub_dash:'Overview of operations and documents',search_ph:'Search: amount, ref, bank, name, or smart query…',btn_upload:'Upload',
+   recent:'Recent documents',viewall:'View all →',dz_title:'Drag documents here or click to upload',
+   dz_sub:'PDF · images · WhatsApp captures — read automatically by OCR',
+   settle_soon:'Settlement linking engine',settle_desc:'Link several receipts into one settlement: AOA → USDT → transfer → MRU.',
+   go_archive:'Go to Archive',new_settle:'New settlement',selected:'selected',link_settle:'Link as settlement',th_date:'Date',th_bank:'Bank',th_amount:'Amount',th_cur:'Currency',th_type:'Type',th_ref:'Ref',th_status:'Status',
+   set_ocr:'OCR languages',set_ocr_d:'Add Arabic for Mauritanian receipts (a bit slower)',set_ai_d:'Supabase Edge Function URL',
+   set_dedup:'Prevent duplicate uploads',set_dedup_d:'Reject files with the same SHA-256',set_wipe:'Wipe local data',
+   set_wipe_d:'Deletes the archive from this browser',wipe_btn:'Wipe',upgrade:'Cloud upgrade path',
+   upgrade_d:'This build stores everything in your browser. Turn on Supabase for multi-device, roles and AES-256 without a rewrite.',
+   k_today:'Today’s transfers',k_pending:'Pending',k_done:'Completed',k_ocr:'OCR accuracy',k_fraud:'Fraud alerts',k_vol:'Today’s volume',
+   empty_docs:'No documents yet',empty_sub:'Upload your first receipt to start',ocr_summary:'Smart summary',flags_h:'Integrity check',rawtext:'Extracted text',fraud_score:'Risk score'}
+};
+let LANG=localStorage.arkLang||(navigator.language||'ar').slice(0,2);
+if(!I18N[LANG])LANG='ar';
+function t(k){return (I18N[LANG]&&I18N[LANG][k])||I18N.en[k]||k}
+function applyI18n(){
+ document.documentElement.lang=LANG;
+ document.documentElement.dir=(LANG==='ar')?'rtl':'ltr';
+ document.querySelectorAll('[data-i18n]').forEach(e=>e.textContent=t(e.dataset.i18n));
+ document.querySelectorAll('[data-i18n-ph]').forEach(e=>e.placeholder=t(e.dataset.i18nPh));
+ document.getElementById('langSel').value=LANG;
+}
+
+/* ============ BANK + CURRENCY DICTIONARIES ============ */
+const BANKS=[
+ // Angola
+ {code:'BAI',country:'AO',rx:/\b(BAI|banco angolano de investimentos)\b/i},
+ {code:'BFA',country:'AO',rx:/\b(BFA|banco de fomento)\b/i},
+ {code:'BIC',country:'AO',rx:/\b(banco bic|BIC)\b/i},
+ {code:'BPC',country:'AO',rx:/\b(BPC|banco de poupan)\b/i},
+ {code:'ATLANTICO',country:'AO',rx:/\b(atl[aâ]ntico|millennium atl)/i},
+ {code:'STANDARD',country:'AO',rx:/\b(standard bank)\b/i},
+ {code:'BCI',country:'AO',rx:/\b(BCI|banco de com[eé]rcio)\b/i},
+ {code:'SOL',country:'AO',rx:/\bbanco sol\b/i},
+ {code:'KEVE',country:'AO',rx:/\bkeve\b/i},
+ {code:'YETU',country:'AO',rx:/\byetu\b/i},
+ // Mauritania
+ {code:'BANKILY',country:'MR',rx:/\bbankily\b/i},
+ {code:'MASRIVI',country:'MR',rx:/\bmasrivi|masarivi\b/i},
+ {code:'SEDAD',country:'MR',rx:/\bsedad\b/i},
+ {code:'BMCI',country:'MR',rx:/\bBMCI\b/i},
+ {code:'BNM',country:'MR',rx:/\b(BNM|banque nationale de mauritanie)\b/i},
+ {code:'BEA',country:'MR',rx:/\b(BEA|banque el amana)\b/i},
+ {code:'BAMIS',country:'MR',rx:/\bBAMIS|al wava|islamique de mauritanie\b/i},
+ {code:'ATTIJARI',country:'MR',rx:/\battijari\b/i},
+ {code:'SGM',country:'MR',rx:/\b(soci[eé]t[eé] g[eé]n[eé]rale)\b/i},
+ {code:'GBM',country:'MR',rx:/\bGBM\b/i},
+ {code:'CLICK',country:'MR',rx:/\bclick\b/i}
+];
+const CURRENCIES=[
+ {code:'AOA',rx:/\b(AOA|kwanza|Kz)\b/i,sym:'Kz'},
+ {code:'MRU',rx:/\b(MRU|ouguiya|أوقية|UM)\b/i,sym:'UM'},
+ {code:'USDT',rx:/\b(USDT|tether)\b/i,sym:'₮'},
+ {code:'EUR',rx:/(EUR|euro|€)/i,sym:'€'},
+ {code:'USD',rx:/\b(USD|d[oó]lar|\$)\b/i,sym:'$'},
+ {code:'CNY',rx:/\b(CNY|RMB|yuan|¥|人民币)\b/i,sym:'¥'},
+ {code:'AED',rx:/\b(AED|dirham|درهم)\b/i,sym:'AED'}
+];
+
+/* ============ PARSER (arkanParse v2) ============ */
+function parseReceipt(text){
+ const T=' '+text.replace(/\u00A0/g,' ')+' ';
+ const out={bank:null,country:null,currency:null,amount:null,date:null,time:null,
+   ref:null,txid:null,sender:null,receiver:null,senderAcc:null,receiverAcc:null,
+   iban:null,swift:null,phone:null,fees:null,status:null,type:null};
+
+ // bank
+ for(const b of BANKS){if(b.rx.test(T)){out.bank=b.code;out.country=b.country;break;}}
+ // currency
+ for(const c of CURRENCIES){if(c.rx.test(T)){out.currency=c.code;break;}}
+ // amount — capture largest money-looking token near amount keywords
+ const amtKw=/(montante|valor|amount|مبلغ|montant|total|quantia)[^\d]{0,18}([\d.,\s]{3,})/i;
+ let m=T.match(amtKw); let cand=[];
+ if(m)cand.push(m[2]);
+ (T.match(/[\d]{1,3}(?:[.,\s]\d{3})+(?:[.,]\d{2})?/g)||[]).forEach(x=>cand.push(x));
+ let best=0;
+ cand.forEach(raw=>{const v=normAmount(raw);if(v>best)best=v;});
+ if(best>0)out.amount=best;
+ // date
+ out.date=extractDate(T);
+ // time
+ const tm=T.match(/\b([0-2]?\d[:h][0-5]\d)(?::[0-5]\d)?\b/); if(tm)out.time=tm[1].replace('h',':');
+ // reference / txid
+ const ref=T.match(/(refer[eê]ncia|ref[.:]?|comprovativo|transa[cç][aã]o|n[ºo°]\.?|المرجع|رقم العملية)\s*[:#]?\s*([A-Z0-9\-]{5,})/i);
+ if(ref)out.ref=ref[2];
+ const tx=T.match(/(id|transaction|opera[cç][aã]o)\s*[:#]?\s*([A-Z0-9]{8,})/i); if(tx)out.txid=tx[2];
+ // names
+ const snd=T.match(/(de|from|remetente|ordenante|المرسل|من)\s*[:\-]?\s*([A-ZÀ-Úا-ي][\wÀ-Ú\u0600-\u06FF' ]{4,40})/i);
+ if(snd)out.sender=clean(snd[2]);
+ const rcv=T.match(/(para|to|benefici[aá]rio|destinat[aá]rio|المستفيد|إلى|receiver)\s*[:\-]?\s*([A-ZÀ-Úا-ي][\wÀ-Ú\u0600-\u06FF' ]{4,40})/i);
+ if(rcv)out.receiver=clean(rcv[2]);
+ // accounts / iban / swift
+ const iban=T.match(/\b([A-Z]{2}\d{2}[A-Z0-9]{11,30})\b/); if(iban)out.iban=iban[1];
+ const swift=T.match(/\b([A-Z]{4}[A-Z]{2}[A-Z0-9]{2}(?:[A-Z0-9]{3})?)\b/); if(swift&&/BANK|BIC|BFA|BAI/i.test(swift[1]))out.swift=swift[1];
+ const acc=T.match(/\b(\d{9,25})\b/); if(acc)out.receiverAcc=acc[1];
+ // phone
+ const ph=T.match(/(\+?2(?:22|44)\s?\d[\d\s]{6,10})/); if(ph)out.phone=ph[1].replace(/\s/g,'');
+ // fees
+ const fee=T.match(/(taxa|fee|comiss[aã]o|frais|رسوم)\s*[:]?\s*([\d.,]+)/i); if(fee)out.fees=normAmount(fee[2]);
+ // status
+ if(/conclu[ií]d|success|completed|efectuad|efetuad|réussi|ناجح|تم/i.test(T))out.status='completed';
+ else if(/pendente|pending|em processamento|en attente|قيد/i.test(T))out.status='pending';
+ else if(/falha|failed|rejeit|échec|فشل/i.test(T))out.status='rejected';
+ else out.status='completed';
+ return out;
+}
+function normAmount(raw){
+ if(!raw)return 0; let s=raw.trim().replace(/\s/g,'');
+ // decide separators: last of , or . with 2 digits = decimal
+ const lastComma=s.lastIndexOf(','), lastDot=s.lastIndexOf('.');
+ if(lastComma>lastDot){ s=s.replace(/\./g,'').replace(',','.'); }
+ else { s=s.replace(/,/g,''); }
+ const v=parseFloat(s); return isNaN(v)?0:v;
+}
+function extractDate(T){
+ let m=T.match(/\b(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})\b/); if(m)return `${m[1]}-${pad(m[2])}-${pad(m[3])}`;
+ m=T.match(/\b(\d{1,2})[-/.](\d{1,2})[-/.](\d{2,4})\b/); if(m){let y=m[3].length===2?'20'+m[3]:m[3];return `${y}-${pad(m[2])}-${pad(m[1])}`;}
+ const months={janeiro:1,fevereiro:2,mar:3,abril:4,maio:5,junho:6,julho:7,agosto:8,setembro:9,outubro:10,novembro:11,dezembro:12,
+   janvier:1,fevrier:2,février:2,mars:3,avril:4,mai:5,juin:6,juillet:7,aout:8,août:8,septembre:9,octobre:10,novembre:11,decembre:12,décembre:12};
+ m=T.match(/\b(\d{1,2})\s+de?\s+([a-zà-ú]+)\s+de?\s+(\d{4})\b/i);
+ if(m){const mo=months[m[2].toLowerCase().slice(0,3)]||months[m[2].toLowerCase()];if(mo)return `${m[3]}-${pad(mo)}-${pad(m[1])}`;}
+ return null;
+}
+const pad=n=>String(n).padStart(2,'0');
+const clean=s=>s.replace(/\s+/g,' ').trim().replace(/[.:,;]+$/,'');
+
+/* ============ CLASSIFY + TAG + VALIDATE ============ */
+function classify(p,text){
+ const T=text.toLowerCase();
+ if(p.currency==='USDT'&&/compra|buy|شراء/.test(T))return 'usdt_buy';
+ if(p.currency==='USDT'&&/venda|sell|بيع/.test(T))return 'usdt_sell';
+ if(p.currency==='USDT')return 'usdt';
+ if(/recebid|received|entrada|cr[eé]dito|credit|received|وارد|استلام/.test(T))return 'incoming';
+ if(/enviad|transfer[eê]ncia|d[eé]bito|paid|pagamento|virement|صادر|تحويل/.test(T))return 'outgoing';
+ return 'transfer';
+}
+function makeTags(p,cls){
+ const tg=[];
+ if(p.currency)tg.push(p.currency);
+ if(p.bank)tg.push(p.bank);
+ if(cls==='incoming')tg.push('Incoming'); else if(cls==='outgoing')tg.push('Outgoing');
+ else if(cls.startsWith('usdt'))tg.push('USDT');
+ if(p.amount&&p.amount>=10000000&&p.currency==='AOA')tg.push('High Value');
+ if(p.amount&&p.amount>=100000&&p.currency==='MRU')tg.push('High Value');
+ if(p.status==='pending')tg.push('Pending'); else if(p.status==='completed')tg.push('Completed');
+ if(p.country==='AO')tg.push('Angola'); else if(p.country==='MR')tg.push('Mauritania');
+ return tg;
+}
+function validate(p,conf,dupHash,text){
+ const f=[]; let score=0;
+ if(!p.amount){f.push(['high','لم يُكتشف مبلغ في المستند']);score+=30;}
+ if(!p.ref&&!p.txid){f.push(['med','لا يوجد رقم مرجع/عملية']);score+=18;}
+ if(!p.date){f.push(['med','تعذّر استخراج التاريخ']);score+=12;}
+ else if(new Date(p.date)>new Date(Date.now()+86400000)){f.push(['high','التاريخ في المستقبل — مستحيل']);score+=35;}
+ if(conf<60){f.push(['med','جودة الصورة/القراءة منخفضة ('+Math.round(conf)+'%)']);score+=15;}
+ if(dupHash){f.push(['high','إيصال مكرر — بصمة مطابقة موجودة مسبقاً']);score+=45;}
+ if(!p.currency){f.push(['med','لم تُحدَّد العملة بوضوح']);score+=10;}
+ // edited-image heuristic: mixed decimal styles or double amounts
+ if((text.match(/[\d]{1,3}(?:[.,]\d{3})+/g)||[]).length>4){f.push(['med','عدة مبالغ متضاربة في النص']);score+=8;}
+ if(f.length===0)f.push(['ok','لم تُكتشف مشاكل — المستند سليم']);
+ score=Math.min(100,score);
+ const level=score>=45?'high':score>=20?'med':'low';
+ return {score,level,flags:f};
+}
+function localSummary(p,cls){
+ const dir={incoming:'تحويل وارد',outgoing:'تحويل صادر',usdt_buy:'شراء USDT',usdt_sell:'بيع USDT',usdt:'عملية USDT',transfer:'تحويل'}[cls]||'عملية';
+ const amt=p.amount?fmt(p.amount)+' '+(p.currency||''):'مبلغ غير محدد';
+ const via=p.bank?('عبر '+p.bank):'';
+ const dt=p.date?('بتاريخ '+p.date):'';
+ return `${dir} بقيمة ${amt} ${via} ${dt}${p.ref?(' — مرجع '+p.ref):''}.`.replace(/\s+/g,' ').trim();
+}
+
+/* ============ FORMATTING ============ */
+function fmt(n){if(n==null)return '—';return n.toLocaleString('en-US',{maximumFractionDigits:2})}
+function smartName(p){
+ const d=p.date||new Date().toISOString().slice(0,10);
+ const amt=p.amount?Math.round(p.amount):'NA';
+ return `${d}_${p.bank||'BANK'}_${amt}_${p.currency||'NA'}${p.ref?('_Ref'+p.ref):''}.pdf`.replace(/[^\w.\-]/g,'');
+}
+
+/* ============ STORAGE (IndexedDB) ============ */
+let DB;
+function openDB(){return new Promise((res,rej)=>{
+ const r=indexedDB.open('arkanArchive',2);
+ r.onupgradeneeded=e=>{const db=e.target.result;
+   if(!db.objectStoreNames.contains('docs'))db.createObjectStore('docs',{keyPath:'id'});
+   if(!db.objectStoreNames.contains('settlements'))db.createObjectStore('settlements',{keyPath:'id'});};
+ r.onsuccess=e=>{DB=e.target.result;res();}; r.onerror=e=>rej(e);
+});}
+function putSettle(s){return new Promise((res,rej)=>{const tx=DB.transaction('settlements','readwrite');tx.objectStore('settlements').put(s);tx.oncomplete=res;tx.onerror=rej;});}
+function allSettle(){return new Promise((res)=>{const out=[];const tx=DB.transaction('settlements','readonly');const cur=tx.objectStore('settlements').openCursor();
+ cur.onsuccess=e=>{const c=e.target.result;if(c){out.push(c.value);c.continue();}else res(out.sort((a,b)=>b.createdAt-a.createdAt));};});}
+function delSettle(id){return new Promise(res=>{const tx=DB.transaction('settlements','readwrite');tx.objectStore('settlements').delete(id);tx.oncomplete=res;});}
+function putDoc(d){return new Promise((res,rej)=>{const tx=DB.transaction('docs','readwrite');tx.objectStore('docs').put(d);tx.oncomplete=res;tx.onerror=rej;});}
+function allDocs(){return new Promise((res)=>{const out=[];const tx=DB.transaction('docs','readonly');const cur=tx.objectStore('docs').openCursor();
+ cur.onsuccess=e=>{const c=e.target.result;if(c){out.push(c.value);c.continue();}else res(out.sort((a,b)=>b.uploadedAt-a.uploadedAt));};});}
+function delDoc(id){return new Promise(res=>{const tx=DB.transaction('docs','readwrite');tx.objectStore('docs').delete(id);tx.oncomplete=res;});}
+
+async function sha256(buf){const h=await crypto.subtle.digest('SHA-256',buf);return [...new Uint8Array(h)].map(b=>b.toString(16).padStart(2,'0')).join('');}
+
+/* ============ OCR PIPELINE ============ */
+const SETTINGS={ocrArabic:localStorage.ocrArabic==='1',dedup:localStorage.dedup!=='0',aiEndpoint:localStorage.aiEndpoint||''};
+async function fileToImageCanvas(file){
+ if(file.type==='application/pdf'){
+   const buf=await file.arrayBuffer();
+   const pdf=await pdfjsLib.getDocument({data:buf}).promise;
+   const page=await pdf.getPage(1);
+   const vp=page.getViewport({scale:2});
+   const cv=document.createElement('canvas');cv.width=vp.width;cv.height=vp.height;
+   await page.render({canvasContext:cv.getContext('2d'),viewport:vp}).promise;
+   return cv;
+ }
+ return await blobToCanvas(file);
+}
+function blobToCanvas(blob){return new Promise(res=>{const img=new Image();img.onload=()=>{
+ const cv=document.createElement('canvas');const max=1600;let{width:w,height:h}=img;
+ if(w>max){h=h*max/w;w=max;} cv.width=w;cv.height=h;cv.getContext('2d').drawImage(img,0,0,w,h);res(cv);};
+ img.src=URL.createObjectURL(blob);});}
+function thumbOf(cv){const t=document.createElement('canvas');const W=560;t.width=W;t.height=cv.height*W/cv.width;
+ t.getContext('2d').drawImage(cv,0,0,t.width,t.height);return t.toDataURL('image/jpeg',.7);}
+
+let worker=null;
+async function getWorker(){
+ const langs='eng+por+fra'+(SETTINGS.ocrArabic?'+ara':'');
+ if(worker&&worker._langs===langs)return worker;
+ if(worker)await worker.terminate();
+ worker=await Tesseract.createWorker(langs);worker._langs=langs;return worker;
+}
+
+async function ingest(file){
+ const tid='t'+Date.now()+Math.random().toString(36).slice(2,6);
+ const toast=addToast(file.name,tid);
+ try{
+   setBar(tid,10,'حساب البصمة…');
+   const buf=await file.arrayBuffer();
+   const hash=await sha256(buf);
+   const existing=await allDocs();
+   const dup=existing.find(d=>d.hash===hash);
+   if(dup&&SETTINGS.dedup){setBar(tid,100,'⚠ مكرر — تم التجاهل');setTimeout(()=>rmToast(tid),2600);return;}
+   setBar(tid,28,'تحويل الصفحة…');
+   const cv=await fileToImageCanvas(file);
+   const thumb=thumbOf(cv);
+   setBar(tid,45,'قراءة OCR…');
+   const w=await getWorker();
+   const {data}=await w.recognize(cv);
+   const text=data.text||''; const conf=data.confidence||0;
+   setBar(tid,78,'تحليل ذكي…');
+   const p=parseReceipt(text);
+   const cls=classify(p,text);
+   const tags=makeTags(p,cls);
+   const fraud=validate(p,conf,!!dup,text);
+   const rec={id:tid+Date.now(),hash,fileName:file.name,smartName:smartName(p),mime:file.type,size:file.size,
+     uploadedAt:Date.now(),thumb,ocrText:text,ocrConfidence:Math.round(conf),parsed:p,classification:cls,
+     tags,country:p.country,fraud,status:p.status,aiSummary:localSummary(p,cls),blob:file};
+   await putDoc(rec);
+   // optional AI
+   if(SETTINGS.aiEndpoint){ enrichAI(rec).catch(()=>{}); }
+   setBar(tid,100,'✓ '+ (p.amount?fmt(p.amount)+' '+(p.currency||''):'تمت القراءة'));
+   setTimeout(()=>rmToast(tid),2200);
+   await refresh();
+ }catch(err){console.error(err);setBar(tid,100,'✗ فشل: '+err.message);setTimeout(()=>rmToast(tid),3500);}
+}
+
+async function enrichAI(rec){
+ const res=await fetch(SETTINGS.aiEndpoint,{method:'POST',headers:{'Content-Type':'application/json'},
+   body:JSON.stringify({text:rec.ocrText,parsed:rec.parsed,lang:LANG})});
+ if(!res.ok)return; const j=await res.json();
+ if(j.summary)rec.aiSummary=j.summary;
+ if(j.flags&&Array.isArray(j.flags))rec.fraud.flags.push(...j.flags.map(x=>['med',x]));
+ await putDoc(rec); await refresh();
+}
+
+/* ============ TOASTS ============ */
+function addToast(name,id){const el=document.createElement('div');el.className='toast';el.id=id;
+ el.innerHTML=`<div class="t-h"><svg class="spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${name}</span></div>
+   <div class="st" style="font-size:11.5px;color:var(--muted)">في الانتظار…</div><div class="bar"><i></i></div>`;
+ document.getElementById('toasts').appendChild(el);return el;}
+function setBar(id,pct,msg){const el=document.getElementById(id);if(!el)return;el.querySelector('.bar i').style.width=pct+'%';
+ if(msg)el.querySelector('.st').textContent=msg; if(pct>=100)el.querySelector('.t-h svg').classList.remove('spin');}
+function rmToast(id){const el=document.getElementById(id);if(el)el.remove();}
+
+/* ============ RENDER ============ */
+let CACHE=[]; let activeFilter='all'; let searchQ='';
+let SETTLES=[];
+async function refresh(){CACHE=await allDocs();SETTLES=await allSettle();renderKPIs();renderRecent();renderArchive();renderReports();renderSettlements();renderVault();}
+
+function renderKPIs(){
+ const today=new Date().toISOString().slice(0,10);
+ const todayN=CACHE.filter(d=>(d.parsed.date||new Date(d.uploadedAt).toISOString().slice(0,10))===today).length;
+ const pend=CACHE.filter(d=>d.status==='pending').length;
+ const done=CACHE.filter(d=>d.status==='completed').length;
+ const avg=CACHE.length?Math.round(CACHE.reduce((s,d)=>s+d.ocrConfidence,0)/CACHE.length):0;
+ const fraud=CACHE.filter(d=>d.fraud.level==='high').length;
+ const volByCur={};CACHE.forEach(d=>{if(d.parsed.amount&&d.parsed.currency)volByCur[d.parsed.currency]=(volByCur[d.parsed.currency]||0)+d.parsed.amount;});
+ const topCur=Object.entries(volByCur).sort((a,b)=>b[1]-a[1])[0];
+ const kpi=(cls,icn,lbl,val,foot)=>`<div class="card kpi ${cls}"><div class="glow"></div>
+   <div class="lbl">${ic(icn)}${lbl}</div><div class="val">${val}</div><div class="foot">${foot||''}</div></div>`;
+ document.getElementById('kpis').innerHTML=
+   kpi('g-gold','upload',t('k_today'),todayN,CACHE.length+' إجمالاً')+
+   kpi('g-am','clock',t('k_pending'),pend,'')+
+   kpi('g-em','check',t('k_done'),done,'')+
+   kpi('g-gold','spark',t('k_ocr'),avg+'<small>%</small>','متوسط الثقة')+
+   kpi('g-rd','alert',t('k_fraud'),fraud,fraud?'تحتاج مراجعة':'لا تنبيهات')+
+   kpi('g-gold','wallet',t('k_vol'),topCur?fmt(Math.round(topCur[1])):'0',topCur?topCur[0]:'');
+}
+function docCard(d){
+ const p=d.parsed;const dir=d.classification==='incoming'?'dir-in':d.classification==='outgoing'?'dir-out':'';
+ return `<div class="doc ${SEL.has(d.id)?'sel':''}" onclick="openDoc('${d.id}')">
+   <div class="thumb">${d.thumb?`<img src="${d.thumb}">`:`<span class="ph">${ic('doc')}</span>`}
+     <span class="selbox ${SEL.has(d.id)?'on':''}" onclick="event.stopPropagation();toggleSel('${d.id}')">${SEL.has(d.id)?ic('check'):''}</span>
+     <span class="risk ${d.fraud.level}">${d.fraud.level==='high'?'خطر':d.fraud.level==='med'?'مراجعة':'سليم'} ${d.fraud.score}</span></div>
+   <div class="body">
+     <div class="amt">${fmt(p.amount)}<span class="cur">${p.currency||''}</span></div>
+     <div class="meta"><span>${p.bank||'—'}</span><span>${p.date||new Date(d.uploadedAt).toLocaleDateString()}</span></div>
+     <div class="tags">${d.tags.slice(0,4).map(x=>`<span class="tag ${BANKS.some(b=>b.code===x)?'bank':''} ${x==='Incoming'?'dir-in':x==='Outgoing'?'dir-out':''}">${x}</span>`).join('')}</div>
+   </div></div>`;
+}
+function emptyBlock(){return `<div class="empty" style="grid-column:1/-1">${ic('folder')}<b>${t('empty_docs')}</b><p>${t('empty_sub')}</p></div>`;}
+function renderRecent(){const el=document.getElementById('recentDocs');const live=CACHE.filter(d=>!d.archived);
+ el.innerHTML=live.length?live.slice(0,8).map(docCard).join(''):emptyBlock();}
+function renderArchive(){
+ renderFilters();
+ let list=CACHE.filter(d=>!d.archived);
+ if(activeFilter!=='all')list=list.filter(d=>d.tags.includes(activeFilter)||d.parsed.currency===activeFilter||d.parsed.bank===activeFilter);
+ if(searchQ)list=smartSearch(list,searchQ);
+ document.getElementById('allDocs').innerHTML=list.length?list.map(docCard).join(''):emptyBlock();
+ document.getElementById('archiveCount').textContent=list.length+' / '+CACHE.length;
+}
+function renderFilters(){
+ const cur=[...new Set(CACHE.map(d=>d.parsed.currency).filter(Boolean))];
+ const bnk=[...new Set(CACHE.map(d=>d.parsed.bank).filter(Boolean))];
+ const chips=['all',...cur,...bnk,'Incoming','Outgoing','High Value','Pending'];
+ document.getElementById('filters').innerHTML=chips.map(c=>
+   `<span class="chip ${activeFilter===c?'on':''}" onclick="activeFilter='${c}';renderArchive()">${c==='all'?'الكل':c}</span>`).join('');
+}
+function renderReports(){
+ let list=CACHE.slice();
+ document.getElementById('reportRows').innerHTML=list.map(d=>{const p=d.parsed;
+   return `<tr onclick="openDoc('${d.id}')" style="cursor:pointer">
+     <td>${p.date||'—'}</td><td>${p.bank||'—'}</td><td class="money">${fmt(p.amount)}</td>
+     <td>${p.currency||'—'}</td><td>${clsLabel(d.classification)}</td><td>${p.ref||'—'}</td>
+     <td><span class="pill ${d.status}">${d.status}</span></td></tr>`;}).join('')
+   ||`<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:30px">${t('empty_docs')}</td></tr>`;
+ // report filters (currency chips reused)
+ const cur=[...new Set(CACHE.map(d=>d.parsed.currency).filter(Boolean))];
+ document.getElementById('reportFilters').innerHTML='<span class="chip on">الكل</span>'+
+   cur.map(c=>`<span class="chip">${c}</span>`).join('');
+}
+function clsLabel(c){return {incoming:'وارد',outgoing:'صادر',usdt_buy:'شراء USDT',usdt_sell:'بيع USDT',usdt:'USDT',transfer:'تحويل'}[c]||c;}
+
+/* ============ SEARCH (Google-like + AI-lite) ============ */
+function smartSearch(list,q){
+ const Q=q.toLowerCase().trim();
+ // AI-lite intents
+ const above=Q.match(/(?:above|acima|plus de|أكثر من|فوق|>)\s*([\d.,]+)\s*(aoa|mru|usdt|eur|usd|cny|aed)?/i);
+ if(above){const v=normAmount(above[1]);const cur=above[2]&&above[2].toUpperCase();
+   return list.filter(d=>d.parsed.amount>=v&&(!cur||d.parsed.currency===cur));}
+ if(/duplicat|مكرر|dupl/i.test(Q)){const seen={};return list.filter(d=>{if(seen[d.hash])return true;seen[d.hash]=1;return false;});}
+ if(/without confirm|sem confirma|بدون تأكيد|pending|قيد/i.test(Q))return list.filter(d=>d.status==='pending');
+ if(/usdt/i.test(Q)&&Q.length<8)return list.filter(d=>d.parsed.currency==='USDT');
+ if(/this month|este m[eê]s|هذا الشهر|ce mois/i.test(Q)){const m=new Date().toISOString().slice(0,7);
+   return list.filter(d=>(d.parsed.date||'').startsWith(m));}
+ // full-text
+ const toks=Q.split(/\s+/).filter(Boolean);
+ return list.filter(d=>{
+   const hay=[d.ocrText,JSON.stringify(d.parsed),d.tags.join(' '),d.fileName].join(' ').toLowerCase();
+   return toks.every(tk=>hay.includes(tk));
+ });
+}
+
+/* ============ DRAWER ============ */
+async function openDoc(id){
+ const d=CACHE.find(x=>x.id===id);if(!d)return;const p=d.parsed;
+ const kv=(k,v,copy)=>v?`<dt>${k}</dt><dd class="${copy?'copy':''}" ${copy?`onclick="navigator.clipboard.writeText('${String(v).replace(/'/g,"")}');toast('نُسخ')"`:''}>${v}</dd>`:'';
+ let previewHtml=d.thumb?`<img class="preview" src="${d.thumb}">`:'';
+ const flags=d.fraud.flags.map(f=>`<div class="flag ${f[0]}"><span class="dot"></span><span>${f[1]}</span></div>`).join('');
+ document.getElementById('drawer').innerHTML=`
+   <div class="dh">
+     <div><div class="amt">${fmt(p.amount)} <span style="color:var(--gold);font-size:15px">${p.currency||''}</span></div>
+       <div style="font-size:12px;color:var(--muted)">${clsLabel(d.classification)} · ${p.bank||'—'}</div></div>
+     <div class="grow"></div>
+     <button class="iconbtn" onclick="closeDrawer()">✕</button>
+   </div>
+   <div class="db">
+     ${previewHtml}
+     <div class="ai-box"><div class="h">${ic('spark')}${t('ocr_summary')}</div>${d.aiSummary}</div>
+     <div class="ai-box" style="background:${d.fraud.level==='high'?'rgba(248,113,113,.08)':'var(--panel)'}">
+       <div class="h" style="color:${d.fraud.level==='high'?'var(--red)':d.fraud.level==='med'?'var(--amber)':'var(--emerald)'}">
+         ${ic('alert')}${t('flags_h')} · ${t('fraud_score')} ${d.fraud.score}/100</div>
+       <div class="flags">${flags}</div>
+     </div>
+     <dl class="kv">
+       ${kv('البنك',p.bank)}${kv('الدولة',p.country==='AO'?'أنغولا':p.country==='MR'?'موريتانيا':p.country)}
+       ${kv('المبلغ',fmt(p.amount)+' '+(p.currency||''))}${kv('التاريخ',p.date)}${kv('الوقت',p.time)}
+       ${kv('المرجع',p.ref,1)}${kv('رقم العملية',p.txid,1)}
+       ${kv('المرسِل',p.sender)}${kv('المستفيد',p.receiver)}
+       ${kv('الحساب',p.receiverAcc,1)}${kv('IBAN',p.iban,1)}${kv('SWIFT',p.swift,1)}
+       ${kv('الهاتف',p.phone,1)}${kv('الرسوم',p.fees!=null?fmt(p.fees):null)}
+       ${kv('دقة القراءة',d.ocrConfidence+'%')}${kv('الاسم الذكي',d.smartName,1)}
+       ${kv('بصمة SHA-256',d.hash.slice(0,20)+'…',1)}
+     </dl>
+     <div class="section-h" style="margin:18px 0 8px"><h2 style="font-size:13px">${t('rawtext')}</h2><div class="rule"></div></div>
+     <div class="ocr-raw">${(d.ocrText||'').slice(0,2000)||'—'}</div>
+     <div style="display:flex;gap:10px;margin-top:16px">
+       <button class="btn btn-ghost" onclick="downloadOriginal('${d.id}')">${ic('download')}<span>الأصل</span></button>
+       <button class="btn btn-ghost" onclick="toggleArchive('${d.id}')">${ic('layers')}<span>${d.archived?'استرجاع':'أرشفة'}</span></button>
+       <button class="btn btn-ghost" style="color:var(--red)" onclick="removeDoc('${d.id}')">حذف</button>
+     </div>
+   </div>`;
+ document.getElementById('drawer').classList.add('on');
+ document.getElementById('scrim').classList.add('on');
+}
+function closeDrawer(){document.getElementById('drawer').classList.remove('on');document.getElementById('scrim').classList.remove('on');}
+async function removeDoc(id){await delDoc(id);closeDrawer();await refresh();toast('تم الحذف');}
+function downloadOriginal(id){const d=CACHE.find(x=>x.id===id);if(!d)return;const url=URL.createObjectURL(d.blob);
+ const a=document.createElement('a');a.href=url;a.download=d.smartName||d.fileName;a.click();}
+
+/* ============ EXPORT ============ */
+function exportData(fmt2){
+ const rows=CACHE.map(d=>({date:d.parsed.date,bank:d.parsed.bank,amount:d.parsed.amount,currency:d.parsed.currency,
+   type:d.classification,ref:d.parsed.ref,sender:d.parsed.sender,receiver:d.parsed.receiver,status:d.status,risk:d.fraud.score}));
+ let blob;
+ if(fmt2==='json')blob=new Blob([JSON.stringify(rows,null,2)],{type:'application/json'});
+ else{const head=Object.keys(rows[0]||{date:''}).join(',');
+   const body=rows.map(r=>Object.values(r).map(v=>`"${v??''}"`).join(',')).join('\n');
+   blob=new Blob([head+'\n'+body],{type:'text/csv'});}
+ const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='arkan_report.'+fmt2;a.click();
+}
+
+/* ============ SETTINGS ============ */
+function toggleSetting(key,el){SETTINGS[key]=!SETTINGS[key];el.classList.toggle('on');localStorage[key]=SETTINGS[key]?'1':'0';}
+async function wipeAll(){if(!confirm('مسح كل المستندات نهائياً من هذا المتصفح؟'))return;
+ const ds=await allDocs();for(const d of ds)await delDoc(d.id);await refresh();toast('تم المسح');}
+function toast(msg){const id='q'+Date.now();const el=document.createElement('div');el.className='toast';el.id=id;
+ el.innerHTML=`<div class="t-h">${ic('check')}<span>${msg}</span></div>`;document.getElementById('toasts').appendChild(el);
+ setTimeout(()=>rmToast(id),1800);}
+
+/* ============ SELECTION ============ */
+const SEL=new Set();
+function toggleSel(id){SEL.has(id)?SEL.delete(id):SEL.add(id);syncSel();renderArchive();renderRecent();}
+function clearSel(){SEL.clear();syncSel();renderArchive();renderRecent();}
+function syncSel(){const b=document.getElementById('selbar');document.getElementById('selCount').textContent=SEL.size;
+ b.classList.toggle('on',SEL.size>0);}
+
+/* ============ SETTLEMENT ENGINE ============ */
+const STEP_LABELS={usdt_buy:'شراء USDT',usdt_sell:'بيع USDT',usdt:'تحويل USDT',
+ incoming:'تحصيل وارد',outgoing:'دفع صادر',transfer:'تحويل'};
+const STAGES=[['upload','رفع','doc'],['ocr','قراءة','search'],['verify','تحقق','check'],
+ ['approve','اعتماد','check'],['pay','دفع','wallet'],['done','مكتمل','check']];
+
+function settleLegs(docIds){
+ // net per currency: outgoing/buy = negative cost, incoming/sell = positive
+ const net={};
+ docIds.forEach(id=>{const d=CACHE.find(x=>x.id===id);if(!d||!d.parsed.amount||!d.parsed.currency)return;
+   const c=d.parsed.currency;const sign=(d.classification==='incoming'||d.classification==='usdt_sell')?1:-1;
+   net[c]=(net[c]||0)+sign*d.parsed.amount;});
+ return net;
+}
+function legHtml(net){
+ const keys=Object.keys(net);if(!keys.length)return '<span style="color:var(--muted)">لا مبالغ مقروءة</span>';
+ return keys.map((c,i)=>`${i?'<span class="legarrow">→</span>':''}<span class="leg ${net[c]<0?'neg':'pos'}">${net[c]<0?'':'+'}${fmt(Math.round(net[c]))} ${c}</span>`).join(' ');
+}
+
+function settleCard(s){const net=settleLegs(s.docIds);const stageIdx=STAGES.findIndex(x=>x[0]===s.stage);
+   return `<div class="scard" onclick="openSettle('${s.id}')">
+     <div style="display:flex;align-items:center;gap:8px"><span class="code">${s.code}</span>
+       <span class="grow" style="flex:1"></span>${s.archived?'<span class="tag">مؤرشف</span>':''}<span class="pill ${s.status}">${s.status}</span></div>
+     <h3>${s.title}</h3>
+     <div class="legs">${legHtml(net)}</div>
+     <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-top:8px">
+       <span>${s.docIds.length} مستند</span>
+       <span>المرحلة: ${STAGES[Math.max(0,stageIdx)][1]}</span>
+       ${s.profit!=null?`<span class="profit ${s.profit>=0?'pos':'neg'}">ربح ${fmt(s.profit)} ${s.profitCur||''}</span>`:''}
+     </div></div>`;}
+function renderSettlements(){
+ const el=document.getElementById('settleList');if(!el)return;
+ const list=SETTLES.filter(s=>!s.archived);
+ if(!list.length){el.innerHTML=`<div class="empty" style="grid-column:1/-1"><span>${ic('link')}</span>
+   <b>${t('nav_settle')}</b><p>لا تسويات بعد — اختر مستندات من الأرشيف ثم «ربط كتسوية».</p></div>`;return;}
+ el.innerHTML=list.map(settleCard).join('');
+}
+
+/* ---- builder ---- */
+let builderPick=[];
+function openBuilder(fromSel){
+ builderPick = fromSel ? [...SEL] : [];
+ renderBuilder();
+ document.getElementById('drawer').classList.add('on');
+ document.getElementById('scrim').classList.add('on');
+}
+function renderBuilder(){
+ const rows=CACHE.map(d=>{const idx=builderPick.indexOf(d.id);const picked=idx>=0;const p=d.parsed;
+   return `<div class="builder-doc ${picked?'picked':''}" onclick="pickBuilder('${d.id}')">
+     ${picked?`<div class="ord">${idx+1}</div>`:''}
+     ${d.thumb?`<img src="${d.thumb}">`:`<div style="width:44px;height:44px;border-radius:8px;background:#0a0b0d;display:grid;place-items:center">${ic('doc')}</div>`}
+     <div class="info"><b>${fmt(p.amount)} ${p.currency||''}</b>
+       <span>${p.bank||'—'} · ${clsLabel(d.classification)} · ${p.date||''}</span></div></div>`;}).join('')
+   ||`<div class="empty">${ic('folder')}<b>لا مستندات</b><p>ارفع إيصالات أولاً</p></div>`;
+ const net=settleLegs(builderPick);
+ document.getElementById('drawer').innerHTML=`
+   <div class="dh"><div><div class="amt" style="font-size:18px">تسوية جديدة</div>
+     <div style="font-size:12px;color:var(--muted)">اختر المستندات بالترتيب</div></div>
+     <div class="grow"></div><button class="iconbtn" onclick="closeDrawer()">✕</button></div>
+   <div class="db">
+     <input class="inp" id="settleTitle" style="width:100%;margin-bottom:8px" placeholder="عنوان التسوية (مثال: تسوية عميل أنغولا #12)">
+     <div style="display:flex;gap:10px;margin-bottom:14px">
+       <input class="inp" id="settleProfit" style="flex:1" type="number" placeholder="الربح (اختياري)">
+       <select class="inp" id="settleProfitCur">${['MRU','AOA','USDT','USD','EUR'].map(c=>`<option>${c}</option>`).join('')}</select>
+     </div>
+     ${builderPick.length?`<div class="ai-box"><div class="h">${ic('link')}تدفّق العملات</div><div class="legs">${legHtml(net)}</div></div>`:''}
+     <div class="section-h" style="margin:14px 0 10px"><h2 style="font-size:13px">المستندات (${builderPick.length} محدّد)</h2><div class="rule"></div></div>
+     ${rows}
+     <button class="btn btn-gold" style="width:100%;justify-content:center;margin-top:16px" onclick="saveSettle()"
+       ${builderPick.length<1?'disabled style="opacity:.5;width:100%;justify-content:center;margin-top:16px"':''}>${ic('check')}<span>حفظ التسوية</span></button>
+   </div>`;
+}
+function pickBuilder(id){const i=builderPick.indexOf(id);if(i>=0)builderPick.splice(i,1);else builderPick.push(id);renderBuilder();}
+async function saveSettle(){
+ if(!builderPick.length)return;
+ const title=document.getElementById('settleTitle').value.trim()||'تسوية';
+ const profitRaw=document.getElementById('settleProfit').value;
+ const s={id:'s'+Date.now(),code:'ARK-'+String(SETTLES.length+1).padStart(4,'0'),title,
+   docIds:[...builderPick],steps:builderPick.map((id,i)=>{const d=CACHE.find(x=>x.id===id);
+     return {docId:id,order:i+1,label:STEP_LABELS[d.classification]||'خطوة'};}),
+   stage:'verify',status:'pending',
+   profit:profitRaw?parseFloat(profitRaw):null,profitCur:document.getElementById('settleProfitCur').value,
+   createdAt:Date.now()};
+ await putSettle(s);SEL.clear();syncSel();closeDrawer();await refresh();go('settlements');toast('تم إنشاء التسوية');
+}
+
+/* ---- settlement detail ---- */
+async function openSettle(id){
+ const s=SETTLES.find(x=>x.id===id);if(!s)return;const net=settleLegs(s.docIds);
+ const stageIdx=STAGES.findIndex(x=>x[0]===s.stage);
+ const tl=STAGES.map((st,i)=>`<div class="st ${i<stageIdx?'done':i===stageIdx?'active':''}" onclick="setStage('${s.id}','${st[0]}')">
+   <div class="node">${i<=stageIdx?ic(st[2]):(i+1)}</div><span>${st[1]}</span></div>`).join('');
+ const docs=s.docIds.map((id2,i)=>{const d=CACHE.find(x=>x.id===id2);if(!d)return '';const p=d.parsed;
+   return `<div class="builder-doc" onclick="openDoc('${id2}')"><div class="ord">${i+1}</div>
+     ${d.thumb?`<img src="${d.thumb}">`:''}
+     <div class="info"><b>${fmt(p.amount)} ${p.currency||''}</b><span>${s.steps[i]?s.steps[i].label:''} · ${p.bank||''} · ${p.date||''}</span></div></div>`;}).join('');
+ document.getElementById('drawer').innerHTML=`
+   <div class="dh"><div><span class="code" style="color:var(--gold);font-family:ui-monospace">${s.code}</span>
+     <div class="amt" style="font-size:18px">${s.title}</div></div><div class="grow"></div>
+     <button class="iconbtn" onclick="closeDrawer()">✕</button></div>
+   <div class="db">
+     <div class="tl">${tl}</div>
+     <div class="ai-box"><div class="h">${ic('link')}تدفّق العملات</div>
+       <div class="legs">${legHtml(net)}</div>
+       ${s.profit!=null?`<div style="margin-top:8px">الربح: <span class="profit ${s.profit>=0?'pos':'neg'}">${fmt(s.profit)} ${s.profitCur}</span></div>`:''}</div>
+     <div style="display:flex;gap:9px;margin:14px 0">
+       <select class="inp" style="flex:1" id="stStatus" onchange="setSStatus('${s.id}',this.value)">
+         ${['pending','completed','rejected'].map(x=>`<option ${s.status===x?'selected':''}>${x}</option>`).join('')}</select>
+     </div>
+     <div class="section-h" style="margin:8px 0 10px"><h2 style="font-size:13px">المستندات المرتبطة</h2><div class="rule"></div></div>
+     ${docs}
+     <div style="display:flex;gap:10px;margin-top:16px">
+       <button class="btn btn-ghost" onclick="toggleArchiveSettle('${s.id}')">${ic('layers')}<span>${s.archived?'استرجاع':'أرشفة'}</span></button>
+       <button class="btn btn-ghost" style="color:var(--red)" onclick="rmSettle('${s.id}')">حذف التسوية</button>
+     </div>
+   </div>`;
+ document.getElementById('drawer').classList.add('on');document.getElementById('scrim').classList.add('on');
+}
+async function setStage(id,stage){const s=SETTLES.find(x=>x.id===id);if(!s)return;s.stage=stage;
+ if(stage==='done'){s.status='completed';}await putSettle(s);await refresh();openSettle(id);}
+async function setSStatus(id,v){const s=SETTLES.find(x=>x.id===id);if(!s)return;s.status=v;await putSettle(s);await refresh();}
+async function rmSettle(id){if(!confirm('حذف هذه التسوية؟'))return;await delSettle(id);closeDrawer();await refresh();toast('تم الحذف');}
+
+/* ============ ARCHIVE VAULT ============ */
+let vaultQ='';
+function ymKey(ts){const d=new Date(ts);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');}
+async function toggleArchive(id){const d=CACHE.find(x=>x.id===id);if(!d)return;
+ d.archived=!d.archived;d.archivedAt=d.archived?Date.now():null;await putDoc(d);closeDrawer();await refresh();
+ toast(d.archived?'تمت الأرشفة':'تم الاسترجاع');}
+async function toggleArchiveSettle(id){const s=SETTLES.find(x=>x.id===id);if(!s)return;
+ s.archived=!s.archived;s.archivedAt=s.archived?Date.now():null;await putSettle(s);closeDrawer();await refresh();
+ toast(s.archived?'تمت الأرشفة':'تم الاسترجاع');}
+function vaultMatch(d){if(!vaultQ)return true;const q=vaultQ.toLowerCase();
+ return [d.ocrText,JSON.stringify(d.parsed),(d.tags||[]).join(' '),d.fileName,d.title,d.code].join(' ').toLowerCase().includes(q);}
+function renderVault(){
+ const el=document.getElementById('vaultBody');if(!el)return;
+ const docs=CACHE.filter(d=>d.archived&&vaultMatch(d));
+ const setts=SETTLES.filter(s=>s.archived&&vaultMatch(s));
+ if(!docs.length&&!setts.length){
+   el.innerHTML=`<div class="empty">${ic('layers')}<b>الأرشيف فارغ</b>
+     <p>افتح أي مستند أو تسوية مكتملة واضغط «أرشفة» لحفظها هنا، مرتّبة شهرياً وبعيداً عن قائمة العمل.</p></div>`;return;}
+ const groups={};
+ docs.forEach(d=>{const k=ymKey(d.archivedAt||d.uploadedAt);(groups[k]=groups[k]||{docs:[],setts:[]}).docs.push(d);});
+ setts.forEach(s=>{const k=ymKey(s.archivedAt||s.createdAt);(groups[k]=groups[k]||{docs:[],setts:[]}).setts.push(s);});
+ const keys=Object.keys(groups).sort().reverse();
+ el.innerHTML=keys.map(k=>{const g=groups[k];
+   const label=new Date(k+'-01').toLocaleDateString(LANG==='ar'?'ar':LANG,{year:'numeric',month:'long'});
+   // month totals per currency
+   const tot={};g.docs.forEach(d=>{const p=d.parsed;if(p.amount&&p.currency)tot[p.currency]=(tot[p.currency]||0)+p.amount;});
+   const totTxt=Object.entries(tot).map(([c,v])=>`${fmt(Math.round(v))} ${c}`).join(' · ');
+   return `<div class="section-h"><h2>${label}</h2><div class="rule"></div>
+     <span class="cnt">${g.docs.length} مستند · ${g.setts.length} تسوية${totTxt?' · '+totTxt:''}</span>
+     <button class="btn btn-ghost" style="padding:7px 13px" onclick="event.stopPropagation();exportMonth('${k}')">${ic('download')}<span>تصدير الشهر</span></button></div>
+   ${g.docs.length?`<div class="grid docs">${g.docs.map(docCard).join('')}</div>`:''}
+   ${g.setts.length?`<div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(340px,1fr));margin-top:12px">${g.setts.map(settleCard).join('')}</div>`:''}`;
+ }).join('');
+}
+function exportMonth(k){
+ const docs=CACHE.filter(d=>d.archived&&ymKey(d.archivedAt||d.uploadedAt)===k);
+ const rows=docs.map(d=>({date:d.parsed.date,bank:d.parsed.bank,amount:d.parsed.amount,currency:d.parsed.currency,
+   type:d.classification,ref:d.parsed.ref,sender:d.parsed.sender,receiver:d.parsed.receiver,status:d.status,risk:d.fraud.score}));
+ if(!rows.length){toast('لا مستندات في هذا الشهر');return;}
+ const head=Object.keys(rows[0]).join(',');
+ const body=rows.map(r=>Object.values(r).map(v=>`"${v??''}"`).join(',')).join('\n');
+ const blob=new Blob([head+'\n'+body],{type:'text/csv'});
+ const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='arkan_archive_'+k+'.csv';a.click();
+}
+
+/* ============ NAV / THEME / EVENTS ============ */
+function go(v){document.querySelectorAll('.nav a').forEach(a=>a.classList.toggle('on',a.dataset.v===v));
+ document.querySelectorAll('.view').forEach(s=>s.classList.remove('on'));
+ document.getElementById('v-'+v).classList.add('on');
+ document.getElementById('viewTitle').textContent=t('nav_'+({dash:'dash',archive:'archive',vault:'vault',settlements:'settle',reports:'reports',settings:'settings'}[v]));
+ document.getElementById('side').classList.remove('open');window.scrollTo(0,0);}
+document.getElementById('nav').addEventListener('click',e=>{const a=e.target.closest('a');if(a)go(a.dataset.v);});
+document.getElementById('vaultSearch').addEventListener('input',e=>{vaultQ=e.target.value.trim();renderVault();});
+
+document.getElementById('themeBtn').addEventListener('click',()=>{
+ const cur=document.documentElement.getAttribute('data-theme')==='light'?'':'light';
+ if(cur)document.documentElement.setAttribute('data-theme','light');else document.documentElement.removeAttribute('data-theme');
+ localStorage.theme=cur;document.getElementById('themeBtn').innerHTML=ic(cur?'sun':'moon');});
+if(localStorage.theme==='light'){document.documentElement.setAttribute('data-theme','light');document.getElementById('themeBtn').innerHTML=ic('sun');}
+
+document.getElementById('langSel').addEventListener('change',e=>{LANG=e.target.value;localStorage.arkLang=LANG;applyI18n();refresh();});
+
+// file input + dropzone
+document.getElementById('fileInput').addEventListener('change',e=>{[...e.target.files].forEach(ingest);e.target.value='';});
+const dz=document.getElementById('dropzone');
+dz.addEventListener('click',()=>document.getElementById('fileInput').click());
+['dragover','dragenter'].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();dz.classList.add('drag');}));
+['dragleave','drop'].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();dz.classList.remove('drag');}));
+dz.addEventListener('drop',e=>{[...e.dataTransfer.files].forEach(ingest);});
+window.addEventListener('dragover',e=>e.preventDefault());
+window.addEventListener('drop',e=>e.preventDefault());
+
+// search
+const gs=document.getElementById('globalSearch');
+gs.addEventListener('input',e=>{searchQ=e.target.value;if(searchQ&&!document.getElementById('v-archive').classList.contains('on'))go('archive');renderArchive();});
+document.addEventListener('keydown',e=>{if(e.key==='/'&&document.activeElement!==gs){e.preventDefault();gs.focus();}if(e.key==='Escape')closeDrawer();});
+
+// restore setting switches
+if(SETTINGS.ocrArabic)document.getElementById('sw-ar').classList.add('on');
+if(!SETTINGS.dedup)document.getElementById('sw-dedup').classList.remove('on');
+document.getElementById('aiEndpoint').value=SETTINGS.aiEndpoint;
+document.getElementById('aiEndpoint').addEventListener('change',e=>{SETTINGS.aiEndpoint=e.target.value.trim();localStorage.aiEndpoint=SETTINGS.aiEndpoint;});
+
+/* ============ BOOT ============ */
+document.querySelectorAll('[data-ic]').forEach(e=>e.innerHTML=ic(e.dataset.ic));
+(async()=>{applyI18n();await openDB();await refresh();})();
+</script>
+</body>
+</html>
