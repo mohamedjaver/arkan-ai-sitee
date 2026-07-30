@@ -590,14 +590,8 @@ function parseReceipt(text){
  for(const b of BANKS){if(b.rx.test(T)){out.bank=b.code;out.country=b.country;break;}}
  // currency
  for(const c of CURRENCIES){if(c.rx.test(T)){out.currency=c.code;break;}}
- // amount — capture largest money-looking token near amount keywords
- const amtKw=/(montante|valor|amount|مبلغ|montant|total|quantia)[^\d]{0,18}([\d.,\s]{3,})/i;
- let m=T.match(amtKw); let cand=[];
- if(m)cand.push(m[2]);
- (T.match(/[\d]{1,3}(?:[.,\s]\d{3})+(?:[.,]\d{2})?/g)||[]).forEach(x=>cand.push(x));
- let best=0;
- cand.forEach(raw=>{const v=normAmount(raw);if(v>best)best=v;});
- if(best>0)out.amount=best;
+ // amount — strip phones / IBAN / long account & ref numbers, THEN score candidates
+ out.amount=extractAmount(T);
  // date
  out.date=extractDate(T);
  // time
@@ -633,6 +627,40 @@ function normAmount(raw){
  if(lastComma>lastDot){ s=s.replace(/\./g,'').replace(',','.'); }
  else { s=s.replace(/,/g,''); }
  const v=parseFloat(s); return isNaN(v)?0:v;
+}
+// Robust money extraction: remove non-amount digit blobs, then score candidates.
+function extractAmount(text){
+ // 1) strip things that are NEVER amounts but look numeric
+ let clean=text
+   .replace(/[A-Z]{2}\d{2}[\d\s]{14,}/gi,' ')                 // IBAN (AO06 0040…, MR13 …)
+   .replace(/\+?\s?2(?:22|44)[\s.\-]?\d[\d\s.\-]{6,12}/g,' ') // Mauritania/Angola phone (+222 / +244)
+   .replace(/\b\d{9,}\b/g,' ');                               // long bare runs: account, CHAVE, PIN, ref, txid
+ const NEG=/(capital social|\bnif\b|\biban\b|\bconta\b|account|\bchave\b|\bpin\b|refer[eê]ncia|comprovativo|telefone|telem[oó]vel|\bphone\b|\bid\b|autoriza|c[oó]digo)/i;
+ const POS=/(montante|valor|quantia|import[aâ]ncia|\btotal\b|amount|montant|المبلغ|مبلغ|debitad|creditad|transferid|pago|enviado|recebido)/i;
+ const CUR=/(Kz|AKZ|AOA|MRU|UM|USDT|EUR|USD|CNY|AED|€|\$|¥)/i;
+ // money token: grouped thousands (1.234.567,89 / 1,234,567.89) OR simple decimal (12345,67 / 12345.67)
+ const tokRx=/\d{1,3}(?:[.\s]\d{3})+(?:,\d{1,2})?|\d{1,3}(?:,\d{3})+(?:\.\d{1,2})?|\d+[.,]\d{2}/g;
+ let best=null,bestScore=-1e9;
+ clean.split(/[\n\r]/).forEach(line=>{
+   const posHit=POS.test(line), negHit=NEG.test(line);
+   let m; tokRx.lastIndex=0;
+   while((m=tokRx.exec(line))!==null){
+     const raw=m[0], val=normAmount(raw);
+     if(!val||val<=0) continue;
+     const intLen=String(Math.floor(val)).length;
+     if(intLen>11) continue;                                  // reject merged/garbage (e.g. phone read as 12 digits)
+     let score=0;
+     if(posHit) score+=50;
+     if(negHit) score-=70;
+     const near=line.slice(Math.max(0,m.index-6),m.index+raw.length+6);
+     if(CUR.test(near)) score+=25;
+     if(/[.,]\d{2}$/.test(raw)) score+=22;                    // has cents
+     if(/[.\s,]/.test(raw)) score+=8;                         // grouped
+     if(intLen>=10) score-=30; else score+=Math.min(9,intLen);
+     if(score>bestScore){bestScore=score;best=val;}
+   }
+ });
+ return best;
 }
 function extractDate(T){
  let m=T.match(/\b(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})\b/); if(m)return `${m[1]}-${pad(m[2])}-${pad(m[3])}`;
