@@ -220,7 +220,7 @@ document.getElementById('amt').addEventListener('input',function(){
   updateEstimate();
 });
 function pick(b){document.querySelectorAll('.ccy button').forEach(x=>x.classList.remove('on'));b.classList.add('on');ccy=b.dataset.c;updateEstimate();}
-function send(){
+async function send(){
   const comp=document.getElementById('comp').value.trim();
   const amt=document.getElementById('amt').value.trim();
   const dest=document.getElementById('dest').value.trim();
@@ -242,6 +242,7 @@ Finalidade: ${purp}
 Contacto: ${who||'—'}
 ———————————
 Solicito cotação para pagamento internacional.`;
+  try{ if(window.ARKAN){ await ARKAN.ready; if(ARKAN.firebaseOK){ const{addDoc,collection,serverTimestamp}=ARKAN.fb; await addDoc(collection(ARKAN.db,'payment_requests'),{ref,company:comp,amount:amt,currency:ccy,destination:dest||'',purpose:purp,contact:who||'',status:'pending',createdAt:serverTimestamp()}); if(ARKAN.toast)ARKAN.toast('تم تسجيل الطلب ✓ '+ref);} } }catch(e){ console.warn('request save failed',e); }
   window.open('https://wa.me/22236295050?text='+encodeURIComponent(msg),'_blank');
 }
 </script>
