@@ -116,3 +116,14 @@ h1,h2,h3,h4,.h1,.h2,.h3{ font-family:var(--ark-font); line-height:1.15; }
 @media (max-width:600px){
   .kpis{ grid-template-columns:repeat(2,1fr)!important; }
 }
+
+/* ============================================================
+   Fix "page appears small" — horizontal overflow was forcing
+   Safari to shrink-to-fit (admin/settlement/etc.). overflow-x:clip
+   stops it WITHOUT breaking sticky/fixed navs (unlike hidden).
+   ============================================================ */
+html,body{ max-width:100%; overflow-x:clip; }
+
+/* settlement + archive primary CTA → signature violet→coral gradient */
+.btn-gold{ background:var(--ark-grad)!important; color:#fff!important; box-shadow:0 10px 26px -10px rgba(108,92,231,.5); }
+.btn-gold:hover{ filter:brightness(1.05); }
