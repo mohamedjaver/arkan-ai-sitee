@@ -478,5 +478,9 @@ paintPickers();
 const saved = JSON.parse(localStorage.getItem('arkan_session')||'null');
 if (saved?.phone && saved?.pin) login(saved.phone, saved.pin, true);
 </script>
+<script type="module">
+  import * as ARKAN from './arkan-core.js';
+  window.ARKAN = ARKAN;
+</script>
 </body>
 </html>
