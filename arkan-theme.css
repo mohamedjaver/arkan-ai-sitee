@@ -1,0 +1,85 @@
+/* ============================================================
+   ARKAN × BAI — Unified Design System  (arkan-theme.css)
+   Merges ARKAN's premium dark fintech depth with BAI's
+   institutional clarity, warmth and typographic hierarchy.
+   Loaded after each page's inline <style> so tokens cascade.
+   ============================================================ */
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap');
+
+:root{
+  /* --- base surfaces (ARKAN dark, kept) --- */
+  --ark-bg-1:#070A14; --ark-bg-2:#0E1322; --ark-bg-3:#131A2E;
+  --ark-glass:rgba(17,23,40,.72); --ark-glass-2:rgba(23,30,50,.82);
+  --ark-stroke:rgba(255,255,255,.09); --ark-stroke-2:rgba(255,255,255,.14);
+  --ark-txt:#F4F6FB; --ark-txt-2:rgba(138,147,168,.92); --ark-txt-3:rgba(138,147,168,.7);
+
+  /* --- primary + accents (ARKAN violet · BAI coral · gold) --- */
+  --ark-violet:#6C5CE7; --ark-violet-2:#8B7BFF;
+  --ark-bai:#EA4E3D;          /* BAI-inspired trust coral */
+  --ark-bai-2:#F06A4C;
+  --ark-gold:#F5C94C; --ark-green:#2FD08C; --ark-red:#F2676A;
+
+  /* signature gradient — the "better than both" identity */
+  --ark-grad:linear-gradient(135deg,#8B7BFF 0%,#6C5CE7 50%,#EA4E3D 128%);
+  --ark-grad-soft:linear-gradient(135deg,rgba(108,92,231,.16),rgba(234,78,61,.10));
+
+  /* --- type --- */
+  --ark-font:'Manrope','IBM Plex Sans Arabic',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  --ark-font-ar:'IBM Plex Sans Arabic','Manrope',sans-serif;
+  --ark-r:16px; --ark-r-lg:22px; --ark-r-sm:12px;
+
+  /* map onto existing site token names so token-driven pages update too */
+  --blue:#6C5CE7; --blue-live:#8B7BFF; --violet:#6C5CE7; --gold:#F5C94C;
+}
+
+/* --- global typography (BAI clarity, applies everywhere) --- */
+body{
+  font-family:var(--ark-font);
+  -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+  letter-spacing:.005em;
+}
+h1,h2,h3,h4,.h1,.h2,.h3{ font-family:var(--ark-font); letter-spacing:-.02em; line-height:1.12; }
+[dir="rtl"] h1,[dir="rtl"] h2,[dir="rtl"] h3,[dir="rtl"] h4{ letter-spacing:0; }
+::selection{ background:rgba(108,92,231,.35); }
+
+/* ============================================================
+   Opt-in premium components (use these classes going forward)
+   ============================================================ */
+.ark-eyebrow{
+  display:inline-block; font:700 12px/1 var(--ark-font);
+  letter-spacing:.16em; text-transform:uppercase; color:var(--ark-bai);
+}
+.ark-title{ font:800 clamp(26px,5vw,44px)/1.08 var(--ark-font); letter-spacing:-.025em; color:var(--ark-txt); }
+.ark-lead{ color:var(--ark-txt-2); font:400 clamp(15px,2.4vw,18px)/1.7 var(--ark-font); }
+
+.ark-btn{
+  display:inline-flex; align-items:center; justify-content:center; gap:9px;
+  font:700 15px var(--ark-font); color:#fff; text-decoration:none;
+  background:var(--ark-grad); border:0; border-radius:14px; padding:14px 24px; cursor:pointer;
+  box-shadow:0 12px 30px -12px rgba(108,92,231,.65); transition:transform .18s, box-shadow .18s;
+}
+.ark-btn:hover{ transform:translateY(-1px); box-shadow:0 18px 38px -12px rgba(234,78,61,.5); }
+.ark-btn-ghost{ background:transparent; border:1px solid var(--ark-stroke-2); color:var(--ark-txt); box-shadow:none; }
+.ark-btn-ghost:hover{ border-color:var(--ark-violet); }
+
+.ark-card{
+  background:var(--ark-glass); border:1px solid var(--ark-stroke); border-radius:var(--ark-r-lg);
+  padding:24px; backdrop-filter:blur(16px); box-shadow:0 24px 60px -26px rgba(0,0,0,.6);
+}
+.ark-card-hi{ border-color:transparent; background:var(--ark-grad-soft),var(--ark-glass); }
+
+/* BAI-style clean data / rate table */
+.ark-rates{ display:flex; flex-direction:column; }
+.ark-rate-row{
+  display:flex; justify-content:space-between; align-items:center; gap:14px;
+  padding:15px 6px; border-bottom:1px solid var(--ark-stroke);
+  font:600 15px var(--ark-font); color:var(--ark-txt);
+}
+.ark-rate-row .ccy{ color:var(--ark-txt-2); font-weight:500; }
+.ark-rate-row .buy{ color:var(--ark-green); } .ark-rate-row .sell{ color:var(--ark-bai); }
+
+/* trust signals (BAI institutional cue) */
+.ark-trust{ display:inline-flex; gap:9px; align-items:center; color:var(--ark-txt-2); font:600 13px var(--ark-font); }
+.ark-trust svg{ width:17px; height:17px; color:var(--ark-gold); }
+
+.ark-divider{ height:1px; background:linear-gradient(90deg,var(--ark-stroke-2),transparent); border:0; }
