@@ -268,6 +268,9 @@ tbody tr:hover{background:var(--stroke)}
   .menu-btn{display:grid!important}
 }
 .menu-btn{display:none}
+.edit-amt{background:var(--panel);border:1px solid var(--stroke);color:var(--muted);width:26px;height:26px;
+  border-radius:8px;cursor:pointer;font-size:13px;vertical-align:middle;margin-inline-start:8px;transition:.15s}
+.edit-amt:hover{border-color:var(--violet);color:var(--violet-2)}
 .ocr-badge{font-size:12px;padding:6px 12px;border-radius:20px;border:1px solid var(--stroke);background:var(--panel);color:var(--muted)}
 .ocr-badge.ok{color:var(--emerald);border-color:rgba(47,208,140,.3);background:rgba(47,208,140,.08)}
 .ocr-badge.cdn{color:var(--amber);border-color:rgba(245,201,76,.3);background:rgba(245,201,76,.08)}
@@ -662,7 +665,14 @@ function extractAmount(text){
  const POS=/(montante|valor|quantia|import[aâ]ncia|\btotal\b|amount|montant|المبلغ|مبلغ|debitad|creditad|transferid|pago|enviado|recebido)/i;
  const CUR=/(Kz|AKZ|AOA|MRU|UM|USDT|EUR|USD|CNY|AED|€|\$|¥)/i;
  // money token: grouped thousands (1.234.567,89 / 1,234,567.89) OR simple decimal (12345,67 / 12345.67)
- const tokRx=/\d{1,3}(?:[.\s]\d{3})+(?:,\d{1,2})?|\d{1,3}(?:,\d{3})+(?:\.\d{1,2})?|\d+[.,]\d{2}/g;
+ const tokRx=/\d{1,3}(?:[.\s]\d{3})+(?:[.,]\d{1,2})?|\d{1,3}(?:,\d{3})+(?:\.\d{1,2})?|\d+[.,]\d{2}/g;
+ // 0) AUTHORITATIVE: the labelled "Montante / Valor" line wins outright (BAI/Angola receipts)
+ for(const line of clean.split(/[\n\r]/)){
+   if(/\b(montante|valor a d[eé]bito|valor|import[aâ]ncia|montant)\b/i.test(line) && !/descritiv|dispon[ií]vel|conta/i.test(line)){
+     const mm=line.match(tokRx);
+     if(mm&&mm.length){ const v=normAmount(mm[0]); if(v>0) return v; }
+   }
+ }
  let best=null,bestScore=-1e9;
  clean.split(/[\n\r]/).forEach(line=>{
    const posHit=POS.test(line), negHit=NEG.test(line);
@@ -792,56 +802,72 @@ function blobToCanvas(blob){return new Promise(res=>{const img=new Image();img.o
 function thumbOf(cv){const t=document.createElement('canvas');const W=560;t.width=W;t.height=cv.height*W/cv.width;
  t.getContext('2d').drawImage(cv,0,0,t.width,t.height);return t.toDataURL('image/jpeg',.7);}
 
-let worker=null;
+let worker=null,_workerInit=null;
 async function getWorker(){
  if(worker)return worker;
- // vendor/ hosts eng.traineddata.gz + core wasm (works offline / on restricted networks)
- let local=false;
- try{const r=await fetch('vendor/eng.traineddata.gz',{method:'HEAD'});local=r.ok;}catch(e){}
- if(local){
-   worker=await Tesseract.createWorker('eng',1,{
-     workerPath:'vendor/worker.min.js',corePath:'vendor/',langPath:'vendor',
-     workerBlobURL:false,gzip:true});
- }else{
-   worker=await Tesseract.createWorker('eng',1,{
-     corePath:'https://cdn.jsdelivr.net/npm/tesseract.js-core@5.1.0/tesseract-core-simd.wasm.js',
-     langPath:'https://tessdata.projectnaptha.com/4.0.0'});
+ if(_workerInit)return _workerInit;
+ _workerInit=(async()=>{
+   let local=false;
+   try{const r=await fetch('vendor/eng.traineddata.gz',{method:'HEAD'});local=r.ok;}catch(e){}
+   const w=local
+     ? await Tesseract.createWorker('eng',1,{workerPath:'vendor/worker.min.js',corePath:'vendor/',langPath:'vendor',workerBlobURL:false,gzip:true})
+     : await Tesseract.createWorker('eng',1,{corePath:'https://cdn.jsdelivr.net/npm/tesseract.js-core@5.1.0/tesseract-core-simd.wasm.js',langPath:'https://tessdata.projectnaptha.com/4.0.0'});
+   worker=w;return w;
+ })();
+ return _workerInit;
+}
+
+// ---- serial ingest queue (prevents phone memory crash on bulk uploads) ----
+let _queue=[],_pumping=false;
+function enqueue(files){ for(const f of files) _queue.push(f); pump(); }
+async function pump(){
+ if(_pumping)return; _pumping=true;
+ let done=0; const total=_queue.length;
+ while(_queue.length){
+   const f=_queue.shift();
+   try{ await ingest(f); }catch(e){ console.error('ingest error',e); }
+   done++; await refresh();
  }
- return worker;
+ _pumping=false;
 }
 
 async function ingest(file){
  const tid='t'+Date.now()+Math.random().toString(36).slice(2,6);
- const toast=addToast(file.name,tid);
+ addToast(file.name,tid);
+ let buf,hash,dup=null,cv,thumb;
  try{
    setBar(tid,10,'حساب البصمة…');
-   const buf=await file.arrayBuffer();
-   const hash=await sha256(buf);
-   const existing=await allDocs();
-   const dup=existing.find(d=>d.hash===hash);
+   buf=await file.arrayBuffer();
+   hash=await sha256(buf);
+   dup=(await allDocs()).find(d=>d.hash===hash);
    if(dup&&SETTINGS.dedup){setBar(tid,100,'⚠ مكرر — تم التجاهل');setTimeout(()=>rmToast(tid),2600);return;}
    setBar(tid,28,'تحويل الصفحة…');
-   const cv=await fileToImageCanvas(file);
-   const thumb=thumbOf(cv);
+   cv=await fileToImageCanvas(file);
+   thumb=thumbOf(cv);
+ }catch(err){ console.error(err); setBar(tid,100,'✗ تعذّر فتح الملف'); setTimeout(()=>rmToast(tid),3000); return; }
+
+ // OCR — if it fails, still SAVE the receipt (image + needs-review) so nothing is lost
+ let text='',conf=0,ocrOk=true;
+ try{
    setBar(tid,45,'قراءة OCR…');
    const w=await getWorker();
    const {data}=await w.recognize(cv);
-   const text=data.text||''; const conf=data.confidence||0;
-   setBar(tid,78,'تحليل ذكي…');
-   const p=parseReceipt(text);
-   const cls=classify(p,text);
-   const tags=makeTags(p,cls);
-   const fraud=validate(p,conf,!!dup,text);
-   const rec={id:tid+Date.now(),hash,fileName:file.name,smartName:smartName(p),mime:file.type,size:file.size,
-     uploadedAt:Date.now(),thumb,ocrText:text,ocrConfidence:Math.round(conf),parsed:p,classification:cls,
-     tags,country:p.country,fraud,status:p.status,aiSummary:localSummary(p,cls),blob:file};
-   await putDoc(rec);
-   // optional AI
-   if(SETTINGS.aiEndpoint){ enrichAI(rec).catch(()=>{}); }
-   setBar(tid,100,'✓ '+ (p.amount?fmt(p.amount)+' '+(p.currency||''):'تمت القراءة'));
-   setTimeout(()=>rmToast(tid),2200);
-   await refresh();
- }catch(err){console.error(err);setBar(tid,100,'✗ فشل: '+err.message);setTimeout(()=>rmToast(tid),3500);}
+   text=data.text||''; conf=data.confidence||0;
+ }catch(err){ console.error('OCR failed',err); ocrOk=false; }
+
+ setBar(tid,78,'تحليل…');
+ const p=parseReceipt(text);
+ const cls=classify(p,text);
+ const tags=makeTags(p,cls);
+ const fraud=validate(p,conf,!!dup,text);
+ if(!ocrOk){ fraud.flags.unshift(['high','تعذّرت قراءة OCR — راجع المبلغ يدوياً']); fraud.score=Math.max(fraud.score,50); fraud.level='high'; }
+ const rec={id:tid+Date.now(),hash,fileName:file.name,smartName:smartName(p),mime:file.type,size:file.size,
+   uploadedAt:Date.now(),thumb,ocrText:text,ocrConfidence:Math.round(conf),parsed:p,classification:cls,
+   tags,country:p.country,fraud,status:(ocrOk?p.status:'pending'),aiSummary:localSummary(p,cls),blob:file,needsReview:!ocrOk};
+ try{ await putDoc(rec); }catch(e){ console.error(e); }
+ if(SETTINGS.aiEndpoint&&ocrOk){ enrichAI(rec).catch(()=>{}); }
+ setBar(tid,100, ocrOk?('✓ '+(p.amount?fmt(p.amount)+' '+(p.currency||''):'تمت القراءة')):'⚠ حُفظ — يحتاج مراجعة');
+ setTimeout(()=>rmToast(tid),2000);
 }
 
 async function enrichAI(rec){
@@ -959,8 +985,9 @@ async function openDoc(id){
  const flags=d.fraud.flags.map(f=>`<div class="flag ${f[0]}"><span class="dot"></span><span>${f[1]}</span></div>`).join('');
  document.getElementById('drawer').innerHTML=`
    <div class="dh">
-     <div><div class="amt">${fmt(p.amount)} <span style="color:var(--gold);font-size:15px">${p.currency||''}</span></div>
-       <div style="font-size:12px;color:var(--muted)">${clsLabel(d.classification)} · ${p.bank||'—'}</div></div>
+     <div><div class="amt">${fmt(p.amount)} <span style="color:var(--gold);font-size:15px">${p.currency||''}</span>
+       <button class="edit-amt" onclick="editAmount('${d.id}')" title="تعديل المبلغ">✎</button></div>
+       <div style="font-size:12px;color:var(--muted)">${clsLabel(d.classification)} · ${p.bank||'—'}${d.needsReview?' · <span style="color:var(--red)">يحتاج مراجعة</span>':''}</div></div>
      <div class="grow"></div>
      <button class="iconbtn" onclick="closeDrawer()">✕</button>
    </div>
@@ -995,6 +1022,26 @@ async function openDoc(id){
 }
 function closeDrawer(){document.getElementById('drawer').classList.remove('on');document.getElementById('scrim').classList.remove('on');}
 async function removeDoc(id){await delDoc(id);closeDrawer();await refresh();toast('تم الحذف');}
+async function editAmount(id){
+ const d=CACHE.find(x=>x.id===id);if(!d)return;
+ const raw=prompt('المبلغ الصحيح (يمكن إضافة العملة، مثال: 10000000 AOA):',
+   ((d.parsed.amount!=null?d.parsed.amount:'')+' '+(d.parsed.currency||'')).trim());
+ if(raw===null)return;
+ const m=raw.trim().match(/([\d.,\s]+)\s*([A-Za-z]{2,4})?/);
+ if(!m){toast('صيغة غير صالحة');return;}
+ const val=normAmount(m[1]);
+ if(!(val>0)){toast('قيمة غير صالحة');return;}
+ d.parsed.amount=val;
+ if(m[2]){const c=m[2].toUpperCase();if(CURRENCIES.some(x=>x.code===c))d.parsed.currency=c;}
+ d.smartName=smartName(d.parsed);
+ d.tags=makeTags(d.parsed,d.classification);
+ d.aiSummary=localSummary(d.parsed,d.classification);
+ d.needsReview=false;
+ d.fraud.flags=d.fraud.flags.filter(f=>!/(مبلغ|OCR)/.test(f[1]));
+ if(!d.fraud.flags.length)d.fraud.flags=[['ok','رُوجع وصُحّح يدوياً']];
+ d.fraud.score=Math.max(0,d.fraud.score-30); d.fraud.level=d.fraud.score>=45?'high':d.fraud.score>=20?'med':'low';
+ await putDoc(d);await refresh();openDoc(id);toast('تم تحديث المبلغ');
+}
 function downloadOriginal(id){const d=CACHE.find(x=>x.id===id);if(!d)return;const url=URL.createObjectURL(d.blob);
  const a=document.createElement('a');a.href=url;a.download=d.smartName||d.fileName;a.click();}
 
@@ -1211,12 +1258,12 @@ if(localStorage.theme==='light'){document.documentElement.setAttribute('data-the
 document.getElementById('langSel').addEventListener('change',e=>{LANG=e.target.value;localStorage.arkLang=LANG;applyI18n();refresh();});
 
 // file input + dropzone
-document.getElementById('fileInput').addEventListener('change',e=>{[...e.target.files].forEach(ingest);e.target.value='';});
+document.getElementById('fileInput').addEventListener('change',e=>{enqueue([...e.target.files]);e.target.value='';});
 const dz=document.getElementById('dropzone');
 dz.addEventListener('click',()=>document.getElementById('fileInput').click());
 ['dragover','dragenter'].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();dz.classList.add('drag');}));
 ['dragleave','drop'].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();dz.classList.remove('drag');}));
-dz.addEventListener('drop',e=>{[...e.dataTransfer.files].forEach(ingest);});
+dz.addEventListener('drop',e=>{enqueue([...e.dataTransfer.files]);});
 window.addEventListener('dragover',e=>e.preventDefault());
 window.addEventListener('drop',e=>e.preventDefault());
 
