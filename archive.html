@@ -605,46 +605,215 @@ const CURRENCIES=[
  {code:'AED',rx:/\b(AED|dirham|درهم)\b/i,sym:'AED'}
 ];
 
+/* ============ ARKAN CORE ENGINE (ported from settlement.html) ============ */
+const ARK_AR_DIG={'٠':'0','١':'1','٢':'2','٣':'3','٤':'4','٥':'5','٦':'6','٧':'7','٨':'8','٩':'9','۰':'0','۱':'1','۲':'2','۳':'3','۴':'4','۵':'5','۶':'6','۷':'7','۸':'8','۹':'9'};
+function arkNorm(t){
+  t=(t||'')+'';
+  t=t.replace(/[\u00A0\u202F\u2007\u2009\u2060]/g,' ');
+  t=t.replace(/[\u200e\u200f\u061c\u202a-\u202e]/g,'');
+  t=t.replace(/[٠-٩۰-۹]/g,d=>ARK_AR_DIG[d]||d);
+  t=t.replace(/[\u066B]/g,',').replace(/[\u066C]/g,' ');
+  return t.replace(/[ \t]+/g,' ');
+}
+/* قص التذييل القانوني للبنوك (رأس المال/الترويسة) */
+function arkStripFooter(t){
+  const cuts=['Este documento foi gerado','Documento processado pelo','Capital Social','Em caso de d','Para valida','Banco Angolano de Investimentos, S.A','Registo no BNA','Sociedade Aberta'];
+  let end=t.length;
+  for(const c of cuts){const i=t.indexOf(c);if(i>150&&i<end)end=i;}
+  return t.slice(0,end);
+}
+const ARK_BANKS=[
+  [/bai\s*directo|banco angolano de investimentos|\bBAI\b/i,'BAI','AOA'],
+  [/\bBFA\b|banco de fomento angola/i,'BFA','AOA'],
+  [/\bBCI\b|banco de com[eé]rcio e ind[uú]stria/i,'BCI','AOA'],
+  [/atl[aâ]ntico/i,'ATLANTICO','AOA'],
+  [/banco sol/i,'SOL','AOA'],
+  [/\bkeve\b/i,'KEVE','AOA'],
+  [/\byetu\b/i,'YETU','AOA'],
+  [/standard bank/i,'STANDARD','AOA'],
+  [/multicaixa|\bemis\b/i,'MULTICAIXA','AOA'],
+  [/peoples bank|bpm\b/i,'Peoples Bank','MRU'],
+  [/bankily|بنكيلي/i,'Bankily','MRU'],
+  [/masrvi|مصرفي/i,'Masrvi','MRU'],
+  [/sedad|السداد/i,'Sedad','MRU'],
+  [/bimbank|بيم بنك/i,'BIM','MRU'],
+  [/binance/i,'Binance','USDT'],
+  [/tronscan|trc-?20|\btron\b/i,'TRON','USDT']
+];
+const ARK_CCY=[
+  {c:'USDT',hint:/usdt|tether|trc-?20|tronscan|binance|تيثر|\bT[1-9A-HJ-NP-Za-km-z]{33}\b/i,sym:'(?:USDT|₮)',dec:2},
+  {c:'MRU', hint:/bankily|sedad|masrvi|peoples bank|السداد|مصرفي|بنكيلي|أوقي|ouguiya|\bMRU\b/i,sym:'(?:MRU|UM|أوقية)',dec:0},
+  {c:'AOA', hint:/\bKz\b|kwanza|multicaixa|comprovativo|movimento|montante|IBAN\s*:?\s*AO|bai directo|banco angolano|\bBFA\b|\bBCI\b|atl[aâ]ntico/i,sym:'(?:Kz|KZ|AOA)',dec:0},
+  {c:'EUR', hint:/€|\bEUR\b|يورو/i,sym:'(?:€|EUR)',dec:2},
+  {c:'USD', hint:/\bUSD\b|US\$|دولار/i,sym:'(?:USD|US\\$|\\$)',dec:2},
+  {c:'CNY', hint:/\bCNY\b|\bRMB\b|¥|يوان/i,sym:'(?:CNY|RMB|¥)',dec:2},
+  {c:'AED', hint:/\bAED\b|درهم إمارات/i,sym:'(?:AED|د\\.إ)',dec:2},
+  {c:'MAD', hint:/\bMAD\b|درهم مغرب/i,sym:'(?:MAD|د\\.م)',dec:2}
+];
+const ARK_MONEY='([0-9]{1,3}(?:[ .,][0-9]{3})+(?:[.,][0-9]{1,2})?|[0-9]+[.,][0-9]{1,2}|[0-9]{2,12})';
+const ARK_LABELS=['amount sent','importancia a transferir','importância a transferir','importancia','importância','montante','valor transferido','valor','importe','total a pagar','quantia','montant','amount','total','débito','debito','crédito','credito','المبلغ','مبلغ','القيمة','قيمة التحويل'];
+const ARK_BLOCK=/(iban|conta|receiver|account|txn|chave|\bpin\b|nif|refer[eê]ncia do|telefone|phone|swift|n\.?[ºo°]|هاتف|حساب)[^0-9]{0,12}$/i;
+
+function arkNum(raw){
+  raw=(raw+'').replace(/\s/g,'');
+  const m=raw.match(/^(.*?)([.,])(\d{1,2})$/);
+  let ip,dec='';
+  if(m&&m[1].length){ip=m[1];dec='.'+m[3];}else ip=raw;
+  const v=parseFloat(ip.replace(/[.,]/g,'')+dec);
+  return isNaN(v)?null:v;
+}
+function arkPlausible(raw){
+  const d=raw.replace(/[^0-9]/g,'');
+  if(!d||d.length>12)return false;
+  if(/^0/.test(d))return false;                     /* أرقام حسابات تبدأ بصفر */
+  if(!/[.,\s]/.test(raw)&&d.length>=10)return false;/* رقم طويل بلا فاصل = مرجع */
+  return true;
+}
+function arkDetectCcy(t){
+  for(const c of ARK_CCY)if(c.hint.test(t))return c;
+  return null;
+}
+function arkBank(t){
+  for(const [re,name,ccy] of ARK_BANKS)if(re.test(t))return {bank:name,ccy};
+  return {bank:null,ccy:null};
+}
+/* المبلغ: تسلسل من 4 طبقات */
+function arkAmount(t,ccyDef){
+  const sym=ccyDef?ccyDef.sym:'(?:Kz|MRU|UM|USDT|USD|EUR|AOA|₮|€|\\$)';
+  const tryMatch=(re)=>{
+    let m,best=null;const R=new RegExp(re,'gi');
+    while((m=R.exec(t))!==null){
+      const raw=m[1];if(!arkPlausible(raw))continue;
+      const pre=t.slice(Math.max(0,m.index-26),m.index);
+      if(ARK_BLOCK.test(pre))continue;
+      const v=arkNum(raw);
+      if(v!=null&&v>0){best={v,raw};break;}
+    }
+    return best;
+  };
+  /* 1) وسم صريح (Montante / Amount Sent / المبلغ ...) */
+  for(const lbl of ARK_LABELS){
+    const i=t.toLowerCase().indexOf(lbl);
+    if(i===-1)continue;
+    const seg=t.slice(i,i+90);
+    const r=tryMatch('(?:'+sym+')?\\s*:?=?\\s*'+ARK_MONEY);
+    const rr=(function(){let m;const R=new RegExp('(?:'+sym+')?\\s*:?=?\\s*'+ARK_MONEY,'i');m=seg.match(R);
+      if(m&&arkPlausible(m[1])){const v=arkNum(m[1]);if(v!=null&&v>0)return {v,raw:m[1],src:'label:'+lbl};}return null;})();
+    if(rr)return rr;
+  }
+  /* 2) ملتصق برمز العملة: Kz 4 000 000,00  /  MRU 2400000 */
+  let r=tryMatch(sym+'\\s*'+ARK_MONEY);
+  if(r)return {...r,src:'sym-pre'};
+  /* 3) الرمز بعد الرقم: 4.000.000,00 Kz */
+  r=tryMatch(ARK_MONEY+'\\s*'+sym);
+  if(r)return {...r,src:'sym-post'};
+  /* 4) أكبر رقم منطقي */
+  const all=[];let m;const R=new RegExp(ARK_MONEY,'g');
+  while((m=R.exec(t))!==null){
+    if(!arkPlausible(m[1]))continue;
+    const pre=t.slice(Math.max(0,m.index-26),m.index);
+    if(ARK_BLOCK.test(pre))continue;
+    const v=arkNum(m[1]);if(v!=null&&v>=100)all.push(v);
+  }
+  if(all.length)return {v:Math.max(...all),raw:null,src:'max'};
+  return null;
+}
+function arkTxn(t,ccy){
+  let m;
+  if(ccy==='AOA'){
+    m=t.match(/N[uú]mero de Opera[cç][aã]o\s*:?\s*([0-9]{6,})/i)||t.match(/Movimento\s*:?\s*([0-9]{6,})/i)
+     ||t.match(/Refer[eê]ncia\s*:?\s*([0-9]{6,})/i)||t.match(/CHAVE\s*:?\s*([0-9]{6,})/i);
+    if(m)return m[1];
+  }
+  m=t.match(/\b([a-f0-9]{64})\b/i);if(m)return m[1];
+  m=t.match(/\b(TR[0-9]{6,})\b/i);if(m)return m[1];
+  m=t.match(/Txn\s*ID\s*:?\s*([0-9A-Za-z]{8,})/i);if(m)return m[1];
+  m=t.match(/(?:Transaction|Trans|Order|Opera[cç][aã]o|رقم العملية|المرجع)\s*(?:ID|N[ºo°]|:)?\s*:?\s*([0-9A-Za-z]{8,})/i);
+  return m?m[1]:null;
+}
+function arkAcct(t){
+  let m=t.match(/\b(AO06\s*[0-9\s]{15,30})\b/i);if(m)return m[1].replace(/\s/g,'');
+  m=t.match(/Receiver\s*:?[\s]*([0-9 ]{8,30})/i);if(m)return m[1].replace(/\s/g,'');
+  m=t.match(/(?:Conta\s*\/?\s*IBAN|IBAN|حساب\s*بنكي)\s*:?\s*([A-Z0-9 ]{10,34})/i);if(m)return m[1].replace(/\s/g,'');
+  m=t.match(/\b(2[0-9]{7})\b/);return m?m[1]:null;
+}
+function arkDate(t){
+  let m=t.match(/\b([0-3]?[0-9][\/\-\.][0-1]?[0-9][\/\-\.](?:20)?[0-9]{2})\b/);
+  if(m)return m[1];
+  m=t.match(/\b(20[0-9]{2}[\/\-][0-1][0-9][\/\-][0-3][0-9])\b/);
+  return m?m[1]:null;
+}
+/* ================= النواة ================= */
+function arkanCore(rawText){
+  const t0=arkNorm(rawText);
+  if(!t0||t0.replace(/\s/g,'').length<12)
+    return {ok:false,amount:null,ccy:null,txn:null,acct:null,date:null,bank:null,app:null,src:null,name:null,err:'لا يوجد نص مقروء',text:t0};
+  const t=arkStripFooter(t0);
+  const b=arkBank(t);
+  let cd=arkDetectCcy(t);
+  if(!cd&&b.ccy)cd=ARK_CCY.find(x=>x.c===b.ccy)||null;
+  const a=arkAmount(t,cd);
+  const ccy=cd?cd.c:(b.ccy||null);
+  let amount=a?a.v:null;
+  /* USDT: مبالغ ضخمة بلا كسور غالبًا خطأ قراءة */
+  if(ccy==='USDT'&&amount!=null&&amount>1e7)amount=null;
+  let name=null;const nm=t.match(/(?:Nome|PARA|Benefici[aá]rio|إلى)\s*:?\s*([A-ZÀ-Ú][A-ZÀ-Ú .]{4,45})/);
+  if(nm)name=nm[1].trim();
+  return {
+    ok:amount!=null, amount, ccy,
+    txn:arkTxn(t,ccy), acct:arkAcct(t), date:arkDate(t),
+    bank:b.bank, app:b.bank, name,
+    src:a?a.src:null,
+    err:amount==null?'لم يُعثر على المبلغ':null,
+    text:t
+  };
+}
+
+function preprocessImage(dataUrl){
+  return new Promise((res,rej)=>{
+    const img=new Image();
+    img.onload=()=>{
+      const MAX=1600;
+      let w=img.width,hh=img.height;
+      const sc=Math.min(1,MAX/Math.max(w,hh));
+      w=Math.round(w*sc);hh=Math.round(hh*sc);
+      const cv=document.createElement('canvas');cv.width=w;cv.height=hh;
+      const cx=cv.getContext('2d');
+      cx.drawImage(img,0,0,w,hh);
+      const d=cx.getImageData(0,0,w,hh),p=d.data;
+      for(let i=0;i<p.length;i+=4){
+        let g=0.299*p[i]+0.587*p[i+1]+0.114*p[i+2];
+        g=(g-128)*1.35+128+15; /* تباين + سطوع */
+        g=Math.max(0,Math.min(255,g));
+        p[i]=p[i+1]=p[i+2]=g;
+      }
+      cx.putImageData(d,0,0);
+      res(cv.toDataURL('image/jpeg',0.92));
+    };
+    img.onerror=rej;
+    img.src=dataUrl;
+  });
+}
+
 /* ============ PARSER (arkanParse v2) ============ */
 function parseReceipt(text){
- const T=' '+text.replace(/\u00A0/g,' ')+' ';
- const out={bank:null,country:null,currency:null,amount:null,date:null,time:null,
-   ref:null,txid:null,sender:null,receiver:null,senderAcc:null,receiverAcc:null,
-   iban:null,swift:null,phone:null,fees:null,status:null,type:null};
-
- // bank
- for(const b of BANKS){if(b.rx.test(T)){out.bank=b.code;out.country=b.country;break;}}
- // currency
- for(const c of CURRENCIES){if(c.rx.test(T)){out.currency=c.code;break;}}
- // amount — strip phones / IBAN / long account & ref numbers, THEN score candidates
- out.amount=extractAmount(T);
- // date
- out.date=extractDate(T);
- // time
- const tm=T.match(/\b([0-2]?\d[:h][0-5]\d)(?::[0-5]\d)?\b/); if(tm)out.time=tm[1].replace('h',':');
- // reference / txid
- const ref=T.match(/(refer[eê]ncia|ref[.:]?|comprovativo|transa[cç][aã]o|n[ºo°]\.?|المرجع|رقم العملية)\s*[:#]?\s*([A-Z0-9\-]{5,})/i);
- if(ref)out.ref=ref[2];
- const tx=T.match(/(id|transaction|opera[cç][aã]o)\s*[:#]?\s*([A-Z0-9]{8,})/i); if(tx)out.txid=tx[2];
- // names
- const snd=T.match(/(de|from|remetente|ordenante|المرسل|من)\s*[:\-]?\s*([A-ZÀ-Úا-ي][\wÀ-Ú\u0600-\u06FF' ]{4,40})/i);
- if(snd)out.sender=clean(snd[2]);
- const rcv=T.match(/(para|to|benefici[aá]rio|destinat[aá]rio|المستفيد|إلى|receiver)\s*[:\-]?\s*([A-ZÀ-Úا-ي][\wÀ-Ú\u0600-\u06FF' ]{4,40})/i);
- if(rcv)out.receiver=clean(rcv[2]);
- // accounts / iban / swift
- const iban=T.match(/\b([A-Z]{2}\d{2}[A-Z0-9]{11,30})\b/); if(iban)out.iban=iban[1];
- const swift=T.match(/\b([A-Z]{4}[A-Z]{2}[A-Z0-9]{2}(?:[A-Z0-9]{3})?)\b/); if(swift&&/BANK|BIC|BFA|BAI/i.test(swift[1]))out.swift=swift[1];
- const acc=T.match(/\b(\d{9,25})\b/); if(acc)out.receiverAcc=acc[1];
- // phone
- const ph=T.match(/(\+?2(?:22|44)\s?\d[\d\s]{6,10})/); if(ph)out.phone=ph[1].replace(/\s/g,'');
- // fees
- const fee=T.match(/(taxa|fee|comiss[aã]o|frais|رسوم)\s*[:]?\s*([\d.,]+)/i); if(fee)out.fees=normAmount(fee[2]);
- // status
- if(/conclu[ií]d|success|completed|efectuad|efetuad|réussi|ناجح|تم/i.test(T))out.status='completed';
- else if(/pendente|pending|em processamento|en attente|قيد/i.test(T))out.status='pending';
- else if(/falha|failed|rejeit|échec|فشل/i.test(T))out.status='rejected';
- else out.status='completed';
- return out;
+ const r=arkanCore(text||'');
+ const country = r.ccy==='AOA'?'AO' : r.ccy==='MRU'?'MR' : null;
+ const T=' '+(text||'').replace(/\u00A0/g,' ')+' ';
+ let time=null; const tm=T.match(/\b([0-2]?\d[:h][0-5]\d)(?::[0-5]\d)?\b/); if(tm)time=tm[1].replace('h',':');
+ let phone=null; const ph=T.match(/(\+?\s?2(?:22|44)[\s.\-]?\d[\d\s.\-]{6,10})/); if(ph)phone=ph[1].replace(/\s/g,'');
+ let fees=null; const fee=T.match(/(taxa|fee|comiss[a\u00e3]o|frais|\u0631\u0633\u0648\u0645)\s*[:]?\s*([\d.,]+)/i); if(fee)fees=normAmount(fee[2]);
+ let status='completed';
+ if(/pendente|pending|em processamento|en attente|\u0642\u064a\u062f/i.test(T))status='pending';
+ else if(/falha|failed|rejeit|\u00e9chec|\u0641\u0634\u0644/i.test(T))status='rejected';
+ let date=r.date;
+ if(date){const m=String(date).match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})$/);
+   if(m){let y=m[3].length===2?'20'+m[3]:m[3];date=y+'-'+String(m[2]).padStart(2,'0')+'-'+String(m[1]).padStart(2,'0');}}
+ const acct=r.acct||null;
+ return {bank:r.bank||null,country,currency:r.ccy||null,amount:r.amount,date,time,
+   ref:r.txn||null,txid:r.txn||null,sender:null,receiver:r.name||null,
+   senderAcc:null,receiverAcc:acct,iban:(acct&&/^[A-Z]{2}\d/.test(acct))?acct:null,swift:null,
+   phone,fees,status};
 }
 function normAmount(raw){
  if(!raw)return 0; let s=raw.trim().replace(/\s/g,'');
@@ -812,6 +981,7 @@ async function getWorker(){
    const w=local
      ? await Tesseract.createWorker('eng',1,{workerPath:'vendor/worker.min.js',corePath:'vendor/',langPath:'vendor',workerBlobURL:false,gzip:true})
      : await Tesseract.createWorker('eng',1,{corePath:'https://cdn.jsdelivr.net/npm/tesseract.js-core@5.1.0/tesseract-core-simd.wasm.js',langPath:'https://tessdata.projectnaptha.com/4.0.0'});
+   try{ await w.setParameters({tessedit_pageseg_mode:"6"}); }catch(e){}
    worker=w;return w;
  })();
  return _workerInit;
@@ -851,7 +1021,8 @@ async function ingest(file){
  try{
    setBar(tid,45,'قراءة OCR…');
    const w=await getWorker();
-   const {data}=await w.recognize(cv);
+   let _src=cv; try{ _src=await preprocessImage(cv.toDataURL("image/jpeg",0.92)); }catch(e){}
+   const {data}=await w.recognize(_src);
    text=data.text||''; conf=data.confidence||0;
  }catch(err){ console.error('OCR failed',err); ocrOk=false; }
 
