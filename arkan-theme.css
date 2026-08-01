@@ -83,3 +83,31 @@ h1,h2,h3,h4,.h1,.h2,.h3{ font-family:var(--ark-font); letter-spacing:-.02em; lin
 .ark-trust svg{ width:17px; height:17px; color:var(--ark-gold); }
 
 .ark-divider{ height:1px; background:linear-gradient(90deg,var(--ark-stroke-2),transparent); border:0; }
+
+/* ============================================================
+   Deep component upgrades — target the real site classes so
+   every page that uses them adopts the ARKAN × BAI look at once.
+   (loaded after inline <style>; layout untouched, colors only)
+   ============================================================ */
+
+/* signature gradient CTA (violet → BAI coral) */
+.btn-primary,.btn-primary:hover{ background-image:var(--ark-grad)!important; background-color:transparent!important; color:#fff!important; }
+.btn-primary{ box-shadow:0 12px 32px -12px rgba(108,92,231,.6); }
+.btn-primary:hover{ filter:brightness(1.06); transform:translateY(-1px); box-shadow:0 18px 40px -12px rgba(234,78,61,.5); }
+
+/* BAI-style coral section eyebrow / kicker */
+.sec-head .kicker,.kicker,.eyebrow{ color:var(--ark-bai)!important; letter-spacing:.16em; }
+
+/* premium card — subtle lift + violet edge on hover */
+.card{ transition:transform .2s, border-color .2s, box-shadow .2s; }
+.card:hover{ transform:translateY(-3px); border-color:rgba(108,92,231,.42); box-shadow:0 30px 72px -30px rgba(0,0,0,.72); }
+
+/* refined ghost / login accents → violet */
+.btn-ghost:hover{ border-color:var(--ark-violet)!important; background:rgba(108,92,231,.08)!important; }
+.btn-login:hover{ border-color:var(--ark-violet)!important; background:rgba(108,92,231,.08)!important; }
+
+/* hero badge — subtle coral edge (trust cue) */
+.hero .badge{ border-color:rgba(234,78,61,.30); }
+
+/* live rate up/down keep financial semantics but align hues */
+.up,.buy{ color:var(--ark-green)!important; } .down,.sell{ color:var(--ark-bai)!important; }
