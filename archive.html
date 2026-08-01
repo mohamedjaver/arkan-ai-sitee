@@ -7,43 +7,49 @@
 <title>ARKAN Intelligence Archive · أرشيف أركان الذكي</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="vendor/pdf.min.js"></script>
+<script src="vendor/tesseract.min.js"></script>
 <style>
 :root{
-  --bg:#0a0b0d; --bg2:#0e1013; --panel:rgba(22,24,28,.72); --panel-solid:#16181c;
-  --stroke:rgba(255,255,255,.08); --stroke-strong:rgba(255,255,255,.14);
-  --text:#eef0f2; --muted:#9298a1; --faint:#5c6169;
-  --gold:#e4c97e; --gold-2:#c9a24b; --gold-deep:#8a6d2a;
-  --emerald:#4ade80; --amber:#fbbf24; --red:#f87171; --blue:#7dd3fc;
-  --grad-gold:linear-gradient(135deg,#f4e2a8 0%,#e4c97e 40%,#c9a24b 100%);
-  --shadow:0 24px 60px -20px rgba(0,0,0,.65);
-  --r:18px; --r-sm:12px;
-  --ff-display:'Space Grotesk','IBM Plex Sans Arabic',sans-serif;
-  --ff-body:'Inter','IBM Plex Sans Arabic',sans-serif;
+  /* ARKAN Rates — نفس نظام تصميم الموقع */
+  --bg:#070A14; --bg2:#0E1322; --bg3:#131A2E;
+  --panel:rgba(17,23,40,.72); --panel-solid:#131A2E;
+  --stroke:rgba(255,255,255,.08); --stroke-strong:rgba(255,255,255,.16);
+  --text:#F4F6FB; --muted:rgba(138,147,168,.95); --faint:rgba(138,147,168,.6);
+  --violet:#6C5CE7; --violet-2:#8B7BFF;
+  --gold:#F5C94C; --gold-2:#6C5CE7; --gold-deep:#8B7BFF;
+  --emerald:#2FD08C; --amber:#F5C94C; --red:#F2676A; --blue:#8B7BFF;
+  --grad-gold:linear-gradient(135deg,#8B7BFF 0%,#6C5CE7 100%);
+  --shadow:0 24px 60px -22px rgba(0,0,0,.6);
+  --r:16px; --r-sm:12px;
+  --ff-display:'IBM Plex Sans Arabic','SF Pro Display',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --ff-body:'IBM Plex Sans Arabic','SF Pro Display',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
   --ff-ar:'IBM Plex Sans Arabic',sans-serif;
 }
 [data-theme="light"]{
-  --bg:#f6f5f1; --bg2:#efeee9; --panel:rgba(255,255,255,.82); --panel-solid:#ffffff;
+  --bg:#eef1f7; --bg2:#e6eaf3; --panel:rgba(255,255,255,.82); --panel-solid:#ffffff;
   --stroke:rgba(15,17,20,.08); --stroke-strong:rgba(15,17,20,.14);
-  --text:#15181c; --muted:#5a616b; --gold:#a9823a; --gold-2:#8a6d2a;
-  --shadow:0 20px 50px -22px rgba(30,25,10,.28);
+  --text:#0E1322; --muted:#5a616b; --gold:#a9823a; --gold-2:#6C5CE7;
+  --shadow:0 20px 50px -22px rgba(20,25,45,.22);
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%;max-width:100vw;overflow-x:hidden}
 body{
-  font-family:var(--ff-body); background:var(--bg); color:var(--text);
+  font-family:var(--ff-body); color:var(--text);
+  background:linear-gradient(180deg,#070A14 0%,#0E1322 55%,#131A2E 100%);
+  background-attachment:fixed; line-height:1.7;
   -webkit-font-smoothing:antialiased; overflow:hidden;
 }
-body::before{ /* ambient */
+[data-theme="light"] body{background:linear-gradient(180deg,#eef1f7 0%,#e6eaf3 100%)}
+body::before{ /* ambient — violet/gold أركان */
   content:""; position:fixed; inset:0; z-index:-1; pointer-events:none;
   background:
-   radial-gradient(1100px 600px at 88% -8%, rgba(228,201,126,.10), transparent 60%),
-   radial-gradient(900px 520px at 6% 110%, rgba(228,201,126,.06), transparent 60%);
+   radial-gradient(1100px 600px at 88% -8%, rgba(108,92,231,.16), transparent 60%),
+   radial-gradient(900px 520px at 6% 110%, rgba(245,201,76,.06), transparent 60%);
 }
 [dir="rtl"]{font-family:var(--ff-ar)}
-::selection{background:rgba(228,201,126,.28)}
+::selection{background:rgba(108,92,231,.35)}
 ::-webkit-scrollbar{width:10px;height:10px}
 ::-webkit-scrollbar-thumb{background:var(--stroke-strong);border-radius:20px}
 input,button,select,textarea{font-family:inherit;color:inherit}
@@ -55,10 +61,10 @@ input,button,select,textarea{font-family:inherit;color:inherit}
   border-inline-end:1px solid var(--stroke); display:flex;flex-direction:column;
   padding:22px 16px; gap:6px; overflow-y:auto;
 }
-.brand{display:flex;align-items:center;gap:12px;padding:6px 8px 18px}
-.brand .arch{width:40px;height:40px;flex:none}
-.brand .txt b{font-family:var(--ff-display);font-weight:700;font-size:16px;letter-spacing:.3px;display:block;line-height:1}
-.brand .txt span{font-size:11px;color:var(--muted);letter-spacing:2px}
+.brand{display:flex;align-items:center;gap:11px;padding:6px 8px 18px}
+.brand .arch{width:42px;height:42px;border-radius:12px;object-fit:cover;flex:none;box-shadow:0 6px 18px -8px rgba(108,92,231,.6)}
+.brand .txt b{font-family:var(--ff-display);font-weight:800;font-size:18px;letter-spacing:.04em;display:block;line-height:1}
+.brand .txt span{font-size:10px;color:var(--violet-2);letter-spacing:2.5px;font-weight:600}
 .nav{display:flex;flex-direction:column;gap:2px;margin-top:4px}
 .nav a{
   display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:var(--r-sm);
@@ -67,10 +73,13 @@ input,button,select,textarea{font-family:inherit;color:inherit}
 }
 .nav a svg{width:19px;height:19px;opacity:.85}
 .nav a:hover{background:var(--stroke);color:var(--text)}
-.nav a.on{color:var(--text);background:linear-gradient(90deg,rgba(228,201,126,.16),rgba(228,201,126,.03))}
+.nav a.on{color:var(--text);background:linear-gradient(90deg,rgba(108,92,231,.20),rgba(108,92,231,.04))}
 .nav a.on::before{content:"";position:absolute;inset-inline-start:0;top:9px;bottom:9px;width:3px;border-radius:4px;background:var(--grad-gold)}
 .side .spacer{flex:1}
 .side-foot{border-top:1px solid var(--stroke);padding-top:12px;font-size:11px;color:var(--muted);line-height:1.7}
+.nav-back{display:block;padding:10px 14px;margin-top:6px;border-radius:var(--r-sm);color:var(--muted);
+  text-decoration:none;font-size:13px;font-weight:500;transition:.18s;border:1px solid var(--stroke)}
+.nav-back:hover{color:var(--text);border-color:var(--violet)}
 
 .main{overflow-y:auto;overflow-x:hidden;position:relative;max-width:100%;min-width:0}
 .top{
@@ -98,8 +107,8 @@ input,button,select,textarea{font-family:inherit;color:inherit}
   display:inline-flex;align-items:center;gap:8px;border:none;cursor:pointer;font-weight:600;
   font-size:13.5px;padding:10px 18px;border-radius:11px;transition:.18s;
 }
-.btn-gold{background:var(--grad-gold);color:#1a1608;box-shadow:0 8px 22px -8px rgba(228,201,126,.5)}
-.btn-gold:hover{transform:translateY(-1px);box-shadow:0 12px 28px -8px rgba(228,201,126,.6)}
+.btn-gold{background:var(--grad-gold);color:#fff;box-shadow:0 8px 22px -8px rgba(108,92,231,.55)}
+.btn-gold:hover{transform:translateY(-1px);box-shadow:0 12px 28px -8px rgba(108,92,231,.6)}
 .btn-ghost{background:var(--panel);border:1px solid var(--stroke);color:var(--text)}
 .btn-ghost:hover{border-color:var(--gold-2)}
 .btn svg{width:16px;height:16px}
@@ -203,7 +212,7 @@ input,button,select,textarea{font-family:inherit;color:inherit}
 .filters{display:flex;flex-wrap:wrap;gap:9px;margin-bottom:6px}
 .chip{font-size:12.5px;padding:7px 13px;border-radius:20px;border:1px solid var(--stroke);background:var(--panel);cursor:pointer;transition:.15s;color:var(--muted)}
 .chip:hover{border-color:var(--gold-2)}
-.chip.on{background:var(--grad-gold);color:#1a1608;border-color:transparent;font-weight:600}
+.chip.on{background:var(--grad-gold);color:#fff;border-color:transparent;font-weight:600}
 
 /* progress toast */
 .toasts{position:fixed;bottom:22px;inset-inline-end:22px;z-index:80;display:flex;flex-direction:column;gap:10px;max-width:340px}
@@ -236,7 +245,7 @@ tbody tr:hover{background:var(--stroke)}
 .switch i{position:absolute;top:3px;inset-inline-start:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:.2s}
 .switch.on i{inset-inline-start:23px}
 
-.bank-badge{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;font-family:var(--ff-display);font-weight:700;font-size:12px;background:var(--grad-gold);color:#1a1608;flex:none}
+.bank-badge{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;font-family:var(--ff-display);font-weight:700;font-size:12px;background:var(--grad-gold);color:#fff;flex:none}
 
 @media(max-width:880px){
   .app{grid-template-columns:1fr}
@@ -256,12 +265,15 @@ tbody tr:hover{background:var(--stroke)}
   .menu-btn{display:grid!important}
 }
 .menu-btn{display:none}
+.ocr-badge{font-size:12px;padding:6px 12px;border-radius:20px;border:1px solid var(--stroke);background:var(--panel);color:var(--muted)}
+.ocr-badge.ok{color:var(--emerald);border-color:rgba(47,208,140,.3);background:rgba(47,208,140,.08)}
+.ocr-badge.cdn{color:var(--amber);border-color:rgba(245,201,76,.3);background:rgba(245,201,76,.08)}
 
 /* selection */
 .selbox{position:absolute;top:10px;inset-inline-end:10px;width:24px;height:24px;border-radius:7px;
   border:1.5px solid var(--stroke-strong);background:rgba(0,0,0,.4);backdrop-filter:blur(6px);
   display:grid;place-items:center;cursor:pointer;transition:.15s;z-index:2}
-.selbox svg{width:15px;height:15px;color:#1a1608}
+.selbox svg{width:15px;height:15px;color:#fff}
 .selbox:hover{border-color:var(--gold)}
 .selbox.on{background:var(--grad-gold);border-color:transparent}
 .doc.sel{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold)}
@@ -291,8 +303,8 @@ tbody tr:hover{background:var(--stroke)}
 .tl .st .node{width:28px;height:28px;border-radius:50%;background:var(--bg2);border:2px solid var(--stroke-strong);
   display:grid;place-items:center;transition:.2s;font-size:12px}
 .tl .st .node svg{width:14px;height:14px}
-.tl .st.done .node{background:var(--grad-gold);border-color:transparent;color:#1a1608}
-.tl .st.active .node{border-color:var(--gold);color:var(--gold);box-shadow:0 0 0 4px rgba(228,201,126,.14)}
+.tl .st.done .node{background:var(--grad-gold);border-color:transparent;color:#fff}
+.tl .st.active .node{border-color:var(--violet-2);color:var(--violet-2);box-shadow:0 0 0 4px rgba(108,92,231,.18)}
 .tl .st span{font-size:10.5px;color:var(--muted);text-align:center}
 .tl .st.done span,.tl .st.active span{color:var(--text)}
 
@@ -304,7 +316,7 @@ tbody tr:hover{background:var(--stroke)}
 .builder-doc .info{flex:1;min-width:0}
 .builder-doc .info b{font-family:var(--ff-display);font-size:14px}
 .builder-doc .info span{font-size:11.5px;color:var(--muted);display:block}
-.builder-doc .ord{width:26px;height:26px;border-radius:50%;background:var(--grad-gold);color:#1a1608;display:grid;place-items:center;font-weight:700;font-size:12px;flex:none}
+.builder-doc .ord{width:26px;height:26px;border-radius:50%;background:var(--grad-gold);color:#fff;display:grid;place-items:center;font-weight:700;font-size:12px;flex:none}
 </style>
 </head>
 <body>
@@ -312,12 +324,7 @@ tbody tr:hover{background:var(--stroke)}
   <!-- SIDEBAR -->
   <aside class="side" id="side">
     <div class="brand">
-      <svg class="arch" viewBox="0 0 48 48" fill="none">
-        <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stop-color="#f4e2a8"/><stop offset="1" stop-color="#c9a24b"/></linearGradient></defs>
-        <path d="M8 42V22C8 13.16 15.16 6 24 6s16 7.16 16 16v20h-7V22a9 9 0 0 0-18 0v20H8Z" fill="url(#g)"/>
-        <rect x="21" y="30" width="6" height="12" fill="url(#g)"/>
-      </svg>
+      <img class="arch" src="arkan-logo.svg" alt="ARKAN" onerror="this.style.display='none'">
       <div class="txt"><b>ARKAN</b><span>INTELLIGENCE</span></div>
     </div>
     <nav class="nav" id="nav">
@@ -329,10 +336,11 @@ tbody tr:hover{background:var(--stroke)}
       <a data-v="settings"><span data-ic="gear"></span><span data-i18n="nav_settings">الإعدادات</span></a>
     </nav>
     <div class="spacer"></div>
+    <a href="index.html" class="nav-back">← العودة إلى الموقع</a>
     <div class="side-foot">
       ARKAN INTERNATIONAL TRADING<br>
       Mauritania · Angola · China<br>
-      <span style="color:var(--gold)">arkanrates.com</span>
+      <span style="color:var(--violet-2)">arkanrates.com</span>
     </div>
   </aside>
 
@@ -423,8 +431,8 @@ tbody tr:hover{background:var(--stroke)}
     <section class="view" id="v-settings">
       <div class="card" style="max-width:720px">
         <div class="setrow">
-          <div class="info"><b data-i18n="set_ocr">لغات قراءة الـ OCR</b><span data-i18n="set_ocr_d">أضف العربية لقراءة الإيصالات الموريتانية (أبطأ قليلاً)</span></div>
-          <div class="switch" id="sw-ar" onclick="toggleSetting('ocrArabic',this)"><i></i></div>
+          <div class="info"><b data-i18n="set_ocr">محرّك القراءة OCR</b><span data-i18n="set_ocr_d">يعمل محلياً من vendor بدون إنترنت خارجي — مناسب لشبكات موريتانيا وأنغولا</span></div>
+          <span id="ocrStatus" class="ocr-badge">…</span>
         </div>
         <div class="setrow">
           <div class="info"><b>AI Endpoint</b><span data-i18n="set_ai_d">رابط Supabase Edge Function للتلخيص وكشف الشذوذ (يبقى المفتاح في الخادم)</span></div>
@@ -460,7 +468,11 @@ tbody tr:hover{background:var(--stroke)}
 </div>
 
 <script>
-pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+(async function initPdfWorker(){
+ try{const r=await fetch('vendor/pdf.worker.min.js',{method:'HEAD'});
+   if(r.ok){pdfjsLib.GlobalWorkerOptions.workerSrc='vendor/pdf.worker.min.js';return;}}catch(e){}
+ pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+})();
 
 /* ============ ICONS ============ */
 function ic(n){const p={
@@ -496,7 +508,7 @@ const I18N={
    dz_sub:'PDF · صور · لقطات واتساب · إشعارات تحويل — يُقرأ تلقائياً بالـ OCR',
    settle_soon:'محرّك ربط التسويات',settle_desc:'اربط عدة إيصالات في تسوية واحدة: شراء AOA ← شراء USDT ← تحويل ← دفع MRU.',
    go_archive:'الذهاب للأرشيف',new_settle:'تسوية جديدة',selected:'محدّد',link_settle:'ربط كتسوية',th_date:'التاريخ',th_bank:'البنك',th_amount:'المبلغ',th_cur:'العملة',th_type:'النوع',th_ref:'المرجع',th_status:'الحالة',
-   set_ocr:'لغات قراءة الـ OCR',set_ocr_d:'أضف العربية لقراءة الإيصالات الموريتانية (أبطأ قليلاً)',
+   set_ocr:'محرّك القراءة OCR',set_ocr_d:'يعمل محلياً من vendor بدون إنترنت خارجي — مناسب لشبكات موريتانيا وأنغولا',
    set_ai_d:'رابط Supabase Edge Function للتلخيص وكشف الشذوذ',set_dedup:'منع الرفع المكرر',set_dedup_d:'رفض الملفات ذات نفس بصمة SHA-256',
    set_wipe:'مسح كل البيانات المحلية',set_wipe_d:'يحذف الأرشيف من هذا المتصفح نهائياً',wipe_btn:'مسح',
    upgrade:'مسار الترقية إلى السحابة',upgrade_d:'هذا الإصدار يخزّن كل شيء داخل متصفحك (IndexedDB). فعّل Supabase للتعدد والأدوار والتشفير دون إعادة كتابة.',
@@ -509,7 +521,7 @@ const I18N={
    dz_sub:'PDF · imagens · capturas WhatsApp — lidos por OCR automaticamente',
    settle_soon:'Motor de liquidações',settle_desc:'Ligue vários comprovativos numa liquidação: AOA → USDT → transferência → MRU.',
    go_archive:'Ir para Arquivo',new_settle:'Nova liquidação',selected:'selecionado(s)',link_settle:'Ligar em liquidação',th_date:'Data',th_bank:'Banco',th_amount:'Valor',th_cur:'Moeda',th_type:'Tipo',th_ref:'Ref',th_status:'Estado',
-   set_ocr:'Idiomas OCR',set_ocr_d:'Adicionar árabe para recibos mauritanos',set_ai_d:'URL da Supabase Edge Function',
+   set_ocr:'Motor OCR',set_ocr_d:'Funciona localmente via vendor, sem CDN externo',set_ai_d:'URL da Supabase Edge Function',
    set_dedup:'Impedir duplicados',set_dedup_d:'Rejeitar ficheiros com o mesmo SHA-256',set_wipe:'Apagar dados locais',
    set_wipe_d:'Remove o arquivo deste navegador',wipe_btn:'Apagar',upgrade:'Caminho para a nuvem',
    upgrade_d:'Esta versão guarda tudo no navegador. Ative Supabase para multi-utilizador sem reescrever.',
@@ -521,7 +533,7 @@ const I18N={
    dz_sub:'PDF · images · captures WhatsApp — lus par OCR automatiquement',
    settle_soon:'Moteur de règlements',settle_desc:'Liez plusieurs reçus en un règlement : AOA → USDT → virement → MRU.',
    go_archive:'Aller à l’archive',new_settle:'Nouveau règlement',selected:'sélectionné(s)',link_settle:'Lier en règlement',th_date:'Date',th_bank:'Banque',th_amount:'Montant',th_cur:'Devise',th_type:'Type',th_ref:'Réf',th_status:'Statut',
-   set_ocr:'Langues OCR',set_ocr_d:'Ajouter l’arabe pour les reçus mauritaniens',set_ai_d:'URL Supabase Edge Function',
+   set_ocr:'Moteur OCR',set_ocr_d:'Fonctionne localement via vendor, sans CDN externe',set_ai_d:'URL Supabase Edge Function',
    set_dedup:'Bloquer doublons',set_dedup_d:'Rejeter les fichiers au même SHA-256',set_wipe:'Effacer données locales',
    set_wipe_d:'Supprime l’archive de ce navigateur',wipe_btn:'Effacer',upgrade:'Vers le cloud',
    upgrade_d:'Cette version stocke tout dans le navigateur. Activez Supabase pour le multi-utilisateur.',
@@ -533,7 +545,7 @@ const I18N={
    dz_sub:'PDF · images · WhatsApp captures — read automatically by OCR',
    settle_soon:'Settlement linking engine',settle_desc:'Link several receipts into one settlement: AOA → USDT → transfer → MRU.',
    go_archive:'Go to Archive',new_settle:'New settlement',selected:'selected',link_settle:'Link as settlement',th_date:'Date',th_bank:'Bank',th_amount:'Amount',th_cur:'Currency',th_type:'Type',th_ref:'Ref',th_status:'Status',
-   set_ocr:'OCR languages',set_ocr_d:'Add Arabic for Mauritanian receipts (a bit slower)',set_ai_d:'Supabase Edge Function URL',
+   set_ocr:'OCR engine',set_ocr_d:'Runs locally from vendor, no external CDN',set_ai_d:'Supabase Edge Function URL',
    set_dedup:'Prevent duplicate uploads',set_dedup_d:'Reject files with the same SHA-256',set_wipe:'Wipe local data',
    set_wipe_d:'Deletes the archive from this browser',wipe_btn:'Wipe',upgrade:'Cloud upgrade path',
    upgrade_d:'This build stores everything in your browser. Turn on Supabase for multi-device, roles and AES-256 without a rewrite.',
@@ -779,10 +791,20 @@ function thumbOf(cv){const t=document.createElement('canvas');const W=560;t.widt
 
 let worker=null;
 async function getWorker(){
- const langs='eng+por+fra'+(SETTINGS.ocrArabic?'+ara':'');
- if(worker&&worker._langs===langs)return worker;
- if(worker)await worker.terminate();
- worker=await Tesseract.createWorker(langs);worker._langs=langs;return worker;
+ if(worker)return worker;
+ // vendor/ hosts eng.traineddata.gz + core wasm (works offline / on restricted networks)
+ let local=false;
+ try{const r=await fetch('vendor/eng.traineddata.gz',{method:'HEAD'});local=r.ok;}catch(e){}
+ if(local){
+   worker=await Tesseract.createWorker('eng',1,{
+     workerPath:'vendor/worker.min.js',corePath:'vendor/',langPath:'vendor',
+     workerBlobURL:false,gzip:true});
+ }else{
+   worker=await Tesseract.createWorker('eng',1,{
+     corePath:'https://cdn.jsdelivr.net/npm/tesseract.js-core@5.1.0/tesseract-core-simd.wasm.js',
+     langPath:'https://tessdata.projectnaptha.com/4.0.0'});
+ }
+ return worker;
 }
 
 async function ingest(file){
@@ -1201,14 +1223,16 @@ gs.addEventListener('input',e=>{searchQ=e.target.value;if(searchQ&&!document.get
 document.addEventListener('keydown',e=>{if(e.key==='/'&&document.activeElement!==gs){e.preventDefault();gs.focus();}if(e.key==='Escape')closeDrawer();});
 
 // restore setting switches
-if(SETTINGS.ocrArabic)document.getElementById('sw-ar').classList.add('on');
 if(!SETTINGS.dedup)document.getElementById('sw-dedup').classList.remove('on');
 document.getElementById('aiEndpoint').value=SETTINGS.aiEndpoint;
 document.getElementById('aiEndpoint').addEventListener('change',e=>{SETTINGS.aiEndpoint=e.target.value.trim();localStorage.aiEndpoint=SETTINGS.aiEndpoint;});
 
 /* ============ BOOT ============ */
 document.querySelectorAll('[data-ic]').forEach(e=>e.innerHTML=ic(e.dataset.ic));
-(async()=>{applyI18n();await openDB();await refresh();})();
+(async()=>{applyI18n();await openDB();await refresh();
+ try{const r=await fetch('vendor/eng.traineddata.gz',{method:'HEAD'});const b=document.getElementById('ocrStatus');
+  if(b){b.textContent=r.ok?'محلي · جاهز':'CDN احتياطي';b.className='ocr-badge '+(r.ok?'ok':'cdn');}}catch(e){const b=document.getElementById('ocrStatus');if(b){b.textContent='CDN احتياطي';b.className='ocr-badge cdn';}}
+})();
 </script>
 </body>
 </html>
