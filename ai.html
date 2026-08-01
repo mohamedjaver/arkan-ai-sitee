@@ -646,6 +646,10 @@ const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.targ
 document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
 </script>
 
+<script type="module">
+  import * as ARKAN from './arkan-core.js';
+  window.ARKAN = ARKAN;   /* الموقع كتطبيق حيّ واحد: أسعار وجلسة مشتركة */
+</script>
 </body>
 </html>
 
