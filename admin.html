@@ -131,6 +131,15 @@ body{ margin:0; color:var(--txt); font-family:'IBM Plex Sans Arabic',system-ui,s
 </head>
 <body>
 <div class="wrap">
+<section id="ark-req-panel" class="ark-card" style="margin:14px 0">
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+    <span class="ark-eyebrow">ARKAN PAY</span>
+    <h3 style="font-weight:800;font-size:17px;margin:0">طلبات الدفع الواردة</h3>
+    <span id="ark-req-count" style="margin-inline-start:auto;color:var(--ark-txt-2,#9aa);font-size:13px"></span>
+  </div>
+  <div id="ark-req-list" style="color:var(--ark-txt-2,#9aa);font-size:14px">جارٍ التحميل…</div>
+</section>
+
   <div class="top">
     <img class="logo" src="arkan-logo.svg" alt="أركان">
     <div>
@@ -482,6 +491,24 @@ document.querySelectorAll('#accFilters button').forEach(b => b.onclick = () => {
 });
 
 $('logoutBtn').onclick = async () => { await signOut(auth); location.reload(); };
+</script>
+<script type="module">
+import * as ARKAN from './arkan-core.js'; window.ARKAN = ARKAN;
+(async()=>{ const list=document.getElementById('ark-req-list'),cnt=document.getElementById('ark-req-count'); if(!list)return;
+  await ARKAN.ready; if(!ARKAN.firebaseOK){ list.textContent='Firebase غير متاح على هذه الشبكة.'; return; }
+  const {collection,query,orderBy,onSnapshot}=ARKAN.fb;
+  try{ onSnapshot(query(collection(ARKAN.db,'payment_requests'),orderBy('createdAt','desc')), snap=>{
+    if(cnt)cnt.textContent=snap.size+' طلب';
+    if(snap.empty){ list.innerHTML='<div style=\'opacity:.6\'>لا طلبات بعد.</div>'; return; }
+    list.innerHTML=snap.docs.map(d=>{const r=d.data(); const wa=r.contact?('https://wa.me/'+String(r.contact).replace(/[^0-9]/g,'')):'';
+      return '<div style=\'display:flex;gap:12px;justify-content:space-between;align-items:center;padding:12px 4px;border-bottom:1px solid rgba(255,255,255,.08)\'>'+
+        '<div style=\'min-width:0\'><div style=\'font-weight:700\'>'+(r.company||'—')+' <span style=\'color:var(--ark-bai,#EA4E3D);font-family:ui-monospace;font-size:12px\'>'+(r.ref||'')+'</span></div>'+
+        '<div style=\'color:var(--ark-txt-2,#9aa);font-size:12.5px\'>'+((r.destination||'—'))+' · '+((r.purpose||''))+' · '+((r.contact||''))+'</div></div>'+
+        '<div style=\'text-align:end;flex:none\'><div style=\'font-weight:800\'>'+(r.amount||'')+' <span style=\'color:var(--ark-gold,#F5C94C)\'>'+(r.currency||'')+'</span></div>'+
+        (wa?('<a href=\''+wa+'\' target=\'_blank\' style=\'color:#2FD08C;font-size:12px;text-decoration:none\'>واتساب ↗</a>'):'')+'</div></div>';
+    }).join(''); }, err=>{ list.textContent='تعذّر التحميل: '+err.message; });
+  }catch(e){ list.textContent='خطأ: '+e.message; }
+})();
 </script>
 </body>
 </html>
