@@ -1,0 +1,25 @@
+// ═══════════════════════════════════════════════════════════
+//  ARKAN — قاعدة payment_requests
+//  ⚠️ لا تستبدل قواعدك كلها. أضِف هذه الكتلة فقط داخل:
+//     match /databases/{database}/documents { ...  هنا  ... }
+//  ثم اضغط Publish في Firebase Console.
+// ═══════════════════════════════════════════════════════════
+
+match /payment_requests/{id} {
+
+  // النموذج العام (بلا تسجيل دخول) يُنشئ طلباً "pending" فقط،
+  // مع التحقق من الحقول الأساسية لمنع الكتابة العشوائية.
+  allow create: if
+        request.resource.data.status == 'pending'
+     && request.resource.data.keys().hasAll(['ref','company','amount','currency','status'])
+     && request.resource.data.company is string
+     && request.resource.data.company.size() > 1
+     && request.resource.data.company.size() < 200;
+
+  // القراءة والتحديث (قبول/رفض) للأدمن فقط — عبر بريدك.
+  allow read, update: if request.auth != null
+     && request.auth.token.email == 'mohamedarbi0208@gmail.com';
+
+  // لا حذف من الواجهة.
+  allow delete: if false;
+}
