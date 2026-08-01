@@ -439,5 +439,9 @@ async function uploadInvoice(){
   inp.click();
 }
 </script>
+<script type="module">
+  import * as ARKAN from './arkan-core.js';
+  window.ARKAN = ARKAN;   /* الموقع كتطبيق حيّ واحد: أسعار وجلسة مشتركة */
+</script>
 </body>
 </html>
