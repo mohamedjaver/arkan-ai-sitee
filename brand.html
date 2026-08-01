@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#070A14">
+<title>ARKAN × BAI — نظام التصميم</title>
+<link rel="icon" href="arkan-icon-512.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="stylesheet" href="arkan-theme.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:linear-gradient(180deg,#070A14 0%,#0E1322 55%,#131A2E 100%);background-attachment:fixed;color:var(--ark-txt);min-height:100vh;line-height:1.7;overflow-x:hidden}
+body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
+  background:radial-gradient(1100px 620px at 85% -10%,rgba(108,92,231,.18),transparent 60%),
+             radial-gradient(820px 520px at 8% 108%,rgba(234,78,61,.12),transparent 60%)}
+.wrap{max-width:1080px;margin:0 auto;padding:32px 20px 80px}
+.nav{display:flex;align-items:center;gap:12px;margin-bottom:44px}
+.nav img{width:40px;height:40px;border-radius:11px}
+.nav b{font:800 18px var(--ark-font);letter-spacing:.04em}
+.nav .sp{flex:1}
+.nav a{color:var(--ark-txt-2);text-decoration:none;font:600 13px var(--ark-font)}
+.hero{text-align:center;padding:26px 0 40px}
+.hero .ark-title{margin:14px auto 16px;max-width:16ch}
+.grad-txt{background:var(--ark-grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero .cta{display:flex;gap:12px;justify-content:center;margin-top:24px;flex-wrap:wrap}
+.trustrow{display:flex;gap:26px;justify-content:center;flex-wrap:wrap;margin-top:34px}
+.sec{margin-top:56px}
+.sec-h{display:flex;align-items:baseline;gap:12px;margin-bottom:18px}
+.sec-h h2{font:800 22px var(--ark-font);letter-spacing:-.02em}
+.sec-h .rule{flex:1;height:1px;background:linear-gradient(90deg,var(--ark-stroke-2),transparent)}
+.grid{display:grid;gap:16px}
+.g3{grid-template-columns:repeat(auto-fill,minmax(min(100%,240px),1fr))}
+.swatches{grid-template-columns:repeat(auto-fill,minmax(min(100%,150px),1fr))}
+.sw{border-radius:14px;border:1px solid var(--ark-stroke);overflow:hidden}
+.sw .chip{height:74px} .sw .lbl{padding:10px 12px;font:600 12px var(--ark-font)} .sw .hex{color:var(--ark-txt-3);font-weight:500;font-size:11px}
+.type-row{display:flex;align-items:baseline;gap:14px;padding:12px 0;border-bottom:1px solid var(--ark-stroke)}
+.type-row span{color:var(--ark-txt-3);font:500 12px var(--ark-font);width:70px;flex:none}
+.card-demo h3{font:700 17px var(--ark-font);margin-bottom:6px}
+.card-demo p{color:var(--ark-txt-2);font-size:14px}
+.foot{margin-top:60px;text-align:center;color:var(--ark-txt-3);font-size:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="nav">
+    <img src="arkan-logo.svg" alt="ARKAN" onerror="this.style.display='none'">
+    <b>ARKAN</b>
+    <div class="sp"></div>
+    <a href="index.html">← الموقع</a>
+  </div>
+
+  <header class="hero">
+    <span class="ark-eyebrow">نظام التصميم الموحّد</span>
+    <h1 class="ark-title">عمق أركان الفخم × وضوح <span class="grad-txt">BAI</span> المؤسسي</h1>
+    <p class="ark-lead" style="max-width:52ch;margin:0 auto">قاعدة داكنة فاخرة، خط Manrope الهندسي النظيف، وتدرّج توقيعي يمزج بنفسجي أركان بأحمر BAI المرجاني — هوية واحدة عبر كل الصفحات.</p>
+    <div class="cta">
+      <a class="ark-btn" href="#">ابدأ الآن</a>
+      <a class="ark-btn ark-btn-ghost" href="#">استكشف</a>
+    </div>
+    <div class="trustrow">
+      <span class="ark-trust"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2l2.4 5 5.6.8-4 4 1 5.6L12 20l-5 2.4 1-5.6-4-4 5.6-.8L12 2Z"/></svg>تصميم Premium</span>
+      <span class="ark-trust"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 6 9 17l-5-5"/></svg>متناسق عبر الصفحات</span>
+      <span class="ark-trust"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>سريع وخفيف</span>
+    </div>
+  </header>
+
+  <section class="sec">
+    <div class="sec-h"><h2>اللوحة اللونية</h2><div class="rule"></div></div>
+    <div class="grid swatches">
+      <div class="sw"><div class="chip" style="background:#6C5CE7"></div><div class="lbl">بنفسجي أساسي<div class="hex">#6C5CE7</div></div></div>
+      <div class="sw"><div class="chip" style="background:#8B7BFF"></div><div class="lbl">بنفسجي حي<div class="hex">#8B7BFF</div></div></div>
+      <div class="sw"><div class="chip" style="background:#EA4E3D"></div><div class="lbl">مرجاني BAI<div class="hex">#EA4E3D</div></div></div>
+      <div class="sw"><div class="chip" style="background:#F5C94C"></div><div class="lbl">ذهبي<div class="hex">#F5C94C</div></div></div>
+      <div class="sw"><div class="chip" style="background:#2FD08C"></div><div class="lbl">أخضر<div class="hex">#2FD08C</div></div></div>
+      <div class="sw"><div class="chip" style="background:linear-gradient(135deg,#8B7BFF,#6C5CE7 52%,#EA4E3D)"></div><div class="lbl">التدرّج التوقيعي<div class="hex">violet → coral</div></div></div>
+      <div class="sw"><div class="chip" style="background:#0E1322"></div><div class="lbl">خلفية<div class="hex">#0E1322</div></div></div>
+      <div class="sw"><div class="chip" style="background:#131A2E"></div><div class="lbl">سطح<div class="hex">#131A2E</div></div></div>
+    </div>
+  </section>
+
+  <section class="sec">
+    <div class="sec-h"><h2>الخطوط والهرمية</h2><div class="rule"></div></div>
+    <div class="ark-card">
+      <div class="type-row"><span>Display</span><div class="ark-title" style="font-size:32px">أركان — Trust in the Future</div></div>
+      <div class="type-row"><span>Heading</span><div style="font:800 24px var(--ark-font)">تحويلات دولية بثقة مؤسسية</div></div>
+      <div class="type-row"><span>Body</span><div class="ark-lead" style="font-size:16px">نص المتن بخط Manrope للّاتيني و IBM Plex Sans Arabic للعربي — وضوح وقابلية قراءة عالية.</div></div>
+      <div class="type-row" style="border:0"><span>Eyebrow</span><span class="ark-eyebrow">قسم · SECTION LABEL</span></div>
+    </div>
+  </section>
+
+  <section class="sec">
+    <div class="sec-h"><h2>المكوّنات</h2><div class="rule"></div></div>
+    <div class="grid g3">
+      <div class="ark-card card-demo"><span class="ark-eyebrow">تحويل</span><h3 style="margin-top:8px">بطاقة زجاجية</h3><p>عمق أركان مع مساحات BAI السخيّة وحواف ناعمة.</p><a class="ark-btn" style="margin-top:14px;width:100%" href="#">إجراء</a></div>
+      <div class="ark-card ark-card-hi card-demo"><span class="ark-eyebrow">مميّز</span><h3 style="margin-top:8px">بطاقة بتدرّج</h3><p>لمسة التدرّج التوقيعي للعناصر البارزة.</p><a class="ark-btn ark-btn-ghost" style="margin-top:14px;width:100%" href="#">تفاصيل</a></div>
+      <div class="ark-card card-demo">
+        <span class="ark-eyebrow">Câmbios</span><h3 style="margin-top:8px;margin-bottom:6px">أسعار مباشرة</h3>
+        <div class="ark-rates">
+          <div class="ark-rate-row"><span class="ccy">USD → AOA</span><span><span class="buy">932.28</span> / <span class="sell">950.92</span></span></div>
+          <div class="ark-rate-row"><span class="ccy">EUR → AOA</span><span><span class="buy">1,098.6</span> / <span class="sell">1,120.5</span></span></div>
+          <div class="ark-rate-row" style="border:0"><span class="ccy">USDT → MRU</span><span><span class="buy">39.8</span> / <span class="sell">40.4</span></span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="foot">ARKAN × BAI Design System · arkanrates.com</div>
+</div>
+</body>
+</html>
