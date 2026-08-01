@@ -742,7 +742,11 @@ fetch('rates-data.json?t='+Date.now()).then(r=>r.ok?r.json():null).then(d=>{
 </script>
 <script src="integrations.js"></script>
 <script src="auth.js"></script>
-<script src="i18n.js"></script></body>
+<script src="i18n.js"></script><script type="module">
+  import * as ARKAN from './arkan-core.js';
+  window.ARKAN = ARKAN;   /* الموقع كتطبيق حيّ واحد: أسعار وجلسة مشتركة */
+</script>
+</body>
 </html>
 
 <div id="arkanPay" style="display:none;position:fixed;inset:0;z-index:99999;background:#000c;backdrop-filter:blur(6px);align-items:center;justify-content:center;font-family:'Poppins','Tajawal',sans-serif" onclick="if(event.target===this)this.style.display='none'">
