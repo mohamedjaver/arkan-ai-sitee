@@ -11,7 +11,7 @@
   const getKeyU = () => (localStorage.getItem('gemKey') || localStorage.getItem(KEY_LS) || '').trim();
   const setKeyU = k => { localStorage.setItem('gemKey', k); localStorage.setItem(KEY_LS, k); };
   const rmKeyU  = () => { localStorage.removeItem('gemKey'); localStorage.removeItem(KEY_LS); };
-  const MODEL = 'gemini-2.0-flash';
+  const MODELS = ['gemini-2.5-flash','gemini-2.0-flash','gemini-flash-latest'];
   const SYS = 'أنت مساعد ARKAN Rates (arkanrates.com) — منصة صرف عملات وتسويات دولية بين موريتانيا وأنغولا والصين والخليج، مملوكة لشركة ARKAN INTERNATIONAL TRADING. خدماتنا: تحويل الأموال عبر الحدود (AOA, MRU, USDT, EUR, CNY, AED)، تسديد فواتير الموردين في الصين، بطاقة فيزا مسبقة الدفع بـ1500 أوقية جديدة (MRU) تُسلَّم في نواكشوط خلال 24-48 ساعة، أرشفة الإيصالات بالذكاء الاصطناعي، ومركز تسويات. واتساب: +222 36 29 50 50. أجب بلغة السائل (عربي/فرنسي/إنجليزي/برتغالي) باختصار ومهنية. إن سُئلت عن سعر حي استخدم الأسعار المرفقة في الرسالة إن وُجدت، وإلا وجّه للواتساب.';
 
   function el(tag, css, html) { const e = document.createElement(tag); if (css) e.style.cssText = css; if (html != null) e.innerHTML = html; return e; }
@@ -33,19 +33,24 @@
     const ctx = ratesContext();
     const contents = history.map(m => ({ role: m.role === 'ai' ? 'model' : 'user', parts: [{ text: m.text }] }));
     if (ctx) contents[contents.length - 1].parts[0].text += '\n\n[بيانات حية]: ' + ctx;
-    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${encodeURIComponent(key)}`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ system_instruction: { parts: [{ text: SYS }] }, contents, generationConfig: { maxOutputTokens: 500, temperature: 0.4 } })
-    });
-    if (!res.ok) {
+    let lastErr = null;
+    for (const MODEL of MODELS) {
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${encodeURIComponent(key)}`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ system_instruction: { parts: [{ text: SYS }] }, contents, generationConfig: { maxOutputTokens: 500, temperature: 0.4 } })
+      });
+      if (res.ok) {
+        const d = await res.json();
+        return (d.candidates && d.candidates[0] && d.candidates[0].content.parts.map(p => p.text).join('')) || '…';
+      }
       let msg = 'HTTP ' + res.status;
       try { const j = await res.json(); if (j.error && j.error.message) msg = j.error.message; } catch (e2) {}
       if (res.status === 400 || res.status === 403) throw new Error('BAD_KEY');
-      if (res.status === 429) throw new Error('RATE');
-      throw new Error(msg);
+      lastErr = (res.status === 429 || res.status === 404) ? new Error(res.status === 429 ? 'RATE' : msg) : new Error(msg);
+      if (res.status !== 429 && res.status !== 404 && res.status !== 503) throw lastErr;
+      // 429/404/503 → جرّب النموذج التالي
     }
-    const d = await res.json();
-    return (d.candidates && d.candidates[0] && d.candidates[0].content.parts.map(p => p.text).join('')) || '…';
+    throw (lastErr || new Error('RATE'));
   }
 
   function mount() {
