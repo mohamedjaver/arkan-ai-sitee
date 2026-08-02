@@ -128,6 +128,7 @@ body{ margin:0; color:var(--txt); font-family:'IBM Plex Sans Arabic',system-ui,s
 .acc-status.active{ background:rgba(52,211,153,.14); color:var(--up); }
 </style>
   <link rel="stylesheet" href="arkan-theme.css">
+<style id="ark-guard">body:not(.ark-admin-ok) .wrap,body:not(.ark-admin-ok) #ark-req-panel{display:none!important}</style>
 </head>
 <body>
 <div class="wrap">
@@ -258,10 +259,11 @@ const isToday = ts => { if(!ts?.toDate) return false; const d=ts.toDate(), n=new
 
 // حماية: أدمن فقط
 onAuthStateChanged(auth, user => {
-  if (!user){ showAdminLogin(); return; }
-  if (!isAdminEmail(user.email)){ toast('هذا الحساب ليس أدمن'); signOut(auth); return; }
+  if (!user){ document.body.classList.remove('ark-admin-ok'); showAdminLogin(); return; }
+  if (!isAdminEmail(user.email)){ document.body.classList.remove('ark-admin-ok'); toast('هذا الحساب ليس أدمن'); signOut(auth); return; }
   $('adminEmail').textContent = user.email;
   const lg = document.getElementById('adminGate'); if(lg) lg.style.display='none';
+  document.body.classList.add('ark-admin-ok');
   listen();
   listenAccounts();
 });
