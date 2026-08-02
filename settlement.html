@@ -5,7 +5,7 @@
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-<meta name="theme-color" content="#0A1A3E">
+<meta name="theme-color" content="#F7FAFD">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="ARKAN">
 <meta name="application-name" content="ARKAN">
@@ -58,20 +58,20 @@ window._pdfReady=(async function(){
 </script>
 <style>
 :root{
-  --bg:#050D24;--bg2:#0A1A3E;
-  --glass:rgba(9,25,60,.68);--glass2:rgba(12,33,78,.82);
-  --stroke:rgba(0,181,255,.14);--stroke-acc:rgba(0,181,255,.5);
-  --acc:#0058D9;--acc2:#00B5FF;--accD:#003B8F;
-  --gold:#F5C94C;--gold2:#FFD97D;
-  --txt:#F8FAFC;--dim:#9FB4DC;
-  --green:#00E08A;--red:#FF6B6B;--wa:#25D366;--blue:#00B5FF;--teal:#26A17B;
+  --bg:#F7FAFD;--bg2:#FFFFFF;
+  --glass:linear-gradient(180deg,#FFFFFF 0%,#F8FBFF 100%);--glass2:#FFFFFF;
+  --stroke:#D9E5F2;--stroke-acc:rgba(0,153,255,.55);
+  --acc:#0056D6;--acc2:#0099FF;--accD:#003B8F;
+  --gold:#C88A0A;--gold2:#E8A812;
+  --txt:#102A43;--dim:#486581;
+  --green:#0A9E5C;--red:#E53935;--wa:#25D366;--blue:#0099FF;--teal:#0F9D6B;
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 .cflag{display:inline-block;width:1.5em;height:1.5em;border-radius:50%;background-size:cover;background-position:center;vertical-align:middle;border:1.5px solid rgba(255,255,255,.14);box-shadow:0 2px 6px rgba(0,0,0,.3)}
 body{background:var(--bg);color:var(--txt);
   font-family:'IBM Plex Sans Arabic',sans-serif;min-height:100vh;
   padding-bottom:calc(88px + env(safe-area-inset-bottom));
-  background-image:radial-gradient(1100px 600px at 78% -10%,rgba(0,88,217,.55),transparent 60%),radial-gradient(900px 700px at -10% 110%,rgba(0,181,255,.22),transparent 55%),linear-gradient(180deg,#071D49 0%,#062165 58%,#003B8F 100%);
+  background-image:linear-gradient(180deg,#F7FAFD 0%,#EEF6FF 100%);
   background-repeat:no-repeat;background-attachment:fixed}
 
 /* ===== طبقات الخلفية الثابتة (موحّدة مع الصفحة الرئيسية) ===== */
@@ -146,12 +146,12 @@ header{padding:20px 18px 4px;position:relative;z-index:6}
 section{padding:16px 18px;display:none}
 section.on{display:block;animation:fadeUp .25s ease}
 @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
-.card{background:var(--glass);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
-  border:1px solid var(--stroke);border-radius:20px;padding:24px;margin-bottom:14px;
-  box-shadow:0 8px 32px rgba(0,0,0,.3), inset 0 1px 0 rgba(255,255,255,.05);contain:layout;
+.card{background:var(--glass);
+  border:1px solid var(--stroke);border-radius:22px;padding:24px;margin-bottom:14px;
+  box-shadow:0 10px 30px -12px rgba(16,42,67,.10), 0 2px 6px -2px rgba(16,42,67,.05);contain:layout;
   transition:border-color .3s,box-shadow .3s}
-.card:hover{border-color:rgba(96,165,250,.3);
-  box-shadow:0 12px 40px rgba(0,88,217,.15), inset 0 1px 0 rgba(255,255,255,.1)}
+.card:hover{border-color:rgba(0,153,255,.45);
+  box-shadow:0 16px 40px -14px rgba(0,86,214,.16)}
 .card h3{font-size:13px;color:var(--acc2);margin-bottom:12px;font-weight:700}
 label{display:block;font-size:12px;color:var(--dim);margin:10px 0 6px}
 input,select,textarea{width:100%;padding:14px 16px;border-radius:12px;background:rgba(15,23,42,.6);
@@ -256,12 +256,12 @@ input.ar,select.ar{font-family:'IBM Plex Sans Arabic',sans-serif}
 .star.on{color:var(--gold)}
 nav{position:fixed;bottom:0;left:0;right:0;z-index:90;
   display:flex;padding:10px 14px calc(10px + env(safe-area-inset-bottom));gap:6px;
-  background:rgba(8,21,54,.85);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
-  border-top:1px solid var(--stroke)}
-.nv{flex:1;text-align:center;padding:8px 2px;border-radius:16px;cursor:pointer;color:var(--dim);transition:.15s}
+  background:#071E4F;
+  border-top:1px solid rgba(255,255,255,.06)}
+.nv{flex:1;text-align:center;padding:8px 2px;border-radius:16px;cursor:pointer;color:#8FA3BD;transition:.15s}
 .nv svg{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .nv div{font-size:10px;margin-top:3px;font-weight:600}
-.nv.on{color:#fff;background:linear-gradient(135deg,var(--acc2),var(--accD));box-shadow:0 8px 22px rgba(0,181,255,.35)}
+.nv.on{color:#fff;background:linear-gradient(135deg,#0056D6,#0099FF);box-shadow:0 8px 22px rgba(0,153,255,.4)}
 .toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%) translateY(80px);
   background:linear-gradient(135deg,var(--acc2),var(--accD));color:#fff;padding:11px 24px;border-radius:26px;
   font-size:13px;font-weight:700;transition:.25s;z-index:99;opacity:0;box-shadow:0 10px 30px rgba(0,181,255,.4)}
@@ -272,7 +272,7 @@ nav{position:fixed;bottom:0;left:0;right:0;z-index:90;
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 
 /* ===== GLOBAL LIVE TICKER ===== */
-#tickerBar{position:relative;overflow:hidden;background:linear-gradient(180deg,rgba(5,13,36,.96),rgba(8,21,54,.92));
+#tickerBar{position:relative;overflow:hidden;background:linear-gradient(135deg,#003B8F,#006BFF);
   border-bottom:1px solid rgba(0,181,255,.25);box-shadow:0 4px 24px rgba(0,88,217,.25);
   backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);z-index:8}
 #tickerBar .tkHead{display:flex;align-items:center;justify-content:space-between;padding:5px 12px 2px}
@@ -451,7 +451,7 @@ body,input,select,textarea,button,.ar,h1,h2,h3{font-family:'IBM Plex Sans Arabic
       <div class="am"><div class="a1 num" id="balU" style="color:#3DDC97">0</div><div class="a2 num" id="balUu">$0</div></div></div>
     <div class="asset" id="cardA" onclick="selectAsset('A')" style="cursor:pointer"><div class="ic" style="background:#F4A50C;color:#0A1A3E;font-weight:800;font-size:14px;letter-spacing:-.5px">Kz</div>
       <div class="nm"><div class="n1">AOA</div><div class="n2" id="rateA">— Kz/USDT</div></div>
-      <div class="am"><div class="a1 num" id="balA" style="color:#FFC94D">0</div><div class="a2 num" id="balAu">$0</div></div></div>
+      <div class="am"><div class="a1 num" id="balA" style="color:#C88A0A">0</div><div class="a2 num" id="balAu">$0</div></div></div>
     <div class="asset" id="cardM" onclick="selectAsset('M')" style="cursor:pointer"><div class="ic" style="background:#00B5FF;color:#0e2544;font-weight:800;font-size:13px;letter-spacing:-.5px">UM</div>
       <div class="nm"><div class="n1">MRU</div><div class="n2" id="rateM">— UM/USDT</div></div>
       <div class="am"><div class="a1 num" id="balM" style="color:#7FB8FF">0</div><div class="a2 num" id="balMu">$0</div></div></div>
@@ -471,7 +471,7 @@ body,input,select,textarea,button,.ar,h1,h2,h3{font-family:'IBM Plex Sans Arabic
 
 <!-- ================= NEW OP ================= -->
 <section id="new" class="on">
-  <div class="glass" id="gemBar" style="padding:14px 16px;margin-bottom:14px;border:1px solid rgba(245,201,76,.25)">
+  <div class="glass" id="gemBar" style="padding:14px 16px;margin-bottom:14px;border:1px solid rgba(200,138,10,.25)">
     <div style="display:flex;align-items:center;gap:10px;cursor:pointer" onclick="var b=document.getElementById('gemBody');b.style.display=b.style.display==='none'?'block':'none'">
       <span style="font-size:18px">🤖</span>
       <b style="flex:1;font-size:14px">قراءة الإيصالات بالذكاء (Gemini)</b>
@@ -653,8 +653,8 @@ body,input,select,textarea,button,.ar,h1,h2,h3{font-family:'IBM Plex Sans Arabic
         <div id="rcListC" style="margin-top:6px;max-height:220px;overflow:auto"></div>
       </div>
       <!-- ===== المورد ===== -->
-      <div style="background:rgba(255,190,80,.06);border:1px solid var(--stroke);border-radius:14px;padding:10px">
-        <div style="font-weight:800;font-size:13px;color:#E8C24A;margin-bottom:8px">إيصالات المورد</div>
+      <div style="background:rgba(200,138,10,.06);border:1px solid var(--stroke);border-radius:14px;padding:10px">
+        <div style="font-weight:800;font-size:13px;color:#B7791F;margin-bottom:8px">إيصالات المورد</div>
         <button class="btn btn-gold btn-sm" style="width:100%;font-size:11px" onclick="uploadRC('sup')">رفع دفعة</button>
         <button class="btn btn-line btn-sm" style="width:100%;font-size:11px;margin-top:6px" onclick="addRCManual('sup')">إدخال يدوي</button>
         <div class="sum" style="margin-top:8px;padding:8px">
@@ -1005,7 +1005,7 @@ body,input,select,textarea,button,.ar,h1,h2,h3{font-family:'IBM Plex Sans Arabic
 
 <!-- ================= MODAL (statement / receipts) ================= -->
 <div id="modal" style="display:none;position:fixed;inset:0;z-index:200;
-  background:rgba(5,13,36,.75);backdrop-filter:blur(6px);padding:20px;overflow-y:auto">
+  background:rgba(16,42,67,.45);backdrop-filter:blur(6px);padding:20px;overflow-y:auto">
   <div style="max-width:560px;margin:30px auto">
     <div class="card" style="margin-bottom:12px">
       <div style="display:flex;justify-content:space-between;align-items:center">
@@ -2883,7 +2883,7 @@ function rcClearAll(){
 /* ============ العرض ============ */
 function rcRow(b){
   const i=rc.indexOf(b), st=rxRes?(rxRes.stat[i]||null):null;
-  const B={ok:['مطابق','#2ecc71'],apx:['تقريبي','#E8C24A'],dup:['مكرر','#ff9f43'],miss:['بلا مطابقة','#ff5c5c']};
+  const B={ok:['مطابق','#2ecc71'],apx:['تقريبي','#B7791F'],dup:['مكرر','#ff9f43'],miss:['بلا مطابقة','#ff5c5c']};
   const badge=st&&B[st.k]?'<span style="color:'+B[st.k][1]+';font-size:9px;font-weight:700">'+B[st.k][0]+'</span>':'';
   const meta=[b.bank,b.date].filter(Boolean).join(' · ');
   return '<div class="leg" style="flex-wrap:wrap;padding:7px 8px;align-items:flex-start">'
@@ -2982,7 +2982,7 @@ function rcFilter(f){
   if(rxFilter==='all'||rxFilter==='ok')
     rows=rows.concat(rxRes.pairs.map(p=>line(
       String(p.a.name||'').slice(0,14)+' ⟷ '+String(p.b.name||'').slice(0,14)+' <span style="color:var(--dim);font-size:9px">('+p.kind+(Math.abs(p.diff)>0.005?' · فرق '+fmt(p.diff,d):'')+')</span>',
-      fmt(p.a.amount,d), p.kind==='تقريبي'?'#E8C24A':'#2ecc71')));
+      fmt(p.a.amount,d), p.kind==='تقريبي'?'#B7791F':'#2ecc71')));
   if(rxFilter==='all'||rxFilter==='missS')
     rows=rows.concat(rxRes.missS.map(x=>line('لم يصل للمورد — '+String(x.name||'').slice(0,20)+(x.txn?' <span style="color:var(--dim);font-size:8px">'+String(x.txn).slice(0,12)+'…</span>':''),fmt(x.amount,d),'var(--red)')));
   if(rxFilter==='all'||rxFilter==='missC')
@@ -4107,7 +4107,7 @@ function renderPortfolio(){
   const bi=$('balInt'),bd=$('balDec'),lbl=document.querySelector('.donutC .s'),curEl=document.querySelector('.donutC .cur');
   const views={
     U:{amt:b.USDT,usd:uU,name:'Tether · USDT',sym:'₮',color:'#3DDC97'},
-    A:{amt:b.AOA,usd:uA,name:'AOA · كوانزا',sym:'Kz',color:'#FFC94D'},
+    A:{amt:b.AOA,usd:uA,name:'AOA · كوانزا',sym:'Kz',color:'#C88A0A'},
     M:{amt:b.MRU,usd:uM,name:'MRU · أوقية',sym:'UM',color:'#7FB8FF'},
     E:{amt:b.EUR||0,usd:uE,name:'EUR · يورو',sym:'€',color:'#7FD1FF'}
   };
@@ -4809,7 +4809,7 @@ async function genStatusImage(){
         <div style="font-size:12px;color:#7A8DB8">${NAMES[x.ccy]||''}</div>
       </div>
       <div style="text-align:left;direction:ltr">
-        <div style="font-family:'IBM Plex Mono';font-size:24px;font-weight:800;color:#FFC94D">${x.w}</div>
+        <div style="font-family:'IBM Plex Mono';font-size:24px;font-weight:800;color:#C88A0A">${x.w}</div>
         <div style="font-family:'IBM Plex Mono';font-size:15px;color:#0058D9">${x.r}</div>
       </div>
     </div>`).join('');
