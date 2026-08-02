@@ -20,12 +20,14 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="vendor/pdf.min.js"></script>
 <script src="vendor/tesseract.min.js"></script>
+<script src="vendor/jsbarcode.all.min.js"></script>
 <script>
 /* سقوط احتياطي إلى CDN إن تعذّر تحميل النسخة المحلية */
 (function(){
   function inj(u){var s=document.createElement('script');s.src=u;s.async=false;document.head.appendChild(s);}
   if(!window.pdfjsLib)inj('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js');
   if(!window.Tesseract)inj('https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.1.0/tesseract.min.js');
+  if(!window.JsBarcode)inj('https://cdnjs.cloudflare.com/ajax/libs/jsbarcode/3.11.6/JsBarcode.all.min.js');
 })();
 </script>
 <script>
@@ -56,53 +58,53 @@ window._pdfReady=(async function(){
 </script>
 <style>
 :root{
-  --bg:#070A14;--bg2:#0E1322;
-  --glass:rgba(17,23,40,.72);--glass2:rgba(23,30,50,.82);
-  --stroke:rgba(255,255,255,.08);--stroke-acc:rgba(108,92,231,.45);
-  --acc:#6C5CE7;--acc2:#8B7BFF;--accD:#5A4BD6;
+  --bg:#050D24;--bg2:#0A1A3E;
+  --glass:rgba(9,25,60,.68);--glass2:rgba(12,33,78,.82);
+  --stroke:rgba(0,181,255,.14);--stroke-acc:rgba(0,181,255,.5);
+  --acc:#0058D9;--acc2:#00B5FF;--accD:#003B8F;
   --gold:#F5C94C;--gold2:#FFD97D;
-  --txt:#F8FAFC;--dim:#94A3B8;
-  --green:#2FD08C;--red:#FF6B6B;--wa:#25D366;--blue:#8B7BFF;--teal:#26A17B;
+  --txt:#F8FAFC;--dim:#9FB4DC;
+  --green:#00E08A;--red:#FF6B6B;--wa:#25D366;--blue:#00B5FF;--teal:#26A17B;
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 .cflag{display:inline-block;width:1.5em;height:1.5em;border-radius:50%;background-size:cover;background-position:center;vertical-align:middle;border:1.5px solid rgba(255,255,255,.14);box-shadow:0 2px 6px rgba(0,0,0,.3)}
 body{background:var(--bg);color:var(--txt);
   font-family:'IBM Plex Sans Arabic',sans-serif;min-height:100vh;
   padding-bottom:calc(88px + env(safe-area-inset-bottom));
-  background-image:linear-gradient(160deg,#0B0F19 0%,#121829 40%,#1a1f35 100%);
+  background-image:radial-gradient(1000px 520px at 85% -10%,rgba(0,88,217,.38),transparent 60%),radial-gradient(760px 520px at -10% 108%,rgba(0,181,255,.15),transparent 55%),linear-gradient(165deg,#050D24 0%,#071D49 45%,#0A2A6E 100%);
   background-repeat:no-repeat;background-attachment:fixed}
 
 /* ===== طبقات الخلفية الثابتة (موحّدة مع الصفحة الرئيسية) ===== */
 .orb{position:fixed;border-radius:50%;filter:blur(90px);pointer-events:none;z-index:0}
 .orb-1{top:-16%;right:-8%;width:56vw;height:56vw;max-width:760px;max-height:760px;
-  background:radial-gradient(circle,rgba(108,92,231,.16),transparent 68%)}
+  background:radial-gradient(circle,rgba(0,88,217,.16),transparent 68%)}
 .orb-2{bottom:-20%;left:-12%;width:60vw;height:60vw;max-width:820px;max-height:820px;
   background:radial-gradient(circle,rgba(139,92,246,.11),transparent 68%)}
 #particles{position:fixed;inset:0;z-index:0;pointer-events:none}
 .grid-bg{position:fixed;inset:0;z-index:0;pointer-events:none;
-  background-image:linear-gradient(rgba(108,92,231,.045) 1px,transparent 1px),
-                   linear-gradient(90deg,rgba(108,92,231,.045) 1px,transparent 1px);
+  background-image:linear-gradient(rgba(0,88,217,.045) 1px,transparent 1px),
+                   linear-gradient(90deg,rgba(0,88,217,.045) 1px,transparent 1px);
   background-size:64px 64px}
 /* المحتوى يطفو فوق الخلفية */
 .card,nav,#lock,#modal,.toast,header,section{position:relative;z-index:1}
 .num{font-family:'IBM Plex Mono',monospace;font-feature-settings:"tnum"}
 #lock{position:fixed;inset:0;z-index:1000;background:var(--bg);
-  background-image:radial-gradient(620px 420px at 50% 28%, rgba(139,114,255,.30), transparent 65%);
+  background-image:radial-gradient(620px 420px at 50% 28%, rgba(0,181,255,.30), transparent 65%);
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;padding:24px}
-#lock .hex{width:82px;height:82px;border-radius:20px;box-shadow:0 0 55px rgba(139,114,255,.6)}
+#lock .hex{width:82px;height:82px;border-radius:20px;box-shadow:0 0 55px rgba(0,181,255,.6)}
 #lock h2{font-size:17px;letter-spacing:3px;font-weight:600}
 #lock h2 span{color:var(--acc2)}
 #lock input{width:210px;text-align:center;letter-spacing:14px;font-size:26px;
   padding:15px;border-radius:18px;background:var(--glass);backdrop-filter:blur(16px);
   border:1px solid var(--stroke);color:var(--acc2);outline:none;font-family:'IBM Plex Mono',monospace}
-#lock input:focus{border-color:var(--stroke-acc);box-shadow:0 0 0 4px rgba(139,114,255,.15)}
+#lock input:focus{border-color:var(--stroke-acc);box-shadow:0 0 0 4px rgba(0,181,255,.15)}
 #lockMsg{font-size:12px;color:var(--dim);min-height:18px}
 #lockMsg.err{color:var(--red)}
 header{padding:20px 18px 4px;position:relative;z-index:6}
 .brand{display:flex;align-items:center;gap:12px}
 .hex{width:46px;height:46px;flex-shrink:0;border-radius:13px;
   background:url("arkan-logo.svg") center/cover;
-  box-shadow:0 8px 22px rgba(91,63,209,.5)}
+  box-shadow:0 8px 22px rgba(0,88,217,.5)}
 .hex.txt{background:linear-gradient(140deg,#B9A8FF,#8B72FF 55%,#5B3FD1);
   display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:22px}
 .brand h1{font-size:16px;font-weight:700;letter-spacing:1.5px}
@@ -110,7 +112,7 @@ header{padding:20px 18px 4px;position:relative;z-index:6}
 .brand p{font-size:10px;color:var(--dim);letter-spacing:2.5px;margin-top:2px}
 /* ===== PORTFOLIO ===== */
 .folio{margin:-100px 0 6px;padding:112px 18px 16px;position:relative;z-index:1;border:none;border-radius:0 0 36px 36px;
-  background:linear-gradient(180deg, rgba(139,114,255,.40) 0%, rgba(139,114,255,.16) 52%, transparent 94%)}
+  background:linear-gradient(180deg, rgba(0,181,255,.40) 0%, rgba(0,181,255,.16) 52%, transparent 94%)}
 .ccySel{display:flex;gap:6px;justify-content:center;margin:2px 0 10px}
 .ccySel button{padding:6px 14px;border-radius:18px;border:1px solid var(--stroke);
   background:rgba(0,0,0,.25);color:var(--dim);font-size:12px;font-weight:700;cursor:pointer;
@@ -149,14 +151,14 @@ section.on{display:block;animation:fadeUp .25s ease}
   box-shadow:0 8px 32px rgba(0,0,0,.3), inset 0 1px 0 rgba(255,255,255,.05);contain:layout;
   transition:border-color .3s,box-shadow .3s}
 .card:hover{border-color:rgba(96,165,250,.3);
-  box-shadow:0 12px 40px rgba(108,92,231,.15), inset 0 1px 0 rgba(255,255,255,.1)}
+  box-shadow:0 12px 40px rgba(0,88,217,.15), inset 0 1px 0 rgba(255,255,255,.1)}
 .card h3{font-size:13px;color:var(--acc2);margin-bottom:12px;font-weight:700}
 label{display:block;font-size:12px;color:var(--dim);margin:10px 0 6px}
 input,select,textarea{width:100%;padding:14px 16px;border-radius:12px;background:rgba(15,23,42,.6);
   border:1px solid rgba(255,255,255,.1);color:#FFFFFF;font-size:16px;
   font-family:'IBM Plex Mono',monospace;outline:none;transition:.15s;appearance:none}
 input::placeholder,textarea::placeholder{color:#64748B}
-input:focus,select:focus,textarea:focus{border-color:#6C5CE7;box-shadow:0 0 0 3px rgba(108,92,231,.2);outline:none}
+input:focus,select:focus,textarea:focus{border-color:#0058D9;box-shadow:0 0 0 3px rgba(0,88,217,.2);outline:none}
 input.ar,select.ar{font-family:'IBM Plex Sans Arabic',sans-serif}
 .row{display:flex;gap:10px}
 .row>div{flex:1}
@@ -166,14 +168,14 @@ input.ar,select.ar{font-family:'IBM Plex Sans Arabic',sans-serif}
 .type .t1{font-size:13px;font-weight:700}
 .type .t2{font-size:10px;color:var(--dim);margin-top:3px;font-family:'IBM Plex Mono',monospace}
 .type.on{border-color:var(--stroke-acc);
-  background:linear-gradient(150deg, rgba(139,114,255,.28), rgba(139,114,255,.06));
-  box-shadow:0 8px 26px rgba(139,114,255,.22)}
+  background:linear-gradient(150deg, rgba(0,181,255,.28), rgba(0,181,255,.06));
+  box-shadow:0 8px 26px rgba(0,181,255,.22)}
 .type.on .t1{color:var(--acc2)}
 .alertline{display:none;margin-top:10px;padding:10px 12px;border-radius:12px;font-size:12px;font-weight:600}
 .alertline.warn{display:block;background:rgba(244,165,12,.12);border:1px solid rgba(244,165,12,.35);color:var(--gold2)}
 .alertline.danger{display:block;background:rgba(255,107,107,.10);border:1px solid rgba(255,107,107,.4);color:var(--red)}
 .ticket{border-radius:22px;padding:18px;margin-bottom:14px;position:relative;overflow:hidden;
-  background:linear-gradient(150deg, rgba(139,114,255,.22), rgba(255,255,255,.03) 60%);
+  background:linear-gradient(150deg, rgba(0,181,255,.22), rgba(255,255,255,.03) 60%);
   border:1px solid var(--stroke-acc);
   box-shadow:0 16px 44px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.08);
   backdrop-filter:blur(18px)}
@@ -189,11 +191,11 @@ input.ar,select.ar{font-family:'IBM Plex Sans Arabic',sans-serif}
 .timer.hot{color:var(--red);border-color:rgba(255,107,107,.5)}
 .btn{width:100%;padding:14px 28px;border:none;border-radius:12px;font-size:16px;font-weight:600;
   cursor:pointer;font-family:'IBM Plex Sans Arabic',sans-serif;transition:.15s;margin-top:10px}
-.btn-gold{background:linear-gradient(135deg,#6C5CE7,#8B7BFF);color:#fff;font-weight:600;
-  box-shadow:0 4px 16px rgba(108,92,231,.3)}
-.btn-gold:hover{box-shadow:0 8px 24px rgba(108,92,231,.4)}
+.btn-gold{background:linear-gradient(135deg,#0058D9,#00B5FF);color:#fff;font-weight:600;
+  box-shadow:0 4px 16px rgba(0,88,217,.3)}
+.btn-gold:hover{box-shadow:0 8px 24px rgba(0,88,217,.4)}
 .btn:active{transform:scale(.97)}
-.btn-line{background:rgba(108,92,231,.08);color:var(--acc2);border:1px solid var(--stroke-acc)}
+.btn-line{background:rgba(0,88,217,.08);color:var(--acc2);border:1px solid var(--stroke-acc)}
 .btn-wa{background:linear-gradient(135deg,#3BE07F,var(--wa));color:#062b14;box-shadow:0 8px 22px rgba(37,211,102,.25)}
 .btn-sm{padding:8px 13px;font-size:12px;width:auto;margin:0;border-radius:11px}
 .btn-row{display:flex;gap:8px}
@@ -210,7 +212,7 @@ input.ar,select.ar{font-family:'IBM Plex Sans Arabic',sans-serif}
 .badge{font-size:11px;padding:4px 11px;border-radius:20px;font-weight:600}
 .b-wait{background:rgba(244,165,12,.14);color:var(--gold2);border:1px solid rgba(244,165,12,.3)}
 .b-conf{background:rgba(61,220,151,.12);color:var(--green);border:1px solid rgba(61,220,151,.3)}
-.b-paid{background:rgba(139,114,255,.14);color:var(--acc2);border:1px solid rgba(139,114,255,.3)}
+.b-paid{background:rgba(0,181,255,.14);color:var(--acc2);border:1px solid rgba(0,181,255,.3)}
 .b-debt{background:rgba(255,107,107,.12);color:var(--red);border:1px solid rgba(255,107,107,.3)}
 .b-type{background:rgba(0,0,0,.3);color:var(--dim);border:1px solid var(--stroke)}
 .tx-mid{display:flex;gap:14px;margin:9px 0;font-size:13px;color:var(--dim);flex-wrap:wrap}
@@ -228,8 +230,8 @@ input.ar,select.ar{font-family:'IBM Plex Sans Arabic',sans-serif}
 .sum .v.red{color:var(--red)}
 .empty{text-align:center;color:var(--dim);padding:36px 0;font-size:13px}
 .chain{border-radius:20px;padding:15px;margin-bottom:12px;
-  background:linear-gradient(150deg, rgba(139,123,255,.14), rgba(255,255,255,.03));
-  border:1px solid rgba(139,123,255,.35);backdrop-filter:blur(14px)}
+  background:linear-gradient(150deg, rgba(0,181,255,.14), rgba(255,255,255,.03));
+  border:1px solid rgba(0,181,255,.35);backdrop-filter:blur(14px)}
 .chain .c-top{display:flex;justify-content:space-between;align-items:center}
 .chain .c-ref{font-family:'IBM Plex Mono',monospace;color:var(--blue);font-weight:700;font-size:14px}
 .chain .c-cap{font-family:'IBM Plex Mono',monospace;font-size:16px;font-weight:700;margin-top:8px}
@@ -259,10 +261,10 @@ nav{position:fixed;bottom:0;left:0;right:0;z-index:90;
 .nv{flex:1;text-align:center;padding:8px 2px;border-radius:16px;cursor:pointer;color:var(--dim);transition:.15s}
 .nv svg{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .nv div{font-size:10px;margin-top:3px;font-weight:600}
-.nv.on{color:#fff;background:linear-gradient(135deg,var(--acc2),var(--accD));box-shadow:0 8px 22px rgba(139,114,255,.35)}
+.nv.on{color:#fff;background:linear-gradient(135deg,var(--acc2),var(--accD));box-shadow:0 8px 22px rgba(0,181,255,.35)}
 .toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%) translateY(80px);
   background:linear-gradient(135deg,var(--acc2),var(--accD));color:#fff;padding:11px 24px;border-radius:26px;
-  font-size:13px;font-weight:700;transition:.25s;z-index:99;opacity:0;box-shadow:0 10px 30px rgba(139,114,255,.4)}
+  font-size:13px;font-weight:700;transition:.25s;z-index:99;opacity:0;box-shadow:0 10px 30px rgba(0,181,255,.4)}
 .toast.show{transform:translateX(-50%) translateY(0);opacity:1}
 .footer-note{text-align:center;font-size:10px;color:#454a63;letter-spacing:2px;margin-top:24px}
 #pdfStage{position:fixed;top:0;right:-2000px;width:794px;background:#fff;color:#111;z-index:-1;
@@ -271,7 +273,7 @@ nav{position:fixed;bottom:0;left:0;right:0;z-index:90;
 
 /* ===== GLOBAL LIVE TICKER ===== */
 #tickerBar{position:relative;overflow:hidden;background:linear-gradient(180deg,rgba(10,11,26,.96),rgba(20,18,45,.92));
-  border-bottom:1px solid rgba(139,114,255,.25);box-shadow:0 4px 24px rgba(91,63,209,.25);
+  border-bottom:1px solid rgba(0,181,255,.25);box-shadow:0 4px 24px rgba(0,88,217,.25);
   backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);z-index:8}
 #tickerBar .tkHead{display:flex;align-items:center;justify-content:space-between;padding:5px 12px 2px}
 #tickerBar .tkLive{display:flex;align-items:center;gap:5px;font-size:9px;letter-spacing:1.5px;color:var(--dim);font-family:'IBM Plex Mono'}
@@ -299,15 +301,15 @@ nav{position:fixed;bottom:0;left:0;right:0;z-index:90;
 .types{display:grid !important;grid-template-columns:1fr 1fr;gap:12px;padding:0 2px;overflow:visible !important}
 .type{display:flex !important;flex-direction:column;align-items:center;justify-content:center;gap:9px;
   min-height:116px;padding:20px 12px !important;border-radius:24px !important;
-  background:linear-gradient(150deg,rgba(255,255,255,.09),rgba(255,255,255,.02) 55%,rgba(139,114,255,.05)) !important;
+  background:linear-gradient(150deg,rgba(255,255,255,.09),rgba(255,255,255,.02) 55%,rgba(0,181,255,.05)) !important;
   border:1px solid rgba(255,255,255,.1) !important;
   backdrop-filter:blur(22px) saturate(1.3);-webkit-backdrop-filter:blur(22px) saturate(1.3);
-  box-shadow:0 10px 34px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.12), inset 0 -20px 40px rgba(139,114,255,.03);
+  box-shadow:0 10px 34px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.12), inset 0 -20px 40px rgba(0,181,255,.03);
   cursor:pointer;width:auto !important;flex:none !important}
 .type:active{transform:scale(.97)}
-.type.on{background:linear-gradient(160deg,rgba(139,114,255,.30),rgba(91,63,209,.14)) !important;
+.type.on{background:linear-gradient(160deg,rgba(0,181,255,.30),rgba(0,88,217,.14)) !important;
   border-color:rgba(183,163,255,.55) !important;
-  box-shadow:0 10px 34px rgba(91,63,209,.45), inset 0 1px 0 rgba(255,255,255,.14)}
+  box-shadow:0 10px 34px rgba(0,88,217,.45), inset 0 1px 0 rgba(255,255,255,.14)}
 .type .ico{display:flex;align-items:center;justify-content:center;line-height:0}
 .type .t1{font-size:14.5px !important;font-weight:800;color:var(--txt)}
 .type .t2{font-size:10.5px !important;color:var(--dim);font-family:'IBM Plex Mono';letter-spacing:.5px}
@@ -352,14 +354,32 @@ body,input,select,textarea,button,.ar,h1,h2,h3{font-family:'IBM Plex Sans Arabic
 .stg.done .lbl{color:#3DDC97}
 .stg.done .line{background:#3DDC97}
 .stg.active .dot{background:linear-gradient(135deg,var(--acc),var(--accD));border-color:var(--acc2);color:#fff;
-  box-shadow:0 0 0 4px rgba(139,114,255,.2);animation:stgPulse 1.8s infinite}
+  box-shadow:0 0 0 4px rgba(0,181,255,.2);animation:stgPulse 1.8s infinite}
 .stg.active .lbl{color:var(--acc2)}
-@keyframes stgPulse{0%,100%{box-shadow:0 0 0 4px rgba(139,114,255,.2)}50%{box-shadow:0 0 0 7px rgba(139,114,255,.05)}}
+@keyframes stgPulse{0%,100%{box-shadow:0 0 0 4px rgba(0,181,255,.2)}50%{box-shadow:0 0 0 7px rgba(0,181,255,.05)}}
 
 @media (max-width:768px){
   .card{border-radius:16px;padding:16px;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
   .btn{width:100%;padding:16px}
 }
+
+/* ═══ barcode per transaction ═══ */
+.bcBtn{border:1px solid var(--stroke);background:rgba(0,181,255,.08);color:var(--acc2);
+  border-radius:8px;padding:3px 8px;font:600 11px 'IBM Plex Mono';cursor:pointer;letter-spacing:2px}
+.bcBtn:active{transform:scale(.94)}
+#bcModal{display:none;position:fixed;inset:0;z-index:900;align-items:center;justify-content:center;
+  background:rgba(3,8,24,.78);backdrop-filter:blur(14px);padding:22px}
+#bcModal.on{display:flex}
+#bcModal .bx{background:#fff;border-radius:22px;padding:26px 22px 20px;max-width:380px;width:100%;
+  text-align:center;box-shadow:0 40px 100px -30px rgba(0,0,0,.8);position:relative;
+  border:1.5px solid rgba(0,181,255,.5)}
+#bcModal .bx h4{color:#071D49;font-size:14px;margin-bottom:4px;font-weight:700}
+#bcModal svg{width:100%;height:auto}
+#bcModal .rf{font:600 13px 'IBM Plex Mono';color:#003B8F;letter-spacing:1px;margin:8px 0 14px;direction:ltr}
+#bcModal .row{display:flex;gap:10px;justify-content:center}
+#bcModal .b{border:0;border-radius:12px;padding:11px 18px;font:700 13px 'IBM Plex Sans Arabic';cursor:pointer}
+#bcModal .b.copy{background:linear-gradient(135deg,#0058D9,#00B5FF);color:#fff}
+#bcModal .b.close{background:#EAF5FF;color:#003B8F}
 </style>
   <link rel="stylesheet" href="arkan-theme.css">
   <link rel="stylesheet" href="arkan-light.css">
@@ -410,7 +430,7 @@ body,input,select,textarea,button,.ar,h1,h2,h3{font-family:'IBM Plex Sans Arabic
       <g transform="rotate(-90 172 172)">
         <circle id="arcU" cx="172" cy="172" r="150" fill="none" stroke="#26A17B" stroke-width="11" stroke-linecap="round" stroke-dasharray="0 943" style="transition:.25s"/>
         <circle id="arcA" cx="172" cy="172" r="150" fill="none" stroke="#F4A50C" stroke-width="11" stroke-linecap="round" stroke-dasharray="0 943" style="transition:.25s"/>
-        <circle id="arcM" cx="172" cy="172" r="150" fill="none" stroke="#8B7BFF" stroke-width="11" stroke-linecap="round" stroke-dasharray="0 943" style="transition:.25s"/>
+        <circle id="arcM" cx="172" cy="172" r="150" fill="none" stroke="#00B5FF" stroke-width="11" stroke-linecap="round" stroke-dasharray="0 943" style="transition:.25s"/>
         <circle id="arcE" cx="172" cy="172" r="150" fill="none" stroke="#A78BFF" stroke-width="11" stroke-linecap="round" stroke-dasharray="0 943" style="transition:.25s"/>
         <circle id="hitU" cx="172" cy="172" r="150" fill="none" stroke="rgba(0,0,0,0)" stroke-width="38" stroke-dasharray="0 943" onclick="selectAsset('U')"/>
         <circle id="hitA" cx="172" cy="172" r="150" fill="none" stroke="rgba(0,0,0,0)" stroke-width="38" stroke-dasharray="0 943" onclick="selectAsset('A')"/>
@@ -432,7 +452,7 @@ body,input,select,textarea,button,.ar,h1,h2,h3{font-family:'IBM Plex Sans Arabic
     <div class="asset" id="cardA" onclick="selectAsset('A')" style="cursor:pointer"><div class="ic" style="background:#F4A50C;color:#15172E;font-weight:800;font-size:14px;letter-spacing:-.5px">Kz</div>
       <div class="nm"><div class="n1">AOA</div><div class="n2" id="rateA">— Kz/USDT</div></div>
       <div class="am"><div class="a1 num" id="balA" style="color:#FFC94D">0</div><div class="a2 num" id="balAu">$0</div></div></div>
-    <div class="asset" id="cardM" onclick="selectAsset('M')" style="cursor:pointer"><div class="ic" style="background:#8B7BFF;color:#0e2544;font-weight:800;font-size:13px;letter-spacing:-.5px">UM</div>
+    <div class="asset" id="cardM" onclick="selectAsset('M')" style="cursor:pointer"><div class="ic" style="background:#00B5FF;color:#0e2544;font-weight:800;font-size:13px;letter-spacing:-.5px">UM</div>
       <div class="nm"><div class="n1">MRU</div><div class="n2" id="rateM">— UM/USDT</div></div>
       <div class="am"><div class="a1 num" id="balM" style="color:#7FB8FF">0</div><div class="a2 num" id="balMu">$0</div></div></div>
   <div class="asset" id="cardE" onclick="selectAsset('E')" style="cursor:pointer"><div class="ic" style="background:#A78BFF;color:#1C1D3C;font-weight:800;font-size:17px">€</div>
@@ -2573,7 +2593,7 @@ async function genReport(){
   const opRows=txs.map(t=>{
     const s=txSummary(t);
     return `<tr>
-      <td style="padding:9px 14px;font-family:'IBM Plex Mono';font-size:12px;border-bottom:1px solid #f1f0f8">${t.ref}</td>
+      <td style="padding:9px 14px;font-family:'IBM Plex Mono';font-size:12px;border-bottom:1px solid #f1f0f8;cursor:pointer" onclick="showBarcode('${t.ref}')" title="باركود">${t.ref} <span style="letter-spacing:1px;color:#0058D9">|||</span></td>
       <td style="padding:9px 14px;font-size:12px;border-bottom:1px solid #f1f0f8">${typeLbl[t.type]||t.type}</td>
       <td style="padding:9px 14px;font-size:12px;border-bottom:1px solid #f1f0f8">${(s.info||'').slice(0,42)}</td>
       <td style="padding:9px 14px;font-family:'IBM Plex Mono';font-size:12px;font-weight:700;border-bottom:1px solid #f1f0f8;text-align:left">${s.p||''}</td>
@@ -4463,7 +4483,7 @@ function renderHistory(){
       </div>
       <div class="day-body">
         ${dtxs.map(t=>{const s=txSummary(t);
-          return `<div class="mini"><span class="r">${t.ref}</span><span>${s.info}</span><span class="p">${s.p}</span></div>`;}).join('')}
+          return `<div class="mini"><span class="r" style="cursor:pointer" onclick="showBarcode('${t.ref}')" title="عرض الباركود">${t.ref}</span><span>${s.info}</span><span class="p">${s.p}</span><button class="bcBtn" onclick="showBarcode('${t.ref}')" title="باركود">|||</button></div>`;}).join('')}
         <div class="btn-row" style="margin-top:10px">
           <button class="btn btn-gold btn-sm" onclick="genPDF(${realIdx})">PDF</button>
           <button class="btn btn-line btn-sm" onclick="exportXlsx(${realIdx})">Excel</button>
@@ -4796,7 +4816,7 @@ async function genStatusImage(){
   const stage=$('pdfStage');
   stage.innerHTML=`
   <div style="width:600px;height:1067px;background:linear-gradient(165deg,#2E2758 0%,#1C1D3C 40%,#0F1130 100%);display:flex;flex-direction:column;font-family:'IBM Plex Sans Arabic',sans-serif;position:relative;overflow:hidden;direction:rtl">
-    <div style="position:absolute;top:-80px;left:-80px;width:300px;height:300px;background:radial-gradient(circle,rgba(139,114,255,.25),transparent 70%);border-radius:50%"></div>
+    <div style="position:absolute;top:-80px;left:-80px;width:300px;height:300px;background:radial-gradient(circle,rgba(0,181,255,.25),transparent 70%);border-radius:50%"></div>
     <div style="padding:54px 40px 0;text-align:center;z-index:2">
       <div style="display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:10px">
         ${invLogoSVG()}
@@ -4806,7 +4826,7 @@ async function genStatusImage(){
       <div style="font-family:'IBM Plex Mono';font-size:15px;color:#8B8FA8;margin-top:5px">${today}</div>
     </div>
     <div style="margin:36px 30px 0;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:24px;overflow:hidden;z-index:2">
-      <div style="display:flex;flex-direction:row-reverse;justify-content:space-between;padding:16px 24px;background:rgba(139,114,255,.15)">
+      <div style="display:flex;flex-direction:row-reverse;justify-content:space-between;padding:16px 24px;background:rgba(0,181,255,.15)">
         <span style="font-size:15px;color:#B9A8FF;font-weight:800">العملة</span>
         <span style="font-size:13px;color:#B9A8FF;font-weight:800;direction:ltr">جملة / تجزئة</span>
       </div>
@@ -4902,7 +4922,7 @@ async function publishRates(){
   const enc=btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
   const longUrl=location.origin+location.pathname.replace(/settlement\.html$/,'')+'rates.html#'+enc;
   const el=$('pubLink');
-  el.innerHTML=`<div class="card" style="background:rgba(139,114,255,.1);margin-top:12px">
+  el.innerHTML=`<div class="card" style="background:rgba(0,181,255,.1);margin-top:12px">
     <div style="font-size:12px;color:var(--dim)">⏳ جارٍ اختصار الرابط...</div></div>`;
   let shortUrl=null;
   try{
@@ -4913,7 +4933,7 @@ async function publishRates(){
   }catch(e){}
   const url=shortUrl||longUrl;
   el.innerHTML=`
-    <div class="card" style="background:rgba(139,114,255,.1);margin-top:12px">
+    <div class="card" style="background:rgba(0,181,255,.1);margin-top:12px">
       <div style="font-size:12px;color:var(--dim);margin-bottom:6px">${shortUrl?'✅ رابط مختصر وآمن للإرسال:':'⚠️ تعذّر الاختصار — رابط كامل (استخدم الرابط الثابت إن أمكن):'}</div>
       <div style="font-size:${shortUrl?'15px':'10px'};font-family:'IBM Plex Mono';word-break:break-all;color:var(--acc2);background:rgba(0,0,0,.3);padding:10px;border-radius:10px">${url}</div>
       <div style="font-size:11px;color:var(--dim);margin-top:6px">⚠️ رابط لعرض لحظي واحد فقط — لا يتحدث لاحقًا. للبايو استخدم الرابط الثابت.</div>
@@ -5059,6 +5079,30 @@ window.arkanMountOCR = function(containerId, onResult){
   upd();
 })();
 
+</script>
+
+<div id="bcModal" onclick="if(event.target===this)this.classList.remove('on')">
+  <div class="bx">
+    <h4>باركود المعاملة</h4>
+    <svg id="bcSvg"></svg>
+    <div class="rf" id="bcRef"></div>
+    <div class="row">
+      <button class="b copy" onclick="navigator.clipboard&&navigator.clipboard.writeText(document.getElementById('bcRef').textContent);toast&&toast('نُسخ المرجع ✓')">نسخ المرجع</button>
+      <button class="b close" onclick="document.getElementById('bcModal').classList.remove('on')">إغلاق</button>
+    </div>
+  </div>
+</div>
+<script>
+function showBarcode(ref){
+  try{
+    document.getElementById('bcRef').textContent=ref;
+    if(window.JsBarcode){
+      JsBarcode('#bcSvg', ref, {format:'CODE128',lineColor:'#071D49',background:'#ffffff',
+        width:2,height:74,displayValue:false,margin:6});
+    }
+    document.getElementById('bcModal').classList.add('on');
+  }catch(e){ alert('تعذّر توليد الباركود: '+e.message); }
+}
 </script>
 <script src="arkan-nav.js" defer></script>
 <script src="arkan-ai.js" defer></script>
