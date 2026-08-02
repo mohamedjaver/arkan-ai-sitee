@@ -1,21 +1,55 @@
-/* ═══ ARKAN LIGHT — خلفية فاتحة موحّدة (BAI) لكل صفحات التطبيق ═══
-   تُحمَّل بعد أنماط كل صفحة فتقلب رموز الألوان الشائعة إلى الفاتح.
-   البطاقات الداكنة تبقى كلوحات تباين فاخرة فوق الخلفية الفاتحة. */
+/* ═══ ARKAN × BAI — لوحة bancobai.ao الحقيقية: كحلي عميق وتدرجات زرقاء ═══ */
 :root{
-  --bg:#f6f8fc!important; --bg-1:#f6f8fc!important; --bg-2:#eef2f9!important; --bg-3:#ffffff!important;
-  --ark-bg-1:#f6f8fc!important; --ark-bg-2:#eef2f9!important; --ark-bg-3:#ffffff!important;
+  /* الخلفيات */
+  --bg:#f2f5fb!important; --bg-1:#f2f5fb!important; --bg-2:#e9eef8!important; --bg-3:#ffffff!important;
+  --ark-bg-1:#f2f5fb!important; --ark-bg-2:#e9eef8!important; --ark-bg-3:#ffffff!important;
   --card:#ffffff!important; --panel:#ffffff!important; --surface:#ffffff!important;
   --ark-glass:#ffffff!important; --ark-glass-2:#ffffff!important;
-  --txt:#0a1e4d!important; --text:#0a1e4d!important; --ark-txt:#0a1e4d!important;
-  --txt-2:#5a6a8f!important; --muted:#5a6a8f!important; --ark-txt-2:#5a6a8f!important; --ark-txt-3:#8b97b5!important;
-  --stroke:#e3e9f4!important; --line:#e3e9f4!important; --border:#e3e9f4!important;
-  --ark-stroke:#e3e9f4!important; --ark-stroke-2:#cdd8ec!important;
-  --gold:#b8860b!important; --ark-gold:#b8860b!important;
+  /* النصوص — كحلي BAI قوي */
+  --txt:#06133a!important; --text:#06133a!important; --ark-txt:#06133a!important;
+  --txt-2:#3c4c74!important; --muted:#3c4c74!important; --ark-txt-2:#3c4c74!important; --ark-txt-3:#6b7ba3!important;
+  /* الحدود */
+  --stroke:#d9e2f2!important; --line:#d9e2f2!important; --border:#d9e2f2!important;
+  --ark-stroke:#d9e2f2!important; --ark-stroke-2:#bccbe6!important;
+  /* الألوان الرئيسية — أزرق BAI بدل البنفسجي */
+  --blue:#002776!important; --blue-live:#0d3aa0!important;
+  --violet:#002776!important; --ark-violet:#002776!important; --ark-violet-2:#0d3aa0!important;
+  --gold:#0d3aa0!important; --ark-gold:#0d3aa0!important;
+  --ark-bai:#d3403c!important;
+  --ark-grad:linear-gradient(120deg,#002776,#0d3aa0 55%,#3498db)!important;
+  --ark-grad-soft:linear-gradient(135deg,rgba(0,39,118,.08),rgba(52,152,219,.06))!important;
 }
-html,body{background:#f6f8fc!important;color:#0a1e4d!important}
+html,body{background:#f2f5fb!important;color:#06133a!important}
 body::before,body::after{display:none!important}
-/* لوحات كانت زجاجية داكنة → بيضاء بظل ناعم */
-.card,.ark-card{background:#fff!important;border-color:#e3e9f4!important;
-  box-shadow:0 18px 44px -22px rgba(10,30,77,.18)!important;color:#0a1e4d}
-input,select,textarea{background:#fbfcff!important;color:#0a1e4d!important;border-color:#cdd8ec!important}
-::placeholder{color:#8b97b5!important}
+
+/* البطاقات: بيضاء بحدود واضحة وظل كحلي ناعم */
+.card,.ark-card{background:#fff!important;border:1px solid #d9e2f2!important;
+  box-shadow:0 14px 36px -18px rgba(0,26,82,.22)!important;color:#06133a}
+
+/* الأزرار الرئيسية: تدرج BAI الأزرق */
+.btn-primary,.btn-gold,.ark-btn{
+  background:linear-gradient(120deg,#002776,#0d3aa0 55%,#3498db)!important;
+  color:#fff!important;border:0!important;
+  box-shadow:0 12px 28px -12px rgba(0,39,118,.55)!important}
+.btn-primary:hover,.btn-gold:hover,.ark-btn:hover{filter:brightness(1.08)}
+.btn-ghost,.btn-login,.ark-btn-ghost{background:#fff!important;color:#002776!important;border:1.5px solid #bccbe6!important}
+.btn-ghost:hover,.btn-login:hover{border-color:#002776!important;background:#f2f5fb!important}
+
+/* العناوين الفرعية: أحمر BAI */
+.kicker,.eyebrow,.ark-eyebrow{color:#d3403c!important}
+h1,h2,h3,h4{color:#06133a}
+
+/* المدخلات */
+input,select,textarea{background:#fff!important;color:#06133a!important;border-color:#bccbe6!important}
+input:focus,select:focus,textarea:focus{border-color:#0d3aa0!important;box-shadow:0 0 0 3px rgba(13,58,160,.12)!important}
+::placeholder{color:#8fa0c4!important}
+
+/* الشارات والحبوب الشفافة البنفسجية → زرقاء واضحة */
+.chip,.pill,.badge,.tag{background:#e9eef8!important;color:#002776!important;border-color:#bccbe6!important}
+
+/* الروابط */
+a{color:inherit}
+.link,a.link{color:#0d3aa0!important}
+
+/* أشرطة التنقل السفلية الداكنة تبقى كحلية BAI */
+nav[class*="bottom"],.bottomnav,.tabbar{background:#002776!important}
