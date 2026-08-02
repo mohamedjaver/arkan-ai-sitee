@@ -1,48 +1,37 @@
 <!DOCTYPE html>
-<html lang="en" dir="ltr">
+<html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#071D49">
-<title>ARKAN Rates — Move Money Across Africa Instantly</title>
-<meta name="description" content="Currency exchange and cross-border settlement between Mauritania, Angola, China and the Gulf. Institutional trust, executed in minutes.">
+<title>ARKAN Rates — الصرف والتسويات الدولية</title>
+<meta name="description" content="Currency exchange and cross-border settlement between Mauritania, Angola, China and the Gulf.">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="icon" href="arkan-icon-512.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100,400..900;125,500..900&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100,400..900;125,500..900&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
 <style>
 /* ============================================================
    ARKAN DESIGN SYSTEM v2 — "Institutional Blue"
    ============================================================ */
 :root{
-  --ink:#071D49;            /* dark navy */
-  --primary:#003B8F;        /* deep financial blue */
-  --primary-2:#0058D9;
-  --accent:#00B5FF;
-  --ice:#EAF5FF;
-  --white:#FFFFFF;
-  --success:#00C853;
-  --warning:#F9A825;
-  --danger:#E53935;
+  --ink:#071D49; --primary:#003B8F; --primary-2:#0058D9; --accent:#00B5FF;
+  --ice:#EAF5FF; --white:#FFFFFF;
+  --success:#00C853; --warning:#F9A825; --danger:#E53935;
   --gold-1:#F3D583; --gold-2:#C9992E;
-
-  --txt:#0E2450;
-  --txt-2:#43598A;
-  --txt-3:#7A8DB8;
-  --stroke:#DCE8F8;
-  --page:#F5F9FF;
-
+  --txt:#0E2450; --txt-2:#43598A; --txt-3:#7A8DB8;
+  --stroke:#DCE8F8; --page:#F5F9FF;
   --r:18px; --r-lg:26px; --r-sm:12px;
   --sh-card:0 10px 34px -14px rgba(7,29,73,.14), 0 2px 6px -2px rgba(7,29,73,.06);
   --sh-pop:0 30px 70px -28px rgba(7,29,73,.35);
   --sh-navy:0 34px 80px -30px rgba(0,59,143,.55);
-
-  --disp:'Archivo','Public Sans',system-ui,sans-serif;
-  --body:'Public Sans',system-ui,-apple-system,sans-serif;
+  --disp:'Archivo','IBM Plex Sans Arabic','Public Sans',system-ui,sans-serif;
+  --body:'Public Sans','IBM Plex Sans Arabic',system-ui,-apple-system,sans-serif;
   --mono:'IBM Plex Mono',ui-monospace,monospace;
 }
+html[lang=ar]{--disp:'IBM Plex Sans Arabic','Archivo',sans-serif;--body:'IBM Plex Sans Arabic','Public Sans',sans-serif}
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{max-width:100%;overflow-x:clip}
 html{scroll-behavior:smooth}
@@ -54,17 +43,20 @@ img,svg,canvas{display:block;max-width:100%}
 .mono{font-family:var(--mono)}
 ::selection{background:var(--accent);color:var(--ink)}
 
-h1,h2,h3,.disp{font-family:var(--disp);font-variation-settings:'wdth' 118}
-.eyebrow{font-family:var(--disp);font-weight:800;font-size:12px;letter-spacing:.22em;
+h1,h2,h3,.disp{font-family:var(--disp)}
+html[lang]:not([lang=ar]) h1, html[lang]:not([lang=ar]) h2, html[lang]:not([lang=ar]) h3{font-variation-settings:'wdth' 118}
+.eyebrow{font-family:var(--disp);font-weight:800;font-size:12px;letter-spacing:.18em;
   text-transform:uppercase;color:var(--primary-2);display:inline-flex;align-items:center;gap:10px}
+html[lang=ar] .eyebrow{letter-spacing:0;font-size:14px}
 .eyebrow::before{content:"";width:26px;height:2px;background:var(--accent);border-radius:2px}
 .sec-h2{font-size:clamp(28px,4.4vw,44px);font-weight:800;letter-spacing:-.02em;
-  line-height:1.08;color:var(--ink);margin:14px 0 12px}
+  line-height:1.15;color:var(--ink);margin:14px 0 12px}
+html[lang=ar] .sec-h2{letter-spacing:0}
 .sec-sub{font-size:clamp(15.5px,2vw,18px);color:var(--txt-2);max-width:60ch}
 
 /* ---------- buttons ---------- */
 .btn{position:relative;display:inline-flex;align-items:center;justify-content:center;gap:10px;
-  font-family:var(--disp);font-weight:700;font-size:15.5px;letter-spacing:.01em;border:0;cursor:pointer;
+  font-family:var(--disp);font-weight:700;font-size:15.5px;border:0;cursor:pointer;
   padding:15px 28px;border-radius:var(--r);transition:transform .18s cubic-bezier(.2,.9,.3,1.4),box-shadow .22s,background .22s;
   will-change:transform}
 .btn:active{transform:translateY(1px) scale(.985)}
@@ -74,27 +66,33 @@ h1,h2,h3,.disp{font-family:var(--disp);font-variation-settings:'wdth' 118}
 .btn-gold{background:linear-gradient(135deg,var(--gold-1),var(--gold-2));color:#3A2A00;
   box-shadow:0 14px 32px -10px rgba(201,153,46,.55), inset 0 1px 0 rgba(255,255,255,.5)}
 .btn-gold:hover{transform:translateY(-2px);box-shadow:0 22px 46px -12px rgba(201,153,46,.6), 0 0 0 6px rgba(243,213,131,.28)}
-.btn-ghost{background:#fff;border:1.5px solid var(--stroke);color:var(--primary)}
-.btn-ghost:hover{border-color:var(--accent);box-shadow:0 10px 26px -12px rgba(0,181,255,.4);transform:translateY(-2px)}
 .btn-ghost-dark{background:rgba(255,255,255,.08);border:1.5px solid rgba(255,255,255,.28);color:#fff;backdrop-filter:blur(6px)}
 .btn-ghost-dark:hover{background:rgba(255,255,255,.16);border-color:rgba(0,181,255,.8);transform:translateY(-2px)}
 
+/* ---------- language switcher ---------- */
+.lang{display:flex;background:rgba(255,255,255,.08);border:1.5px solid rgba(0,181,255,.35);
+  border-radius:999px;padding:3px;gap:2px}
+.lang button{border:0;background:transparent;color:rgba(234,245,255,.7);cursor:pointer;
+  font:700 12.5px var(--disp);padding:7px 12px;border-radius:999px;transition:all .18s;letter-spacing:.04em}
+.lang button.on{background:var(--accent);color:var(--ink)}
+.lang button:not(.on):hover{color:#fff}
+
 /* ---------- nav ---------- */
-.nav{position:sticky;top:0;z-index:60;background:rgba(7,29,73,.82);backdrop-filter:blur(18px);
+.nav{position:sticky;top:0;z-index:60;background:rgba(7,29,73,.85);backdrop-filter:blur(18px);
   border-bottom:1px solid rgba(0,181,255,.16)}
-.nav .wrap{display:flex;align-items:center;gap:16px;height:76px}
+.nav .wrap{display:flex;align-items:center;gap:14px;height:76px}
 .brand{display:flex;align-items:center;gap:12px}
 .brand .mark{width:42px;height:42px;flex:none;filter:drop-shadow(0 6px 16px rgba(0,181,255,.4))}
 .brand .wm{display:flex;flex-direction:column;line-height:1}
-.brand .wm b{font-family:var(--disp);font-variation-settings:'wdth' 125;font-weight:900;
+.brand .wm b{font-family:'Archivo',sans-serif;font-variation-settings:'wdth' 125;font-weight:900;
   font-size:19px;letter-spacing:.08em;color:#fff}
-.brand .wm span{font-family:var(--disp);font-weight:700;font-size:9.5px;letter-spacing:.42em;color:var(--accent);margin-top:3px}
-.nav .links{display:flex;gap:28px;margin-inline-start:26px;font-size:14.5px;font-weight:600;color:rgba(234,245,255,.72)}
+.brand .wm span{font-family:'Archivo',sans-serif;font-weight:700;font-size:9.5px;letter-spacing:.42em;color:var(--accent);margin-top:3px}
+.nav .links{display:flex;gap:26px;margin-inline-start:22px;font-size:14.5px;font-weight:600;color:rgba(234,245,255,.72)}
 .nav .links a{position:relative;padding:6px 0;transition:color .18s}
-.nav .links a::after{content:"";position:absolute;left:0;bottom:0;width:0;height:2px;background:var(--accent);border-radius:2px;transition:width .22s}
+.nav .links a::after{content:"";position:absolute;inset-inline-start:0;bottom:0;width:0;height:2px;background:var(--accent);border-radius:2px;transition:width .22s}
 .nav .links a:hover{color:#fff}.nav .links a:hover::after{width:100%}
 .nav .sp{flex:1}
-.nav .btn{padding:11px 22px;font-size:14px}
+.nav .btn{padding:11px 20px;font-size:14px}
 .nav-toggle{display:none;width:44px;height:44px;border-radius:12px;border:1.5px solid rgba(255,255,255,.25);
   background:transparent;color:#fff;cursor:pointer;font-size:20px}
 .mmenu{display:none;position:fixed;inset:76px 0 auto 0;z-index:59;background:#071D49;
@@ -109,13 +107,13 @@ h1,h2,h3,.disp{font-family:var(--disp);font-variation-settings:'wdth' 118}
   linear-gradient(180deg,#071D49 0%,#062165 58%,#003B8F 100%);
   color:#fff;overflow:hidden;padding:74px 0 0}
 .hero .grid{display:grid;grid-template-columns:1.05fr .95fr;gap:48px;align-items:center;position:relative;z-index:2}
-.pill{display:inline-flex;align-items:center;gap:10px;font-size:13px;font-weight:700;letter-spacing:.06em;
+.pill{display:inline-flex;align-items:center;gap:10px;font-size:13px;font-weight:700;
   color:#EAF5FF;border:1px solid rgba(0,181,255,.45);background:rgba(0,181,255,.1);
   border-radius:999px;padding:9px 18px;backdrop-filter:blur(6px)}
 .pill .dot{width:8px;height:8px;border-radius:50%;background:var(--success);box-shadow:0 0 0 5px rgba(0,200,83,.18);animation:pulse 1.8s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
-.hero h1{font-size:clamp(40px,6.2vw,72px);font-weight:900;font-variation-settings:'wdth' 122;
-  letter-spacing:-.025em;line-height:1.02;margin:24px 0 20px;max-width:14ch}
+.hero h1{font-size:clamp(38px,5.8vw,68px);font-weight:900;letter-spacing:-.02em;line-height:1.08;margin:24px 0 20px;max-width:16ch}
+html[lang=ar] .hero h1{letter-spacing:0;line-height:1.25;font-size:clamp(34px,5.4vw,60px)}
 .hero h1 em{font-style:normal;background:linear-gradient(92deg,#7FDBFF 0%,var(--accent) 55%,#5FB9FF 100%);
   -webkit-background-clip:text;background-clip:text;color:transparent}
 .hero .lede{color:rgba(234,245,255,.85);font-size:clamp(16px,2.1vw,19.5px);max-width:52ch;margin-bottom:32px}
@@ -124,50 +122,50 @@ h1,h2,h3,.disp{font-family:var(--disp);font-variation-settings:'wdth' 118}
 .trust li{display:inline-flex;align-items:center;gap:8px;font-size:13.5px;font-weight:600;color:rgba(234,245,255,.75)}
 .trust svg{width:16px;height:16px;color:var(--accent);flex:none}
 
-/* converter card in hero */
+/* converter */
 .xcard{background:#fff;border-radius:var(--r-lg);box-shadow:var(--sh-navy);
   padding:28px;color:var(--txt);position:relative}
 .xcard::before{content:"";position:absolute;inset:0;border-radius:inherit;padding:1.5px;
   background:linear-gradient(140deg,rgba(0,181,255,.85),rgba(0,88,217,.15) 40%,rgba(0,181,255,.5));
   -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
   -webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none}
-.xcard .xh{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
-.xcard .xh b{font-family:var(--disp);font-size:18px;font-weight:800;color:var(--ink)}
-.xtag{font-size:11px;font-weight:800;letter-spacing:.14em;color:var(--primary-2);
-  background:var(--ice);border-radius:999px;padding:6px 12px}
+.xcard .xh{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:18px}
+.xcard .xh b{font-family:var(--disp);font-size:17px;font-weight:800;color:var(--ink)}
+.xtag{font-size:11px;font-weight:800;letter-spacing:.1em;color:var(--primary-2);
+  background:var(--ice);border-radius:999px;padding:6px 12px;white-space:nowrap}
 .xfield{background:var(--page);border:1.5px solid var(--stroke);border-radius:var(--r);
   padding:14px 18px;display:flex;align-items:center;gap:14px;transition:border-color .18s, box-shadow .18s}
 .xfield:focus-within{border-color:var(--accent);box-shadow:0 0 0 4px rgba(0,181,255,.15)}
-.xfield .lab{font-size:11.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--txt-3)}
+.xfield .lab{font-size:12px;font-weight:700;color:var(--txt-3)}
 .xfield input{border:0;background:transparent;outline:0;width:100%;
-  font-family:var(--mono);font-weight:600;font-size:26px;color:var(--ink)}
-.xfield .cur{font-family:var(--disp);font-weight:800;font-size:16px;color:var(--primary);
+  font-family:var(--mono);font-weight:600;font-size:26px;color:var(--ink);direction:ltr;text-align:start}
+.xfield .cur{font-family:'Archivo',sans-serif;font-weight:800;font-size:16px;color:var(--primary);
   background:#fff;border:1.5px solid var(--stroke);border-radius:12px;padding:9px 14px;white-space:nowrap}
 .xswap{display:grid;place-items:center;margin:-8px auto;position:relative;z-index:2;
   width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--primary-2));
   color:#fff;border:4px solid #fff;cursor:pointer;box-shadow:0 10px 24px -8px rgba(0,88,217,.55);
   transition:transform .25s}
 .xswap:hover{transform:rotate(180deg)}
-.xmeta{display:flex;justify-content:space-between;font-size:13.5px;color:var(--txt-2);margin:16px 2px}
-.xmeta b{color:var(--ink);font-family:var(--mono)}
+.xmeta{display:flex;justify-content:space-between;font-size:13.5px;color:var(--txt-2);margin:16px 2px;flex-wrap:wrap;gap:6px}
+.xmeta b{color:var(--ink);font-family:var(--mono);direction:ltr;unicode-bidi:embed}
 .xcard .btn{width:100%}
 
-/* ---------- globe network ---------- */
+/* ---------- globe ---------- */
 .network{position:relative;z-index:1;margin-top:56px;padding-bottom:0}
 .netcard{position:relative;border-radius:var(--r-lg) var(--r-lg) 0 0;overflow:hidden;
   background:linear-gradient(180deg,rgba(7,29,73,.0),rgba(4,16,44,.55));
   border:1px solid rgba(0,181,255,.18);border-bottom:0}
 .nethead{display:flex;align-items:center;gap:14px;padding:20px 26px 0;position:relative;z-index:3}
-.nethead .k{font-family:var(--disp);font-weight:800;font-size:11px;letter-spacing:.26em;color:var(--accent)}
+.nethead .k{font-family:'Archivo',sans-serif;font-weight:800;font-size:11px;letter-spacing:.26em;color:var(--accent)}
 .nethead h3{font-family:var(--disp);font-weight:800;font-size:19px;color:#fff}
 .nethead .live{margin-inline-start:auto;display:inline-flex;align-items:center;gap:8px;font-size:12.5px;color:rgba(234,245,255,.7)}
 .nethead .live .d{width:8px;height:8px;border-radius:50%;background:var(--success);animation:pulse 1.6s infinite}
 #globe{width:100%;height:460px;display:block}
-.feed{position:absolute;left:26px;bottom:26px;z-index:3;display:flex;flex-direction:column;gap:10px;pointer-events:none}
+.feed{position:absolute;inset-inline-start:26px;bottom:26px;z-index:3;display:flex;flex-direction:column;gap:10px;pointer-events:none}
 .feed .chip{display:inline-flex;align-items:center;gap:10px;background:rgba(7,29,73,.72);
   border:1px solid rgba(0,181,255,.35);backdrop-filter:blur(10px);border-radius:999px;
   padding:9px 16px;font-size:13px;color:#EAF5FF;font-weight:600;opacity:0;transform:translateY(8px);
-  animation:chipin .45s forwards}
+  animation:chipin .45s forwards;direction:ltr}
 .feed .chip .ok{width:18px;height:18px;border-radius:50%;background:var(--success);display:grid;place-items:center;flex:none}
 .feed .chip .ok svg{width:10px;height:10px;color:#fff}
 .feed .chip b{font-family:var(--mono);color:#9FE3FF;font-weight:600}
@@ -176,36 +174,38 @@ h1,h2,h3,.disp{font-family:var(--disp);font-variation-settings:'wdth' 118}
   border-top:1px solid rgba(0,181,255,.18);display:grid;grid-template-columns:repeat(4,1fr)}
 .netstats .st{padding:22px 26px;border-inline-end:1px solid rgba(0,181,255,.12)}
 .netstats .st:last-child{border-inline-end:0}
-.netstats .v{font-family:var(--disp);font-variation-settings:'wdth' 120;font-weight:900;
-  font-size:clamp(22px,3vw,32px);color:#fff;letter-spacing:-.01em}
+.netstats .v{font-family:'Archivo',sans-serif;font-variation-settings:'wdth' 120;font-weight:900;
+  font-size:clamp(22px,3vw,32px);color:#fff;letter-spacing:-.01em;direction:ltr}
+[dir=rtl] .netstats .v{text-align:right}
 .netstats .v i{font-style:normal;color:var(--accent)}
-.netstats .l{font-size:12.5px;font-weight:600;letter-spacing:.06em;color:rgba(234,245,255,.6);margin-top:4px}
+.netstats .l{font-size:12.5px;font-weight:600;color:rgba(234,245,255,.6);margin-top:4px}
 
 /* ---------- sections ---------- */
 section{padding:88px 0}
 .sec-head{margin-bottom:44px}
 
-/* market table */
+/* market */
 .market-card{background:#fff;border:1px solid var(--stroke);border-radius:var(--r-lg);
   box-shadow:var(--sh-card);overflow:hidden}
-.mrow{display:grid;grid-template-columns:1.4fr 1fr 1fr 1.2fr;align-items:center;gap:16px;
+.mrow{display:grid;grid-template-columns:1.6fr 1fr 1fr;align-items:center;gap:16px;
   padding:20px 28px;border-bottom:1px solid var(--stroke);transition:background .15s}
 .mrow:last-child{border-bottom:0}
 .mrow:hover{background:var(--page)}
-.mrow.hd{padding:14px 28px;background:var(--ice);font-size:11.5px;font-weight:800;
-  letter-spacing:.14em;text-transform:uppercase;color:var(--primary)}
+.mrow.hd{padding:14px 28px;background:var(--ice);font-size:12px;font-weight:800;color:var(--primary)}
 .pair{display:flex;align-items:center;gap:14px}
 .pair .ic{width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,var(--ice),#fff);
-  border:1px solid var(--stroke);display:grid;place-items:center;
-  font-family:var(--disp);font-weight:900;font-size:12px;color:var(--primary)}
-.pair b{font-family:var(--disp);font-weight:800;font-size:16.5px;color:var(--ink)}
+  border:1px solid var(--stroke);display:grid;place-items:center;flex:none;
+  font-family:'Archivo',sans-serif;font-weight:900;font-size:11px;color:var(--primary)}
+.pair b{font-family:var(--disp);font-weight:800;font-size:16px;color:var(--ink);direction:ltr;unicode-bidi:embed}
 .pair span{display:block;font-size:12.5px;color:var(--txt-3);font-weight:600}
-.price{font-family:var(--mono);font-weight:600;font-size:18px;color:var(--ink)}
-.chg{font-family:var(--mono);font-weight:600;font-size:14px;display:inline-flex;align-items:center;gap:6px;
-  border-radius:999px;padding:6px 13px}
-.chg.up{color:#00893C;background:rgba(0,200,83,.1)}
-.chg.dn{color:var(--danger);background:rgba(229,57,53,.09)}
-.spark{width:100%;max-width:210px;height:44px;justify-self:end}
+.price{font-family:var(--mono);font-weight:600;font-size:18px;color:var(--ink);direction:ltr;unicode-bidi:embed}
+[dir=rtl] .price{text-align:right}
+.sub2{font-family:var(--mono);font-size:13.5px;color:var(--txt-2);direction:ltr;unicode-bidi:embed}
+[dir=rtl] .sub2{text-align:right}
+.upd{display:inline-flex;align-items:center;gap:8px;margin-top:14px;font-size:13px;font-weight:600;color:var(--txt-2);
+  background:#fff;border:1px solid var(--stroke);border-radius:999px;padding:8px 16px;box-shadow:var(--sh-card)}
+.upd .d{width:8px;height:8px;border-radius:50%;background:var(--success)}
+.upd b{font-family:var(--mono);color:var(--ink)}
 
 /* steps */
 .steps-band{background:linear-gradient(180deg,#071D49,#0A2A6E);color:#fff;position:relative;overflow:hidden}
@@ -220,13 +220,13 @@ section{padding:88px 0}
 .step{position:relative;background:rgba(255,255,255,.05);border:1px solid rgba(0,181,255,.22);
   border-radius:var(--r);padding:54px 24px 26px;backdrop-filter:blur(6px);transition:transform .22s,border-color .22s}
 .step:hover{transform:translateY(-4px);border-color:var(--accent)}
-.step .n{position:absolute;top:-0px;left:24px;transform:translateY(-50%);
+.step .n{position:absolute;top:0;inset-inline-start:24px;transform:translateY(-50%);
   width:62px;height:62px;border-radius:50%;display:grid;place-items:center;
   background:linear-gradient(135deg,var(--primary-2),var(--accent));color:#fff;
-  font-family:var(--disp);font-weight:900;font-size:22px;border:5px solid #0A2A6E;
+  font-family:'Archivo',sans-serif;font-weight:900;font-size:22px;border:5px solid #0A2A6E;
   box-shadow:0 12px 28px -8px rgba(0,181,255,.6)}
 .step h4{font-family:var(--disp);font-weight:800;font-size:18px;margin-bottom:8px}
-.step p{font-size:14.5px;color:rgba(234,245,255,.72);line-height:1.6}
+.step p{font-size:14.5px;color:rgba(234,245,255,.72);line-height:1.7}
 
 /* balances */
 .balances{display:grid;grid-template-columns:repeat(4,1fr);gap:22px;margin-top:8px}
@@ -237,21 +237,21 @@ section{padding:88px 0}
   background:linear-gradient(90deg,var(--primary-2),var(--accent))}
 .bal .cur{display:flex;align-items:center;gap:10px;font-size:13px;font-weight:700;color:var(--txt-2)}
 .bal .cur .cc{width:34px;height:34px;border-radius:10px;background:var(--ice);display:grid;place-items:center;
-  font-family:var(--disp);font-weight:900;font-size:11px;color:var(--primary)}
-.bal .amt{font-family:var(--disp);font-variation-settings:'wdth' 118;font-weight:900;
-  font-size:clamp(24px,2.6vw,32px);color:var(--ink);letter-spacing:-.01em;margin:14px 0 6px}
-.bal .d{font-family:var(--mono);font-size:13px;font-weight:600}
-.bal .d.up{color:#00893C}.bal .d.dn{color:var(--danger)}
+  font-family:'Archivo',sans-serif;font-weight:900;font-size:11px;color:var(--primary)}
+.bal .amt{font-family:'Archivo',sans-serif;font-variation-settings:'wdth' 118;font-weight:900;
+  font-size:clamp(24px,2.6vw,32px);color:var(--ink);letter-spacing:-.01em;margin:14px 0 6px;direction:ltr}
+[dir=rtl] .bal .amt{text-align:right}
 
 /* visa */
 .visa{background:var(--ice)}
 .visa .grid{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:center}
 .card3d{perspective:1200px}
-.vcard{position:relative;aspect-ratio:1.586;border-radius:22px;padding:28px;color:#fff;
+.vcard{position:relative;aspect-ratio:1.586;border-radius:22px;padding:28px;color:#fff;direction:ltr;text-align:left;
   background:
     radial-gradient(500px 260px at 85% -20%, rgba(0,181,255,.5), transparent 60%),
     linear-gradient(135deg,#071D49 0%,#003B8F 55%,#0058D9 100%);
-  box-shadow:var(--sh-navy);transform:rotateY(-9deg) rotateX(4deg);transition:transform .5s cubic-bezier(.2,.8,.2,1)}
+  box-shadow:var(--sh-navy);transform:rotateY(-9deg) rotateX(4deg);transition:transform .5s cubic-bezier(.2,.8,.2,1);
+  display:flex;flex-direction:column}
 .card3d:hover .vcard{transform:rotateY(0) rotateX(0)}
 .vcard::after{content:"";position:absolute;inset:0;border-radius:inherit;
   background:linear-gradient(115deg,transparent 30%,rgba(255,255,255,.12) 45%,transparent 60%);pointer-events:none}
@@ -260,16 +260,15 @@ section{padding:88px 0}
 .vcard .num{font-family:var(--mono);font-size:clamp(17px,2.4vw,22px);letter-spacing:.14em;margin:auto 0 18px;font-weight:600}
 .vcard .meta{display:flex;justify-content:space-between;align-items:flex-end;font-size:12px}
 .vcard .meta .l{font-size:9px;letter-spacing:.18em;color:rgba(234,245,255,.6)}
-.vcard .meta b{font-family:var(--disp);font-weight:700;letter-spacing:.08em;font-size:13.5px}
-.vcard .visa-w{font-family:var(--disp);font-weight:900;font-style:italic;font-size:26px;letter-spacing:.02em}
-.vcard{display:flex;flex-direction:column}
+.vcard .meta b{font-family:'Archivo',sans-serif;font-weight:700;letter-spacing:.08em;font-size:13.5px}
+.vcard .visa-w{font-family:'Archivo',sans-serif;font-weight:900;font-style:italic;font-size:26px}
 .vfeat{list-style:none;margin:26px 0 30px;display:grid;gap:14px}
 .vfeat li{display:flex;gap:14px;align-items:flex-start;font-size:15.5px;color:var(--txt)}
 .vfeat .tick{flex:none;width:26px;height:26px;border-radius:50%;background:#fff;border:1.5px solid var(--stroke);
   display:grid;place-items:center;color:var(--success);box-shadow:var(--sh-card)}
 .vfeat .tick svg{width:13px;height:13px}
-.vprice{display:flex;align-items:baseline;gap:10px;margin-bottom:22px}
-.vprice b{font-family:var(--disp);font-variation-settings:'wdth' 120;font-weight:900;font-size:44px;color:var(--ink);letter-spacing:-.02em}
+.vprice{display:flex;align-items:baseline;gap:12px;margin-bottom:22px;flex-wrap:wrap}
+.vprice b{font-family:'Archivo','IBM Plex Sans Arabic',sans-serif;font-weight:900;font-size:clamp(34px,4vw,44px);color:var(--ink);letter-spacing:-.02em;direction:ltr;unicode-bidi:embed}
 .vprice span{font-weight:600;color:var(--txt-2)}
 
 /* ai */
@@ -307,18 +306,18 @@ footer::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;
   .netstats .st:nth-child(2n){border-inline-end:0}
   .netstats .st{border-bottom:1px solid rgba(0,181,255,.12)}
 }
-@media (max-width:760px){
+@media (max-width:820px){
   .nav .links{display:none}
-  .nav .btn-ghost-dark{display:none}
+  .nav .btn{display:none}
   .nav-toggle{display:grid;place-items:center}
+  .lang button{padding:6px 9px;font-size:11.5px}
   section{padding:64px 0}
   .hero{padding-top:48px}
-  .mrow{grid-template-columns:1.4fr 1fr 1fr}
-  .spark{display:none}
+  .mrow{padding:18px 20px}
   .balances{grid-template-columns:1fr}
   .steps{grid-template-columns:1fr}
   #globe{height:340px}
-  .feed{left:16px;bottom:16px}
+  .feed{inset-inline-start:16px;bottom:16px}
 }
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:.001s !important;transition-duration:.001s !important}
@@ -330,40 +329,40 @@ footer::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;
 <!-- ================= NAV ================= -->
 <nav class="nav">
   <div class="wrap">
-    <a class="brand" href="index.html" aria-label="ARKAN Rates home">
+    <a class="brand" href="index.html" aria-label="ARKAN Rates">
       <svg class="mark" viewBox="0 0 64 64" fill="none" aria-hidden="true">
-        <defs>
-          <linearGradient id="lg" x1="8" y1="56" x2="56" y2="8">
-            <stop offset="0" stop-color="#0058D9"/><stop offset="1" stop-color="#00B5FF"/>
-          </linearGradient>
-        </defs>
+        <defs><linearGradient id="lg" x1="8" y1="56" x2="56" y2="8">
+          <stop offset="0" stop-color="#0058D9"/><stop offset="1" stop-color="#00B5FF"/></linearGradient></defs>
         <rect x="2" y="2" width="60" height="60" rx="16" fill="#071D49"/>
         <rect x="2" y="2" width="60" height="60" rx="16" stroke="url(#lg)" stroke-width="2.5"/>
         <path d="M14 46 L32 14 L50 46" stroke="url(#lg)" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
         <path d="M20 40 C26 30, 38 30, 44 40" stroke="#EAF5FF" stroke-width="3.5" stroke-linecap="round" fill="none"/>
-        <circle cx="20" cy="40" r="3.4" fill="#00B5FF"/>
-        <circle cx="44" cy="40" r="3.4" fill="#00B5FF"/>
+        <circle cx="20" cy="40" r="3.4" fill="#00B5FF"/><circle cx="44" cy="40" r="3.4" fill="#00B5FF"/>
       </svg>
       <span class="wm"><b>ARKAN</b><span>RATES</span></span>
     </a>
     <div class="links">
-      <a href="#network">Network</a>
-      <a href="#markets">Markets</a>
-      <a href="#exchange">Exchange</a>
-      <a href="#settle">Settlement</a>
-      <a href="#visa">Visa Card</a>
+      <a href="#network" data-i="nav_network"></a>
+      <a href="#markets" data-i="nav_markets"></a>
+      <a href="#exchange" data-i="nav_exchange"></a>
+      <a href="#settle" data-i="nav_settle"></a>
+      <a href="#visa" data-i="nav_visa"></a>
       <a href="ai.html">AI</a>
     </div>
     <div class="sp"></div>
-    <a class="btn btn-ghost-dark" href="login.html">Sign in</a>
-    <a class="btn btn-primary" href="request.html">Get started →</a>
+    <div class="lang" id="langSeg" role="group" aria-label="Language">
+      <button data-l="ar">عربي</button><button data-l="fr">FR</button><button data-l="en">EN</button><button data-l="pt">PT</button>
+    </div>
+    <a class="btn btn-ghost-dark" href="login.html" data-i="nav_signin"></a>
+    <a class="btn btn-primary" href="request.html" data-i="nav_start"></a>
     <button class="nav-toggle" id="navToggle" aria-label="Menu">☰</button>
   </div>
 </nav>
 <div class="mmenu" id="mmenu">
-  <a href="#network">Network</a><a href="#markets">Markets</a><a href="#exchange">Exchange</a>
-  <a href="#settle">Settlement</a><a href="#visa">Visa Card</a><a href="ai.html">AI</a>
-  <a href="login.html">Sign in</a>
+  <a href="#network" data-i="nav_network"></a><a href="#markets" data-i="nav_markets"></a>
+  <a href="#exchange" data-i="nav_exchange"></a><a href="#settle" data-i="nav_settle"></a>
+  <a href="#visa" data-i="nav_visa"></a><a href="ai.html">AI</a>
+  <a href="login.html" data-i="nav_signin"></a>
 </div>
 
 <!-- ================= HERO ================= -->
@@ -371,97 +370,96 @@ footer::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;
   <div class="wrap">
     <div class="grid">
       <div>
-        <span class="pill"><span class="dot"></span>Africa × China × Gulf corridors · Live</span>
-        <h1>Move money across Africa, <em>instantly.</em></h1>
-        <p class="lede">Currency exchange and cross-border settlement between Mauritania, Angola, China and the Gulf — official reference rates, institutional trust, executed in minutes.</p>
+        <span class="pill"><span class="dot"></span><span data-i="pill"></span></span>
+        <h1 data-ih="h1"></h1>
+        <p class="lede" data-i="lede"></p>
         <div class="cta">
-          <a class="btn btn-primary" href="request.html">Start exchange</a>
-          <a class="btn btn-ghost-dark" href="login.html">Open business account</a>
+          <a class="btn btn-primary" href="request.html" data-i="cta1"></a>
+          <a class="btn btn-ghost-dark" href="login.html" data-i="cta2"></a>
         </div>
         <ul class="trust">
-          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6l8-4z"/></svg>Licensed &amp; regulated</li>
-          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 018 0v3"/></svg>256-bit encryption</li>
-          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>Settlement in minutes</li>
-          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 6L9 17l-5-5"/></svg>KYC verified</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6l8-4z"/></svg><span data-i="trust1"></span></li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 018 0v3"/></svg><span data-i="trust2"></span></li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg><span data-i="trust3"></span></li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 6L9 17l-5-5"/></svg><span data-i="trust4"></span></li>
         </ul>
       </div>
 
-      <!-- Converter -->
       <div class="xcard" id="exchange">
-        <div class="xh"><b>Convert at the best corridor rate</b><span class="xtag">LIVE</span></div>
+        <div class="xh"><b data-i="x_title"></b><span class="xtag" data-i="x_tag"></span></div>
         <div class="xfield">
           <div style="flex:1">
-            <div class="lab">You send</div>
-            <input id="fromAmt" inputmode="decimal" value="1,000" aria-label="Amount you send">
+            <div class="lab" data-i="x_send"></div>
+            <input id="fromAmt" inputmode="decimal" value="1,000" aria-label="Amount">
           </div>
-          <div class="cur" id="fromCur">USDT</div>
+          <div class="cur" id="fromCur">USD</div>
         </div>
-        <button class="xswap" id="swapBtn" aria-label="Swap currencies">
+        <button class="xswap" id="swapBtn" aria-label="Swap">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4v13M7 17l-3-3M7 17l3-3M17 20V7M17 7l-3 3M17 7l3 3"/></svg>
         </button>
         <div class="xfield">
           <div style="flex:1">
-            <div class="lab">Recipient gets</div>
-            <input id="toAmt" readonly value="39,850" aria-label="Amount recipient gets">
+            <div class="lab" data-i="x_get"></div>
+            <input id="toAmt" readonly value="">
           </div>
           <div class="cur" id="toCur">MRU</div>
         </div>
         <div class="xmeta">
-          <span>Rate <b id="rateTxt">1 USDT = 39.85 MRU</b></span>
-          <span>Fee <b>0.3%</b></span>
+          <span><span data-i="x_rate"></span> <b id="rateTxt"></b></span>
+          <span><span data-i="x_fee"></span> <b>0.3%</b></span>
         </div>
-        <a class="btn btn-primary" href="request.html">Continue →</a>
+        <a class="btn btn-primary" href="request.html" data-i="x_go"></a>
       </div>
     </div>
   </div>
 
-  <!-- Global payment network -->
   <div class="network wrap" id="network">
     <div class="netcard">
       <div class="nethead">
         <div>
           <div class="k">ARKAN NETWORK</div>
-          <h3>Global Payment Network</h3>
+          <h3 data-i="net_h"></h3>
         </div>
-        <span class="live"><span class="d"></span>Live corridor activity</span>
+        <span class="live"><span class="d"></span><span data-i="net_live"></span></span>
       </div>
-      <canvas id="globe" aria-label="Animated map of ARKAN payment corridors between Africa, China, the Gulf, Europe and the Americas"></canvas>
+      <canvas id="globe" aria-label="ARKAN payment corridors"></canvas>
       <div class="feed" id="feed"></div>
       <div class="netstats">
-        <div class="st"><div class="v">$24.8<i>M</i></div><div class="l">Volume · 24h</div></div>
-        <div class="st"><div class="v">12</div><div class="l">Connected markets</div></div>
-        <div class="st"><div class="v">2.3<i>s</i></div><div class="l">Avg. settlement</div></div>
-        <div class="st"><div class="v">99.97<i>%</i></div><div class="l">Success rate</div></div>
+        <div class="st"><div class="v">$24.8<i>M</i></div><div class="l" data-i="st1"></div></div>
+        <div class="st"><div class="v">12</div><div class="l" data-i="st2"></div></div>
+        <div class="st"><div class="v">2.3<i>s</i></div><div class="l" data-i="st3"></div></div>
+        <div class="st"><div class="v">99.97<i>%</i></div><div class="l" data-i="st4"></div></div>
       </div>
     </div>
   </div>
 </header>
 
-<!-- ================= MARKETS ================= -->
+<!-- ================= ARKAN OFFICIAL RATES ================= -->
 <section id="markets">
   <div class="wrap">
     <div class="sec-head">
-      <span class="eyebrow">Live market</span>
-      <h2 class="sec-h2">Real-time rates across corridors</h2>
-      <p class="sec-sub">Reference rates for the currencies ARKAN settles every day — AOA, MRU, USDT and majors.</p>
+      <span class="eyebrow" data-i="mk_eye"></span>
+      <h2 class="sec-h2" data-i="mk_h2"></h2>
+      <p class="sec-sub" data-i="mk_sub"></p>
+      <span class="upd"><span class="d"></span><span data-i="mk_upd"></span> <b id="updDate"></b></span>
     </div>
     <div class="market-card" id="mkt"></div>
   </div>
 </section>
 
-<!-- ================= SETTLEMENT STEPS ================= -->
+<!-- ================= STEPS ================= -->
 <section class="steps-band" id="settle">
   <div class="wrap">
     <div class="sec-head">
-      <span class="eyebrow">Settlement</span>
-      <h2 class="sec-h2">From request to settled — four steps</h2>
-      <p class="sec-sub">Every transfer follows the same audited path. No surprises, no black box.</p>
+      <span class="eyebrow" data-i="sp_eye"></span>
+      <h2 class="sec-h2" data-i="sp_h2"></h2>
+      <p class="sec-sub" data-i="sp_sub"></p>
     </div>
     <div class="steps">
-      <div class="step"><div class="n">1</div><h4>Choose corridor</h4><p>Pick source &amp; destination currency and amount.</p></div>
-      <div class="step"><div class="n">2</div><h4>Upload receipt</h4><p>Attach the bank proof — read automatically by OCR.</p></div>
-      <div class="step"><div class="n">3</div><h4>Verification</h4><p>Fraud checks &amp; reconciliation against the payment.</p></div>
-      <div class="step"><div class="n">4</div><h4>Settlement</h4><p>USDT / local payout released, both sides confirmed.</p></div>
+      <div class="step"><div class="n">1</div><h4 data-i="s1h"></h4><p data-i="s1p"></p></div>
+      <div class="step"><div class="n">2</div><h4 data-i="s2h"></h4><p data-i="s2p"></p></div>
+      <div class="step"><div class="n">3</div><h4 data-i="s3h"></h4><p data-i="s3p"></p></div>
+      <div class="step"><div class="n">4</div><h4 data-i="s4h"></h4><p data-i="s4p"></p></div>
     </div>
   </div>
 </section>
@@ -470,15 +468,15 @@ footer::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;
 <section id="dash">
   <div class="wrap">
     <div class="sec-head">
-      <span class="eyebrow">Dashboard</span>
-      <h2 class="sec-h2">Your balances, one view</h2>
-      <p class="sec-sub">Every currency you operate in, reconciled and live.</p>
+      <span class="eyebrow" data-i="db_eye"></span>
+      <h2 class="sec-h2" data-i="db_h2"></h2>
+      <p class="sec-sub" data-i="db_sub"></p>
     </div>
     <div class="balances">
-      <div class="bal"><div class="cur"><span class="cc">AOA</span>Kwanza</div><div class="amt">4,120,000</div><div class="d up">▲ 0.34%</div></div>
-      <div class="bal"><div class="cur"><span class="cc">MRU</span>Ouguiya</div><div class="amt">318,540</div><div class="d up">▲ 0.12%</div></div>
-      <div class="bal"><div class="cur"><span class="cc">USDT</span>Tether</div><div class="amt">86,300</div><div class="d up">▲ 0.02%</div></div>
-      <div class="bal"><div class="cur"><span class="cc">EUR</span>Euro</div><div class="amt">12,800</div><div class="d dn">▼ 0.50%</div></div>
+      <div class="bal"><div class="cur"><span class="cc">AOA</span><span data-i="c_aoa"></span></div><div class="amt">4,120,000</div></div>
+      <div class="bal"><div class="cur"><span class="cc">MRU</span><span data-i="c_mru"></span></div><div class="amt">318,540</div></div>
+      <div class="bal"><div class="cur"><span class="cc">USDT</span>Tether</div><div class="amt">86,300</div></div>
+      <div class="bal"><div class="cur"><span class="cc">EUR</span>Euro</div><div class="amt">12,800</div></div>
     </div>
   </div>
 </section>
@@ -490,7 +488,7 @@ footer::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;
       <div class="card3d">
         <div class="vcard">
           <div class="row1">
-            <span style="font-family:var(--disp);font-weight:800;letter-spacing:.16em;font-size:12px;color:#9FE3FF">ARKAN · PREPAID</span>
+            <span style="font-family:'Archivo',sans-serif;font-weight:800;letter-spacing:.16em;font-size:12px;color:#9FE3FF">ARKAN · PREPAID</span>
             <span class="chip"></span>
           </div>
           <div class="num">4023&nbsp;&nbsp;••••&nbsp;&nbsp;••••&nbsp;&nbsp;7714</div>
@@ -502,17 +500,17 @@ footer::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;
         </div>
       </div>
       <div>
-        <span class="eyebrow">ARKAN Card</span>
-        <h2 class="sec-h2">One card. Every border.</h2>
-        <p class="sec-sub">Prepaid international Visa, delivered in Nouakchott — pay online, subscriptions and travel with confidence.</p>
+        <span class="eyebrow" data-i="v_eye"></span>
+        <h2 class="sec-h2" data-i="v_h2"></h2>
+        <p class="sec-sub" data-i="v_sub"></p>
         <ul class="vfeat">
-          <li><span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></span>Works on all international websites &amp; apps</li>
-          <li><span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></span>Recharge via Bankily / Sedad / USDT at ARKAN rates</li>
-          <li><span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></span>Delivered in 24–48h · activation included</li>
-          <li><span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></span>Support in Arabic, French &amp; English</li>
+          <li><span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></span><span data-i="v_f1"></span></li>
+          <li><span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></span><span data-i="v_f2"></span></li>
+          <li><span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></span><span data-i="v_f3"></span></li>
+          <li><span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></span><span data-i="v_f4"></span></li>
         </ul>
-        <div class="vprice"><b>1,500</b><span>MRU · one-time</span></div>
-        <a class="btn btn-gold" href="https://wa.me/22236295050?text=%D8%A3%D8%B1%D9%8A%D8%AF%20%D8%B7%D9%84%D8%A8%20%D8%A8%D8%B7%D8%A7%D9%82%D8%A9%20%D9%81%D9%8A%D8%B2%D8%A7%20%E2%80%94%201500%20MRU">Order via WhatsApp →</a>
+        <div class="vprice" id="vprice"></div>
+        <a class="btn btn-gold" id="waBtn" href="https://wa.me/22236295050" data-i="v_cta"></a>
       </div>
     </div>
   </div>
@@ -522,25 +520,22 @@ footer::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;
 <section id="ai">
   <div class="wrap">
     <div class="sec-head">
-      <span class="eyebrow">AI-powered</span>
-      <h2 class="sec-h2">Smart financial intelligence</h2>
-      <p class="sec-sub">Machine intelligence works on every transaction, so you don't have to.</p>
+      <span class="eyebrow" data-i="ai_eye"></span>
+      <h2 class="sec-h2" data-i="ai_h2"></h2>
+      <p class="sec-sub" data-i="ai_sub"></p>
     </div>
     <div class="ai-grid">
       <div class="ai-card">
         <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/></svg></div>
-        <h4>Best rate detection</h4>
-        <p>AI scans every corridor to find the optimal rate for your transaction in real-time.</p>
+        <h4 data-i="ai1h"></h4><p data-i="ai1p"></p>
       </div>
       <div class="ai-card">
         <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6l8-4z"/><path d="M9 12l2 2 4-4"/></svg></div>
-        <h4>Fraud prevention</h4>
-        <p>Machine-learning models detect suspicious patterns and protect funds 24/7.</p>
+        <h4 data-i="ai2h"></h4><p data-i="ai2p"></p>
       </div>
       <div class="ai-card">
         <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="5" cy="12" r="2.5"/><circle cx="19" cy="6" r="2.5"/><circle cx="19" cy="18" r="2.5"/><path d="M7.5 11l9-4M7.5 13l9 4"/></svg></div>
-        <h4>Smart routing</h4>
-        <p>Payments are automatically routed through the fastest, cheapest available corridor.</p>
+        <h4 data-i="ai3h"></h4><p data-i="ai3p"></p>
       </div>
     </div>
   </div>
@@ -560,60 +555,244 @@ footer::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;
     </a>
     <div class="sp" style="flex:1"></div>
     <div class="f-links">
-      <a href="rates.html">Rates</a>
-      <a href="request.html">Transfer</a>
-      <a href="settlement.html">Settlement</a>
-      <a href="archive.html">Archive</a>
+      <a href="rates.html" data-i="f_rates"></a>
+      <a href="request.html" data-i="f_transfer"></a>
+      <a href="settlement.html" data-i="f_settle"></a>
+      <a href="archive.html" data-i="f_archive"></a>
     </div>
     <div class="f-copy">© 2026 ARKAN INTERNATIONAL TRADING · Mauritania · Angola · China</div>
   </div>
 </footer>
 
 <script>
-/* ---------- mobile menu ---------- */
-const mm=document.getElementById('mmenu');
-document.getElementById('navToggle').addEventListener('click',()=>mm.classList.toggle('open'));
-mm.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>mm.classList.remove('open')));
+/* ============================================================
+   i18n — AR / FR / EN / PT
+   ============================================================ */
+const I18N={
+ar:{
+  nav_network:"الشبكة",nav_markets:"الأسعار",nav_exchange:"التحويل",nav_settle:"التسوية",nav_visa:"بطاقة فيزا",
+  nav_signin:"دخول",nav_start:"ابدأ الآن",
+  pill:"ممرات إفريقيا × الصين × الخليج · مباشر",
+  h1:"حوّل أموالك عبر إفريقيا <em>فورًا.</em>",
+  lede:"الصرف والتسويات الدولية بين موريتانيا وأنغولا والصين والخليج — أسعار أركان الرسمية، ثقة مؤسسية، وتنفيذ في دقائق.",
+  cta1:"ابدأ التحويل",cta2:"افتح حساب أعمال",
+  trust1:"مرخّصة ومنظّمة",trust2:"تشفير 256-بت",trust3:"تسوية في دقائق",trust4:"تحقق KYC",
+  x_title:"حوّل بسعر أركان الرسمي",x_tag:"سعر أركان",x_send:"ترسل",x_get:"يستلم المستفيد",x_rate:"السعر",x_fee:"الرسوم",x_go:"متابعة ←",
+  net_h:"شبكة المدفوعات العالمية",net_live:"نشاط الممرات مباشر",
+  st1:"حجم التداول · 24س",st2:"أسواق مرتبطة",st3:"متوسط التسوية",st4:"نسبة النجاح",
+  mk_eye:"أسعار أركان",mk_h2:"أسعار أركان الرسمية",
+  mk_sub:"الأسعار المعتمدة للتعامل — تُحدَّث مباشرة من إدارة أركان، لا أسعار آلية.",mk_upd:"آخر تحديث",
+  mk_pair:"العملة",mk_rate:"السعر",mk_old:"بالأوقية القديمة",
+  sp_eye:"التسوية",sp_h2:"من الطلب إلى التسوية — أربع خطوات",sp_sub:"كل تحويل يمر بنفس المسار المدقَّق. لا مفاجآت، لا صندوق أسود.",
+  s1h:"اختر الممر",s1p:"حدد عملة المصدر والوجهة والمبلغ.",
+  s2h:"ارفع الإيصال",s2p:"إثبات الدفع البنكي يُقرأ آليًا بتقنية OCR.",
+  s3h:"التحقق",s3p:"فحص الاحتيال والمطابقة مع الدفعة.",
+  s4h:"التسوية",s4p:"صرف USDT أو العملة المحلية وتأكيد الطرفين.",
+  db_eye:"لوحة التحكم",db_h2:"أرصدتك في شاشة واحدة",db_sub:"كل عملة تعمل بها، مُسوّاة ومباشرة.",
+  c_aoa:"كوانزا",c_mru:"أوقية",
+  v_eye:"بطاقة أركان",v_h2:"بطاقة واحدة. لكل الحدود.",
+  v_sub:"بطاقة فيزا دولية مسبقة الدفع، تُسلَّم في نواكشوط — ادفع أونلاين، الاشتراكات والسفر بثقة.",
+  v_f1:"تعمل على جميع المواقع والتطبيقات الدولية",v_f2:"اشحن عبر Bankily / Sedad / USDT بأسعار أركان",
+  v_f3:"التسليم خلال 24–48 ساعة · التفعيل مشمول",v_f4:"دعم بالعربية والفرنسية والإنجليزية",
+  v_cta:"اطلب عبر واتساب",
+  wa:"أريد طلب بطاقة فيزا أركان",
+  ai_eye:"بالذكاء الاصطناعي",ai_h2:"ذكاء مالي متقدم",ai_sub:"الذكاء الاصطناعي يعمل على كل معاملة، حتى لا تضطر أنت لذلك.",
+  ai1h:"أفضل سعر",ai1p:"يفحص الذكاء الاصطناعي كل الممرات لإيجاد أفضل سعر لمعاملتك فورًا.",
+  ai2h:"منع الاحتيال",ai2p:"نماذج تعلم آلي تكشف الأنماط المشبوهة وتحمي الأموال على مدار الساعة.",
+  ai3h:"توجيه ذكي",ai3p:"تُوجَّه المدفوعات آليًا عبر أسرع وأرخص ممر متاح.",
+  f_rates:"الأسعار",f_transfer:"تحويل",f_settle:"التسوية",f_archive:"الأرشيف"
+},
+fr:{
+  nav_network:"Réseau",nav_markets:"Taux",nav_exchange:"Change",nav_settle:"Règlement",nav_visa:"Carte Visa",
+  nav_signin:"Connexion",nav_start:"Commencer →",
+  pill:"Corridors Afrique × Chine × Golfe · En direct",
+  h1:"Transférez votre argent en Afrique, <em>instantanément.</em>",
+  lede:"Change et règlement transfrontalier entre la Mauritanie, l'Angola, la Chine et le Golfe — taux officiels ARKAN, confiance institutionnelle, exécution en quelques minutes.",
+  cta1:"Démarrer un change",cta2:"Ouvrir un compte business",
+  trust1:"Agréé & réglementé",trust2:"Chiffrement 256 bits",trust3:"Règlement en minutes",trust4:"Vérifié KYC",
+  x_title:"Convertissez au taux officiel ARKAN",x_tag:"TAUX ARKAN",x_send:"Vous envoyez",x_get:"Le bénéficiaire reçoit",x_rate:"Taux",x_fee:"Frais",x_go:"Continuer →",
+  net_h:"Réseau de paiement mondial",net_live:"Activité en direct",
+  st1:"Volume · 24h",st2:"Marchés connectés",st3:"Règlement moyen",st4:"Taux de réussite",
+  mk_eye:"Taux ARKAN",mk_h2:"Les taux officiels ARKAN",
+  mk_sub:"Les taux appliqués — mis à jour directement par ARKAN, aucun flux automatique.",mk_upd:"Mis à jour",
+  mk_pair:"Paire",mk_rate:"Taux",mk_old:"Ancienne ouguiya",
+  sp_eye:"Règlement",sp_h2:"De la demande au règlement — quatre étapes",sp_sub:"Chaque transfert suit le même parcours audité. Aucune surprise.",
+  s1h:"Choisissez le corridor",s1p:"Devise source, destination et montant.",
+  s2h:"Téléversez le reçu",s2p:"La preuve bancaire est lue automatiquement par OCR.",
+  s3h:"Vérification",s3p:"Contrôles anti-fraude et rapprochement du paiement.",
+  s4h:"Règlement",s4p:"Paiement USDT / local libéré, confirmé des deux côtés.",
+  db_eye:"Tableau de bord",db_h2:"Vos soldes, en un coup d'œil",db_sub:"Chaque devise, réconciliée et à jour.",
+  c_aoa:"Kwanza",c_mru:"Ouguiya",
+  v_eye:"Carte ARKAN",v_h2:"Une carte. Toutes les frontières.",
+  v_sub:"Visa prépayée internationale, livrée à Nouakchott — payez en ligne, abonnements et voyages en toute confiance.",
+  v_f1:"Fonctionne sur tous les sites et applis internationaux",v_f2:"Rechargez via Bankily / Sedad / USDT aux taux ARKAN",
+  v_f3:"Livraison en 24–48h · activation incluse",v_f4:"Support en arabe, français et anglais",
+  v_cta:"Commander via WhatsApp →",
+  wa:"Je souhaite commander la carte Visa ARKAN",
+  ai_eye:"Propulsé par l'IA",ai_h2:"Intelligence financière avancée",ai_sub:"L'IA travaille sur chaque transaction, pour que vous n'ayez pas à le faire.",
+  ai1h:"Meilleur taux",ai1p:"L'IA analyse chaque corridor pour trouver le taux optimal en temps réel.",
+  ai2h:"Prévention de la fraude",ai2p:"Des modèles de ML détectent les schémas suspects et protègent les fonds 24/7.",
+  ai3h:"Routage intelligent",ai3p:"Les paiements sont routés via le corridor le plus rapide et le moins cher.",
+  f_rates:"Taux",f_transfer:"Transfert",f_settle:"Règlement",f_archive:"Archives"
+},
+en:{
+  nav_network:"Network",nav_markets:"Rates",nav_exchange:"Exchange",nav_settle:"Settlement",nav_visa:"Visa Card",
+  nav_signin:"Sign in",nav_start:"Get started →",
+  pill:"Africa × China × Gulf corridors · Live",
+  h1:"Move money across Africa, <em>instantly.</em>",
+  lede:"Currency exchange and cross-border settlement between Mauritania, Angola, China and the Gulf — official ARKAN rates, institutional trust, executed in minutes.",
+  cta1:"Start exchange",cta2:"Open business account",
+  trust1:"Licensed & regulated",trust2:"256-bit encryption",trust3:"Settlement in minutes",trust4:"KYC verified",
+  x_title:"Convert at the official ARKAN rate",x_tag:"ARKAN RATE",x_send:"You send",x_get:"Recipient gets",x_rate:"Rate",x_fee:"Fee",x_go:"Continue →",
+  net_h:"Global Payment Network",net_live:"Live corridor activity",
+  st1:"Volume · 24h",st2:"Connected markets",st3:"Avg. settlement",st4:"Success rate",
+  mk_eye:"ARKAN rates",mk_h2:"Official ARKAN rates",
+  mk_sub:"The applied rates — updated directly by ARKAN, no automated feeds.",mk_upd:"Updated",
+  mk_pair:"Pair",mk_rate:"Rate",mk_old:"Old ouguiya",
+  sp_eye:"Settlement",sp_h2:"From request to settled — four steps",sp_sub:"Every transfer follows the same audited path. No surprises, no black box.",
+  s1h:"Choose corridor",s1p:"Pick source & destination currency and amount.",
+  s2h:"Upload receipt",s2p:"Attach the bank proof — read automatically by OCR.",
+  s3h:"Verification",s3p:"Fraud checks & reconciliation against the payment.",
+  s4h:"Settlement",s4p:"USDT / local payout released, both sides confirmed.",
+  db_eye:"Dashboard",db_h2:"Your balances, one view",db_sub:"Every currency you operate in, reconciled and live.",
+  c_aoa:"Kwanza",c_mru:"Ouguiya",
+  v_eye:"ARKAN Card",v_h2:"One card. Every border.",
+  v_sub:"Prepaid international Visa, delivered in Nouakchott — pay online, subscriptions and travel with confidence.",
+  v_f1:"Works on all international websites & apps",v_f2:"Recharge via Bankily / Sedad / USDT at ARKAN rates",
+  v_f3:"Delivered in 24–48h · activation included",v_f4:"Support in Arabic, French & English",
+  v_cta:"Order via WhatsApp →",
+  wa:"I would like to order the ARKAN Visa card",
+  ai_eye:"AI-powered",ai_h2:"Smart financial intelligence",ai_sub:"Machine intelligence works on every transaction, so you don't have to.",
+  ai1h:"Best rate detection",ai1p:"AI scans every corridor to find the optimal rate for your transaction in real-time.",
+  ai2h:"Fraud prevention",ai2p:"Machine-learning models detect suspicious patterns and protect funds 24/7.",
+  ai3h:"Smart routing",ai3p:"Payments are automatically routed through the fastest, cheapest available corridor.",
+  f_rates:"Rates",f_transfer:"Transfer",f_settle:"Settlement",f_archive:"Archive"
+},
+pt:{
+  nav_network:"Rede",nav_markets:"Taxas",nav_exchange:"Câmbio",nav_settle:"Liquidação",nav_visa:"Cartão Visa",
+  nav_signin:"Entrar",nav_start:"Começar →",
+  pill:"Corredores África × China × Golfo · Ao vivo",
+  h1:"Envie dinheiro pela África, <em>instantaneamente.</em>",
+  lede:"Câmbio e liquidação internacional entre Mauritânia, Angola, China e o Golfo — taxas oficiais ARKAN, confiança institucional, executado em minutos.",
+  cta1:"Iniciar câmbio",cta2:"Abrir conta empresarial",
+  trust1:"Licenciado e regulado",trust2:"Criptografia de 256 bits",trust3:"Liquidação em minutos",trust4:"Verificado KYC",
+  x_title:"Converta à taxa oficial ARKAN",x_tag:"TAXA ARKAN",x_send:"Você envia",x_get:"O destinatário recebe",x_rate:"Taxa",x_fee:"Tarifa",x_go:"Continuar →",
+  net_h:"Rede global de pagamentos",net_live:"Atividade ao vivo",
+  st1:"Volume · 24h",st2:"Mercados conectados",st3:"Liquidação média",st4:"Taxa de sucesso",
+  mk_eye:"Taxas ARKAN",mk_h2:"Taxas oficiais ARKAN",
+  mk_sub:"As taxas aplicadas — atualizadas diretamente pela ARKAN, sem feeds automáticos.",mk_upd:"Atualizado",
+  mk_pair:"Par",mk_rate:"Taxa",mk_old:"Ouguiya antiga",
+  sp_eye:"Liquidação",sp_h2:"Do pedido à liquidação — quatro passos",sp_sub:"Cada transferência segue o mesmo caminho auditado. Sem surpresas.",
+  s1h:"Escolha o corredor",s1p:"Moeda de origem, destino e valor.",
+  s2h:"Envie o recibo",s2p:"O comprovativo bancário é lido automaticamente por OCR.",
+  s3h:"Verificação",s3p:"Controlo antifraude e reconciliação do pagamento.",
+  s4h:"Liquidação",s4p:"Pagamento USDT / local liberado, confirmado por ambos os lados.",
+  db_eye:"Painel",db_h2:"Seus saldos, numa só vista",db_sub:"Cada moeda, reconciliada e atualizada.",
+  c_aoa:"Kwanza",c_mru:"Ouguiya",
+  v_eye:"Cartão ARKAN",v_h2:"Um cartão. Todas as fronteiras.",
+  v_sub:"Visa pré-pago internacional, entregue em Nouakchott — pague online, assinaturas e viagens com confiança.",
+  v_f1:"Funciona em todos os sites e apps internacionais",v_f2:"Recarregue via Bankily / Sedad / USDT às taxas ARKAN",
+  v_f3:"Entrega em 24–48h · ativação incluída",v_f4:"Suporte em árabe, francês e inglês",
+  v_cta:"Pedir via WhatsApp →",
+  wa:"Quero pedir o cartão Visa ARKAN",
+  ai_eye:"Com IA",ai_h2:"Inteligência financeira avançada",ai_sub:"A IA trabalha em cada transação, para que você não precise.",
+  ai1h:"Melhor taxa",ai1p:"A IA analisa cada corredor para encontrar a taxa ideal em tempo real.",
+  ai2h:"Prevenção de fraude",ai2p:"Modelos de ML detetam padrões suspeitos e protegem os fundos 24/7.",
+  ai3h:"Roteamento inteligente",ai3p:"Os pagamentos são encaminhados pelo corredor mais rápido e barato.",
+  f_rates:"Taxas",f_transfer:"Transferência",f_settle:"Liquidação",f_archive:"Arquivo"
+}};
 
-/* ---------- markets table (logic preserved) ---------- */
-const rows=[
-  ['USDT/AOA','Tether → Kwanza','843.50','+1.20','up',1],
-  ['USDT/MRU','Tether → Ouguiya','39.85','+0.08','up',2],
-  ['EUR/AOA','Euro → Kwanza','920.30','+0.23','up',3],
-  ['EUR/MRU','Euro → Ouguiya','43.40','-0.12','dn',4],
-  ['CNY/MRU','Yuan → Ouguiya','5.61','+0.05','up',5],
-  ['AED/MRU','Dirham → Ouguiya','10.85','+0.02','up',6]
-];
-const spark=(col,seed)=>{let pts='';let y=34;for(let i=0;i<=11;i++){y+=(Math.sin(seed+i)*6)-(i*1.1);y=Math.max(6,Math.min(40,y));pts+=`${i*19},${y.toFixed(0)} `;}
-  return `<svg class="spark" viewBox="0 0 210 48" preserveAspectRatio="none"><polyline points="${pts.trim()}" fill="none" stroke="${col}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/></svg>`;};
-document.getElementById('mkt').innerHTML=
-  `<div class="mrow hd"><span>Pair</span><span>Rate</span><span>24h</span><span style="text-align:right">Trend</span></div>`+
-  rows.map(r=>`<div class="mrow">
-    <div class="pair"><span class="ic">${r[0].split('/')[0]}</span><div><b>${r[0]}</b><span>${r[1]}</span></div></div>
-    <span class="price">${r[2]}</span>
-    <span><span class="chg ${r[4]}">${r[4]==='up'?'▲':'▼'} ${r[3].replace('-','')}%</span></span>
-    ${spark(r[4]==='up'?'#00C853':'#E53935',r[5])}
-  </div>`).join('');
+/* ============================================================
+   ARKAN OFFICIAL RATES — from rates.json (Mohamed edits that file only)
+   All base values in old ouguiya (MRO). 1 MRU = 10 MRO.
+   ============================================================ */
+let RATES={updated:"2026-08-02",usd_mro:422.5,eur_mro:485,aoa_mro:0.35,usd_cny:7.16,usd_aed:3.6725,card_price_mro:15000};
+const fmt=(n,d=2)=>n.toLocaleString('en-US',{maximumFractionDigits:d});
+let LANG=localStorage.getItem('arkan_lang')||'ar';
 
-/* ---------- converter (logic preserved) ---------- */
-const R={USDT:1,MRU:39.85,AOA:843.5,EUR:0.92,CNY:7.1,AED:3.67};
-const f=document.getElementById('fromAmt'),t=document.getElementById('toAmt'),
+function R(){ // units per 1 USD
+  return {USD:1,USDT:1,
+    MRU:RATES.usd_mro/10,
+    AOA:RATES.usd_mro/RATES.aoa_mro,
+    EUR:RATES.usd_mro/RATES.eur_mro,
+    CNY:RATES.usd_cny, AED:RATES.usd_aed};
+}
+
+function renderMarket(){
+  const t=I18N[LANG], r=R();
+  const rows=[
+    ['USD','MRU', r.MRU,        `${fmt(RATES.usd_mro,1)} MRO`],
+    ['EUR','MRU', r.MRU/r.EUR,  `${fmt(RATES.eur_mro,1)} MRO`],
+    ['USD','AOA', r.AOA,        `1 USD = ${fmt(r.AOA,0)} Kz`],
+    ['EUR','AOA', r.AOA/r.EUR,  `1 EUR = ${fmt(r.AOA/r.EUR,0)} Kz`],
+    ['MRU','AOA', r.AOA/r.MRU,  `1000 MRU = ${fmt(1000*r.AOA/r.MRU,0)} Kz`],
+    ['CNY','MRU', r.MRU/r.CNY,  `${fmt(RATES.usd_mro/RATES.usd_cny,1)} MRO`],
+    ['AED','MRU', r.MRU/r.AED,  `${fmt(RATES.usd_mro/RATES.usd_aed,1)} MRO`]
+  ];
+  document.getElementById('mkt').innerHTML=
+    `<div class="mrow hd"><span>${t.mk_pair}</span><span>${t.mk_rate}</span><span>${t.mk_old}</span></div>`+
+    rows.map(x=>`<div class="mrow">
+      <div class="pair"><span class="ic">${x[0]}</span><div><b>${x[0]} → ${x[1]}</b></div></div>
+      <span class="price">${fmt(x[2])}</span>
+      <span class="sub2">${x[3]}</span>
+    </div>`).join('');
+  document.getElementById('updDate').textContent=RATES.updated;
+}
+
+function renderCardPrice(){
+  const el=document.getElementById('vprice');
+  const usd=RATES.card_price_mro/RATES.usd_mro;
+  const eur=RATES.card_price_mro/RATES.eur_mro;
+  const aoa=RATES.card_price_mro/RATES.aoa_mro;
+  if(LANG==='ar')      el.innerHTML=`<b>1,500</b><span>أوقية جديدة · 15,000 قديمة · دفعة واحدة</span>`;
+  else if(LANG==='pt') el.innerHTML=`<b>Kz ${fmt(aoa,0)}</b><span>pagamento único</span>`;
+  else if(LANG==='fr') el.innerHTML=`<b>${fmt(usd,1)} $</b><span>≈ ${fmt(eur,1)} € · paiement unique</span>`;
+  else                 el.innerHTML=`<b>$${fmt(usd,1)}</b><span>≈ €${fmt(eur,1)} · one-time</span>`;
+}
+
+/* converter */
+const f=document.getElementById('fromAmt'),tAmt=document.getElementById('toAmt'),
       fc=document.getElementById('fromCur'),tc=document.getElementById('toCur'),
       rt=document.getElementById('rateTxt');
-const fmt=n=>n.toLocaleString('en-US',{maximumFractionDigits:2});
 function calc(){
+  const r=R();
   const a=parseFloat(f.value.replace(/[^\d.]/g,''))||0;
-  const rate=(R[tc.textContent]/R[fc.textContent]);
-  t.value=fmt(a*rate);
+  const rate=(r[tc.textContent]/r[fc.textContent]);
+  tAmt.value=fmt(a*rate);
   rt.textContent=`1 ${fc.textContent} = ${fmt(rate)} ${tc.textContent}`;
 }
 f.addEventListener('input',calc);
 f.addEventListener('blur',()=>{const a=parseFloat(f.value.replace(/[^\d.]/g,''))||0;f.value=fmt(a);});
 document.getElementById('swapBtn').addEventListener('click',()=>{
   const a=fc.textContent;fc.textContent=tc.textContent;tc.textContent=a;calc();});
-calc();
 
-/* ---------- 3D globe payment network ---------- */
+/* language */
+function setLang(l){
+  LANG=l; localStorage.setItem('arkan_lang',l);
+  const t=I18N[l];
+  document.documentElement.lang=l;
+  document.documentElement.dir=(l==='ar')?'rtl':'ltr';
+  document.querySelectorAll('[data-i]').forEach(el=>{const k=el.dataset.i;if(t[k]!==undefined)el.textContent=t[k];});
+  document.querySelectorAll('[data-ih]').forEach(el=>{const k=el.dataset.ih;if(t[k]!==undefined)el.innerHTML=t[k];});
+  document.querySelectorAll('#langSeg button').forEach(b=>b.classList.toggle('on',b.dataset.l===l));
+  document.getElementById('waBtn').href='https://wa.me/22236295050?text='+encodeURIComponent(t.wa);
+  document.title=(l==='ar')?'ARKAN Rates — الصرف والتسويات الدولية':'ARKAN Rates — Move Money Across Africa Instantly';
+  renderMarket(); renderCardPrice(); calc();
+}
+document.querySelectorAll('#langSeg button').forEach(b=>b.addEventListener('click',()=>setLang(b.dataset.l)));
+
+/* load Mohamed's rates (cache-busted so updates show immediately) */
+fetch('rates.json?t='+Date.now()).then(r=>r.json()).then(j=>{Object.assign(RATES,j);setLang(LANG);}).catch(()=>setLang(LANG));
+setLang(LANG);
+
+/* mobile menu */
+const mm=document.getElementById('mmenu');
+document.getElementById('navToggle').addEventListener('click',()=>mm.classList.toggle('open'));
+mm.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>mm.classList.remove('open')));
+
+/* ============================================================
+   3D globe payment network
+   ============================================================ */
 (function(){
   const cv=document.getElementById('globe');
   const ctx=cv.getContext('2d');
@@ -655,47 +834,42 @@ calc();
     const om=Math.acos(dot), so=Math.sin(om)||1e-6;
     const k1=Math.sin((1-t)*om)/so, k2=Math.sin(t*om)/so;
     let x=v1[0]*k1+v2[0]*k2, y=v1[1]*k1+v2[1]*k2, z=v1[2]*k1+v2[2]*k2;
-    const lift=1+Math.sin(t*Math.PI)*0.13;               /* arc altitude */
+    const lift=1+Math.sin(t*Math.PI)*0.13;
     x*=lift;y*=lift;z*=lift;
-    const lo=Math.atan2(x,z)+rot, la=Math.asin(Math.max(-1,Math.min(1,y/lift)))// keep lat
-    ;const r=Math.hypot(x,y,z);
+    const lo=Math.atan2(x,z)+rot, la=Math.asin(Math.max(-1,Math.min(1,y/lift)));
+    const r=Math.hypot(x,y,z);
     const X=Math.sin(lo)*Math.cos(la)*r, Y=Math.sin(la)*r, Z=Math.cos(lo)*Math.cos(la)*r;
     const y2=Y*Math.cos(TILT)-Z*Math.sin(TILT), z2=Y*Math.sin(TILT)+Z*Math.cos(TILT);
     return {x:cx+X*Rr, y:cy-y2*Rr, z:z2};
   }
 
   let rot=0.35, last=0;
-  const particles=CORRIDORS.map((c,i)=>({c,t:Math.random(),sp:0.0016+Math.random()*0.0016}));
+  const particles=CORRIDORS.map(c=>({c,t:Math.random(),sp:0.0016+Math.random()*0.0016}));
 
   function frame(ts){
     const dt=Math.min(ts-last,50); last=ts;
     if(!reduced) rot+=dt*0.000045;
     ctx.clearRect(0,0,W,H);
 
-    /* sphere glow */
     const g=ctx.createRadialGradient(cx,cy,Rr*0.2,cx,cy,Rr*1.25);
     g.addColorStop(0,'rgba(0,88,217,.22)');g.addColorStop(.7,'rgba(0,181,255,.06)');g.addColorStop(1,'rgba(0,0,0,0)');
     ctx.fillStyle=g; ctx.beginPath(); ctx.arc(cx,cy,Rr*1.25,0,7); ctx.fill();
 
-    /* graticule dots */
     ctx.fillStyle='rgba(120,190,255,.34)';
     for(let la=-60;la<=75;la+=15){
       for(let lo=-180;lo<180;lo+=10){
         const p=proj(la,lo,rot);
         if(p.z>0.08){
-          const a=0.15+0.5*p.z;
-          ctx.globalAlpha=a;
+          ctx.globalAlpha=0.15+0.5*p.z;
           ctx.beginPath();ctx.arc(p.x,p.y,1.15,0,7);ctx.fill();
         }
       }
     }
     ctx.globalAlpha=1;
 
-    /* limb */
     ctx.strokeStyle='rgba(0,181,255,.35)';ctx.lineWidth=1.2;
     ctx.beginPath();ctx.arc(cx,cy,Rr,0,7);ctx.stroke();
 
-    /* corridors */
     for(const cor of CORRIDORS){
       const a=CITIES[cor[0]],b=CITIES[cor[1]];
       ctx.beginPath();let vis=false;
@@ -706,7 +880,6 @@ calc();
       ctx.strokeStyle='rgba(0,181,255,.30)';ctx.lineWidth=1.4;ctx.stroke();
     }
 
-    /* particles */
     for(const pt of particles){
       if(!reduced) pt.t+=pt.sp*dt; if(pt.t>1)pt.t=0;
       const a=CITIES[pt.c[0]],b=CITIES[pt.c[1]];
@@ -719,8 +892,7 @@ calc();
       }
     }
 
-    /* city nodes + labels */
-    ctx.textBaseline='middle';
+    ctx.textBaseline='middle';ctx.textAlign='left';
     for(const c of CITIES){
       const p=proj(c[1],c[2],rot);
       if(p.z>0.05){
@@ -740,7 +912,6 @@ calc();
   }
   requestAnimationFrame(frame);
 
-  /* live settlement feed */
   const FEED=[
     ['Luanda','Guangzhou','84,300,000 AOA'],
     ['Nouakchott','Dubai','412,000 MRU'],
@@ -755,7 +926,7 @@ calc();
     const [a,b,amt]=FEED[fi%FEED.length]; fi++;
     const el=document.createElement('span');
     el.className='chip';
-    el.innerHTML=`<span class="ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4"><path d="M20 6L9 17l-5-5"/></svg></span>${a} → ${b} · <b>${amt}</b> · Settled`;
+    el.innerHTML=`<span class="ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4"><path d="M20 6L9 17l-5-5"/></svg></span>${a} → ${b} · <b>${amt}</b> ✓`;
     feedEl.appendChild(el);
     while(feedEl.children.length>2) feedEl.removeChild(feedEl.firstChild);
   }
