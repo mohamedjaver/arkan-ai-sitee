@@ -425,7 +425,9 @@ async function geminiExtract(b64,mime){
 اقرأ كل حرف ثم افهم المعنى واستخرج JSON فقط بلا أي نص آخر وبهذه البنية حرفيًا:
 ${GEM_SCHEMA}
 - amount رقم فقط بلا فواصل. currency رمز ISO أو USDT.
-- الكوانزا الأنغولية: AOA (تظهر كـ Kz أو KZ أو AKZ). الأوقية: MRU (أو UM). انتبه للفواصل الأوروبية 1.234.567,89.
+- ⚠️ المبلغ هو قيمة حقل Montante/المبلغ/Total/Valor فقط (مثل: Kz 8 000 000,00 → 8000000). لا تضع أبدًا في amount أرقام Movimento أو Número de Operação أو Transacção أو CHAVE أو PIN أو Conta/IBAN — هذه أرقام تعريفية تذهب في transaction_id/reference.
+- تجاهل تمامًا أرقام التذييل القانوني (Capital Social، NIF، الهواتف).
+- الكوانزا الأنغولية: AOA (تظهر كـ Kz أو KZ أو AKZ). الأوقية: MRU (أو UM). انتبه للفواصل الأوروبية 1.234.567,89 والمسافات 8 000 000,00.
 - قيّم جودة الصورة في quality (مقصوصة؟ ضبابية؟ أثر تعديل؟ زوايا ناقصة؟).
 - confidence: ثقتك 0-100 في دقة المبلغ والمرجع.`;
   const body={contents:[{parts:[{text:prompt},{inline_data:{mime_type:mime||'image/jpeg',data:b64}}]}],
@@ -458,24 +460,76 @@ async function getWorker(){
   return _wi;
 }
 const BANKS=['BAI','BIC','ATLANTICO','ATLÂNTICO','BCI','BFA','BPM','BMCI','BNM','SGM','BANKILY','SEDAD','MASRVI','BINANCE','HTX','OKX','BYBIT','KEYSTONE','SBM','ORABANK'];
-function localParse(text){
+function stripFooter(t){
+  // قص تذييل البنك القانوني (Capital Social Kz 157 545 000 000 وغيره) قبل أي استخراج
+  const m=t.search(/CAPITAL\s+SOCIAL|REGISTO\s+NO\s+BNA|CONSERVAT[ÓO]RIA|SOCIEDADE\s+ABERTA|LINHA\s+DE\s+ATENDIMENTO|CASO\s+NECESSITE/i);
+  return m>80? t.slice(0,m) : t;
+}
+function parseNum(s){
+  s=String(s).trim();
+  if(/,\d{2}$/.test(s)) s=s.replace(/[ .\u00A0]/g,'').replace(',','.');      // 8 000 000,00 · 18.000.000,00
+  else if(/\.\d{2}$/.test(s)) s=s.replace(/[ ,\u00A0]/g,'');                 // 1,392,076.00
+  else s=s.replace(/[ ,.\u00A0]/g,'');                                        // أعداد صحيحة مجمّعة
+  const n=parseFloat(s); return isFinite(n)?n:0;
+}
+const AMT_LBL=/MONTANTE|MONTANT|TOTAL|VALOR|IMPORT[ÂA]NCIA|AMOUNT|المبلغ|القيمة|المجموع/i;
+const CUR_TOK=/\bKZ\b|\bAKZ\b|\bAOA\b|\bMRU\b|\bUM\b|\bUSDT\b|\bUSD\b|\bEUR\b|\$|€|أوقية|كوانزا/i;
+const ID_LBL=/MOVIMENTO|OPERA[ÇC][ÃA]O|TRANSAC[ÇC]|TRANSFER[ÊE]NCIA\s+ATRIBU|CONTA|IBAN|CHAVE|\bPIN\b|N[ºO°]|NIF|TEL|SWIFT|REF|رقم\s+العملية|الحساب/i;
+function localParse(rawText){
+  const text=stripFooter(rawText||'');
   const T=text.toUpperCase();
   const p={};
   p.bank=BANKS.find(b=>T.includes(b))||'';
-  const cur=T.match(/\b(USDT|USD|AOA|MRU|EUR|CNY|AED|KZ|AKZ|UM)\b/); 
+  const cur=T.match(/\b(USDT|USD|AOA|MRU|EUR|CNY|AED|AKZ|KZ|UM)\b/);
   p.currency=cur?({KZ:'AOA',AKZ:'AOA',UM:'MRU'}[cur[1]]||cur[1]):'';
-  const nums=[...T.matchAll(/([\d.,]{4,})/g)].map(m=>{
-    let s=m[1];
-    if(/,\d{2}$/.test(s))s=s.replace(/\./g,'').replace(',','.'); else s=s.replace(/,/g,'');
-    return parseFloat(s);}).filter(n=>n>1&&n<1e12);
-  p.amount=nums.length?Math.max(...nums):0;
-  const ref=T.match(/\b(?:REF|RÉF|N[ºO°]?|TXID|TX|HASH)[:\s#]*([A-Z0-9\-]{6,30})\b/); p.reference=ref?ref[1]:'';
+  /* ── المبلغ: تسجيل نقاط لكل مرشح حسب سياق سطره — لا "أكبر رقم" أبدًا ── */
+  const lines=text.split(/\n+/);
+  let best=null;
+  for(const line of lines){
+    const L=line.toUpperCase();
+    for(const m of line.matchAll(/(\d{1,3}(?:[ .,\u00A0]\d{3})*(?:[.,]\d{2})?|\d+[.,]\d{2})/g)){
+      const tok=m[1]; const v=parseNum(tok);
+      if(!(v>0&&v<1e12)) continue;
+      let score=0;
+      if(AMT_LBL.test(L)) score+=6;
+      if(CUR_TOK.test(L)) score+=4;
+      if(/[.,]\d{2}$/.test(tok)) score+=3;                       // صيغة نقدية ,00
+      if(/[ .,\u00A0]\d{3}/.test(tok)) score+=2;                 // فواصل آلاف
+      if(ID_LBL.test(L)) score-=8;                                // سطر أرقام تعريفية
+      if(!/[ .,\u00A0]/.test(tok)&&tok.length>=9) score-=7;      // 7084610234 ونحوه
+      if(v>=1e9&&!AMT_LBL.test(L)) score-=4;
+      if(score>0&&(!best||score>best.score||(score===best.score&&v>best.v))) best={v,score};
+    }
+  }
+  p.amount=best?best.v:0;
+  /* ── المرجع: Movimento / Número de Operação / Transacção أولاً ── */
+  const ref=T.match(/(?:MOVIMENTO|N[ÚU]MERO\s+DE\s+OPERA[ÇC][ÃA]O|N[ÚU]MERO\s+DE\s+TRANSFER[ÊE]NCIA(?:\s+ATRIBU[ÍI]DO)?|TRANSAC[ÇC][ÃA]O|N[ºO°]\s*DE\s*TRANSFER[ÊE]NCIA|REF(?:ER[ÊE]NCIA)?|TXID|TX|HASH)[:\s#.]*([A-Z0-9\-]*\d[A-Z0-9\-]{3,29})/);
+  p.reference=ref?ref[1]:'';
+  p.transaction_id=p.reference;
   const w=T.match(/\bT[A-Z0-9]{33}\b/); p.wallet_address=w?w[0]:'';
-  const ib=T.match(/\b[A-Z]{2}\d{2}[A-Z0-9]{10,30}\b/); p.iban=ib?ib[0]:'';
-  const sw=T.match(/\b[A-Z]{6}[A-Z0-9]{2}(?:[A-Z0-9]{3})?\b/); p.swift=(sw&&!p.iban?.includes(sw[0]))?sw[0]:'';
+  const ib=T.match(/\bAO\d{2}[ .]?[\d .]{15,30}\b|\b[A-Z]{2}\d{2}[A-Z0-9]{10,30}\b/); p.iban=ib?ib[0].replace(/ /g,''):'';
+  const swm=T.match(/SWIFT[:\s]*([A-Z]{6}[A-Z0-9]{2}(?:[A-Z0-9]{3})?)/); p.swift=swm?swm[1]:'';
   const dt=T.match(/\b(20\d{2}[-\/.]\d{1,2}[-\/.]\d{1,2}|\d{1,2}[-\/.]\d{1,2}[-\/.]20\d{2})\b/);
   if(dt){const parts=dt[1].split(/[-\/.]/);p.date=parts[0].length===4?`${parts[0]}-${parts[1].padStart(2,'0')}-${parts[2].padStart(2,'0')}`:`${parts[2]}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}`;}
-  p.doc_type=/USDT|TRC20|TXID|HASH|BINANCE|HTX|OKX/.test(T)?'crypto':(/SWIFT|MT103/.test(T)?'swift':'bank');
+  const ben=text.match(/(?:Benefici[áa]rio|Destinat[áa]rio|PARA)[:\s]*\n?\s*(?:Nome[:\s]*)?([A-ZÀ-Ú][A-ZÀ-Ú .]{5,40})/i);
+  if(ben)p.beneficiary=ben[1].trim();
+  const snd=text.match(/(?:Ordenante|\bDE\b)[:\s]*\n?\s*(?:Nome[:\s]*)?([A-ZÀ-Ú][A-ZÀ-Ú .]{5,40})/i);
+  if(snd)p.sender=snd[1].trim();
+  p.doc_type=/USDT|TRC20|TXID|HASH|BINANCE|HTX|OKX/.test(T)?'crypto':(/SWIFT\s+COPY|MT103/.test(T)?'swift':'bank');
+  return p;
+}
+/* ═══ حراسة مشتركة: المبلغ لا يساوي أبدًا رقم العملية — تنطبق على Gemini والمحلي ═══ */
+function crossGuard(p,rawText){
+  const digits=x=>String(x==null?'':x).replace(/\D/g,'');
+  const amtD=digits(Math.round(+p.amount||0));
+  const ids=[p.reference,p.transaction_id].map(digits).filter(Boolean);
+  if(amtD.length>=7&&ids.includes(amtD)){
+    p._amountWasId=p.amount; p.amount=0;
+  }
+  if((+p.amount||0)>=1e9&&rawText){
+    const t=stripFooter(rawText).toUpperCase();
+    if(!AMT_LBL.test(t)||!t.includes(amtD.slice(0,6))){ /* keep */ }
+  }
   return p;
 }
 
@@ -540,6 +594,7 @@ function verify(rec){
   if(q.blurry)flags.push(['m','الصورة ضبابية — قد تكون القراءة ناقصة']);
   if(q.cropped||q.missing_corners)flags.push(['m','الصورة مقصوصة أو زوايا ناقصة']);
   if(q.edited_suspicion)flags.push(['h','🚨 اشتباه تعديل على المستند — مراجعة يدوية إلزامية']);
+  if(p._amountWasId)flags.push(['h','🚨 الرقم المقروء كمبلغ ('+fmt(p._amountWasId,0)+') هو رقم العملية نفسه — صُفّر المبلغ، أدخله يدويًا أو أعد التحليل بـ Gemini']);
   if(!p.amount)flags.push(['m','لم يُقرأ مبلغ — راجع يدويًا']);
   rec.fraud={flags:flags.map(f=>[f[0]==='h'?'high':f[0]==='m'?'med':'low',f[1]]),
     level:flags.some(f=>f[0]==='h')?'high':flags.some(f=>f[0]==='m')?'med':'low',
@@ -615,6 +670,7 @@ async function processFile(file){
       rec.ocrConfidence=Math.min(100,Math.max(0,+p.confidence||0));
     }catch(ge){
       engine='local';
+      rec.geminiError=(ge&&ge.message)||'?';
       tqSet(tid,55,'محرك محلي (Tesseract)…');
       try{
         const w=await getWorker();
@@ -624,7 +680,8 @@ async function processFile(file){
       }catch(te){ p={}; rec.ocrConfidence=0; rec.needsReview=true; }
     }
     rec.engine=engine;
-    rec.parsed=Object.assign({amount:0,currency:'',bank:''},p);
+    rec.parsed=crossGuard(Object.assign({amount:0,currency:'',bank:''},p), rec.ocrText||'');
+    if(rec.geminiError)audit(rec,'Gemini تعذّر ('+rec.geminiError+') → المحرك المحلي');
     rec.smartName=smartName(rec.parsed);
     audit(rec,'أُنشئ · محرك: '+engine+' · ثقة '+(rec.ocrConfidence||0)+'%');
 
