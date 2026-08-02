@@ -1,0 +1,21 @@
+/* ═══ ARKAN LIGHT — خلفية فاتحة موحّدة (BAI) لكل صفحات التطبيق ═══
+   تُحمَّل بعد أنماط كل صفحة فتقلب رموز الألوان الشائعة إلى الفاتح.
+   البطاقات الداكنة تبقى كلوحات تباين فاخرة فوق الخلفية الفاتحة. */
+:root{
+  --bg:#f6f8fc!important; --bg-1:#f6f8fc!important; --bg-2:#eef2f9!important; --bg-3:#ffffff!important;
+  --ark-bg-1:#f6f8fc!important; --ark-bg-2:#eef2f9!important; --ark-bg-3:#ffffff!important;
+  --card:#ffffff!important; --panel:#ffffff!important; --surface:#ffffff!important;
+  --ark-glass:#ffffff!important; --ark-glass-2:#ffffff!important;
+  --txt:#0a1e4d!important; --text:#0a1e4d!important; --ark-txt:#0a1e4d!important;
+  --txt-2:#5a6a8f!important; --muted:#5a6a8f!important; --ark-txt-2:#5a6a8f!important; --ark-txt-3:#8b97b5!important;
+  --stroke:#e3e9f4!important; --line:#e3e9f4!important; --border:#e3e9f4!important;
+  --ark-stroke:#e3e9f4!important; --ark-stroke-2:#cdd8ec!important;
+  --gold:#b8860b!important; --ark-gold:#b8860b!important;
+}
+html,body{background:#f6f8fc!important;color:#0a1e4d!important}
+body::before,body::after{display:none!important}
+/* لوحات كانت زجاجية داكنة → بيضاء بظل ناعم */
+.card,.ark-card{background:#fff!important;border-color:#e3e9f4!important;
+  box-shadow:0 18px 44px -22px rgba(10,30,77,.18)!important;color:#0a1e4d}
+input,select,textarea{background:#fbfcff!important;color:#0a1e4d!important;border-color:#cdd8ec!important}
+::placeholder{color:#8b97b5!important}
