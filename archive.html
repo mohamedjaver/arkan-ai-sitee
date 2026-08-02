@@ -84,7 +84,7 @@ header{position:sticky;top:0;z-index:40;backdrop-filter:blur(18px);-webkit-backd
 .hint{font-size:11px;color:var(--faint);margin:8px 4px 0;line-height:1.7}
 
 /* ── tabs ── */
-.vtabs{display:flex;gap:8px;padding:14px 16px 4px;max-width:1180px;margin:0 auto}
+.vtabs{display:flex;align-items:center;gap:8px;padding:14px 16px 4px;max-width:1180px;margin:0 auto}
 .vt{border:1px solid var(--cardline);background:#fff;color:var(--dim);border-radius:999px;
   padding:9px 18px;font:700 13px var(--ff);cursor:pointer;transition:all .2s}
 .vt.on{background:var(--grad);color:#fff;border-color:transparent;box-shadow:0 8px 20px rgba(0,88,217,.3)}
@@ -281,6 +281,30 @@ header{position:sticky;top:0;z-index:40;backdrop-filter:blur(18px);-webkit-backd
   .kpis{grid-template-columns:repeat(2,1fr)}
 }
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* ── وضع التحديد الجماعي ── */
+.vt.selmode{background:#FDEBEA;color:#C62828;border-color:#F5C6C4}
+.doc .ck{position:absolute;top:10px;inset-inline-start:10px;width:26px;height:26px;border-radius:50%;
+  border:2px solid #BFD9F7;background:#fff;display:none;place-items:center;z-index:2;
+  transition:all .18s;box-shadow:0 4px 10px rgba(16,42,67,.12)}
+.doc .ck svg{width:14px;height:14px;color:#fff;opacity:0}
+body.selecting .doc .ck{display:grid}
+body.selecting .doc:hover{transform:none}
+.doc.picked{border-color:#0099FF;box-shadow:0 0 0 3px rgba(0,153,255,.25), var(--sh)}
+.doc.picked .ck{background:var(--grad);border-color:transparent}
+.doc.picked .ck svg{opacity:1}
+#selbar{position:fixed;left:50%;transform:translateX(-50%) translateY(120%);bottom:calc(96px + env(safe-area-inset-bottom));
+  z-index:250;display:flex;gap:10px;align-items:center;background:#041B4A;border:1px solid rgba(0,162,255,.4);
+  border-radius:999px;padding:10px 12px;box-shadow:0 24px 60px rgba(2,14,40,.55);transition:transform .3s cubic-bezier(.2,.9,.3,1.1)}
+body.selecting #selbar{transform:translateX(-50%) translateY(0)}
+#selbar .cnt{color:#BFE4FF;font:700 13px var(--ff);padding:0 8px;white-space:nowrap}
+#selbar button{border:0;cursor:pointer;border-radius:999px;padding:10px 16px;font:700 12.5px var(--ff);white-space:nowrap;
+  transition:transform .15s,filter .18s}
+#selbar button:active{transform:scale(.95)}
+#selbar .all{background:rgba(255,255,255,.12);color:#EAF5FF}
+#selbar .del{background:linear-gradient(135deg,#E53935,#FF6B5E);color:#fff;box-shadow:0 8px 20px rgba(229,57,53,.4)}
+#selbar .del:disabled{opacity:.45;cursor:default}
+#selbar .cancel{background:transparent;color:#9FB7D9}
 </style>
 </head>
 <body>
@@ -316,6 +340,8 @@ header{position:sticky;top:0;z-index:40;backdrop-filter:blur(18px);-webkit-backd
   <button class="vt on" data-v="arch" onclick="setView('arch')">📂 الأرشيف</button>
   <button class="vt" data-v="chains" onclick="setView('chains')">⛓ سلاسل التسوية</button>
   <button class="vt" data-v="stats" onclick="setView('stats')">📊 الإحصاءات</button>
+  <span style="flex:1"></span>
+  <button class="vt" id="selBtn" onclick="toggleSelect()">☑️ تحديد</button>
 </div>
 
 <div class="wrap">
@@ -383,6 +409,12 @@ header{position:sticky;top:0;z-index:40;backdrop-filter:blur(18px);-webkit-backd
   </div>
 </div>
 
+<div id="selbar">
+  <span class="cnt" id="selCnt">0 محدد</span>
+  <button class="all" onclick="selectAllVisible()">تحديد الكل</button>
+  <button class="del" id="selDel" onclick="bulkDelete()" disabled>🗑 حذف</button>
+  <button class="cancel" onclick="toggleSelect(false)">إلغاء</button>
+</div>
 <div id="tq"></div>
 
 <script>
@@ -820,7 +852,8 @@ function docCard(d,i){
   else if(d.needsReview)badges.push('<span class="bdg rev">مراجعة</span>');
   else badges.push('<span class="bdg ok">موثّق</span>');
   if(d.chainId)badges.push('<span class="bdg chain">⛓</span>');
-  return `<div class="doc" style="animation-delay:${Math.min(i*35,350)}ms" onclick="openDoc('${d.id}')">
+  return `<div class="doc ${SELECTED.has(d.id)?'picked':''}" id="doc_${d.id}" style="animation-delay:${Math.min(i*35,350)}ms" data-id="${d.id}">
+    <span class="ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4"><path d="M20 6L9 17l-5-5"/></svg></span>
     <div class="th ${d.isPdf?'pdf':''}" style="background-image:url('${d.thumb||''}')"></div>
     <div class="bd">
       <div class="nm">${esc(d.smartName||d.fileName)}</div>
@@ -847,6 +880,7 @@ function renderTimeline(){
     return;
   }
   const shown=docs.slice(0,RENDER_LIMIT);
+  VISIBLE_IDS=shown.map(d=>d.id);
   const groups={};
   shown.forEach(d=>{const[k,l]=groupKey(d.uploadedAt);(groups[k]=groups[k]||{l,docs:[]}).docs.push(d);});
   tl.innerHTML=Object.keys(groups).sort().map(k=>{
@@ -906,6 +940,41 @@ function renderInsights(){
 }
 
 /* ═══ Doc modal ═══ */
+/* ═══ التحديد الجماعي والحذف ═══ */
+let SELECT=false; const SELECTED=new Set(); let VISIBLE_IDS=[];
+function toggleSelect(force){
+  SELECT=(force===undefined)?!SELECT:force;
+  if(!SELECT)SELECTED.clear();
+  document.body.classList.toggle('selecting',SELECT);
+  const b=$('selBtn');
+  b.classList.toggle('selmode',SELECT);
+  b.textContent=SELECT?'✕ إنهاء التحديد':'☑️ تحديد';
+  paintSel(); renderTimeline();
+}
+function paintSel(){
+  $('selCnt').textContent=SELECTED.size+' محدد';
+  $('selDel').disabled=!SELECTED.size;
+  $('selDel').textContent='🗑 حذف'+(SELECTED.size?' ('+SELECTED.size+')':'');
+}
+function pick(id){
+  if(SELECTED.has(id))SELECTED.delete(id); else SELECTED.add(id);
+  const el=document.getElementById('doc_'+id);
+  if(el)el.classList.toggle('picked',SELECTED.has(id));
+  paintSel();
+}
+function selectAllVisible(){
+  const all=VISIBLE_IDS.every(id=>SELECTED.has(id));
+  VISIBLE_IDS.forEach(id=>{ all?SELECTED.delete(id):SELECTED.add(id); });
+  paintSel(); renderTimeline();
+}
+async function bulkDelete(){
+  if(!SELECTED.size)return;
+  if(!confirm('حذف '+SELECTED.size+' مستند نهائيًا من الأرشيف؟ لا يمكن التراجع.'))return;
+  for(const id of SELECTED){ try{ await delDoc(id); }catch(e){} }
+  CACHE=CACHE.filter(d=>!SELECTED.has(d.id));
+  toast0('حُذف '+SELECTED.size+' مستند ✓');
+  toggleSelect(false); renderAll();
+}
 let CUR=null,zoom=1,rot=0;
 async function openDoc(id){
   const d=CACHE.find(x=>x.id===id); if(!d)return; CUR=d; zoom=1; rot=0;
@@ -1041,6 +1110,12 @@ function renderAll(){renderKPIs();renderChips();renderInsights();renderTimeline(
   if(VIEW==='chains')renderChains(); if(VIEW==='stats')renderStats();}
 
 /* ═══ boot ═══ */
+document.getElementById('tl').addEventListener('click',e=>{
+  const card=e.target.closest('.doc'); if(!card)return;
+  if(e.target.closest('.mono'))return; /* باركود المرجع له معالجه الخاص */
+  const id=card.dataset.id;
+  if(SELECT){ pick(id); } else { openDoc(id); }
+});
 (async function(){
   await openDB();
   CACHE=await allDocs();
