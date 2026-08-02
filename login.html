@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#071D49">
+<meta name="theme-color" content="#FFFFFF">
 <title>الدخول — ARKAN Rates</title>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="icon" href="arkan-icon-512.png">
@@ -12,7 +12,7 @@
 :root{
   --ink:#071D49;--primary:#003B8F;--primary-2:#0058D9;--accent:#00B5FF;--ice:#EAF5FF;
   --success:#00C853;--danger:#E53935;
-  --txt:#0E2450;--txt-2:#43598A;--txt-3:#7A8DB8;--stroke:#DCE8F8;--page:#F5F9FF;
+  --txt:#102A43;--txt-2:#486581;--txt-3:#7A93AD;--stroke:#D9E5F2;--page:#F7FAFD;
   --r:18px;
   --disp:'IBM Plex Sans Arabic','Archivo',sans-serif;
   --body:'IBM Plex Sans Arabic','Public Sans',sans-serif;
@@ -22,13 +22,10 @@ html[lang]:not([lang=ar]){--disp:'Archivo','IBM Plex Sans Arabic',sans-serif;--b
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{max-width:100%;overflow-x:clip}
 body{font-family:var(--body);color:var(--txt);min-height:100dvh;display:grid;place-items:center;padding:22px;
-  background:
-    radial-gradient(900px 500px at 85% -10%, rgba(0,88,217,.5), transparent 60%),
-    radial-gradient(700px 500px at -10% 110%, rgba(0,181,255,.2), transparent 55%),
-    linear-gradient(180deg,#071D49 0%,#062165 60%,#003B8F 100%)}
+  background:linear-gradient(180deg,#FFFFFF 0%,#EEF6FF 100%)}
 .card{width:100%;max-width:440px;background:#fff;border-radius:26px;overflow:hidden;
-  box-shadow:0 44px 110px -40px rgba(2,10,32,.75)}
-.head{position:relative;background:linear-gradient(135deg,#071D49 0%,#003B8F 60%,#0058D9 100%);
+  box-shadow:0 30px 80px -30px rgba(16,42,67,.22);border:1px solid #D9E5F2}
+.head{position:relative;background:linear-gradient(135deg,#003B8F,#006BFF);
   color:#fff;padding:30px 24px 26px;text-align:center;overflow:hidden}
 .head::after{content:"";position:absolute;inset:0;pointer-events:none;
   background:radial-gradient(360px 180px at 80% -20%, rgba(0,181,255,.4), transparent 70%)}
@@ -55,7 +52,7 @@ body{font-family:var(--body);color:var(--txt);min-height:100dvh;display:grid;pla
 .f input:focus{border-color:var(--accent);box-shadow:0 0 0 4px rgba(0,181,255,.15);background:#fff}
 .pin{font-family:var(--mono) !important;letter-spacing:.35em;text-align:center;font-size:19px !important}
 .go{width:100%;border:0;border-radius:16px;padding:16px;
-  background:linear-gradient(135deg,var(--primary),var(--primary-2));color:#fff;
+  background:linear-gradient(135deg,#0056D6,#0099FF);color:#fff;
   font:700 16px var(--disp);cursor:pointer;margin-top:4px;
   box-shadow:0 14px 30px -10px rgba(0,88,217,.55), inset 0 1px 0 rgba(255,255,255,.22);
   transition:transform .18s, box-shadow .22s}
