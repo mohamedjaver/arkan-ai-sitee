@@ -71,7 +71,7 @@ window._pdfReady=(async function(){
 body{background:var(--bg);color:var(--txt);
   font-family:'IBM Plex Sans Arabic',sans-serif;min-height:100vh;
   padding-bottom:calc(88px + env(safe-area-inset-bottom));
-  background-image:linear-gradient(180deg,#F7FAFD 0%,#EEF6FF 100%);
+  background-image:linear-gradient(180deg,#F3F9FF 0%,#EAF4FF 35%,#E1F0FF 70%,#D8EBFF 100%);
   background-repeat:no-repeat;background-attachment:fixed}
 
 /* ===== طبقات الخلفية الثابتة (موحّدة مع الصفحة الرئيسية) ===== */
@@ -95,8 +95,8 @@ body{background:var(--bg);color:var(--txt);
 #lock h2{font-size:17px;letter-spacing:3px;font-weight:600}
 #lock h2 span{color:var(--acc2)}
 #lock input{width:210px;text-align:center;letter-spacing:14px;font-size:26px;
-  padding:15px;border-radius:18px;background:var(--glass);backdrop-filter:blur(16px);
-  border:1px solid var(--stroke);color:var(--acc2);outline:none;font-family:'IBM Plex Mono',monospace}
+  padding:15px;border-radius:18px;background:#FFFFFF;
+  border:1.5px solid #D5E5F8;color:#003B8F;outline:none;font-family:'IBM Plex Mono',monospace}
 #lock input:focus{border-color:var(--stroke-acc);box-shadow:0 0 0 4px rgba(0,181,255,.15)}
 #lockMsg{font-size:12px;color:var(--dim);min-height:18px}
 #lockMsg.err{color:var(--red)}
@@ -146,19 +146,19 @@ header{padding:20px 18px 4px;position:relative;z-index:6}
 section{padding:16px 18px;display:none}
 section.on{display:block;animation:fadeUp .25s ease}
 @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
-.card{background:var(--glass);
-  border:1px solid var(--stroke);border-radius:22px;padding:24px;margin-bottom:14px;
-  box-shadow:0 10px 30px -12px rgba(16,42,67,.10), 0 2px 6px -2px rgba(16,42,67,.05);contain:layout;
-  transition:border-color .3s,box-shadow .3s}
-.card:hover{border-color:rgba(0,153,255,.45);
-  box-shadow:0 16px 40px -14px rgba(0,86,214,.16)}
+.card{background:#FCFEFF;
+  border:1px solid #D8E8F8;border-radius:24px;padding:24px;margin-bottom:14px;
+  box-shadow:0 12px 40px rgba(0,58,143,.08);contain:layout;
+  transition:border-color .3s,box-shadow .3s,transform .3s}
+.card:hover{border-color:rgba(0,153,255,.5);transform:translateY(-6px);
+  box-shadow:0 22px 54px rgba(0,86,214,.14), 0 0 0 4px rgba(0,153,255,.07)}
 .card h3{font-size:13px;color:var(--acc2);margin-bottom:12px;font-weight:700}
 label{display:block;font-size:12px;color:var(--dim);margin:10px 0 6px}
-input,select,textarea{width:100%;padding:14px 16px;border-radius:12px;background:rgba(15,23,42,.6);
-  border:1px solid rgba(255,255,255,.1);color:#FFFFFF;font-size:16px;
+input,select,textarea{width:100%;padding:14px 16px;border-radius:18px;background:#FFFFFF;
+  border:1px solid #D5E5F8;color:#102A43;font-size:16px;
   font-family:'IBM Plex Mono',monospace;outline:none;transition:.15s;appearance:none}
-input::placeholder,textarea::placeholder{color:#64748B}
-input:focus,select:focus,textarea:focus{border-color:#0058D9;box-shadow:0 0 0 3px rgba(0,88,217,.2);outline:none}
+input::placeholder,textarea::placeholder{color:#8FA6C0}
+input:focus,select:focus,textarea:focus{border-color:#0099FF;box-shadow:0 0 0 4px rgba(0,153,255,.18);outline:none;caret-color:#0058D9}
 input.ar,select.ar{font-family:'IBM Plex Sans Arabic',sans-serif}
 .row{display:flex;gap:10px}
 .row>div{flex:1}
@@ -191,11 +191,12 @@ input.ar,select.ar{font-family:'IBM Plex Sans Arabic',sans-serif}
 .timer.hot{color:var(--red);border-color:rgba(255,107,107,.5)}
 .btn{width:100%;padding:14px 28px;border:none;border-radius:12px;font-size:16px;font-weight:600;
   cursor:pointer;font-family:'IBM Plex Sans Arabic',sans-serif;transition:.15s;margin-top:10px}
-.btn-gold{background:linear-gradient(135deg,#0058D9,#00B5FF);color:#fff;font-weight:600;
-  box-shadow:0 4px 16px rgba(0,88,217,.3)}
-.btn-gold:hover{box-shadow:0 8px 24px rgba(0,88,217,.4)}
+.btn-gold{background:linear-gradient(135deg,#0058D9,#00A2FF);color:#fff;font-weight:600;
+  box-shadow:0 8px 22px rgba(0,88,217,.35)}
+.btn-gold:hover{filter:brightness(1.08);box-shadow:0 12px 30px rgba(0,162,255,.45)}
 .btn:active{transform:scale(.97)}
-.btn-line{background:rgba(0,88,217,.08);color:var(--acc2);border:1px solid var(--stroke-acc)}
+.btn-line{background:#EDF6FF;color:#003B8F;border:1px solid #BFD9F7}
+.btn-line:hover{background:#E2F0FF;border-color:#0099FF}
 .btn-wa{background:linear-gradient(135deg,#3BE07F,var(--wa));color:#062b14;box-shadow:0 8px 22px rgba(37,211,102,.25)}
 .btn-sm{padding:8px 13px;font-size:12px;width:auto;margin:0;border-radius:11px}
 .btn-row{display:flex;gap:8px}
@@ -222,7 +223,10 @@ input.ar,select.ar{font-family:'IBM Plex Sans Arabic',sans-serif}
 .tx-acts{display:flex;gap:8px;margin-top:9px;flex-wrap:wrap}
 .sum-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .sum-grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
-.sum{background:rgba(0,0,0,.26);border:1px solid var(--stroke);border-radius:16px;padding:14px;text-align:center}
+.sum{background:#FCFEFF;border:1px solid #D8E8F8;border-top:3px solid #0099FF;border-radius:16px;padding:14px;text-align:center;box-shadow:0 8px 22px rgba(0,58,143,.06)}
+.sum:has(.v.green){border-top-color:#00C853}
+.sum:has(.v.gold){border-top-color:#FFB300}
+.sum:has(.v.red){border-top-color:#E53935}
 .sum .k{font-size:11px;color:var(--dim)}
 .sum .v{font-size:18px;font-weight:600;margin-top:6px;font-family:'IBM Plex Mono',monospace}
 .sum .v.gold{color:var(--gold2)}
@@ -239,7 +243,7 @@ input.ar,select.ar{font-family:'IBM Plex Sans Arabic',sans-serif}
   font-family:'IBM Plex Mono',monospace;color:var(--dim)}
 .leg b{color:var(--txt)}
 .leg .lp{color:var(--green)}
-.legform{margin-top:10px;padding:12px;border-radius:16px;background:rgba(0,0,0,.26);border:1px solid var(--stroke)}
+.legform{margin-top:10px;padding:12px;border-radius:16px;background:#F3F9FF;border:1px solid #D8E8F8}
 .day{background:var(--glass);backdrop-filter:blur(14px);border:1px solid var(--stroke);
   border-radius:18px;margin-bottom:10px;overflow:hidden}
 .day-head{padding:14px 15px;display:flex;justify-content:space-between;align-items:center;cursor:pointer}
@@ -256,9 +260,9 @@ input.ar,select.ar{font-family:'IBM Plex Sans Arabic',sans-serif}
 .star.on{color:var(--gold)}
 nav{position:fixed;bottom:0;left:0;right:0;z-index:90;
   display:flex;padding:10px 14px calc(10px + env(safe-area-inset-bottom));gap:6px;
-  background:#071E4F;
+  background:#041B4A;
   border-top:1px solid rgba(255,255,255,.06)}
-.nv{flex:1;text-align:center;padding:8px 2px;border-radius:16px;cursor:pointer;color:#8FA3BD;transition:.15s}
+.nv{flex:1;text-align:center;padding:8px 2px;border-radius:16px;cursor:pointer;color:#9FB7D9;transition:.15s}
 .nv svg{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .nv div{font-size:10px;margin-top:3px;font-weight:600}
 .nv.on{color:#fff;background:linear-gradient(135deg,#0056D6,#0099FF);box-shadow:0 8px 22px rgba(0,153,255,.4)}
@@ -292,7 +296,7 @@ nav{position:fixed;bottom:0;left:0;right:0;z-index:90;
 .tkItem .sym{font-weight:800;color:var(--txt);letter-spacing:.5px}
 .tkItem .px{font-weight:700;color:#E8E4FF}
 .tkItem .chg{font-weight:700;font-size:11px}
-.tkItem .chg.up{color:#3DDC97}.tkItem .chg.dn{color:#FF6B6B}.tkItem .chg.fl{color:#F4A50C}
+.tkItem .chg.up{color:#3DDC97}.tkItem .chg.dn{color:#FF6B6B}.tkItem .chg.fl{color:#FFB300}
 .tkStale{font-size:9px;color:var(--gold2);font-family:'IBM Plex Mono'}
 /* نافذة تفاصيل العملة */
 .spark{width:100%;height:56px;margin:10px 0}
@@ -359,7 +363,7 @@ body,input,select,textarea,button,.ar,h1,h2,h3{font-family:'IBM Plex Sans Arabic
 @keyframes stgPulse{0%,100%{box-shadow:0 0 0 4px rgba(0,181,255,.2)}50%{box-shadow:0 0 0 7px rgba(0,181,255,.05)}}
 
 @media (max-width:768px){
-  .card{border-radius:16px;padding:16px;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+  .card{border-radius:20px;padding:16px}
   .btn{width:100%;padding:16px}
 }
 
@@ -380,6 +384,20 @@ body,input,select,textarea,button,.ar,h1,h2,h3{font-family:'IBM Plex Sans Arabic
 #bcModal .b{border:0;border-radius:12px;padding:11px 18px;font:700 13px 'IBM Plex Sans Arabic';cursor:pointer}
 #bcModal .b.copy{background:linear-gradient(135deg,#0058D9,#00B5FF);color:#fff}
 #bcModal .b.close{background:#EAF5FF;color:#003B8F}
+
+/* ═══ premium background: subtle financial grid (4%) ═══ */
+body::after{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.04;
+  background-image:linear-gradient(#003B8F 1px,transparent 1px),linear-gradient(90deg,#003B8F 1px,transparent 1px);
+  background-size:44px 44px}
+/* ═══ section depth tints ═══ */
+section#new.on{background:#EDF6FF;border-radius:26px}
+section#settle.on{background:#EEF7FF;border-radius:26px}
+section#history.on{background:#F7FBFF;border-radius:26px}
+section#ledger.on{background:#F3F9FF;border-radius:26px}
+section#contacts.on{background:#F8FCFF;border-radius:26px}
+/* ═══ tables: alternating + hover (scoped to app cards, not PDF stage) ═══ */
+.card table tr:nth-child(even) td{background:#F8FBFF}
+.card table tr:hover td{background:#EAF5FF}
 </style>
   <link rel="stylesheet" href="arkan-theme.css">
   <link rel="stylesheet" href="arkan-light.css">
@@ -1802,7 +1820,7 @@ function invLogoSVG(){
   return `<svg width="58" height="58" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
     <defs>
       <linearGradient id="ivm" x1="0" y1="0.2" x2="1" y2="0.8">
-        <stop offset="0" stop-color="#C24DF5"/><stop offset="0.42" stop-color="#0058D9"/>
+        <stop offset="0" stop-color="#00A2FF"/><stop offset="0.42" stop-color="#0058D9"/>
         <stop offset="0.72" stop-color="#2F7BF6"/><stop offset="1" stop-color="#3FB6F9"/>
       </linearGradient>
     </defs>
@@ -4952,14 +4970,14 @@ async function publishRates(){
 (function(){
   var cv=document.getElementById('particles'); if(!cv)return;
   var ctx=cv.getContext('2d'), ps=[], W, H;
-  var COLORS=['59,130,246','96,165,250','0,88,217'];
+  var COLORS=['0,153,255','0,88,217','63,182,249'];
   function seed(){
     ps=[];
     var COUNT=innerWidth<700?42:80;
     for(var i=0;i<COUNT;i++){
       ps.push({x:Math.random()*W,y:Math.random()*H,
         size:Math.random()*1.7+.5,
-        op:Math.random()*.45+.18,
+        op:Math.random()*.14+.05,
         col:COLORS[Math.floor(Math.random()*COLORS.length)]});
     }
   }
