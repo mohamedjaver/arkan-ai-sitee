@@ -3789,16 +3789,26 @@ async function anyReceiptText(dataUrl,type,name){
 }
 
 /* Gemini → نص خام حرفي يفهمه arkanCore (يحافظ على Montante/Número/etc) */
+async function gemFetch(key, body){
+  const MODELS=['gemini-2.5-flash','gemini-2.0-flash','gemini-flash-latest'];
+  let last=null;
+  for(const m of MODELS){
+    const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+m+':generateContent?key='+encodeURIComponent(key),
+      {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    const d=await r.json().catch(()=>({}));
+    if(r.ok) return d;
+    last=new Error((d.error&&d.error.message)||('HTTP '+r.status));
+    if(r.status!==429&&r.status!==404&&r.status!==503) throw last;
+  }
+  throw last||new Error('Gemini unavailable');
+}
 async function geminiToText(dataUrl, type, name){
   const key = ARKAN_GEMINI.getKey();
   const b64 = dataUrl.split(',')[1];
   const lname = String(name||'').toLowerCase();
   const mime = type || (lname.endsWith('.pdf') ? 'application/pdf' : 'image/jpeg');
   const prompt = 'Extract ALL text from this financial receipt VERBATIM, exactly as written. Preserve original field labels and language (Portuguese/Arabic/French; Angolan banks BCI/BAI/BFA/ATLANTICO/Bankily). Keep labels like Montante, Numero de Operacao, Movimento, Data, Referencia, IBAN, importancia, Valor. Return ONLY the raw text, no translation, no JSON, no commentary.';
-  const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key='+encodeURIComponent(key);
-  const resp = await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({contents:[{parts:[{text:prompt},{inline_data:{mime_type:mime,data:b64}}]}],generationConfig:{temperature:0.1}})});
-  const data = await resp.json();
+  const data = await gemFetch(key,{contents:[{parts:[{text:prompt},{inline_data:{mime_type:mime,data:b64}}]}],generationConfig:{temperature:0.1}});
   if(data.error) throw new Error(data.error.message||'Gemini error');
   return (data.candidates?.[0]?.content?.parts?.[0]?.text||'').trim();
 }
@@ -5022,15 +5032,10 @@ window.ARKAN_GEMINI = (function(){
     const prompt = 'أنت محلل إيصالات مالية خبير. اقرأ هذا الإيصال (قد يكون بالعربية أو البرتغالية أو الفرنسية من بنوك أنغولا مثل BCI/BAI/BFA/ATLANTICO أو Bankily الموريتاني). استخرج البيانات بصيغة JSON فقط بلا أي شرح:\n{"amount":رقم بلا فواصل,"currency":"MRU أو AOA أو USDT أو USD أو EUR أو CNY أو AED","bank":"اسم البنك","date":"YYYY-MM-DD","txn":"رقم العملية/المرجع","sender":"اسم المرسل","receiver":"اسم المستقبل"}\nإن غاب أي حقل ضع null. أرجع JSON فقط.';
 
     onStatus && onStatus('يحلّل Gemini الإيصال...');
-    const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key='+encodeURIComponent(key);
-    const resp = await fetch(url, {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({
-        contents:[{ parts:[ {text:prompt}, {inline_data:{mime_type:mime, data:b64}} ] }],
-        generationConfig:{ temperature:0.1 }
-      })
+    const data = await gemFetch(key, {
+      contents:[{ parts:[ {text:prompt}, {inline_data:{mime_type:mime, data:b64}} ] }],
+      generationConfig:{ temperature:0.1 }
     });
-    const data = await resp.json();
     if(data.error){ throw new Error(data.error.message || 'API_ERROR'); }
     let txt = (data.candidates?.[0]?.content?.parts?.[0]?.text || '').replace(/```json|```/g,'').trim();
     let parsed=null; try{ parsed=JSON.parse(txt); }catch(e){}
@@ -5122,7 +5127,7 @@ function showBarcode(ref){
   }catch(e){ alert('تعذّر توليد الباركود: '+e.message); }
 }
 </script>
-<script src="arkan-nav.js?v=7" defer></script>
-<script src="arkan-ai.js?v=7" defer></script>
+<script src="arkan-nav.js?v=8" defer></script>
+<script src="arkan-ai.js?v=8" defer></script>
 </body>
 </html>
