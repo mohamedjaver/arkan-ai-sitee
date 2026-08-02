@@ -3517,8 +3517,9 @@ function attachReceipt(ref){
       let amount=null,label=null,cands=[];
       try{
         let txt='';
-        if(f.type==='application/pdf'&&window.pdfjsLib)txt=await pdfText(dataUrl);
-        else if(f.type.startsWith('image/')){toast('قراءة الصورة (OCR)...');txt=await ocrImage(dataUrl);}
+        toast('قراءة الإيصال بذكاء Gemini...');
+        try{ txt=await anyReceiptText(dataUrl,f.type,f.name); }
+        catch(e){ txt=''; }
         if(txt){const ex=extractAmount(txt);amount=ex.value;label=ex.label;cands=allCandidates(txt).slice(0,20);}
       }catch(e){}
       const meta={id:'R'+Date.now(),ref,name:f.name,type:f.type,size:f.size,ts:Date.now(),amount,amountLabel:label,amounts:cands};
