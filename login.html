@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#002776">
+<title>الدخول — ARKAN Rates</title>
+<link rel="icon" href="arkan-icon-512.png">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;700&family=IBM+Plex+Mono:wght@600&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#002776;--blue:#3498db;--grad:linear-gradient(120deg,#e74c3c,#e67e22 30%,#f39c12 58%,#3498db);
+--txt:#0a1e4d;--txt2:#5a6a8f;--stroke:#cdd8ec;--page:#f6f8fc}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{max-width:100%;overflow-x:clip}
+body{font-family:'IBM Plex Sans Arabic','Manrope',sans-serif;background:var(--page);color:var(--txt);
+ min-height:100dvh;display:grid;place-items:center;padding:22px}
+.card{width:100%;max-width:420px;background:#fff;border:1px solid #e3e9f4;border-radius:22px;overflow:hidden;
+ box-shadow:0 34px 80px -34px rgba(10,30,77,.35)}
+.head{background:var(--grad);color:#fff;padding:26px 22px;text-align:center}
+.head img{width:52px;height:52px;border-radius:14px;background:#fff;padding:6px;margin-bottom:10px}
+.head b{display:block;font-size:19px;letter-spacing:.03em}
+.head span{font-size:12.5px;opacity:.92}
+.tabs{display:flex;border-bottom:1px solid #e3e9f4}
+.tabs button{flex:1;padding:14px;border:0;background:none;font:700 14.5px 'IBM Plex Sans Arabic';color:var(--txt2);cursor:pointer;border-bottom:2.5px solid transparent}
+.tabs button.on{color:var(--navy);border-color:var(--navy)}
+.body{padding:22px}
+.f{margin-bottom:14px}
+.f label{display:block;font-size:12.5px;font-weight:600;color:var(--txt2);margin-bottom:6px}
+.f input{width:100%;border:1px solid var(--stroke);border-radius:13px;padding:13px 14px;font:500 15px 'IBM Plex Sans Arabic';outline:none;color:var(--txt);background:#fbfcff}
+.f input:focus{border-color:var(--blue)}
+.pin{font-family:'IBM Plex Mono';letter-spacing:.35em;text-align:center}
+.go{width:100%;border:0;border-radius:14px;padding:14px;background:var(--navy);color:#fff;font:700 15.5px 'IBM Plex Sans Arabic';cursor:pointer;margin-top:4px}
+.go:active{transform:scale(.985)}
+.alt{margin-top:14px;text-align:center;font-size:13px;color:var(--txt2)}
+.alt a{color:var(--navy);font-weight:700;text-decoration:none}
+.msg{display:none;margin-bottom:14px;border-radius:12px;padding:12px 14px;font-size:13.5px}
+.msg.err{display:block;background:#fdecea;color:#b03a2e}
+.msg.ok{display:block;background:#e8f8f0;color:#1e8449}
+.pinbox{display:none;background:#f0f6ff;border:1px dashed var(--blue);border-radius:14px;padding:16px;text-align:center;margin-bottom:14px}
+.pinbox .p{font:600 30px 'IBM Plex Mono';color:var(--navy);letter-spacing:.3em}
+.foot{padding:0 22px 22px;text-align:center;font-size:12px;color:var(--txt2)}
+.foot a{color:var(--navy)}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="head">
+    <img src="arkan-icon-512.png" alt="ARKAN" onerror="this.style.display='none'">
+    <b>ARKAN Rates</b><span>منصّة الصرف والتسويات الدولية</span>
+  </div>
+  <div class="tabs">
+    <button id="tL" class="on">تسجيل الدخول</button>
+    <button id="tR">حساب جديد</button>
+  </div>
+  <div class="body">
+    <div class="msg" id="msg"></div>
+    <div class="pinbox" id="pinbox">رمزك السرّي — احفظه<div class="p" id="pinval"></div></div>
+
+    <form id="fL" onsubmit="return false">
+      <div class="f"><label>رقم الهاتف (واتساب)</label><input id="lPhone" inputmode="tel" placeholder="36295050"></div>
+      <div class="f"><label>الرمز السرّي PIN</label><input id="lPin" class="pin" inputmode="numeric" maxlength="4" placeholder="••••"></div>
+      <button class="go" id="bL">دخول</button>
+      <div class="alt">نسيت الرمز؟ <a href="https://wa.me/22236295050?text=%D9%86%D8%B3%D9%8A%D8%AA%20%D8%B1%D9%85%D8%B2%20PIN">راسلنا واتساب</a></div>
+    </form>
+
+    <form id="fR" style="display:none" onsubmit="return false">
+      <div class="f"><label>الاسم الكامل</label><input id="rName" placeholder="محمد ولد أحمد"></div>
+      <div class="f"><label>رقم الهاتف (واتساب)</label><input id="rPhone" inputmode="tel" placeholder="36295050"></div>
+      <button class="go" id="bR">إنشاء الحساب</button>
+      <div class="alt">بإنشائك حساباً توافق على شروط الخدمة</div>
+    </form>
+  </div>
+  <div class="foot"><a href="index.html">← العودة للموقع</a></div>
+</div>
+
+<script type="module">
+import * as ARKAN from './arkan-core.js'; window.ARKAN=ARKAN;
+const $=id=>document.getElementById(id);
+const next=new URLSearchParams(location.search).get('next')||'account.html';
+const msg=(t,ok)=>{const m=$('msg');m.textContent=t;m.className='msg '+(ok?'ok':'err');};
+$('tL').onclick=()=>{ $('tL').classList.add('on');$('tR').classList.remove('on');$('fL').style.display='';$('fR').style.display='none'; };
+$('tR').onclick=()=>{ $('tR').classList.add('on');$('tL').classList.remove('on');$('fR').style.display='';$('fL').style.display='none'; };
+
+// جلسة قائمة → دخول مباشر
+if(ARKAN.getSession()){ location.replace(next); }
+
+$('bL').onclick=async()=>{
+  const p=$('lPhone').value.trim(), pin=$('lPin').value.trim();
+  if(!p||pin.length<4) return msg('أدخل الهاتف والرمز (4 أرقام)');
+  $('bL').textContent='جارٍ الدخول…';
+  try{
+    const u=await ARKAN.clientLogin(p,pin);
+    if(!u){ msg('الهاتف أو الرمز غير صحيح'); $('bL').textContent='دخول'; return; }
+    msg('تم الدخول ✓',1); location.replace(next);
+  }catch(e){ msg('تعذّر الاتصال — جرّب لاحقاً أو راسلنا واتساب'); $('bL').textContent='دخول'; }
+};
+
+$('bR').onclick=async()=>{
+  const name=$('rName').value.trim(), phone=ARKAN.normPhone($('rPhone').value);
+  if(name.length<3||phone.length<7) return msg('أدخل الاسم ورقم هاتف صحيح');
+  $('bR').textContent='جارٍ الإنشاء…';
+  try{
+    await ARKAN.ready;
+    if(!ARKAN.firebaseOK) throw 0;
+    const {doc,getDoc,setDoc,serverTimestamp}=ARKAN.fb;
+    const ref=doc(ARKAN.db,'users',phone);
+    const snap=await getDoc(ref);
+    let pin;
+    if(snap.exists()){ pin=snap.data().pin; msg('الحساب موجود — استخدم دخول',1); }
+    else{
+      pin=ARKAN.makePin();
+      await setDoc(ref,{name,phone,pin,ref:ARKAN.makeRef(),balance:0,role:'client',status:'pending',createdAt:serverTimestamp()});
+    }
+    $('pinval').textContent=pin; $('pinbox').style.display='block';
+    ARKAN.saveSession(phone,pin);
+    msg('تم إنشاء حسابك ✓ سيتم تفعيله بعد المراجعة',1);
+    setTimeout(()=>location.replace(next),2600);
+  }catch(e){ msg('تعذّر الإنشاء الآن — راسلنا واتساب لإنشاء حسابك'); $('bR').textContent='إنشاء الحساب'; }
+};
+</script>
+<script src="arkan-ai.js" defer></script>
+</body>
+</html>
