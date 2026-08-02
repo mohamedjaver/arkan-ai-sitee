@@ -8,6 +8,9 @@
    ═══════════════════════════════════════════════════════════ */
 (function () {
   const KEY_LS = 'arkan_gemini_key';
+  const getKeyU = () => (localStorage.getItem('gemKey') || localStorage.getItem(KEY_LS) || '').trim();
+  const setKeyU = k => { localStorage.setItem('gemKey', k); localStorage.setItem(KEY_LS, k); };
+  const rmKeyU  = () => { localStorage.removeItem('gemKey'); localStorage.removeItem(KEY_LS); };
   const MODEL = 'gemini-2.0-flash';
   const SYS = 'أنت مساعد ARKAN Rates (arkanrates.com) — منصة صرف عملات وتسويات دولية بين موريتانيا وأنغولا والصين والخليج، مملوكة لشركة ARKAN INTERNATIONAL TRADING. خدماتنا: تحويل الأموال عبر الحدود (AOA, MRU, USDT, EUR, CNY, AED)، تسديد فواتير الموردين في الصين، بطاقة فيزا مسبقة الدفع بـ1500 أوقية جديدة (MRU) تُسلَّم في نواكشوط خلال 24-48 ساعة، أرشفة الإيصالات بالذكاء الاصطناعي، ومركز تسويات. واتساب: +222 36 29 50 50. أجب بلغة السائل (عربي/فرنسي/إنجليزي/برتغالي) باختصار ومهنية. إن سُئلت عن سعر حي استخدم الأسعار المرفقة في الرسالة إن وُجدت، وإلا وجّه للواتساب.';
 
@@ -25,7 +28,7 @@
   }
 
   async function askGemini(history) {
-    const key = localStorage.getItem(KEY_LS);
+    const key = getKeyU();
     if (!key) throw new Error('NO_KEY');
     const ctx = ratesContext();
     const contents = history.map(m => ({ role: m.role === 'ai' ? 'model' : 'user', parts: [{ text: m.text }] }));
@@ -34,7 +37,13 @@
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ system_instruction: { parts: [{ text: SYS }] }, contents, generationConfig: { maxOutputTokens: 500, temperature: 0.4 } })
     });
-    if (!res.ok) throw new Error('HTTP ' + res.status);
+    if (!res.ok) {
+      let msg = 'HTTP ' + res.status;
+      try { const j = await res.json(); if (j.error && j.error.message) msg = j.error.message; } catch (e2) {}
+      if (res.status === 400 || res.status === 403) throw new Error('BAD_KEY');
+      if (res.status === 429) throw new Error('RATE');
+      throw new Error(msg);
+    }
     const d = await res.json();
     return (d.candidates && d.candidates[0] && d.candidates[0].content.parts.map(p => p.text).join('')) || '…';
   }
@@ -83,21 +92,27 @@
     async function send() {
       const q = input.value.trim(); if (!q) return;
       input.value = ''; bubble('user', q); hist.push({ role: 'user', text: q });
-      if (!localStorage.getItem(KEY_LS)) {
+      if (!getKeyU()) {
         bubble('ai', 'لتفعيل الذكاء الاصطناعي: اضغط ⚙ وأدخل مفتاح Gemini (يُحفظ على جهازك فقط).\nوللمساعدة الفورية: واتساب +222 36 29 50 50'); return;
       }
       const w = bubble('ai', '…');
       try { const a = await askGemini(hist.slice(-8)); w.textContent = a; hist.push({ role: 'ai', text: a }); }
-      catch (e) { w.textContent = e.message === 'NO_KEY' ? 'أدخل مفتاح API من ⚙' : 'تعذّر الاتصال بالمساعد حالياً. تواصل واتساب: +222 36 29 50 50'; }
+      catch (e) {
+        w.textContent =
+          e.message === 'NO_KEY'  ? 'أدخل مفتاح API من ⚙' :
+          e.message === 'BAD_KEY' ? '🔑 المفتاح مرفوض أو مُلغى — اضغط ⚙ وأدخل مفتاح Gemini جديدًا من aistudio.google.com/apikey' :
+          e.message === 'RATE'    ? 'ضغط مؤقت على الخدمة — أعد المحاولة بعد دقيقة' :
+          'تعذّر الاتصال (' + e.message + ') — تحقق من الإنترنت أو واتساب +222 36 29 50 50';
+      }
       log.scrollTop = log.scrollHeight;
     }
     panel.querySelector('#ark-ai-go').addEventListener('click', send);
     input.addEventListener('keydown', e => { if (e.key === 'Enter') send(); });
     panel.querySelector('#ark-ai-x').addEventListener('click', () => panel.style.display = 'none');
     panel.querySelector('#ark-ai-set').addEventListener('click', () => {
-      const cur = localStorage.getItem(KEY_LS) || '';
+      const cur = getKeyU();
       const k = prompt('مفتاح Gemini API (aistudio.google.com/apikey) — يُحفظ على هذا الجهاز فقط:', cur);
-      if (k !== null) { k.trim() ? localStorage.setItem(KEY_LS, k.trim()) : localStorage.removeItem(KEY_LS);
+      if (k !== null) { k.trim() ? setKeyU(k.trim()) : rmKeyU();
         bubble('ai', k.trim() ? 'تم حفظ المفتاح ✓ — اسألني الآن أي شيء.' : 'أُزيل المفتاح.'); }
     });
     fab.addEventListener('click', () => { const on = panel.style.display === 'flex'; panel.style.display = on ? 'none' : 'flex'; if (!on) { hello(); input.focus(); } });
