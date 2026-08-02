@@ -982,8 +982,16 @@ async function openDoc(id){
   const img=$('dmImg'); img.style.transform='';
   try{ img.src=d.blob?URL.createObjectURL(d.blob instanceof Blob?d.blob:new Blob([d.blob])):d.thumb; }
   catch(e){ img.src=d.thumb||''; }
-  if(d.isPdf&&d.blob){ // render page 1 for preview
-    try{const {cv}=await fileToCanvas(d.blob); img.src=cv.toDataURL('image/jpeg',0.9);}catch(e){}
+  if(d.isPdf&&d.blob){ // معاينة عالية الدقة
+    try{
+      const buf=await d.blob.arrayBuffer();
+      const pdf=await pdfjsLib.getDocument({data:buf}).promise;
+      const pg=await pdf.getPage(1);
+      const vp=pg.getViewport({scale:3});
+      const cv=document.createElement('canvas');cv.width=vp.width;cv.height=vp.height;
+      await pg.render({canvasContext:cv.getContext('2d'),viewport:vp}).promise;
+      img.src=cv.toDataURL('image/png');
+    }catch(e){}
   }
   const p=d.parsed||{};
   const F=(k,v,ar)=>v?`<div class="f"><div class="k">${k}</div><div class="v ${ar?'ar':''}">${esc(v)}</div></div>`:'';
@@ -1010,7 +1018,8 @@ async function openDoc(id){
     <div class="mact">
       <button class="btn btn-p" onclick="reanalyze('${d.id}')">✦ إعادة تحليل Gemini</button>
       ${p.reference?`<button class="btn btn-s" onclick="showBarcode('${esc(p.reference)}')">||| باركود</button>`:''}
-      <button class="btn btn-s" onclick="downloadDoc('${d.id}')">⬇ تنزيل</button>
+      <button class="btn btn-p" onclick="downloadHD('${d.id}')">🖼 صورة HD</button>
+      <button class="btn btn-s" onclick="downloadDoc('${d.id}')">⬇ الملف الأصلي</button>
       <button class="btn btn-d" onclick="removeDoc('${d.id}')">حذف</button>
     </div>
     <div class="audit"><div style="font-size:10.5px;font-weight:700;color:var(--dim);margin-bottom:4px">سجل التدقيق (غير قابل للتعديل)</div>
@@ -1025,6 +1034,46 @@ function applyT(){$('dmImg').style.transform=`scale(${zoom}) rotate(${rot}deg)`;
 function fsImg(){const v=$('mview');(document.fullscreenElement?document.exitFullscreen():v.requestFullscreen?.())}
 function downloadDoc(id){const d=CACHE.find(x=>x.id===id);if(!d?.blob)return;
   const a=document.createElement('a');a.href=URL.createObjectURL(d.blob);a.download=d.fileName;a.click();}
+/* ═══ تصدير صورة عالية الجودة (HD) — PDF يُصيَّر بدقة 4x حتى 3 صفحات مدموجة ═══ */
+async function downloadHD(id){
+  const d=CACHE.find(x=>x.id===id); if(!d?.blob){toast0('لا يوجد ملف أصلي');return;}
+  const base=(d.smartName||d.fileName||'ARKAN').replace(/[\\/:*?"<>|·]+/g,'_').slice(0,60);
+  try{
+    if(d.isPdf){
+      toast0('تصيير PDF بجودة عالية…');
+      if(!window.pdfjsLib)throw new Error('محرك PDF غير محمّل');
+      const buf=await d.blob.arrayBuffer();
+      const pdf=await pdfjsLib.getDocument({data:buf}).promise;
+      const n=Math.min(pdf.numPages,3);
+      const cvs=[];
+      for(let i=1;i<=n;i++){
+        const pg=await pdf.getPage(i);
+        const vp=pg.getViewport({scale:4});
+        const cv=document.createElement('canvas');cv.width=vp.width;cv.height=vp.height;
+        await pg.render({canvasContext:cv.getContext('2d'),viewport:vp}).promise;
+        cvs.push(cv);
+      }
+      const W=Math.max(...cvs.map(c=>c.width)), H=cvs.reduce((s,c)=>s+c.height,0);
+      const out=document.createElement('canvas');out.width=W;out.height=H;
+      const cx=out.getContext('2d');cx.fillStyle='#fff';cx.fillRect(0,0,W,H);
+      let y=0;cvs.forEach(c=>{cx.drawImage(c,(W-c.width)/2,y);y+=c.height;});
+      await new Promise(res=>out.toBlob(b=>{
+        const a2=document.createElement('a');a2.href=URL.createObjectURL(b);
+        a2.download=base+'_HD.png';a2.click();
+        setTimeout(()=>URL.revokeObjectURL(a2.href),4000);res();
+      },'image/png'));
+      toast0('✓ صورة HD ('+W+'×'+H+')');
+    }else{
+      /* الصور: الأصل نفسه هو الأعلى جودة — يُنزَّل بلا أي إعادة ضغط */
+      const a2=document.createElement('a');
+      a2.href=URL.createObjectURL(d.blob);
+      const ext=(d.fileName.match(/\.[a-z0-9]+$/i)||['.jpg'])[0];
+      a2.download=base+'_HD'+ext; a2.click();
+      setTimeout(()=>URL.revokeObjectURL(a2.href),4000);
+      toast0('✓ الصورة الأصلية بجودتها الكاملة');
+    }
+  }catch(e){ toast0('✗ '+(e.message||'تعذّر التصدير')); }
+}
 async function removeDoc(id){
   if(!confirm('حذف هذا المستند نهائيًا من الأرشيف؟'))return;
   await delDoc(id);CACHE=CACHE.filter(d=>d.id!==id);closeDoc();renderAll();toast0('حُذف ✓');
