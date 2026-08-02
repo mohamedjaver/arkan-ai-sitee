@@ -41,16 +41,16 @@
 
   function mount() {
     if (document.getElementById('ark-ai-fab')) return;
-    const NAVY = '#002776', GRAD = 'linear-gradient(120deg,#e74c3c,#e67e22 30%,#f39c12 58%,#3498db)';
+    const NAVY = '#003B8F', GRAD = 'linear-gradient(120deg,#00B5FF,#0058D9 30%,#003B8F 58%,#00B5FF)';
 
     const fab = el('button',
-      `position:fixed;inset-inline-end:16px;bottom:calc(env(safe-area-inset-bottom,0px) + 84px);z-index:99992;width:54px;height:54px;border-radius:50%;border:0;cursor:pointer;color:#fff;display:grid;place-items:center;background:${GRAD};box-shadow:0 14px 32px -10px rgba(231,76,60,.55);transition:transform .18s`,
+      `position:fixed;inset-inline-end:16px;bottom:calc(env(safe-area-inset-bottom,0px) + 84px);z-index:99992;width:54px;height:54px;border-radius:50%;border:0;cursor:pointer;color:#fff;display:grid;place-items:center;background:${GRAD};box-shadow:0 14px 32px -10px rgba(0,88,217,.55);transition:transform .18s`,
       '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3Z"/><path d="M19 15l.9 2.6L22.5 18.5l-2.6.9L19 22l-.9-2.6-2.6-.9 2.6-.9L19 15Z"/></svg>');
     fab.id = 'ark-ai-fab'; fab.title = 'ARKAN AI';
     document.body.appendChild(fab);
 
     const panel = el('div',
-      `position:fixed;inset-inline-end:12px;bottom:calc(env(safe-area-inset-bottom,0px) + 148px);z-index:99993;width:min(92vw,390px);max-height:min(70vh,560px);display:none;flex-direction:column;background:#fff;border:1px solid #e3e9f4;border-radius:20px;box-shadow:0 40px 90px -30px rgba(10,30,77,.45);overflow:hidden;font-family:'IBM Plex Sans Arabic','Manrope',sans-serif`);
+      `position:fixed;inset-inline-end:12px;bottom:calc(env(safe-area-inset-bottom,0px) + 148px);z-index:99993;width:min(92vw,390px);max-height:min(70vh,560px);display:none;flex-direction:column;background:#fff;border:1px solid #DCE8F8;border-radius:20px;box-shadow:0 40px 90px -30px rgba(7,29,73,.45);overflow:hidden;font-family:'IBM Plex Sans Arabic','Manrope',sans-serif`);
     panel.innerHTML = `
       <div style="display:flex;align-items:center;gap:10px;padding:13px 16px;background:${NAVY};color:#fff">
         <div style="width:30px;height:30px;border-radius:9px;background:${GRAD};display:grid;place-items:center">
@@ -61,9 +61,9 @@
           <button id="ark-ai-x" style="background:none;border:0;color:#fff;cursor:pointer;font-size:17px">✕</button>
         </span>
       </div>
-      <div id="ark-ai-log" dir="auto" style="flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:9px;background:#f6f8fc"></div>
-      <div style="display:flex;gap:8px;padding:11px;border-top:1px solid #e3e9f4;background:#fff">
-        <input id="ark-ai-in" dir="auto" placeholder="اسأل عن الأسعار، الفيزا، التحويل…" style="flex:1;border:1px solid #cdd8ec;border-radius:12px;padding:11px 13px;font-size:14px;outline:none;font-family:inherit">
+      <div id="ark-ai-log" dir="auto" style="flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:9px;background:#F5F9FF"></div>
+      <div style="display:flex;gap:8px;padding:11px;border-top:1px solid #DCE8F8;background:#fff">
+        <input id="ark-ai-in" dir="auto" placeholder="اسأل عن الأسعار، الفيزا، التحويل…" style="flex:1;border:1px solid #DCE8F8;border-radius:12px;padding:11px 13px;font-size:14px;outline:none;font-family:inherit">
         <button id="ark-ai-go" style="border:0;border-radius:12px;padding:0 16px;background:${NAVY};color:#fff;font-weight:700;cursor:pointer">↑</button>
       </div>`;
     document.body.appendChild(panel);
@@ -74,7 +74,7 @@
       const mine = role === 'user';
       const b = el('div', `max-width:86%;padding:10px 13px;border-radius:14px;font-size:13.5px;line-height:1.65;white-space:pre-wrap;word-break:break-word;` +
         (mine ? `align-self:flex-end;background:${NAVY};color:#fff;border-end-end-radius:4px`
-              : 'align-self:flex-start;background:#fff;border:1px solid #e3e9f4;color:#0a1e4d;border-end-start-radius:4px'));
+              : 'align-self:flex-start;background:#fff;border:1px solid #DCE8F8;color:#071D49;border-end-start-radius:4px'));
       b.textContent = text; log.appendChild(b); log.scrollTop = log.scrollHeight; return b;
     }
     function hello() {
