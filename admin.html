@@ -500,7 +500,7 @@ import * as ARKAN from './arkan-core.js'; window.ARKAN = ARKAN;
   if (!list) return;
   await ARKAN.ready;
   if (!ARKAN.firebaseOK) { list.textContent = 'Firebase غير متاح على هذه الشبكة.'; return; }
-  const { collection, query, orderBy, onSnapshot, doc, updateDoc, serverTimestamp } = ARKAN.fb;
+  const { collection, query, orderBy, onSnapshot, doc, updateDoc, serverTimestamp, onAuthStateChanged } = ARKAN.fb;
 
   let AC;
   function beep(){ try{ AC = AC || new (window.AudioContext||window.webkitAudioContext)();
@@ -517,35 +517,46 @@ import * as ARKAN from './arkan-core.js'; window.ARKAN = ARKAN;
     b.disabled = true;
     try { await updateDoc(doc(ARKAN.db,'payment_requests',id), { status: act, decidedAt: serverTimestamp() });
       if (ARKAN.toast) ARKAN.toast(act==='accepted' ? 'تم القبول ✓' : 'تم الرفض'); }
-    catch (err) { if (ARKAN.toast) ARKAN.toast('تعذّر التحديث: '+err.message); b.disabled=false; }
+    catch (err) { alert('تعذّر التحديث: '+(err.code||err.message)); b.disabled=false; }
   });
 
-  const seen = new Set(); let first = true;
-  onSnapshot(query(collection(ARKAN.db,'payment_requests'), orderBy('createdAt','desc')), snap => {
-    if (cnt) cnt.textContent = snap.size + ' طلب';
-    let isNew = false;
-    snap.docs.forEach(d => { if (!seen.has(d.id)) { if (!first) isNew = true; seen.add(d.id); } });
-    if (isNew) { beep(); if (ARKAN.toast) ARKAN.toast('🔔 طلب دفع جديد'); }
-    first = false;
-    if (snap.empty) { list.innerHTML = '<div style="opacity:.6">لا طلبات بعد.</div>'; return; }
-    list.innerHTML = snap.docs.map(d => {
-      const r = d.data();
-      const wa = r.contact ? ('https://wa.me/' + String(r.contact).replace(/[^0-9]/g,'')) : '';
-      const st = r.status || 'pending';
-      return `<div style="display:flex;gap:12px;justify-content:space-between;align-items:flex-start;padding:12px 4px;border-bottom:1px solid rgba(255,255,255,.08)">
-        <div style="min-width:0">
-          <div style="font-weight:700">${r.company||'—'} <span style="color:var(--ark-bai,#EA4E3D);font-family:ui-monospace;font-size:12px">${r.ref||''}</span> ${pill(st)}</div>
-          <div style="color:var(--ark-txt-2,#9aa);font-size:12.5px">${r.destination||'—'} · ${r.purpose||''} · ${r.contact||''}</div>
-          <div style="margin-top:7px;display:flex;gap:7px;flex-wrap:wrap">
-            <button data-id="${d.id}" data-act="accepted" style="border:0;border-radius:8px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer;background:#2FD08C22;color:#2FD08C">قبول ✓</button>
-            <button data-id="${d.id}" data-act="rejected" style="border:0;border-radius:8px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer;background:#F2676A22;color:#F2676A">رفض ✕</button>
-            ${wa?`<a href="${wa}" target="_blank" style="border-radius:8px;padding:5px 12px;font-size:12px;font-weight:700;text-decoration:none;background:#25D36622;color:#2FD08C">واتساب ↗</a>`:''}
+  let started = false;
+  function subscribe(){
+    if (started) return; started = true;
+    const seen = new Set(); let first = true;
+    onSnapshot(query(collection(ARKAN.db,'payment_requests'), orderBy('createdAt','desc')), snap => {
+      if (cnt) cnt.textContent = snap.size + ' طلب';
+      let isNew = false;
+      snap.docs.forEach(d => { if (!seen.has(d.id)) { if (!first) isNew = true; seen.add(d.id); } });
+      if (isNew) { beep(); if (ARKAN.toast) ARKAN.toast('🔔 طلب دفع جديد'); }
+      first = false;
+      if (snap.empty) { list.innerHTML = '<div style="opacity:.6">لا طلبات بعد.</div>'; return; }
+      list.innerHTML = snap.docs.map(d => {
+        const r = d.data();
+        const wa = r.contact ? ('https://wa.me/' + String(r.contact).replace(/[^0-9]/g,'')) : '';
+        const st = r.status || 'pending';
+        return `<div style="display:flex;gap:12px;justify-content:space-between;align-items:flex-start;padding:12px 4px;border-bottom:1px solid rgba(255,255,255,.08)">
+          <div style="min-width:0">
+            <div style="font-weight:700">${r.company||'—'} <span style="color:var(--ark-bai,#EA4E3D);font-family:ui-monospace;font-size:12px">${r.ref||''}</span> ${pill(st)}</div>
+            <div style="color:var(--ark-txt-2,#9aa);font-size:12.5px">${r.destination||'—'} · ${r.purpose||''} · ${r.contact||''}</div>
+            <div style="margin-top:7px;display:flex;gap:7px;flex-wrap:wrap">
+              <button data-id="${d.id}" data-act="accepted" style="border:0;border-radius:8px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer;background:#2FD08C22;color:#2FD08C">قبول ✓</button>
+              <button data-id="${d.id}" data-act="rejected" style="border:0;border-radius:8px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer;background:#F2676A22;color:#F2676A">رفض ✕</button>
+              ${wa?`<a href="${wa}" target="_blank" style="border-radius:8px;padding:5px 12px;font-size:12px;font-weight:700;text-decoration:none;background:#25D36622;color:#2FD08C">واتساب ↗</a>`:''}
+            </div>
           </div>
-        </div>
-        <div style="text-align:end;flex:none;font-weight:800">${r.amount||''} <span style="color:var(--ark-gold,#F5C94C)">${r.currency||''}</span></div>
-      </div>`;
-    }).join('');
-  }, err => { list.textContent = 'تعذّر التحميل: ' + err.message; });
+          <div style="text-align:end;flex:none;font-weight:800">${r.amount||''} <span style="color:var(--ark-gold,#F5C94C)">${r.currency||''}</span></div>
+        </div>`;
+      }).join('');
+    }, err => { list.innerHTML = '<div style="color:#F2676A">تعذّر التحميل: '+(err.code||err.message)+'</div>'; });
+  }
+
+  // انتظر تسجيل دخول الأدمن حتى تسمح القواعد بالقراءة
+  list.textContent = 'بانتظار تسجيل دخول الأدمن…';
+  onAuthStateChanged(ARKAN.auth, user => {
+    if (user) subscribe();
+    else if (!started) list.textContent = 'سجّل دخول الأدمن لعرض الطلبات.';
+  });
 })();
 </script>
 <script src="arkan-nav.js" defer></script>
