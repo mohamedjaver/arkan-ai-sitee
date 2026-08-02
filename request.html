@@ -242,7 +242,16 @@ Finalidade: ${purp}
 Contacto: ${who||'—'}
 ———————————
 Solicito cotação para pagamento internacional.`;
-  try{ if(window.ARKAN){ await ARKAN.ready; if(ARKAN.firebaseOK){ const{addDoc,collection,serverTimestamp}=ARKAN.fb; await addDoc(collection(ARKAN.db,'payment_requests'),{ref,company:comp,amount:amt,currency:ccy,destination:dest||'',purpose:purp,contact:who||'',status:'pending',createdAt:serverTimestamp()}); if(ARKAN.toast)ARKAN.toast('تم تسجيل الطلب ✓ '+ref);} } }catch(e){ console.warn('request save failed',e); }
+  try{
+    if(!window.ARKAN){ alert('ARKAN core لم يُحمّل'); }
+    else { await ARKAN.ready;
+      if(!ARKAN.firebaseOK){ alert('Firebase غير متصل — لم يُسجّل الطلب (واتساب فقط)'); }
+      else { const {addDoc,collection,serverTimestamp}=ARKAN.fb;
+        await addDoc(collection(ARKAN.db,'payment_requests'),{ref,company:comp,amount:amt,currency:ccy,destination:dest||'',purpose:purp,contact:who||'',status:'pending',createdAt:serverTimestamp()});
+        if(ARKAN.toast)ARKAN.toast('تم تسجيل الطلب ✓ '+ref); else alert('تم تسجيل الطلب ✓ '+ref);
+      }
+    }
+  }catch(e){ alert('تعذّر تسجيل الطلب: '+(e.code||e.message)); }
   window.open('https://wa.me/22236295050?text='+encodeURIComponent(msg),'_blank');
 }
 </script>
