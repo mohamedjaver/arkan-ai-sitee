@@ -105,6 +105,12 @@ html.pt-enter body{animation:ptIn .38s cubic-bezier(.22,1,.36,1)}
   <script src="arkan-gate.js"></script>
 </head>
 <body>
+<div id="ark-seg" style="position:sticky;top:0;z-index:60;display:flex;gap:8px;justify-content:center;padding:12px 14px;background:rgba(242,245,251,.95);backdrop-filter:blur(10px);border-bottom:1px solid #d9e2f2">
+  <a href="#companies" style="flex:1;max-width:220px;text-align:center;padding:12px;border-radius:13px;font-weight:800;font-size:14.5px;text-decoration:none;background:linear-gradient(120deg,#002776,#0d3aa0 55%,#3498db);color:#fff">تحويلات الشركات</a>
+  <a href="#individuals" style="flex:1;max-width:220px;text-align:center;padding:12px;border-radius:13px;font-weight:800;font-size:14.5px;text-decoration:none;background:#fff;color:#002776;border:1.5px solid #bccbe6">تحويلات الأفراد</a>
+</div>
+<div id="companies"></div>
+
 
 <div class="wrap">
   <a href="./" style="display:flex;align-items:center;justify-content:center;gap:11px;margin-bottom:20px;text-decoration:none">
@@ -457,5 +463,53 @@ async function uploadInvoice(){
 </script>
 <script src="arkan-nav.js" defer></script>
 <script src="arkan-ai.js" defer></script>
+
+<!-- ═══ تحويلات الأفراد ═══ -->
+<section id="individuals" style="max-width:640px;margin:26px auto 60px;padding:0 16px">
+  <div class="card" style="background:#fff;border:1px solid #d9e2f2;border-radius:20px;padding:22px;box-shadow:0 14px 36px -18px rgba(0,26,82,.22)">
+    <div style="color:#d3403c;font-weight:800;font-size:12px;letter-spacing:.14em">INDIVIDUALS · أفراد</div>
+    <h2 style="color:#06133a;font-size:22px;font-weight:800;margin:6px 0 4px">تحويل شخصي — أفراد</h2>
+    <p style="color:#3c4c74;font-size:13.5px;margin-bottom:16px">موريتانيا ⇄ أنغولا ⇄ الخليج — الرد عبر واتساب فورًا</p>
+    <div style="display:grid;gap:12px">
+      <div><label style="display:block;font-size:12.5px;font-weight:700;color:#3c4c74;margin-bottom:5px">الاسم الكامل</label>
+        <input id="ind-name" style="width:100%;border:1.5px solid #bccbe6;border-radius:12px;padding:12px 13px;font-size:15px;color:#06133a" placeholder="محمد ولد أحمد"></div>
+      <div><label style="display:block;font-size:12.5px;font-weight:700;color:#3c4c74;margin-bottom:5px">رقم الواتساب</label>
+        <input id="ind-phone" inputmode="tel" style="width:100%;border:1.5px solid #bccbe6;border-radius:12px;padding:12px 13px;font-size:15px;color:#06133a" placeholder="36295050"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div><label style="display:block;font-size:12.5px;font-weight:700;color:#3c4c74;margin-bottom:5px">يرسل</label>
+          <select id="ind-from" style="width:100%;border:1.5px solid #bccbe6;border-radius:12px;padding:12px;font-size:15px;color:#06133a;background:#fff">
+            <option>MRU</option><option>AOA</option><option>USDT</option><option>EUR</option><option>AED</option><option>CNY</option></select></div>
+        <div><label style="display:block;font-size:12.5px;font-weight:700;color:#3c4c74;margin-bottom:5px">يستلم المستفيد</label>
+          <select id="ind-to" style="width:100%;border:1.5px solid #bccbe6;border-radius:12px;padding:12px;font-size:15px;color:#06133a;background:#fff">
+            <option>AOA</option><option>MRU</option><option>USDT</option><option>EUR</option><option>AED</option><option>CNY</option></select></div>
+      </div>
+      <div><label style="display:block;font-size:12.5px;font-weight:700;color:#3c4c74;margin-bottom:5px">المبلغ</label>
+        <input id="ind-amt" inputmode="decimal" style="width:100%;border:1.5px solid #bccbe6;border-radius:12px;padding:12px 13px;font-size:17px;font-family:ui-monospace;color:#06133a" placeholder="مثال: 50,000"></div>
+      <button id="ind-send" style="border:0;border-radius:14px;padding:14px;font-weight:800;font-size:15.5px;color:#fff;cursor:pointer;background:linear-gradient(120deg,#002776,#0d3aa0 55%,#3498db);box-shadow:0 12px 28px -12px rgba(0,39,118,.55)">إرسال الطلب عبر واتساب</button>
+    </div>
+  </div>
+</section>
+<script>
+(function(){
+  var b=document.getElementById('ind-send'); if(!b) return;
+  b.addEventListener('click', async function(){
+    var name=(document.getElementById('ind-name').value||'').trim();
+    var phone=(document.getElementById('ind-phone').value||'').replace(/[^0-9]/g,'');
+    var from=document.getElementById('ind-from').value, to=document.getElementById('ind-to').value;
+    var amt=(document.getElementById('ind-amt').value||'').trim();
+    if(name.length<3||phone.length<7||!amt){ alert('أكمل الاسم والهاتف والمبلغ'); return; }
+    var ref='IN'+Date.now().toString(36).toUpperCase().slice(-6);
+    try{ if(window.ARKAN){ await ARKAN.ready; if(ARKAN.firebaseOK){
+      var fb=ARKAN.fb;
+      await fb.addDoc(fb.collection(ARKAN.db,'payment_requests'),
+        {ref:ref,company:name,amount:amt,currency:from+'→'+to,destination:to,purpose:'تحويل فردي',
+         contact:phone,type:'individual',status:'pending',createdAt:fb.serverTimestamp()});
+      if(ARKAN.toast)ARKAN.toast('تم تسجيل الطلب ✓ '+ref);
+    }}}catch(e){ console.warn(e); }
+    var msg='طلب تحويل فردي — '+ref+'%0A'+'الاسم: '+encodeURIComponent(name)+'%0A'+'الهاتف: '+phone+'%0A'+'يرسل: '+encodeURIComponent(amt)+' '+from+'%0A'+'يستلم: '+to;
+    window.open('https://wa.me/22236295050?text='+msg,'_blank');
+  });
+})();
+</script>
 </body>
 </html>
