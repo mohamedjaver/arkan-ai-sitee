@@ -4643,6 +4643,8 @@ async function adminSignIn(){
     await ARKAN.fb.signInWithEmailAndPassword(ARKAN.auth,em.trim(),pw);
     localStorage.setItem('arkan-owner-email',em.trim());
     toast('✅ دخول الأدمن ناجح');
+    localStorage.setItem('arkan_admin_dev','1');
+    if(window.ARKAN_MARK_ADMIN)ARKAN_MARK_ADMIN();
     inbAuthBox('');
     loadInbox();
   }catch(e){ toast('فشل الدخول: '+(e.code||e.message)); }
