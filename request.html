@@ -110,6 +110,7 @@ html.pt-enter body{animation:ptIn .38s cubic-bezier(.22,1,.36,1)}
   <link rel="stylesheet" href="arkan-theme.css">
   <link rel="stylesheet" href="arkan-light.css">
   <script src="arkan-gate.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
 <div id="ark-seg" style="position:sticky;top:0;z-index:60;display:flex;gap:8px;justify-content:center;padding:12px 14px;background:rgba(242,245,251,.95);backdrop-filter:blur(10px);border-bottom:1px solid #D8E8F8">
@@ -546,8 +547,19 @@ async function uploadInvoice(){
           <select id="ind-to" style="width:100%;border:1.5px solid #D5E5F8;border-radius:12px;padding:12px;font-size:15px;color:#071E4F;background:#fff">
             <option value="AOA">🇦🇴 AOA — كوانزا</option><option value="MRU">🇲🇷 MRU — أوقية</option><option value="USD">🇺🇸 USD — دولار</option><option value="EUR">🇪🇺 EUR — يورو</option><option value="USDT">₮ USDT — تيثر</option><option value="AED">🇦🇪 AED — درهم</option><option value="CNY">🇨🇳 CNY — يوان</option></select></div>
       </div>
-      <div><label style="display:block;font-size:12.5px;font-weight:700;color:#486581;margin-bottom:5px">المبلغ</label>
+      <div><label style="display:block;font-size:12.5px;font-weight:700;color:#486581;margin-bottom:5px">المبلغ <span style="color:#00A2FF;font-size:11px">— تلقائيًا من الحاسبة</span></label>
         <input id="ind-amt" inputmode="decimal" style="width:100%;border:1.5px solid #D5E5F8;border-radius:12px;padding:12px 13px;font-size:17px;font-family:ui-monospace;color:#071E4F" placeholder="مثال: 50,000"></div>
+
+      <div style="height:1px;background:#E4EEF9;margin:4px 0"></div>
+      <div style="font-size:12.5px;font-weight:800;color:#003B8F">🏦 بيانات المستفيد (من يستلم المبلغ)</div>
+      <div><label style="display:block;font-size:12.5px;font-weight:700;color:#486581;margin-bottom:5px">اسم المستفيد الكامل</label>
+        <input id="ind-bname" style="width:100%;border:1.5px solid #D5E5F8;border-radius:12px;padding:12px 13px;font-size:15px;color:#071E4F" placeholder="الاسم كما في الحساب البنكي"></div>
+      <div style="display:grid;grid-template-columns:1.4fr 1fr;gap:10px">
+        <div><label style="display:block;font-size:12.5px;font-weight:700;color:#486581;margin-bottom:5px">رقم الحساب / IBAN</label>
+          <input id="ind-iban" inputmode="numeric" style="width:100%;border:1.5px solid #D5E5F8;border-radius:12px;padding:12px 13px;font-size:15px;font-family:ui-monospace;color:#071E4F;direction:ltr;text-align:right" placeholder="0000 0000 0000"></div>
+        <div><label style="display:block;font-size:12.5px;font-weight:700;color:#486581;margin-bottom:5px">البنك</label>
+          <input id="ind-bank" style="width:100%;border:1.5px solid #D5E5F8;border-radius:12px;padding:12px 13px;font-size:15px;color:#071E4F" placeholder="BAI / BIM …"></div>
+      </div>
       <button id="ind-send" style="border:0;border-radius:14px;padding:14px;font-weight:800;font-size:15.5px;color:#fff;cursor:pointer;background:linear-gradient(120deg,#003B8F,#0056D6 55%,#00A2FF);box-shadow:0 12px 28px -12px rgba(0,39,118,.55)">إرسال الطلب عبر واتساب</button>
     </div>
   </div>
@@ -560,17 +572,30 @@ async function uploadInvoice(){
     var phone=(document.getElementById('ind-phone').value||'').replace(/[^0-9]/g,'');
     var from=document.getElementById('ind-from').value, to=document.getElementById('ind-to').value;
     var amt=(document.getElementById('ind-amt').value||'').trim();
+    var bname=(document.getElementById('ind-bname').value||'').trim();
+    var iban=(document.getElementById('ind-iban').value||'').trim();
+    var bank=(document.getElementById('ind-bank').value||'').trim();
     if(name.length<3||phone.length<7||!amt){ alert('أكمل الاسم والهاتف والمبلغ'); return; }
+    if(!bname||!iban){ alert('أدخل اسم المستفيد ورقم حسابه البنكي'); return; }
     var ref='IN'+Date.now().toString(36).toUpperCase().slice(-6);
     showProcessing(amt, from);
     try{ if(window.ARKAN){ await ARKAN.ready; if(ARKAN.firebaseOK){
       var fb=ARKAN.fb;
       await fb.addDoc(fb.collection(ARKAN.db,'payment_requests'),
         {ref:ref,company:name,amount:amt,currency:from+'→'+to,destination:to,purpose:'تحويل فردي',
-         contact:phone,type:'individual',status:'pending',createdAt:fb.serverTimestamp()});
+         contact:phone,type:'individual',status:'pending',
+         benefName:bname,benefIban:iban,benefBank:bank,createdAt:fb.serverTimestamp()});
       if(ARKAN.toast)ARKAN.toast('تم تسجيل الطلب ✓ '+ref);
     }}}catch(e){ console.warn(e); }
-    var msg='طلب تحويل فردي — '+ref+'%0A'+'الاسم: '+encodeURIComponent(name)+'%0A'+'الهاتف: '+phone+'%0A'+'يرسل: '+encodeURIComponent(amt)+' '+from+'%0A'+'يستلم: '+to;
+    var L=encodeURIComponent;
+    var msg='طلب تحويل فردي — '+ref+'%0A'
+      +'المُرسِل: '+L(name)+' / '+phone+'%0A'
+      +'يرسل: '+L(amt)+' '+from+'  ⇦  يستلم: '+to+'%0A'
+      +'— المستفيد —%0A'
+      +'الاسم: '+L(bname)+'%0A'
+      +'الحساب: '+L(iban)+(bank?('  ('+L(bank)+')'):'');
+    window._pdfData={ref:ref,date:new Date().toLocaleString('en-GB'),sender:name,senderPhone:phone,
+      amount:amt,from:from,to:to,bname:bname,iban:iban,bank:bank};
     okToSuccess(ref, 'https://wa.me/22236295050?text='+msg, amt, from);
   });
 })();
@@ -622,6 +647,7 @@ async function uploadInvoice(){
     <div class="okBtns">
       <button class="okWa" id="okWaBtn">متابعة عبر واتساب</button>
       <button class="okShare" id="okShareBtn">📤 إرسال البطاقة</button>
+      <button class="okShare" id="okPdfBtn" style="background:#003B8F!important;color:#fff!important;border:0!important">📄 إيصال PDF</button>
       <button class="okClose" onclick="document.getElementById('okWrap').classList.remove('on')">إغلاق</button>
     </div>
   </div>
@@ -637,6 +663,84 @@ var OK_CHECK_SVG=`<svg viewBox="0 0 170 170">
       </svg>`;
 
 /* ═══ بطاقة إيصال مصوّرة: دائرة زرقاء + المبلغ — تُشارك عبر واتساب كصورة ═══ */
+
+/* ═══ إيصال PDF احترافي لتفاصيل المعاملة ═══ */
+function buildTransferPDF(d){
+  if(!window.jspdf){alert('مكتبة PDF لم تُحمّل — تحقق من الاتصال');return;}
+  const { jsPDF }=window.jspdf;
+  const doc=new jsPDF({unit:'pt',format:'a4'});
+  const W=doc.internal.pageSize.getWidth(); // 595
+  const navy=[7,29,73], blue=[13,71,181], sky=[47,143,232], ink=[16,42,67], dim=[90,110,140];
+  /* رأس كحلي */
+  doc.setFillColor(...navy); doc.rect(0,0,W,120,'F');
+  doc.setFillColor(...sky); doc.rect(0,118,W,3,'F');
+  /* شعار نصي */
+  doc.setTextColor(255,255,255); doc.setFont('helvetica','bold'); doc.setFontSize(26);
+  doc.text('ARKAN',40,58);
+  doc.setTextColor(150,200,255); doc.setFontSize(11); doc.setFont('helvetica','normal');
+  doc.text('RATES  ·  International Settlement',40,78);
+  doc.setTextColor(200,220,255); doc.setFontSize(9);
+  doc.text('arkanrates.com  |  +222 36 29 50 50',40,98);
+  /* شارة الإيصال */
+  doc.setTextColor(255,255,255); doc.setFont('helvetica','bold'); doc.setFontSize(13);
+  doc.text('TRANSFER RECEIPT',W-40,54,{align:'right'});
+  doc.setFont('courier','normal'); doc.setFontSize(11); doc.setTextColor(180,210,255);
+  doc.text('REF: '+d.ref,W-40,74,{align:'right'});
+  doc.setFontSize(9); doc.setTextColor(160,190,230);
+  doc.text(d.date,W-40,92,{align:'right'});
+
+  /* صندوق المبلغ الكبير */
+  let y=160;
+  doc.setFillColor(240,247,255); doc.roundedRect(40,y,W-80,86,10,10,'F');
+  doc.setDrawColor(200,220,245); doc.roundedRect(40,y,W-80,86,10,10,'S');
+  doc.setTextColor(...dim); doc.setFontSize(10); doc.setFont('helvetica','normal');
+  doc.text('AMOUNT SENT',60,y+26);
+  doc.setTextColor(...navy); doc.setFont('courier','bold'); doc.setFontSize(30);
+  const amtNum=parseFloat(String(d.amount).replace(/[^\d.]/g,''))||0;
+  doc.text(amtNum.toLocaleString('en-US')+' '+d.from, 60, y+62);
+  doc.setFont('helvetica','normal'); doc.setFontSize(11); doc.setTextColor(...blue);
+  doc.text(d.from+'  →  '+d.to, W-60, y+40, {align:'right'});
+
+  /* جدول التفاصيل */
+  y+=118;
+  const rows=[
+    ['Sender (المُرسِل)', d.sender],
+    ['Sender phone', d.senderPhone],
+    ['Beneficiary (المستفيد)', d.bname],
+    ['Bank account / IBAN', d.iban],
+    ['Bank', d.bank||'—'],
+    ['Receiving currency', d.to],
+    ['Reference', d.ref],
+    ['Date & time', d.date]
+  ];
+  doc.setFontSize(11);
+  rows.forEach((r,i)=>{
+    const ry=y+i*38;
+    if(i%2===0){doc.setFillColor(248,251,255);doc.rect(40,ry-16,W-80,38,'F');}
+    doc.setTextColor(...dim); doc.setFont('helvetica','normal');
+    doc.text(r[0], 60, ry+6);
+    doc.setTextColor(...ink); doc.setFont('helvetica','bold');
+    doc.text(String(r[1]||'—'), W-60, ry+6, {align:'right'});
+  });
+  y+=rows.length*38+20;
+
+  /* حالة */
+  doc.setFillColor(255,247,224); doc.roundedRect(40,y,W-80,44,8,8,'F');
+  doc.setTextColor(138,95,0); doc.setFont('helvetica','bold'); doc.setFontSize(11);
+  doc.text('● PENDING — قيد التنفيذ', 60, y+27);
+  doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(150,120,40);
+  doc.text('سيتم التأكيد عبر واتساب خلال دقائق', W-60, y+27, {align:'right'});
+
+  /* تذييل */
+  const fy=doc.internal.pageSize.getHeight()-60;
+  doc.setDrawColor(220,232,248); doc.line(40,fy,W-40,fy);
+  doc.setTextColor(...dim); doc.setFontSize(8.5); doc.setFont('helvetica','normal');
+  doc.text('هذا إيصال طلب صادر عن ARKAN Rates — ليس إثبات دفع نهائي. للاستفسار: +222 36 29 50 50', W/2, fy+18, {align:'center'});
+  doc.text('ARKAN International Trading  ·  arkanrates.com', W/2, fy+32, {align:'center'});
+
+  doc.save('ARKAN_Receipt_'+d.ref+'.pdf');
+}
+
 async function buildReceiptCard(amount,currency,ref){
   const W=1080,H=1350,cv=document.createElement('canvas');cv.width=W;cv.height=H;
   const x=cv.getContext('2d');
@@ -730,6 +834,8 @@ function okToSuccess(ref,waUrl,amount,currency){
   wa.onclick=function(){window.open(waUrl,'_blank');};
   var sh=document.getElementById('okShareBtn');
   if(sh)sh.onclick=function(){shareReceipt(amount,currency,ref,waUrl);};
+  var pb=document.getElementById('okPdfBtn');
+  if(pb)pb.onclick=function(){ if(window._pdfData)buildTransferPDF(window._pdfData); else alert('لا بيانات'); };
   setTimeout(function(){window.open(waUrl,'_blank');},2200);
   if(navigator.vibrate)navigator.vibrate([12,40,12]);
 }
