@@ -315,12 +315,18 @@ body.selecting #selbar{transform:translateX(-50%) translateY(0)}
   font:600 14px var(--mono);color:#102A43;background:#fff;outline:none;direction:ltr;text-align:right}
 #editBox input:focus,#editBox select:focus{border-color:#0099FF;box-shadow:0 0 0 3px rgba(0,153,255,.15)}
 .bdg.user{background:#E1F5EA;color:#0A7A3D;border:1px solid #9FDDB8}
+
+/* ── فرز ── */
+.sortwrap{position:relative;flex:none}
+.sortsel{appearance:none;-webkit-appearance:none;border:1px solid var(--cardline);background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%230056D6' stroke-width='1.8' fill='none' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat left 12px center;
+  color:var(--deep);border-radius:999px;padding:8px 15px 8px 30px;font:700 12.5px var(--ff);cursor:pointer;white-space:nowrap}
+.sortsel:focus{outline:none;border-color:#0099FF;box-shadow:0 0 0 3px rgba(0,153,255,.15)}
 </style>
 </head>
 <body>
 <script>
 /* ═══ تحديث ذاتي: يضمن أحدث نسخة دائمًا رغم كل طبقات الكاش ═══ */
-const ARKAN_ARCHIVE_BUILD='2026-08-03.10';
+const ARKAN_ARCHIVE_BUILD='2026-08-03.11';
 (async()=>{
   try{
     const r=await fetch('version.json?t='+Date.now(),{cache:'no-store'});
@@ -395,7 +401,17 @@ const ARKAN_ARCHIVE_BUILD='2026-08-03.10';
   </div>
 
   <!-- filters -->
-  <div class="chips" id="chips"></div>
+  <div style="display:flex;gap:8px;align-items:center">
+    <span class="sortwrap"><select class="sortsel" id="sortSel" onchange="setSort(this.value)">
+      <option value="rc_desc">📅 تاريخ الإيصال — الأحدث</option>
+      <option value="rc_asc">📅 تاريخ الإيصال — الأقدم</option>
+      <option value="up_desc">⬆️ وقت الرفع — الأحدث</option>
+      <option value="up_asc">⬆️ وقت الرفع — الأقدم</option>
+      <option value="amt_desc">💰 المبلغ — الأكبر</option>
+      <option value="amt_asc">💰 المبلغ — الأصغر</option>
+    </select></span>
+    <div class="chips" id="chips" style="flex:1"></div>
+  </div>
 
   <!-- AI insights -->
   <div class="insights" id="insights"></div>
@@ -464,6 +480,31 @@ const allDocs=()=>new Promise(res=>{const out=[];const c=DB.transaction('docs','
 const delDoc=id=>new Promise(res=>{const tx=DB.transaction('docs','readwrite');tx.objectStore('docs').delete(id);tx.oncomplete=res;});
 
 let CACHE=[], FILTER={}, QUERY='', VIEW='arch';
+let SORT=localStorage.getItem('arkan_sort')||'rc_desc';
+function setSort(v){SORT=v;localStorage.setItem('arkan_sort',v);renderTimeline();}
+/* الطابع الزمني الفعّال للإيصال: تاريخه المقروء (+وقته) وإلا وقت الرفع */
+function effTs(d){
+  const p=d.parsed||{};
+  if(p.date&&/^\d{4}-\d{2}-\d{2}$/.test(p.date)){
+    let t='12:00:00';
+    if(p.time&&/^\d{1,2}:\d{2}/.test(p.time))t=p.time.length<=5?p.time+':00':p.time;
+    const ts=Date.parse(p.date+'T'+t);
+    if(!isNaN(ts))return ts;
+  }
+  return d.uploadedAt||0;
+}
+function sortDocs(docs){
+  const s=[...docs];
+  switch(SORT){
+    case 'rc_asc':  s.sort((a,b)=>effTs(a)-effTs(b)); break;
+    case 'up_desc': s.sort((a,b)=>(b.uploadedAt||0)-(a.uploadedAt||0)); break;
+    case 'up_asc':  s.sort((a,b)=>(a.uploadedAt||0)-(b.uploadedAt||0)); break;
+    case 'amt_desc':s.sort((a,b)=>((b.parsed?.amount)||0)-((a.parsed?.amount)||0)); break;
+    case 'amt_asc': s.sort((a,b)=>((a.parsed?.amount)||0)-((b.parsed?.amount)||0)); break;
+    default:        s.sort((a,b)=>effTs(b)-effTs(a)); /* rc_desc */
+  }
+  return s;
+}
 const $=id=>document.getElementById(id);
 const fmt=(n,d=2)=>(+n||0).toLocaleString('en-US',{maximumFractionDigits:d});
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -926,7 +967,8 @@ function docCard(d,i){
 }
 let RENDER_LIMIT=40;
 function renderTimeline(){
-  let docs=chipFilter(nlFilter(QUERY,CACHE));
+  let docs=sortDocs(chipFilter(nlFilter(QUERY,CACHE)));
+  if($('sortSel'))$('sortSel').value=SORT;
   const tl=$('tl');
   if(!docs.length){
     tl.innerHTML=`<div class="empty"><div class="art">
@@ -938,8 +980,12 @@ function renderTimeline(){
   const shown=docs.slice(0,RENDER_LIMIT);
   VISIBLE_IDS=shown.map(d=>d.id);
   const groups={};
-  shown.forEach(d=>{const[k,l]=groupKey(d.uploadedAt);(groups[k]=groups[k]||{l,docs:[]}).docs.push(d);});
-  tl.innerHTML=Object.keys(groups).sort().map(k=>{
+  const AMT=SORT.startsWith('amt');
+  const basis=d=>SORT.startsWith('up')?(d.uploadedAt||0):effTs(d);
+  if(AMT){ groups['0']={l:SORT==='amt_desc'?'مرتّب: الأكبر مبلغًا أولًا':'مرتّب: الأصغر مبلغًا أولًا',docs:shown}; }
+  else shown.forEach(d=>{const[k,l]=groupKey(basis(d));(groups[k]=groups[k]||{l,docs:[]}).docs.push(d);});
+  const asc=SORT.endsWith('_asc')&&!SORT.startsWith('amt');
+  tl.innerHTML=Object.keys(groups).sort((x,y)=>asc?y.localeCompare(x):x.localeCompare(y)).map(k=>{
     const g=groups[k];
     const tot={};g.docs.forEach(d=>{const p=d.parsed||{};if(p.amount&&p.currency)tot[p.currency]=(tot[p.currency]||0)+p.amount;});
     const totS=Object.entries(tot).map(([c,v])=>fmt(v,0)+' '+c).join(' · ');
