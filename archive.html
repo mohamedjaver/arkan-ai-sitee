@@ -305,6 +305,16 @@ body.selecting #selbar{transform:translateX(-50%) translateY(0)}
 #selbar .del{background:linear-gradient(135deg,#E53935,#FF6B5E);color:#fff;box-shadow:0 8px 20px rgba(229,57,53,.4)}
 #selbar .del:disabled{opacity:.45;cursor:default}
 #selbar .cancel{background:transparent;color:#9FB7D9}
+
+/* ── التصحيح اليدوي ── */
+#editBox{display:none;background:#F0F7FF;border:1.5px dashed #0099FF;border-radius:16px;padding:14px;margin:12px 0}
+#editBox.on{display:block;animation:rise .3s both}
+#editBox .eg{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:10px}
+#editBox label{display:block;font-size:10.5px;font-weight:700;color:#486581;margin-bottom:4px}
+#editBox input,#editBox select{width:100%;border:1.5px solid #D5E5F8;border-radius:12px;padding:10px 12px;
+  font:600 14px var(--mono);color:#102A43;background:#fff;outline:none;direction:ltr;text-align:right}
+#editBox input:focus,#editBox select:focus{border-color:#0099FF;box-shadow:0 0 0 3px rgba(0,153,255,.15)}
+.bdg.user{background:#E1F5EA;color:#0A7A3D;border:1px solid #9FDDB8}
 </style>
 </head>
 <body>
@@ -874,7 +884,8 @@ function groupKey(ts){
 function docCard(d,i){
   const p=d.parsed||{};
   const badges=[];
-  if((d.fraud?.flags||[]).some(f=>f[0]==='high'))badges.push('<span class="bdg dup">تنبيه</span>');
+  if(d.verifiedByUser)badges.push('<span class="bdg user">✓ مُدقّق يدويًا</span>');
+  else if((d.fraud?.flags||[]).some(f=>f[0]==='high'))badges.push('<span class="bdg dup">تنبيه</span>');
   else if(d.needsReview)badges.push('<span class="bdg rev">مراجعة</span>');
   else badges.push('<span class="bdg ok">موثّق</span>');
   if(d.chainId)badges.push('<span class="bdg chain">⛓</span>');
@@ -951,7 +962,7 @@ function renderKPIs(){
 /* ═══ Insights ═══ */
 async function upgradeAll(auto){
   if(!getKey()){ if(auto)return; return promptKey(); }
-  const targets=CACHE.filter(d=>d.blob&&(d.engine!=='gemini'||(d.ocrConfidence||0)<90));
+  const targets=CACHE.filter(d=>d.blob&&!d.verifiedByUser&&(d.engine!=='gemini'||(d.ocrConfidence||0)<90));
   if(!targets.length){toast0('كل المستندات مقروءة بـ Gemini بثقة عالية ✓');return;}
   if(!auto&&!confirm('ترقية قراءة '+targets.length+' مستند عبر Gemini الأقوى؟ (يستغرق ~'+Math.ceil(targets.length*2.5)+' ثانية)'))return;
   if(auto)toast0('🤖 '+targets.length+' قراءة قديمة — تُرقّى تلقائيًا عبر Gemini…');
@@ -1055,7 +1066,7 @@ async function openDoc(id){
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
       ${confRing(d.ocrConfidence)}
       <div><b style="font-size:13px;color:var(--navy)">ثقة القراءة ${d.ocrConfidence||0}%</b>
-      <div style="font-size:11px;color:var(--faint)">محرك: ${d.engine==='gemini'?'Gemini AI ✦':'محلي'} · ${d.pages>1?d.pages+' صفحات · ':''}${(d.size/1024).toFixed(0)} KB</div></div>
+      <div style="font-size:11px;color:var(--faint)">محرك: ${d.verifiedByUser?'مُدقّق يدويًا ✓':(d.engine==='gemini'?'Gemini AI ✦':'محلي')} · ${d.pages>1?d.pages+' صفحات · ':''}${(d.size/1024).toFixed(0)} KB</div></div>
     </div>
     <div class="fgrid">
       ${F('المبلغ',p.amount?fmt(p.amount)+' '+(p.currency||''):'')}
@@ -1070,9 +1081,23 @@ async function openDoc(id){
       ${p.notes?`<div class="f w"><div class="k">ملاحظات</div><div class="v ar">${esc(p.notes)}</div></div>`:''}
       ${d.chainId?`<div class="f w"><div class="k">سلسلة التسوية</div><div class="v">⛓ ${d.chainId} · ${(d.links||[]).length} مستندات مرتبطة</div></div>`:''}
     </div>
+    <div id="editBox">
+      <div class="eg">
+        <div><label>المبلغ</label><input id="eAmt" inputmode="decimal"></div>
+        <div><label>العملة</label><select id="eCur"><option>AOA</option><option>MRU</option><option>USDT</option><option>USD</option><option>EUR</option><option>CNY</option><option>AED</option></select></div>
+        <div><label>التاريخ</label><input id="eDate" placeholder="YYYY-MM-DD"></div>
+        <div><label>البنك</label><input id="eBank" style="direction:rtl;font-family:var(--ff)"></div>
+        <div style="grid-column:1/-1"><label>المرجع</label><input id="eRef"></div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-p" style="flex:1" onclick="saveManual()">✓ حفظ وفحص</button>
+        <button class="btn btn-s" onclick="document.getElementById('editBox').classList.remove('on')">إلغاء</button>
+      </div>
+    </div>
     <div class="flags">${(d.fraud?.flags||[]).map(f=>`<div class="flag ${f[0]==='high'?'h':f[0]==='med'?'m':'l'}">${f[0]==='high'?'🚨':f[0]==='med'?'⚠':'✓'} ${esc(f[1])}</div>`).join('')||'<div class="flag l">✓ لا تنبيهات — المستند سليم</div>'}</div>
     <div class="mact">
-      <button class="btn btn-p" onclick="reanalyze('${d.id}')">✦ إعادة تحليل Gemini</button>
+      <button class="btn btn-p" onclick="openEdit()">✏️ تصحيح يدوي</button>
+      <button class="btn btn-s" onclick="reanalyze('${d.id}')">✦ إعادة تحليل Gemini</button>
       ${p.reference?`<button class="btn btn-s" onclick="showBarcode('${esc(p.reference)}')">||| باركود</button>`:''}
       <button class="btn btn-p" onclick="downloadHD('${d.id}')">🖼 صورة HD</button>
       <button class="btn btn-s" onclick="downloadDoc('${d.id}')">⬇ الملف الأصلي</button>
@@ -1082,6 +1107,52 @@ async function openDoc(id){
       ${(d.audit||[]).slice(-6).map(a=>`<div class="a">${new Date(a.ts).toLocaleString('en-GB')} — ${esc(a.action)}</div>`).join('')||'<div class="a">—</div>'}
     </div>`;
   $('dm').classList.add('on');
+}
+function openEdit(){
+  if(!CUR)return;
+  const p=CUR.parsed||{};
+  $('eAmt').value=p.amount||'';
+  $('eCur').value=p.currency||'AOA';
+  $('eDate').value=p.date||'';
+  $('eBank').value=p.bank||'';
+  $('eRef').value=p.reference||'';
+  $('editBox').classList.add('on');
+  $('eAmt').focus();
+}
+async function saveManual(){
+  if(!CUR)return;
+  const amt=parseNum($('eAmt').value);
+  if(!(amt>0)){alert('أدخل مبلغًا صحيحًا');return;}
+  const p=CUR.parsed=CUR.parsed||{};
+  const old=p.amount;
+  p.amount=amt; p.currency=$('eCur').value;
+  p.date=$('eDate').value.trim()||p.date;
+  p.bank=$('eBank').value.trim()||p.bank;
+  p.reference=$('eRef').value.trim()||p.reference;
+  delete p._amountWasId;
+  CUR.verifiedByUser=true; CUR.ocrConfidence=100; CUR.needsReview=false;
+  CUR.smartName=smartName(p);
+  /* ═ فحص ما بعد التصحيح ═ */
+  const checks=[];
+  const txt=(CUR.ocrText||'').replace(/[\u202F\u2009\u00A0 .,]/g,'');
+  const amtD=String(Math.round(amt));
+  if(txt){
+    checks.push(txt.includes(amtD)
+      ? ['l','✓ فحص: المبلغ '+fmt(amt)+' موجود حرفيًا في نص المستند']
+      : ['m','⚠ فحص: لم أجد '+fmt(amt)+' في النص المقروء — تأكد من الرقم']);
+  }
+  const refD=String(p.reference||'').replace(/\D/g,'');
+  if(refD&&amtD===refD)checks.push(['h','🚨 المبلغ يساوي المرجع — تحقق']);
+  const dup=CACHE.find(d=>d.id!==CUR.id&&d.parsed?.amount===amt&&d.parsed?.currency===p.currency&&d.parsed?.date===p.date);
+  if(dup)checks.push(['m','⚠ مستند آخر بنفس المبلغ والتاريخ: '+(dup.smartName||dup.fileName)]);
+  verify(CUR);
+  CUR.needsReview=false;
+  CUR.fraud.flags=[...checks,...CUR.fraud.flags.filter(f=>!/لم يُقرأ مبلغ|رقم العملية نفسه/.test(f[1]))];
+  audit(CUR,'تصحيح يدوي: '+fmt(old||0)+' → '+fmt(amt)+' '+p.currency+' · فُحص ✓');
+  autoLink(CUR);
+  await putDoc(CUR);
+  renderAll(); openDoc(CUR.id);
+  toast0(txt&&txt.includes(amtD)?'✓ حُفظ — والمبلغ مطابق للنص':'✓ حُفظ التصحيح');
 }
 function closeDoc(){$('dm').classList.remove('on');const i=$('dmImg');if(i.src.startsWith('blob:'))URL.revokeObjectURL(i.src);}
 function zoomImg(k){zoom=Math.max(.5,Math.min(6,zoom*k));applyT();}
