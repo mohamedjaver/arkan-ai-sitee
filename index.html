@@ -749,10 +749,19 @@ let RATES={updated:"2026-08-02",usd_mro:422.5,eur_mro:485,aoa_mro:0.35,usd_cny:7
 /* ═══ الأسعار المتدرجة المنشورة من لوحة التسوية (جملة/متوسط/تجزئة) ═══ */
 let TIERS={}, TIER_TS=null;
 async function loadTiers(){
+  let d=null;
+  /* 1) السحابة (منشور بلا رمز) */
   try{
-    const r=await fetch('rates-data.json?t='+Date.now(),{cache:'no-store'});
-    if(!r.ok)return;
-    const d=await r.json();
+    const FS='https://firestore.googleapis.com/v1/projects/arkan-rates-prod/databases/(default)/documents/public/rates?key=AIzaSyCtL-OySTK9FeyD0h-31BiupYFtGBxbJ_U';
+    const c=await fetch(FS+'&t='+Date.now(),{cache:'no-store'});
+    if(c.ok){ const j=await c.json();
+      const raw=j.fields&&j.fields.json&&j.fields.json.stringValue;
+      if(raw) d=JSON.parse(raw); }
+  }catch(e){}
+  /* 2) الملف الثابت احتياطًا */
+  try{
+    if(!d){ const r=await fetch('rates-data.json?t='+Date.now(),{cache:'no-store'});
+      if(!r.ok)return; d=await r.json(); }
     (d.r||[]).forEach(x=>{ if(x.ccy) TIERS[x.ccy]=x; });
     TIER_TS=d.date||null;
     const u=document.getElementById('updDate'); if(u&&TIER_TS)u.textContent=TIER_TS;
