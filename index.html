@@ -359,6 +359,9 @@ body::after{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;opac
 .tierbadge{display:none;margin-inline-start:8px;font:700 11px 'IBM Plex Sans Arabic',sans-serif;
   background:linear-gradient(135deg,#0D47B5,#4FB2F8);color:#fff;border-radius:999px;padding:4px 11px;vertical-align:middle;
   box-shadow:0 6px 14px rgba(13,71,181,.3)}
+
+.wsl{display:inline-block;margin-inline-start:6px;font:700 10px 'IBM Plex Sans Arabic',sans-serif;
+  background:#EDF6FF;color:#0056D6;border:1px solid #BFD9F7;border-radius:999px;padding:2px 8px;vertical-align:middle}
 </style>
 </head>
 <body>
@@ -776,7 +779,7 @@ function tierFor(ccy,fx){
   if(thrM&&fx>=thrM) return {rate:+t.m||+t.r, tier:'m', label:{ar:'سعر متوسط',fr:'Prix moyen',en:'Mid-tier',pt:'Preço médio'}};
   return {rate:+t.r, tier:'r', label:{ar:'سعر التجزئة',fr:'Prix de détail',en:'Retail',pt:'Preço a retalho'}};
 }
-const fmt=(n,d=2)=>n.toLocaleString('en-US',{maximumFractionDigits:d});
+const fmt=(n,d=2)=>(+n||0).toLocaleString('en-US',{maximumFractionDigits:d});
 let LANG=localStorage.getItem('arkan_lang')||'ar';
 
 function R(){ // units per 1 USD
@@ -789,23 +792,47 @@ function R(){ // units per 1 USD
 
 function renderMarket(){
   const t=I18N[LANG], r=R();
-  const rows=[
-    ['USD','MRU', r.MRU,        `${fmt(RATES.usd_mro,1)} MRO`],
-    ['EUR','MRU', r.MRU/r.EUR,  `${fmt(RATES.eur_mro,1)} MRO`],
-    ['USD','AOA', r.AOA,        `1 USD = ${fmt(r.AOA,0)} Kz`],
-    ['EUR','AOA', r.AOA/r.EUR,  `1 EUR = ${fmt(r.AOA/r.EUR,0)} Kz`],
-    ['MRU','AOA', r.AOA/r.MRU,  `1000 MRU = ${fmt(1000*r.AOA/r.MRU,0)} Kz`],
-    ['CNY','MRU', r.MRU/r.CNY,  `${fmt(RATES.usd_mro/RATES.usd_cny,1)} MRO`],
-    ['AED','MRU', r.MRU/r.AED,  `${fmt(RATES.usd_mro/RATES.usd_aed,1)} MRO`]
-  ];
+  /* MRU لكل وحدة من العملة، حسب شريحة السعر المنشورة (r=تجزئة افتراضيًا للعرض) */
+  const pub=(c,tier)=>{ const x=TIERS[c]; if(!x)return null; const v=+(x[tier]||x.r); return v>0? v/10 : null; };
+  const has=c=>!!TIERS[c];
+  const mruPer=c=>pub(c,'r');                    /* سعر التجزئة المعروض في الجدول */
+  const wPer=c=>pub(c,'w');
+  const rows=[];
+  /* USD → MRU */
+  rows.push(['USD','MRU', has('USD')?mruPer('USD'):r.MRU, has('USD')?`${fmt(mruPer('USD')*10,1)} MRO`:`${fmt(RATES.usd_mro,1)} MRO`]);
+  /* EUR → MRU */
+  rows.push(['EUR','MRU', has('EUR')?mruPer('EUR'):r.MRU/r.EUR, has('EUR')?`${fmt(mruPer('EUR')*10,1)} MRO`:`${fmt(RATES.eur_mro,1)} MRO`]);
+  /* AOA → MRU (منشور غالبًا) */
+  if(has('AOA')) rows.push(['AOA','MRU', mruPer('AOA'), `1000 Kz = ${fmt(1000*mruPer('AOA'),0)} MRU`]);
+  /* MRU → AOA */
+  const aoaPerMru = has('AOA') ? 1/mruPer('AOA') : (r.AOA/r.MRU);
+  rows.push(['MRU','AOA', aoaPerMru, `1000 MRU = ${fmt(1000*aoaPerMru,0)} Kz`]);
+  /* USD/EUR → AOA (اشتقاق من الأسعار المنشورة إن توفرت) */
+  const usdMru = has('USD')?mruPer('USD'):r.MRU;
+  const eurMru = has('EUR')?mruPer('EUR'):r.MRU/r.EUR;
+  rows.push(['USD','AOA', usdMru*aoaPerMru, `1 USD = ${fmt(usdMru*aoaPerMru,0)} Kz`]);
+  rows.push(['EUR','AOA', eurMru*aoaPerMru, `1 EUR = ${fmt(eurMru*aoaPerMru,0)} Kz`]);
+  /* CNY / AED / USDT */
+  if(has('CNY')) rows.push(['CNY','MRU', mruPer('CNY'), `${fmt(mruPer('CNY')*10,1)} MRO`]);
+  else rows.push(['CNY','MRU', r.MRU/r.CNY, `${fmt(RATES.usd_mro/RATES.usd_cny,1)} MRO`]);
+  if(has('AED')) rows.push(['AED','MRU', mruPer('AED'), `${fmt(mruPer('AED')*10,1)} MRO`]);
+  else rows.push(['AED','MRU', r.MRU/r.AED, `${fmt(RATES.usd_mro/RATES.usd_aed,1)} MRO`]);
+  if(has('USDT')) rows.push(['USDT','MRU', mruPer('USDT'), `${fmt(mruPer('USDT')*10,1)} MRO`]);
+  const wsNote={ar:'جملة',fr:'Gros',en:'Whsl',pt:'Grosso'}[LANG]||'جملة';
   document.getElementById('mkt').innerHTML=
     `<div class="mrow hd"><span>${t.mk_pair}</span><span>${t.mk_rate}</span><span>${t.mk_old}</span></div>`+
-    rows.map(x=>`<div class="mrow">
+    rows.map(x=>{
+      const dp=(v)=>v<0.1?4:(v<10?2:2);
+      const c=x[0];
+      const showW = x[1]==='MRU' && has(c);
+      const w=showW?wPer(c):null;
+      const wTxt=(w&&Math.abs(w-x[2])>1e-9)?`<span class="wsl">${wsNote} ${fmt(w,dp(w))}</span>`:'';
+      return `<div class="mrow">
       <div class="pair"><span class="ic">${x[0]}</span><div><b>${x[0]} → ${x[1]}</b></div></div>
-      <span class="price">${fmt(x[2])}</span>
+      <span class="price">${fmt(x[2],dp(x[2]))} ${wTxt}</span>
       <span class="sub2">${x[3]}</span>
-    </div>`).join('');
-  document.getElementById('updDate').textContent=RATES.updated;
+    </div>`;}).join('');
+  document.getElementById('updDate').textContent=TIER_TS||RATES.updated;
 }
 
 function renderCardPrice(){
