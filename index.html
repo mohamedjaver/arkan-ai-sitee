@@ -885,7 +885,8 @@ function passToRequest(){
     var a=(document.getElementById('fromAmt').value||'').replace(/[^\d.]/g,'');
     var fr=document.getElementById('fromCur').textContent.trim();
     var to=document.getElementById('toCur').textContent.trim();
-    var u='request.html?amt='+encodeURIComponent(a)+'&from='+encodeURIComponent(fr)+'&to='+encodeURIComponent(to)+'#individuals';
+    var rt='';try{rt=(document.getElementById('rateTxt').textContent.match(/=\s*([\d.,]+)/)||[])[1]||'';}catch(e){}
+    var u='request.html?amt='+encodeURIComponent(a)+'&from='+encodeURIComponent(fr)+'&to='+encodeURIComponent(to)+(rt?'&rate='+encodeURIComponent(rt):'')+'#individuals';
     document.getElementById('goBtn').setAttribute('href',u);
   }catch(e){}
 }
