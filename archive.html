@@ -318,6 +318,24 @@ body.selecting #selbar{transform:translateX(-50%) translateY(0)}
 </style>
 </head>
 <body>
+<script>
+/* ═══ تحديث ذاتي: يضمن أحدث نسخة دائمًا رغم كل طبقات الكاش ═══ */
+const ARKAN_ARCHIVE_BUILD='2026-08-03.10';
+(async()=>{
+  try{
+    const r=await fetch('version.json?t='+Date.now(),{cache:'no-store'});
+    if(!r.ok)return;
+    const j=await r.json();
+    if(j.build&&j.build!==ARKAN_ARCHIVE_BUILD){
+      const k='arkan_arch_forced';
+      if(sessionStorage.getItem(k)!==j.build){
+        sessionStorage.setItem(k,j.build);
+        location.replace('archive.html?b='+encodeURIComponent(j.build));
+      }
+    }
+  }catch(e){}
+})();
+</script>
 <script src="arkan-gate.js"></script>
 
 <header>
