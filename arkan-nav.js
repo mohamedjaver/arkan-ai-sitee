@@ -9,12 +9,12 @@
   const APPS = [
     { n: 'الأسعار والتحويل', u: 'rates.html',      d: 'أسعار الصرف الحيّة والتحويل', i: 'rates'  },
     { n: 'طلب تحويل',        u: 'request.html',    d: 'دفع دولي عبر الحدود',        i: 'send'   },
-    { n: 'أرشيف الإيصالات',  u: 'archive.html',    d: 'قراءة وأرشفة ذكية بالـOCR',  i: 'archive'},
-    { n: 'مركز التسويات',    u: 'settlement.html', d: 'مطابقة العميل × المورّد',     i: 'settle' },
+    { n: 'أرشيف الإيصالات',  u: 'archive.html',    d: 'قراءة وأرشفة ذكية بالـOCR',  i: 'archive', adminOnly:true},
+    { n: 'مركز التسويات',    u: 'settlement.html', d: 'مطابقة العميل × المورّد',     i: 'settle', adminOnly:true },
     { n: 'حسابي',            u: 'account.html',    d: 'رصيدك ومعاملاتك',            i: 'user'   },
-    { n: 'التداول',          u: 'trading.html',    d: 'مؤشرات وأنظمة تداول',        i: 'chart'  },
+    { n: 'التداول',          u: 'trading.html',    d: 'مؤشرات وأنظمة تداول',        i: 'chart', adminOnly:true },
     { n: 'مساعد أركان',      u: 'ai.html',         d: 'الذكاء الاصطناعي',           i: 'ai'     },
-    { n: 'لوحة الإدارة',     u: 'admin.html',      d: 'إدارة الطلبات والمعاملات',    i: 'admin'  }
+    { n: 'لوحة الإدارة',     u: 'admin.html',      d: 'إدارة الطلبات والمعاملات',    i: 'admin', adminOnly:true }
   ];
   const P = {
     rates:'<path d="M4 8h13l-3-3M20 16H7l3 3"/>',
