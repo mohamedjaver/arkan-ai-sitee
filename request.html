@@ -283,7 +283,7 @@ Solicito cotação para pagamento internacional.`;
       }
     }
   }catch(e){ alert('تعذّر تسجيل الطلب: '+(e.code||e.message)); }
-  window.open('https://wa.me/22236295050?text='+encodeURIComponent(msg),'_blank');
+  showSuccess(amt, ccy, ref, 'https://wa.me/22236295050?text='+encodeURIComponent(msg));
 }
 </script>
 <script src="integrations.js"></script>
@@ -557,9 +557,83 @@ async function uploadInvoice(){
       if(ARKAN.toast)ARKAN.toast('تم تسجيل الطلب ✓ '+ref);
     }}}catch(e){ console.warn(e); }
     var msg='طلب تحويل فردي — '+ref+'%0A'+'الاسم: '+encodeURIComponent(name)+'%0A'+'الهاتف: '+phone+'%0A'+'يرسل: '+encodeURIComponent(amt)+' '+from+'%0A'+'يستلم: '+to;
-    window.open('https://wa.me/22236295050?text='+msg,'_blank');
+    showSuccess(amt, from, ref, 'https://wa.me/22236295050?text='+msg);
   });
 })();
+</script>
+
+<style>
+#okWrap{display:none;position:fixed;inset:0;z-index:9999;align-items:center;justify-content:center;
+  background:linear-gradient(180deg,#F3F9FF 0%,#EAF4FF 50%,#D8EBFF 100%);padding:24px}
+#okWrap.on{display:flex}
+.okBox{text-align:center;max-width:380px;width:100%;animation:okIn .5s cubic-bezier(.2,.9,.3,1.15) both}
+@keyframes okIn{from{opacity:0;transform:scale(.9) translateY(20px)}to{opacity:1;transform:none}}
+.okRing{width:170px;height:170px;margin:0 auto 26px;position:relative;filter:drop-shadow(0 24px 50px rgba(13,71,181,.35))}
+.okRing svg{width:100%;height:100%}
+.okRing .c{stroke:url(#okg);stroke-width:10;fill:none;stroke-linecap:round;
+  stroke-dasharray:472;stroke-dashoffset:472;animation:okC .8s .15s cubic-bezier(.4,0,.2,1) forwards}
+@keyframes okC{to{stroke-dashoffset:0}}
+.okRing .t{stroke:#fff;stroke-width:11;fill:none;stroke-linecap:round;stroke-linejoin:round;
+  stroke-dasharray:110;stroke-dashoffset:110;animation:okT .45s .85s cubic-bezier(.4,0,.2,1) forwards}
+@keyframes okT{to{stroke-dashoffset:0}}
+.okRing .bg{fill:url(#okg)}
+.okAmt{font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:clamp(34px,10vw,46px);
+  color:#071E4F;letter-spacing:-1px;direction:ltr;animation:okIn .5s .6s both}
+.okAmt small{font-size:.42em;color:#0056D6;font-weight:700;letter-spacing:1px}
+.okTitle{font-weight:800;font-size:18px;color:#071E4F;margin-top:10px;animation:okIn .5s .75s both}
+.okSub{font-size:13.5px;color:#486581;margin-top:6px;line-height:1.8;animation:okIn .5s .85s both}
+.okRef{display:inline-block;margin-top:12px;font-family:'IBM Plex Mono';font-size:13px;font-weight:600;
+  color:#003B8F;background:#fff;border:1.5px solid #D5E5F8;border-radius:999px;padding:8px 18px;
+  direction:ltr;animation:okIn .5s .95s both}
+.okBtns{display:flex;gap:10px;margin-top:26px;animation:okIn .5s 1.05s both}
+.okBtns button{flex:1;border:0;cursor:pointer;border-radius:999px;padding:15px;font-weight:800;font-size:14.5px;
+  font-family:inherit;transition:transform .15s}
+.okBtns button:active{transform:scale(.96)}
+.okWa{background:linear-gradient(135deg,#1FBF64,#25D366);color:#fff;box-shadow:0 12px 26px rgba(37,211,102,.35)}
+.okClose{background:#fff;color:#003B8F;border:1.5px solid #D5E5F8!important}
+</style>
+<div id="okWrap">
+  <div class="okBox">
+    <div class="okRing">
+      <svg viewBox="0 0 170 170">
+        <defs><linearGradient id="okg" x1="0" y1="170" x2="170" y2="0">
+          <stop offset="0" stop-color="#0D47B5"/><stop offset=".55" stop-color="#2F8FE8"/><stop offset="1" stop-color="#4FB2F8"/>
+        </linearGradient></defs>
+        <circle class="bg" cx="85" cy="85" r="64" opacity="0"><animate attributeName="opacity" from="0" to="1" begin="0.9s" dur="0.3s" fill="freeze"/></circle>
+        <circle class="c" cx="85" cy="85" r="75"/>
+        <path class="t" d="M55 88 L77 110 L118 66"/>
+      </svg>
+    </div>
+    <div class="okAmt" id="okAmt">0</div>
+    <div class="okTitle">تم استلام طلب التحويل ✓</div>
+    <div class="okSub">فريق أركان سيؤكد معك عبر واتساب خلال دقائق<br>احتفظ برقم المرجع</div>
+    <span class="okRef" id="okRef">—</span>
+    <div class="okBtns">
+      <button class="okWa" id="okWaBtn">متابعة عبر واتساب</button>
+      <button class="okClose" onclick="document.getElementById('okWrap').classList.remove('on')">إغلاق</button>
+    </div>
+  </div>
+</div>
+<script>
+function showSuccess(amount,currency,ref,waUrl){
+  var el=document.getElementById('okWrap');
+  var amtEl=document.getElementById('okAmt');
+  document.getElementById('okRef').textContent=ref||'—';
+  var target=parseFloat(String(amount).replace(/[^\d.]/g,''))||0;
+  el.classList.remove('on');void el.offsetWidth;el.classList.add('on');
+  /* عدّاد المبلغ */
+  var st=null;
+  function step(t){if(!st)st=t;var k=Math.min(1,(t-st)/900);
+    var v=Math.round(target*(1-Math.pow(1-k,3)));
+    amtEl.innerHTML=v.toLocaleString('en-US')+' <small>'+(currency||'')+'</small>';
+    if(k<1)requestAnimationFrame(step);}
+  setTimeout(function(){requestAnimationFrame(step);},550);
+  var wa=document.getElementById('okWaBtn');
+  wa.onclick=function(){window.open(waUrl,'_blank');};
+  /* فتح واتساب تلقائيًا بعد اكتمال المشهد */
+  setTimeout(function(){window.open(waUrl,'_blank');},2400);
+  if(navigator.vibrate)navigator.vibrate([12,40,12]);
+}
 </script>
 </body>
 </html>
