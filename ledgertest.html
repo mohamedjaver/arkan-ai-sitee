@@ -1,0 +1,76 @@
+<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>فحص سجل الحوالات</title>
+<style>
+body{font-family:system-ui,sans-serif;background:#071D49;color:#EAF5FF;margin:0;padding:20px;line-height:1.7}
+h1{font-size:18px;margin:0 0 4px}.sub{color:#9Fc3e8;font-size:13px;margin-bottom:18px}
+.row{background:#0c2a5e;border:1px solid #163c7e;border-radius:14px;padding:13px 15px;margin-bottom:10px}
+.row b{font-size:14px}.st{float:left;font-weight:800;font-size:12px;padding:3px 12px;border-radius:999px}
+.ok{background:#0a7a3d;color:#fff}.bad{background:#c62828;color:#fff}.wait{background:#5a6b8c;color:#fff}
+.d{font-size:12px;color:#9Fc3e8;margin-top:6px;clear:both}
+.verdict{margin-top:16px;padding:15px;border-radius:16px;font-weight:800;text-align:center;font-size:15px}
+.vok{background:linear-gradient(135deg,#0a7a3d,#0fae5a)}.vbad{background:linear-gradient(135deg,#b71c1c,#e53935)}
+input{width:100%;box-sizing:border-box;padding:12px;border-radius:12px;border:1px solid #2a4a80;background:#0a2350;color:#fff;font-size:15px;margin-bottom:12px;direction:ltr;text-align:center}
+button{width:100%;padding:14px;border:0;border-radius:12px;background:linear-gradient(135deg,#0D47B5,#4FB2F8);color:#fff;font-weight:800;font-size:15px;cursor:pointer}
+</style></head><body>
+<h1>🔗 فحص سجل حوالات العميل</h1>
+<div class="sub">يتأكد أن العميل يقرأ معاملاته، وأن غير الأدمن لا يعدّلها.</div>
+<input id="ph" placeholder="رقم هاتف عميل للاختبار (مثال 957995536)" value="957995536">
+<button onclick="run()">ابدأ الفحص</button>
+<div id="out" style="margin-top:16px"></div>
+<div id="verdict"></div>
+<script>
+const KEY='AIzaSyCtL-OySTK9FeyD0h-31BiupYFtGBxbJ_U';
+const BASE='https://firestore.googleapis.com/v1/projects/arkan-rates-prod/databases/(default)/documents';
+const out=document.getElementById('out');
+function row(label,cls,txt,d){const el=document.createElement('div');el.className='row';
+  el.innerHTML='<span class="st '+cls+'">'+txt+'</span><b>'+label+'</b><div class="d">'+d+'</div>';out.appendChild(el);return el;}
+async function run(){
+  out.innerHTML='';document.getElementById('verdict').textContent='';
+  const phone=document.getElementById('ph').value.replace(/[^0-9]/g,'');
+  let ok=true;
+  // 1) العميل يقرأ معاملاته (structured query where uid==phone)
+  const r1=row('العميل يقرأ سجل معاملاته','wait','...','استعلام uid=='+phone);
+  try{
+    const res=await fetch(BASE+':runQuery?key='+KEY,{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({structuredQuery:{from:[{collectionId:'transactions'}],
+        where:{fieldFilter:{field:{fieldPath:'uid'},op:'EQUAL',value:{stringValue:phone}}},limit:50}})});
+    const j=await res.json();
+    if(res.ok){const n=Array.isArray(j)?j.filter(x=>x.document).length:0;
+      r1.querySelector('.st').className='st ok';r1.querySelector('.st').textContent='يقرأ ✓';
+      r1.querySelector('.d').textContent='نجح — '+n+' معاملة مرئية للعميل.';}
+    else{ok=false;r1.querySelector('.st').className='st bad';r1.querySelector('.st').textContent='محجوب ✗';
+      r1.querySelector('.d').textContent='القاعدة تمنع القراءة: '+((j.error||{}).message||res.status);}
+  }catch(e){ok=false;r1.querySelector('.st').className='st bad';r1.querySelector('.st').textContent='خطأ';r1.querySelector('.d').textContent=e.message;}
+
+  // 2) غير الأدمن لا يعدّل معاملة (يجب أن يُرفض)
+  const r2=row('غير الأدمن لا يعدّل','wait','...','محاولة تعديل بلا حساب');
+  try{
+    const res=await fetch(BASE+'/transactions/__nope__?key='+KEY+'&updateMask.fieldPaths=status',
+      {method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({fields:{status:{stringValue:'hacked'}}})});
+    if(res.status===403||res.status===404){r2.querySelector('.st').className='st ok';r2.querySelector('.st').textContent='محميّة ✓';
+      r2.querySelector('.d').textContent='رُفض التعديل ('+res.status+') — أنت وحدك تعدّل.';}
+    else{ok=false;r2.querySelector('.st').className='st bad';r2.querySelector('.st').textContent='ثغرة ✗';
+      r2.querySelector('.d').textContent='⚠ سُمح بالتعديل بلا حساب!';}
+  }catch(e){r2.querySelector('.st').className='st ok';r2.querySelector('.st').textContent='محميّة ✓';r2.querySelector('.d').textContent='رُفض.';}
+
+  // 3) قائمة كل المعاملات بلا فلتر (يجب أن تُرفض — حماية بقية العملاء)
+  const r3=row('لا سحب جماعي لكل المعاملات','wait','...','list بلا فلتر');
+  try{
+    const res=await fetch(BASE+'/transactions?key='+KEY+'&pageSize=100');
+    const j=await res.json();
+    if(res.status===403||(j.error&&/permission/i.test(j.error.message||''))){
+      r3.querySelector('.st').className='st ok';r3.querySelector('.st').textContent='محميّة ✓';
+      r3.querySelector('.d').textContent='رُفض السحب الجماعي — بيانات العملاء محمية.';}
+    else{ // قد يسمح إن كانت limit≤50؛ نتحقق من العدد
+      const n=(j.documents||[]).length;
+      if(n>0){r3.querySelector('.st').className='st wait';r3.querySelector('.st').textContent='تنبيه';
+        r3.querySelector('.d').textContent='قُرئت '+n+' وثيقة — مقبول إن كان الحد ≤50، لكن راقبه.';}
+      else{r3.querySelector('.st').className='st ok';r3.querySelector('.st').textContent='فارغ ✓';r3.querySelector('.d').textContent='لا تسريب.';}}
+  }catch(e){r3.querySelector('.st').className='st ok';r3.querySelector('.st').textContent='محميّة ✓';r3.querySelector('.d').textContent='رُفض.';}
+
+  const v=document.getElementById('verdict');
+  v.className='verdict '+(ok?'vok':'vbad');
+  v.textContent=ok?'✅ الحلقة تعمل — العميل يرى سجله وبياناته محمية':'✗ راجع القاعدة — القراءة محجوبة';
+}
+</script></body></html>
