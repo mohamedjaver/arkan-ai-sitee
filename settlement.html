@@ -4705,6 +4705,7 @@ function renderInbox(){
         <button class="btn btn-gold btn-sm" onclick="inbToOp('${x._id}')">➕ حوّله لعملية</button>
         <button class="btn btn-line btn-sm" onclick="inbWa('${x._id}')">واتساب</button>
         ${done?'':`<button class="btn btn-line btn-sm" onclick="inbDone('${x._id}')">✓ تم</button>`}
+        <button class="btn btn-d btn-sm" onclick="inbReject('${x._id}')">✕ رفض</button>
       </div>
     </div>`;
   }).join('');
@@ -4715,6 +4716,16 @@ function inbWa(id){
   const p=(x.contact||'').replace(/[^0-9]/g,'');
   const msg='بخصوص طلبك '+(x.ref||'')+' — '+(x.amount||'')+' '+(x.currency||'');
   window.open('https://wa.me/'+(p.length>7?p:'22236295050')+'?text='+encodeURIComponent(msg),'_blank');
+}
+async function inbReject(id){
+  if(!confirm('رفض وحذف هذا الطلب نهائياً؟'))return;
+  try{
+    const {doc,deleteDoc}=ARKAN.fb;
+    await deleteDoc(doc(ARKAN.db,'payment_requests',id));
+    INB=INB.filter(v=>v._id!==id);
+    renderInbox();
+    toast('حُذف الطلب');
+  }catch(e){toast('تعذّر الحذف: '+(e.code||e.message));}
 }
 async function inbDone(id){
   const x=INB.find(v=>v._id===id);if(!x)return;
