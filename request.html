@@ -9,12 +9,12 @@
 <title>ARKAN — Pagamentos Internacionais | تحويلات دولية</title>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@500;600;700;800&family=Space+Grotesk:wght@600;700&family=IBM+Plex+Mono:wght@500;700&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#080916;--card:#101122;--acc:#8B72FF;--acc2:#B9A8FF;--gold:#E8C24A;--txt:#EDEAFB;--dim:#8B8FA8;--green:#3DDC97;--stroke:rgba(255,255,255,.09)}
+:root{--bg:#F3F9FF;--card:#FCFEFF;--acc:#0056D6;--acc2:#00A2FF;--gold:#C88A0A;--txt:#102A43;--dim:#486581;--green:#00A860;--stroke:#D8E8F8}
 *{margin:0;padding:0;box-sizing:border-box}
-body{background:linear-gradient(180deg,#14122B 0%,#0D0E20 30%,#080916 68%,#050610 100%);background-attachment:fixed;min-height:100vh;font-family:'Cairo','Tajawal',sans-serif;color:var(--txt)}
+body{background:linear-gradient(180deg,#F3F9FF 0%,#EAF4FF 35%,#E1F0FF 70%,#D8EBFF 100%);background-attachment:fixed;min-height:100vh;font-family:'Cairo','Tajawal',sans-serif;color:var(--txt)}
 .wrap{max-width:560px;margin:0 auto;padding:34px 20px 60px}
 .logo{display:flex;align-items:center;gap:14px;justify-content:center;margin-bottom:8px}
-.logo img{width:56px;height:56px;border-radius:15px;box-shadow:0 10px 30px rgba(91,63,209,.5)}
+.logo img{width:56px;height:56px;border-radius:15px;box-shadow:0 10px 26px rgba(0,86,214,.35)}
 h1{text-align:center;font-size:24px;font-weight:800;letter-spacing:1px}
 h1 span{color:var(--acc2)}
 .sub{text-align:center;color:var(--dim);font-size:13px;letter-spacing:2px;margin:6px 0 6px;font-family:'IBM Plex Mono'}
@@ -25,17 +25,17 @@ h1 span{color:var(--acc2)}
 .card h2{font-size:16px;margin-bottom:4px}
 .card .h2ar{font-family:'Cairo';color:var(--dim);font-size:13px;margin-bottom:18px}
 label{display:block;font-size:12px;color:var(--dim);margin:14px 0 6px;font-weight:600}
-input,select,textarea{width:100%;background:rgba(0,0,0,.3);border:1px solid var(--stroke);border-radius:14px;
+input,select,textarea{width:100%;background:rgba(16,42,67,.10);border:1px solid var(--stroke);border-radius:14px;
   padding:14px;color:var(--txt);font-size:16px;font-family:'Cairo','Tajawal';outline:none}
 input:focus,select:focus,textarea:focus{border-color:var(--acc)}
 .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .ccy{display:flex;gap:8px;margin-top:6px}
-.ccy button{flex:1;padding:11px 6px;border-radius:14px;border:1px solid var(--stroke);background:rgba(0,0,0,.25);
+.ccy button{flex:1;padding:11px 6px;border-radius:16px;border:1px solid var(--stroke);background:#FFFFFF;
   color:var(--dim);font-weight:800;font-size:15px;cursor:pointer;font-family:'IBM Plex Mono';
   display:flex;flex-direction:column;align-items:center;gap:3px;line-height:1.2}
 .ccy button .rt{font-size:11px;font-weight:700;color:var(--gold);letter-spacing:.3px}
-.ccy button.on{background:linear-gradient(135deg,var(--acc2),#5B3FD1);color:#fff;border-color:transparent}
-.ccy button.on .rt{color:#FFE9A6}
+.ccy button.on{background:linear-gradient(135deg,#0D47B5 0%,#2F8FE8 55%,#4FB2F8 100%);color:#fff;border-color:transparent;box-shadow:0 8px 20px rgba(13,71,181,.35)}
+.ccy button.on .rt{color:#FFF3D6}
 .est{display:none;margin-top:10px;padding:12px 14px;border-radius:13px;background:rgba(232,194,74,.08);
   border:1px solid rgba(232,194,74,.3);font-size:14px;font-weight:800;color:var(--gold);
   font-family:'IBM Plex Mono';text-align:center;letter-spacing:.2px}
@@ -52,6 +52,11 @@ input:focus,select:focus,textarea:focus{border-color:var(--acc)}
 .step .t{font-size:13.5px;line-height:1.6}
 .step .t small{color:var(--dim);display:block;font-family:'Cairo'}
 footer{text-align:center;margin-top:30px;color:var(--dim);font-size:10.5px;letter-spacing:1.5px;font-family:'IBM Plex Mono'}
+
+body::after{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.04;
+  background-image:linear-gradient(#003B8F 1px,transparent 1px),linear-gradient(90deg,#003B8F 1px,transparent 1px);
+  background-size:44px 44px}
+body>*{position:relative;z-index:1}
 </style>
 
 <style id="pageTransition">
@@ -96,7 +101,7 @@ html.pt-enter body{animation:ptIn .38s cubic-bezier(.22,1,.36,1)}
 <script src="config.js"></script>
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="ARKAN SETTLEMENTS">
-<meta property="og:title" content="تحويلات الشركات الدولية — ARKAN SETTLEMENTS">
+<meta property="og:title" content="التحويلات الدولية — ARKAN Rates">
 <meta property="og:description" content="تسديد فواتير الموردين الدوليين بقراءة تلقائية للفاتورة ومرجع رسمي.">
 <meta property="og:image" content="https://arkanrates.com/arkan-icon-512.png">
 <meta name="twitter:card" content="summary_large_image">
@@ -105,17 +110,35 @@ html.pt-enter body{animation:ptIn .38s cubic-bezier(.22,1,.36,1)}
   <script src="arkan-gate.js"></script>
 </head>
 <body>
-<div id="ark-seg" style="position:sticky;top:0;z-index:60;display:flex;gap:8px;justify-content:center;padding:12px 14px;background:rgba(242,245,251,.95);backdrop-filter:blur(10px);border-bottom:1px solid #d9e2f2">
-  <a href="#companies" style="flex:1;max-width:220px;text-align:center;padding:12px;border-radius:13px;font-weight:800;font-size:14.5px;text-decoration:none;background:linear-gradient(120deg,#002776,#0d3aa0 55%,#3498db);color:#fff">تحويلات الشركات</a>
-  <a href="#individuals" style="flex:1;max-width:220px;text-align:center;padding:12px;border-radius:13px;font-weight:800;font-size:14.5px;text-decoration:none;background:#fff;color:#002776;border:1.5px solid #bccbe6">تحويلات الأفراد</a>
+<div id="ark-seg" style="position:sticky;top:0;z-index:60;display:flex;gap:8px;justify-content:center;padding:12px 14px;background:rgba(242,245,251,.95);backdrop-filter:blur(10px);border-bottom:1px solid #D8E8F8">
+  <a href="#individuals" id="tabInd" class="topTab on">تحويلات الأفراد</a>
+  <a href="#companies" id="tabComp" class="topTab">تحويلات الشركات</a>
+  <style>
+  .topTab{flex:1;max-width:220px;text-align:center;padding:13px;border-radius:999px;font-weight:800;font-size:14.5px;text-decoration:none;background:#fff;color:#003B8F;border:1.5px solid #D5E5F8;transition:all .2s}
+  .topTab.on{background:linear-gradient(135deg,#0D47B5 0%,#2F8FE8 55%,#4FB2F8 100%);color:#fff;border-color:transparent;box-shadow:0 10px 24px rgba(13,71,181,.35)}
+  </style>
+  <script>
+  document.addEventListener('DOMContentLoaded',function(){
+    var ti=document.getElementById('tabInd'),tc=document.getElementById('tabComp');
+    function act(a){ti.classList.toggle('on',a==='i');tc.classList.toggle('on',a==='c');}
+    ti.addEventListener('click',function(){act('i');});
+    tc.addEventListener('click',function(){act('c');});
+    /* الأفراد هي الوجهة الافتراضية دائمًا */
+    if(!location.hash||location.hash==='#individuals'){
+      act('i');
+      setTimeout(function(){var el=document.getElementById('individuals');
+        if(el)el.scrollIntoView({behavior:'instant',block:'start'});},60);
+    } else if(location.hash==='#companies'){act('c');}
+  });
+  </script>
 </div>
 <div id="companies"></div>
 
 
 <div class="wrap">
   <a href="./" style="display:flex;align-items:center;justify-content:center;gap:11px;margin-bottom:20px;text-decoration:none">
-    <svg width="36" height="36" viewBox="0 0 512 512" style="border-radius:10px;box-shadow:0 6px 20px rgba(124,92,255,.45);flex-shrink:0" aria-label="ARKAN"><defs><radialGradient id="rqbg" cx="0.5" cy="0.42" r="0.75"><stop offset="0" stop-color="#141A45"/><stop offset="1" stop-color="#080B22"/></radialGradient><linearGradient id="rqmk" x1="0" y1="0.2" x2="1" y2="0.8"><stop offset="0" stop-color="#C24DF5"/><stop offset="0.42" stop-color="#7C5CFF"/><stop offset="0.72" stop-color="#2F7BF6"/><stop offset="1" stop-color="#3FB6F9"/></linearGradient><linearGradient id="rqsf" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#9F5CF0"/><stop offset="1" stop-color="#3E8DF7"/></linearGradient></defs><rect width="512" height="512" rx="96" fill="url(#rqbg)"/><path fill="url(#rqmk)" d="M256 84 L394 428 L338 428 L256 222 L174 428 L118 428 Z"/><path d="M256 84 L124 424 L118 428 L252 88 Z" fill="#EDE0FF" opacity="0.55"/><path d="M256 84 L390 424 L394 428 L260 88 Z" fill="#BFE3FF" opacity="0.45"/><path fill="url(#rqmk)" d="M78 384 Q 256 258 434 350 Q 300 306 174 352 Q 118 372 78 384 Z"/><path fill="url(#rqsf)" opacity="0.85" d="M112 414 Q 244 344 342 366 Q 240 372 148 406 Q 126 412 112 414 Z"/></svg>
-    <span style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:15px;letter-spacing:.02em;direction:ltr;color:#EDEAFB"><b>ARKAN</b> <span style="color:#B9A8FF">SETTLEMENTS</span></span>
+    <svg width="36" height="36" viewBox="0 0 512 512" style="border-radius:10px;box-shadow:0 6px 20px rgba(124,92,255,.45);flex-shrink:0" aria-label="ARKAN"><defs><radialGradient id="rqbg" cx="0.5" cy="0.42" r="0.75"><stop offset="0" stop-color="#141A45"/><stop offset="1" stop-color="#080B22"/></radialGradient><linearGradient id="rqmk" x1="0" y1="0.2" x2="1" y2="0.8"><stop offset="0" stop-color="#00A2FF"/><stop offset="0.42" stop-color="#0056D6"/><stop offset="0.72" stop-color="#2F7BF6"/><stop offset="1" stop-color="#4FB2F8"/></linearGradient><linearGradient id="rqsf" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#0058D9"/><stop offset="1" stop-color="#3E8DF7"/></linearGradient></defs><rect width="512" height="512" rx="96" fill="url(#rqbg)"/><path fill="url(#rqmk)" d="M256 84 L394 428 L338 428 L256 222 L174 428 L118 428 Z"/><path d="M256 84 L124 424 L118 428 L252 88 Z" fill="#E2F0FF" opacity="0.55"/><path d="M256 84 L390 424 L394 428 L260 88 Z" fill="#BFE3FF" opacity="0.45"/><path fill="url(#rqmk)" d="M78 384 Q 256 258 434 350 Q 300 306 174 352 Q 118 372 78 384 Z"/><path fill="url(#rqsf)" opacity="0.85" d="M112 414 Q 244 344 342 366 Q 240 372 148 406 Q 126 412 112 414 Z"/></svg>
+    <span style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:15px;letter-spacing:.02em;direction:ltr;color:#F0F7FF"><b>ARKAN</b> <span style="color:#0058D9">SETTLEMENTS</span></span>
   </a>
   
   <h1>تحويلات الشركات الدولية</h1>
@@ -133,8 +156,8 @@ html.pt-enter body{animation:ptIn .38s cubic-bezier(.22,1,.36,1)}
     <div class="h2ar">اطلب عرض سعر — الرد عبر واتساب فورًا</div>
 
     <div id="invDrop" onclick="uploadInvoice()" style="border:2px dashed rgba(139,114,255,.4);border-radius:16px;padding:20px;text-align:center;cursor:pointer;margin-bottom:18px;background:rgba(139,114,255,.05);transition:.2s">
-      <div style="font-size:15px;font-weight:700;color:#B9A8FF" id="invDropTxt">Carregar fatura · ارفع الفاتورة (صورة / PDF)</div>
-      <div style="font-size:12px;color:#8B8FA8;margin-top:5px" id="invDropSub">Leitura automática do montante e da empresa · قراءة تلقائية للمبلغ واسم الشركة</div>
+      <div style="font-size:15px;font-weight:700;color:#0058D9" id="invDropTxt">Carregar fatura · ارفع الفاتورة (صورة / PDF)</div>
+      <div style="font-size:12px;color:#7A93AD;margin-top:5px" id="invDropSub">Leitura automática do montante e da empresa · قراءة تلقائية للمبلغ واسم الشركة</div>
       <div id="invResult" style="margin-top:8px"></div>
     </div>
 
@@ -470,8 +493,8 @@ async function uploadInvoice(){
       txtEl.textContent='Fatura lida · قُرئت الفاتورة';
       res.innerHTML='<div style="font-family:monospace;font-size:12px;color:#3DDC97">'+
         (got.length?got.join(' · '):'')+
-        (!amount?'<div style="color:#F4A50C;margin-top:4px">Insira o montante manualmente · أدخل المبلغ يدويًا</div>':'')+
-        (!company?'<div style="color:#F4A50C;margin-top:4px">Insira o nome da empresa · أدخل اسم الشركة</div>':'')+
+        (!amount?'<div style="color:#FFB300;margin-top:4px">Insira o montante manualmente · أدخل المبلغ يدويًا</div>':'')+
+        (!company?'<div style="color:#FFB300;margin-top:4px">Insira o nome da empresa · أدخل اسم الشركة</div>':'')+
         '</div>';
       [document.getElementById('comp'),document.getElementById('amt')].forEach(function(el){
         if(el.value){el.style.transition='.3s';el.style.background='rgba(61,220,151,.12)';setTimeout(function(){el.style.background='';},900);}
@@ -493,26 +516,26 @@ async function uploadInvoice(){
 
 <!-- ═══ تحويلات الأفراد ═══ -->
 <section id="individuals" style="max-width:640px;margin:26px auto 60px;padding:0 16px">
-  <div class="card" style="background:#fff;border:1px solid #d9e2f2;border-radius:20px;padding:22px;box-shadow:0 14px 36px -18px rgba(0,26,82,.22)">
+  <div class="card" style="background:#fff;border:1px solid #D8E8F8;border-radius:20px;padding:22px;box-shadow:0 14px 36px -18px rgba(0,26,82,.22)">
     <div style="color:#d3403c;font-weight:800;font-size:12px;letter-spacing:.14em">INDIVIDUALS · أفراد</div>
-    <h2 style="color:#06133a;font-size:22px;font-weight:800;margin:6px 0 4px">تحويل شخصي — أفراد</h2>
-    <p style="color:#3c4c74;font-size:13.5px;margin-bottom:16px">موريتانيا ⇄ أنغولا ⇄ الخليج — الرد عبر واتساب فورًا</p>
+    <h2 style="color:#071E4F;font-size:22px;font-weight:800;margin:6px 0 4px">تحويل شخصي — أفراد</h2>
+    <p style="color:#486581;font-size:13.5px;margin-bottom:16px">موريتانيا ⇄ أنغولا ⇄ الخليج — الرد عبر واتساب فورًا</p>
     <div style="display:grid;gap:12px">
-      <div><label style="display:block;font-size:12.5px;font-weight:700;color:#3c4c74;margin-bottom:5px">الاسم الكامل</label>
-        <input id="ind-name" style="width:100%;border:1.5px solid #bccbe6;border-radius:12px;padding:12px 13px;font-size:15px;color:#06133a" placeholder="محمد ولد أحمد"></div>
-      <div><label style="display:block;font-size:12.5px;font-weight:700;color:#3c4c74;margin-bottom:5px">رقم الواتساب</label>
-        <input id="ind-phone" inputmode="tel" style="width:100%;border:1.5px solid #bccbe6;border-radius:12px;padding:12px 13px;font-size:15px;color:#06133a" placeholder="36295050"></div>
+      <div><label style="display:block;font-size:12.5px;font-weight:700;color:#486581;margin-bottom:5px">الاسم الكامل</label>
+        <input id="ind-name" style="width:100%;border:1.5px solid #D5E5F8;border-radius:12px;padding:12px 13px;font-size:15px;color:#071E4F" placeholder="محمد ولد أحمد"></div>
+      <div><label style="display:block;font-size:12.5px;font-weight:700;color:#486581;margin-bottom:5px">رقم الواتساب</label>
+        <input id="ind-phone" inputmode="tel" style="width:100%;border:1.5px solid #D5E5F8;border-radius:12px;padding:12px 13px;font-size:15px;color:#071E4F" placeholder="36295050"></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-        <div><label style="display:block;font-size:12.5px;font-weight:700;color:#3c4c74;margin-bottom:5px">يرسل</label>
-          <select id="ind-from" style="width:100%;border:1.5px solid #bccbe6;border-radius:12px;padding:12px;font-size:15px;color:#06133a;background:#fff">
+        <div><label style="display:block;font-size:12.5px;font-weight:700;color:#486581;margin-bottom:5px">يرسل</label>
+          <select id="ind-from" style="width:100%;border:1.5px solid #D5E5F8;border-radius:12px;padding:12px;font-size:15px;color:#071E4F;background:#fff">
             <option>MRU</option><option>AOA</option><option>USDT</option><option>EUR</option><option>AED</option><option>CNY</option></select></div>
-        <div><label style="display:block;font-size:12.5px;font-weight:700;color:#3c4c74;margin-bottom:5px">يستلم المستفيد</label>
-          <select id="ind-to" style="width:100%;border:1.5px solid #bccbe6;border-radius:12px;padding:12px;font-size:15px;color:#06133a;background:#fff">
+        <div><label style="display:block;font-size:12.5px;font-weight:700;color:#486581;margin-bottom:5px">يستلم المستفيد</label>
+          <select id="ind-to" style="width:100%;border:1.5px solid #D5E5F8;border-radius:12px;padding:12px;font-size:15px;color:#071E4F;background:#fff">
             <option>AOA</option><option>MRU</option><option>USDT</option><option>EUR</option><option>AED</option><option>CNY</option></select></div>
       </div>
-      <div><label style="display:block;font-size:12.5px;font-weight:700;color:#3c4c74;margin-bottom:5px">المبلغ</label>
-        <input id="ind-amt" inputmode="decimal" style="width:100%;border:1.5px solid #bccbe6;border-radius:12px;padding:12px 13px;font-size:17px;font-family:ui-monospace;color:#06133a" placeholder="مثال: 50,000"></div>
-      <button id="ind-send" style="border:0;border-radius:14px;padding:14px;font-weight:800;font-size:15.5px;color:#fff;cursor:pointer;background:linear-gradient(120deg,#002776,#0d3aa0 55%,#3498db);box-shadow:0 12px 28px -12px rgba(0,39,118,.55)">إرسال الطلب عبر واتساب</button>
+      <div><label style="display:block;font-size:12.5px;font-weight:700;color:#486581;margin-bottom:5px">المبلغ</label>
+        <input id="ind-amt" inputmode="decimal" style="width:100%;border:1.5px solid #D5E5F8;border-radius:12px;padding:12px 13px;font-size:17px;font-family:ui-monospace;color:#071E4F" placeholder="مثال: 50,000"></div>
+      <button id="ind-send" style="border:0;border-radius:14px;padding:14px;font-weight:800;font-size:15.5px;color:#fff;cursor:pointer;background:linear-gradient(120deg,#003B8F,#0056D6 55%,#00A2FF);box-shadow:0 12px 28px -12px rgba(0,39,118,.55)">إرسال الطلب عبر واتساب</button>
     </div>
   </div>
 </section>
