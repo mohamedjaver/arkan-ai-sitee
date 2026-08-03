@@ -20,7 +20,7 @@ h1 span{color:var(--acc2)}
 .sub{text-align:center;color:var(--dim);font-size:13px;letter-spacing:2px;margin:6px 0 6px;font-family:'IBM Plex Mono'}
 .sub-ar{text-align:center;color:var(--dim);font-size:14px;font-family:'Cairo';margin-bottom:26px}
 .badges{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:26px}
-.badge{padding:7px 14px;border-radius:20px;background:rgba(139,114,255,.12);border:1px solid rgba(139,114,255,.3);font-size:11.5px;color:var(--acc2);font-weight:600}
+.badge{padding:7px 14px;border-radius:20px;background:rgba(0,153,255,.12);border:1px solid rgba(0,153,255,.3);font-size:11.5px;color:var(--acc2);font-weight:600}
 .card{background:rgba(255,255,255,.045);border:1px solid var(--stroke);border-radius:24px;padding:24px 20px;backdrop-filter:blur(14px)}
 .card h2{font-size:16px;margin-bottom:4px}
 .card .h2ar{font-family:'Cairo';color:var(--dim);font-size:13px;margin-bottom:18px}
@@ -40,14 +40,16 @@ input:focus,select:focus,textarea:focus{border-color:var(--acc)}
   border:1px solid rgba(232,194,74,.3);font-size:14px;font-weight:800;color:var(--gold);
   font-family:'IBM Plex Mono';text-align:center;letter-spacing:.2px}
 .est small{display:block;font-family:'Cairo';font-size:11px;color:var(--dim);font-weight:600;margin-top:3px;letter-spacing:0}
-.go{width:100%;margin-top:22px;padding:17px;border:none;border-radius:16px;font-size:16.5px;font-weight:800;
-  background:linear-gradient(135deg,#25D366,#128C7E);color:#fff;cursor:pointer;font-family:'Cairo','Tajawal';
-  box-shadow:0 12px 30px rgba(37,211,102,.3)}
+.go{width:100%;margin-top:22px;padding:17px;border:none;border-radius:999px;font-size:16.5px;font-weight:800;
+  background:linear-gradient(135deg,#0D47B5 0%,#2F8FE8 55%,#4FB2F8 100%);color:#fff;cursor:pointer;font-family:'Cairo','Tajawal';
+  box-shadow:0 12px 30px rgba(13,71,181,.35);transition:filter .2s,transform .15s}
+.go:hover{filter:brightness(1.07)}
+.go:active{transform:scale(.98)}
 .note{margin-top:14px;font-size:11.5px;color:var(--dim);line-height:1.8;text-align:center}
 .steps{margin-top:26px}
 .step{display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-bottom:1px solid rgba(255,255,255,.05)}
 .step:last-child{border:none}
-.step .n{width:28px;height:28px;flex-shrink:0;border-radius:9px;background:rgba(139,114,255,.15);color:var(--acc2);
+.step .n{width:28px;height:28px;flex-shrink:0;border-radius:9px;background:rgba(0,153,255,.15);color:var(--acc2);
   display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;font-family:'IBM Plex Mono'}
 .step .t{font-size:13.5px;line-height:1.6}
 .step .t small{color:var(--dim);display:block;font-family:'Cairo'}
@@ -137,8 +139,8 @@ html.pt-enter body{animation:ptIn .38s cubic-bezier(.22,1,.36,1)}
 
 <div class="wrap">
   <a href="./" style="display:flex;align-items:center;justify-content:center;gap:11px;margin-bottom:20px;text-decoration:none">
-    <svg width="36" height="36" viewBox="0 0 512 512" style="border-radius:10px;box-shadow:0 6px 20px rgba(124,92,255,.45);flex-shrink:0" aria-label="ARKAN"><defs><radialGradient id="rqbg" cx="0.5" cy="0.42" r="0.75"><stop offset="0" stop-color="#141A45"/><stop offset="1" stop-color="#080B22"/></radialGradient><linearGradient id="rqmk" x1="0" y1="0.2" x2="1" y2="0.8"><stop offset="0" stop-color="#00A2FF"/><stop offset="0.42" stop-color="#0056D6"/><stop offset="0.72" stop-color="#2F7BF6"/><stop offset="1" stop-color="#4FB2F8"/></linearGradient><linearGradient id="rqsf" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#0058D9"/><stop offset="1" stop-color="#3E8DF7"/></linearGradient></defs><rect width="512" height="512" rx="96" fill="url(#rqbg)"/><path fill="url(#rqmk)" d="M256 84 L394 428 L338 428 L256 222 L174 428 L118 428 Z"/><path d="M256 84 L124 424 L118 428 L252 88 Z" fill="#E2F0FF" opacity="0.55"/><path d="M256 84 L390 424 L394 428 L260 88 Z" fill="#BFE3FF" opacity="0.45"/><path fill="url(#rqmk)" d="M78 384 Q 256 258 434 350 Q 300 306 174 352 Q 118 372 78 384 Z"/><path fill="url(#rqsf)" opacity="0.85" d="M112 414 Q 244 344 342 366 Q 240 372 148 406 Q 126 412 112 414 Z"/></svg>
-    <span style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:15px;letter-spacing:.02em;direction:ltr;color:#F0F7FF"><b>ARKAN</b> <span style="color:#0058D9">SETTLEMENTS</span></span>
+    <svg width="38" height="38" viewBox="0 0 64 64" fill="none" style="flex-shrink:0;filter:drop-shadow(0 6px 16px rgba(0,153,255,.35))" aria-label="ARKAN"><defs><linearGradient id="rql" x1="8" y1="56" x2="56" y2="8"><stop offset="0" stop-color="#0058D9"/><stop offset="1" stop-color="#00B5FF"/></linearGradient></defs><rect x="2" y="2" width="60" height="60" rx="16" fill="#071D49"/><rect x="2" y="2" width="60" height="60" rx="16" stroke="url(#rql)" stroke-width="2.5"/><path d="M14 46 L32 14 L50 46" stroke="url(#rql)" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M20 40 C26 30, 38 30, 44 40" stroke="#EAF5FF" stroke-width="3.5" stroke-linecap="round" fill="none"/><circle cx="20" cy="40" r="3.4" fill="#00B5FF"/><circle cx="44" cy="40" r="3.4" fill="#00B5FF"/></svg>
+    <span style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:15px;letter-spacing:.02em;direction:ltr;color:#071E4F"><b>ARKAN</b> <span style="color:#0058D9">SETTLEMENTS</span></span>
   </a>
   
   <h1>تحويلات الشركات الدولية</h1>
@@ -155,7 +157,7 @@ html.pt-enter body{animation:ptIn .38s cubic-bezier(.22,1,.36,1)}
     <h2>Solicitar cotação — Pagamento internacional</h2>
     <div class="h2ar">اطلب عرض سعر — الرد عبر واتساب فورًا</div>
 
-    <div id="invDrop" onclick="uploadInvoice()" style="border:2px dashed rgba(139,114,255,.4);border-radius:16px;padding:20px;text-align:center;cursor:pointer;margin-bottom:18px;background:rgba(139,114,255,.05);transition:.2s">
+    <div id="invDrop" onclick="uploadInvoice()" style="border:2px dashed rgba(0,153,255,.45);border-radius:16px;padding:20px;text-align:center;cursor:pointer;margin-bottom:18px;background:rgba(0,153,255,.05);transition:.2s">
       <div style="font-size:15px;font-weight:700;color:#0058D9" id="invDropTxt">Carregar fatura · ارفع الفاتورة (صورة / PDF)</div>
       <div style="font-size:12px;color:#7A93AD;margin-top:5px" id="invDropSub">Leitura automática do montante e da empresa · قراءة تلقائية للمبلغ واسم الشركة</div>
       <div id="invResult" style="margin-top:8px"></div>
@@ -273,6 +275,7 @@ Finalidade: ${purp}
 Contacto: ${who||'—'}
 ———————————
 Solicito cotação para pagamento internacional.`;
+  showProcessing(amt, ccy);
   try{
     if(!window.ARKAN){ alert('ARKAN core لم يُحمّل'); }
     else { await ARKAN.ready;
@@ -283,7 +286,7 @@ Solicito cotação para pagamento internacional.`;
       }
     }
   }catch(e){ alert('تعذّر تسجيل الطلب: '+(e.code||e.message)); }
-  showSuccess(amt, ccy, ref, 'https://wa.me/22236295050?text='+encodeURIComponent(msg));
+  okToSuccess(ref, 'https://wa.me/22236295050?text='+encodeURIComponent(msg));
 }
 </script>
 <script src="integrations.js"></script>
@@ -549,6 +552,7 @@ async function uploadInvoice(){
     var amt=(document.getElementById('ind-amt').value||'').trim();
     if(name.length<3||phone.length<7||!amt){ alert('أكمل الاسم والهاتف والمبلغ'); return; }
     var ref='IN'+Date.now().toString(36).toUpperCase().slice(-6);
+    showProcessing(amt, from);
     try{ if(window.ARKAN){ await ARKAN.ready; if(ARKAN.firebaseOK){
       var fb=ARKAN.fb;
       await fb.addDoc(fb.collection(ARKAN.db,'payment_requests'),
@@ -557,7 +561,7 @@ async function uploadInvoice(){
       if(ARKAN.toast)ARKAN.toast('تم تسجيل الطلب ✓ '+ref);
     }}}catch(e){ console.warn(e); }
     var msg='طلب تحويل فردي — '+ref+'%0A'+'الاسم: '+encodeURIComponent(name)+'%0A'+'الهاتف: '+phone+'%0A'+'يرسل: '+encodeURIComponent(amt)+' '+from+'%0A'+'يستلم: '+to;
-    showSuccess(amt, from, ref, 'https://wa.me/22236295050?text='+msg);
+    okToSuccess(ref, 'https://wa.me/22236295050?text='+msg);
   });
 })();
 </script>
@@ -566,6 +570,9 @@ async function uploadInvoice(){
 #okWrap{display:none;position:fixed;inset:0;z-index:9999;align-items:center;justify-content:center;
   background:linear-gradient(180deg,#F3F9FF 0%,#EAF4FF 50%,#D8EBFF 100%);padding:24px}
 #okWrap.on{display:flex}
+.okSpin{width:170px;height:170px;border-radius:50%;border:10px solid #DCEBFC;border-top-color:#2F8FE8;border-inline-end-color:#4FB2F8;
+  animation:okSp .9s linear infinite;box-sizing:border-box}
+@keyframes okSp{to{transform:rotate(360deg)}}
 .okBox{text-align:center;max-width:380px;width:100%;animation:okIn .5s cubic-bezier(.2,.9,.3,1.15) both}
 @keyframes okIn{from{opacity:0;transform:scale(.9) translateY(20px)}to{opacity:1;transform:none}}
 .okRing{width:170px;height:170px;margin:0 auto 26px;position:relative;filter:drop-shadow(0 24px 50px rgba(13,71,181,.35))}
@@ -589,20 +596,13 @@ async function uploadInvoice(){
 .okBtns button{flex:1;border:0;cursor:pointer;border-radius:999px;padding:15px;font-weight:800;font-size:14.5px;
   font-family:inherit;transition:transform .15s}
 .okBtns button:active{transform:scale(.96)}
-.okWa{background:linear-gradient(135deg,#1FBF64,#25D366);color:#fff;box-shadow:0 12px 26px rgba(37,211,102,.35)}
+.okWa{background:linear-gradient(135deg,#0D47B5 0%,#2F8FE8 55%,#4FB2F8 100%);color:#fff;box-shadow:0 12px 26px rgba(13,71,181,.4)}
 .okClose{background:#fff;color:#003B8F;border:1.5px solid #D5E5F8!important}
 </style>
 <div id="okWrap">
   <div class="okBox">
     <div class="okRing">
-      <svg viewBox="0 0 170 170">
-        <defs><linearGradient id="okg" x1="0" y1="170" x2="170" y2="0">
-          <stop offset="0" stop-color="#0D47B5"/><stop offset=".55" stop-color="#2F8FE8"/><stop offset="1" stop-color="#4FB2F8"/>
-        </linearGradient></defs>
-        <circle class="bg" cx="85" cy="85" r="64" opacity="0"><animate attributeName="opacity" from="0" to="1" begin="0.9s" dur="0.3s" fill="freeze"/></circle>
-        <circle class="c" cx="85" cy="85" r="75"/>
-        <path class="t" d="M55 88 L77 110 L118 66"/>
-      </svg>
+      <div class="okSpin"></div>
     </div>
     <div class="okAmt" id="okAmt">0</div>
     <div class="okTitle">تم استلام طلب التحويل ✓</div>
@@ -615,6 +615,43 @@ async function uploadInvoice(){
   </div>
 </div>
 <script>
+var OK_CHECK_SVG=`<svg viewBox="0 0 170 170">
+        <defs><linearGradient id="okg" x1="0" y1="170" x2="170" y2="0">
+          <stop offset="0" stop-color="#0D47B5"/><stop offset=".55" stop-color="#2F8FE8"/><stop offset="1" stop-color="#4FB2F8"/>
+        </linearGradient></defs>
+        <circle class="bg" cx="85" cy="85" r="64" opacity="0"><animate attributeName="opacity" from="0" to="1" begin="0.9s" dur="0.3s" fill="freeze"/></circle>
+        <circle class="c" cx="85" cy="85" r="75"/>
+        <path class="t" d="M55 88 L77 110 L118 66"/>
+      </svg>`;
+function showProcessing(amount,currency){
+  var el=document.getElementById('okWrap');
+  var ring=el.querySelector('.okRing');
+  ring.innerHTML='<div class="okSpin"></div>';
+  document.getElementById('okRef').style.display='none';
+  el.querySelector('.okBtns').style.display='none';
+  el.querySelector('.okTitle').textContent='جارٍ تسجيل طلبك…';
+  el.querySelector('.okSub').innerHTML='ثوانٍ ويصلك التأكيد';
+  var amtEl=document.getElementById('okAmt');
+  el.classList.add('on');
+  var target=parseFloat(String(amount).replace(/[^\d.]/g,''))||0,st=null;
+  function step(t){if(!st)st=t;var k=Math.min(1,(t-st)/800);
+    amtEl.innerHTML=Math.round(target*(1-Math.pow(1-k,3))).toLocaleString('en-US')+' <small>'+(currency||'')+'</small>';
+    if(k<1)requestAnimationFrame(step);}
+  requestAnimationFrame(step);
+  if(navigator.vibrate)navigator.vibrate(10);
+}
+function okToSuccess(ref,waUrl){
+  var el=document.getElementById('okWrap');
+  el.querySelector('.okRing').innerHTML=OK_CHECK_SVG;   /* إعادة الحقن تعيد تشغيل رسم الدائرة والعلامة */
+  el.querySelector('.okTitle').textContent='تم استلام طلب التحويل ✓';
+  el.querySelector('.okSub').innerHTML='فريق أركان سيؤكد معك عبر واتساب خلال دقائق<br>احتفظ برقم المرجع';
+  var refEl=document.getElementById('okRef');refEl.textContent=ref||'—';refEl.style.display='inline-block';
+  el.querySelector('.okBtns').style.display='flex';
+  var wa=document.getElementById('okWaBtn');
+  wa.onclick=function(){window.open(waUrl,'_blank');};
+  setTimeout(function(){window.open(waUrl,'_blank');},2200);
+  if(navigator.vibrate)navigator.vibrate([12,40,12]);
+}
 function showSuccess(amount,currency,ref,waUrl){
   var el=document.getElementById('okWrap');
   var amtEl=document.getElementById('okAmt');
