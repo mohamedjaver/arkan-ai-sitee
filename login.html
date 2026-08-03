@@ -210,7 +210,7 @@ $('bR').onclick=async()=>{
       await setDoc(ref,{name,phone,pin,ref:ARKAN.makeRef(),balance:0,role:'client',status:'pending',createdAt:serverTimestamp()});
     }
     $('pinval').textContent=pin; $('pinbox').style.display='block';
-    ARKAN.saveSession(phone,pin);
+    ARKAN.saveSession(phone,pin,name);
     msg(T.ok_created,1);
     setTimeout(()=>location.replace(next),2600);
   }catch(e){ msg(T.e_create); $('bR').textContent=T.bR; }
