@@ -4898,7 +4898,59 @@ function flagEmoji(c){return {AOA:'🇦🇴',MRU:'🇲🇷',CNY:'🇨🇳',AED:'
 
 /* نشر للرابط الثابت — يحدّث ملف JSON على GitHub، الرابط يبقى ثابتًا */
 const GH_OWNER='mohamedjaver',GH_REPO='arkan-ai-sitee',GH_FILE='rates-data.json';
+const FS_PROJECT='arkan-rates-prod';
+const FS_KEY='AIzaSyCtL-OySTK9FeyD0h-31BiupYFtGBxbJ_U';
+const FS_DOC='https://firestore.googleapis.com/v1/projects/'+FS_PROJECT+'/databases/(default)/documents/public/rates';
+/* نشر بلا رمز: Firestore مباشرة */
+async function publishFirestore(valid,wa){
+  const payload={fields:{
+    json:{stringValue:JSON.stringify({r:valid,wa,ts:Date.now(),date:new Date().toLocaleDateString('en-GB')})},
+    ts:{integerValue:String(Date.now())},
+    date:{stringValue:new Date().toLocaleDateString('en-GB')}
+  }};
+  const r=await fetch(FS_DOC+'?key='+FS_KEY,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+  if(!r.ok){ let m='';try{const e=await r.json();m=(e.error&&e.error.message)||('HTTP '+r.status);}catch(x){m='HTTP '+r.status;}
+    throw new Error(m); }
+  return true;
+}
 async function publishStatic(){
+  const valid0=pubRows.filter(x=>x.ccy&&(x.w>0||x.m>0||x.r>0));
+  if(!valid0.length){toast('سعّر عملة أولًا');return;}
+  const wa0=($('pubWa')?$('pubWa').value:'22236295050').replace(/[^0-9]/g,'')||'22236295050';
+  toast('🚀 جارٍ النشر للموقع...');
+  try{
+    await publishFirestore(valid0,wa0);
+    $('pubLink').innerHTML=`<div class="card" style="background:rgba(0,200,83,.10);margin-top:12px;border:1px solid rgba(0,200,83,.3)">
+      <div style="font-size:13.5px;color:#0A7A3D;font-weight:800;margin-bottom:6px">✅ نُشرت الأسعار — arkanrates.com يعرضها الآن</div>
+      <div style="font-size:12px;color:var(--dim);line-height:1.8">العميل يرى تلقائيًا سعر الجملة إن كان مبلغه كبيرًا، والتجزئة إن كان صغيرًا. بلا روابط ولا رموز.</div>
+    </div>`;
+    toast('✅ نُشرت — الموقع محدّث');
+    return;
+  }catch(e){
+    if(/permission|PERMISSION_DENIED|Missing or insufficient/i.test(e.message)){
+      $('pubLink').innerHTML=`<div class="card" style="background:rgba(255,179,0,.10);margin-top:12px;border:1px solid rgba(255,179,0,.35)">
+        <div style="font-size:13px;color:#8A5F00;font-weight:800;margin-bottom:6px">⚠ فعّل النشر السحابي مرة واحدة</div>
+        <div style="font-size:12px;color:var(--dim);line-height:1.9">افتح Firebase Console ← Firestore ← Rules، والصق هذا ثم Publish:</div>
+        <pre style="font-size:10.5px;direction:ltr;text-align:left;background:#0B1E42;color:#BFE4FF;padding:10px;border-radius:10px;overflow:auto;margin-top:8px">rules_version = '2';
+service cloud.firestore {
+  match /databases/{db}/documents {
+    match /public/rates {
+      allow read: if true;
+      allow write: if true;
+    }
+    match /{document=**} { allow read, write: if false; }
+  }
+}</pre>
+        <div style="font-size:11.5px;color:var(--dim);margin-top:6px">بعدها اضغط «نشر مباشر للموقع» ولن يُطلب أي رمز أبدًا.</div>
+      </div>`;
+      toast('فعّل قاعدة Firestore مرة واحدة (الشرح بالأعلى)');
+      return;
+    }
+    toast('تعذّر النشر السحابي — جارٍ المسار البديل');
+    return publishViaGitHub();
+  }
+}
+async function publishViaGitHub(){
   const valid=pubRows.filter(x=>x.ccy&&(x.w>0||x.m>0||x.r>0));
   if(!valid.length){toast('سعّر عملة أولًا');return;}
   let token=localStorage.getItem('arkan-ghtoken');
