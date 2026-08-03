@@ -659,11 +659,11 @@ async function uploadInvoice(){
 .okRef{display:inline-block;margin-top:12px;font-family:'IBM Plex Mono';font-size:13px;font-weight:600;
   color:#003B8F;background:#fff;border:1.5px solid #D5E5F8;border-radius:999px;padding:8px 18px;
   direction:ltr;animation:okIn .5s .95s both}
-.okBtns{display:flex;flex-wrap:wrap;gap:10px;margin-top:26px;animation:okIn .5s 1.05s both}
+.okBtns{display:flex;flex-direction:column;gap:10px;margin-top:26px;max-width:340px;margin-inline:auto;animation:okIn .5s 1.05s both}
 .okBtns button{flex:1;border:0;cursor:pointer;border-radius:999px;padding:15px;font-weight:800;font-size:14.5px;
   font-family:inherit;transition:transform .15s}
 .okBtns button:active{transform:scale(.96)}
-.okWa{background:linear-gradient(135deg,#0D47B5 0%,#2F8FE8 55%,#4FB2F8 100%);color:#fff;box-shadow:0 12px 26px rgba(13,71,181,.4)}
+.okWa{background:linear-gradient(135deg,#0D47B5 0%,#2F8FE8 55%,#4FB2F8 100%);color:#fff;box-shadow:0 14px 30px rgba(13,71,181,.45);font-size:15.5px;padding:17px}
 .okClose{background:#fff;color:#003B8F;border:1.5px solid #D5E5F8!important}
 .okShare{background:#EDF6FF;color:#003B8F;border:1.5px solid #BFD9F7!important}
 </style>
@@ -678,8 +678,7 @@ async function uploadInvoice(){
     <span class="okRef" id="okRef">—</span>
     <div class="okBtns">
       <button class="okWa" id="okSendBtn">📤 إرسال الإيصال عبر واتساب</button>
-      <button class="okClose" onclick="document.getElementById('okWrap').classList.remove('on')">إغلاق</button>
-      <button class="okClose" onclick="document.getElementById('okWrap').classList.remove('on')">إغلاق</button>
+      <button class="okClose" id="okCloseBtn" onclick="document.getElementById('okWrap').classList.remove('on')">إغلاق</button>
     </div>
   </div>
 </div>
@@ -697,8 +696,25 @@ var OK_CHECK_SVG=`<svg viewBox="0 0 170 170">
 
 
 
+const RCPT_I18N={
+  ar:{title:'إيصال طلب تحويل',rate:'سعر الصرف: ',sender:'المُرسِل',sphone:'هاتف المُرسِل',benef:'المستفيد',
+      iban:'رقم الحساب / IBAN',bank:'البنك',rccy:'العملة المستلمة',ref:'المرجع',dt:'التاريخ والوقت',
+      pending:'● قيد التنفيذ — سيؤكَّد عبر واتساب',foot:'إيصال طلب — ليس إثبات دفع نهائي',dir:'rtl'},
+  fr:{title:'Reçu de demande de transfert',rate:'Taux: ',sender:'Expéditeur',sphone:'Téléphone',benef:'Bénéficiaire',
+      iban:'Compte / IBAN',bank:'Banque',rccy:'Devise reçue',ref:'Référence',dt:'Date et heure',
+      pending:'● En cours — confirmation via WhatsApp',foot:'Reçu de demande — pas une preuve de paiement',dir:'ltr'},
+  pt:{title:'Recibo de pedido de transferência',rate:'Taxa: ',sender:'Remetente',sphone:'Telefone',benef:'Beneficiário',
+      iban:'Conta / IBAN',bank:'Banco',rccy:'Moeda recebida',ref:'Referência',dt:'Data e hora',
+      pending:'● Em processamento — confirmação via WhatsApp',foot:'Recibo de pedido — não é comprovativo de pagamento',dir:'ltr'},
+  en:{title:'Transfer Request Receipt',rate:'Rate: ',sender:'Sender',sphone:'Sender phone',benef:'Beneficiary',
+      iban:'Bank account / IBAN',bank:'Bank',rccy:'Receiving currency',ref:'Reference',dt:'Date & time',
+      pending:'● Pending — confirmation via WhatsApp',foot:'Request receipt — not a final payment proof',dir:'ltr'}
+};
+function rcptLang(){ try{return localStorage.getItem('arkan_lang')||'ar';}catch(e){return 'ar';} }
 async function buildReceiptCard(){
   const d=window._pdfData||{};
+  const L=RCPT_I18N[rcptLang()]||RCPT_I18N.ar;
+  const RTL=L.dir==='rtl';
   const W=1080,H=1620,cv=document.createElement('canvas');cv.width=W;cv.height=H;
   const x=cv.getContext('2d');
   const amtN=parseFloat(String(d.amount).replace(/[^\d.]/g,''))||0;
@@ -717,7 +733,8 @@ async function buildReceiptCard(){
   x.fillStyle='#FFFFFF';x.font='800 56px "Archivo",Cairo,sans-serif';x.fillText('ARKAN',60,110);
   x.fillStyle='rgba(150,200,255,.85)';x.font='600 24px "Archivo",sans-serif';x.fillText('RATES · International Settlement',60,148);
   x.textAlign='right';
-  x.fillStyle='#7FDBFF';x.font='700 26px "Archivo",sans-serif';x.fillText('إيصال طلب تحويل',W-60,104);
+  x.textAlign=RTL?'right':'left';x.fillStyle='#7FDBFF';x.font='700 26px "Archivo",sans-serif';
+  if(RTL){ x.fillText(L.title,W-60,104); } else { x.font='600 22px "Archivo",sans-serif'; x.fillText(L.title,W-60,104); x.textAlign='right'; }
   x.fillStyle='rgba(191,227,255,.7)';x.font='600 22px "IBM Plex Mono",monospace';x.fillText(d.date||'',W-60,142);
   x.strokeStyle='rgba(0,181,255,.5)';x.lineWidth=3;x.beginPath();x.moveTo(60,178);x.lineTo(W-60,178);x.stroke();
   /* دائرة النجاح */
@@ -735,38 +752,37 @@ async function buildReceiptCard(){
   x.fillStyle='#7FDBFF';x.font='700 46px "Archivo",sans-serif';
   x.fillText((d.from||'')+'  →  '+(d.to||''),W/2,662);
   /* سعر الصرف */
-  if(d.rate){ x.fillStyle='rgba(191,227,255,.75)';x.font='600 30px "IBM Plex Mono",monospace';
-    x.fillText('سعر الصرف: '+d.rate,W/2,716); }
+  if(d.rate){ x.textAlign='center';x.fillStyle='rgba(191,227,255,.75)';x.font='600 30px "IBM Plex Mono",monospace';
+    x.fillText(L.rate+d.rate,W/2,716); }
   /* جدول التفاصيل */
-  let ry=800; const rowH=92, lx=W-90, vx=90;
+  let ry=800; const rowH=92; const labX=RTL?W-90:90, valX=RTL?90:W-90;
   function row(label,val){
     x.fillStyle='rgba(255,255,255,.045)';
     if(((ry-800)/rowH)%2===0){x.beginPath();x.roundRect(60,ry-46,W-120,rowH-8,14);x.fill();}
-    x.textAlign='right';x.fillStyle='rgba(191,227,255,.7)';x.font='600 27px Cairo,sans-serif';
-    x.fillText(label,lx,ry);
-    x.textAlign='left';x.fillStyle='#FFFFFF';x.font='700 30px Cairo,sans-serif';
-    /* قص القيم الطويلة */
+    x.textAlign=RTL?'right':'left';x.fillStyle='rgba(191,227,255,.7)';x.font='600 27px Cairo,sans-serif';
+    x.fillText(label,labX,ry);
+    x.textAlign=RTL?'left':'right';x.fillStyle='#FFFFFF';x.font='700 30px Cairo,sans-serif';
     let v=String(val||'—'); if(v.length>28)v=v.slice(0,27)+'…';
-    x.fillText(v,vx,ry);
+    x.fillText(v,valX,ry);
     ry+=rowH;
   }
-  row('المُرسِل', d.sender);
-  row('هاتف المُرسِل', d.senderPhone);
-  row('المستفيد', d.bname);
-  row('رقم الحساب / IBAN', d.iban);
-  if(d.bank) row('البنك', d.bank);
-  row('العملة المستلمة', d.to);
-  row('المرجع', d.ref);
-  row('التاريخ والوقت', d.date);
+  row(L.sender, d.sender);
+  row(L.sphone, d.senderPhone);
+  row(L.benef, d.bname);
+  row(L.iban, d.iban);
+  if(d.bank) row(L.bank, d.bank);
+  row(L.rccy, d.to);
+  row(L.ref, d.ref);
+  row(L.dt, d.date);
   /* شارة الحالة */
   ry+=10;
   x.fillStyle='rgba(255,193,7,.14)';x.beginPath();x.roundRect(60,ry-40,W-120,80,16);x.fill();
   x.strokeStyle='rgba(255,193,7,.4)';x.lineWidth=2;x.stroke();
-  x.textAlign='right';x.fillStyle='#FFD966';x.font='700 28px Cairo,sans-serif';
-  x.fillText('● قيد التنفيذ — سيؤكَّد عبر واتساب', W-90, ry+8);
+  x.textAlign=RTL?'right':'left';x.fillStyle='#FFD966';x.font='700 28px Cairo,sans-serif';
+  x.fillText(L.pending, RTL?W-90:90, ry+8);
   /* تذييل */
   x.textAlign='center';x.fillStyle='rgba(191,227,255,.6)';x.font='600 24px Cairo,sans-serif';
-  x.fillText('إيصال طلب — ليس إثبات دفع نهائي', W/2, H-96);
+  x.fillText(L.foot, W/2, H-96);
   x.fillStyle='rgba(255,255,255,.45)';x.font='600 24px "IBM Plex Mono",monospace';
   x.fillText('arkanrates.com  ·  +222 36 29 50 50', W/2, H-52);
   return await new Promise(res=>cv.toBlob(res,'image/png',0.95));
