@@ -296,7 +296,7 @@ Solicito cotação para pagamento internacional.`;
       }
     }
   }catch(e){ alert('تعذّر تسجيل الطلب: '+(e.code||e.message)); }
-  okToSuccess(ref, 'https://wa.me/22236295050?text='+encodeURIComponent(msg));
+  okToSuccess(ref, 'https://wa.me/22236295050?text='+encodeURIComponent(msg), amt, ccy);
 }
 </script>
 <script src="integrations.js"></script>
@@ -571,7 +571,7 @@ async function uploadInvoice(){
       if(ARKAN.toast)ARKAN.toast('تم تسجيل الطلب ✓ '+ref);
     }}}catch(e){ console.warn(e); }
     var msg='طلب تحويل فردي — '+ref+'%0A'+'الاسم: '+encodeURIComponent(name)+'%0A'+'الهاتف: '+phone+'%0A'+'يرسل: '+encodeURIComponent(amt)+' '+from+'%0A'+'يستلم: '+to;
-    okToSuccess(ref, 'https://wa.me/22236295050?text='+msg);
+    okToSuccess(ref, 'https://wa.me/22236295050?text='+msg, amt, from);
   });
 })();
 </script>
@@ -602,12 +602,13 @@ async function uploadInvoice(){
 .okRef{display:inline-block;margin-top:12px;font-family:'IBM Plex Mono';font-size:13px;font-weight:600;
   color:#003B8F;background:#fff;border:1.5px solid #D5E5F8;border-radius:999px;padding:8px 18px;
   direction:ltr;animation:okIn .5s .95s both}
-.okBtns{display:flex;gap:10px;margin-top:26px;animation:okIn .5s 1.05s both}
+.okBtns{display:flex;flex-wrap:wrap;gap:10px;margin-top:26px;animation:okIn .5s 1.05s both}
 .okBtns button{flex:1;border:0;cursor:pointer;border-radius:999px;padding:15px;font-weight:800;font-size:14.5px;
   font-family:inherit;transition:transform .15s}
 .okBtns button:active{transform:scale(.96)}
 .okWa{background:linear-gradient(135deg,#0D47B5 0%,#2F8FE8 55%,#4FB2F8 100%);color:#fff;box-shadow:0 12px 26px rgba(13,71,181,.4)}
 .okClose{background:#fff;color:#003B8F;border:1.5px solid #D5E5F8!important}
+.okShare{background:#EDF6FF;color:#003B8F;border:1.5px solid #BFD9F7!important}
 </style>
 <div id="okWrap">
   <div class="okBox">
@@ -620,6 +621,7 @@ async function uploadInvoice(){
     <span class="okRef" id="okRef">—</span>
     <div class="okBtns">
       <button class="okWa" id="okWaBtn">متابعة عبر واتساب</button>
+      <button class="okShare" id="okShareBtn">📤 إرسال البطاقة</button>
       <button class="okClose" onclick="document.getElementById('okWrap').classList.remove('on')">إغلاق</button>
     </div>
   </div>
@@ -633,6 +635,73 @@ var OK_CHECK_SVG=`<svg viewBox="0 0 170 170">
         <circle class="c" cx="85" cy="85" r="75"/>
         <path class="t" d="M55 88 L77 110 L118 66"/>
       </svg>`;
+
+/* ═══ بطاقة إيصال مصوّرة: دائرة زرقاء + المبلغ — تُشارك عبر واتساب كصورة ═══ */
+async function buildReceiptCard(amount,currency,ref){
+  const W=1080,H=1350,cv=document.createElement('canvas');cv.width=W;cv.height=H;
+  const x=cv.getContext('2d');
+  /* خلفية كحلية بتوهج */
+  const bg=x.createLinearGradient(0,0,0,H);
+  bg.addColorStop(0,'#071D49');bg.addColorStop(.58,'#062165');bg.addColorStop(1,'#003B8F');
+  x.fillStyle=bg;x.fillRect(0,0,W,H);
+  const gl=x.createRadialGradient(W*.8,H*.1,0,W*.8,H*.1,W*.9);
+  gl.addColorStop(0,'rgba(0,181,255,.30)');gl.addColorStop(1,'rgba(0,181,255,0)');
+  x.fillStyle=gl;x.fillRect(0,0,W,H);
+  /* شبكة خفيفة */
+  x.strokeStyle='rgba(255,255,255,.05)';x.lineWidth=1;
+  for(let i=0;i<W;i+=64){x.beginPath();x.moveTo(i,0);x.lineTo(i,H);x.stroke();}
+  for(let j=0;j<H;j+=64){x.beginPath();x.moveTo(0,j);x.lineTo(W,j);x.stroke();}
+  /* العنوان */
+  x.textAlign='center';
+  x.fillStyle='#EAF5FF';x.font='700 40px "Archivo",Cairo,sans-serif';
+  x.fillText('ARKAN RATES',W/2,140);
+  x.fillStyle='rgba(191,227,255,.75)';x.font='600 26px Cairo,sans-serif';
+  x.fillText('طلب تحويل مستلم', W/2, 190);
+  /* الدائرة الزرقاء + علامة الصح */
+  const cx=W/2, cy=520, r=170;
+  const rg=x.createLinearGradient(cx-r,cy+r,cx+r,cy-r);
+  rg.addColorStop(0,'#0D47B5');rg.addColorStop(.55,'#2F8FE8');rg.addColorStop(1,'#4FB2F8');
+  x.save();
+  x.shadowColor='rgba(0,153,255,.55)';x.shadowBlur=70;
+  x.beginPath();x.arc(cx,cy,r,0,Math.PI*2);x.fillStyle=rg;x.fill();
+  x.restore();
+  x.strokeStyle='#fff';x.lineWidth=26;x.lineCap='round';x.lineJoin='round';
+  x.beginPath();x.moveTo(cx-72,cy+6);x.lineTo(cx-16,cy+62);x.lineTo(cx+80,cy-52);x.stroke();
+  /* المبلغ */
+  const n=parseFloat(String(amount).replace(/[^\d.]/g,''))||0;
+  x.fillStyle='#FFFFFF';x.font='700 108px "IBM Plex Mono",monospace';
+  x.fillText(n.toLocaleString('en-US'), W/2, 830);
+  x.fillStyle='#7FDBFF';x.font='700 46px "Archivo",monospace';
+  x.fillText(currency||'', W/2, 895);
+  /* المرجع */
+  x.fillStyle='rgba(255,255,255,.10)';
+  const bw=520,bh=88,bx=(W-bw)/2,by=960;
+  x.beginPath();x.roundRect(bx,by,bw,bh,44);x.fill();
+  x.strokeStyle='rgba(0,181,255,.45)';x.lineWidth=2;x.stroke();
+  x.fillStyle='#EAF5FF';x.font='600 38px "IBM Plex Mono",monospace';
+  x.fillText(ref||'—', W/2, by+58);
+  /* تذييل */
+  x.fillStyle='rgba(191,227,255,.6)';x.font='600 28px Cairo,sans-serif';
+  x.fillText('التأكيد خلال دقائق عبر واتساب', W/2, 1130);
+  x.fillStyle='rgba(255,255,255,.45)';x.font='600 26px "IBM Plex Mono",monospace';
+  x.fillText('arkanrates.com  ·  +222 36 29 50 50', W/2, 1250);
+  return await new Promise(res=>cv.toBlob(res,'image/png'));
+}
+async function shareReceipt(amount,currency,ref,waUrl){
+  try{
+    const blob=await buildReceiptCard(amount,currency,ref);
+    const file=new File([blob],'ARKAN_'+(ref||'req')+'.png',{type:'image/png'});
+    if(navigator.canShare&&navigator.canShare({files:[file]})){
+      await navigator.share({files:[file],title:'طلب تحويل ARKAN',
+        text:'طلب تحويل '+Number(String(amount).replace(/[^\d.]/g,'')).toLocaleString('en-US')+' '+(currency||'')+' — المرجع '+ref});
+    }else{
+      const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+      a.download='ARKAN_'+(ref||'req')+'.png';a.click();
+      setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+      if(waUrl)window.open(waUrl,'_blank');
+    }
+  }catch(e){ if(waUrl)window.open(waUrl,'_blank'); }
+}
 function showProcessing(amount,currency){
   var el=document.getElementById('okWrap');
   var ring=el.querySelector('.okRing');
@@ -650,7 +719,7 @@ function showProcessing(amount,currency){
   requestAnimationFrame(step);
   if(navigator.vibrate)navigator.vibrate(10);
 }
-function okToSuccess(ref,waUrl){
+function okToSuccess(ref,waUrl,amount,currency){
   var el=document.getElementById('okWrap');
   el.querySelector('.okRing').innerHTML=OK_CHECK_SVG;   /* إعادة الحقن تعيد تشغيل رسم الدائرة والعلامة */
   el.querySelector('.okTitle').textContent='تم استلام طلب التحويل ✓';
@@ -659,6 +728,8 @@ function okToSuccess(ref,waUrl){
   el.querySelector('.okBtns').style.display='flex';
   var wa=document.getElementById('okWaBtn');
   wa.onclick=function(){window.open(waUrl,'_blank');};
+  var sh=document.getElementById('okShareBtn');
+  if(sh)sh.onclick=function(){shareReceipt(amount,currency,ref,waUrl);};
   setTimeout(function(){window.open(waUrl,'_blank');},2200);
   if(navigator.vibrate)navigator.vibrate([12,40,12]);
 }
