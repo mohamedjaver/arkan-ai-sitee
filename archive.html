@@ -352,6 +352,7 @@ body.selecting #selbar{transform:translateX(-50%) translateY(0)}
   <button class="vt" data-v="stats" onclick="setView('stats')">📊 الإحصاءات</button>
   <span style="flex:1"></span>
   <button class="vt" id="upBtn" onclick="upgradeAll()" style="border-color:rgba(0,153,255,.5);color:#0056D6">✦ ترقية القراءات</button>
+  <button class="vt" onclick="exportArchive()" title="تصدير للتحليل في Claude Cowork">📤 تصدير</button>
   <button class="vt" id="selBtn" onclick="toggleSelect()">☑️ تحديد</button>
 </div>
 
@@ -960,6 +961,36 @@ function renderKPIs(){
 }
 
 /* ═══ Insights ═══ */
+/* ═══ تصدير للتحليل في Claude Cowork / Excel ═══ */
+function exportArchive(){
+  if(!CACHE.length){toast0('الأرشيف فارغ');return;}
+  const rows=CACHE.map(d=>{const p=d.parsed||{};return{
+    date:p.date||new Date(d.uploadedAt).toISOString().slice(0,10),
+    bank:p.bank||'', amount:p.amount||0, currency:p.currency||'',
+    reference:p.reference||'', beneficiary:p.beneficiary||'', sender:p.sender||'',
+    doc_type:p.doc_type||'', chain:d.chainId||'',
+    confidence:d.ocrConfidence||0,
+    status:d.verifiedByUser?'مُدقّق يدويًا':(d.needsReview?'يحتاج مراجعة':'موثّق'),
+    flags:(d.fraud?.flags||[]).map(f=>f[1]).join(' | '),
+    engine:d.verifiedByUser?'user':(d.engine||''),
+    file:d.fileName||'', uploaded:new Date(d.uploadedAt).toISOString()
+  };});
+  const stamp=new Date().toISOString().slice(0,10);
+  /* CSV بترويسة عربية + BOM ليفتح صحيحًا في Excel */
+  const H=['التاريخ','البنك','المبلغ','العملة','المرجع','المستفيد','المرسل','النوع','السلسلة','الثقة%','الحالة','التنبيهات','المحرك','الملف','وقت الرفع'];
+  const K=['date','bank','amount','currency','reference','beneficiary','sender','doc_type','chain','confidence','status','flags','engine','file','uploaded'];
+  const csvEsc=v=>{v=String(v??'');return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;};
+  const csv='\uFEFF'+H.join(',')+'\n'+rows.map(r=>K.map(k=>csvEsc(r[k])).join(',')).join('\n');
+  const dl=(content,name,type)=>{const b=new Blob([content],{type});
+    const x=document.createElement('a');x.href=URL.createObjectURL(b);x.download=name;x.click();
+    setTimeout(()=>URL.revokeObjectURL(x.href),4000);};
+  dl(csv,'ARKAN_ARCHIVE_'+stamp+'.csv','text/csv;charset=utf-8');
+  /* JSON كامل للذكاء الاصطناعي */
+  const meta={exported:new Date().toISOString(),source:'ARKAN Intelligence Archive',docs:rows.length,
+    note:'ملف تحليلي لـ Claude Cowork — كل مستند بحقوله وتنبيهاته وسلسلته'};
+  setTimeout(()=>dl(JSON.stringify({meta,receipts:rows},null,1),'ARKAN_ARCHIVE_'+stamp+'.json','application/json'),600);
+  toast0('📤 صُدّر '+rows.length+' مستند (CSV + JSON) — أسقطهما في مجلد Cowork');
+}
 async function upgradeAll(auto){
   if(!getKey()){ if(auto)return; return promptKey(); }
   const targets=CACHE.filter(d=>d.blob&&!d.verifiedByUser&&(d.engine!=='gemini'||(d.ocrConfidence||0)<90));
