@@ -121,6 +121,28 @@ html.pt-enter body{animation:ptIn .38s cubic-bezier(.22,1,.36,1)}
   .topTab.on{background:linear-gradient(135deg,#0D47B5 0%,#2F8FE8 55%,#4FB2F8 100%);color:#fff;border-color:transparent;box-shadow:0 10px 24px rgba(13,71,181,.35)}
   </style>
   <script>
+
+function applyRegisteredClient(){
+  var sess=null; try{sess=JSON.parse(localStorage.getItem('arkan_session')||'null');}catch(e){}
+  if(!sess||!sess.phone) return;
+  var nameEl=document.getElementById('ind-name'), phoneEl=document.getElementById('ind-phone');
+  if(nameEl&&sess.name) nameEl.value=sess.name;
+  if(phoneEl&&sess.phone) phoneEl.value=String(sess.phone).replace(/[^0-9]/g,'');
+  function hide(el){ if(!el)return; var box=el.closest('div'); if(box)box.style.display='none'; }
+  hide(nameEl); hide(phoneEl);
+  var host=document.getElementById('individuals');
+  if(host&&!document.getElementById('ind-logout')){
+    var grid=host.querySelector('div[style*="grid"]');
+    var w=document.createElement('div');
+    w.style.cssText='display:flex;align-items:center;gap:10px;background:#EDF6FF;border:1px solid #BFD9F7;border-radius:14px;padding:11px 14px;margin-bottom:14px';
+    w.innerHTML='<span style="font-size:20px">👋</span><div style="flex:1;font-size:13px;color:#071E4F"><b>'+(sess.name||'عميل أركان')+'</b><br><span style="color:#486581;font-size:11.5px">مسجّل · '+String(sess.phone)+' — لن تكتب بياناتك ثانية</span></div><button id="ind-logout" style="border:0;background:#fff;color:#486581;border-radius:8px;padding:6px 10px;font-size:11px;cursor:pointer">تبديل</button>';
+    if(grid&&grid.parentNode)grid.parentNode.insertBefore(w,grid);
+    var lo=document.getElementById('ind-logout');
+    if(lo)lo.onclick=function(){ localStorage.removeItem('arkan_session'); location.reload(); };
+  }
+  var btn=document.getElementById('ind-send');
+  if(btn)btn.textContent='إرسال الطلب فورًا عبر واتساب';
+}
   document.addEventListener('DOMContentLoaded',function(){
     /* المبلغ يُكتب مرة واحدة: استقبال من حاسبة الرئيسية */
     try{
@@ -129,6 +151,7 @@ html.pt-enter body{animation:ptIn .38s cubic-bezier(.22,1,.36,1)}
       if(amt&&+amt>0){var ia=document.getElementById('ind-amt');if(ia)ia.value=(+amt).toLocaleString('en-US');}
       function setSel(id,v){var el=document.getElementById(id);if(el&&v&&[...el.options].some(o=>o.value===v||o.text===v))el.value=v;}
       setSel('ind-from',from);setSel('ind-to',to);
+    applyRegisteredClient();
       var ca=document.getElementById('amt');/* حقل الشركات إن رغب */
       if(amt&&+amt>0&&ca&&!ca.value)ca.value=(+amt).toLocaleString('en-US');
     }catch(e){}
@@ -879,6 +902,7 @@ document.addEventListener('DOMContentLoaded',function(){
       for(i=0;i<el.options.length;i++){ if(new RegExp('\\b'+val+'\\b').test(el.options[i].text)){el.selectedIndex=i;return;} }
     }
     setSel('ind-from',fr); setSel('ind-to',to);
+    applyRegisteredClient();
     if(amt&&document.getElementById('ind-amt')){
       var box=document.getElementById('ind-amt');
       box.style.transition='.4s'; box.style.background='rgba(0,153,255,.10)';
@@ -888,5 +912,8 @@ document.addEventListener('DOMContentLoaded',function(){
 });
 </script>
 <script src="arkan-sense.js?v=2" defer></script>
+
+
+<script>document.addEventListener("DOMContentLoaded",function(){setTimeout(applyRegisteredClient,120);});</script>
 </body>
 </html>
