@@ -30,7 +30,37 @@
     osc.connect(g); g.connect(c.destination);
     osc.start(t0); osc.stop(t0 + dur + 0.02);
   }
-  function buzz(p) { if (navigator.vibrate) { try { navigator.vibrate(p); } catch (e) {} } }
+  /* ── محرك اهتزاز حسّي: يعمل على أندرويد (Vibration API) وعلى iPhone (حيلة switch في Safari 17.4+) ── */
+  var _iosSwitch = null, _iosLabel = null, _iosReady = false;
+  function _initIOS() {
+    if (_iosReady) return;
+    _iosReady = true;
+    try {
+      var inp = document.createElement('input');
+      inp.type = 'checkbox';
+      inp.setAttribute('switch', '');          /* عنصر WebKit الأصلي */
+      inp.id = 'ark-haptic-sw';
+      inp.style.cssText = 'position:fixed;top:-100px;left:-100px;width:1px;height:1px;opacity:0;pointer-events:none';
+      var lab = document.createElement('label');
+      lab.setAttribute('for', 'ark-haptic-sw');
+      lab.style.cssText = 'position:fixed;top:-100px;left:-100px;width:1px;height:1px;opacity:0;pointer-events:none';
+      (document.body || document.documentElement).appendChild(inp);
+      (document.body || document.documentElement).appendChild(lab);
+      _iosSwitch = inp; _iosLabel = lab;
+    } catch (e) {}
+  }
+  function _iosTick() {
+    if (!_iosLabel) _initIOS();
+    if (_iosLabel) { try { _iosLabel.click(); return true; } catch (e) {} }
+    return false;
+  }
+  function buzz(p) {
+    /* أندرويد وما يدعم Vibration API */
+    if (navigator.vibrate) { try { if (navigator.vibrate(p)) return; } catch (e) {} }
+    /* iPhone: نبضة عبر حيلة الـswitch (نبضة واحدة لكل نمط) */
+    var n = Array.isArray(p) ? Math.min(3, Math.ceil(p.length / 2)) : 1;
+    for (var i = 0; i < n; i++) setTimeout(_iosTick, i * 70);
+  }
 
   /* أزرار: اهتزاز حسّي لطيف فقط — بلا صوت (نمط Exodus) */
   var SFX = {
@@ -225,6 +255,7 @@
   }
   function boot() {
     injectCSS();
+    _initIOS();
     mountToggle();
     armWelcome();
     /* القفل يعمل فقط إن فعّله المستخدم، ومرة واحدة لكل جلسة */
