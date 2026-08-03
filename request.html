@@ -134,7 +134,7 @@ function applyRegisteredClient(){
     var grid=host.querySelector('div[style*="grid"]');
     var w=document.createElement('div');
     w.style.cssText='display:flex;align-items:center;gap:10px;background:#EDF6FF;border:1px solid #BFD9F7;border-radius:14px;padding:11px 14px;margin-bottom:14px';
-    w.innerHTML='<span style="font-size:20px">👋</span><div style="flex:1;font-size:13px;color:#071E4F"><b>'+(sess.name||'عميل أركان')+'</b><br><span style="color:#486581;font-size:11.5px">مسجّل · '+String(sess.phone)+' — لن تكتب بياناتك ثانية</span></div><button id="ind-logout" style="border:0;background:#fff;color:#486581;border-radius:8px;padding:6px 10px;font-size:11px;cursor:pointer">تبديل</button>';
+    w.innerHTML='<div style="flex:1;font-size:13px;color:#071E4F"><b>'+(sess.name||'عميل أركان')+'</b><br><span style="color:#486581;font-size:11.5px">مسجّل · '+String(sess.phone)+' — لن تكتب بياناتك ثانية</span></div><button id="ind-logout" style="border:0;background:#fff;color:#486581;border-radius:8px;padding:6px 10px;font-size:11px;cursor:pointer">تبديل</button>';
     if(grid&&grid.parentNode)grid.parentNode.insertBefore(w,grid);
     var lo=document.getElementById('ind-logout');
     if(lo)lo.onclick=function(){ localStorage.removeItem('arkan_session'); location.reload(); };
@@ -564,16 +564,16 @@ async function uploadInvoice(){
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
         <div><label style="display:block;font-size:12.5px;font-weight:700;color:#486581;margin-bottom:5px">يرسل</label>
           <select id="ind-from" style="width:100%;border:1.5px solid #D5E5F8;border-radius:12px;padding:12px;font-size:15px;color:#071E4F;background:#fff">
-            <option value="MRU">🇲🇷 MRU — أوقية</option><option value="AOA">🇦🇴 AOA — كوانزا</option><option value="USD">🇺🇸 USD — دولار</option><option value="EUR">🇪🇺 EUR — يورو</option><option value="USDT">₮ USDT — تيثر</option><option value="AED">🇦🇪 AED — درهم</option><option value="CNY">🇨🇳 CNY — يوان</option></select></div>
+            <option value="MRU">🇲🇷 MRU — أوقية</option><option value="AOA">🇦🇴 AOA — كوانزا</option><option value="USD">🇺🇸 USD — دولار</option><option value="EUR">🇪🇺 EUR — يورو</option><option value="USDT">USDT — تيثر</option><option value="AED">🇦🇪 AED — درهم</option><option value="CNY">🇨🇳 CNY — يوان</option></select></div>
         <div><label style="display:block;font-size:12.5px;font-weight:700;color:#486581;margin-bottom:5px">يستلم المستفيد</label>
           <select id="ind-to" style="width:100%;border:1.5px solid #D5E5F8;border-radius:12px;padding:12px;font-size:15px;color:#071E4F;background:#fff">
-            <option value="AOA">🇦🇴 AOA — كوانزا</option><option value="MRU">🇲🇷 MRU — أوقية</option><option value="USD">🇺🇸 USD — دولار</option><option value="EUR">🇪🇺 EUR — يورو</option><option value="USDT">₮ USDT — تيثر</option><option value="AED">🇦🇪 AED — درهم</option><option value="CNY">🇨🇳 CNY — يوان</option></select></div>
+            <option value="AOA">🇦🇴 AOA — كوانزا</option><option value="MRU">🇲🇷 MRU — أوقية</option><option value="USD">🇺🇸 USD — دولار</option><option value="EUR">🇪🇺 EUR — يورو</option><option value="USDT">USDT — تيثر</option><option value="AED">🇦🇪 AED — درهم</option><option value="CNY">🇨🇳 CNY — يوان</option></select></div>
       </div>
       <div><label style="display:block;font-size:12.5px;font-weight:700;color:#486581;margin-bottom:5px">المبلغ <span style="color:#00A2FF;font-size:11px">— تلقائيًا من الحاسبة</span></label>
         <input id="ind-amt" inputmode="decimal" style="width:100%;border:1.5px solid #D5E5F8;border-radius:12px;padding:12px 13px;font-size:17px;font-family:ui-monospace;color:#071E4F" placeholder="مثال: 50,000"></div>
 
       <div style="height:1px;background:#E4EEF9;margin:4px 0"></div>
-      <div style="font-size:12.5px;font-weight:800;color:#003B8F">🏦 بيانات المستفيد (من يستلم المبلغ)</div>
+      <div style="font-size:12.5px;font-weight:800;color:#003B8F">بيانات المستفيد — من يستلم المبلغ</div>
       <div><label style="display:block;font-size:12.5px;font-weight:700;color:#486581;margin-bottom:5px">اسم المستفيد الكامل</label>
         <input id="ind-bname" style="width:100%;border:1.5px solid #D5E5F8;border-radius:12px;padding:12px 13px;font-size:15px;color:#071E4F" placeholder="الاسم كما في الحساب البنكي"></div>
       <div style="display:grid;grid-template-columns:1.4fr 1fr;gap:10px">
@@ -673,11 +673,11 @@ async function uploadInvoice(){
       <div class="okSpin"></div>
     </div>
     <div class="okAmt" id="okAmt">0</div>
-    <div class="okTitle">تم استلام طلب التحويل ✓</div>
+    <div class="okTitle">تم استلام طلب التحويل</div>
     <div class="okSub">فريق أركان سيؤكد معك عبر واتساب خلال دقائق<br>احتفظ برقم المرجع</div>
     <span class="okRef" id="okRef">—</span>
     <div class="okBtns">
-      <button class="okWa" id="okSendBtn">📤 إرسال الإيصال عبر واتساب</button>
+      <button class="okWa" id="okSendBtn">إرسال الإيصال عبر واتساب</button>
       <button class="okClose" id="okCloseBtn" onclick="document.getElementById('okWrap').classList.remove('on')">إغلاق</button>
     </div>
   </div>
@@ -699,16 +699,16 @@ var OK_CHECK_SVG=`<svg viewBox="0 0 170 170">
 const RCPT_I18N={
   ar:{title:'إيصال طلب تحويل',rate:'سعر الصرف: ',sender:'المُرسِل',sphone:'هاتف المُرسِل',benef:'المستفيد',
       iban:'رقم الحساب / IBAN',bank:'البنك',rccy:'العملة المستلمة',ref:'المرجع',dt:'التاريخ والوقت',
-      pending:'● قيد التنفيذ — سيؤكَّد عبر واتساب',foot:'إيصال طلب — ليس إثبات دفع نهائي',dir:'rtl'},
+      pending:'قيد التنفيذ — سيؤكَّد عبر واتساب',foot:'إيصال طلب — ليس إثبات دفع نهائي',dir:'rtl'},
   fr:{title:'Reçu de demande de transfert',rate:'Taux: ',sender:'Expéditeur',sphone:'Téléphone',benef:'Bénéficiaire',
       iban:'Compte / IBAN',bank:'Banque',rccy:'Devise reçue',ref:'Référence',dt:'Date et heure',
-      pending:'● En cours — confirmation via WhatsApp',foot:'Reçu de demande — pas une preuve de paiement',dir:'ltr'},
+      pending:'En cours — confirmation via WhatsApp',foot:'Reçu de demande — pas une preuve de paiement',dir:'ltr'},
   pt:{title:'Recibo de pedido de transferência',rate:'Taxa: ',sender:'Remetente',sphone:'Telefone',benef:'Beneficiário',
       iban:'Conta / IBAN',bank:'Banco',rccy:'Moeda recebida',ref:'Referência',dt:'Data e hora',
-      pending:'● Em processamento — confirmação via WhatsApp',foot:'Recibo de pedido — não é comprovativo de pagamento',dir:'ltr'},
+      pending:'Em processamento — confirmação via WhatsApp',foot:'Recibo de pedido — não é comprovativo de pagamento',dir:'ltr'},
   en:{title:'Transfer Request Receipt',rate:'Rate: ',sender:'Sender',sphone:'Sender phone',benef:'Beneficiary',
       iban:'Bank account / IBAN',bank:'Bank',rccy:'Receiving currency',ref:'Reference',dt:'Date & time',
-      pending:'● Pending — confirmation via WhatsApp',foot:'Request receipt — not a final payment proof',dir:'ltr'}
+      pending:'Pending — confirmation via WhatsApp',foot:'Request receipt — not a final payment proof',dir:'ltr'}
 };
 function rcptLang(){ try{return localStorage.getItem('arkan_lang')||'ar';}catch(e){return 'ar';} }
 async function buildReceiptCard(){
@@ -830,7 +830,7 @@ function showProcessing(amount,currency){
 function okToSuccess(ref,waUrl,amount,currency){
   var el=document.getElementById('okWrap');
   el.querySelector('.okRing').innerHTML=OK_CHECK_SVG;   /* إعادة الحقن تعيد تشغيل رسم الدائرة والعلامة */
-  el.querySelector('.okTitle').textContent='تم استلام طلب التحويل ✓';
+  el.querySelector('.okTitle').textContent='تم استلام طلب التحويل';
   el.querySelector('.okSub').innerHTML='فريق أركان سيؤكد معك عبر واتساب خلال دقائق<br>احتفظ برقم المرجع';
   var refEl=document.getElementById('okRef');refEl.textContent=ref||'—';refEl.style.display='inline-block';
   el.querySelector('.okBtns').style.display='flex';
