@@ -486,15 +486,29 @@ section#contacts.on{background:#F8FCFF;border-radius:26px}
 
   <div class="donutWrap">
     <svg id="donut" viewBox="0 0 344 344" style="cursor:pointer;width:min(96vw,470px);height:auto">
-      <defs><filter id="ringGlow" x="-30%" y="-30%" width="160%" height="160%">
-      <feGaussianBlur stdDeviation="3.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
-    </filter></defs>
+      <defs>
+      <filter id="ringGlow" x="-30%" y="-30%" width="160%" height="160%">
+        <feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>
+      <linearGradient id="gU" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#00FFE0"/><stop offset="1" stop-color="#00CFFF"/>
+      </linearGradient>
+      <linearGradient id="gA" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#00C2FF"/><stop offset="1" stop-color="#0084FF"/>
+      </linearGradient>
+      <linearGradient id="gM" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#3D8BFF"/><stop offset="1" stop-color="#1F5AFF"/>
+      </linearGradient>
+      <linearGradient id="gE" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#A9CBFF"/><stop offset="1" stop-color="#6FA0FF"/>
+      </linearGradient>
+    </defs>
       <circle cx="172" cy="172" r="150" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="8"/>
       <g transform="rotate(-90 172 172)">
-        <circle filter="url(#ringGlow)" id="arcU" cx="172" cy="172" r="150" fill="none" stroke="#26A17B" stroke-width="8" stroke-linecap="round" stroke-dasharray="0 943" style="transition:.25s"/>
-        <circle filter="url(#ringGlow)" id="arcA" cx="172" cy="172" r="150" fill="none" stroke="#F4A50C" stroke-width="8" stroke-linecap="round" stroke-dasharray="0 943" style="transition:.25s"/>
-        <circle filter="url(#ringGlow)" id="arcM" cx="172" cy="172" r="150" fill="none" stroke="#3AA0FF" stroke-width="8" stroke-linecap="round" stroke-dasharray="0 943" style="transition:.25s"/>
-        <circle filter="url(#ringGlow)" id="arcE" cx="172" cy="172" r="150" fill="none" stroke="#7FE3FF" stroke-width="8" stroke-linecap="round" stroke-dasharray="0 943" style="transition:.25s"/>
+        <circle filter="url(#ringGlow)" id="arcU" cx="172" cy="172" r="150" fill="none" stroke="url(#gU)" stroke-width="8" stroke-linecap="round" stroke-dasharray="0 943" style="transition:.25s"/>
+        <circle filter="url(#ringGlow)" id="arcA" cx="172" cy="172" r="150" fill="none" stroke="url(#gA)" stroke-width="8" stroke-linecap="round" stroke-dasharray="0 943" style="transition:.25s"/>
+        <circle filter="url(#ringGlow)" id="arcM" cx="172" cy="172" r="150" fill="none" stroke="url(#gM)" stroke-width="8" stroke-linecap="round" stroke-dasharray="0 943" style="transition:.25s"/>
+        <circle filter="url(#ringGlow)" id="arcE" cx="172" cy="172" r="150" fill="none" stroke="url(#gE)" stroke-width="8" stroke-linecap="round" stroke-dasharray="0 943" style="transition:.25s"/>
         <circle id="hitU" cx="172" cy="172" r="150" fill="none" stroke="rgba(0,0,0,0)" stroke-width="38" stroke-dasharray="0 943" onclick="selectAsset('U')"/>
         <circle id="hitA" cx="172" cy="172" r="150" fill="none" stroke="rgba(0,0,0,0)" stroke-width="38" stroke-dasharray="0 943" onclick="selectAsset('A')"/>
         <circle id="hitM" cx="172" cy="172" r="150" fill="none" stroke="rgba(0,0,0,0)" stroke-width="38" stroke-dasharray="0 943" onclick="selectAsset('M')"/>
@@ -509,16 +523,16 @@ section#contacts.on{background:#F8FCFF;border-radius:26px}
   <div class="assets">
     <div class="asset" id="cardU" onclick="selectAsset('U')" style="cursor:pointer"><div class="ic" style="background:#26A17B;box-shadow:0 10px 24px rgba(38,161,123,.4),0 0 0 1px rgba(38,161,123,.3)"><span style="color:#fff;font:800 24px 'Archivo',sans-serif">₮</span></div>
       <div class="nm"><div class="n1">Tether</div><div class="n2" id="rateU">$1.00 · USDT</div></div>
-      <div class="am"><div class="a1 num" id="balU" style="color:#3DDC97">0</div><div class="a2 num" id="balUu">$0</div></div></div>
+      <div class="am"><div class="a1 num" id="balU" style="color:#00B8CC">0</div><div class="a2 num" id="balUu">$0</div></div></div>
     <div class="asset" id="cardA" onclick="selectAsset('A')" style="cursor:pointer"><div class="ic" style="background-image:url('https://flagcdn.com/w160/ao.png')"></div>
       <div class="nm"><div class="n1">AOA</div><div class="n2" id="rateA">— Kz/USDT</div></div>
-      <div class="am"><div class="a1 num" id="balA" style="color:#C88A0A">0</div><div class="a2 num" id="balAu">$0</div></div></div>
+      <div class="am"><div class="a1 num" id="balA" style="color:#0084E0">0</div><div class="a2 num" id="balAu">$0</div></div></div>
     <div class="asset" id="cardM" onclick="selectAsset('M')" style="cursor:pointer"><div class="ic" style="background-image:url('https://flagcdn.com/w160/mr.png')"></div>
       <div class="nm"><div class="n1">MRU</div><div class="n2" id="rateM">— UM/USDT</div></div>
-      <div class="am"><div class="a1 num" id="balM" style="color:#7FB8FF">0</div><div class="a2 num" id="balMu">$0</div></div></div>
+      <div class="am"><div class="a1 num" id="balM" style="color:#2F6BFF">0</div><div class="a2 num" id="balMu">$0</div></div></div>
   <div class="asset" id="cardE" onclick="selectAsset('E')" style="cursor:pointer"><div class="ic" style="background-image:url('https://flagcdn.com/w160/eu.png')"></div>
     <div class="nm"><div class="n1">EUR</div><div class="n2" id="rateE">— UM/EUR</div></div>
-    <div class="am"><div class="a1 num" id="balE" style="color:#7FD1FF">0</div><div class="a2 num" id="balEu">0</div></div>
+    <div class="am"><div class="a1 num" id="balE" style="color:#5F8FE8">0</div><div class="a2 num" id="balEu">0</div></div>
   </div>
   </div>
   <div class="chips">
@@ -4213,10 +4227,10 @@ function renderPortfolio(){
   /* المركز: الإجمالي أو الأصل المحدد */
   const bi=$('balInt'),bd=$('balDec'),lbl=document.querySelector('.donutC .s'),curEl=document.querySelector('.donutC .cur');
   const views={
-    U:{amt:b.USDT,usd:uU,name:'Tether · USDT',sym:'₮',color:'#3DDC97'},
-    A:{amt:b.AOA,usd:uA,name:'AOA · كوانزا',sym:'Kz',color:'#C88A0A'},
-    M:{amt:b.MRU,usd:uM,name:'MRU · أوقية',sym:'UM',color:'#7FB8FF'},
-    E:{amt:b.EUR||0,usd:uE,name:'EUR · يورو',sym:'€',color:'#7FD1FF'}
+    U:{amt:b.USDT,usd:uU,name:'Tether · USDT',sym:'₮',color:'#00E5FF'},
+    A:{amt:b.AOA,usd:uA,name:'AOA · كوانزا',sym:'Kz',color:'#00A3FF'},
+    M:{amt:b.MRU,usd:uM,name:'MRU · أوقية',sym:'UM',color:'#2F6BFF'},
+    E:{amt:b.EUR||0,usd:uE,name:'EUR · يورو',sym:'€',color:'#8FB8FF'}
   };
   if(bi){
     if(selAsset&&views[selAsset]){
