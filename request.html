@@ -591,14 +591,18 @@ async function uploadInvoice(){
 (function(){
   var b=document.getElementById('ind-send'); if(!b) return;
   b.addEventListener('click', async function(){
+    var sess=null; try{sess=JSON.parse(localStorage.getItem('arkan_session')||'null');}catch(e){}
     var name=(document.getElementById('ind-name').value||'').trim();
     var phone=(document.getElementById('ind-phone').value||'').replace(/[^0-9]/g,'');
+    /* العميل المسجّل: خذ الاسم والهاتف من جلسته إن غابا من الحقول المخفية */
+    if(sess){ if(!name) name=(sess.name||'عميل أركان'); if(!phone) phone=String(sess.phone||'').replace(/[^0-9]/g,''); }
     var from=document.getElementById('ind-from').value, to=document.getElementById('ind-to').value;
     var amt=(document.getElementById('ind-amt').value||'').trim();
     var bname=(document.getElementById('ind-bname').value||'').trim();
     var iban=(document.getElementById('ind-iban').value||'').trim();
     var bank=(document.getElementById('ind-bank').value||'').trim();
-    if(name.length<3||phone.length<7||!amt){ alert('أكمل الاسم والهاتف والمبلغ'); return; }
+    if(!amt){ alert('أدخل المبلغ المطلوب تحويله'); return; }
+    if(!sess && (name.length<3||phone.length<7)){ alert('أكمل اسمك ورقم هاتفك'); return; }
     if(!bname||!iban){ alert('أدخل اسم المستفيد ورقم حسابه البنكي'); return; }
     var ref='IN'+Date.now().toString(36).toUpperCase().slice(-6);
     showProcessing(amt, from);
