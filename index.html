@@ -355,6 +355,10 @@ body::after{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;opac
 .curdd .ci .fl{font-size:22px;width:26px;text-align:center}
 .curdd .ci b{font-family:'Archivo',sans-serif;font-size:14.5px;color:#071E4F}
 .curdd .ci small{display:block;font-size:11px;color:#7A93AD;font-weight:600}
+
+.tierbadge{display:none;margin-inline-start:8px;font:700 11px 'IBM Plex Sans Arabic',sans-serif;
+  background:linear-gradient(135deg,#0D47B5,#4FB2F8);color:#fff;border-radius:999px;padding:4px 11px;vertical-align:middle;
+  box-shadow:0 6px 14px rgba(13,71,181,.3)}
 </style>
 </head>
 <body>
@@ -440,7 +444,7 @@ body::after{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;opac
           <div class="curdd" id="dd_to"></div>
         </div>
         <div class="xmeta">
-          <span><span data-i="x_rate"></span> <b id="rateTxt"></b></span>
+          <span><span data-i="x_rate"></span> <b id="rateTxt"></b> <span id="tierBadge" class="tierbadge"></span></span>
           <span><span data-i="x_fee"></span> <b>0.3%</b></span>
         </div>
         <a class="btn btn-primary" href="request.html#individuals" id="goBtn" data-i="x_go" onclick="passToRequest()"></a>
@@ -742,6 +746,29 @@ pt:{
    All base values in old ouguiya (MRO). 1 MRU = 10 MRO.
    ============================================================ */
 let RATES={updated:"2026-08-02",usd_mro:422.5,eur_mro:485,aoa_mro:0.35,usd_cny:7.16,usd_aed:3.6725,card_price_mro:15000};
+/* ═══ الأسعار المتدرجة المنشورة من لوحة التسوية (جملة/متوسط/تجزئة) ═══ */
+let TIERS={}, TIER_TS=null;
+async function loadTiers(){
+  try{
+    const r=await fetch('rates-data.json?t='+Date.now(),{cache:'no-store'});
+    if(!r.ok)return;
+    const d=await r.json();
+    (d.r||[]).forEach(x=>{ if(x.ccy) TIERS[x.ccy]=x; });
+    TIER_TS=d.date||null;
+    const u=document.getElementById('updDate'); if(u&&TIER_TS)u.textContent=TIER_TS;
+    calc(); renderMarket();
+loadTiers();
+setInterval(loadTiers,180000);
+  }catch(e){}
+}
+/* يختار الشريحة حسب حجم مبلغ العميل بالعملة الأجنبية */
+function tierFor(ccy,fx){
+  const t=TIERS[ccy]; if(!t)return null;
+  const thr=+t.thr||0, thrM=+t.thrM||0;
+  if(thr&&fx>=thr)   return {rate:+t.w, tier:'w', label:{ar:'سعر الجملة',fr:'Prix de gros',en:'Wholesale',pt:'Preço grossista'}};
+  if(thrM&&fx>=thrM) return {rate:+t.m||+t.r, tier:'m', label:{ar:'سعر متوسط',fr:'Prix moyen',en:'Mid-tier',pt:'Preço médio'}};
+  return {rate:+t.r, tier:'r', label:{ar:'سعر التجزئة',fr:'Prix de détail',en:'Retail',pt:'Preço a retalho'}};
+}
 const fmt=(n,d=2)=>n.toLocaleString('en-US',{maximumFractionDigits:d});
 let LANG=localStorage.getItem('arkan_lang')||'ar';
 
@@ -831,9 +858,23 @@ function passToRequest(){
 function calc(){
   const r=R();
   const a=parseFloat(f.value.replace(/[^\d.]/g,''))||0;
-  const rate=(r[tc.textContent]/r[fc.textContent]);
+  let rate=(r[tc.textContent]/r[fc.textContent]);
+  /* تسعير متدرج: إن كان الزوج يشمل MRU وعملة مسعّرة، استخدم شريحة العميل */
+  let tierNote='';
+  const F=fc.textContent, T=tc.textContent;
+  if(F==='MRU'&&TIERS[T]){
+    let est=a/((+TIERS[T].r)/10)||0;              /* تقدير أولي بسعر التجزئة */
+    let ti=tierFor(T,est);
+    if(ti){ let fx=a/(ti.rate/10); const ti2=tierFor(T,fx); if(ti2&&ti2.tier!==ti.tier){ti=ti2;fx=a/(ti.rate/10);}
+      rate=1/(ti.rate/10); tierNote=ti.label[LANG]||ti.label.ar; }
+  }else if(TIERS[F]&&T==='MRU'){
+    const ti=tierFor(F,a);
+    if(ti){ rate=ti.rate/10; tierNote=ti.label[LANG]||ti.label.ar; }
+  }
   tAmt.value=fmt(a*rate);
-  rt.textContent=`1 ${fc.textContent} = ${fmt(rate)} ${tc.textContent}`;
+  rt.textContent=`1 ${F} = ${fmt(rate)} ${T}`;
+  const tb=document.getElementById('tierBadge');
+  if(tb){ tb.textContent=tierNote||''; tb.style.display=tierNote?'inline-block':'none'; }
   const go=document.getElementById('goBtn');
   if(go)go.href='request.html?amt='+encodeURIComponent(a||'')+'&from='+fc.textContent+'&to='+tc.textContent+'#individuals';
 }
