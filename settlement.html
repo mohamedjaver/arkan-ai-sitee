@@ -4719,9 +4719,25 @@ function inbWa(id){
 async function inbDone(id){
   const x=INB.find(v=>v._id===id);if(!x)return;
   try{
-    const {doc,updateDoc}=ARKAN.fb;
+    const {doc,updateDoc,collection,addDoc,serverTimestamp}=ARKAN.fb;
+    /* 1) علّم الطلب مكتملًا */
     await updateDoc(doc(ARKAN.db,'payment_requests',id),{status:'done'});
-    x.status='done';renderInbox();toast('حُدّثت الحالة ✓');
+    /* 2) أنشئ سجل حوالة للعميل (يظهر في حسابه كرصيد محوَّل عبرنا) */
+    const cc=String(x.currency||'');
+    let from='',to='';
+    if(cc.includes('→')){const p=cc.split('→');from=p[0].trim();to=(p[1]||'').trim();}
+    else {from=cc.trim();to=x.destination||'';}
+    const amtNum=parseFloat(String(x.amount||'').replace(/[^\d.]/g,''))||0;
+    const phone=String(x.contact||'').replace(/[^0-9]/g,'');
+    if(phone.length>=7){
+      await addDoc(collection(ARKAN.db,'transactions'),{
+        uid:phone, from:from||'—', to:to||'—', amount:amtNum,
+        status:'done', clientRef:x.ref||'', benefName:x.benefName||x.bname||'',
+        createdAt:serverTimestamp(), confirmedAt:serverTimestamp(), source:'settlement'
+      });
+    }
+    x.status='done';renderInbox();
+    toast('✅ أُكّدت — ظهرت في حساب العميل');
   }catch(e){toast('تعذّر التحديث: '+(e.code||e.message));}
 }
 /* تحويل الطلب إلى عملية: يعبّي نموذج العملية ويحفظ العميل */
