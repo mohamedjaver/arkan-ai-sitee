@@ -402,6 +402,11 @@ section#contacts.on{background:#F8FCFF;border-radius:26px}
   <link rel="stylesheet" href="arkan-theme.css">
   <link rel="stylesheet" href="arkan-light.css">
   <script src="arkan-gate.js"></script>
+<script type="module">
+  import * as ARKAN from './arkan-core.js';
+  window.ARKAN = ARKAN;
+  window.dispatchEvent(new Event('arkan-core-ready'));
+</script>
 </head>
 <body>
 <div class="grid-bg"></div>
@@ -1036,6 +1041,23 @@ section#contacts.on{background:#F8FCFF;border-radius:26px}
   </div>
 </div>
 
+<!-- ================= CLIENT REQUESTS INBOX ================= -->
+<section id="inbox">
+  <div class="card">
+    <h3>📥 طلبات العملاء — مباشر</h3>
+    <div style="font-size:12.5px;color:var(--dim);line-height:1.9;margin-bottom:12px">
+      كل طلب يرسله عميل من الموقع يظهر هنا فورًا. حوّله لعملية بضغطة، وأرفق إيصال واتساب لاحقًا.
+    </div>
+    <div id="inbAuth"></div>
+    <div class="btn-row" style="margin-bottom:12px">
+      <button class="btn btn-gold btn-sm" onclick="loadInbox()">🔄 تحديث</button>
+      <button class="btn btn-line btn-sm" onclick="inbFilter='pending';loadInbox()">قيد الانتظار</button>
+      <button class="btn btn-line btn-sm" onclick="inbFilter='all';loadInbox()">الكل</button>
+    </div>
+    <div id="inbList"><div style="text-align:center;color:var(--dim);font-size:13px;padding:20px">اضغط تحديث لجلب الطلبات</div></div>
+  </div>
+</section>
+
 <!-- ================= HISTORY ================= -->
 <section id="history">
   <div class="card">
@@ -1067,6 +1089,10 @@ section#contacts.on{background:#F8FCFF;border-radius:26px}
   </div>
   <div class="nv" data-t="contacts">
     <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="10" cy="7" r="4"/><path d="M21 21v-2a4 4 0 0 0-3-3.87"/></svg><div>الجهات</div>
+  </div>
+  <div class="nv" data-t="inbox" style="position:relative">
+    <svg viewBox="0 0 24 24"><path d="M3 8l9 6 9-6"/><rect x="3" y="5" width="18" height="14" rx="2"/></svg><div>الطلبات</div>
+    <span id="inbBadge" style="display:none;position:absolute;top:2px;inset-inline-end:8px;background:#E53935;color:#fff;border-radius:999px;min-width:16px;height:16px;font:700 9px sans-serif;line-height:16px;text-align:center;padding:0 3px"></span>
   </div>
   <div class="nv" data-t="history">
     <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg><div>الذاكرة</div>
@@ -4528,6 +4554,151 @@ function delDay(i){
   if(!confirm('حذف أرشيف '+hist[i].date+' نهائيًا؟'))return;
   hist.splice(i,1);saveHist();renderHistory();toast('حُذف ✓');
 }
+
+
+/* ═══════════ صندوق طلبات العملاء (Firestore) ═══════════ */
+let inbFilter='pending', INB=[];
+function inbAuthBox(msg,btn){
+  $('inbAuth').innerHTML=msg?`<div class="card" style="background:#FFF6E0;border:1px solid #FFE0A3;margin-bottom:12px;padding:12px">
+    <div style="font-size:12.5px;color:#8A5F00;font-weight:700;line-height:1.8">${msg}</div>${btn||''}</div>`:'';
+}
+async function adminSignIn(){
+  try{
+    if(!window.ARKAN)throw new Error('core لم يُحمّل');
+    await ARKAN.ready;
+    if(!ARKAN.firebaseOK)throw new Error('لا اتصال بالسحابة');
+    const em=prompt('بريد الأدمن:', localStorage.getItem('arkan-owner-email')||'mohamedarbi0208@gmail.com');
+    if(!em)return;
+    const pw=prompt('كلمة المرور:');
+    if(!pw)return;
+    await ARKAN.fb.signInWithEmailAndPassword(ARKAN.auth,em.trim(),pw);
+    localStorage.setItem('arkan-owner-email',em.trim());
+    toast('✅ دخول الأدمن ناجح');
+    inbAuthBox('');
+    loadInbox();
+  }catch(e){ toast('فشل الدخول: '+(e.code||e.message)); }
+}
+async function loadInbox(){
+  const list=$('inbList');
+  list.innerHTML='<div style="text-align:center;color:var(--dim);padding:18px;font-size:13px">جارٍ الجلب…</div>';
+  try{
+    if(!window.ARKAN)throw new Error('CORE');
+    await ARKAN.ready;
+    if(!ARKAN.firebaseOK)throw new Error('OFFLINE');
+    const u=ARKAN.auth&&ARKAN.auth.currentUser;
+    if(!u){ 
+      inbAuthBox('لعرض طلبات العملاء سجّل دخول الأدمن مرة واحدة على هذا الجهاز.',
+        '<button class="btn btn-gold btn-sm" style="margin-top:8px" onclick="adminSignIn()">🔑 دخول الأدمن</button>');
+      list.innerHTML='<div style="text-align:center;color:var(--dim);padding:18px;font-size:13px">بانتظار تسجيل الدخول</div>';
+      return;
+    }
+    inbAuthBox('');
+    const {collection,getDocs,query,orderBy,limit}=ARKAN.fb;
+    const snap=await getDocs(query(collection(ARKAN.db,'payment_requests'),orderBy('createdAt','desc'),limit(60)));
+    INB=[];snap.forEach(d=>INB.push(Object.assign({_id:d.id},d.data())));
+    renderInbox();
+  }catch(e){
+    const m=(e.message==='CORE')?'ARKAN core لم يُحمّل':(e.message==='OFFLINE'?'لا اتصال بالسحابة':(e.code||e.message));
+    list.innerHTML=`<div style="text-align:center;color:var(--dim);padding:18px;font-size:12.5px">تعذّر الجلب: ${m}</div>`;
+    if(/permission/i.test(m))inbAuthBox('صلاحية مرفوضة — سجّل دخول الأدمن.',
+      '<button class="btn btn-gold btn-sm" style="margin-top:8px" onclick="adminSignIn()">🔑 دخول الأدمن</button>');
+  }
+}
+function renderInbox(){
+  const list=$('inbList');
+  let rows=INB.filter(x=>inbFilter==='all'||(x.status||'pending')==='pending');
+  const pend=INB.filter(x=>(x.status||'pending')==='pending').length;
+  const bd=$('inbBadge'); if(bd){bd.textContent=pend||'';bd.style.display=pend?'inline-block':'none';}
+  if(!rows.length){list.innerHTML='<div style="text-align:center;color:var(--dim);padding:22px;font-size:13px">لا طلبات '+(inbFilter==='pending'?'قيد الانتظار':'')+'</div>';return;}
+  list.innerHTML=rows.map(x=>{
+    const t=x.createdAt&&x.createdAt.seconds?new Date(x.createdAt.seconds*1000):null;
+    const isInd=x.type==='individual';
+    const done=(x.status||'pending')!=='pending';
+    return `<div class="sum" style="text-align:right;margin-bottom:10px;border-top-color:${done?'#00C853':'#FFB300'}">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:800;font-size:14px;color:var(--acc2)">${esc2(x.company||'—')}</div>
+          <div style="font-size:11.5px;color:var(--dim);margin-top:3px">
+            ${isInd?'👤 فردي':'🏢 شركة'} · ${esc2(x.purpose||'')} ${x.destination?'· إلى '+esc2(x.destination):''}
+          </div>
+          <div style="font-family:'IBM Plex Mono';font-size:11px;color:var(--dim);margin-top:4px;direction:ltr;text-align:right">
+            ${esc2(x.ref||'')} · ${t?t.toLocaleString('en-GB'):''}
+          </div>
+        </div>
+        <div style="text-align:left;flex:none">
+          <div style="font-family:'IBM Plex Mono';font-weight:700;font-size:17px;color:var(--txt);direction:ltr">${esc2(String(x.amount||''))}</div>
+          <div style="font-size:11px;color:var(--acc);font-weight:700;direction:ltr">${esc2(x.currency||'')}</div>
+        </div>
+      </div>
+      <div class="btn-row" style="margin-top:10px">
+        <button class="btn btn-gold btn-sm" onclick="inbToOp('${x._id}')">➕ حوّله لعملية</button>
+        <button class="btn btn-line btn-sm" onclick="inbWa('${x._id}')">واتساب</button>
+        ${done?'':`<button class="btn btn-line btn-sm" onclick="inbDone('${x._id}')">✓ تم</button>`}
+      </div>
+    </div>`;
+  }).join('');
+}
+function esc2(v){return String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function inbWa(id){
+  const x=INB.find(v=>v._id===id);if(!x)return;
+  const p=(x.contact||'').replace(/[^0-9]/g,'');
+  const msg='بخصوص طلبك '+(x.ref||'')+' — '+(x.amount||'')+' '+(x.currency||'');
+  window.open('https://wa.me/'+(p.length>7?p:'22236295050')+'?text='+encodeURIComponent(msg),'_blank');
+}
+async function inbDone(id){
+  const x=INB.find(v=>v._id===id);if(!x)return;
+  try{
+    const {doc,updateDoc}=ARKAN.fb;
+    await updateDoc(doc(ARKAN.db,'payment_requests',id),{status:'done'});
+    x.status='done';renderInbox();toast('حُدّثت الحالة ✓');
+  }catch(e){toast('تعذّر التحديث: '+(e.code||e.message));}
+}
+/* تحويل الطلب إلى عملية: يعبّي نموذج العملية ويحفظ العميل */
+function inbToOp(id){
+  const x=INB.find(v=>v._id===id);if(!x)return;
+  const amt=parseFloat(String(x.amount||'').replace(/[^\d.]/g,''))||0;
+  /* استخراج العملتين: "MRU→AOA" أو عملة واحدة */
+  let from='',to='';
+  const cc=String(x.currency||'');
+  if(cc.includes('→')){const p=cc.split('→');from=p[0].trim();to=p[1].trim();}
+  else {from=cc.trim();to=x.destination||'';}
+  switchTab('new');
+  setTimeout(()=>{
+    /* اسم العميل ورقمه */
+    const nm=$('cName')||$('clientName')||$('cliName');
+    if(nm)nm.value=x.company||'';
+    const wa=$('cWa')||$('clientWa');
+    if(wa)wa.value=(x.contact||'').replace(/[^0-9]/g,'');
+    /* المبلغ */
+    const am=$('amt')||$('opAmt')||$('amount');
+    if(am){am.value=amt;am.dispatchEvent(new Event('input',{bubbles:true}));}
+    toast('📥 '+(x.ref||'')+' — أكمل السعر والربح ثم احفظ');
+    /* ربط الطلب بالعملية القادمة */
+    window._inbLinked={ref:x.ref,id:x._id,company:x.company,contact:x.contact};
+  },260);
+}
+/* عند حفظ العملية، اربطها بالطلب وحدّث حالته */
+(function(){
+  const _st=window.saveTx;
+  if(typeof _st==='function'){
+    window.saveTx=function(){
+      const link=window._inbLinked;
+      const r=_st.apply(this,arguments);
+      if(link&&txs.length){
+        const last=txs[txs.length-1];
+        last.clientRef=link.ref; last.clientName=link.company; last.clientWa=link.contact;
+        persist();
+        if(window.ARKAN&&ARKAN.firebaseOK&&ARKAN.auth&&ARKAN.auth.currentUser){
+          try{const {doc,updateDoc}=ARKAN.fb;
+            updateDoc(doc(ARKAN.db,'payment_requests',link.id),{status:'processing',opRef:last.ref});}catch(e){}
+        }
+        window._inbLinked=null;
+        toast('🔗 رُبطت العملية بطلب العميل');
+      }
+      return r;
+    };
+  }
+})();
 
 /* ================= CLOSE DAY ================= */
 function closeDay(){
