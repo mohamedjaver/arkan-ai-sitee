@@ -24,13 +24,13 @@
   body{background:linear-gradient(180deg,#F3F9FF 0%,#EAF4FF 45%,#E1F0FF 100%);background-attachment:fixed;color:var(--txt);
     display:flex;justify-content:center;min-height:100dvh}
   .num{font-variant-numeric:tabular-nums;direction:ltr;unicode-bidi:plaintext}
-  .stage{width:100%;max-width:430px;position:relative;background:var(--bg);overflow:hidden}
+  .stage{width:100%;max-width:520px;position:relative;background:var(--bg);overflow:hidden}
   .ambient{position:fixed;inset:0;max-width:430px;margin:0 auto;pointer-events:none;z-index:0;
     background:
       radial-gradient(420px 300px at 85% -5%, rgba(108,92,231,.22), transparent 60%),
       radial-gradient(380px 280px at 10% 25%, rgba(47,208,140,.07), transparent 60%),
       radial-gradient(500px 380px at 50% 110%, rgba(245,201,76,.08), transparent 60%);}
-  main{position:relative;z-index:1;padding:18px 20px 120px}
+  main{position:relative;z-index:1;padding:16px 14px 120px}
   .screen{display:none;animation:fade .35s ease}
   .screen.active{display:block}
   @keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
@@ -131,15 +131,15 @@
   .picker-menu button:active{background:#E4EEF9}
   .picker-menu .flag{width:28px;height:28px;border-width:1.5px}
   .picker-menu .mc{font-weight:600;font-size:14px} .picker-menu .mn{font-size:11.5px;color:var(--muted)}
-  nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;z-index:10;
-    background:rgba(10,13,24,.86);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
-    border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(4,1fr);
+  nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:520px;z-index:10;
+    background:rgba(255,255,255,.92);backdrop-filter:blur(22px) saturate(1.4);-webkit-backdrop-filter:blur(22px) saturate(1.4);
+    border-top:1px solid #D9E5F2;box-shadow:0 -8px 30px rgba(16,42,67,.08);display:grid;grid-template-columns:repeat(4,1fr);
     padding:10px 8px calc(14px + env(safe-area-inset-bottom))}
   .nav-it{display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;padding:4px;position:relative}
-  .nav-it svg{width:22px;height:22px;stroke:var(--muted);transition:stroke .2s}
-  .nav-it span{font-size:11px;color:var(--muted);transition:color .2s}
-  .nav-it.on svg{stroke:var(--gold)} .nav-it.on span{color:var(--gold);font-weight:600}
-  .nav-it.on::before{content:'';position:absolute;top:-11px;width:26px;height:3px;border-radius:0 0 4px 4px;background:var(--gold)}
+  .nav-it svg{width:23px;height:23px;stroke:#7A93AD;transition:stroke .2s}
+  .nav-it span{font-size:11px;color:#7A93AD;font-weight:600;transition:color .2s}
+  .nav-it.on svg{stroke:#0056D6} .nav-it.on span{color:#0056D6;font-weight:800}
+  .nav-it.on::before{content:'';position:absolute;top:-11px;width:28px;height:3px;border-radius:0 0 4px 4px;background:linear-gradient(90deg,#0056D6,#4FB2F8)}
   .acct-head{display:flex;flex-direction:column;align-items:center;margin:14px 0 26px}
   .avatar{width:84px;height:84px;border-radius:30px;font-size:32px;font-weight:700;color:#fff;
     background:linear-gradient(135deg,var(--violet),#0058D9);display:grid;place-items:center;
@@ -394,10 +394,25 @@ $('toPick').onclick   = e => { e.stopPropagation(); const o=$('tMenu').classList
 document.addEventListener('click', closeMenus);
 let swapDeg=0;
 $('swapBtn').onclick = () => { [st.from,st.to]=[st.to,st.from]; swapDeg+=180; $('swapBtn').firstElementChild.style.transform=`rotate(${swapDeg}deg)`; paintPickers(); calc(); };
-$('reqBtn').onclick = () => {
+$('reqBtn').onclick = async () => {
   const amt = parseAmt(), out = $('toAmt').value;
-  const msg = `مرحباً، أريد تحويلاً عبر أركان.\nرقمي المرجعي: ${USER?.ref||''}\nأرسل: ${fmt(amt)} ${st.from}\nيستلم: ${out} ${st.to}`;
+  if(!amt||amt<=0){ toast('أدخل المبلغ'); return; }
+  const ref = 'TR'+Date.now().toString(36).toUpperCase().slice(-6);
+  const phone = SESSION?.phone || USER?.phone || '';
+  /* سجّل الطلب في السحابة (يظهر في صندوق طلبات الأدمن) */
+  try{
+    const { collection, addDoc, serverTimestamp } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js');
+    await addDoc(collection(db,'payment_requests'),{
+      ref, company:(USER?.name||'عميل أركان'), amount:String(amt), currency:st.from+'→'+st.to,
+      destination:st.to, purpose:'تحويل فردي', contact:String(phone),
+      type:'individual', status:'pending', createdAt:serverTimestamp()
+    });
+  }catch(e){ console.warn(e); }
+  const msg = `طلب تحويل — ${ref}\nالعميل: ${USER?.name||''} / ${phone}\nأرسل: ${fmt(amt)} ${st.from}\nيستلم: ${out} ${st.to}\nالمرجع: ${USER?.ref||''}`;
   window.open(`https://wa.me/${WA}?text=${encodeURIComponent(msg)}`,'_blank');
+  /* وجّه العميل لحسابه ليتابع الطلب */
+  toast('✓ سُجّل طلبك — تابعه في حسابك');
+  setTimeout(()=>{ go('home'); }, 900);
 };
 
 $('gEnter').onclick = () => {
