@@ -328,7 +328,7 @@ body.selecting #selbar{transform:translateX(-50%) translateY(0)}
 <body>
 <script>
 /* ═══ تحديث ذاتي: يضمن أحدث نسخة دائمًا رغم كل طبقات الكاش ═══ */
-const ARKAN_ARCHIVE_BUILD='2026-08-03.13';
+const ARKAN_ARCHIVE_BUILD='2026-08-03.14';
 (async()=>{
   try{
     const r=await fetch('version.json?t='+Date.now(),{cache:'no-store'});
@@ -385,6 +385,7 @@ const ARKAN_ARCHIVE_BUILD='2026-08-03.13';
 <div class="wrap">
 
   <!-- KPI dashboard -->
+  <div id="akBioSlot"></div>
   <div class="kpis" id="kpis"></div>
 
   <!-- upload -->
@@ -1402,5 +1403,6 @@ document.getElementById('tl').addEventListener('click',e=>{
 </script>
 <script src="arkan-nav.js?v=8" defer></script>
 <script src="arkan-ai.js?v=8" defer></script>
+<script src="arkan-sense.js?v=1" defer></script>
 </body>
 </html>
