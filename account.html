@@ -7,20 +7,21 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>ARKAN — حسابي</title>
-<meta name="theme-color" content="#070A14">
-<rect width='100' height='100' rx='24' fill='%236C5CE7'/><path d='M50 20 L74 78 H60 L50 52 L40 78 H26 Z' fill='%23fff'/></svg>">
+<meta name="theme-color" content="#F7FAFD">
+<rect width='100' height='100' rx='24' fill='%23071D49'/><path d='M50 20 L74 78 H60 L50 52 L40 78 H26 Z' fill='%23fff'/></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#070A14; --card:#0E1322; --card2:#131A2E; --line:rgba(255,255,255,.07);
-    --txt:#F4F6FB; --muted:#8A93A8; --gold:#F5C94C; --violet:#6C5CE7;
-    --green:#2FD08C; --red:#F2676A; --radius:26px;
+    --bg:#F7FAFD; --card:#FFFFFF; --card2:#F8FBFF; --line:#D9E5F2;
+    --txt:#102A43; --muted:#486581; --gold:#C88A0A; --violet:#0056D6;
+    --acc:#0056D6; --acc2:#0099FF; --accD:#003B8F;
+    --green:#0A9E5C; --red:#E53935; --radius:24px;
   }
   *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   html,body{height:100%}
-  body{font-family:'IBM Plex Sans Arabic',system-ui,sans-serif;background:var(--bg);color:var(--txt);
+  body{background:linear-gradient(180deg,#F3F9FF 0%,#EAF4FF 45%,#E1F0FF 100%);background-attachment:fixed;color:var(--txt);
     display:flex;justify-content:center;min-height:100dvh}
   .num{font-variant-numeric:tabular-nums;direction:ltr;unicode-bidi:plaintext}
   .stage{width:100%;max-width:430px;position:relative;background:var(--bg);overflow:hidden}
@@ -36,7 +37,7 @@
   .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:26px}
   .brand{display:flex;align-items:center;gap:11px}
   .logo{width:42px;height:42px;border-radius:14px;object-fit:cover;display:block;box-shadow:0 8px 24px rgba(108,92,231,.35)}
-  img.logo{background:linear-gradient(135deg,var(--violet),#8B7BFF)}
+  img.logo{background:linear-gradient(135deg,var(--violet),#0058D9)}
   .brand b{font-size:17px;letter-spacing:.5px}
   .brand small{display:block;font-size:11px;color:var(--muted);font-weight:400}
   .bell{width:42px;height:42px;border-radius:14px;border:1px solid var(--line);background:var(--card);
@@ -63,13 +64,13 @@
   .act:active .ic{transform:scale(.93)}
   .act svg{width:22px;height:22px}
   .act span{font-size:12px;color:var(--muted)}
-  .act.gold .ic{background:linear-gradient(135deg,var(--gold),#E8B53A);border:none;box-shadow:0 10px 26px rgba(245,201,76,.28)}
+  .act.gold .ic{background:linear-gradient(135deg,#0D47B5 0%,#2F8FE8 55%,#4FB2F8 100%);border:none;box-shadow:0 10px 26px rgba(245,201,76,.28)}
   .act.gold svg{stroke:#3A2E08}
   .act.gold span{color:var(--txt);font-weight:500}
   .sec{display:flex;align-items:baseline;justify-content:space-between;margin:0 2px 14px}
   .sec h2{font-size:17px;font-weight:600}
   .sec a{font-size:12.5px;color:var(--gold);text-decoration:none;cursor:pointer}
-  .flag{width:46px;height:46px;border-radius:50%;flex-shrink:0;border:2px solid rgba(255,255,255,.12);
+  .flag{width:46px;height:46px;border-radius:50%;flex-shrink:0;border:2px solid #D9E5F2;
     box-shadow:0 4px 14px rgba(0,0,0,.35);background-size:cover;background-position:center;position:relative;overflow:hidden}
   .flag.tether{background:#26A17B;display:grid;place-items:center;color:#fff;font-weight:700;font-size:17px;font-family:Arial}
   .rates{display:flex;flex-direction:column;gap:10px}
@@ -97,7 +98,7 @@
   .pill.wait{background:rgba(245,201,76,.13);color:var(--gold)}
   .pill.cancel{background:rgba(242,103,106,.13);color:var(--red)}
   .empty{text-align:center;padding:36px 20px;color:var(--muted);font-size:13px}
-  .sk{height:74px;border-radius:22px;background:linear-gradient(90deg,rgba(255,255,255,.03),rgba(255,255,255,.07),rgba(255,255,255,.03));background-size:200% 100%;animation:sh 1.4s linear infinite;margin-bottom:10px}
+  .sk{height:74px;border-radius:22px;background:linear-gradient(90deg,rgba(255,255,255,.03),#D9E5F2,rgba(255,255,255,.03));background-size:200% 100%;animation:sh 1.4s linear infinite;margin-bottom:10px}
   @keyframes sh{to{background-position:-200% 0}}
   .conv{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:22px 18px;margin-bottom:14px}
   .conv .clabel{font-size:12.5px;color:var(--muted);margin-bottom:10px}
@@ -111,7 +112,7 @@
   .cpicker b{font-size:14px}
   .cpicker svg{width:13px;height:13px;stroke:var(--muted)}
   .swap{width:44px;height:44px;border-radius:50%;margin:12px auto;display:grid;place-items:center;
-    background:linear-gradient(135deg,var(--violet),#8B7BFF);box-shadow:0 8px 22px rgba(108,92,231,.35);cursor:pointer}
+    background:linear-gradient(135deg,var(--violet),#0058D9);box-shadow:0 8px 22px rgba(108,92,231,.35);cursor:pointer}
   .swap svg{width:19px;height:19px;stroke:#fff;transition:transform .5s}
   .conv-result{border-color:rgba(245,201,76,.25);background:linear-gradient(180deg,rgba(245,201,76,.05),var(--card))}
   .conv-result input{color:var(--gold)}
@@ -119,15 +120,15 @@
   .meta b{color:var(--txt);font-weight:500}
   .meta .tier-w{color:var(--gold)} .meta .tier-m{color:#67e8f9} .meta .tier-r{color:var(--txt)}
   .cta{width:100%;margin-top:22px;padding:19px;border:none;border-radius:20px;cursor:pointer;
-    background:linear-gradient(135deg,var(--gold),#E8B53A);color:#3A2E08;font-family:inherit;font-size:16.5px;font-weight:700;
+    background:linear-gradient(135deg,#0D47B5 0%,#2F8FE8 55%,#4FB2F8 100%);color:#3A2E08;font-family:inherit;font-size:16.5px;font-weight:700;
     box-shadow:0 14px 34px rgba(245,201,76,.25);transition:transform .15s}
   .cta:active{transform:scale(.98)}
   .picker-menu{position:absolute;top:calc(100% + 8px);inset-inline-end:0;z-index:30;width:220px;max-height:260px;overflow:auto;
-    background:var(--card2);border:1px solid var(--line);border-radius:18px;padding:6px;display:none;box-shadow:0 20px 50px rgba(0,0,0,.6)}
+    background:var(--card2);border:1px solid var(--line);border-radius:18px;padding:6px;display:none;box-shadow:0 20px 50px rgba(16,42,67,.10)}
   .picker-menu.on{display:block}
   .picker-menu button{width:100%;display:flex;align-items:center;gap:11px;padding:10px 11px;border:0;border-radius:12px;
     background:transparent;color:var(--txt);cursor:pointer;text-align:right;font-family:inherit}
-  .picker-menu button:active{background:rgba(255,255,255,.06)}
+  .picker-menu button:active{background:#E4EEF9}
   .picker-menu .flag{width:28px;height:28px;border-width:1.5px}
   .picker-menu .mc{font-weight:600;font-size:14px} .picker-menu .mn{font-size:11.5px;color:var(--muted)}
   nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;z-index:10;
@@ -141,7 +142,7 @@
   .nav-it.on::before{content:'';position:absolute;top:-11px;width:26px;height:3px;border-radius:0 0 4px 4px;background:var(--gold)}
   .acct-head{display:flex;flex-direction:column;align-items:center;margin:14px 0 26px}
   .avatar{width:84px;height:84px;border-radius:30px;font-size:32px;font-weight:700;color:#fff;
-    background:linear-gradient(135deg,var(--violet),#8B7BFF);display:grid;place-items:center;
+    background:linear-gradient(135deg,var(--violet),#0058D9);display:grid;place-items:center;
     box-shadow:0 14px 36px rgba(108,92,231,.35);margin-bottom:14px}
   .acct-head b{font-size:20px}
   .acct-head small{font-size:13px;color:var(--muted);margin-top:4px}
@@ -170,10 +171,10 @@
   .gate input:focus{border-color:rgba(245,201,76,.45)}
   .gate .pin{text-align:center;letter-spacing:.5em;font-size:22px;font-weight:700;direction:ltr}
   .gate .enter{width:100%;padding:16px;border:0;border-radius:15px;cursor:pointer;
-    background:linear-gradient(135deg,var(--gold),#E8B53A);color:#3A2E08;font-family:inherit;font-weight:700;font-size:16px}
+    background:linear-gradient(135deg,#0D47B5 0%,#2F8FE8 55%,#4FB2F8 100%);color:#3A2E08;font-family:inherit;font-weight:700;font-size:16px}
   .gate .enter:disabled{opacity:.5}
   .gate .err{margin-top:14px;padding:12px;border-radius:12px;font-size:13px;display:none;
-    background:rgba(242,103,106,.12);border:1px solid rgba(242,103,106,.3);color:#fca5a5}
+    background:rgba(242,103,106,.12);border:1px solid rgba(242,103,106,.3);color:#F2A0A0}
   .gate .err.on{display:block}
   .gate .hint{margin-top:20px;text-align:center;font-size:12px;color:var(--muted);line-height:1.8}
   .gate .hint a{color:var(--gold);text-decoration:none}
@@ -207,9 +208,9 @@
       </div>
       <div class="actions">
         <div class="act gold" data-goto="s-send"><div class="ic"><svg fill="none" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M12 5l7 7-7 7"/></svg></div><span>تحويل</span></div>
-        <div class="act" data-act="deposit"><div class="ic"><svg fill="none" stroke="#8A93A8" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14m7-7H5"/></svg></div><span>إيداع</span></div>
-        <div class="act" data-goto="s-rates"><div class="ic"><svg fill="none" stroke="#8A93A8" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 17l6-6 4 4 8-8m0 0h-5m5 0v5"/></svg></div><span>الأسعار</span></div>
-        <div class="act" data-goto="s-acct"><div class="ic"><svg fill="none" stroke="#8A93A8" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/></svg></div><span>السجل</span></div>
+        <div class="act" data-act="deposit"><div class="ic"><svg fill="none" stroke="#486581" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14m7-7H5"/></svg></div><span>إيداع</span></div>
+        <div class="act" data-goto="s-rates"><div class="ic"><svg fill="none" stroke="#486581" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 17l6-6 4 4 8-8m0 0h-5m5 0v5"/></svg></div><span>الأسعار</span></div>
+        <div class="act" data-goto="s-acct"><div class="ic"><svg fill="none" stroke="#486581" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/></svg></div><span>السجل</span></div>
       </div>
       <div class="sec"><h2>أسعار اليوم</h2><a data-goto="s-rates">عرض الكل</a></div>
       <div class="rates" id="homeRates"><div class="sk"></div><div class="sk"></div></div>
@@ -251,7 +252,7 @@
         <div class="row"><div class="ric"><svg fill="none" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"/></svg></div><div class="rtxt"><b>الرقم المرجعي</b><small>لمشاركته عند الطلب</small></div><div class="rval" id="acctRef">—</div></div>
         <div class="row"><div class="ric"><svg fill="none" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" d="M9 12l2 2 4-4m5.6 2A9 9 0 1 1 12 3a9 9 0 0 1 8.6 9z"/></svg></div><div class="rtxt"><b>حالة الحساب</b><small id="acctStatusSub">—</small></div><span id="acctStatus" class="status-on">نشط</span></div>
         <div class="row"><div class="ric"><svg fill="none" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" d="M12 15v2m-6 4h12a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2zm10-10V7a4 4 0 0 0-8 0v4h8z"/></svg></div><div class="rtxt"><b>رمز الدخول</b><small>احفظه للدخول لاحقاً</small></div><div class="rval num" id="acctPin" style="letter-spacing:3px">••••</div></div>
-        <div class="row logout-r" id="logoutRow"><div class="ric"><svg fill="none" stroke="#F2676A" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V6a3 3 0 0 1 3-3h4a3 3 0 0 1 3 3v1"/></svg></div><div class="rtxt"><b>تسجيل الخروج</b><small>إنهاء الجلسة على هذا الجهاز</small></div></div>
+        <div class="row logout-r" id="logoutRow"><div class="ric"><svg fill="none" stroke="#E53935" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V6a3 3 0 0 1 3-3h4a3 3 0 0 1 3 3v1"/></svg></div><div class="rtxt"><b>تسجيل الخروج</b><small>إنهاء الجلسة على هذا الجهاز</small></div></div>
       </div>
       <div class="sec" style="margin-top:26px"><h2>سجل المعاملات</h2></div>
       <div class="rates" id="fullTx"><div class="sk"></div></div>
@@ -460,7 +461,7 @@ function txHTML(t, id){
   const map={done:['done','مكتملة'],pending:['wait','قيد الانتظار'],cancel:['cancel','ملغاة']};
   const b = map[t.status]||map.pending;
   const dt = t.createdAt?.toDate ? t.createdAt.toDate().toLocaleDateString('en-GB') : '—';
-  return `<div class="tx"><div class="ticon out"><svg fill="none" stroke="#8B7BFF" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14m-7-7l7 7-7 7"/></svg></div>
+  return `<div class="tx"><div class="ticon out"><svg fill="none" stroke="#0058D9" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14m-7-7l7 7-7 7"/></svg></div>
     <div class="tinfo"><b>${t.from} → ${t.to}</b><small class="num">${dt} · ${(t.clientRef||id.slice(-6)).toUpperCase()}</small></div>
     <div class="tval"><b class="num">${fmt(t.amount||0, t.dp??2)} ${t.from}</b><span class="pill ${b[0]}">${b[1]}</span></div></div>`;
 }
