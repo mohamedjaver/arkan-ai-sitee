@@ -117,7 +117,7 @@ header{padding:20px 18px 4px;position:relative;z-index:6}
 .ic.flagT .usdtB{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:50%;
   background:#26A17B;color:#fff;font:800 15px 'Archivo',sans-serif}
 /* ===== PORTFOLIO ===== */
-.folio{margin:-100px 0 14px;padding:112px 18px 26px;position:relative;z-index:1;border:none;border-radius:0 0 40px 40px;
+.folio{margin:-100px 0 14px;padding:96px 12px 26px;position:relative;z-index:1;border:none;border-radius:0 0 40px 40px;
   background:
     radial-gradient(700px 380px at 82% -6%, rgba(0,181,255,.35), transparent 60%),
     radial-gradient(560px 400px at -8% 108%, rgba(0,120,255,.22), transparent 55%),
@@ -480,39 +480,30 @@ section#contacts.on{background:#F8FCFF;border-radius:26px}
 </div>
 
 <header>
-  <div class="brand">
-    <div class="hex"></div>
-    <div>
-      <h1>ARKAN <span>SETTLEMENT FLOW</span></h1>
-      <p>AOA · USDT · MRU — V6.1</p>
-    </div>
-  </div>
 </header>
 
 <div class="folio">
-  <div class="ccySel">
-    <button data-dc="USD" onclick="setDispCcy('USD')">USD</button>
-    <button data-dc="USDT" onclick="setDispCcy('USDT')">USDT</button>
-    <button data-dc="AOA" onclick="setDispCcy('AOA')">Kz</button>
-    <button data-dc="MRU" onclick="setDispCcy('MRU')">UM</button>
-  </div>
+
   <div class="donutWrap">
-    <svg id="donut" width="380" height="380" viewBox="0 0 344 344" style="cursor:pointer;max-width:96vw">
-      <circle cx="172" cy="172" r="150" fill="none" stroke="rgba(255,255,255,.14)" stroke-width="11"/>
+    <svg id="donut" viewBox="0 0 344 344" style="cursor:pointer;width:min(96vw,470px);height:auto">
+      <defs><filter id="ringGlow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="3.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter></defs>
+      <circle cx="172" cy="172" r="150" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="8"/>
       <g transform="rotate(-90 172 172)">
-        <circle id="arcU" cx="172" cy="172" r="150" fill="none" stroke="#26A17B" stroke-width="11" stroke-linecap="round" stroke-dasharray="0 943" style="transition:.25s"/>
-        <circle id="arcA" cx="172" cy="172" r="150" fill="none" stroke="#F4A50C" stroke-width="11" stroke-linecap="round" stroke-dasharray="0 943" style="transition:.25s"/>
-        <circle id="arcM" cx="172" cy="172" r="150" fill="none" stroke="#3AA0FF" stroke-width="11" stroke-linecap="round" stroke-dasharray="0 943" style="transition:.25s"/>
-        <circle id="arcE" cx="172" cy="172" r="150" fill="none" stroke="#7FE3FF" stroke-width="11" stroke-linecap="round" stroke-dasharray="0 943" style="transition:.25s"/>
+        <circle filter="url(#ringGlow)" id="arcU" cx="172" cy="172" r="150" fill="none" stroke="#26A17B" stroke-width="8" stroke-linecap="round" stroke-dasharray="0 943" style="transition:.25s"/>
+        <circle filter="url(#ringGlow)" id="arcA" cx="172" cy="172" r="150" fill="none" stroke="#F4A50C" stroke-width="8" stroke-linecap="round" stroke-dasharray="0 943" style="transition:.25s"/>
+        <circle filter="url(#ringGlow)" id="arcM" cx="172" cy="172" r="150" fill="none" stroke="#3AA0FF" stroke-width="8" stroke-linecap="round" stroke-dasharray="0 943" style="transition:.25s"/>
+        <circle filter="url(#ringGlow)" id="arcE" cx="172" cy="172" r="150" fill="none" stroke="#7FE3FF" stroke-width="8" stroke-linecap="round" stroke-dasharray="0 943" style="transition:.25s"/>
         <circle id="hitU" cx="172" cy="172" r="150" fill="none" stroke="rgba(0,0,0,0)" stroke-width="38" stroke-dasharray="0 943" onclick="selectAsset('U')"/>
         <circle id="hitA" cx="172" cy="172" r="150" fill="none" stroke="rgba(0,0,0,0)" stroke-width="38" stroke-dasharray="0 943" onclick="selectAsset('A')"/>
         <circle id="hitM" cx="172" cy="172" r="150" fill="none" stroke="rgba(0,0,0,0)" stroke-width="38" stroke-dasharray="0 943" onclick="selectAsset('M')"/>
         <circle id="hitE" cx="172" cy="172" r="150" fill="none" stroke="rgba(0,0,0,0)" stroke-width="38" stroke-dasharray="0 943" onclick="selectAsset('E')"/>
       </g>
     </svg>
-    <div class="donutC" onclick="selectAsset(null)" style="cursor:pointer">
+    <div class="donutC" onclick="cycleDispCcy()" style="cursor:pointer;-webkit-tap-highlight-color:transparent">
       <div class="t"><span class="cur">$</span><span id="balInt">0</span><span class="dec" id="balDec">.00</span></div>
-      <div class="s">إجمالي المحفظة</div>
+      <div class="s">إجمالي المحفظة · <b id="dispTag" style="color:#7FDBFF">USD</b> <span style="opacity:.6">⇄ المس للتبديل</span></div>
     </div>
   </div>
   <div class="assets">
@@ -4192,13 +4183,24 @@ function fitCenter(){
   t.style.fontSize=size+'px';
 }
 let dispCcy=localStorage.getItem('arkan-dispccy')||'USD';
+const DISP_ORDER=['USD','USDT','AOA','MRU'];
+function cycleDispCcy(){
+  const i=DISP_ORDER.indexOf(dispCcy);
+  setDispCcy(DISP_ORDER[(i+1)%DISP_ORDER.length]);
+  if(window.ARKAN_SENSE)ARKAN_SENSE.play('toggle');
+  /* نبضة بصرية على الرقم */
+  const t=document.querySelector('.donutC .t');
+  if(t){t.style.transition='transform .18s';t.style.transform='scale(1.06)';
+    setTimeout(()=>t.style.transform='',180);}
+}
 const DISP_SYM={USD:'$',USDT:'₮',AOA:'Kz',MRU:'UM'};
 function convDisp(usd){
   if(dispCcy==='AOA')return usd*(wallet.vA||1160);
   if(dispCcy==='MRU')return usd*(wallet.vM||40);
   return usd; /* USD/USDT */
 }
-function setDispCcy(c){dispCcy=c;localStorage.setItem('arkan-dispccy',c);renderPortfolio();}
+function setDispCcy(c){
+  setTimeout(()=>{const dt=document.getElementById('dispTag');if(dt)dt.textContent=({AOA:'Kz',MRU:'UM'}[dispCcy]||dispCcy);},0);dispCcy=c;localStorage.setItem('arkan-dispccy',c);renderPortfolio();}
 let selAsset=null; /* null=الإجمالي | U/A/M */
 function selectAsset(k){
   document.querySelectorAll('.asset').forEach(el=>el.classList.remove('sel'));
