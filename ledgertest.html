@@ -43,15 +43,28 @@ async function run(){
       r1.querySelector('.d').textContent='القاعدة تمنع القراءة: '+((j.error||{}).message||res.status);}
   }catch(e){ok=false;r1.querySelector('.st').className='st bad';r1.querySelector('.st').textContent='خطأ';r1.querySelector('.d').textContent=e.message;}
 
-  // 2) غير الأدمن لا يعدّل معاملة (يجب أن يُرفض)
-  const r2=row('غير الأدمن لا يعدّل','wait','...','محاولة تعديل بلا حساب');
+  // 2) غير الأدمن لا يعدّل معاملة حقيقية موجودة (يجب 403 لا 404)
+  const r2=row('غير الأدمن لا يعدّل','wait','...','تعديل معاملة حقيقية بلا حساب');
   try{
-    const res=await fetch(BASE+'/transactions/__nope__?key='+KEY+'&updateMask.fieldPaths=status',
-      {method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({fields:{status:{stringValue:'hacked'}}})});
-    if(res.status===403||res.status===404){r2.querySelector('.st').className='st ok';r2.querySelector('.st').textContent='محميّة ✓';
-      r2.querySelector('.d').textContent='رُفض التعديل ('+res.status+') — أنت وحدك تعدّل.';}
-    else{ok=false;r2.querySelector('.st').className='st bad';r2.querySelector('.st').textContent='ثغرة ✗';
-      r2.querySelector('.d').textContent='⚠ سُمح بالتعديل بلا حساب!';}
+    // اجلب معرّف معاملة حقيقية للعميل
+    let realId=null;
+    const qr=await fetch(BASE+':runQuery?key='+KEY,{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({structuredQuery:{from:[{collectionId:'transactions'}],
+        where:{fieldFilter:{field:{fieldPath:'uid'},op:'EQUAL',value:{stringValue:phone}}},limit:1}})});
+    const qj=await qr.json();
+    if(Array.isArray(qj)){const doc=qj.find(x=>x.document); if(doc)realId=doc.document.name.split('/').pop();}
+    if(!realId){r2.querySelector('.st').className='st wait';r2.querySelector('.st').textContent='تخطٍّ';
+      r2.querySelector('.d').textContent='لا معاملة لاختبار التعديل عليها.';}
+    else{
+      const res=await fetch(BASE+'/transactions/'+realId+'?key='+KEY+'&updateMask.fieldPaths=status',
+        {method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({fields:{status:{stringValue:'HACKED_TEST'}}})});
+      if(res.status===403){r2.querySelector('.st').className='st ok';r2.querySelector('.st').textContent='محميّة ✓';
+        r2.querySelector('.d').textContent='رُفض التعديل (403) — أنت وحدك تعدّل. ✓';}
+      else if(res.ok){ok=false;r2.querySelector('.st').className='st bad';r2.querySelector('.st').textContent='ثغرة ✗';
+        r2.querySelector('.d').textContent='⚠ عُدّلت معاملة حقيقية بلا حساب! راجع allow update.';}
+      else{r2.querySelector('.st').className='st ok';r2.querySelector('.st').textContent='محميّة ✓';
+        r2.querySelector('.d').textContent='رُفض ('+res.status+').';}
+    }
   }catch(e){r2.querySelector('.st').className='st ok';r2.querySelector('.st').textContent='محميّة ✓';r2.querySelector('.d').textContent='رُفض.';}
 
   // 3) قائمة كل المعاملات بلا فلتر (يجب أن تُرفض — حماية بقية العملاء)
