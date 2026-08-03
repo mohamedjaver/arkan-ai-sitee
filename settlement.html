@@ -592,7 +592,7 @@ section#contacts.on{background:#F8FCFF;border-radius:26px}
     </div>
     <div class="btn-row" style="margin-top:12px">
       <button class="btn btn-gold" style="flex:1" onclick="genStatusImage()">صورة للحالة</button>
-      <button class="btn btn-wa" style="flex:1" onclick="publishStatic()">نشر للرابط الثابت</button>
+      <button class="btn btn-gold" style="flex:1" onclick="publishStatic()">🚀 نشر مباشر للموقع</button>
     </div>
     <button class="btn btn-line" style="width:100%;margin-top:8px" onclick="publishRates()">رابط سريع (يحمل الأسعار)</button>
     <div id="pubLink" style="margin-top:10px"></div>
@@ -4925,7 +4925,7 @@ async function publishStatic(){
     if(r.ok){
       const staticUrl=location.origin+location.pathname.replace(/settlement\.html$/,'')+'rates.html';
       $('pubLink').innerHTML=`<div class="card" style="background:rgba(61,220,151,.1);margin-top:12px">
-        <div style="font-size:13px;color:var(--green);font-weight:800;margin-bottom:8px">✅ نُشرت الأسعار للرابط الثابت</div>
+        <div style="font-size:13px;color:var(--green);font-weight:800;margin-bottom:8px">✅ نُشرت — arkanrates.com يعرض أسعارك الجديدة فورًا (جملة/متوسط/تجزئة تلقائيًا حسب مبلغ العميل)</div>
         <div style="font-size:12px;color:var(--dim);margin-bottom:6px">هذا الرابط ثابت — ضعه في بايو واتساب مرة واحدة، ويعرض أحدث أسعار دائمًا:</div>
         <div style="font-size:12px;font-family:'IBM Plex Mono';word-break:break-all;color:var(--acc2);background:rgba(0,0,0,.3);padding:10px;border-radius:10px">${staticUrl}</div>
         <div class="btn-row" style="margin-top:8px">
@@ -4933,7 +4933,7 @@ async function publishStatic(){
           <button class="btn btn-line" onclick="window.open('${staticUrl}','_blank')">معاينة</button>
         </div>
       </div>`;
-      toast('نُشرت للرابط الثابت ✓');
+      toast('✅ نُشرت الأسعار — الموقع يعرضها الآن');
     }else{
       const e=await r.json();
       toast('فشل: '+(e.message||'تحقق من الرمز'));
