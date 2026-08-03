@@ -766,8 +766,6 @@ async function loadTiers(){
     TIER_TS=d.date||null;
     const u=document.getElementById('updDate'); if(u&&TIER_TS)u.textContent=TIER_TS;
     calc(); renderMarket();
-loadTiers();
-setInterval(loadTiers,180000);
   }catch(e){}
 }
 /* يختار الشريحة حسب حجم مبلغ العميل بالعملة الأجنبية */
@@ -1062,6 +1060,11 @@ mm.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>mm.classList.
   pushFeed();
   if(!reduced) setInterval(pushFeed,3400);
 })();
+
+/* تحميل الأسعار المتدرجة المنشورة سحابيًا */
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>{loadTiers();});
+else loadTiers();
+setInterval(loadTiers,180000);
 </script>
 </body>
 </html>
