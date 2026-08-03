@@ -117,11 +117,18 @@ header{padding:20px 18px 4px;position:relative;z-index:6}
 .ic.flagT .usdtB{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:50%;
   background:#26A17B;color:#fff;font:800 15px 'Archivo',sans-serif}
 /* ===== PORTFOLIO ===== */
-.folio{margin:-100px 0 6px;padding:112px 18px 16px;position:relative;z-index:1;border:none;border-radius:0 0 36px 36px;
-  background:linear-gradient(180deg, rgba(0,181,255,.40) 0%, rgba(0,181,255,.16) 52%, transparent 94%)}
+.folio{margin:-100px 0 14px;padding:112px 18px 26px;position:relative;z-index:1;border:none;border-radius:0 0 40px 40px;
+  background:
+    radial-gradient(700px 380px at 82% -6%, rgba(0,181,255,.35), transparent 60%),
+    radial-gradient(560px 400px at -8% 108%, rgba(0,120,255,.22), transparent 55%),
+    linear-gradient(180deg,#071D49 0%,#082468 55%,#0A3A9C 100%);
+  box-shadow:0 26px 60px -18px rgba(4,20,60,.55)}
+.folio .donutC .t{color:#FFFFFF}
+.folio .donutC .t .cur,.folio .donutC .t .dec{color:rgba(191,227,255,.75)}
+.folio .donutC .s{color:rgba(191,227,255,.75)}
 .ccySel{display:flex;gap:6px;justify-content:center;margin:2px 0 10px}
-.ccySel button{padding:6px 14px;border-radius:18px;border:1px solid var(--stroke);
-  background:rgba(0,0,0,.25);color:var(--dim);font-size:12px;font-weight:700;cursor:pointer;
+.ccySel button{padding:7px 16px;border-radius:999px;border:1px solid rgba(255,255,255,.22);
+  background:rgba(255,255,255,.10);color:rgba(224,240,255,.85);font-size:12px;font-weight:700;cursor:pointer;
   font-family:'IBM Plex Mono',monospace;transition:.15s}
 .ccySel button.on{background:linear-gradient(135deg,var(--acc2),var(--accD));color:#fff;border-color:transparent}
 .donutWrap{display:flex;justify-content:center;position:relative}
@@ -142,9 +149,9 @@ header{padding:20px 18px 4px;position:relative;z-index:6}
 .donutC .s{font-size:11px;color:var(--dim);margin-top:4px}
 .assets{margin-top:18px;padding:0 0}
 .asset{display:flex;align-items:center;gap:14px;padding:18px 16px;border-radius:24px;
-  background:rgba(255,255,255,.55);backdrop-filter:blur(18px) saturate(1.4);-webkit-backdrop-filter:blur(18px) saturate(1.4);
-  border:1px solid rgba(255,255,255,.75);margin-bottom:12px;position:relative;overflow:hidden;
-  box-shadow:0 10px 30px rgba(0,58,143,.10), inset 0 1px 0 rgba(255,255,255,.9);
+  background:#FFFFFF;
+  border:1px solid #E4EEF9;margin-bottom:12px;position:relative;overflow:hidden;
+  box-shadow:0 12px 30px rgba(3,18,55,.28);
   transition:transform .28s cubic-bezier(.2,.9,.3,1.2), box-shadow .28s;
   animation:assetIn .5s cubic-bezier(.2,.9,.3,1.1) both}
 .asset:nth-child(1){animation-delay:.05s}.asset:nth-child(2){animation-delay:.12s}
@@ -481,12 +488,12 @@ section#contacts.on{background:#F8FCFF;border-radius:26px}
   </div>
   <div class="donutWrap">
     <svg id="donut" width="380" height="380" viewBox="0 0 344 344" style="cursor:pointer;max-width:96vw">
-      <circle cx="172" cy="172" r="150" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="11"/>
+      <circle cx="172" cy="172" r="150" fill="none" stroke="rgba(255,255,255,.14)" stroke-width="11"/>
       <g transform="rotate(-90 172 172)">
         <circle id="arcU" cx="172" cy="172" r="150" fill="none" stroke="#26A17B" stroke-width="11" stroke-linecap="round" stroke-dasharray="0 943" style="transition:.25s"/>
         <circle id="arcA" cx="172" cy="172" r="150" fill="none" stroke="#F4A50C" stroke-width="11" stroke-linecap="round" stroke-dasharray="0 943" style="transition:.25s"/>
-        <circle id="arcM" cx="172" cy="172" r="150" fill="none" stroke="#00B5FF" stroke-width="11" stroke-linecap="round" stroke-dasharray="0 943" style="transition:.25s"/>
-        <circle id="arcE" cx="172" cy="172" r="150" fill="none" stroke="#00B5FF" stroke-width="11" stroke-linecap="round" stroke-dasharray="0 943" style="transition:.25s"/>
+        <circle id="arcM" cx="172" cy="172" r="150" fill="none" stroke="#3AA0FF" stroke-width="11" stroke-linecap="round" stroke-dasharray="0 943" style="transition:.25s"/>
+        <circle id="arcE" cx="172" cy="172" r="150" fill="none" stroke="#7FE3FF" stroke-width="11" stroke-linecap="round" stroke-dasharray="0 943" style="transition:.25s"/>
         <circle id="hitU" cx="172" cy="172" r="150" fill="none" stroke="rgba(0,0,0,0)" stroke-width="38" stroke-dasharray="0 943" onclick="selectAsset('U')"/>
         <circle id="hitA" cx="172" cy="172" r="150" fill="none" stroke="rgba(0,0,0,0)" stroke-width="38" stroke-dasharray="0 943" onclick="selectAsset('A')"/>
         <circle id="hitM" cx="172" cy="172" r="150" fill="none" stroke="rgba(0,0,0,0)" stroke-width="38" stroke-dasharray="0 943" onclick="selectAsset('M')"/>
@@ -4261,8 +4268,9 @@ function renderPortfolio(){
   /* إبراز بطاقة الأصل المحددة */
   [['U','cardU'],['A','cardA'],['M','cardM'],['E','cardE']].forEach(([k,id])=>{
     const c=$(id);if(!c)return;
-    c.style.borderColor=selAsset===k?views[k].color:'rgba(255,255,255,.07)';
-    c.style.background=selAsset===k?'rgba(255,255,255,.08)':'rgba(255,255,255,.045)';
+    c.style.borderColor=selAsset===k?views[k].color:'#E4EEF9';
+    c.style.background='#FFFFFF';
+    c.classList.toggle('sel',selAsset===k);
   });
   $('wU').value=wallet.U||'';$('wA').value=wallet.A||'';$('wM').value=wallet.M||'';
   $('wVA').value=wallet.vA||'';$('wVM').value=wallet.vM||'';
