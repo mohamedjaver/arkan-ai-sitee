@@ -50,7 +50,7 @@ button,input,select,textarea{font-family:inherit}
 input,select,textarea{font-size:16px}
 /* المحتوى يطفو فوق الخلفية الثابتة */
 .wrap,header,section,footer,main,.layer{position:relative;z-index:1}
-::selection{background:rgba(108,92,231,.32)}
+::selection{background:rgba(0,153,255,.14)}
 .num{font-variant-numeric:tabular-nums;font-feature-settings:"tnum"}
 .ltr{direction:ltr;unicode-bidi:isolate}
 .wrap{max-width:1180px;margin:0 auto;padding:0 24px}
@@ -58,9 +58,9 @@ input,select,textarea{font-size:16px}
 /* ===== خلفية متوهجة هادئة ===== */
 .orb{position:fixed;border-radius:50%;filter:blur(90px);pointer-events:none;z-index:0}
 .orb-1{top:-16%;right:-8%;width:56vw;height:56vw;max-width:760px;max-height:760px;
-  background:radial-gradient(circle,rgba(108,92,231,.35),transparent 68%)}
+  background:radial-gradient(circle,rgba(0,153,255,.14),transparent 68%)}
 .orb-2{bottom:-20%;left:-12%;width:60vw;height:60vw;max-width:820px;max-height:820px;
-  background:radial-gradient(circle,rgba(245,201,76,.10),transparent 68%)}
+  background:radial-gradient(circle,rgba(0,181,255,.06),transparent 68%)}
 @keyframes drift1{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-3%,4%) scale(1.06)}}
 @keyframes drift2{0%,100%{transform:translate(0,0) scale(1.04)}50%{transform:translate(4%,-3%) scale(.97)}}
 #particles{position:fixed;inset:0;z-index:0;pointer-events:none}
@@ -84,7 +84,7 @@ nav.bar{position:sticky;top:0;z-index:40;background:rgba(11,15,25,.72);
 .links a:hover{color:var(--txt)}
 .btn-login{padding:10px 22px;border-radius:var(--r-sm);border:1px solid var(--stroke-2);
   background:transparent;color:var(--txt);font-size:14px;font-weight:600;cursor:pointer;transition:.22s}
-.btn-login:hover{border-color:rgba(108,92,231,.55);background:rgba(108,92,231,.08)}
+.btn-login:hover{border-color:rgba(0,153,255,.14);background:rgba(0,153,255,.14)}
 .menu-btn{display:none;width:40px;height:40px;border-radius:11px;border:1px solid var(--stroke-2);
   background:transparent;cursor:pointer;flex-direction:column;justify-content:center;align-items:center;gap:5px}
 .menu-btn i{display:block;width:17px;height:1.8px;background:var(--txt);border-radius:2px;transition:.28s}
@@ -168,7 +168,7 @@ nav.bar{position:sticky;top:0;z-index:40;background:rgba(11,15,25,.72);
   border-radius:var(--r-sm);padding:0 14px;height:100%;min-height:58px;min-width:126px;cursor:pointer;
   transition:.22s;color:var(--txt)}
 .fdd-btn:hover{border-color:rgba(59,130,246,.45)}
-.fdd.on .fdd-btn{border-color:rgba(108,92,231,.55);box-shadow:0 0 0 4px rgba(59,130,246,.1)}
+.fdd.on .fdd-btn{border-color:rgba(0,153,255,.14);box-shadow:0 0 0 4px rgba(59,130,246,.1)}
 .fdd-flag{width:26px;height:26px;border-radius:50%;object-fit:cover;flex-shrink:0;
   box-shadow:0 0 0 1px #D9E5F2}
 .fdd-code{font-size:1rem;font-weight:700;letter-spacing:.05em;flex:1;text-align:right}
@@ -1249,8 +1249,8 @@ const makeRef = () => 'AK' + Date.now().toString(36).toUpperCase().slice(-6);
 function showPinModal(pin, ref, waUrl){
   const wrap = document.createElement('div');
   wrap.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.72);backdrop-filter:blur(6px);padding:22px;font-family:inherit';
-  wrap.innerHTML = '<div style="width:100%;max-width:380px;background:#FFFFFF;border:1px solid rgba(245,201,76,.3);border-radius:24px;padding:28px 22px;text-align:center;color:#102A43">'
-    + '<div style="width:60px;height:60px;margin:0 auto 16px;border-radius:50%;background:rgba(47,208,140,.14);display:grid;place-items:center;font-size:28px">✓</div>'
+  wrap.innerHTML = '<div style="width:100%;max-width:380px;background:#FFFFFF;border:1px solid rgba(0,181,255,.06);border-radius:24px;padding:28px 22px;text-align:center;color:#102A43">'
+    + '<div style="width:60px;height:60px;margin:0 auto 16px;border-radius:50%;background:rgba(0,168,255,.05);display:grid;place-items:center;font-size:28px">✓</div>'
     + '<h3 style="margin:0 0 6px;font-size:19px;font-weight:700">تم إنشاء حسابك</h3>'
     + '<p style="margin:0 0 20px;font-size:13px;color:#486581;line-height:1.7">احفظ رمزك للدخول لاحقاً على <b style="color:#C88A0A">account.html</b></p>'
     + '<div style="background:#F8FBFF;border:1px solid #E4EEF9;border-radius:16px;padding:16px;margin-bottom:12px"><div style="font-size:12px;color:#486581;margin-bottom:6px">رمزك الشخصي</div><div style="font-size:38px;font-weight:800;letter-spacing:.3em;color:#C88A0A;direction:ltr">'+pin+'</div></div>'
