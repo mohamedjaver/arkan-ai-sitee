@@ -32,16 +32,15 @@
   }
   function buzz(p) { if (navigator.vibrate) { try { navigator.vibrate(p); } catch (e) {} } }
 
+  /* أزرار: اهتزاز حسّي لطيف فقط — بلا صوت (نمط Exodus) */
   var SFX = {
-    tap:     function () { tone(660, 0.05, 'sine', 0.035); buzz(8); },
-    primary: function () { tone(523.25, 0.07, 'sine', 0.05); tone(783.99, 0.10, 'sine', 0.045, null, 0.045); buzz(12); },
-    success: function () { tone(659.25, 0.09, 'sine', 0.05); tone(987.77, 0.10, 'sine', 0.05, null, 0.08);
-                           tone(1318.5, 0.18, 'sine', 0.04, null, 0.16); buzz([12, 40, 18]); },
-    error:   function () { tone(200, 0.18, 'triangle', 0.05, 120); buzz([30, 60, 30]); },
-    toggle:  function () { tone(880, 0.04, 'sine', 0.03); buzz(6); },
-    unlock:  function () { tone(392, 0.10, 'sine', 0.045); tone(587.33, 0.10, 'sine', 0.045, null, 0.07);
-                           tone(880, 0.22, 'sine', 0.04, null, 0.14); buzz([10, 30, 14]); },
-    swipe:   function () { tone(420, 0.10, 'sine', 0.03, 760); buzz(6); }
+    tap:     function () { buzz(8); },
+    primary: function () { buzz(12); },
+    success: function () { buzz([10, 35, 14]); },   /* نبضة نجاح ناعمة */
+    error:   function () { buzz([26, 50, 26]); },   /* اهتزاز رفض */
+    toggle:  function () { buzz(6); },
+    unlock:  function () { buzz([10, 28, 12]); },
+    swipe:   function () { buzz(6); }
   };
 
   /* ══════════════ 2) ربط تلقائي بالأزرار ══════════════ */
