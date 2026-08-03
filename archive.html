@@ -323,11 +323,12 @@ body.selecting #selbar{transform:translateX(-50%) translateY(0)}
   color:var(--deep);border-radius:999px;padding:8px 15px 8px 30px;font:700 12.5px var(--ff);cursor:pointer;white-space:nowrap}
 .sortsel:focus{outline:none;border-color:#0099FF;box-shadow:0 0 0 3px rgba(0,153,255,.15)}
 </style>
+<link rel="apple-touch-icon" sizes="180x180" href="arkan-touch-180.png">
 </head>
 <body>
 <script>
 /* ═══ تحديث ذاتي: يضمن أحدث نسخة دائمًا رغم كل طبقات الكاش ═══ */
-const ARKAN_ARCHIVE_BUILD='2026-08-03.12';
+const ARKAN_ARCHIVE_BUILD='2026-08-03.13';
 (async()=>{
   try{
     const r=await fetch('version.json?t='+Date.now(),{cache:'no-store'});
