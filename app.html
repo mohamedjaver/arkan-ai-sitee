@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <meta name="description" content="صرف العملات وتسديد فواتير الموردين — بمرجع رسمي وتنفيذ خلال دقائق. موريتانيا · أنغولا · الصين.">
-<meta name="theme-color" content="#070A14">
+<meta name="theme-color" content="#F7FAFD">
 <link rel="manifest" href="site-manifest.json">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -32,28 +32,14 @@
    ARKAN Rates — Design System
    ============================================================ */
 :root{
-  /* الخلفية والأسطح — نظام أركان */
-  --bg-1:#070A14; --bg-2:#0E1322; --bg-3:#131A2E;
-  --glass:rgba(17,23,40,.72);
-  --glass-hover:rgba(23,30,50,.82);
-  --stroke:rgba(255,255,255,.08);
-  --stroke-2:rgba(255,255,255,.09);
-  /* الألوان — بنفسجي/ذهبي أركان */
-  --blue:#6C5CE7; --blue-live:#8B7BFF;
-  --violet:#6C5CE7; --gold:#F5C94C; --green:#2FD08C;
-  --up:#2FD08C; --down:#F2676A;
-  /* النصوص */
-  --txt:#F4F6FB;
-  --txt-2:rgba(138,147,168,.75);
-  --txt-3:rgba(138,147,168,.95);
-  /* الأشكال */
-  --r-lg:22px; --r-md:16px; --r-sm:12px;
-}
+    --bg:#F7FAFD; --card:#FFFFFF; --card2:#F8FBFF; --line:#D9E5F2;
+    --txt:#102A43; --muted:#486581; --gold:#C88A0A; --violet:#0056D6;
+    --acc:#0056D6; --acc2:#0099FF; --accD:#003B8F;
+    --green:#0A9E5C; --red:#E53935; --radius:24px;
+  }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html{scroll-behavior:smooth}
-body{
-  min-height:100vh;
-  background:linear-gradient(180deg,#070A14 0%,#0E1322 55%,#131A2E 100%);
+body{background:linear-gradient(180deg,#F3F9FF 0%,#EAF4FF 45%,#E1F0FF 100%);background-attachment:fixed;
   background-attachment:fixed;
   color:var(--txt);
   font-family:'IBM Plex Sans Arabic','SF Pro Display',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;
@@ -116,7 +102,7 @@ nav.bar{position:sticky;top:0;z-index:40;background:rgba(11,15,25,.72);
 .sec-head h2{font-size:clamp(1.7rem,3.5vw,2.4rem);font-weight:800;letter-spacing:-.02em;line-height:1.25}
 .sec-head p{color:var(--txt-2);font-size:1rem;margin-top:12px;max-width:600px}
 .card{background:var(--glass);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
-  box-shadow:0 8px 32px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.05);contain:layout;
+  box-shadow:0 8px 32px rgba(16,42,67,.10),inset 0 1px 0 #EDF3FA;contain:layout;
   border:1px solid var(--stroke);border-radius:var(--r-lg);padding:30px}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:9px;padding:15px 30px;
   border-radius:var(--r-md);border:none;font-size:15px;font-weight:700;cursor:pointer;
@@ -141,7 +127,7 @@ nav.bar{position:sticky;top:0;z-index:40;background:rgba(11,15,25,.72);
 .hero-cta{display:flex;gap:13px;flex-wrap:wrap;margin-bottom:52px}
 .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
 .stat{background:var(--glass);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
-  box-shadow:0 8px 32px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.05);border:1px solid var(--stroke);
+  box-shadow:0 8px 32px rgba(16,42,67,.10),inset 0 1px 0 #EDF3FA;border:1px solid var(--stroke);
   border-radius:var(--r-md);padding:22px 20px;transition:.28s}
 .stat:hover{transform:translateY(-4px);background:var(--glass-hover);border-color:var(--stroke-2)}
 .stat b{display:block;font-size:1.45rem;font-weight:800;letter-spacing:-.02em;margin-bottom:4px}
@@ -161,7 +147,7 @@ nav.bar{position:sticky;top:0;z-index:40;background:rgba(11,15,25,.72);
   padding:0 16px;color:var(--txt);font-size:16px;font-weight:700;outline:none;cursor:pointer;
   min-width:112px;transition:.22s;letter-spacing:.04em}
 .conv-input select:focus{border-color:rgba(59,130,246,.5);box-shadow:0 0 0 4px rgba(59,130,246,.1)}
-.conv-input select option{background:#0E1322;color:#fff}
+.conv-input select option{background:#FFFFFF;color:#fff}
 .swap-wrap{display:flex;justify-content:center;margin:2px 0 8px}
 .swap{width:44px;height:44px;border-radius:50%;background:rgba(59,130,246,.1);
   border:1px solid rgba(59,130,246,.28);color:var(--blue-live);display:grid;place-items:center;
@@ -184,7 +170,7 @@ nav.bar{position:sticky;top:0;z-index:40;background:rgba(11,15,25,.72);
 .fdd-btn:hover{border-color:rgba(59,130,246,.45)}
 .fdd.on .fdd-btn{border-color:rgba(108,92,231,.55);box-shadow:0 0 0 4px rgba(59,130,246,.1)}
 .fdd-flag{width:26px;height:26px;border-radius:50%;object-fit:cover;flex-shrink:0;
-  box-shadow:0 0 0 1px rgba(255,255,255,.14)}
+  box-shadow:0 0 0 1px #D9E5F2}
 .fdd-code{font-size:1rem;font-weight:700;letter-spacing:.05em;flex:1;text-align:right}
 .fdd-car{transition:transform .25s;opacity:.5;flex-shrink:0}
 .fdd.on .fdd-car{transform:rotate(180deg);opacity:1}
@@ -207,7 +193,7 @@ nav.bar{position:sticky;top:0;z-index:40;background:rgba(11,15,25,.72);
 /* ===== EXCHANGE DESK ===== */
 .desk{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:20px}
 .pair{background:var(--glass);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
-  box-shadow:0 8px 32px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.05);border:1px solid var(--stroke);
+  box-shadow:0 8px 32px rgba(16,42,67,.10),inset 0 1px 0 #EDF3FA;border:1px solid var(--stroke);
   border-radius:var(--r-lg);padding:26px;transition:transform .32s cubic-bezier(.22,1,.36,1),background .32s,border-color .32s,box-shadow .32s}
 .pair:hover{transform:translateY(-4px);background:var(--glass-hover);border-color:var(--stroke-2);
   box-shadow:0 22px 60px rgba(0,0,0,.36)}
@@ -224,14 +210,14 @@ nav.bar{position:sticky;top:0;z-index:40;background:rgba(11,15,25,.72);
 .spark{width:100%;height:44px;margin-bottom:16px;display:block}
 .pair-bs{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--stroke);
   border-radius:var(--r-sm);overflow:hidden;border:1px solid var(--stroke)}
-.bs{background:rgba(0,0,0,.2);padding:13px 15px}
+.bs{background:rgba(16,42,67,.10);padding:13px 15px}
 .bs .k{font-size:.72rem;color:var(--txt-2);margin-bottom:4px}
 .bs .v{font-size:1.02rem;font-weight:700;font-variant-numeric:tabular-nums}
 
 /* ===== FEATURES ===== */
 .feats{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px}
 .feat{background:var(--glass);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
-  box-shadow:0 8px 32px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.05);border:1px solid var(--stroke);
+  box-shadow:0 8px 32px rgba(16,42,67,.10),inset 0 1px 0 #EDF3FA;border:1px solid var(--stroke);
   border-radius:var(--r-lg);padding:30px 26px;transition:.3s}
 .feat:hover{transform:translateY(-4px);background:var(--glass-hover);border-color:var(--stroke-2)}
 .feat .n{font-size:.95rem;font-weight:800;color:var(--blue-live);letter-spacing:.1em;margin-bottom:14px}
@@ -248,7 +234,7 @@ nav.bar{position:sticky;top:0;z-index:40;background:rgba(11,15,25,.72);
 .field input:focus,.field select:focus,.field textarea:focus{
   border-color:rgba(59,130,246,.5);box-shadow:0 0 0 4px rgba(59,130,246,.1)}
 .field textarea{resize:vertical;min-height:88px}
-.field select option{background:#0E1322;color:#fff}
+.field select option{background:#FFFFFF;color:#fff}
 .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 
 /* ===== UPLOAD (invoice) ===== */
@@ -273,7 +259,7 @@ footer{border-top:1px solid var(--stroke);margin-top:60px;padding:52px 0 40px;po
 /* ===== TOAST ===== */
 #toast{position:fixed;bottom:24px;left:24px;z-index:200;background:rgba(18,24,41,.97);
   border:1px solid var(--stroke-2);border-right:3px solid var(--blue);border-radius:var(--r-md);
-  padding:15px 22px;font-size:.9rem;box-shadow:0 22px 60px rgba(0,0,0,.5);
+  padding:15px 22px;font-size:.9rem;box-shadow:0 22px 60px rgba(16,42,67,.10);
   opacity:0;transform:translateY(14px);pointer-events:none;transition:.3s cubic-bezier(.22,1,.36,1);max-width:340px}
 #toast.on{opacity:1;transform:none}
 
@@ -729,7 +715,7 @@ function renderDesk(){
     var vals=series(idx*137+7, base);
     var chg=((vals[vals.length-1]-vals[0])/vals[0])*100;
     var up=chg>=0;
-    var col=up?'#4ade80':'#f87171';
+    var col=up?'#0A9E5C':'#E53935';
     var uid='sp'+idx;
     var buy=base*0.995, sell=base*1.005;
     return '<article class="pair">'+
@@ -1148,14 +1134,14 @@ function applyExtract(txt){
   var T=document.getElementById('dropT'), R=document.getElementById('dropR');
   if(got.length){
     T.textContent='قُرئت الفاتورة';
-    R.innerHTML='<span style="color:#4ade80">'+got.join(' \u00b7 ')+'</span>';
+    R.innerHTML='<span style="color:#0A9E5C">'+got.join(' \u00b7 ')+'</span>';
     ['ivComp','ivAmt'].forEach(function(id){
       var el=document.getElementById(id);
       if(el&&el.value){el.style.transition='background .4s';el.style.background='rgba(74,222,128,.14)';
         setTimeout(function(){el.style.background='';},1100);}
     });
   }else{
-    R.innerHTML='<span style="color:#f87171">لم أتعرّف على المبلغ أو اسم الشركة</span>';
+    R.innerHTML='<span style="color:#E53935">لم أتعرّف على المبلغ أو اسم الشركة</span>';
   }
   return got.length;
 }
@@ -1184,15 +1170,15 @@ async function readInvoice(file){
 
     T.textContent = got.length ? 'قُرئت الفاتورة' : 'ارفع الفاتورة — صورة أو PDF';
     var html='';
-    if(got.length)html+='<span style="color:#4ade80">'+got.join(' · ')+'</span>';
+    if(got.length)html+='<span style="color:#0A9E5C">'+got.join(' · ')+'</span>';
     var missing=[];
     if(!company)missing.push('اسم الشركة');
     if(!amount)missing.push('المبلغ');
-    if(missing.length)html+='<div style="color:#f87171;margin-top:6px;font-size:.8rem">تعذّر استخراج: '+missing.join(' و')+' — أدخله يدويًا</div>';
+    if(missing.length)html+='<div style="color:#E53935;margin-top:6px;font-size:.8rem">تعذّر استخراج: '+missing.join(' و')+' — أدخله يدويًا</div>';
     if(OCR_STATE.raw.replace(/\s/g,'').length>15){
       html+='<div style="margin-top:10px"><button type="button" class="btn btn-ghost" style="padding:8px 16px;font-size:.78rem" onclick="event.stopPropagation();showRaw()">عرض النص المقروء</button></div>';
     }else{
-      html+='<div style="color:#f87171;margin-top:6px;font-size:.8rem">لم يُقرأ أي نص — جرّب صورة أوضح أو أقرب</div>';
+      html+='<div style="color:#E53935;margin-top:6px;font-size:.8rem">لم يُقرأ أي نص — جرّب صورة أوضح أو أقرب</div>';
     }
     R.innerHTML=html;
     ['ivComp','ivAmt'].forEach(function(id){
@@ -1205,7 +1191,7 @@ async function readInvoice(file){
     });
   }catch(e){
     T.textContent='ارفع الفاتورة — صورة أو PDF';
-    R.innerHTML='<span style="color:#f87171">تعذّرت القراءة — أدخل البيانات يدويًا</span>';
+    R.innerHTML='<span style="color:#E53935">تعذّرت القراءة — أدخل البيانات يدويًا</span>';
   }
   OCR_STATE.busy=false;
 }
@@ -1213,7 +1199,7 @@ function showRaw(){
   var w=window.open('','_blank');
   if(!w){toast('اسمح بالنوافذ المنبثقة لعرض النص');return;}
   w.document.write('<meta charset="utf-8"><title>النص المقروء</title>'+
-    '<body style="background:#070A14;color:#e8ecf1;font-family:monospace;padding:24px;white-space:pre-wrap;line-height:1.8;font-size:13px">'+
+    '<body style="background:#F7FAFD;color:#e8ecf1;font-family:monospace;padding:24px;white-space:pre-wrap;line-height:1.8;font-size:13px">'+
     (OCR_STATE.raw||'').replace(/[<>&]/g,function(c){return {'<':'&lt;','>':'&gt;','&':'&amp;'}[c];})+'</body>');
   w.document.close();
 }
@@ -1263,14 +1249,14 @@ const makeRef = () => 'AK' + Date.now().toString(36).toUpperCase().slice(-6);
 function showPinModal(pin, ref, waUrl){
   const wrap = document.createElement('div');
   wrap.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.72);backdrop-filter:blur(6px);padding:22px;font-family:inherit';
-  wrap.innerHTML = '<div style="width:100%;max-width:380px;background:#0E1322;border:1px solid rgba(245,201,76,.3);border-radius:24px;padding:28px 22px;text-align:center;color:#F4F6FB">'
+  wrap.innerHTML = '<div style="width:100%;max-width:380px;background:#FFFFFF;border:1px solid rgba(245,201,76,.3);border-radius:24px;padding:28px 22px;text-align:center;color:#102A43">'
     + '<div style="width:60px;height:60px;margin:0 auto 16px;border-radius:50%;background:rgba(47,208,140,.14);display:grid;place-items:center;font-size:28px">✓</div>'
     + '<h3 style="margin:0 0 6px;font-size:19px;font-weight:700">تم إنشاء حسابك</h3>'
-    + '<p style="margin:0 0 20px;font-size:13px;color:#8A93A8;line-height:1.7">احفظ رمزك للدخول لاحقاً على <b style="color:#F5C94C">account.html</b></p>'
-    + '<div style="background:#131A2E;border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:16px;margin-bottom:12px"><div style="font-size:12px;color:#8A93A8;margin-bottom:6px">رمزك الشخصي</div><div style="font-size:38px;font-weight:800;letter-spacing:.3em;color:#F5C94C;direction:ltr">'+pin+'</div></div>'
-    + '<div style="background:#131A2E;border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:12px;margin-bottom:20px"><div style="font-size:12px;color:#8A93A8;margin-bottom:4px">رقمك المرجعي</div><div style="font-size:16px;font-weight:700;letter-spacing:.1em;color:#6C5CE7;direction:ltr">'+ref+'</div></div>'
-    + '<button id="arkWaGo" style="width:100%;padding:15px;border:0;border-radius:14px;cursor:pointer;background:linear-gradient(135deg,#2FD08C,#25b378);color:#04150d;font-weight:700;font-size:15px;font-family:inherit;margin-bottom:10px">إرسال الطلب عبر واتساب</button>'
-    + '<button id="arkClose" style="width:100%;padding:13px;border:1px solid rgba(255,255,255,.1);border-radius:14px;cursor:pointer;background:transparent;color:#8A93A8;font-weight:600;font-family:inherit">حفظت الرمز — إغلاق</button>'
+    + '<p style="margin:0 0 20px;font-size:13px;color:#486581;line-height:1.7">احفظ رمزك للدخول لاحقاً على <b style="color:#C88A0A">account.html</b></p>'
+    + '<div style="background:#F8FBFF;border:1px solid #E4EEF9;border-radius:16px;padding:16px;margin-bottom:12px"><div style="font-size:12px;color:#486581;margin-bottom:6px">رمزك الشخصي</div><div style="font-size:38px;font-weight:800;letter-spacing:.3em;color:#C88A0A;direction:ltr">'+pin+'</div></div>'
+    + '<div style="background:#F8FBFF;border:1px solid #E4EEF9;border-radius:14px;padding:12px;margin-bottom:20px"><div style="font-size:12px;color:#486581;margin-bottom:4px">رقمك المرجعي</div><div style="font-size:16px;font-weight:700;letter-spacing:.1em;color:#0056D6;direction:ltr">'+ref+'</div></div>'
+    + '<button id="arkWaGo" style="width:100%;padding:15px;border:0;border-radius:14px;cursor:pointer;background:linear-gradient(135deg,#0A9E5C,#25b378);color:#04150d;font-weight:700;font-size:15px;font-family:inherit;margin-bottom:10px">إرسال الطلب عبر واتساب</button>'
+    + '<button id="arkClose" style="width:100%;padding:13px;border:1px solid #D9E5F2;border-radius:14px;cursor:pointer;background:transparent;color:#486581;font-weight:600;font-family:inherit">حفظت الرمز — إغلاق</button>'
     + '</div>';
   document.body.appendChild(wrap);
   wrap.querySelector('#arkWaGo').onclick = function(){ window.open(waUrl, '_blank'); };
