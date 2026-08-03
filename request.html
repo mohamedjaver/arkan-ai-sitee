@@ -121,6 +121,16 @@ html.pt-enter body{animation:ptIn .38s cubic-bezier(.22,1,.36,1)}
   </style>
   <script>
   document.addEventListener('DOMContentLoaded',function(){
+    /* المبلغ يُكتب مرة واحدة: استقبال من حاسبة الرئيسية */
+    try{
+      var q=new URLSearchParams(location.search);
+      var amt=q.get('amt'),from=q.get('from'),to=q.get('to');
+      if(amt&&+amt>0){var ia=document.getElementById('ind-amt');if(ia)ia.value=(+amt).toLocaleString('en-US');}
+      function setSel(id,v){var el=document.getElementById(id);if(el&&v&&[...el.options].some(o=>o.value===v||o.text===v))el.value=v;}
+      setSel('ind-from',from);setSel('ind-to',to);
+      var ca=document.getElementById('amt');/* حقل الشركات إن رغب */
+      if(amt&&+amt>0&&ca&&!ca.value)ca.value=(+amt).toLocaleString('en-US');
+    }catch(e){}
     var ti=document.getElementById('tabInd'),tc=document.getElementById('tabComp');
     function act(a){ti.classList.toggle('on',a==='i');tc.classList.toggle('on',a==='c');}
     ti.addEventListener('click',function(){act('i');});
@@ -671,6 +681,34 @@ function showSuccess(amount,currency,ref,waUrl){
   setTimeout(function(){window.open(waUrl,'_blank');},2400);
   if(navigator.vibrate)navigator.vibrate([12,40,12]);
 }
+</script>
+<script>
+/* تعبئة تلقائية من حاسبة الرئيسية — لا يُكتب المبلغ مرتين */
+document.addEventListener('DOMContentLoaded',function(){
+  try{
+    var q=new URLSearchParams(location.search);
+    var amt=q.get('amt'), fr=q.get('from'), to=q.get('to');
+    if(amt){
+      var n=parseFloat(amt);
+      var pretty=isFinite(n)?n.toLocaleString('en-US'):amt;
+      var ia=document.getElementById('ind-amt'); if(ia)ia.value=pretty;
+      var ca=document.getElementById('amt'); if(ca&&!ca.value)ca.value=pretty;
+    }
+    function setSel(id,val){
+      var el=document.getElementById(id); if(!el||!val)return;
+      var i;
+      for(i=0;i<el.options.length;i++){ if(el.options[i].value===val){el.selectedIndex=i;return;} }
+      for(i=0;i<el.options.length;i++){ if(el.options[i].text.trim()===val){el.selectedIndex=i;return;} }
+      for(i=0;i<el.options.length;i++){ if(new RegExp('\\b'+val+'\\b').test(el.options[i].text)){el.selectedIndex=i;return;} }
+    }
+    setSel('ind-from',fr); setSel('ind-to',to);
+    if(amt&&document.getElementById('ind-amt')){
+      var box=document.getElementById('ind-amt');
+      box.style.transition='.4s'; box.style.background='rgba(0,153,255,.10)';
+      setTimeout(function(){box.style.background='';},1200);
+    }
+  }catch(e){}
+});
 </script>
 </body>
 </html>
