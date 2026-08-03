@@ -123,12 +123,22 @@ header{padding:20px 18px 4px;position:relative;z-index:6}
     radial-gradient(560px 400px at -8% 108%, rgba(0,120,255,.22), transparent 55%),
     linear-gradient(180deg,#071D49 0%,#082468 55%,#0A3A9C 100%);
   box-shadow:0 26px 60px -18px rgba(4,20,60,.55)}
+.folio{--aur:#00B5FF}
+.folio::before{content:"";position:absolute;top:-40px;left:50%;transform:translateX(-50%);
+  width:150%;height:340px;pointer-events:none;z-index:0;
+  background:radial-gradient(58% 100% at 50% 0%, color-mix(in srgb, var(--aur) 55%, transparent) 0%, transparent 72%);
+  filter:blur(26px);opacity:.8;transition:opacity .5s;animation:aurBreath 5.2s ease-in-out infinite}
+@keyframes aurBreath{0%,100%{opacity:.55}50%{opacity:.95}}
+.folio>*{position:relative;z-index:1}
 .folio .donutC .t{color:#FFFFFF}
 .folio .donutC .t .cur,.folio .donutC .t .dec{color:rgba(191,227,255,.75)}
 .folio .donutC .s{color:rgba(191,227,255,.75)}
 .ccySel{display:flex;gap:6px;justify-content:center;margin:2px 0 10px}
-.ccySel button{padding:7px 16px;border-radius:999px;border:1px solid rgba(255,255,255,.22);
-  background:rgba(255,255,255,.10);color:rgba(224,240,255,.85);font-size:12px;font-weight:700;cursor:pointer;
+.ccySel button:active{transform:scale(.93)}
+.ccySel button{padding:8px 17px;border-radius:999px;border:1px solid rgba(255,255,255,.22);
+  background:rgba(255,255,255,.09);backdrop-filter:blur(14px) saturate(1.3);-webkit-backdrop-filter:blur(14px) saturate(1.3);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.18), 0 6px 16px rgba(0,10,40,.25);
+  color:rgba(224,240,255,.88);font-size:12px;font-weight:700;cursor:pointer;transition:transform .18s,background .2s;
   font-family:'IBM Plex Mono',monospace;transition:.15s}
 .ccySel button.on{background:linear-gradient(135deg,var(--acc2),var(--accD));color:#fff;border-color:transparent}
 .donutWrap{display:flex;justify-content:center;position:relative}
@@ -4269,9 +4279,12 @@ function renderPortfolio(){
   [['U','cardU'],['A','cardA'],['M','cardM'],['E','cardE']].forEach(([k,id])=>{
     const c=$(id);if(!c)return;
     c.style.borderColor=selAsset===k?views[k].color:'#E4EEF9';
+    /* التوهج العلوي يتلوّن بالأصل المحدد (Exodus) */
     c.style.background='#FFFFFF';
     c.classList.toggle('sel',selAsset===k);
   });
+  const fol=document.querySelector('.folio');
+  if(fol)fol.style.setProperty('--aur', selAsset?views[selAsset].color:'#00B5FF');
   $('wU').value=wallet.U||'';$('wA').value=wallet.A||'';$('wM').value=wallet.M||'';
   $('wVA').value=wallet.vA||'';$('wVM').value=wallet.vM||'';
   const wE=$('wE');if(wE){wE.value=wallet.E||'';$('wVE').value=wallet.vE||'';}
@@ -5394,6 +5407,6 @@ function showBarcode(ref){
 </script>
 <script src="arkan-nav.js?v=8" defer></script>
 <script src="arkan-ai.js?v=8" defer></script>
-<script src="arkan-sense.js?v=1" defer></script>
+<script src="arkan-sense.js?v=2" defer></script>
 </body>
 </html>
