@@ -170,7 +170,7 @@
     function close(ok) {
       d.classList.remove('on');
       document.documentElement.style.overflow = '';
-      if (ok) SFX.unlock();
+      if (ok){ SFX.unlock(); sessionStorage.setItem('arkan_welcomed','1'); }
       sessionStorage.setItem('arkan_unlocked', '1');
     }
     async function attempt() {
@@ -202,9 +202,32 @@
   }
 
   /* ══════════════ 6) الإقلاع ══════════════ */
+  /* نغمة افتتاح راقية (وتر صاعد ناعم) — مرة لكل جلسة */
+  function welcome() {
+    if (sessionStorage.getItem('arkan_welcomed')) return;
+    var c = ctx(); if (!c || muted) return;
+    if (c.state === 'suspended') return; /* ينتظر أول لمسة */
+    sessionStorage.setItem('arkan_welcomed', '1');
+    tone(392.00, 0.30, 'sine', 0.035);
+    tone(587.33, 0.34, 'sine', 0.035, null, 0.10);
+    tone(783.99, 0.42, 'sine', 0.032, null, 0.20);
+    tone(1174.7, 0.55, 'sine', 0.022, null, 0.30);
+    buzz([8, 30, 10]);
+  }
+  function armWelcome() {
+    welcome(); /* يعمل مباشرة في PWA أحيانًا */
+    var deadline = Date.now() + 20000;
+    function onFirst() {
+      if (Date.now() < deadline) setTimeout(welcome, 60);
+      document.removeEventListener('pointerdown', onFirst, true);
+    }
+    if (!sessionStorage.getItem('arkan_welcomed'))
+      document.addEventListener('pointerdown', onFirst, { capture: true, once: true });
+  }
   function boot() {
     injectCSS();
     mountToggle();
+    armWelcome();
     /* القفل يعمل فقط إن فعّله المستخدم، ومرة واحدة لكل جلسة */
     if (bioOn() && sessionStorage.getItem('arkan_unlocked') !== '1') runLock();
   }
