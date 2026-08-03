@@ -10,14 +10,50 @@
   "theme_color": "#071D49",
   "lang": "ar",
   "dir": "rtl",
-  "categories": ["finance", "business"],
+  "categories": [
+    "finance",
+    "business"
+  ],
   "icons": [
-    { "src": "arkan-icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "arkan-icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "arkan-icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    {
+      "src": "arkan-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "arkan-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "arkan-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
   ],
   "shortcuts": [
-    { "name": "التسوية", "url": "./settlement.html", "icons": [{ "src": "arkan-icon-192.png", "sizes": "192x192" }] },
-    { "name": "الأرشيف الذكي", "url": "./archive.html", "icons": [{ "src": "arkan-icon-192.png", "sizes": "192x192" }] }
+    {
+      "name": "التسوية",
+      "url": "./settlement.html",
+      "icons": [
+        {
+          "src": "arkan-icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "الأرشيف الذكي",
+      "url": "./archive.html",
+      "icons": [
+        {
+          "src": "arkan-icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
   ]
 }
