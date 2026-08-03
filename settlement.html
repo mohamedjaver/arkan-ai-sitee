@@ -125,6 +125,15 @@ header{padding:20px 18px 4px;position:relative;z-index:6}
   font-family:'IBM Plex Mono',monospace;transition:.15s}
 .ccySel button.on{background:linear-gradient(135deg,var(--acc2),var(--accD));color:#fff;border-color:transparent}
 .donutWrap{display:flex;justify-content:center;position:relative}
+.donutWrap::before{content:"";position:absolute;top:50%;left:50%;width:300px;height:300px;
+  transform:translate(-50%,-50%);border-radius:50%;pointer-events:none;
+  background:conic-gradient(from 0deg, rgba(0,181,255,.0), rgba(0,181,255,.22), rgba(79,178,248,.0) 60%);
+  filter:blur(28px);animation:haloSpin 9s linear infinite}
+@keyframes haloSpin{to{transform:translate(-50%,-50%) rotate(360deg)}}
+#donut{animation:donutBreath 4.5s ease-in-out infinite}
+@keyframes donutBreath{0%,100%{transform:scale(1)}50%{transform:scale(1.015)}}
+.donutC .t{animation:numGlow 4.5s ease-in-out infinite}
+@keyframes numGlow{0%,100%{text-shadow:none}50%{text-shadow:0 0 24px rgba(0,153,255,.25)}}
 .donutC{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
 .donutC{padding:0 46px;text-align:center}
 .donutC .t{font-size:52px;font-weight:700;font-family:'IBM Plex Sans Arabic',sans-serif;letter-spacing:-1px;white-space:nowrap;line-height:1.1}
@@ -132,12 +141,29 @@ header{padding:20px 18px 4px;position:relative;z-index:6}
 .donutC .t .dec{font-size:.42em;color:var(--dim);font-weight:500}
 .donutC .s{font-size:11px;color:var(--dim);margin-top:4px}
 .assets{margin-top:18px;padding:0 0}
-.asset{display:flex;align-items:center;gap:14px;padding:18px 16px;border-radius:22px;
-  background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.07);margin-bottom:12px}
-.asset .ic{width:52px;height:52px;flex-shrink:0;border-radius:16px;
-  display:flex;align-items:center;justify-content:center;font-weight:800;font-size:17px;color:#0e0f20;
-  font-family:'IBM Plex Mono',monospace;
-  clip-path:polygon(50% 0,93% 25%,93% 75%,50% 100%,7% 75%,7% 25%)}
+.asset{display:flex;align-items:center;gap:14px;padding:18px 16px;border-radius:24px;
+  background:rgba(255,255,255,.55);backdrop-filter:blur(18px) saturate(1.4);-webkit-backdrop-filter:blur(18px) saturate(1.4);
+  border:1px solid rgba(255,255,255,.75);margin-bottom:12px;position:relative;overflow:hidden;
+  box-shadow:0 10px 30px rgba(0,58,143,.10), inset 0 1px 0 rgba(255,255,255,.9);
+  transition:transform .28s cubic-bezier(.2,.9,.3,1.2), box-shadow .28s;
+  animation:assetIn .5s cubic-bezier(.2,.9,.3,1.1) both}
+.asset:nth-child(1){animation-delay:.05s}.asset:nth-child(2){animation-delay:.12s}
+.asset:nth-child(3){animation-delay:.19s}.asset:nth-child(4){animation-delay:.26s}
+@keyframes assetIn{from{opacity:0;transform:translateY(16px) scale(.97)}to{opacity:1;transform:none}}
+.asset::before{content:"";position:absolute;top:0;left:-80%;width:60%;height:100%;pointer-events:none;
+  background:linear-gradient(105deg,transparent,rgba(255,255,255,.55),transparent);
+  transform:skewX(-18deg);animation:sheen 5.5s ease-in-out infinite}
+.asset:nth-child(2)::before{animation-delay:1.3s}.asset:nth-child(3)::before{animation-delay:2.6s}
+.asset:nth-child(4)::before{animation-delay:3.9s}
+@keyframes sheen{0%,72%{left:-80%}92%,100%{left:130%}}
+.asset:active{transform:scale(.975);box-shadow:0 6px 18px rgba(0,58,143,.14)}
+.asset.sel{border-color:rgba(0,153,255,.65);box-shadow:0 0 0 3px rgba(0,153,255,.18), 0 14px 34px rgba(0,86,214,.18)}
+.asset .ic{width:58px;height:58px;flex-shrink:0;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;font-weight:800;font-size:17px;
+  background-size:cover;background-position:center;
+  border:2.5px solid #fff;box-shadow:0 10px 24px rgba(16,42,67,.22), 0 0 0 1px rgba(0,153,255,.15);
+  transition:transform .3s cubic-bezier(.2,.9,.3,1.3)}
+.asset:active .ic{transform:scale(1.12)}
 .asset .nm{flex:1}
 .asset .nm .n1{font-size:18px;font-weight:700}
 .asset .nm .n2{font-size:13px;color:var(--dim);margin-top:4px;font-family:'IBM Plex Mono',monospace}
@@ -454,7 +480,7 @@ section#contacts.on{background:#F8FCFF;border-radius:26px}
     <button data-dc="MRU" onclick="setDispCcy('MRU')">UM</button>
   </div>
   <div class="donutWrap">
-    <svg id="donut" width="344" height="344" viewBox="0 0 344 344" style="cursor:pointer">
+    <svg id="donut" width="380" height="380" viewBox="0 0 344 344" style="cursor:pointer;max-width:96vw">
       <circle cx="172" cy="172" r="150" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="11"/>
       <g transform="rotate(-90 172 172)">
         <circle id="arcU" cx="172" cy="172" r="150" fill="none" stroke="#26A17B" stroke-width="11" stroke-linecap="round" stroke-dasharray="0 943" style="transition:.25s"/>
@@ -473,16 +499,16 @@ section#contacts.on{background:#F8FCFF;border-radius:26px}
     </div>
   </div>
   <div class="assets">
-    <div class="asset" id="cardU" onclick="selectAsset('U')" style="cursor:pointer"><div class="ic flagT"><span class="usdtB">₮</span></div>
+    <div class="asset" id="cardU" onclick="selectAsset('U')" style="cursor:pointer"><div class="ic" style="background:#26A17B;box-shadow:0 10px 24px rgba(38,161,123,.4),0 0 0 1px rgba(38,161,123,.3)"><span style="color:#fff;font:800 24px 'Archivo',sans-serif">₮</span></div>
       <div class="nm"><div class="n1">Tether</div><div class="n2" id="rateU">$1.00 · USDT</div></div>
       <div class="am"><div class="a1 num" id="balU" style="color:#3DDC97">0</div><div class="a2 num" id="balUu">$0</div></div></div>
-    <div class="asset" id="cardA" onclick="selectAsset('A')" style="cursor:pointer"><div class="ic flagT">🇦🇴</div>
+    <div class="asset" id="cardA" onclick="selectAsset('A')" style="cursor:pointer"><div class="ic" style="background-image:url('https://flagcdn.com/w160/ao.png')"></div>
       <div class="nm"><div class="n1">AOA</div><div class="n2" id="rateA">— Kz/USDT</div></div>
       <div class="am"><div class="a1 num" id="balA" style="color:#C88A0A">0</div><div class="a2 num" id="balAu">$0</div></div></div>
-    <div class="asset" id="cardM" onclick="selectAsset('M')" style="cursor:pointer"><div class="ic flagT">🇲🇷</div>
+    <div class="asset" id="cardM" onclick="selectAsset('M')" style="cursor:pointer"><div class="ic" style="background-image:url('https://flagcdn.com/w160/mr.png')"></div>
       <div class="nm"><div class="n1">MRU</div><div class="n2" id="rateM">— UM/USDT</div></div>
       <div class="am"><div class="a1 num" id="balM" style="color:#7FB8FF">0</div><div class="a2 num" id="balMu">$0</div></div></div>
-  <div class="asset" id="cardE" onclick="selectAsset('E')" style="cursor:pointer"><div class="ic flagT">🇪🇺</div>
+  <div class="asset" id="cardE" onclick="selectAsset('E')" style="cursor:pointer"><div class="ic" style="background-image:url('https://flagcdn.com/w160/eu.png')"></div>
     <div class="nm"><div class="n1">EUR</div><div class="n2" id="rateE">— UM/EUR</div></div>
     <div class="am"><div class="a1 num" id="balE" style="color:#7FD1FF">0</div><div class="a2 num" id="balEu">0</div></div>
   </div>
@@ -4157,7 +4183,9 @@ function convDisp(usd){
 }
 function setDispCcy(c){dispCcy=c;localStorage.setItem('arkan-dispccy',c);renderPortfolio();}
 let selAsset=null; /* null=الإجمالي | U/A/M */
-function selectAsset(k){selAsset=(selAsset===k)?null:k;renderPortfolio();}
+function selectAsset(k){
+  document.querySelectorAll('.asset').forEach(el=>el.classList.remove('sel'));
+  if(k)(document.getElementById('card'+k)||{classList:{add(){}}}).classList.add('sel');selAsset=(selAsset===k)?null:k;renderPortfolio();}
 function renderPortfolio(){
   const b=balances();
   const eurUsd=(wallet.vE||44)/(wallet.vM||40); /* MRU/EUR ÷ MRU/USDT = $ لكل يورو */
