@@ -271,6 +271,46 @@ section{padding:88px 0}
 .vcard .meta .l{font-size:9px;letter-spacing:.18em;color:rgba(234,245,255,.6)}
 .vcard .meta b{font-family:'Archivo',sans-serif;font-weight:700;letter-spacing:.08em;font-size:13.5px}
 .vcard .visa-w{font-family:'Archivo',sans-serif;font-weight:900;font-style:italic;font-size:26px}
+/* ── WALLET SECTION ── */
+.walletsec{background:linear-gradient(180deg,#071D49 0%,#0A2A66 100%);color:#EAF5FF;position:relative;overflow:hidden}
+.walletsec::before{content:"";position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(600px 380px at 82% 10%, rgba(38,161,123,.16), transparent 60%),
+             radial-gradient(500px 340px at 8% 90%, rgba(0,153,255,.14), transparent 60%)}
+.walletsec .grid{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:center;position:relative;z-index:1}
+.walletsec .eyebrow{color:#5CE0B8}
+.walletsec .sec-h2{color:#fff}
+.walletsec .sec-sub{color:rgba(234,245,255,.75)}
+.walletsec .vfeat li{color:rgba(234,245,255,.9)}
+.walletsec .tick{background:rgba(38,161,123,.18);color:#5CE0B8}
+.wkard{position:relative;border-radius:22px;padding:26px;direction:ltr;text-align:left;
+  background:radial-gradient(420px 240px at 88% -10%, rgba(38,161,123,.4), transparent 60%),
+             linear-gradient(150deg,#04143A 0%,#0056D6 70%,#0B8BE8 100%);
+  box-shadow:0 30px 70px -20px rgba(0,30,90,.7);transform:rotateY(-8deg) rotateX(3deg);
+  transition:transform .5s cubic-bezier(.2,.8,.2,1);color:#fff}
+.card3d:hover .wkard{transform:rotateY(0) rotateX(0)}
+.wkard::after{content:"";position:absolute;inset:0;border-radius:inherit;
+  background:linear-gradient(115deg,transparent 30%,rgba(255,255,255,.1) 45%,transparent 60%);pointer-events:none}
+.wkard .row1{display:flex;justify-content:space-between;align-items:center;margin-bottom:26px}
+.wkard .tchip{display:inline-flex;align-items:center;gap:7px;font-size:11px;letter-spacing:.08em;
+  background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);padding:6px 12px;border-radius:999px;font-family:var(--mono)}
+.wkard .tdot{width:7px;height:7px;border-radius:50%;background:#5CFFB1;box-shadow:0 0 10px #5CFFB1;animation:wpulse 2s infinite}
+@keyframes wpulse{50%{opacity:.4}}
+.wkard .tsym{width:38px;height:38px;border-radius:50%;background:#26A17B;display:grid;place-items:center;font-weight:800;font-size:19px;font-family:Arial}
+.wkard .wlbl{font-size:11px;letter-spacing:.14em;color:rgba(234,245,255,.65);font-family:var(--mono)}
+.wkard .wamt{font-family:var(--mono);font-size:clamp(30px,4vw,40px);font-weight:700;letter-spacing:-.5px;margin:4px 0 22px}
+.wkard .wamt small{font-size:16px;color:#7FE3C1;font-weight:600;margin-left:8px}
+.wkard .waddr{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.1);
+  border:1px solid rgba(255,255,255,.18);border-radius:12px;padding:10px 14px;font-family:var(--mono);font-size:12.5px;letter-spacing:.05em}
+.race{margin-top:26px;display:grid;gap:14px}
+.race .rrow{display:grid;gap:7px}
+.race .rmeta{display:flex;justify-content:space-between;font-size:12.5px;color:rgba(234,245,255,.75)}
+.race .rmeta b{color:#fff;font-weight:600}
+.race .rbar{height:9px;border-radius:99px;background:rgba(255,255,255,.08);overflow:hidden}
+.race .rfill{height:100%;border-radius:inherit}
+.race .bank .rfill{width:96%;background:rgba(234,245,255,.28)}
+.race .ark .rfill{width:7%;background:linear-gradient(90deg,#26A17B,#5CFFB1);box-shadow:0 0 14px rgba(92,255,177,.55)}
+.race .ark .rmeta b{color:#5CE0B8}
+@media (max-width:900px){.walletsec .grid{grid-template-columns:1fr;gap:40px}}
 .vfeat{list-style:none;margin:26px 0 30px;display:grid;gap:14px}
 .vfeat li{display:flex;gap:14px;align-items:flex-start;font-size:15.5px;color:var(--txt)}
 .vfeat .tick{flex:none;width:26px;height:26px;border-radius:50%;background:#fff;border:1.5px solid var(--stroke);
@@ -386,6 +426,7 @@ body::after{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;opac
       <a href="#markets" data-i="nav_markets"></a>
       <a href="#exchange" data-i="nav_exchange"></a>
       <a href="#settle" data-i="nav_settle"></a>
+      <a href="#wallet" data-i="nav_wallet"></a>
       <a href="#visa" data-i="nav_visa"></a>
       <a href="ai.html">AI</a>
     </div>
@@ -401,7 +442,7 @@ body::after{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;opac
 <div class="mmenu" id="mmenu">
   <a href="#network" data-i="nav_network"></a><a href="#markets" data-i="nav_markets"></a>
   <a href="#exchange" data-i="nav_exchange"></a><a href="#settle" data-i="nav_settle"></a>
-  <a href="#visa" data-i="nav_visa"></a><a href="ai.html">AI</a>
+  <a href="#wallet" data-i="nav_wallet"></a><a href="#visa" data-i="nav_visa"></a><a href="ai.html">AI</a>
   <a href="login.html" data-i="nav_signin"></a>
 </div>
 
@@ -523,6 +564,47 @@ body::after{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;opac
   </div>
 </section>
 
+<!-- ================= WALLET ================= -->
+<section class="walletsec" id="wallet">
+  <div class="wrap">
+    <div class="grid">
+      <div>
+        <span class="eyebrow" data-i="w_eye"></span>
+        <h2 class="sec-h2" data-i="w_h2"></h2>
+        <p class="sec-sub" data-i="w_sub"></p>
+        <ul class="vfeat">
+          <li><span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></span><span data-i="w_f1"></span></li>
+          <li><span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></span><span data-i="w_f2"></span></li>
+          <li><span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></span><span data-i="w_f3"></span></li>
+          <li><span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></span><span data-i="w_f4"></span></li>
+        </ul>
+        <a class="btn btn-gold" href="wallet.html" data-i="w_cta"></a>
+      </div>
+      <div class="card3d">
+        <div class="wkard">
+          <div class="row1">
+            <span class="tchip"><span class="tdot"></span> TRON · TRC20 · LIVE</span>
+            <span class="tsym">₮</span>
+          </div>
+          <div class="wlbl">ARKAN WALLET · USDT</div>
+          <div class="wamt">24,850.00<small>USDT</small></div>
+          <div class="waddr">⧉&nbsp; TWReQD····9vCe9t</div>
+        </div>
+        <div class="race">
+          <div class="rrow bank">
+            <div class="rmeta"><span data-i="w_bank"></span><b data-i="w_bankt"></b></div>
+            <div class="rbar"><div class="rfill"></div></div>
+          </div>
+          <div class="rrow ark">
+            <div class="rmeta"><span data-i="w_ark"></span><b data-i="w_arkt"></b></div>
+            <div class="rbar"><div class="rfill"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- ================= VISA ================= -->
 <section class="visa" id="visa">
   <div class="wrap">
@@ -637,6 +719,17 @@ ar:{
   v_f1:"تعمل على جميع المواقع والتطبيقات الدولية",v_f2:"اشحن عبر Bankily / Sedad / USDT بأسعار أركان",
   v_f3:"التسليم خلال 24–48 ساعة · التفعيل مشمول",v_f4:"دعم بالعربية والفرنسية والإنجليزية",
   v_cta:"اطلب عبر واتساب",
+  nav_wallet:"المحفظة",
+  w_eye:"محفظة أركان · بلوكتشين",
+  w_h2:"أرسل أموالك أسرع من البنوك.",
+  w_sub:"محفظة USDT لامركزية داخل أركان — الحوالة تصل في أقل من دقيقة، من موريتانيا إلى أنغولا والصين والعالم. مفاتيحك تبقى معك، وأركان لا يستطيع لمس أموالك.",
+  w_f1:"تسوية على شبكة TRON خلال ثوانٍ — لا أيام انتظار ولا سويفت",
+  w_f2:"رسوم شبكة أقل من دولار مهما كان حجم المبلغ",
+  w_f3:"غير وصائية: المفتاح الخاص لا يغادر جهازك أبدًا",
+  w_f4:"كل معاملة موثّقة علنًا وقابلة للتحقق على Tronscan",
+  w_cta:"افتح محفظتك الآن",
+  w_bank:"حوالة بنكية دولية",w_bankt:"2–5 أيام عمل",
+  w_ark:"محفظة أركان",w_arkt:"أقل من دقيقة",
   wa:"أريد طلب بطاقة فيزا أركان",
   ai_eye:"بالذكاء الاصطناعي",ai_h2:"ذكاء مالي متقدم",ai_sub:"الذكاء الاصطناعي يعمل على كل معاملة، حتى لا تضطر أنت لذلك.",
   ai1h:"أفضل سعر",ai1p:"يفحص الذكاء الاصطناعي كل الممرات لإيجاد أفضل سعر لمعاملتك فورًا.",
@@ -670,6 +763,17 @@ fr:{
   v_f1:"Fonctionne sur tous les sites et applis internationaux",v_f2:"Rechargez via Bankily / Sedad / USDT aux taux ARKAN",
   v_f3:"Livraison en 24–48h · activation incluse",v_f4:"Support en arabe, français et anglais",
   v_cta:"Commander via WhatsApp →",
+  nav_wallet:"Portefeuille",
+  w_eye:"PORTEFEUILLE ARKAN · BLOCKCHAIN",
+  w_h2:"Envoyez votre argent plus vite que les banques.",
+  w_sub:"Un portefeuille USDT décentralisé chez ARKAN — le transfert arrive en moins d'une minute, de la Mauritanie vers l'Angola, la Chine et le monde. Vos clés restent chez vous : ARKAN ne peut pas toucher vos fonds.",
+  w_f1:"Règlement sur le réseau TRON en quelques secondes — sans SWIFT ni jours d'attente",
+  w_f2:"Frais de réseau inférieurs à un dollar, quel que soit le montant",
+  w_f3:"Non-custodial : la clé privée ne quitte jamais votre appareil",
+  w_f4:"Chaque opération est publique et vérifiable sur Tronscan",
+  w_cta:"Ouvrir mon portefeuille",
+  w_bank:"Virement bancaire international",w_bankt:"2–5 jours ouvrés",
+  w_ark:"Portefeuille ARKAN",w_arkt:"Moins d'une minute",
   wa:"Je souhaite commander la carte Visa ARKAN",
   ai_eye:"Propulsé par l'IA",ai_h2:"Intelligence financière avancée",ai_sub:"L'IA travaille sur chaque transaction, pour que vous n'ayez pas à le faire.",
   ai1h:"Meilleur taux",ai1p:"L'IA analyse chaque corridor pour trouver le taux optimal en temps réel.",
@@ -703,6 +807,17 @@ en:{
   v_f1:"Works on all international websites & apps",v_f2:"Recharge via Bankily / Sedad / USDT at ARKAN rates",
   v_f3:"Delivered in 24–48h · activation included",v_f4:"Support in Arabic, French & English",
   v_cta:"Order via WhatsApp →",
+  nav_wallet:"Wallet",
+  w_eye:"ARKAN WALLET · BLOCKCHAIN",
+  w_h2:"Send money faster than banks.",
+  w_sub:"A decentralized USDT wallet inside ARKAN — transfers land in under a minute, from Mauritania to Angola, China and the world. Your keys stay with you: ARKAN can never touch your funds.",
+  w_f1:"Settlement on the TRON network in seconds — no SWIFT, no waiting days",
+  w_f2:"Network fees under one dollar, whatever the amount",
+  w_f3:"Non-custodial: your private key never leaves your device",
+  w_f4:"Every transaction is public and verifiable on Tronscan",
+  w_cta:"Open your wallet",
+  w_bank:"International bank transfer",w_bankt:"2–5 business days",
+  w_ark:"ARKAN Wallet",w_arkt:"Under a minute",
   wa:"I would like to order the ARKAN Visa card",
   ai_eye:"AI-powered",ai_h2:"Smart financial intelligence",ai_sub:"Machine intelligence works on every transaction, so you don't have to.",
   ai1h:"Best rate detection",ai1p:"AI scans every corridor to find the optimal rate for your transaction in real-time.",
@@ -736,6 +851,17 @@ pt:{
   v_f1:"Funciona em todos os sites e apps internacionais",v_f2:"Recarregue via Bankily / Sedad / USDT às taxas ARKAN",
   v_f3:"Entrega em 24–48h · ativação incluída",v_f4:"Suporte em árabe, francês e inglês",
   v_cta:"Pedir via WhatsApp →",
+  nav_wallet:"Carteira",
+  w_eye:"CARTEIRA ARKAN · BLOCKCHAIN",
+  w_h2:"Envie o seu dinheiro mais rápido que os bancos.",
+  w_sub:"Uma carteira USDT descentralizada na ARKAN — a transferência chega em menos de um minuto, da Mauritânia para Angola, China e o mundo. As suas chaves ficam consigo: a ARKAN não pode tocar nos seus fundos.",
+  w_f1:"Liquidação na rede TRON em segundos — sem SWIFT, sem dias de espera",
+  w_f2:"Taxas de rede abaixo de um dólar, seja qual for o valor",
+  w_f3:"Non-custodial: a chave privada nunca sai do seu dispositivo",
+  w_f4:"Cada operação é pública e verificável no Tronscan",
+  w_cta:"Abrir a minha carteira",
+  w_bank:"Transferência bancária internacional",w_bankt:"2–5 dias úteis",
+  w_ark:"Carteira ARKAN",w_arkt:"Menos de um minuto",
   wa:"Quero pedir o cartão Visa ARKAN",
   ai_eye:"Com IA",ai_h2:"Inteligência financeira avançada",ai_sub:"A IA trabalha em cada transação, para que você não precise.",
   ai1h:"Melhor taxa",ai1p:"A IA analisa cada corredor para encontrar a taxa ideal em tempo real.",
