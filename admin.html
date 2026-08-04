@@ -180,7 +180,8 @@ body{font-family:'IBM Plex Sans Arabic',system-ui,sans-serif}
   <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
     <span class="ark-eyebrow" style="color:#0056D6;font-weight:800;letter-spacing:.15em">ARKAN</span>
     <h3 style="font-weight:800;font-size:17px;margin:0;color:#071E4F">طلبات الدفع الواردة</h3>
-    <span id="ark-req-count" style="margin-inline-start:auto;color:#486581;font-size:13px;font-weight:700"></span>
+    <span id="ark-req-count" style="margin-inline-start:auto;color:#9FC3E8;font-size:13px;font-weight:700"></span>
+    <button id="ark-req-purge" style="border:1px solid rgba(229,57,53,.45);background:rgba(229,57,53,.16);color:#FF8A85;border-radius:10px;padding:7px 13px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit">🗑 حذف الكل</button>
   </div>
   <div id="ark-req-list" style="color:#102A43;--x:0" data-x="color:var(--ark-txt-2,#9aa);font-size:14px">جارٍ التحميل…</div>
 </section>
@@ -559,6 +560,24 @@ import * as ARKAN from './arkan-core.js'; window.ARKAN = ARKAN;
 
   function pillColor(st){return {pending:'#FFB300',accepted:'#0FAE5A',rejected:'#E53935'}[st]||'#7FDBFF';}
   function pillText(st){return {pending:'قيد الانتظار',accepted:'مقبول',rejected:'مرفوض'}[st]||'—';}
+  /* حذف جماعي لكل الطلبات المعروضة (تنظيف بيانات الاختبار) */
+  const purgeBtn = document.getElementById('ark-req-purge');
+  if (purgeBtn) purgeBtn.onclick = async () => {
+    const cards = list.querySelectorAll('[data-reqcard]');
+    const ids = [...list.querySelectorAll('[data-act="rejected"]')].map(b=>b.getAttribute('data-id'));
+    if (!ids.length) { if(ARKAN.toast)ARKAN.toast('لا طلبات للحذف'); return; }
+    if (!confirm('حذف '+ids.length+' طلب نهائياً؟ لا يمكن التراجع.')) return;
+    purgeBtn.disabled = true; purgeBtn.textContent = '... جارٍ الحذف';
+    const { deleteDoc } = ARKAN.fb;
+    let ok=0, fail=0;
+    for (const id of ids) {
+      try { await deleteDoc(doc(ARKAN.db,'payment_requests',id)); ok++; }
+      catch(e){ fail++; }
+    }
+    purgeBtn.disabled = false; purgeBtn.textContent = '🗑 حذف الكل';
+    if (ARKAN.toast) ARKAN.toast('حُذف '+ok+' طلب'+(fail?(' · فشل '+fail):''));
+    if (fail) alert('تعذّر حذف '+fail+' طلب — تأكد من تسجيل دخول الأدمن.');
+  };
   list.addEventListener('click', async (e) => {
     const b = e.target.closest('[data-act]'); if (!b) return;
     const id = b.getAttribute('data-id'), act = b.getAttribute('data-act');
