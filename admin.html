@@ -126,13 +126,52 @@ body{background:linear-gradient(180deg,#F3F9FF 0%,#EAF4FF 45%,#E1F0FF 100%);back
   <link rel="stylesheet" href="arkan-theme.css">
 <style id="ark-guard">body:not(.ark-admin-ok) .wrap,body:not(.ark-admin-ok) #ark-req-panel{display:none!important}</style>
 <style id="ark-admin-override">
-  body{background:linear-gradient(180deg,#F3F9FF 0%,#EAF4FF 45%,#E1F0FF 100%)!important;color:#102A43!important}
-  .ark-card,.card,.wrap>section{background:#FFFFFF!important;border-color:#D9E5F2!important;color:#102A43!important}
-  #ark-req-panel *{color:inherit}
-  #ark-req-list{color:#102A43!important}
-  #ark-req-list [data-reqcard]{background:#FFFFFF!important}
-  h1,h2,h3,h4,b,strong{color:#071E4F!important}
-  .mono,[style*="ui-monospace"]{color:#0056D6}
+/* ══ خلفية كحلية موحّدة (بأسلوب صفحة الفحص) ══ */
+body{background:#0B2050!important;color:#EAF5FF!important;}
+.ark-card{background:#0E2A63!important;border-color:#1B478F!important;color:#EAF5FF!important;}
+body{font-family:'IBM Plex Sans Arabic',system-ui,sans-serif}
+.wrap{max-width:640px;margin:0 auto;padding:16px}
+
+/* ══ لوحة الطلبات — معزولة بالكامل ══ */
+#ark-req-panel{
+  background:#0B2050!important;border:1px solid #1B478F!important;border-radius:20px!important;
+  padding:18px!important;margin:14px 0!important;box-shadow:0 14px 40px rgba(3,15,45,.5)!important;
+  display:block!important}
+#ark-req-panel h3{color:#FFFFFF!important;text-shadow:none!important;font-size:17px!important;font-weight:800!important;margin:0!important}
+#ark-req-panel .ark-eyebrow{color:#7FDBFF!important;font-weight:800!important;letter-spacing:.15em!important;font-size:12px!important}
+#ark-req-count{color:#9FC3E8!important;font-weight:700!important;font-size:13px!important}
+#ark-req-list{color:#EAF5FF!important;display:block!important}
+
+/* ══ بطاقة الطلب — تخطيط ثابت لا يتقلص ══ */
+#ark-req-list [data-reqcard]{
+  display:block!important;width:100%!important;box-sizing:border-box!important;
+  background:#12336F!important;border:1px solid #23539E!important;border-radius:16px!important;
+  padding:14px 16px!important;margin:0 0 10px 0!important;
+  box-shadow:0 6px 18px rgba(3,15,45,.35)!important}
+#ark-req-list [data-reqcard] *{flex:none!important;min-width:0}
+#ark-req-list .rq-head{display:flex!important;justify-content:space-between!important;align-items:flex-start!important;gap:12px!important;flex-wrap:nowrap!important}
+#ark-req-list .rq-info{flex:1 1 auto!important;min-width:0!important}
+#ark-req-list .rq-name{color:#FFFFFF!important;font-weight:800!important;font-size:15px!important;margin-bottom:4px!important;white-space:normal!important}
+#ark-req-list .rq-ref{color:#7FDBFF!important;font-family:'IBM Plex Mono',ui-monospace,monospace!important;font-size:12px!important;font-weight:700!important;margin-bottom:3px!important;direction:ltr!important;text-align:right!important}
+#ark-req-list .rq-meta{color:#9FC3E8!important;font-size:12px!important;line-height:1.7!important}
+#ark-req-list .rq-amt{flex:0 0 auto!important;text-align:left!important;white-space:nowrap!important}
+#ark-req-list .rq-amt b{display:block!important;color:#FFFFFF!important;font-family:'IBM Plex Mono',monospace!important;font-size:17px!important;font-weight:700!important;direction:ltr!important}
+#ark-req-list .rq-amt small{display:block!important;color:#7FDBFF!important;font-size:11.5px!important;font-weight:700!important;direction:ltr!important;margin-top:2px!important}
+
+/* ══ الأزرار ══ */
+#ark-req-list .rq-acts{display:flex!important;gap:8px!important;flex-wrap:wrap!important;margin-top:12px!important}
+#ark-req-list .rq-acts>*{
+  flex:0 0 auto!important;border:0!important;border-radius:10px!important;
+  padding:9px 16px!important;font-size:12.5px!important;font-weight:800!important;
+  cursor:pointer!important;text-decoration:none!important;display:inline-block!important;
+  font-family:inherit!important;line-height:1.2!important;white-space:nowrap!important}
+#ark-req-list .rq-ok{background:#0FAE5A!important;color:#fff!important;box-shadow:0 4px 14px rgba(15,174,90,.35)!important}
+#ark-req-list .rq-no{background:rgba(229,57,53,.18)!important;color:#FF8A85!important;border:1px solid rgba(229,57,53,.45)!important}
+#ark-req-list .rq-wa{background:rgba(37,211,102,.16)!important;color:#4DE38A!important;border:1px solid rgba(37,211,102,.4)!important}
+
+/* ══ شارة الحالة ══ */
+#ark-req-list .rq-pill{display:inline-block!important;font-size:11px!important;font-weight:800!important;
+  padding:3px 10px!important;border-radius:999px!important;margin-inline-start:6px!important;white-space:nowrap!important}
 </style>
 </head>
 <body>
@@ -518,6 +557,8 @@ import * as ARKAN from './arkan-core.js'; window.ARKAN = ARKAN;
   const pill = s => { const m = { pending:['قيد الانتظار','#C88A0A'], accepted:['مقبول','#0A9E5C'], rejected:['مرفوض','#E53935'] }[s] || ['—','#7A93AD'];
     return `<span style="font-size:11px;font-weight:800;padding:3px 10px;border-radius:20px;background:${m[1]}18;color:${m[1]};border:1px solid ${m[1]}40">${m[0]}</span>`; };
 
+  function pillColor(st){return {pending:'#FFB300',accepted:'#0FAE5A',rejected:'#E53935'}[st]||'#7FDBFF';}
+  function pillText(st){return {pending:'قيد الانتظار',accepted:'مقبول',rejected:'مرفوض'}[st]||'—';}
   list.addEventListener('click', async (e) => {
     const b = e.target.closest('[data-act]'); if (!b) return;
     const id = b.getAttribute('data-id'), act = b.getAttribute('data-act');
@@ -556,19 +597,23 @@ import * as ARKAN from './arkan-core.js'; window.ARKAN = ARKAN;
         const r = d.data();
         const wa = r.contact ? ('https://wa.me/' + String(r.contact).replace(/[^0-9]/g,'')) : '';
         const st = r.status || 'pending';
-        return `<div data-reqcard style="background:#FFFFFF;border:1px solid #D9E5F2;border-radius:16px;padding:14px;margin-bottom:10px;box-shadow:0 6px 18px rgba(16,42,67,.07)">
-          <div style="display:flex;gap:12px;justify-content:space-between;align-items:flex-start">
-          <div style="min-width:0;flex:1">
-            <div style="font-weight:800;font-size:15px;color:#102A43;margin-bottom:4px">${r.company||'—'} ${pill(st)}</div>
-            <div style="font-family:'IBM Plex Mono',ui-monospace;font-size:12px;color:#0056D6;font-weight:700;margin-bottom:3px">${r.ref||''}</div>
-            <div style="color:#486581;font-size:12.5px">${r.destination||'—'} · ${r.purpose||''} · ${r.contact||''}</div>
-            <div style="margin-top:7px;display:flex;gap:7px;flex-wrap:wrap">
-              <button data-id="${d.id}" data-act="accepted" style="border:0;border-radius:10px;padding:8px 16px;font-size:12.5px;font-weight:800;cursor:pointer;background:#0A9E5C;color:#fff;box-shadow:0 4px 12px rgba(10,158,92,.3)">قبول ✓</button>
-              <button data-id="${d.id}" data-act="rejected" style="border:0;border-radius:10px;padding:8px 16px;font-size:12.5px;font-weight:800;cursor:pointer;background:#FFF0F0;color:#E53935;border:1px solid #F5C6C6!important">رفض ✕</button>
-              ${wa?`<a href="${wa}" target="_blank" style="border-radius:8px;padding:5px 12px;font-size:12px;font-weight:700;text-decoration:none;background:#25D36622;color:#0A9E5C">واتساب ↗</a>`:''}
+        return `<div data-reqcard>
+          <div class="rq-head">
+            <div class="rq-info">
+              <div class="rq-name">${r.company||'—'} <span class="rq-pill" style="background:${pillColor(st)}22;color:${pillColor(st)};border:1px solid ${pillColor(st)}55">${pillText(st)}</span></div>
+              <div class="rq-ref">${r.ref||''}</div>
+              <div class="rq-meta">${r.destination||'—'} · ${r.purpose||''} · ${r.contact||''}</div>
+            </div>
+            <div class="rq-amt">
+              <b>${r.amount||''}</b>
+              <small>${r.currency||''}</small>
             </div>
           </div>
-          <div style="text-align:end;flex:none;font-weight:800">${r.amount||''} <span style="color:var(--ark-gold,#C88A0A)">${r.currency||''}</span></div>
+          <div class="rq-acts">
+            <button class="rq-ok" data-id="${d.id}" data-act="accepted">قبول ✓</button>
+            <button class="rq-no" data-id="${d.id}" data-act="rejected">رفض ✕</button>
+            ${wa?`<a class="rq-wa" href="${wa}" target="_blank" rel="noopener">واتساب ↗</a>`:''}
+          </div>
         </div>`;
       }).join('');
     }, err => { list.innerHTML = '<div style="color:#E53935">تعذّر التحميل: '+(err.code||err.message)+'</div>'; });
