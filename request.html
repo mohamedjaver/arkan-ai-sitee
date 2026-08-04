@@ -629,14 +629,18 @@ async function uploadInvoice(){
       +'— المستفيد —%0A'
       +'الاسم: '+L(bname)+'%0A'
       +'الحساب: '+L(iban)+(bank?('  ('+L(bank)+')'):'');
-    var rateStr='';
+    var rateStr='', rateNum=0, recvStr='';
     try{ var na=parseFloat(String(amt).replace(/[^\d.]/g,''))||0;
       /* سعر الصرف التقريبي من الحاسبة إن مُرّر */
       var q=new URLSearchParams(location.search); var qr=q.get('rate');
-      if(qr) rateStr='1 '+from+' = '+qr+' '+to;
+      if(qr){ rateStr='1 '+from+' = '+qr+' '+to; rateNum=parseFloat(qr)||0; }
+      if(rateNum>0&&na>0){ var rv=na*rateNum;
+        recvStr=(rv>=100?Math.round(rv):Math.round(rv*100)/100).toLocaleString('en-US');
+        msg+='%0Aيستلم تقريبًا: ≈ '+recvStr+' '+to;
+      }
     }catch(e){}
     window._pdfData={ref:ref,date:new Date().toLocaleString('en-GB'),sender:name,senderPhone:phone,
-      amount:amt,from:from,to:to,bname:bname,iban:iban,bank:bank,rate:rateStr};
+      amount:amt,from:from,to:to,bname:bname,iban:iban,bank:bank,rate:rateStr,rateNum:rateNum,recv:recvStr};
     okToSuccess(ref, 'https://wa.me/22236295050?text='+msg, amt, from);
   });
 })();
@@ -754,15 +758,24 @@ async function buildReceiptCard(){
   x.beginPath();x.arc(cx,cy,r,0,Math.PI*2);x.fillStyle=rg;x.fill();x.restore();
   x.strokeStyle='#fff';x.lineWidth=20;x.lineCap='round';x.lineJoin='round';
   x.beginPath();x.moveTo(cx-52,cy+4);x.lineTo(cx-10,cy+46);x.lineTo(cx+58,cy-38);x.stroke();
-  /* المبلغ الكبير */
+  /* المبلغ الكبير — المُرسَل ثم المُستلَم */
   x.textAlign='center';
-  x.fillStyle='#FFFFFF';x.font='800 128px "IBM Plex Mono",monospace';
-  x.fillText(amtN.toLocaleString('en-US'),W/2,600);
-  x.fillStyle='#7FDBFF';x.font='700 46px "Archivo",sans-serif';
-  x.fillText((d.from||'')+'  →  '+(d.to||''),W/2,662);
-  /* سعر الصرف */
-  if(d.rate){ x.textAlign='center';x.fillStyle='rgba(191,227,255,.75)';x.font='600 30px "IBM Plex Mono",monospace';
-    x.fillText(L.rate+d.rate,W/2,716); }
+  x.fillStyle='#FFFFFF';x.font='800 112px "IBM Plex Mono",monospace';
+  x.fillText(amtN.toLocaleString('en-US'),W/2,578);
+  x.fillStyle='#7FDBFF';x.font='700 38px "Archivo",sans-serif';
+  x.fillText(d.from||'',W/2,626);
+  if(d.recv){
+    /* المبلغ المستلم بالذهبي */
+    x.fillStyle='#FFD54F';x.font='800 64px "IBM Plex Mono",monospace';
+    x.fillText('≈ '+d.recv+' '+(d.to||''),W/2,704);
+    if(d.rate){ x.fillStyle='rgba(191,227,255,.75)';x.font='600 27px "IBM Plex Mono",monospace';
+      x.fillText(L.rate+d.rate,W/2,748); }
+  } else {
+    x.fillStyle='#7FDBFF';x.font='700 46px "Archivo",sans-serif';
+    x.fillText((d.from||'')+'  →  '+(d.to||''),W/2,682);
+    if(d.rate){ x.fillStyle='rgba(191,227,255,.75)';x.font='600 30px "IBM Plex Mono",monospace';
+      x.fillText(L.rate+d.rate,W/2,736); }
+  }
   /* جدول التفاصيل */
   let ry=800; const rowH=92; const labX=RTL?W-90:90, valX=RTL?90:W-90;
   function row(label,val){
