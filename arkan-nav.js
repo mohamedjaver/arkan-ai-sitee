@@ -12,8 +12,6 @@
     { n: 'أرشيف الإيصالات',  u: 'archive.html',    d: 'قراءة وأرشفة ذكية بالـOCR',  i: 'archive', adminOnly:true},
     { n: 'مركز التسويات',    u: 'settlement.html', d: 'مطابقة العميل × المورّد',     i: 'settle', adminOnly:true },
     { n: 'حسابي',            u: 'account.html',    d: 'رصيدك ومعاملاتك',            i: 'user'   },
-    { n: 'التداول',          u: 'trading.html',    d: 'مؤشرات وأنظمة تداول',        i: 'chart', adminOnly:true },
-    { n: 'مساعد أركان',      u: 'ai.html',         d: 'الذكاء الاصطناعي',           i: 'ai'     },
     { n: 'لوحة الإدارة',     u: 'admin.html',      d: 'إدارة الطلبات والمعاملات',    i: 'admin', adminOnly:true }
   ];
   const P = {
