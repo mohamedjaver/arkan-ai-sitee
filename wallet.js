@@ -286,41 +286,46 @@ async function makeReceipt(){
     await (document.fonts&&document.fonts.ready||Promise.resolve());
     var W=1240,H=1754, cv=document.createElement('canvas'); cv.width=W; cv.height=H;
     var x=cv.getContext('2d');
-    /* خلفية */
-    x.fillStyle='#F5F9FF'; x.fillRect(0,0,W,H);
-    /* رأس متدرج */
-    var g=x.createLinearGradient(0,0,W,420); g.addColorStop(0,'#062A6E'); g.addColorStop(.65,'#0056D6'); g.addColorStop(1,'#0B8BE8');
-    x.fillStyle=g; x.fillRect(0,0,W,420);
-    x.fillStyle='rgba(38,161,123,.35)'; x.beginPath(); x.arc(W-140,60,220,0,7); x.fill();
-    /* شعار */
-    x.fillStyle='#fff'; x.font='800 54px Archivo, Arial'; x.textAlign='left'; x.direction='ltr';
-    x.fillText('ARKAN',70,120);
-    x.fillStyle='#7FE3C1'; x.fillText('RATES',282,120);
-    x.fillStyle='rgba(255,255,255,.8)'; x.font='400 26px "IBM Plex Sans Arabic"'; x.textAlign='right'; x.direction='rtl';
-    x.fillText('إيصال تحويل USDT · TRC20', W-70,118);
-    /* المبلغ */
-    x.textAlign='center'; x.direction='ltr'; x.fillStyle='#fff';
-    x.font='700 104px Archivo, Arial';
-    x.fillText('-'+fmt(SEND.amt)+' USDT', W/2, 268);
-    /* دائرة النجاح الكبيرة — متداخلة مع الرأس */
-    var cx=W/2, cy=420, R=95;
-    x.beginPath(); x.arc(cx,cy,R+22,0,7); x.fillStyle='#F5F9FF'; x.fill();
-    x.beginPath(); x.arc(cx,cy,R+12,0,7); x.fillStyle='#BBD7F6'; x.fill();
-    var cg=x.createLinearGradient(cx-R,cy-R,cx+R,cy+R);
-    cg.addColorStop(0,'#2F7CE0'); cg.addColorStop(1,'#5B9BEA');
-    x.beginPath(); x.arc(cx,cy,R,0,7); x.fillStyle=cg; x.fill();
-    x.strokeStyle='#fff'; x.lineWidth=16; x.lineCap='round'; x.lineJoin='round';
-    x.beginPath(); x.moveTo(cx-42,cy+4); x.lineTo(cx-10,cy+38); x.lineTo(cx+48,cy-32); x.stroke();
-    /* الحالة تحت الدائرة */
-    x.font='600 30px "IBM Plex Sans Arabic"'; x.direction='rtl'; x.textAlign='center';
-    x.fillStyle=SEND.confirmed?'#0A9E5C':'#486581';
-    x.fillText(SEND.confirmed?'✓ تم الإرسال — مؤكدة على البلوكتشين':'تم الإرسال — قيد التأكيد', W/2, 590);
-    /* بطاقة التفاصيل */
-    function card(y,h){ x.fillStyle='#fff'; x.strokeStyle='#D9E5F2'; x.lineWidth=2;
-      rr(x,70,y,W-140,h,26); x.fill(); x.stroke(); }
     function rr(c,px,py,pw,ph,r){ c.beginPath(); c.moveTo(px+r,py); c.arcTo(px+pw,py,px+pw,py+ph,r);
       c.arcTo(px+pw,py+ph,px,py+ph,r); c.arcTo(px,py+ph,px,py,r); c.arcTo(px,py,px+pw,py,r); c.closePath(); }
-    card(640,540);
+
+    /* خلفية زرقاء كاملة */
+    var g=x.createLinearGradient(0,0,W,H);
+    g.addColorStop(0,'#052361'); g.addColorStop(.5,'#0050C8'); g.addColorStop(1,'#0B8BE8');
+    x.fillStyle=g; x.fillRect(0,0,W,H);
+    x.fillStyle='rgba(38,161,123,.28)'; x.beginPath(); x.arc(W-90,110,300,0,7); x.fill();
+    x.fillStyle='rgba(255,255,255,.05)'; x.beginPath(); x.arc(60,H-80,340,0,7); x.fill();
+
+    /* الشعار */
+    x.textAlign='left'; x.direction='ltr';
+    x.fillStyle='#fff'; x.font='800 56px Archivo, Arial'; x.fillText('ARKAN',70,120);
+    x.fillStyle='#7FE3C1'; x.fillText('RATES',292,120);
+    x.textAlign='right'; x.direction='rtl'; x.fillStyle='rgba(255,255,255,.85)';
+    x.font='400 27px "IBM Plex Sans Arabic"'; x.fillText('إيصال تحويل USDT', W-70,116);
+
+    /* المبلغ */
+    x.textAlign='center'; x.direction='ltr'; x.fillStyle='#fff';
+    x.font='700 112px Archivo, Arial';
+    x.fillText('-'+fmt(SEND.amt)+' USDT', W/2, 285);
+
+    /* دائرة النجاح الكبيرة */
+    var cx=W/2, cy=520, R=130;
+    x.fillStyle='rgba(255,255,255,.12)'; x.beginPath(); x.arc(cx,cy,R+48,0,7); x.fill();
+    x.fillStyle='#fff'; x.beginPath(); x.arc(cx,cy,R+20,0,7); x.fill();
+    var cg=x.createLinearGradient(cx-R,cy-R,cx+R,cy+R);
+    cg.addColorStop(0,'#2F7CE0'); cg.addColorStop(1,'#5B9BEA');
+    x.fillStyle=cg; x.beginPath(); x.arc(cx,cy,R,0,7); x.fill();
+    x.strokeStyle='#fff'; x.lineWidth=22; x.lineCap='round'; x.lineJoin='round';
+    x.beginPath(); x.moveTo(cx-58,cy+6); x.lineTo(cx-14,cy+52); x.lineTo(cx+64,cy-44); x.stroke();
+
+    /* الحالة */
+    x.textAlign='center'; x.direction='rtl';
+    x.font='600 34px "IBM Plex Sans Arabic"'; x.fillStyle='#9FF5D2';
+    x.fillText(SEND.confirmed?'تم الإرسال بنجاح — مؤكدة على البلوكتشين ✓':'تم الإرسال — قيد التأكيد على الشبكة', W/2, 748);
+
+    /* بطاقة التفاصيل البيضاء */
+    x.save(); x.shadowColor='rgba(0,20,60,.35)'; x.shadowBlur=40; x.shadowOffsetY=14;
+    x.fillStyle='#fff'; rr(x,70,800,W-140,500,28); x.fill(); x.restore();
     var rows=[
       ['من محفظة',S.addr],
       ['إلى محفظة',SEND.to],
@@ -328,41 +333,44 @@ async function makeReceipt(){
       ['رقم المعاملة TxID',SEND.tx],
       ['التاريخ والوقت',SEND.when.toLocaleString('ar-MR',{dateStyle:'medium',timeStyle:'short'})]
     ];
-    var ry=720;
+    var ry=880;
     rows.forEach(function(rw,i){
       x.textAlign='right'; x.direction='rtl'; x.fillStyle='#486581';
-      x.font='500 26px "IBM Plex Sans Arabic"'; x.fillText(rw[0], W-120, ry);
+      x.font='500 25px "IBM Plex Sans Arabic"'; x.fillText(rw[0], W-120, ry);
       x.textAlign='left'; x.direction='ltr'; x.fillStyle='#102A43';
       var mono=/^T|^[0-9a-f]{20}/.test(rw[1]);
-      x.font=(mono?'600 24px "Courier New", monospace':'600 26px "IBM Plex Sans Arabic"');
+      x.font=(mono?'600 23px "Courier New", monospace':'600 25px "IBM Plex Sans Arabic"');
       var v=rw[1];
-      if(v.length>46){ x.fillText(v.slice(0,46),120,ry-14); x.fillText(v.slice(46),120,ry+18); }
+      if(v.length>46){ x.fillText(v.slice(0,46),120,ry-13); x.fillText(v.slice(46),120,ry+17); }
       else x.fillText(v,120,ry);
-      if(i<rows.length-1){ x.strokeStyle='#EAF2FB'; x.beginPath(); x.moveTo(110,ry+42); x.lineTo(W-110,ry+42); x.stroke(); }
-      ry+=92;
+      if(i<rows.length-1){ x.strokeStyle='#EAF2FB'; x.lineWidth=2; x.beginPath(); x.moveTo(110,ry+38); x.lineTo(W-110,ry+38); x.stroke(); }
+      ry+=88;
     });
-    /* QR التحقق */
-    card(1210,420);
+
+    /* بطاقة التحقق QR */
+    x.save(); x.shadowColor='rgba(0,20,60,.35)'; x.shadowBlur=40; x.shadowOffsetY=14;
+    x.fillStyle='#fff'; rr(x,70,1340,W-140,320,28); x.fill(); x.restore();
     x.textAlign='right'; x.direction='rtl'; x.fillStyle='#102A43'; x.font='600 30px "IBM Plex Sans Arabic"';
-    x.fillText('تحقق علني من المعاملة', W-120, 1290);
+    x.fillText('تحقق علني من المعاملة', W-120, 1425);
     x.fillStyle='#486581'; x.font='400 24px "IBM Plex Sans Arabic"';
-    x.fillText('امسح الرمز لعرض هذا التحويل على Tronscan', W-120, 1336);
-    x.fillText('سجل عام غير قابل للتعديل', W-120, 1376);
+    x.fillText('امسح الرمز لعرض هذا التحويل على Tronscan', W-120, 1472);
+    x.fillText('سجل عام غير قابل للتعديل', W-120, 1514);
     var link=net().scan+'/transaction/'+SEND.tx;
     var q=window.qrcode(0,'M'); q.addData(link); q.make();
-    var n=q.getModuleCount(), size=290, cell=size/n, qx=120, qy=1265;
-    x.fillStyle='#fff'; x.fillRect(qx-14,qy-14,size+28,size+28);
+    var n=q.getModuleCount(), size=240, cell=size/n, qx=120, qy=1380;
     x.fillStyle='#102A43';
     for(var r2=0;r2<n;r2++)for(var c2=0;c2<n;c2++) if(q.isDark(r2,c2)) x.fillRect(qx+c2*cell,qy+r2*cell,cell+.5,cell+.5);
+
     /* تذييل */
-    x.textAlign='center'; x.direction='rtl'; x.fillStyle='#486581'; x.font='400 22px "IBM Plex Sans Arabic"';
-    x.fillText('arkanrates.com — إيصال مولّد آليًا من محفظة أركان اللامركزية', W/2, 1660);
-    x.font='400 20px Arial'; x.direction='ltr';
-    x.fillText('ARKAN INTERNATIONAL TRADING · Non-Custodial Wallet · '+new Date().getFullYear(), W/2, 1700);
+    x.textAlign='center'; x.direction='rtl'; x.fillStyle='rgba(255,255,255,.85)';
+    x.font='400 22px "IBM Plex Sans Arabic"';
+    x.fillText('arkanrates.com — إيصال مولّد آليًا من محفظة أركان اللامركزية', W/2, 1706);
+    x.font='400 19px Arial'; x.direction='ltr'; x.fillStyle='rgba(255,255,255,.6)';
+    x.fillText('ARKAN INTERNATIONAL TRADING · Non-Custodial Wallet · '+new Date().getFullYear(), W/2, 1738);
 
     var img=cv.toDataURL('image/jpeg',.92);
     var JS=window.jspdf&&window.jspdf.jsPDF;
-    if(!JS){ /* بديل: تنزيل صورة */ dl(img,'ARKAN-receipt-'+SEND.tx.slice(0,8)+'.jpg'); return; }
+    if(!JS){ dl(img,'ARKAN-receipt-'+SEND.tx.slice(0,8)+'.jpg'); return; }
     var pdf=new JS({unit:'pt',format:'a4'});
     var pw=pdf.internal.pageSize.getWidth(), ph=pdf.internal.pageSize.getHeight();
     pdf.addImage(img,'JPEG',0,0,pw,ph);
