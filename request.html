@@ -728,8 +728,21 @@ async function buildReceiptCard(){
   const d=window._pdfData||{};
   const L=RCPT_I18N[rcptLang()]||RCPT_I18N.ar;
   const RTL=L.dir==='rtl';
-  const W=1080,H=1760,cv=document.createElement('canvas');cv.width=W;cv.height=H;
+  /* دقة مضاعفة ×2 لإخراج HD زجاجي حاد */
+  const S=2, W=1080,H=1760,cv=document.createElement('canvas');
+  cv.width=W*S;cv.height=H*S;
   const x=cv.getContext('2d');
+  x.scale(S,S);
+  x.imageSmoothingEnabled=true;x.imageSmoothingQuality='high';
+  /* تحميل الخطوط قبل الرسم — يمنع السقوط لخط النظام الباهت */
+  try{
+    await Promise.all([
+      '800 112px "IBM Plex Mono"','800 64px "IBM Plex Mono"','600 27px "IBM Plex Mono"',
+      '800 56px "Archivo"','700 38px "Archivo"','700 26px "Archivo"',
+      '700 30px Cairo','600 27px Cairo','700 28px Cairo','600 24px Cairo'
+    ].map(f=>document.fonts.load(f)));
+    await document.fonts.ready;
+  }catch(e){}
   const amtN=parseFloat(String(d.amount).replace(/[^\d.]/g,''))||0;
   /* خلفية كحلية */
   const bg=x.createLinearGradient(0,0,0,H);
