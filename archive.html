@@ -527,7 +527,7 @@ function promptKey(){
 function paintKey(){const on=!!getKey();$('gchip').classList.toggle('on',on);
   $('gtxt').textContent=on?'Gemini مفعّل':'Gemini غير مفعّل';}
 
-const GEM_SCHEMA=`{"transaction_id":"","reference":"","bank":"","amount":0,"currency":"","date":"YYYY-MM-DD","time":"","country":"","beneficiary":"","sender":"","wallet_address":"","iban":"","swift":"","fee":0,"exchange_rate":"","status":"","institution":"","branch":"","notes":"","doc_type":"","quality":{"cropped":false,"blurry":false,"edited_suspicion":false,"missing_corners":false,"issues":""},"confidence":0}`;
+const GEM_SCHEMA=`{"transaction_id":"","reference":"","bank":"","amount":0,"currency":"","date":"YYYY-MM-DD","time":"","country":"","beneficiary":"","sender":"","wallet_address":"","iban":"","swift":"","fee":0,"exchange_rate":"","status":"","institution":"","branch":"","notes":"","doc_type":"","receipt_side":"","field_confidence":{"amount":0,"currency":0,"date":0,"reference":0,"bank":0,"sender":0,"beneficiary":0},"quality":{"cropped":false,"blurry":false,"edited_suspicion":false,"missing_corners":false,"issues":""},"confidence":0}`;
 async function geminiExtract(b64,mime,modelChain){
   const key=getKey(); if(!key)throw new Error('NOKEY');
   const prompt=`أنت محرك OCR مالي مؤسسي. اقرأ هذا المستند (قد يكون بالعربية أو الفرنسية أو الإنجليزية أو البرتغالية أو الصينية): إيصال بنكي، تحويل، كشف حساب، إيصال كريبتو، SWIFT، أو فاتورة.
@@ -538,7 +538,9 @@ ${GEM_SCHEMA}
 - تجاهل تمامًا أرقام التذييل القانوني (Capital Social، NIF، الهواتف).
 - الكوانزا الأنغولية: AOA (تظهر كـ Kz أو KZ أو AKZ). الأوقية: MRU (أو UM). انتبه للفواصل الأوروبية 1.234.567,89 والمسافات 8 000 000,00.
 - قيّم جودة الصورة في quality (مقصوصة؟ ضبابية؟ أثر تعديل؟ زوايا ناقصة؟).
-- confidence: ثقتك 0-100 في دقة المبلغ والمرجع.`;
+- confidence: ثقتك 0-100 في دقة المبلغ والمرجع.
+- field_confidence: ثقتك 0-100 في كل حقل على حدة (المبلغ، العملة، التاريخ، المرجع، البنك، المرسل، المستفيد). إن لم يوجد الحقل في المستند ضع 0.
+- receipt_side: صنّف الإيصال من منظور شركة ARKAN (أسماؤها: ARKAN، أركان، Mohamed Javer، Mohamed El Arbi): إذا كان المال واردًا إلى ARKAN من عميل → "customer". إذا كان المال صادرًا من ARKAN إلى طرف آخر (مورد/مستفيد خارجي) → "supplier". إذا لم تستطع الجزم → "unknown".`;
   const body={contents:[{parts:[{text:prompt},{inline_data:{mime_type:mime||'image/jpeg',data:b64}}]}],
     generationConfig:{temperature:0,responseMimeType:'application/json'}};
   let j=null,ok=false,last='';
@@ -1942,6 +1944,248 @@ function mCsv(){
     <div class="mc-foot">
       <button onclick="document.getElementById('mcPick').classList.remove('on')">إلغاء</button>
       <button class="p" onclick="mPickOk()">🔗 ربط المحدد</button>
+    </div>
+  </div>
+</div>
+
+<style>
+.mc-wrap{position:relative}
+#mcLines{position:absolute;inset:0;pointer-events:none;z-index:5}
+.gk-modal{position:fixed;inset:0;background:rgba(7,29,73,.6);backdrop-filter:blur(5px);display:none;align-items:center;justify-content:center;z-index:950;padding:16px}
+.gk-modal.on{display:flex}
+.gk-box{background:#fff;border-radius:18px;width:min(480px,100%);overflow:hidden}
+.gk-box h3{margin:0;padding:14px 18px;background:linear-gradient(90deg,#0058D9,#00B5FF);color:#fff;font-size:14px;display:flex;justify-content:space-between}
+.gk-box .bd{padding:16px 18px;font-size:12.5px;color:#243b63;line-height:2}
+.gk-box input{width:100%;border:1.5px solid rgba(7,29,73,.18);border-radius:10px;padding:10px 12px;font-size:13px;font-family:'IBM Plex Mono',monospace;direction:ltr;margin:8px 0}
+.gk-box .st{font-size:12px;font-weight:700;min-height:20px}
+.gk-box .st.ok{color:#0a9e5c}.gk-box .st.bad{color:#d63333}
+.fc-warn{margin-top:10px;background:#fff8ec;border:1px solid rgba(224,138,0,.35);border-radius:10px;padding:8px 10px;font-size:11px;color:#8a5a00}
+.fc-warn b{display:block;margin-bottom:4px}
+.fc-chip{display:inline-flex;gap:4px;background:#fff;border:1px solid rgba(224,138,0,.4);border-radius:16px;padding:2px 9px;margin:2px;font-size:10.5px}
+.fc-chip.crit{border-color:rgba(214,51,51,.5);color:#c22}
+</style>
+<script>
+/* ═══════════════════════════════════════════════════════════
+   ARKAN Matching Center — الإضافات المتبقية
+   Excel متعدد الأوراق · JSON · خط بصري · ثقة الحقول · تفعيل Gemini
+   ═══════════════════════════════════════════════════════════ */
+
+/* ═══ 1) تفعيل Gemini — نافذة إعداد + اختبار مباشر للمفتاح ═══ */
+window.promptKey=function(){ $('gkModal').classList.add('on'); $('gkInput').value=getKey(); $('gkSt').textContent=''; $('gkSt').className='st'; };
+async function gkTest(){
+  const k=$('gkInput').value.trim();
+  const st=$('gkSt');
+  if(!k){st.textContent='أدخل المفتاح أولًا';st.className='st bad';return false;}
+  st.textContent='⏳ يختبر الاتصال بـ Gemini…';st.className='st';
+  try{
+    const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key='+encodeURIComponent(k),
+      {method:'POST',headers:{'Content-Type':'application/json'},
+       body:JSON.stringify({contents:[{parts:[{text:'رد بكلمة: جاهز'}]}],generationConfig:{maxOutputTokens:10}})});
+    const j=await r.json().catch(()=>({}));
+    if(r.ok){st.textContent='✅ المفتاح يعمل — Gemini جاهز';st.className='st ok';return true;}
+    st.textContent='✗ '+((j.error&&j.error.message)||('HTTP '+r.status)).slice(0,90);st.className='st bad';return false;
+  }catch(e){st.textContent='✗ تعذر الاتصال — تحقق من الإنترنت';st.className='st bad';return false;}
+}
+async function gkSave(){
+  const k=$('gkInput').value.trim();
+  if(k){ const ok=await gkTest(); if(!ok)return; }
+  localStorage.setItem('gemKey',k); paintKey();
+  toast0(k?'✓ Gemini مفعّل ويعمل':'أُزيل المفتاح');
+  if(k)setTimeout(()=>$('gkModal').classList.remove('on'),700);
+  else $('gkModal').classList.remove('on');
+}
+
+/* ═══ 2) تصنيف Gemini التلقائي لنوع الإيصال ═══ */
+(function(){
+  const _pf=window.processFile;
+  window.processFile=async function(file){
+    await _pf(file);
+    /* الـhook السابق ضبط النوع اليدوي — هنا نكمل بتصنيف Gemini إن بقي غير محدد */
+    const rec=CACHE[0];
+    if(rec&&!rec.rtype){
+      const side=rec.parsed&&rec.parsed.receipt_side;
+      if(side==='customer'||side==='supplier'){
+        rec.rtype=side;
+        audit(rec,'صُنّف تلقائيًا بواسطة Gemini: '+(side==='customer'?'إيصال زبون':'إيصال مورد'));
+        await mSave(rec); await autoMatchAll(true);
+      }
+    }
+  };
+})();
+
+/* ═══ 3) ثقة الحقول — تحذير لكل حقل أقل من 75% داخل نافذة المستند ═══ */
+(function(){
+  const _od=window.openDoc;
+  window.openDoc=async function(id){
+    await _od(id);
+    const d=byId(id); if(!d)return;
+    const fc=d.parsed&&d.parsed.field_confidence;
+    if(!fc)return;
+    const NAMES={amount:'المبلغ',currency:'العملة',date:'التاريخ',reference:'المرجع',bank:'البنك',sender:'المرسل',beneficiary:'المستفيد'};
+    const low=Object.entries(fc).filter(([k,v])=>NAMES[k]&&+v>0&&+v<75);
+    if(!low.length)return;
+    const host=$('dmData'); if(!host||host.querySelector('.fc-warn'))return;
+    host.insertAdjacentHTML('afterbegin',
+      `<div class="fc-warn"><b>⚠️ حقول بثقة منخفضة — تحتاج مراجعة يدوية:</b>
+      ${low.map(([k,v])=>`<span class="fc-chip ${+v<50?'crit':''}">${NAMES[k]} · ${v}%</span>`).join('')}</div>`);
+  };
+})();
+
+/* ═══ 4) الخط البصري بين البطاقات المرتبطة ═══ */
+function drawMatchLines(){
+  const grid=document.querySelector('#v_match .mc-grid');
+  if(!grid)return;
+  let svg=document.getElementById('mcLines');
+  if(!grid.classList.contains('mc-wrap'))grid.classList.add('mc-wrap');
+  if(!svg){svg=document.createElementNS('http://www.w3.org/2000/svg','svg');svg.id='mcLines';grid.appendChild(svg);}
+  const gr=grid.getBoundingClientRect();
+  svg.setAttribute('width',gr.width);svg.setAttribute('height',gr.height);
+  svg.innerHTML='';
+  if(window.innerWidth<860)return; /* عمودي على الهاتف — بلا خطوط */
+  const panes=grid.querySelectorAll('.mc-list');
+  if(panes.length<2)return;
+  const cs=rlist('customer');
+  cs.forEach(c=>{
+    (c.mIds||[]).forEach(sid=>{
+      const ce=grid.querySelector(`.mc-pane.cst [data-mid="${c.id}"]`);
+      const se=grid.querySelector(`.mc-pane.sup [data-mid="${sid}"]`);
+      if(!ce||!se)return;
+      const cr=ce.getBoundingClientRect(),sr=se.getBoundingClientRect();
+      const cl=panes[0].getBoundingClientRect(),sl=panes[1].getBoundingClientRect();
+      /* أخفِ الخط إن كانت البطاقة خارج نافذة قائمتها */
+      if(cr.bottom<cl.top||cr.top>cl.bottom||sr.bottom<sl.top||sr.top>sl.bottom)return;
+      /* RTL: لوحة الزبائن يمين، الموردون يسار */
+      const x1=cr.left-gr.left, y1=cr.top-gr.top+cr.height/2;
+      const x2=sr.right-gr.left, y2=sr.top-gr.top+sr.height/2;
+      const st=mStatusOf(c);
+      const col=st==='settled'||st==='ok'?'#0a9e5c':st==='diff'?'#d63333':'#e0a400';
+      const mx=(x1+x2)/2;
+      const p=document.createElementNS('http://www.w3.org/2000/svg','path');
+      p.setAttribute('d',`M${x1},${y1} C${mx},${y1} ${mx},${y2} ${x2},${y2}`);
+      p.setAttribute('stroke',col);p.setAttribute('stroke-width','2.2');
+      p.setAttribute('fill','none');p.setAttribute('stroke-linecap','round');
+      p.setAttribute('opacity','.75');
+      if(st==='diff')p.setAttribute('stroke-dasharray','6 4');
+      svg.appendChild(p);
+      [[x1,y1],[x2,y2]].forEach(([x,y])=>{
+        const c2=document.createElementNS('http://www.w3.org/2000/svg','circle');
+        c2.setAttribute('cx',x);c2.setAttribute('cy',y);c2.setAttribute('r','4');
+        c2.setAttribute('fill',col);svg.appendChild(c2);
+      });
+    });
+  });
+}
+/* أعد الرسم بعد كل renderMatch وعند تمرير القوائم */
+(function(){
+  const _rm=window.renderMatch;
+  window.renderMatch=function(){
+    _rm();
+    requestAnimationFrame(()=>{
+      drawMatchLines();
+      document.querySelectorAll('#v_match .mc-list').forEach(l=>{
+        l.removeEventListener('scroll',drawMatchLines);
+        l.addEventListener('scroll',drawMatchLines,{passive:true});
+      });
+    });
+  };
+  window.addEventListener('resize',()=>{if(VIEW==='match')drawMatchLines();});
+})();
+/* ضع data-mid على بطاقات المطابقة */
+(function(){
+  const _mc=window.mcCard;
+  window.mcCard=function(d){ return _mc(d).replace('<div class="mc-card">','<div class="mc-card" data-mid="'+d.id+'">'); };
+})();
+
+/* ═══ 5) Excel متعدد الأوراق (SpreadsheetML — بلا مكتبات) ═══ */
+function _xmlEsc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function _sheet(name,head,rows){
+  const H='<Row>'+head.map(h=>`<Cell ss:StyleID="hd"><Data ss:Type="String">${_xmlEsc(h)}</Data></Cell>`).join('')+'</Row>';
+  const R=rows.map(r=>'<Row>'+r.map(v=>{
+    const isN=typeof v==='number'&&isFinite(v);
+    return `<Cell><Data ss:Type="${isN?'Number':'String'}">${isN?v:_xmlEsc(v)}</Data></Cell>`;
+  }).join('')+'</Row>').join('');
+  return `<Worksheet ss:Name="${_xmlEsc(name)}"><Table>${H}${R}</Table></Worksheet>`;
+}
+function mExcel(){
+  const cs=rlist('customer'),ss=rlist('supplier');
+  const rows=mRows('all');
+  const ST={settled:'تمت التسوية',ok:'مطابق',diff:'فرق مبلغ',weak:'مطابقة ضعيفة',missing:'لا مقابل'};
+  const P=d=>d.parsed||{};
+  const rec2row=d=>{const p=P(d);return[p.date||'',d.party||'',p.sender||'',p.beneficiary||'',+p.amount||0,p.currency||'',p.bank||'',p.reference||'',ST[mStatusOf(d)]||'',d.settled?'نعم':'لا'];};
+  const sums={};rows.forEach(r=>{const k=mCur(r.c)||'?';(sums[k]=sums[k]||{c:0,s:0}).c+=r.own;sums[k].s+=r.oth;});
+  const sheets=[];
+  sheets.push(_sheet('ملخص',['العملة','مجموع الزبائن','مجموع الموردين','الفرق'],
+    Object.entries(sums).map(([k,v])=>[k,v.c,v.s,v.c-v.s])
+    .concat([['— العمليات —','زبائن: '+cs.length,'موردون: '+ss.length,'ناقص: '+rows.filter(r=>['missing','weak','diff'].includes(r.st)).length]])));
+  const HH=['التاريخ','الطرف','المرسل','المستفيد','المبلغ','العملة','البنك','المرجع','حالة المطابقة','مسوّى'];
+  sheets.push(_sheet('إيصالات الزبائن',HH,cs.map(rec2row)));
+  sheets.push(_sheet('إيصالات الموردين',HH,ss.map(rec2row)));
+  sheets.push(_sheet('المطابقات',['الزبون','مبلغ الزبون','الموردون','مبلغ الموردين','العملة','الفرق','الحالة'],
+    rows.filter(r=>r.others.length).map(r=>[r.c.party||r.c.smartName||'',r.own,
+      r.others.map(o=>o.party||o.smartName||'').join(' + '),r.oth,mCur(r.c),r.own-r.oth,ST[r.st]||''])));
+  sheets.push(_sheet('الإيصالات الناقصة',['النوع','الطرف','المبلغ','العملة','منذ (ساعة)','الحالة'],
+    rows.filter(r=>['missing','weak'].includes(r.st)).map(r=>['زبون دون مورد',r.c.party||r.c.smartName||'',r.own,mCur(r.c),Math.floor((Date.now()-r.c.uploadedAt)/36e5),r.c._sugg?'مطابقة ضعيفة':'بانتظار إيصال المورد'])
+    .concat(ss.filter(s=>!(s.mIds||[]).length).map(s=>['مورد دون زبون',s.party||s.smartName||'',mAmt(s),mCur(s),Math.floor((Date.now()-(s.uploadedAt||Date.now()))/36e5),'غير مرتبط']))));
+  sheets.push(_sheet('فروقات المبالغ',['الزبون','مبلغ الزبون','مبلغ المورد','الفرق','النسبة %','العملة'],
+    rows.filter(r=>r.st==='diff').map(r=>[r.c.party||r.c.smartName||'',r.own,r.oth,r.own-r.oth,+((Math.abs(r.own-r.oth)/Math.max(r.own,r.oth)*100).toFixed(2)),mCur(r.c)])));
+  const logs=[];
+  CACHE.filter(d=>d.rtype).forEach(d=>(d.audit||[]).forEach(a=>logs.push([new Date(a.ts).toLocaleString('en-GB'),d.party||d.smartName||d.fileName,a.action])));
+  logs.sort((a,b)=>b[0].localeCompare(a[0]));
+  sheets.push(_sheet('سجل المراجعة',['التاريخ والوقت','المستند','الإجراء'],logs.slice(0,2000)));
+  const xml=`<?xml version="1.0"?><?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
+<Styles><Style ss:ID="hd"><Font ss:Bold="1" ss:Color="#FFFFFF"/><Interior ss:Color="#071D49" ss:Pattern="Solid"/></Style></Styles>
+${sheets.join('')}</Workbook>`;
+  const blob=new Blob(['\ufeff'+xml],{type:'application/vnd.ms-excel'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download='ARKAN_matching_'+new Date().toISOString().slice(0,10)+'.xls';a.click();
+  toast0('✓ صدر Excel — 7 أوراق');
+}
+
+/* ═══ 6) تصدير JSON للمطابقة ═══ */
+function mJson(){
+  const rows=mRows('all');
+  const out={report:'ARKAN Matching Export',generated:new Date().toISOString(),
+    tolerance_pc:MTOL(),alert_hours:AHRS(),
+    operations:rows.map(r=>{const p=r.c.parsed||{};return{
+      customer:{id:r.c.id,party:r.c.party||'',amount:r.own,currency:mCur(r.c),date:p.date||'',reference:p.reference||'',bank:p.bank||''},
+      suppliers:r.others.map(o=>{const q=o.parsed||{};return{id:o.id,party:o.party||'',amount:mAmt(o),currency:mCur(o),date:q.date||'',reference:q.reference||''};}),
+      supplier_total:r.oth,difference:r.own-r.oth,status:r.st,settled:!!r.c.settled,
+      audit:(r.c.audit||[]).map(a=>({ts:new Date(a.ts).toISOString(),action:a.action}))
+    };})};
+  const blob=new Blob([JSON.stringify(out,null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download='arkan_matching_'+new Date().toISOString().slice(0,10)+'.json';a.click();
+  toast0('✓ صدر JSON');
+}
+
+/* أزرار التصدير الجديدة داخل شريط الإعدادات */
+(function(){
+  const _rm2=window.renderMatch;
+  window.renderMatch=function(){
+    _rm2();
+    const bar=document.querySelector('#v_match .mc-set');
+    if(bar&&!bar.querySelector('.mc-x-extra')){
+      bar.insertAdjacentHTML('beforeend',
+        `<button class="btn btn-s mc-x-extra" style="padding:7px 14px;font-size:12px" onclick="mExcel()">📗 Excel</button>
+         <button class="btn btn-s mc-x-extra" style="padding:7px 14px;font-size:12px" onclick="mJson()">🧾 JSON</button>`);
+    }
+  };
+})();
+</script>
+<!-- نافذة تفعيل Gemini -->
+<div class="gk-modal" id="gkModal" onclick="if(event.target===this)this.classList.remove('on')">
+  <div class="gk-box">
+    <h3><b>✦ تفعيل Gemini AI</b><span style="cursor:pointer" onclick="document.getElementById('gkModal').classList.remove('on')">✕</span></h3>
+    <div class="bd">
+      المفتاح يُحفظ <b>على جهازك فقط</b> (localStorage) ولا يُرفع لأي خادم أو GitHub.
+      <br>احصل على مفتاح مجاني من: <b style="direction:ltr;display:inline-block">aistudio.google.com/apikey</b>
+      <input id="gkInput" placeholder="AIzaSy..." autocomplete="off" spellcheck="false">
+      <div class="st" id="gkSt"></div>
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <button class="btn btn-s" style="flex:1;padding:9px" onclick="gkTest()">🔍 اختبار المفتاح</button>
+        <button class="btn btn-p" style="flex:1;padding:9px" onclick="gkSave()">💾 حفظ وتفعيل</button>
+      </div>
     </div>
   </div>
 </div>
