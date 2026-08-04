@@ -58,7 +58,7 @@ async function connect(){
     if(!hasTronLink()){ showInstallGuide(); return; }
     if(window.tronLink&&window.tronLink.request){
       var r=await window.tronLink.request({method:'tron_requestAccounts'});
-      if(r&&r.code&&r.code!==200){ toast('رفض العميل الاتصال أو TronLink مقفل',true); return; }
+      if(r&&r.code&&r.code!==200){ toast('رُفض الاتصال أو التطبيق مقفل',true); return; }
     }
     var tries=0;
     while(tries++<20){
@@ -66,7 +66,7 @@ async function connect(){
       if(a){ onConnected(a,true); return; }
       await new Promise(function(res){setTimeout(res,250);});
     }
-    toast('افتح TronLink وفعّل المحفظة ثم أعد المحاولة',true);
+    toast('افتح تطبيق التوقيع وفعّل المحفظة ثم أعد المحاولة',true);
   }catch(e){ toast('تعذر الاتصال: '+(e.message||e),true); }
   finally{ S.busy=false; setBtnLoading('btnConnect',false); }
 }
@@ -132,8 +132,15 @@ async function refresh(){
     localStorage.setItem('arkan_wallet_lastbal',JSON.stringify({u:usdt,t:trx,at:Date.now()}));
     loadTxs();
   }catch(e){
-    $('usdtBal').textContent='—'; $('trxBal').textContent='—';
-    toast('تعذر جلب الرصيد — تحقق من الاتصال',true);
+    var c=null; try{c=JSON.parse(localStorage.getItem('arkan_wallet_lastbal')||'null');}catch(_){}
+    if(c&&typeof c.u==='number'){
+      /* فشل مؤقت للشبكة — أبقِ آخر رصيد معروف بدون إزعاج */
+      $('usdtBal').textContent=fmt(c.u); $('trxBal').textContent=fmt(c.t)+' TRX';
+      $('usdBal').textContent='آخر رصيد محفوظ — يتحدث تلقائيًا';
+    }else{
+      $('usdtBal').textContent='—';
+      toast('تعذر جلب الرصيد — تحقق من الاتصال',true);
+    }
   }
   if(b)b.classList.remove('spin');
 }
@@ -208,7 +215,7 @@ var SEND={to:null,amt:0,tx:null,when:null,confirmed:false};
 function openSend(){
   if(!S.addr)return;
   if(!S.live||!window.tronWeb||!window.tronWeb.ready&&!(window.tronWeb&&window.tronWeb.defaultAddress&&window.tronWeb.defaultAddress.base58)){
-    toast('الإرسال يتطلب فتح الصفحة داخل تطبيق TronLink (وضع العرض لا يوقّع)',true);
+    toast('الإرسال يتطلب التوقيع من تطبيقك — وضع العرض للمتابعة فقط',true);
     $('guideModal').classList.add('on'); return;
   }
   $('sendForm').style.display='block'; $('sendConfirm').style.display='none'; $('sendBusy').style.display='none';
@@ -233,7 +240,7 @@ function reviewSend(){
 async function doSend(){
   if(S.busy)return; S.busy=true;
   $('sendConfirm').style.display='none'; $('sendBusy').style.display='block';
-  $('busyMsg').textContent='بانتظار توقيعك في TronLink…';
+  $('busyMsg').textContent='بانتظار توقيعك في تطبيق المحفظة…';
   try{
     var c=await window.tronWeb.contract().at(net().usdt);
     var sun=window.tronWeb.toSun? window.tronWeb.toSun(SEND.amt): Math.round(SEND.amt*1e6);
@@ -293,17 +300,27 @@ async function makeReceipt(){
     x.fillText('إيصال تحويل USDT · TRC20', W-70,118);
     /* المبلغ */
     x.textAlign='center'; x.direction='ltr'; x.fillStyle='#fff';
-    x.font='700 110px Archivo, Arial';
-    x.fillText('-'+fmt(SEND.amt)+' USDT', W/2, 290);
-    x.font='500 28px "IBM Plex Sans Arabic"'; x.direction='rtl';
-    x.fillStyle='#9FF5D2';
-    x.fillText(SEND.confirmed?'✓ مؤكدة على البلوكتشين':'قيد التأكيد على الشبكة', W/2, 360);
+    x.font='700 104px Archivo, Arial';
+    x.fillText('-'+fmt(SEND.amt)+' USDT', W/2, 268);
+    /* دائرة النجاح الكبيرة — متداخلة مع الرأس */
+    var cx=W/2, cy=420, R=95;
+    x.beginPath(); x.arc(cx,cy,R+22,0,7); x.fillStyle='#F5F9FF'; x.fill();
+    x.beginPath(); x.arc(cx,cy,R+12,0,7); x.fillStyle='#BBD7F6'; x.fill();
+    var cg=x.createLinearGradient(cx-R,cy-R,cx+R,cy+R);
+    cg.addColorStop(0,'#2F7CE0'); cg.addColorStop(1,'#5B9BEA');
+    x.beginPath(); x.arc(cx,cy,R,0,7); x.fillStyle=cg; x.fill();
+    x.strokeStyle='#fff'; x.lineWidth=16; x.lineCap='round'; x.lineJoin='round';
+    x.beginPath(); x.moveTo(cx-42,cy+4); x.lineTo(cx-10,cy+38); x.lineTo(cx+48,cy-32); x.stroke();
+    /* الحالة تحت الدائرة */
+    x.font='600 30px "IBM Plex Sans Arabic"'; x.direction='rtl'; x.textAlign='center';
+    x.fillStyle=SEND.confirmed?'#0A9E5C':'#486581';
+    x.fillText(SEND.confirmed?'✓ تم الإرسال — مؤكدة على البلوكتشين':'تم الإرسال — قيد التأكيد', W/2, 590);
     /* بطاقة التفاصيل */
     function card(y,h){ x.fillStyle='#fff'; x.strokeStyle='#D9E5F2'; x.lineWidth=2;
       rr(x,70,y,W-140,h,26); x.fill(); x.stroke(); }
     function rr(c,px,py,pw,ph,r){ c.beginPath(); c.moveTo(px+r,py); c.arcTo(px+pw,py,px+pw,py+ph,r);
       c.arcTo(px+pw,py+ph,px,py+ph,r); c.arcTo(px,py+ph,px,py,r); c.arcTo(px,py,px+pw,py,r); c.closePath(); }
-    card(480,560);
+    card(640,540);
     var rows=[
       ['من محفظة',S.addr],
       ['إلى محفظة',SEND.to],
@@ -311,7 +328,7 @@ async function makeReceipt(){
       ['رقم المعاملة TxID',SEND.tx],
       ['التاريخ والوقت',SEND.when.toLocaleString('ar-MR',{dateStyle:'medium',timeStyle:'short'})]
     ];
-    var ry=560;
+    var ry=720;
     rows.forEach(function(rw,i){
       x.textAlign='right'; x.direction='rtl'; x.fillStyle='#486581';
       x.font='500 26px "IBM Plex Sans Arabic"'; x.fillText(rw[0], W-120, ry);
@@ -322,18 +339,18 @@ async function makeReceipt(){
       if(v.length>46){ x.fillText(v.slice(0,46),120,ry-14); x.fillText(v.slice(46),120,ry+18); }
       else x.fillText(v,120,ry);
       if(i<rows.length-1){ x.strokeStyle='#EAF2FB'; x.beginPath(); x.moveTo(110,ry+42); x.lineTo(W-110,ry+42); x.stroke(); }
-      ry+=98;
+      ry+=92;
     });
     /* QR التحقق */
-    card(1090,470);
+    card(1210,420);
     x.textAlign='right'; x.direction='rtl'; x.fillStyle='#102A43'; x.font='600 30px "IBM Plex Sans Arabic"';
-    x.fillText('تحقق علني من المعاملة', W-120, 1170);
+    x.fillText('تحقق علني من المعاملة', W-120, 1290);
     x.fillStyle='#486581'; x.font='400 24px "IBM Plex Sans Arabic"';
-    x.fillText('امسح الرمز لعرض هذا التحويل على Tronscan', W-120, 1218);
-    x.fillText('سجل عام غير قابل للتعديل على شبكة TRON', W-120, 1260);
+    x.fillText('امسح الرمز لعرض هذا التحويل على Tronscan', W-120, 1336);
+    x.fillText('سجل عام غير قابل للتعديل', W-120, 1376);
     var link=net().scan+'/transaction/'+SEND.tx;
     var q=window.qrcode(0,'M'); q.addData(link); q.make();
-    var n=q.getModuleCount(), size=300, cell=size/n, qx=120, qy=1150;
+    var n=q.getModuleCount(), size=290, cell=size/n, qx=120, qy=1265;
     x.fillStyle='#fff'; x.fillRect(qx-14,qy-14,size+28,size+28);
     x.fillStyle='#102A43';
     for(var r2=0;r2<n;r2++)for(var c2=0;c2<n;c2++) if(q.isDark(r2,c2)) x.fillRect(qx+c2*cell,qy+r2*cell,cell+.5,cell+.5);
@@ -374,8 +391,9 @@ function render(){
   $('vConn').style.display=connected?'block':'none';
   if(connected){
     $('addrShort').textContent=shortAddr(S.addr);
-    $('netBadge').textContent=net().label;
-    $('netBadge').className='net-badge'+(S.net!=='mainnet'?' test':'');
+    var nb=$('netBadge');
+    if(S.net!=='mainnet'){ nb.textContent=net().label; nb.className='net-badge test'; nb.style.display='inline-block'; }
+    else nb.style.display='none';
     $('modeBadge').style.display=S.live?'none':'inline-flex';
     var scanA=$('scanLink'); if(scanA) scanA.href=net().scan+'/address/'+S.addr;
   }
