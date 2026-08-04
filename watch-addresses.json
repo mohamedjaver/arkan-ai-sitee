@@ -1,0 +1,9 @@
+{
+ "comment": "المحافظ المراقبة — أضف أي عنوان جديد هنا",
+ "wallets": [
+  {
+   "label": "ARKAN INVST",
+   "address": "PUT_FULL_TRON_ADDRESS_HERE"
+  }
+ ]
+}
