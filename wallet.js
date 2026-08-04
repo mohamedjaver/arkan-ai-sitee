@@ -148,6 +148,21 @@ async function loadTxs(){
     var j=await r.json();
     var rows=(j.data||[]);
     if(!rows.length){ box.innerHTML='<div class="tx-empty">لا توجد معاملات USDT بعد — استقبل أول تحويل لتظهر هنا</div>'; return; }
+    /* إشعار فوري داخل الصفحة عند وصول حوالة جديدة */
+    try{
+      var latestIn=rows.find(function(t){return t.to===S.addr;});
+      if(latestIn){
+        var key='arkan_wallet_lastin_'+S.addr;
+        var prev=localStorage.getItem(key);
+        if(prev&&prev!==latestIn.transaction_id){
+          var amt=Number(latestIn.value)/Math.pow(10,(latestIn.token_info&&latestIn.token_info.decimals)||6);
+          toast('💰 وصلت حوالة +'+fmt(amt)+' USDT');
+          if(window.Notification&&Notification.permission==='granted')
+            new Notification('محفظة أركان',{body:'وصلت حوالة +'+fmt(amt)+' USDT',icon:'arkan-icon-192.png'});
+        }
+        localStorage.setItem(key,latestIn.transaction_id);
+      }
+    }catch(e){}
     box.innerHTML=rows.map(function(t){
       var incoming=(t.to===S.addr);
       var amt=Number(t.value)/Math.pow(10,(t.token_info&&t.token_info.decimals)||6);
@@ -232,6 +247,10 @@ function boot(){
   });
   setTimeout(upgrade,600);
   render(); if(S.addr) refresh();
+  setInterval(function(){ if(S.addr&&!document.hidden) refresh(); },45000);
+  document.addEventListener('visibilitychange',function(){ if(!document.hidden&&S.addr) refresh(); });
+  if(window.Notification&&Notification.permission==='default')
+    setTimeout(function(){ try{Notification.requestPermission();}catch(e){} },4000);
 
   $('btnConnect').addEventListener('click',connect);
   $('btnConnect2') && $('btnConnect2').addEventListener('click',connect);
