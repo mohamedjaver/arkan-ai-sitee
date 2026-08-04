@@ -369,14 +369,34 @@ async function makeReceipt(){
     x.fillText('ARKAN INTERNATIONAL TRADING · Non-Custodial Wallet · '+new Date().getFullYear(), W/2, 1738);
 
     var img=cv.toDataURL('image/jpeg',.92);
+    var name='ARKAN-receipt-'+SEND.tx.slice(0,8);
     var JS=window.jspdf&&window.jspdf.jsPDF;
-    if(!JS){ dl(img,'ARKAN-receipt-'+SEND.tx.slice(0,8)+'.jpg'); return; }
+    if(!JS){ dl(img,name+'.jpg'); return null; }
     var pdf=new JS({unit:'pt',format:'a4'});
     var pw=pdf.internal.pageSize.getWidth(), ph=pdf.internal.pageSize.getHeight();
     pdf.addImage(img,'JPEG',0,0,pw,ph);
-    pdf.save('ARKAN-receipt-'+SEND.tx.slice(0,8)+'.pdf');
-    toast('تم إنشاء الإيصال ✓');
-  }catch(e){ toast('تعذر إنشاء الإيصال: '+(e.message||e),true); }
+    return {pdf:pdf,name:name+'.pdf'};
+  }catch(e){ toast('تعذر إنشاء الإيصال: '+(e.message||e),true); return null; }
+}
+
+async function downloadReceipt(){
+  var r=await makeReceipt(); if(!r)return;
+  r.pdf.save(r.name); toast('تم إنشاء الإيصال ✓');
+}
+
+async function shareReceipt(){
+  var r=await makeReceipt(); if(!r)return;
+  var blob=r.pdf.output('blob');
+  var file=new File([blob],r.name,{type:'application/pdf'});
+  var msg='إيصال تحويل أركان: -'+fmt(SEND.amt)+' USDT\nالتحقق: '+net().scan+'/transaction/'+SEND.tx;
+  if(navigator.canShare&&navigator.canShare({files:[file]})){
+    try{ await navigator.share({files:[file],title:'إيصال أركان',text:msg}); return; }
+    catch(e){ if(/Abort/i.test(e.name||''))return; }
+  }
+  /* بديل: نزّل الملف ثم افتح واتساب برسالة الرابط ليرفقه المستخدم */
+  r.pdf.save(r.name);
+  toast('نُزّل الإيصال — أرفقه في واتساب من الملفات');
+  setTimeout(function(){ window.open('https://wa.me/?text='+encodeURIComponent(msg),'_blank'); },900);
 }
 function dl(href,name){ var a=document.createElement('a'); a.href=href; a.download=name; document.body.appendChild(a); a.click(); a.remove(); }
 
@@ -440,7 +460,8 @@ function boot(){
   $('sendBack').addEventListener('click',function(){$('sendConfirm').style.display='none';$('sendForm').style.display='block';});
   $('sendGo').addEventListener('click',doSend);
   $('sendMax').addEventListener('click',function(){ $('sendAmt').value=($('usdtBal').textContent||'').replace(/,/g,''); });
-  $('btnPdf').addEventListener('click',makeReceipt);
+  $('btnPdf').addEventListener('click',downloadReceipt);
+  $('btnShare').addEventListener('click',shareReceipt);
   $('btnDisc').addEventListener('click',disconnect);
   $('btnTLOpen').addEventListener('click',openInTronLink);
   $('btnManual').addEventListener('click',function(){ $('addrModal').classList.add('on'); setTimeout(function(){$('manualAddr').focus();},250); });
