@@ -459,8 +459,12 @@ function openApp(phone){
   $('acctStatus').className = pending?'status-wait':'status-on';
   $('acctStatus').textContent = pending?'قيد التفعيل':'نشط';
   $('acctStatusSub').textContent = pending?'بانتظار تأكيد أركان':'التحقق مكتمل';
-  const q = query(collection(db,'transactions'), where('uid','==',phone), orderBy('createdAt','desc'));
-  onSnapshot(q, renderTx, err=>{ console.error(err); $('fullTx').innerHTML='<div class="empty">تعذّر تحميل السجل</div>'; });
+  const q = query(collection(db,'transactions'), where('uid','==',phone));
+  onSnapshot(q, renderTx, err=>{
+    console.error('tx query error:', err);
+    $('fullTx').innerHTML='<div class="empty">تعذّر تحميل السجل: '+(err.code||err.message)+'</div>';
+    $('homeTx').innerHTML='<div class="empty">تعذّر تحميل السجل</div>';
+  });
 }
 
 let balHidden=false;
@@ -482,6 +486,12 @@ function txHTML(t, id){
 }
 function renderTx(snap){
   const all=[]; snap.forEach(d=>all.push([d.id,d.data()]));
+  /* ترتيب محلي بالأحدث (بدل orderBy الذي يتطلب فهرسًا) */
+  all.sort((a,b)=>{
+    const ta=a[1].createdAt?.seconds||a[1].createdAt?.toMillis?.()/1000||0;
+    const tb=b[1].createdAt?.seconds||b[1].createdAt?.toMillis?.()/1000||0;
+    return tb-ta;
+  });
   /* إجمالي ما حوّله العميل عبرنا (المؤكد فقط) — بعملة الإرسال، محوّلًا لأوقية للعرض الموحّد */
   let totalMRU=0, doneCount=0;
   all.forEach(([id,t])=>{
