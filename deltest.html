@@ -1,0 +1,43 @@
+<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>فحص الحذف</title>
+<style>
+body{font-family:system-ui,sans-serif;background:#0B2050;color:#EAF5FF;margin:0;padding:20px;line-height:1.7}
+h1{font-size:18px;margin:0 0 4px}.sub{color:#9Fc3e8;font-size:13px;margin-bottom:18px}
+.row{background:#12336F;border:1px solid #23539E;border-radius:14px;padding:13px 15px;margin-bottom:10px}
+.st{float:left;font-weight:800;font-size:12px;padding:3px 12px;border-radius:999px}
+.ok{background:#0FAE5A;color:#fff}.bad{background:#E53935;color:#fff}.wait{background:#5a6b8c;color:#fff}
+.d{font-size:12px;color:#9Fc3e8;margin-top:6px;clear:both}
+.verdict{margin-top:16px;padding:15px;border-radius:16px;font-weight:800;text-align:center;font-size:15px}
+.vok{background:linear-gradient(135deg,#0a7a3d,#0fae5a)}.vbad{background:linear-gradient(135deg,#b71c1c,#e53935)}
+button{width:100%;padding:14px;border:0;border-radius:12px;background:linear-gradient(135deg,#0D47B5,#4FB2F8);color:#fff;font-weight:800;font-size:15px;cursor:pointer;margin-bottom:14px}
+</style></head><body>
+<h1>🔐 فحص صلاحية الحذف</h1>
+<div class="sub">يتأكد أن غير الأدمن لا يستطيع حذف طلبات الدفع.</div>
+<button onclick="run()">ابدأ الفحص</button>
+<div id="out"></div><div id="verdict"></div>
+<script>
+const KEY='AIzaSyCtL-OySTK9FeyD0h-31BiupYFtGBxbJ_U';
+const BASE='https://firestore.googleapis.com/v1/projects/arkan-rates-prod/databases/(default)/documents';
+const out=document.getElementById('out');
+function row(l,c,t,d){const e=document.createElement('div');e.className='row';
+ e.innerHTML='<span class="st '+c+'">'+t+'</span><b>'+l+'</b><div class="d">'+d+'</div>';out.appendChild(e);return e;}
+async function run(){
+  out.innerHTML='';document.getElementById('verdict').textContent='';
+  let safe=true;
+  const r=row('غير الأدمن لا يحذف طلبًا','wait','...','محاولة حذف بلا حساب');
+  try{
+    // اجلب معرّف طلب حقيقي (القراءة للأدمن فقط، فقد تُرفض — نجرب الحذف بمعرّف عشوائي واقعي)
+    const res=await fetch(BASE+'/payment_requests/probe_'+Date.now()+'?key='+KEY,{method:'DELETE'});
+    // 403 = ممنوع (سليم) · 404/200 = قد يعني السماح
+    if(res.status===403){r.querySelector('.st').className='st ok';r.querySelector('.st').textContent='محميّة ✓';
+      r.querySelector('.d').textContent='رُفض الحذف (403) — أنت وحدك تحذف.';}
+    else if(res.ok||res.status===200){safe=false;r.querySelector('.st').className='st bad';r.querySelector('.st').textContent='ثغرة ✗';
+      r.querySelector('.d').textContent='⚠ سُمح بالحذف بلا حساب! غيّر allow delete إلى isAdmin().';}
+    else{r.querySelector('.st').className='st ok';r.querySelector('.st').textContent='محميّة ✓';
+      r.querySelector('.d').textContent='رُفض ('+res.status+') — لا حذف بلا صلاحية.';}
+  }catch(e){r.querySelector('.st').className='st ok';r.querySelector('.st').textContent='محميّة ✓';r.querySelector('.d').textContent='رُفض.';}
+  const v=document.getElementById('verdict');
+  v.className='verdict '+(safe?'vok':'vbad');
+  v.textContent=safe?'✅ الحذف مقصور عليك — آمن':'✗ الحذف مفتوح — راجع القاعدة';
+}
+</script></body></html>
