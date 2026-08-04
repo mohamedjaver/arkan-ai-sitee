@@ -92,6 +92,22 @@ async function fetchAccount(addr){
   return (j.data&&j.data[0])||null;
 }
 
+var _px={v:0,at:0};
+async function getTrxPrice(){
+  if(Date.now()-_px.at<300000&&_px.v)return _px.v;
+  try{
+    var r=await fetch('https://api.coingecko.com/api/v3/simple/price?ids=tron&vs_currencies=usd');
+    var j=await r.json(); var p=j&&j.tron&&j.tron.usd;
+    if(p){_px={v:p,at:Date.now()};return p;}
+  }catch(e){}
+  try{ /* بديل: Binance العام */
+    var r2=await fetch('https://api.binance.com/api/v3/ticker/price?symbol=TRXUSDT');
+    var j2=await r2.json(); var p2=parseFloat(j2.price);
+    if(p2){_px={v:p2,at:Date.now()};return p2;}
+  }catch(e){}
+  return _px.v||0;
+}
+
 async function refresh(){
   if(!S.addr)return;
   var b=$('btnRefresh'); if(b)b.classList.add('spin');
@@ -107,8 +123,10 @@ async function refresh(){
       });
     }
     $('usdtBal').textContent=fmt(usdt);
-    $('usdBal').textContent='≈ $'+fmt(usdt);
     $('trxBal').textContent=fmt(trx)+' TRX';
+    var trxPrice=await getTrxPrice();
+    var total=usdt+(trx*trxPrice);
+    $('usdBal').textContent='إجمالي القيمة ≈ $'+fmt(total);
     var low=trx<25;
     $('gasWarn').style.display=low?'flex':'none';
     localStorage.setItem('arkan_wallet_lastbal',JSON.stringify({u:usdt,t:trx,at:Date.now()}));
