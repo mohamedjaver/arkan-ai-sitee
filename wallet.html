@@ -229,6 +229,57 @@ main{position:relative;z-index:1;padding:16px 14px 110px}
   </div>
 </div>
 
+<!-- ═══ مودال الإرسال ═══ -->
+<div class="modal" id="sendModal">
+  <div class="sheet">
+    <div class="sheet-h"><h3>إرسال USDT</h3><button class="x" data-close="sendModal">✕</button></div>
+    <div id="sendForm">
+      <label style="font-size:12.5px;color:var(--muted);display:block;margin-bottom:6px">عنوان المستلم (TRC20)</label>
+      <input id="sendTo" class="num" autocomplete="off" spellcheck="false" placeholder="TXxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+        style="width:100%;padding:14px;border:1.5px solid var(--line);border-radius:14px;font-family:inherit;font-size:13px;background:var(--card2);direction:ltr;text-align:left;margin-bottom:14px">
+      <label style="font-size:12.5px;color:var(--muted);display:block;margin-bottom:6px">المبلغ USDT</label>
+      <div style="position:relative;margin-bottom:10px">
+        <input id="sendAmt" class="num" inputmode="decimal" placeholder="0.00"
+          style="width:100%;padding:14px 74px 14px 14px;border:1.5px solid var(--line);border-radius:14px;font-family:inherit;font-size:16px;font-weight:600;background:var(--card2);direction:ltr;text-align:left">
+        <button id="sendMax" style="position:absolute;top:50%;transform:translateY(-50%);inset-inline-end:10px;border:none;background:rgba(0,86,214,.08);color:var(--acc);font-family:inherit;font-size:12px;font-weight:600;padding:7px 12px;border-radius:10px;cursor:pointer">الكل</button>
+      </div>
+      <div style="font-size:11.5px;color:var(--muted);line-height:1.7;margin-bottom:16px">
+        رسوم الشبكة تُخصم TRX تلقائيًا من محفظتك (عادة 14–30 TRX إذا لا توجد طاقة Energy).</div>
+      <button class="btn btn-primary" id="sendReview">مراجعة العملية</button>
+    </div>
+    <div id="sendConfirm" style="display:none">
+      <div style="background:var(--card2);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:16px;font-size:13px;display:grid;gap:11px">
+        <div style="display:flex;justify-content:space-between"><span style="color:var(--muted)">المبلغ</span><b class="num" id="cAmt"></b></div>
+        <div style="display:flex;justify-content:space-between;gap:12px"><span style="color:var(--muted)">من</span><b class="num" style="font-size:11.5px" id="cFrom"></b></div>
+        <div style="display:flex;justify-content:space-between;gap:12px"><span style="color:var(--muted)">إلى</span><b class="num" style="font-size:11.5px" id="cTo"></b></div>
+        <div style="display:flex;justify-content:space-between"><span style="color:var(--muted)">الشبكة</span><b>TRON · TRC20</b></div>
+      </div>
+      <div class="warn" style="margin-bottom:14px">⚠️<span>تحويلات البلوكتشين <b>غير قابلة للاسترجاع</b>. تأكد من العنوان قبل التوقيع.</span></div>
+      <button class="btn btn-primary" id="sendGo">تأكيد وتوقيع في TronLink</button>
+      <button class="btn btn-ghost" id="sendBack" style="margin-top:10px">تعديل</button>
+    </div>
+    <div id="sendBusy" style="display:none;text-align:center;padding:28px 10px">
+      <div style="font-size:15px;font-weight:600;margin-bottom:8px" id="busyMsg">بانتظار توقيعك في TronLink…</div>
+      <div style="font-size:12.5px;color:var(--muted)">لا تغلق الصفحة</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ مودال نجاح الإرسال + إيصال PDF ═══ -->
+<div class="modal" id="doneModal">
+  <div class="sheet" style="text-align:center">
+    <div class="sheet-h" style="margin-bottom:4px"><span></span><button class="x" data-close="doneModal">✕</button></div>
+    <div style="width:70px;height:70px;margin:6px auto 16px;border-radius:50%;background:rgba(10,158,92,.1);display:grid;place-items:center">
+      <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#0A9E5C" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+    </div>
+    <h3 style="margin-bottom:6px">تم الإرسال بنجاح</h3>
+    <div class="num" style="font-size:30px;font-weight:700;margin-bottom:4px"><span id="dAmt"></span> <span style="font-size:15px;color:var(--tether)">USDT</span></div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:18px" id="dStatus">قيد التأكيد على الشبكة…</div>
+    <button class="btn btn-primary" id="btnPdf">⬇ تحميل إيصال PDF</button>
+    <a class="btn btn-ghost" id="dScan" target="_blank" rel="noopener" style="margin-top:10px;text-decoration:none">عرض على Tronscan ↗</a>
+  </div>
+</div>
+
 <!-- ═══ مودال إدخال العنوان يدويًا ═══ -->
 <div class="modal" id="addrModal">
   <div class="sheet">
@@ -246,6 +297,7 @@ main{position:relative;z-index:1;padding:16px 14px 110px}
 <div class="wtoast" id="wToast"></div>
 </div>
 <script src="vendor/qrcode.js"></script>
+<script src="vendor/jspdf.min.js" defer></script>
 <script src="wallet.js"></script>
 </body>
 </html>
