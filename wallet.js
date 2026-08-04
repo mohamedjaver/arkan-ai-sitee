@@ -202,8 +202,158 @@ function copyAddr(){
     });
 }
 
-/* ── الإرسال — يُفعّل في المرحلة الثانية بعد اختبار الاستقبال ── */
-function sendSoon(){ toast('الإرسال يُفعّل في المرحلة الثانية بعد اختبار الاستقبال على الشبكة'); }
+/* ═══════ المرحلة 2: الإرسال بتوقيع TronLink ═══════ */
+var SEND={to:null,amt:0,tx:null,when:null,confirmed:false};
+
+function openSend(){
+  if(!S.addr)return;
+  if(!S.live||!window.tronWeb||!window.tronWeb.ready&&!(window.tronWeb&&window.tronWeb.defaultAddress&&window.tronWeb.defaultAddress.base58)){
+    toast('الإرسال يتطلب فتح الصفحة داخل تطبيق TronLink (وضع العرض لا يوقّع)',true);
+    $('guideModal').classList.add('on'); return;
+  }
+  $('sendForm').style.display='block'; $('sendConfirm').style.display='none'; $('sendBusy').style.display='none';
+  $('sendTo').value=''; $('sendAmt').value='';
+  $('sendModal').classList.add('on');
+}
+
+function reviewSend(){
+  var to=($('sendTo').value||'').trim();
+  var amt=parseFloat(($('sendAmt').value||'').replace(/,/g,''));
+  var bal=parseFloat(($('usdtBal').textContent||'0').replace(/,/g,''))||0;
+  if(!isTronAddress(to)){ toast('عنوان المستلم غير صالح',true); return; }
+  if(to===S.addr){ toast('لا يمكن الإرسال إلى نفس المحفظة',true); return; }
+  if(!(amt>0)){ toast('أدخل مبلغًا صحيحًا',true); return; }
+  if(amt>bal){ toast('المبلغ أكبر من رصيدك ('+fmt(bal)+' USDT)',true); return; }
+  SEND.to=to; SEND.amt=amt;
+  $('cAmt').textContent=fmt(amt)+' USDT';
+  $('cFrom').textContent=shortAddr(S.addr); $('cTo').textContent=shortAddr(to);
+  $('sendForm').style.display='none'; $('sendConfirm').style.display='block';
+}
+
+async function doSend(){
+  if(S.busy)return; S.busy=true;
+  $('sendConfirm').style.display='none'; $('sendBusy').style.display='block';
+  $('busyMsg').textContent='بانتظار توقيعك في TronLink…';
+  try{
+    var c=await window.tronWeb.contract().at(net().usdt);
+    var sun=window.tronWeb.toSun? window.tronWeb.toSun(SEND.amt): Math.round(SEND.amt*1e6);
+    var txid=await c.transfer(SEND.to,String(sun)).send({feeLimit:50000000});
+    SEND.tx=(typeof txid==='string')?txid:(txid&&txid.txid)||String(txid);
+    SEND.when=new Date(); SEND.confirmed=false;
+    $('sendModal').classList.remove('on');
+    $('dAmt').textContent=fmt(SEND.amt);
+    $('dScan').href=net().scan+'/transaction/'+SEND.tx;
+    $('dStatus').textContent='قيد التأكيد على الشبكة…';
+    $('doneModal').classList.add('on');
+    trackConfirm(SEND.tx);
+    setTimeout(refresh,4000);
+  }catch(e){
+    var msg=(e&&(e.message||e.error||e))+'';
+    if(/Confirmation declined|cancel|reject/i.test(msg)) toast('ألغيت التوقيع — لم يُرسل شيء',true);
+    else if(/balance|energy|bandwidth|fee/i.test(msg)) toast('رصيد TRX غير كافٍ لرسوم الشبكة',true);
+    else toast('فشل الإرسال: '+msg.slice(0,80),true);
+    $('sendBusy').style.display='none'; $('sendConfirm').style.display='block';
+  }
+  S.busy=false;
+}
+
+async function trackConfirm(txid){
+  for(var i=0;i<20;i++){
+    await new Promise(function(r){setTimeout(r,4000);});
+    try{
+      var r=await fetch(net().grid+'/wallet/gettransactioninfobyid',{method:'POST',
+        headers:{'content-type':'application/json'},body:JSON.stringify({value:txid})});
+      var j=await r.json();
+      if(j&&j.blockNumber){
+        SEND.confirmed=true;
+        var el=$('dStatus'); if(el){el.textContent='✓ مؤكدة على البلوكتشين — البلوك '+j.blockNumber; el.style.color='var(--green)';}
+        return;
+      }
+    }catch(e){}
+  }
+}
+
+/* ═══════ إيصال PDF احترافي (Canvas → jsPDF) ═══════ */
+async function makeReceipt(){
+  try{
+    await (document.fonts&&document.fonts.ready||Promise.resolve());
+    var W=1240,H=1754, cv=document.createElement('canvas'); cv.width=W; cv.height=H;
+    var x=cv.getContext('2d');
+    /* خلفية */
+    x.fillStyle='#F5F9FF'; x.fillRect(0,0,W,H);
+    /* رأس متدرج */
+    var g=x.createLinearGradient(0,0,W,420); g.addColorStop(0,'#062A6E'); g.addColorStop(.65,'#0056D6'); g.addColorStop(1,'#0B8BE8');
+    x.fillStyle=g; x.fillRect(0,0,W,420);
+    x.fillStyle='rgba(38,161,123,.35)'; x.beginPath(); x.arc(W-140,60,220,0,7); x.fill();
+    /* شعار */
+    x.fillStyle='#fff'; x.font='800 54px Archivo, Arial'; x.textAlign='left'; x.direction='ltr';
+    x.fillText('ARKAN',70,120);
+    x.fillStyle='#7FE3C1'; x.fillText('RATES',282,120);
+    x.fillStyle='rgba(255,255,255,.8)'; x.font='400 26px "IBM Plex Sans Arabic"'; x.textAlign='right'; x.direction='rtl';
+    x.fillText('إيصال تحويل USDT · TRC20', W-70,118);
+    /* المبلغ */
+    x.textAlign='center'; x.direction='ltr'; x.fillStyle='#fff';
+    x.font='700 110px Archivo, Arial';
+    x.fillText('-'+fmt(SEND.amt)+' USDT', W/2, 290);
+    x.font='500 28px "IBM Plex Sans Arabic"'; x.direction='rtl';
+    x.fillStyle='#9FF5D2';
+    x.fillText(SEND.confirmed?'✓ مؤكدة على البلوكتشين':'قيد التأكيد على الشبكة', W/2, 360);
+    /* بطاقة التفاصيل */
+    function card(y,h){ x.fillStyle='#fff'; x.strokeStyle='#D9E5F2'; x.lineWidth=2;
+      rr(x,70,y,W-140,h,26); x.fill(); x.stroke(); }
+    function rr(c,px,py,pw,ph,r){ c.beginPath(); c.moveTo(px+r,py); c.arcTo(px+pw,py,px+pw,py+ph,r);
+      c.arcTo(px+pw,py+ph,px,py+ph,r); c.arcTo(px,py+ph,px,py,r); c.arcTo(px,py,px+pw,py,r); c.closePath(); }
+    card(480,560);
+    var rows=[
+      ['من محفظة',S.addr],
+      ['إلى محفظة',SEND.to],
+      ['الشبكة','TRON · TRC20'],
+      ['رقم المعاملة TxID',SEND.tx],
+      ['التاريخ والوقت',SEND.when.toLocaleString('ar-MR',{dateStyle:'medium',timeStyle:'short'})]
+    ];
+    var ry=560;
+    rows.forEach(function(rw,i){
+      x.textAlign='right'; x.direction='rtl'; x.fillStyle='#486581';
+      x.font='500 26px "IBM Plex Sans Arabic"'; x.fillText(rw[0], W-120, ry);
+      x.textAlign='left'; x.direction='ltr'; x.fillStyle='#102A43';
+      var mono=/^T|^[0-9a-f]{20}/.test(rw[1]);
+      x.font=(mono?'600 24px "Courier New", monospace':'600 26px "IBM Plex Sans Arabic"');
+      var v=rw[1];
+      if(v.length>46){ x.fillText(v.slice(0,46),120,ry-14); x.fillText(v.slice(46),120,ry+18); }
+      else x.fillText(v,120,ry);
+      if(i<rows.length-1){ x.strokeStyle='#EAF2FB'; x.beginPath(); x.moveTo(110,ry+42); x.lineTo(W-110,ry+42); x.stroke(); }
+      ry+=98;
+    });
+    /* QR التحقق */
+    card(1090,470);
+    x.textAlign='right'; x.direction='rtl'; x.fillStyle='#102A43'; x.font='600 30px "IBM Plex Sans Arabic"';
+    x.fillText('تحقق علني من المعاملة', W-120, 1170);
+    x.fillStyle='#486581'; x.font='400 24px "IBM Plex Sans Arabic"';
+    x.fillText('امسح الرمز لعرض هذا التحويل على Tronscan', W-120, 1218);
+    x.fillText('سجل عام غير قابل للتعديل على شبكة TRON', W-120, 1260);
+    var link=net().scan+'/transaction/'+SEND.tx;
+    var q=window.qrcode(0,'M'); q.addData(link); q.make();
+    var n=q.getModuleCount(), size=300, cell=size/n, qx=120, qy=1150;
+    x.fillStyle='#fff'; x.fillRect(qx-14,qy-14,size+28,size+28);
+    x.fillStyle='#102A43';
+    for(var r2=0;r2<n;r2++)for(var c2=0;c2<n;c2++) if(q.isDark(r2,c2)) x.fillRect(qx+c2*cell,qy+r2*cell,cell+.5,cell+.5);
+    /* تذييل */
+    x.textAlign='center'; x.direction='rtl'; x.fillStyle='#486581'; x.font='400 22px "IBM Plex Sans Arabic"';
+    x.fillText('arkanrates.com — إيصال مولّد آليًا من محفظة أركان اللامركزية', W/2, 1660);
+    x.font='400 20px Arial'; x.direction='ltr';
+    x.fillText('ARKAN INTERNATIONAL TRADING · Non-Custodial Wallet · '+new Date().getFullYear(), W/2, 1700);
+
+    var img=cv.toDataURL('image/jpeg',.92);
+    var JS=window.jspdf&&window.jspdf.jsPDF;
+    if(!JS){ /* بديل: تنزيل صورة */ dl(img,'ARKAN-receipt-'+SEND.tx.slice(0,8)+'.jpg'); return; }
+    var pdf=new JS({unit:'pt',format:'a4'});
+    var pw=pdf.internal.pageSize.getWidth(), ph=pdf.internal.pageSize.getHeight();
+    pdf.addImage(img,'JPEG',0,0,pw,ph);
+    pdf.save('ARKAN-receipt-'+SEND.tx.slice(0,8)+'.pdf');
+    toast('تم إنشاء الإيصال ✓');
+  }catch(e){ toast('تعذر إنشاء الإيصال: '+(e.message||e),true); }
+}
+function dl(href,name){ var a=document.createElement('a'); a.href=href; a.download=name; document.body.appendChild(a); a.click(); a.remove(); }
 
 /* ── دليل التثبيت (آيفون/أندرويد بدون TronLink) ── */
 function showInstallGuide(){ $('guideModal').classList.add('on'); }
@@ -259,7 +409,12 @@ function boot(){
   $('btnCopy2').addEventListener('click',copyAddr);
   $('btnReceive').addEventListener('click',openReceive);
   $('btnQR').addEventListener('click',openReceive);
-  $('btnSend').addEventListener('click',sendSoon);
+  $('btnSend').addEventListener('click',openSend);
+  $('sendReview').addEventListener('click',reviewSend);
+  $('sendBack').addEventListener('click',function(){$('sendConfirm').style.display='none';$('sendForm').style.display='block';});
+  $('sendGo').addEventListener('click',doSend);
+  $('sendMax').addEventListener('click',function(){ $('sendAmt').value=($('usdtBal').textContent||'').replace(/,/g,''); });
+  $('btnPdf').addEventListener('click',makeReceipt);
   $('btnDisc').addEventListener('click',disconnect);
   $('btnTLOpen').addEventListener('click',openInTronLink);
   $('btnManual').addEventListener('click',function(){ $('addrModal').classList.add('on'); setTimeout(function(){$('manualAddr').focus();},250); });
@@ -272,6 +427,9 @@ function boot(){
   });
   document.querySelectorAll('[data-close]').forEach(function(el){
     el.addEventListener('click',function(){ $(el.dataset.close).classList.remove('on'); });
+  });
+  document.querySelectorAll('.modal').forEach(function(m){
+    m.addEventListener('click',function(e){ if(e.target===m) m.classList.remove('on'); });
   });
 }
 
