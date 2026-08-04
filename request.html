@@ -808,7 +808,7 @@ async function buildReceiptCanvas(){
     const goldTxt='≈ '+d.recv+' '+(d.to||'');
     x.font='800 64px "IBM Plex Mono",monospace';
     const tw=x.measureText(goldTxt).width;
-    const icoR=34, gap=20;
+    const icoR=46, gap=22;
     const hasIco=!!flagImg||d.to==='USDT';
     const total=tw+(hasIco?gap+icoR*2:0);
     const sx=(W-total)/2, by=704;
@@ -821,7 +821,7 @@ async function buildReceiptCanvas(){
       if(flagImg){ x.drawImage(flagImg,icx-icoR,icy-icoR,icoR*2,icoR*2); }
       else { /* USDT */
         x.fillStyle='#26A17B';x.fillRect(icx-icoR,icy-icoR,icoR*2,icoR*2);
-        x.fillStyle='#fff';x.font='800 44px "Archivo",sans-serif';
+        x.fillStyle='#fff';x.font='800 58px "Archivo",sans-serif';
         x.textAlign='center';x.textBaseline='middle';x.fillText('₮',icx,icy+2);
         x.textBaseline='alphabetic';
       }
@@ -831,7 +831,7 @@ async function buildReceiptCanvas(){
     }
     x.textAlign='center';
     if(d.rate){ x.fillStyle='rgba(191,227,255,.75)';x.font='600 27px "IBM Plex Mono",monospace';
-      x.fillText(L.rate+d.rate,W/2,748); }
+      x.fillText(L.rate+d.rate,W/2,758); }
   } else {
     x.fillStyle='#7FDBFF';x.font='700 46px "Archivo",sans-serif';
     x.fillText((d.from||'')+'  →  '+(d.to||''),W/2,682);
@@ -840,12 +840,12 @@ async function buildReceiptCanvas(){
   }
   /* جدول التفاصيل */
   let ry=800; const rowH=92; const labX=RTL?W-90:90, valX=RTL?90:W-90;
-  function row(label,val){
+  function row(label,val,color){
     x.fillStyle='rgba(255,255,255,.045)';
     if(((ry-800)/rowH)%2===0){x.beginPath();x.roundRect(60,ry-46,W-120,rowH-8,14);x.fill();}
     x.textAlign=RTL?'right':'left';x.fillStyle='rgba(191,227,255,.7)';x.font='600 27px Cairo,sans-serif';
     x.fillText(label,labX,ry);
-    x.textAlign=RTL?'left':'right';x.fillStyle='#FFFFFF';x.font='700 30px Cairo,sans-serif';
+    x.textAlign=RTL?'left':'right';x.fillStyle=color||'#FFFFFF';x.font='700 30px Cairo,sans-serif';
     let v=String(val||'—'); if(v.length>28)v=v.slice(0,27)+'…';
     x.fillText(v,valX,ry);
     ry+=rowH;
@@ -855,7 +855,7 @@ async function buildReceiptCanvas(){
   row(L.benef, d.bname);
   row(L.iban, d.iban);
   if(d.bank) row(L.bank, d.bank);
-  row(L.rccy, d.to);
+  row(L.rccy, d.recv?('≈ '+d.recv+' '+(d.to||'')):d.to, d.recv?'#FFD54F':null);
   row(L.ref, d.ref);
   row(L.dt, d.date);
   /* شارة الحالة — بعد الجدول بمسافة واضحة، مع تمركز عمودي للنص */
