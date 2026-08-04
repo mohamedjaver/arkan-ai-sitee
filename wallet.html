@@ -141,7 +141,7 @@ main{position:relative;z-index:1;padding:16px 14px 110px}
   <div class="topbar">
     <div class="brand">
       <div class="logo">A</div>
-      <div><b>محفظة أركان</b><small>USDT · TRC20 · لامركزية</small></div>
+      <div><b>محفظة أركان</b><small>حسابك الرقمي · USDT</small></div>
     </div>
     <a class="back" href="account.html" aria-label="رجوع">←</a>
   </div>
@@ -153,17 +153,17 @@ main{position:relative;z-index:1;padding:16px 14px 110px}
         <svg viewBox="0 0 24 24" fill="none"><path d="M21 7L12 3L3 7v10l9 4l9-4V7z" stroke="#fff" stroke-width="1.6"/><path d="M12 12v9M3 7l9 5l9-5" stroke="#7FE3C1" stroke-width="1.6"/></svg>
       </div>
       <h1>محفظتك، بمفاتيحك أنت</h1>
-      <p>اربط محفظة TronLink لاستقبال USDT ومتابعة رصيدك.<br>أركان لا يحتفظ بمفاتيحك الخاصة ولا يستطيع لمس أموالك — أنت المالك الوحيد.</p>
+      <p>فعّل محفظتك لاستقبال الأموال وإرسالها ومتابعة رصيدك لحظيًا.<br>أركان لا يحتفظ بمفاتيحك الخاصة ولا يستطيع لمس أموالك — أنت المالك الوحيد.</p>
       <button class="btn btn-primary" id="btnConnect">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M13 10V3L4 14h7v7l9-11h-7z" stroke="#fff" stroke-width="1.8" stroke-linejoin="round"/></svg>
-        ربط محفظة TronLink
+        تفعيل محفظتك الآن
       </button>
       <button class="btn btn-ghost" id="btnManual" style="margin-top:10px">
         متابعة بعنوان محفظتك — Trust Wallet وغيرها
       </button>
       <div class="trust">
         <div><b>غير وصائية</b>المفتاح الخاص لا يغادر جهازك أبدًا</div>
-        <div><b>توقيعك شرط</b>لا تحويل يخرج دون موافقتك داخل TronLink</div>
+        <div><b>توقيعك شرط</b>لا تحويل يخرج من حسابك دون موافقتك</div>
         <div><b>رصيد حقيقي</b>يُقرأ مباشرة من شبكة TRON</div>
         <div><b>شفافية كاملة</b>كل معاملة موثقة على Tronscan</div>
       </div>
@@ -175,11 +175,11 @@ main{position:relative;z-index:1;padding:16px 14px 110px}
     <div class="wcard">
       <div class="wc-top">
         <span class="chain"><span class="dot"></span> USDT · TRC20</span>
-        <span class="net-badge" id="netBadge">TRON Mainnet</span>
+        <span class="net-badge" id="netBadge" style="display:none"></span>
       </div>
       <div class="wc-label">رصيد المحفظة <span class="mode-badge" id="modeBadge">عرض فقط</span></div>
       <div class="wc-amount num"><span id="usdtBal">…</span><span class="cur">USDT</span></div>
-      <div class="wc-sub"><span id="usdBal" class="num">≈ $0.00</span><span class="num" id="trxBal">… TRX</span></div>
+      <div class="wc-sub"><span id="usdBal" class="num">≈ $0.00</span><span class="num" id="trxBal" style="display:none">… TRX</span></div>
       <div class="addr-chip" id="btnCopy" role="button" tabindex="0">
         <b class="num" id="addrShort">T…</b>
         <svg viewBox="0 0 24 24" fill="none"><rect x="9" y="9" width="11" height="11" rx="2.5" stroke="currentColor" stroke-width="1.7"/><path d="M5 15V5a2 2 0 0 1 2-2h8" stroke="currentColor" stroke-width="1.7"/></svg>
@@ -219,13 +219,13 @@ main{position:relative;z-index:1;padding:16px 14px 110px}
 <!-- ═══ مودال دليل TronLink ═══ -->
 <div class="modal" id="guideModal">
   <div class="sheet">
-    <div class="sheet-h"><h3>تثبيت TronLink</h3><button class="x" data-close="guideModal">✕</button></div>
+    <div class="sheet-h"><h3>تفعيل التوقيع الآمن</h3><button class="x" data-close="guideModal">✕</button></div>
     <div class="guide-steps">
-      <div class="gstep"><i>1</i><span>حمّل تطبيق <b>TronLink</b> من App Store أو Google Play وأنشئ محفظة. <b>احفظ كلمات الاسترداد ورقيًا</b> — لا تشاركها مع أحد أبدًا، ولا حتى مع أركان.</span></div>
-      <div class="gstep"><i>2</i><span>افتح TronLink ← تبويب <b>Discover</b> (المتصفح).</span></div>
+      <div class="gstep"><i>1</i><span>حمّل تطبيق التوقيع <b>TronLink</b> من App Store أو Google Play وأنشئ محفظتك. <b>احفظ كلمات الاسترداد ورقيًا</b> — لا تشاركها مع أحد أبدًا، ولا حتى مع أركان.</span></div>
+      <div class="gstep"><i>2</i><span>افتح التطبيق ← تبويب <b>Discover</b> (المتصفح).</span></div>
       <div class="gstep"><i>3</i><span>الصق رابط <b>arkanrates.com/wallet.html</b> واضغط ربط المحفظة.</span></div>
     </div>
-    <button class="btn btn-primary" id="btnTLOpen">فتح في تطبيق TronLink</button>
+    <button class="btn btn-primary" id="btnTLOpen">فتح في تطبيق التوقيع</button>
   </div>
 </div>
 
@@ -255,11 +255,11 @@ main{position:relative;z-index:1;padding:16px 14px 110px}
         <div style="display:flex;justify-content:space-between"><span style="color:var(--muted)">الشبكة</span><b>TRON · TRC20</b></div>
       </div>
       <div class="warn" style="margin-bottom:14px">⚠️<span>تحويلات البلوكتشين <b>غير قابلة للاسترجاع</b>. تأكد من العنوان قبل التوقيع.</span></div>
-      <button class="btn btn-primary" id="sendGo">تأكيد وتوقيع في TronLink</button>
+      <button class="btn btn-primary" id="sendGo">تأكيد وتوقيع الإرسال</button>
       <button class="btn btn-ghost" id="sendBack" style="margin-top:10px">تعديل</button>
     </div>
     <div id="sendBusy" style="display:none;text-align:center;padding:28px 10px">
-      <div style="font-size:15px;font-weight:600;margin-bottom:8px" id="busyMsg">بانتظار توقيعك في TronLink…</div>
+      <div style="font-size:15px;font-weight:600;margin-bottom:8px" id="busyMsg">بانتظار توقيعك في تطبيق المحفظة…</div>
       <div style="font-size:12.5px;color:var(--muted)">لا تغلق الصفحة</div>
     </div>
   </div>
@@ -269,8 +269,9 @@ main{position:relative;z-index:1;padding:16px 14px 110px}
 <div class="modal" id="doneModal">
   <div class="sheet" style="text-align:center">
     <div class="sheet-h" style="margin-bottom:4px"><span></span><button class="x" data-close="doneModal">✕</button></div>
-    <div style="width:70px;height:70px;margin:6px auto 16px;border-radius:50%;background:rgba(10,158,92,.1);display:grid;place-items:center">
-      <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#0A9E5C" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+    <div style="width:130px;height:130px;margin:6px auto 20px;border-radius:50%;display:grid;place-items:center;
+      background:linear-gradient(135deg,#2F7CE0,#5B9BEA);box-shadow:0 0 0 7px #fff,0 0 0 12px #BBD7F6,0 18px 40px -12px rgba(47,124,224,.55)">
+      <svg width="62" height="62" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
     </div>
     <h3 style="margin-bottom:6px">تم الإرسال بنجاح</h3>
     <div class="num" style="font-size:30px;font-weight:700;margin-bottom:4px"><span id="dAmt"></span> <span style="font-size:15px;color:var(--tether)">USDT</span></div>
@@ -285,7 +286,7 @@ main{position:relative;z-index:1;padding:16px 14px 110px}
   <div class="sheet">
     <div class="sheet-h"><h3>متابعة بعنوان محفظتك</h3><button class="x" data-close="addrModal">✕</button></div>
     <p style="font-size:12.5px;color:var(--muted);line-height:1.8;margin-bottom:14px">
-      الصق عنوان <b>TRON (TRC20)</b> من أي محفظة — Trust Wallet، Binance، TronLink…<br>
+      الصق عنوان <b>USDT (TRC20)</b> من أي محفظة أو منصة — Trust Wallet، Binance وغيرها…<br>
       وضع عرض فقط: رصيد حقيقي + استقبال بـ QR + سجل المعاملات. الإرسال يتطلب ربط محفظة موقّعة.</p>
     <input id="manualAddr" class="num" inputmode="text" autocomplete="off" spellcheck="false"
       placeholder="TXxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
