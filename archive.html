@@ -379,6 +379,7 @@ const ARKAN_ARCHIVE_BUILD='2026-08-03.14';
   <span style="flex:1"></span>
   <button class="vt" id="upBtn" onclick="upgradeAll()" style="border-color:rgba(0,153,255,.5);color:#0056D6">✦ ترقية القراءات</button>
   <button class="vt" onclick="exportArchive()" title="تصدير للتحليل في Claude Cowork">📤 تصدير</button>
+  <button class="vt" onclick="exportPdfReport()" title="تقرير PDF احترافي">🧾 تقرير PDF</button>
   <button class="vt" id="selBtn" onclick="toggleSelect()">☑️ تحديد</button>
 </div>
 
@@ -1028,6 +1029,27 @@ function renderKPIs(){
 }
 
 /* ═══ Insights ═══ */
+
+/* ═══ تقرير PDF — تحميل كسول للمحركات ثم توليد ═══ */
+let _pdfLibsP=null;
+function _loadScript(src){return new Promise((res,rej)=>{const s=document.createElement('script');s.src=src;s.onload=res;s.onerror=()=>rej(new Error(src));document.head.appendChild(s);});}
+async function exportPdfReport(){
+  try{
+    toast0('⏳ يُجهّز التقرير…');
+    if(!_pdfLibsP)_pdfLibsP=(async()=>{ 
+      if(!window.jspdf)await _loadScript('vendor/jspdf.min.js');
+      if(!window.jspdf.jsPDF.API.autoTable)await _loadScript('vendor/autotable.min.js');
+      if(!window.ARKAN_FONTS)await _loadScript('vendor/arkan-arabic-font.js');
+      if(!window.ArkanPdfReport)await _loadScript('vendor/arkan-pdf-report.js');
+    })();
+    await _pdfLibsP;
+    const docs=CACHE.filter(d=>d.parsed&&(d.parsed.amount||d.parsed.bank||d.parsed.date));
+    if(!docs.length){toast0('لا توجد إيصالات مقروءة للتصدير');return;}
+    window.ArkanPdfReport.run(docs);
+    toast0('✓ صدر التقرير');
+  }catch(e){toast0('✗ '+(e.message||'تعذر إنشاء التقرير'));}
+}
+
 /* ═══ تصدير للتحليل في Claude Cowork / Excel ═══ */
 function exportArchive(){
   if(!CACHE.length){toast0('الأرشيف فارغ');return;}
