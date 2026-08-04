@@ -446,12 +446,89 @@ var DICT={
 "جنيه إسترليني":{fr:"Livre sterling",pt:"Libra esterlina"},
 "ليرة تركية":{fr:"Livre turque",pt:"Lira turca"},
 "فرنك غرب أفريقي":{fr:"Franc CFA (UEMOA)",pt:"Franco CFA (UEMOA)"},
+
+/* ACCOUNT PAGE (account.html) */
+"ARKAN — حسابي":{fr:"ARKAN — Mon compte",pt:"ARKAN — Minha conta"},
+"أركان — حسابي":{fr:"ARKAN — Mon compte",pt:"ARKAN — Minha conta"},
+"حسابي":{fr:"Mon compte",pt:"Minha conta"},
+"مرحباً":{fr:"Bienvenue",pt:"Bem-vindo"},
+"إجمالي ما حوّلته عبرنا":{fr:"Total transféré via ARKAN",pt:"Total transferido via ARKAN"},
+"رقمك المرجعي":{fr:"Votre référence",pt:"Sua referência"},
+"حسابك قيد التفعيل — سيؤكده فريق أركان قريباً.":{fr:"Votre compte est en cours d'activation — l'équipe ARKAN le confirmera bientôt.",pt:"A sua conta está em ativação — a equipa ARKAN irá confirmá-la em breve."},
+"تحويل":{fr:"Transfert",pt:"Transferir"},
+"إيداع":{fr:"Dépôt",pt:"Depósito"},
+"السجل":{fr:"Historique",pt:"Histórico"},
+"أسعار اليوم":{fr:"Taux du jour",pt:"Cotações de hoje"},
+"عرض الكل":{fr:"Voir tout",pt:"Ver tudo"},
+"آخر المعاملات":{fr:"Dernières opérations",pt:"Últimas operações"},
+"الكل":{fr:"Tout",pt:"Tudo"},
+"أسعار الصرف":{fr:"Taux de change",pt:"Taxas de câmbio"},
+"تحديث مباشر":{fr:"Mise à jour en direct",pt:"Atualização ao vivo"},
+"تحويل جديد":{fr:"Nouveau transfert",pt:"Nova transferência"},
+"احسب قبل أن ترسل":{fr:"Calculez avant d'envoyer",pt:"Calcule antes de enviar"},
+"ترسل":{fr:"Vous envoyez",pt:"Você envia"},
+"يستلم المستفيد":{fr:"Le bénéficiaire reçoit",pt:"O beneficiário recebe"},
+"السعر المعتمد":{fr:"Taux appliqué",pt:"Taxa aplicada"},
+"الشريحة المطبّقة":{fr:"Palier appliqué",pt:"Escalão aplicado"},
+"مدة الوصول":{fr:"Délai d'arrivée",pt:"Tempo de chegada"},
+"خلال دقائق":{fr:"En quelques minutes",pt:"Em minutos"},
+"متابعة التحويل":{fr:"Suivre le transfert",pt:"Acompanhar transferência"},
+"الرقم المرجعي":{fr:"Numéro de référence",pt:"Número de referência"},
+"لمشاركته عند الطلب":{fr:"À partager sur demande",pt:"Para partilhar quando solicitado"},
+"حالة الحساب":{fr:"Statut du compte",pt:"Estado da conta"},
+"نشط":{fr:"Actif",pt:"Ativo"},
+"رمز الدخول":{fr:"Code d'accès",pt:"Código de acesso"},
+"احفظه للدخول لاحقاً":{fr:"Conservez-le pour vos prochaines connexions",pt:"Guarde-o para entrar mais tarde"},
+"تسجيل الخروج":{fr:"Déconnexion",pt:"Sair"},
+"إنهاء الجلسة على هذا الجهاز":{fr:"Terminer la session sur cet appareil",pt:"Encerrar a sessão neste dispositivo"},
+"سجل المعاملات":{fr:"Historique des opérations",pt:"Histórico de operações"},
+"الرئيسية":{fr:"Accueil",pt:"Início"},
+"دخول برقم واتساب ورمزك الشخصي":{fr:"Connexion avec votre WhatsApp et votre code personnel",pt:"Entre com o seu WhatsApp e o seu código pessoal"},
+"رقم واتساب":{fr:"Numéro WhatsApp",pt:"Número WhatsApp"},
+"الرمز الشخصي":{fr:"Code personnel",pt:"Código pessoal"},
+"دخول":{fr:"Connexion",pt:"Entrar"},
+"ليس لديك حساب؟ اطلب تحويلاً من":{fr:"Pas de compte ? Demandez un transfert depuis la",pt:"Sem conta? Solicite uma transferência na"},
+"الصفحة الرئيسية":{fr:"page d'accueil",pt:"página inicial"},
+"ويصلك رمزك عبر واتساب.":{fr:"et recevez votre code par WhatsApp.",pt:"e receba o seu código por WhatsApp."},
+
+/* REQUEST + APP — تكملة التغطية */
+"تحويلات الأفراد":{fr:"Transferts particuliers",pt:"Transferências para particulares"},
+"INDIVIDUALS · أفراد":{fr:"INDIVIDUALS · Particuliers",pt:"INDIVIDUALS · Particulares"},
+"تحويل شخصي — أفراد":{fr:"Transfert personnel — Particuliers",pt:"Transferência pessoal — Particulares"},
+"موريتانيا ⇄ أنغولا ⇄ الخليج — الرد عبر واتساب فورًا":{fr:"Mauritanie ⇄ Angola ⇄ Golfe — réponse immédiate sur WhatsApp",pt:"Mauritânia ⇄ Angola ⇄ Golfo — resposta imediata no WhatsApp"},
+"رقم الواتساب":{fr:"Numéro WhatsApp",pt:"Número WhatsApp"},
+"يرسل":{fr:"Envoie",pt:"Envia"},
+"🇲🇷 MRU — أوقية":{fr:"🇲🇷 MRU — Ouguiya",pt:"🇲🇷 MRU — Ouguiya"},
+"🇦🇴 AOA — كوانزا":{fr:"🇦🇴 AOA — Kwanza",pt:"🇦🇴 AOA — Kwanza"},
+"🇺🇸 USD — دولار":{fr:"🇺🇸 USD — Dollar",pt:"🇺🇸 USD — Dólar"},
+"🇪🇺 EUR — يورو":{fr:"🇪🇺 EUR — Euro",pt:"🇪🇺 EUR — Euro"},
+"USDT — تيثر":{fr:"USDT — Tether",pt:"USDT — Tether"},
+"🇦🇪 AED — درهم":{fr:"🇦🇪 AED — Dirham",pt:"🇦🇪 AED — Dirham"},
+"🇨🇳 CNY — يوان":{fr:"🇨🇳 CNY — Yuan",pt:"🇨🇳 CNY — Yuan"},
+"— تلقائيًا من الحاسبة":{fr:"— automatiquement depuis le calculateur",pt:"— automaticamente da calculadora"},
+"بيانات المستفيد — من يستلم المبلغ":{fr:"Bénéficiaire — qui reçoit les fonds",pt:"Beneficiário — quem recebe o valor"},
+"اسم المستفيد الكامل":{fr:"Nom complet du bénéficiaire",pt:"Nome completo do beneficiário"},
+"رقم الحساب / IBAN":{fr:"Numéro de compte / IBAN",pt:"Número de conta / IBAN"},
+"البنك":{fr:"Banque",pt:"Banco"},
+"إرسال الطلب عبر واتساب":{fr:"Envoyer la demande via WhatsApp",pt:"Enviar o pedido via WhatsApp"},
+"تم استلام طلب التحويل":{fr:"Demande de transfert reçue",pt:"Pedido de transferência recebido"},
+"فريق أركان سيؤكد معك عبر واتساب خلال دقائق":{fr:"L'équipe ARKAN confirmera avec vous sur WhatsApp en quelques minutes",pt:"A equipa ARKAN irá confirmar consigo no WhatsApp em minutos"},
+"احتفظ برقم المرجع":{fr:"Conservez le numéro de référence",pt:"Guarde o número de referência"},
+"إرسال الإيصال عبر واتساب":{fr:"Envoyer le reçu via WhatsApp",pt:"Enviar o recibo via WhatsApp"},
+"محمد ولد أحمد":{fr:"Ex. : Mohamed Ould Ahmed",pt:"Ex.: Mohamed Ould Ahmed"},
+"مثال: 50,000":{fr:"Ex. : 50 000",pt:"Ex.: 50 000"},
+"الاسم كما في الحساب البنكي":{fr:"Nom tel qu'indiqué sur le compte bancaire",pt:"Nome como consta na conta bancária"},
+"تحوّل":{fr:"Convertissez",pt:"Converta"},
+"✎ تعديل المبلغ أو العملة":{fr:"✎ Modifier le montant ou la devise",pt:"✎ Alterar o valor ou a moeda"},
+"خدمات ومنصّات أركان":{fr:"Services & plateformes ARKAN",pt:"Serviços e plataformas ARKAN"},
+"كل أدوات أركان في مكان واحد — الأسعار، الطلبات، الأرشيف، التسويات، والمزيد.":{fr:"Tous les outils ARKAN au même endroit — taux, demandes, archives, règlements et plus.",pt:"Todas as ferramentas ARKAN num só lugar — cotações, pedidos, arquivo, liquidações e mais."},
 };
 
 var LANGS=['ar','fr','pt'];
+function norm(l){ if(l==='en')return 'fr'; return (LANGS.indexOf(l)>=0)?l:null; }
 function detect(){
-  var saved=localStorage.getItem('arkan-lang');
-  if(saved&&LANGS.indexOf(saved)>=0)return saved;
+  var saved=norm(localStorage.getItem('arkan_lang'))||norm(localStorage.getItem('arkan-lang'));
+  if(saved)return saved;
   var nav=(navigator.languages&&navigator.languages[0])||navigator.language||'ar';
   nav=nav.toLowerCase();
   if(nav.indexOf('pt')===0)return 'pt';
@@ -469,7 +546,7 @@ function translateNode(n,lang){
   if(d&&d[lang]){if(n._aAR==null)n._aAR=raw;n.nodeValue=d[lang];}
 }
 function apply(lang){
-  cur=lang;localStorage.setItem('arkan-lang',lang);
+  cur=lang;localStorage.setItem('arkan_lang',lang);try{localStorage.removeItem('arkan-lang');}catch(e){}
   document.documentElement.lang=lang;
   document.documentElement.dir=(lang==='ar')?'rtl':'ltr';
   var w=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT,null);
@@ -481,32 +558,16 @@ function apply(lang){
     var src=el._aARP||p;var d=DICT[src.trim()];
     if(d&&d[lang]){el._aARP=src;el.setAttribute('placeholder',d[lang]);}
   });
-  document.querySelectorAll('.arkan-lang button').forEach(function(b){
-    var on=b.dataset.l===lang;
-    b.style.background=on?'linear-gradient(135deg,#8B72FF,#5B3FD1)':'transparent';
-    b.style.color=on?'#fff':'#8B8FA8';
-  });
   document.dispatchEvent(new CustomEvent('arkan:lang',{detail:lang}));
 }
 window.arkanLang=function(){return cur;};
 window.arkanT=function(ar){var d=DICT[ar];return (cur!=='ar'&&d&&d[cur])?d[cur]:ar;};
 
-function mount(){
-  if(document.querySelector('.arkan-lang'))return;
-  var d=document.createElement('div');
-  d.className='arkan-lang';
-  d.style.cssText='position:fixed;bottom:16px;left:16px;z-index:99;display:flex;gap:4px;background:rgba(8,9,20,.88);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.12);border-radius:100px;padding:4px';
-  LANGS.forEach(function(l){
-    var b=document.createElement('button');
-    b.dataset.l=l;b.textContent=l.toUpperCase();
-    b.style.cssText='border:none;background:transparent;color:#8B8FA8;font-family:monospace;font-size:11px;font-weight:700;padding:7px 12px;border-radius:100px;cursor:pointer;letter-spacing:.05em';
-    b.onclick=function(){apply(l);};
-    d.appendChild(b);
-  });
-  document.body.appendChild(d);
-}
-function boot(){mount();apply(cur);}
+function boot(){apply(cur);}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
+/* مزامنة اللغة مع الصفحة الرئيسية (نفس المفتاح arkan_lang) */
+window.addEventListener('storage',function(e){ if(e.key==='arkan_lang'){var l=norm(e.newValue); if(l&&l!==cur)apply(l);} });
+window.addEventListener('pageshow',function(){ var l=norm(localStorage.getItem('arkan_lang')); if(l&&l!==cur)apply(l); });
 /* المحتوى الديناميكي اللاحق (أسعار تُحقن بعد التحميل) */
 var mo=new MutationObserver(function(muts){
   if(cur==='ar')return;
