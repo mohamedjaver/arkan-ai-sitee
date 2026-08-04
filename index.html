@@ -423,11 +423,11 @@ body::after{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;opac
     </a>
     <div class="links">
       <a href="#network" data-i="nav_network"></a>
+      <a href="#wallet" data-i="nav_wallet"></a>
+      <a href="#visa" data-i="nav_visa"></a>
       <a href="#markets" data-i="nav_markets"></a>
       <a href="#exchange" data-i="nav_exchange"></a>
       <a href="#settle" data-i="nav_settle"></a>
-      <a href="#wallet" data-i="nav_wallet"></a>
-      <a href="#visa" data-i="nav_visa"></a>
       <a href="ai.html">AI</a>
     </div>
     <div class="sp"></div>
@@ -440,9 +440,9 @@ body::after{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;opac
   </div>
 </nav>
 <div class="mmenu" id="mmenu">
-  <a href="#network" data-i="nav_network"></a><a href="#markets" data-i="nav_markets"></a>
-  <a href="#exchange" data-i="nav_exchange"></a><a href="#settle" data-i="nav_settle"></a>
-  <a href="#wallet" data-i="nav_wallet"></a><a href="#visa" data-i="nav_visa"></a><a href="ai.html">AI</a>
+  <a href="#network" data-i="nav_network"></a><a href="#wallet" data-i="nav_wallet"></a>
+  <a href="#visa" data-i="nav_visa"></a><a href="#markets" data-i="nav_markets"></a>
+  <a href="#exchange" data-i="nav_exchange"></a><a href="#settle" data-i="nav_settle"></a><a href="ai.html">AI</a>
   <a href="login.html" data-i="nav_signin"></a>
 </div>
 
@@ -517,53 +517,6 @@ body::after{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;opac
   </div>
 </header>
 
-<!-- ================= ARKAN OFFICIAL RATES ================= -->
-<section id="markets">
-  <div class="wrap">
-    <div class="sec-head">
-      <span class="eyebrow" data-i="mk_eye"></span>
-      <h2 class="sec-h2" data-i="mk_h2"></h2>
-      <p class="sec-sub" data-i="mk_sub"></p>
-      <span class="upd"><span class="d"></span><span data-i="mk_upd"></span> <b id="updDate"></b></span>
-    </div>
-    <div class="market-card" id="mkt"></div>
-  </div>
-</section>
-
-<!-- ================= STEPS ================= -->
-<section class="steps-band" id="settle">
-  <div class="wrap">
-    <div class="sec-head">
-      <span class="eyebrow" data-i="sp_eye"></span>
-      <h2 class="sec-h2" data-i="sp_h2"></h2>
-      <p class="sec-sub" data-i="sp_sub"></p>
-    </div>
-    <div class="steps">
-      <div class="step"><div class="n">1</div><h4 data-i="s1h"></h4><p data-i="s1p"></p></div>
-      <div class="step"><div class="n">2</div><h4 data-i="s2h"></h4><p data-i="s2p"></p></div>
-      <div class="step"><div class="n">3</div><h4 data-i="s3h"></h4><p data-i="s3p"></p></div>
-      <div class="step"><div class="n">4</div><h4 data-i="s4h"></h4><p data-i="s4p"></p></div>
-    </div>
-  </div>
-</section>
-
-<!-- ================= BALANCES ================= -->
-<section id="dash">
-  <div class="wrap">
-    <div class="sec-head">
-      <span class="eyebrow" data-i="db_eye"></span>
-      <h2 class="sec-h2" data-i="db_h2"></h2>
-      <p class="sec-sub" data-i="db_sub"></p>
-    </div>
-    <div class="balances">
-      <div class="bal"><div class="cur"><span class="cc">AOA</span><span data-i="c_aoa"></span></div><div class="amt">4,120,000</div></div>
-      <div class="bal"><div class="cur"><span class="cc">MRU</span><span data-i="c_mru"></span></div><div class="amt">318,540</div></div>
-      <div class="bal"><div class="cur"><span class="cc">USDT</span>Tether</div><div class="amt">86,300</div></div>
-      <div class="bal"><div class="cur"><span class="cc">EUR</span>Euro</div><div class="amt">12,800</div></div>
-    </div>
-  </div>
-</section>
-
 <!-- ================= WALLET ================= -->
 <section class="walletsec" id="wallet">
   <div class="wrap">
@@ -636,6 +589,53 @@ body::after{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;opac
         <div class="vprice" id="vprice"></div>
         <a class="btn btn-gold" id="waBtn" href="https://wa.me/22236295050" data-i="v_cta"></a>
       </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= ARKAN OFFICIAL RATES ================= -->
+<section id="markets">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="eyebrow" data-i="mk_eye"></span>
+      <h2 class="sec-h2" data-i="mk_h2"></h2>
+      <p class="sec-sub" data-i="mk_sub"></p>
+      <span class="upd"><span class="d"></span><span data-i="mk_upd"></span> <b id="updDate"></b></span>
+    </div>
+    <div class="market-card" id="mkt"></div>
+  </div>
+</section>
+
+<!-- ================= STEPS ================= -->
+<section class="steps-band" id="settle">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="eyebrow" data-i="sp_eye"></span>
+      <h2 class="sec-h2" data-i="sp_h2"></h2>
+      <p class="sec-sub" data-i="sp_sub"></p>
+    </div>
+    <div class="steps">
+      <div class="step"><div class="n">1</div><h4 data-i="s1h"></h4><p data-i="s1p"></p></div>
+      <div class="step"><div class="n">2</div><h4 data-i="s2h"></h4><p data-i="s2p"></p></div>
+      <div class="step"><div class="n">3</div><h4 data-i="s3h"></h4><p data-i="s3p"></p></div>
+      <div class="step"><div class="n">4</div><h4 data-i="s4h"></h4><p data-i="s4p"></p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= BALANCES ================= -->
+<section id="dash">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="eyebrow" data-i="db_eye"></span>
+      <h2 class="sec-h2" data-i="db_h2"></h2>
+      <p class="sec-sub" data-i="db_sub"></p>
+    </div>
+    <div class="balances">
+      <div class="bal"><div class="cur"><span class="cc">AOA</span><span data-i="c_aoa"></span></div><div class="amt">4,120,000</div></div>
+      <div class="bal"><div class="cur"><span class="cc">MRU</span><span data-i="c_mru"></span></div><div class="amt">318,540</div></div>
+      <div class="bal"><div class="cur"><span class="cc">USDT</span>Tether</div><div class="amt">86,300</div></div>
+      <div class="bal"><div class="cur"><span class="cc">EUR</span>Euro</div><div class="amt">12,800</div></div>
     </div>
   </div>
 </section>
