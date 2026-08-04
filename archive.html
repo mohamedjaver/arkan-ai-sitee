@@ -375,6 +375,7 @@ const ARKAN_ARCHIVE_BUILD='2026-08-03.14';
 <div class="vtabs">
   <button class="vt on" data-v="arch" onclick="setView('arch')">📂 الأرشيف</button>
   <button class="vt" data-v="chains" onclick="setView('chains')">⛓ سلاسل التسوية</button>
+  <button class="vt" data-v="match" onclick="setView('match')">🤝 مركز المطابقة</button>
   <button class="vt" data-v="stats" onclick="setView('stats')">📊 الإحصاءات</button>
   <span style="flex:1"></span>
   <button class="vt" id="upBtn" onclick="upgradeAll()" style="border-color:rgba(0,153,255,.5);color:#0056D6">✦ ترقية القراءات</button>
@@ -423,6 +424,7 @@ const ARKAN_ARCHIVE_BUILD='2026-08-03.14';
   <!-- views -->
   <div id="v_arch"><div id="tl"></div></div>
   <div id="v_chains" style="display:none"></div>
+  <div id="v_match" style="display:none"></div>
   <div id="v_stats" style="display:none"></div>
 
 </div>
@@ -953,6 +955,9 @@ function docCard(d,i){
   else if(d.needsReview)badges.push('<span class="bdg rev">مراجعة</span>');
   else badges.push('<span class="bdg ok">موثّق</span>');
   if(d.chainId)badges.push('<span class="bdg chain">⛓</span>');
+  if(d.rtype==='customer')badges.push('<span class="bdg" style="background:rgba(0,153,255,.14);color:#0056D6">👤 زبون</span>');
+  if(d.rtype==='supplier')badges.push('<span class="bdg" style="background:rgba(130,80,255,.14);color:#6a3bd8">🏭 مورد</span>');
+  if(d.rtype&&window.mStatusOf){const st=mStatusOf(d);const M=MSTYLE[st];if(M)badges.push(`<span class="bdg" style="background:${M.bg};color:${M.fg}">${M.ic} ${M.t}</span>`);}
   return `<div class="doc ${SELECTED.has(d.id)?'picked':''}" id="doc_${d.id}" style="animation-delay:${Math.min(i*35,350)}ms" data-id="${d.id}">
     <span class="ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4"><path d="M20 6L9 17l-5-5"/></svg></span>
     <div class="th ${d.isPdf?'pdf':''}" style="background-image:url('${d.thumb||''}')"></div>
@@ -1399,11 +1404,14 @@ function setView(v){
   $('v_arch').style.display=v==='arch'?'':'none';
   $('v_chains').style.display=v==='chains'?'':'none';
   $('v_stats').style.display=v==='stats'?'':'none';
+  $('v_match').style.display=v==='match'?'':'none';
   if(v==='chains')renderChains();
   if(v==='stats')renderStats();
+  if(v==='match'&&window.renderMatch)renderMatch();
 }
 function renderAll(){renderKPIs();renderChips();renderInsights();renderTimeline();
-  if(VIEW==='chains')renderChains(); if(VIEW==='stats')renderStats();}
+  if(VIEW==='chains')renderChains(); if(VIEW==='stats')renderStats();
+  if(VIEW==='match'&&window.renderMatch)renderMatch();}
 
 /* ═══ boot ═══ */
 document.getElementById('tl').addEventListener('click',e=>{
@@ -1423,6 +1431,521 @@ document.getElementById('tl').addEventListener('click',e=>{
   setTimeout(()=>{ try{ upgradeAll(true); }catch(e){} }, 2500);
 })();
 </script>
+<style>
+/* ═══ ARKAN Matching Center ═══ */
+.mc-alerts{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px}
+.mc-al{background:#fff;border:1px solid rgba(7,29,73,.08);border-radius:14px;padding:12px 14px;box-shadow:0 4px 14px rgba(7,29,73,.05)}
+.mc-al .k{font-size:11px;color:#6b7d9e;margin-bottom:4px}
+.mc-al .v{font-size:22px;font-weight:800;color:#071D49}
+.mc-al.red .v{color:#d63333}.mc-al.org .v{color:#e08a00}.mc-al.grn .v{color:#0a9e5c}
+.mc-banner{background:linear-gradient(90deg,#fff3f3,#fff);border:1px solid rgba(214,51,51,.35);border-right:4px solid #d63333;border-radius:12px;padding:10px 14px;margin-bottom:12px;font-size:12.5px;color:#8a1f1f;line-height:1.9}
+.mc-set{display:flex;gap:10px;flex-wrap:wrap;align-items:center;background:#fff;border:1px solid rgba(7,29,73,.08);border-radius:12px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:#3b4c6e}
+.mc-set select,.mc-set input{border:1px solid rgba(7,29,73,.15);border-radius:8px;padding:5px 8px;font-size:12px;font-family:inherit}
+.mc-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:860px){.mc-grid{grid-template-columns:1fr}}
+.mc-pane{background:#fff;border:1px solid rgba(7,29,73,.08);border-radius:16px;overflow:hidden;box-shadow:0 6px 20px rgba(7,29,73,.05)}
+.mc-pane>h3{margin:0;padding:12px 16px;font-size:14px;display:flex;align-items:center;gap:8px;color:#fff}
+.mc-pane.cst>h3{background:linear-gradient(90deg,#0058D9,#00B5FF)}
+.mc-pane.sup>h3{background:linear-gradient(90deg,#5a2ecc,#8b5cf6)}
+.mc-pane>h3 small{font-weight:600;opacity:.85;margin-inline-start:auto;font-size:11px}
+.mc-list{max-height:560px;overflow:auto;padding:10px}
+.mc-card{display:flex;gap:10px;background:#f7faff;border:1px solid rgba(7,29,73,.07);border-radius:12px;padding:10px;margin-bottom:8px;position:relative}
+.mc-card .th{width:52px;height:52px;border-radius:8px;background-size:cover;background-position:center;background-color:#e8eefb;flex-shrink:0;cursor:pointer}
+.mc-card .in{flex:1;min-width:0}
+.mc-card .nm{font-size:12.5px;font-weight:700;color:#071D49;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mc-card .amt{font-size:15px;font-weight:800;color:#0056D6;font-family:'IBM Plex Mono',monospace}
+.mc-card .mt{font-size:10.5px;color:#6b7d9e;display:flex;gap:8px;flex-wrap:wrap;margin-top:2px}
+.mc-st{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;border-radius:20px;padding:2px 8px;margin-top:4px}
+.mc-acts{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px}
+.mc-acts button{border:1px solid rgba(7,29,73,.14);background:#fff;border-radius:8px;padding:3px 8px;font-size:10.5px;cursor:pointer;font-family:inherit;color:#243b63}
+.mc-acts button.p{background:#0058D9;border-color:#0058D9;color:#fff}
+.mc-acts button.g{background:#0a9e5c;border-color:#0a9e5c;color:#fff}
+.mc-acts button.r{color:#d63333;border-color:rgba(214,51,51,.3)}
+.mc-link{position:absolute;top:8px;inset-inline-end:10px;font-size:10px;color:#6b7d9e}
+.mc-sums{display:flex;gap:10px;flex-wrap:wrap;background:#071D49;color:#fff;border-radius:14px;padding:12px 16px;margin:14px 0;font-size:12px}
+.mc-sums b{font-family:'IBM Plex Mono',monospace;font-size:15px}
+.mc-sums .d{color:#FFD54F}
+.mc-miss{background:#fff;border:1px solid rgba(7,29,73,.08);border-radius:16px;margin-top:14px;overflow:hidden}
+.mc-miss>h3{margin:0;padding:12px 16px;background:linear-gradient(90deg,#d63333,#ff7b54);color:#fff;font-size:14px}
+.mc-miss table{width:100%;border-collapse:collapse;font-size:11.5px}
+.mc-miss th{background:#f2f6ff;color:#3b4c6e;padding:8px;text-align:right;font-size:10.5px}
+.mc-miss td{padding:8px;border-top:1px solid rgba(7,29,73,.06);color:#243b63}
+.mc-miss .age{font-family:'IBM Plex Mono',monospace;font-weight:700}
+.mc-miss .age.hot{color:#d63333}
+.mc-modal{position:fixed;inset:0;background:rgba(7,29,73,.55);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;z-index:900;padding:16px}
+.mc-modal.on{display:flex}
+.mc-box{background:#fff;border-radius:18px;width:min(560px,100%);max-height:82vh;display:flex;flex-direction:column;overflow:hidden}
+.mc-box h3{margin:0;padding:14px 18px;background:#071D49;color:#fff;font-size:14px;display:flex;justify-content:space-between}
+.mc-box h3 span{cursor:pointer}
+.mc-box .bd{padding:14px;overflow:auto}
+.mc-pick{display:flex;gap:10px;border:1.5px solid rgba(7,29,73,.1);border-radius:12px;padding:10px;margin-bottom:8px;cursor:pointer}
+.mc-pick.sel{border-color:#0058D9;background:#f0f7ff}
+.mc-pick .sc{margin-inline-start:auto;font-weight:800;font-family:'IBM Plex Mono',monospace;font-size:14px}
+.mc-pick .sc.hi{color:#0a9e5c}.mc-pick .sc.md{color:#e08a00}.mc-pick .sc.lo{color:#96a5c0}
+.mc-foot{padding:12px 14px;border-top:1px solid rgba(7,29,73,.08);display:flex;gap:8px;justify-content:flex-end}
+.mc-foot button{border-radius:10px;padding:8px 16px;font-size:12.5px;font-family:inherit;cursor:pointer;border:1px solid rgba(7,29,73,.15);background:#fff}
+.mc-foot button.p{background:#0058D9;color:#fff;border-color:#0058D9}
+.uz-type{display:flex;gap:8px;align-items:center;justify-content:center;margin-top:10px;font-size:12px;color:#3b4c6e}
+.uz-type select{border:1px solid rgba(7,29,73,.18);border-radius:9px;padding:6px 10px;font-size:12px;font-family:inherit;background:#fff}
+</style>
+<script>
+/* ═══════════════════════════════════════════════════════════
+   ARKAN Matching Center — customer↔supplier reconciliation
+   الربط يُخزَّن داخل سجلات المستندات (mIds) — صفر migration
+   ═══════════════════════════════════════════════════════════ */
+window.MSTYLE={
+  settled:{t:'تمت التسوية',ic:'✅',bg:'rgba(10,158,92,.14)',fg:'#0a7a47'},
+  ok:{t:'مطابق',ic:'🟢',bg:'rgba(10,158,92,.12)',fg:'#0a9e5c'},
+  diff:{t:'فرق مبلغ',ic:'🔴',bg:'rgba(214,51,51,.12)',fg:'#d63333'},
+  weak:{t:'مطابقة محتملة',ic:'🟡',bg:'rgba(255,196,0,.15)',fg:'#a97b00'},
+  missing:{t:'لا مقابل',ic:'⛔',bg:'rgba(214,51,51,.15)',fg:'#c22'},
+  none:{t:'—',ic:'',bg:'',fg:''}
+};
+const MTOL=()=>+(localStorage.getItem('arkan_mtol')||1);          /* % */
+const AHRS=()=>+(localStorage.getItem('arkan_ahrs')||6);          /* hours */
+const mSave=async d=>{try{await putDoc(d);}catch(e){}};
+const byId=id=>CACHE.find(x=>x.id===id);
+const mAmt=d=>+(d.parsed?.amount)||0;
+const mCur=d=>(d.parsed?.currency)||'';
+const rlist=t=>CACHE.filter(d=>d.rtype===t);
+const linkedSum=d=>(d.mIds||[]).map(byId).filter(Boolean).reduce((a,x)=>a+mAmt(x),0);
+
+/* ═══ نوع الإيصال ═══ */
+async function setRtype(id,t,silent){
+  const d=byId(id); if(!d)return;
+  const old=d.rtype||'';
+  if(old===t)return;
+  d.rtype=t;
+  audit(d,`نوع الإيصال: ${old||'غير محدد'} → ${t==='customer'?'زبون':t==='supplier'?'مورد':'غير محدد'}`);
+  await mSave(d);
+  if(!silent){toast0('✓ حُدد النوع');renderAll();}
+}
+async function setParty(id){
+  const d=byId(id); if(!d)return;
+  const v=prompt(d.rtype==='supplier'?'اسم المورد':'اسم الزبون',d.party||'');
+  if(v===null)return;
+  audit(d,`الطرف: ${d.party||'—'} → ${v}`);
+  d.party=v.trim(); await mSave(d); renderAll();
+}
+
+/* ═══ محرك النقاط ═══ */
+function mScore(c,s){
+  const cp=c.parsed||{},sp=s.parsed||{};
+  let sc=0,why=[];
+  const nz=x=>String(x||'').trim().toUpperCase();
+  if(cp.reference&&sp.reference&&nz(cp.reference)===nz(sp.reference)){sc+=35;why.push('مرجع');}
+  const a1=mAmt(c),a2=mAmt(s);
+  if(a1&&a2){
+    const diff=Math.abs(a1-a2),pc=diff/Math.max(a1,a2)*100;
+    if(pc<=0.01){sc+=25;why.push('مبلغ');}
+    else if(pc<=MTOL()){sc+=20;why.push('مبلغ~');}
+    else if(pc<=5){sc+=8;}
+  }
+  if(mCur(c)&&mCur(c)===mCur(s)){sc+=10;why.push('عملة');}
+  const t1=effTs(c),t2=effTs(s),dh=Math.abs(t1-t2)/36e5;
+  if(dh<=24){sc+=10;why.push('تاريخ');}else if(dh<=72){sc+=5;}
+  if(dh<=2){sc+=5;why.push('وقت');}
+  const names=[cp.beneficiary,cp.sender,c.party].map(nz).filter(x=>x.length>3);
+  const names2=[sp.beneficiary,sp.sender,s.party].map(nz).filter(x=>x.length>3);
+  if(names.some(n=>names2.some(m=>m.includes(n)||n.includes(m)))){sc+=10;why.push('اسم');}
+  if(cp.bank&&sp.bank&&nz(cp.bank)===nz(sp.bank)){sc+=5;why.push('بنك');}
+  return {score:Math.min(100,sc),why:why.join('·')};
+}
+function mBand(s){return s>=90?'مؤكد':s>=75?'عالٍ':s>=55?'محتمل':'ضعيف';}
+
+/* ═══ الربط / الفك / التسوية ═══ */
+async function mLink(cid,sid,mode){
+  const c=byId(cid),s=byId(sid); if(!c||!s)return;
+  c.mIds=c.mIds||[]; s.mIds=s.mIds||[];
+  if(!c.mIds.includes(sid))c.mIds.push(sid);
+  if(!s.mIds.includes(cid))s.mIds.push(cid);
+  const {score}=mScore(c,s);
+  c.mMeta=c.mMeta||{}; c.mMeta[sid]={score,mode:mode||'يدوي',ts:Date.now()};
+  audit(c,`ربط بإيصال مورد ${s.smartName||sid} (${mode||'يدوي'} · ${score})`);
+  audit(s,`ربط بإيصال زبون ${c.smartName||cid} (${mode||'يدوي'} · ${score})`);
+  await mSave(c); await mSave(s);
+}
+async function mUnlink(cid,sid){
+  const c=byId(cid),s=byId(sid); if(!c||!s)return;
+  c.mIds=(c.mIds||[]).filter(x=>x!==sid);
+  s.mIds=(s.mIds||[]).filter(x=>x!==cid);
+  if(c.settled&&!c.mIds.length)c.settled=false;
+  audit(c,'فك ربط عن '+(s.smartName||sid));
+  audit(s,'فك ربط عن '+(c.smartName||cid));
+  await mSave(c); await mSave(s);
+  toast0('فُك الربط'); renderAll();
+}
+async function mUnlinkAll(id){
+  const d=byId(id); if(!d)return;
+  for(const other of [...(d.mIds||[])])
+    await mUnlink(d.rtype==='customer'?id:other, d.rtype==='customer'?other:id);
+}
+async function mSettle(cid){
+  const c=byId(cid); if(!c)return;
+  if(!(c.mIds||[]).length){
+    const rs=prompt('لا يوجد إيصال مورد مرتبط.\nلاعتماد التسوية استثنائيًا اكتب السبب:');
+    if(!rs||!rs.trim())return;
+    audit(c,'تسوية استثنائية دون إيصال مورد — السبب: '+rs.trim());
+  } else audit(c,'اعتماد التسوية ✓');
+  c.settled=true; c.settledAt=Date.now();
+  await mSave(c); toast0('✅ تمت التسوية'); renderAll();
+}
+
+/* ═══ الحالة ═══ */
+function mStatusOf(d){
+  if(d.rtype!=='customer'&&d.rtype!=='supplier')return 'none';
+  if(d.settled)return 'settled';
+  const ids=d.mIds||[];
+  if(!ids.length)return (d._sugg&&d._sugg.score>=55)?'weak':'missing';
+  const own=mAmt(d), other=linkedSum(d);
+  if(!own||!other)return 'weak';
+  const pc=Math.abs(own-other)/Math.max(own,other)*100;
+  return pc<=MTOL()?'ok':'diff';
+}
+
+/* ═══ المطابقة التلقائية ═══ */
+async function autoMatchAll(quiet){
+  const cs=rlist('customer'),ss=rlist('supplier');
+  let auto=0;
+  const takenPairs=new Set();
+  cs.forEach(c=>(c.mIds||[]).forEach(s=>takenPairs.add(c.id+'|'+s)));
+  for(const c of cs){
+    c._sugg=null;
+    if(c.settled)continue;
+    let best=null;
+    for(const s of ss){
+      if((c.mIds||[]).includes(s.id))continue;
+      const r=mScore(c,s);
+      if(!best||r.score>best.score)best={id:s.id,score:r.score,why:r.why};
+    }
+    if(!best)continue;
+    if(best.score>=90&&!(c.mIds||[]).length&&!(byId(best.id).mIds||[]).length){
+      await mLink(c.id,best.id,'تلقائي'); auto++;
+    } else if(best.score>=55) c._sugg=best;
+  }
+  if(!quiet)toast0(auto?('🤖 رُبط تلقائيًا '+auto+' عملية'):'لا مطابقات مؤكدة جديدة');
+  renderAll();
+}
+
+/* ═══ نافذة الربط اليدوي ═══ */
+let _pickFor=null,_pickSel=new Set();
+function mPickOpen(id){
+  const d=byId(id); if(!d)return; _pickFor=id;_pickSel=new Set();
+  const opp=rlist(d.rtype==='customer'?'supplier':'customer');
+  const scored=opp.map(o=>{
+    const [c,s]=d.rtype==='customer'?[d,o]:[o,d];
+    return {o,r:mScore(c,s)};
+  }).sort((a,b)=>b.r.score-a.r.score);
+  $('mcPickTitle').textContent=d.rtype==='customer'?'اختر إيصال المورد المقابل':'اختر إيصال الزبون المقابل';
+  $('mcPickList').innerHTML=scored.length?scored.map(({o,r})=>{
+    const p=o.parsed||{};
+    const cls=r.score>=75?'hi':r.score>=55?'md':'lo';
+    return `<div class="mc-pick" id="pk_${o.id}" onclick="mPickTog('${o.id}')">
+      <div class="th" style="width:44px;height:44px;border-radius:8px;background:#e8eefb url('${o.thumb||''}') center/cover"></div>
+      <div style="min-width:0">
+        <div style="font-size:12px;font-weight:700;color:#071D49">${esc(o.party||o.smartName||o.fileName)}</div>
+        <div style="font-size:11px;color:#0056D6;font-family:'IBM Plex Mono',monospace">${fmt(mAmt(o),0)} ${esc(mCur(o))} · ${esc(p.date||'')}</div>
+        <div style="font-size:10px;color:#96a5c0">${esc(r.why||'')}</div>
+      </div>
+      <div class="sc ${cls}">${r.score}</div>
+    </div>`;}).join(''):
+    '<div style="text-align:center;color:#96a5c0;padding:20px;font-size:12px">لا توجد إيصالات في الجهة المقابلة — ارفع إيصالًا وحدد نوعه أولًا</div>';
+  $('mcPick').classList.add('on');
+}
+function mPickTog(id){
+  _pickSel.has(id)?_pickSel.delete(id):_pickSel.add(id);
+  $('pk_'+id).classList.toggle('sel',_pickSel.has(id));
+}
+async function mPickOk(){
+  if(!_pickFor||!_pickSel.size){$('mcPick').classList.remove('on');return;}
+  const d=byId(_pickFor);
+  for(const oid of _pickSel){
+    if(d.rtype==='customer')await mLink(_pickFor,oid,'يدوي');
+    else await mLink(oid,_pickFor,'يدوي');
+  }
+  $('mcPick').classList.remove('on');
+  toast0('🔗 رُبط '+_pickSel.size+' إيصال'); renderAll();
+}
+
+/* ═══ زر: تم إرسال الإيصال للمورد ═══ */
+window._pendingLink=null;
+function mSent(cid){
+  const pick=confirm('هل إيصال المورد موجود في الأرشيف؟\n\nموافق = اختيار من الموجود\nإلغاء = رفع إيصال جديد الآن');
+  if(pick){ mPickOpen(cid); }
+  else {
+    window._pendingLink=cid; window._nextType='supplier';
+    const sel=$('uzType'); if(sel)sel.value='supplier';
+    toast0('📤 ارفع إيصال المورد الآن — سيُربط تلقائيًا');
+    setView('arch');
+    document.getElementById('fi').click();
+  }
+}
+
+/* ═══ hook على processFile: نوع الرفع + الربط المعلّق ═══ */
+(function(){
+  const _pf=window.processFile;
+  window.processFile=async function(file){
+    const before=new Set(CACHE.map(d=>d.id));
+    await _pf(file);
+    const rec=CACHE.find(d=>!before.has(d.id));
+    if(!rec)return;
+    const t=window._nextType||($('uzType')?$('uzType').value:'');
+    if(t){rec.rtype=t; audit(rec,'نوع عند الرفع: '+(t==='customer'?'زبون':'مورد'));}
+    if(window._pendingLink&&rec.rtype==='supplier'){
+      await mLink(window._pendingLink,rec.id,'تم الإرسال للمورد');
+      const c=byId(window._pendingLink);
+      if(c){c.settled=true;c.settledAt=Date.now();audit(c,'تمت التسوية بعد رفع إيصال المورد ✓');await mSave(c);}
+      window._pendingLink=null; window._nextType=null;
+      toast0('✅ رُبط بإيصال الزبون وتمت التسوية');
+    }
+    await mSave(rec);
+    await autoMatchAll(true);
+  };
+})();
+
+/* ═══ العرض ═══ */
+function ageStr(ts){
+  const h=Math.floor((Date.now()-ts)/36e5);
+  if(h<24)return h+' ساعة';
+  return Math.floor(h/24)+' يوم '+(h%24)+' س';
+}
+function mcCard(d){
+  const p=d.parsed||{},st=mStatusOf(d),M=MSTYLE[st];
+  const others=(d.mIds||[]).map(byId).filter(Boolean);
+  const isC=d.rtype==='customer';
+  return `<div class="mc-card">
+    <div class="th" style="background-image:url('${d.thumb||''}')" onclick="openDoc('${d.id}')"></div>
+    <div class="in">
+      <div class="nm">${esc(d.party||p.sender||p.beneficiary||d.smartName||d.fileName)}</div>
+      <div class="amt">${fmt(mAmt(d),0)} <small style="font-size:10px">${esc(mCur(d))}</small></div>
+      <div class="mt">
+        ${p.bank?`<span>🏦 ${esc(p.bank)}</span>`:''}
+        <span>📅 ${esc(p.date||new Date(d.uploadedAt).toLocaleDateString('en-GB'))}</span>
+        ${p.reference?`<span>🔖 ${esc(String(p.reference).slice(0,12))}</span>`:''}
+      </div>
+      <span class="mc-st" style="background:${M.bg};color:${M.fg}">${M.ic} ${M.t}${d._sugg?` · اقتراح ${d._sugg.score}`:''}</span>
+      ${others.length?`<div style="font-size:10px;color:#6b7d9e;margin-top:3px">🔗 ${others.map(o=>esc(o.party||o.smartName||'').slice(0,22)).join(' · ')} — ${fmt(linkedSum(d),0)} ${esc(mCur(others[0]))}</div>`:''}
+      <div class="mc-acts">
+        <button onclick="openDoc('${d.id}')">فتح</button>
+        <button onclick="setParty('${d.id}')">الاسم</button>
+        <button onclick="mPickOpen('${d.id}')">🔗 ربط</button>
+        ${d._sugg?`<button class="p" onclick="${isC?`mLink('${d.id}','${d._sugg.id}','اعتماد اقتراح').then(()=>{toast0('🔗 رُبط');renderAll()})`:''}">قبول الاقتراح</button>`:''}
+        ${others.length?`<button class="r" onclick="mUnlinkAll('${d.id}')">فك الربط</button>`:''}
+        ${isC&&!d.settled?`<button class="g" onclick="${others.length?`mSettle('${d.id}')`:`mSent('${d.id}')`}">${others.length?'✓ اعتماد التسوية':'📤 تم الإرسال للمورد'}</button>`:''}
+        ${d.settled?`<button onclick="(async()=>{const c=byId('${d.id}');c.settled=false;audit(c,'إلغاء اعتماد التسوية');await mSave(c);renderAll();})()">↩ إلغاء التسوية</button>`:''}
+        <button onclick="setRtype('${d.id}','${isC?'supplier':'customer'}')">↔ تحويل النوع</button>
+      </div>
+    </div>
+  </div>`;
+}
+function renderMatch(){
+  const host=$('v_match'); if(!host)return;
+  const cs=rlist('customer'),ss=rlist('supplier');
+  const untyped=CACHE.filter(d=>!d.rtype&&(d.parsed?.amount));
+  /* اقتراحات محدثة */
+  cs.forEach(c=>{ if(!c._sugg&&!(c.mIds||[]).length&&!c.settled){
+    let best=null; for(const s of ss){const r=mScore(c,s); if(!best||r.score>best.score)best={id:s.id,score:r.score};}
+    if(best&&best.score>=55)c._sugg=best; }});
+  const missC=cs.filter(c=>mStatusOf(c)==='missing'||mStatusOf(c)==='weak');
+  const missS=ss.filter(s=>!(s.mIds||[]).length);
+  const diffs=cs.filter(c=>mStatusOf(c)==='diff');
+  const done=cs.filter(c=>['ok','settled'].includes(mStatusOf(c)));
+  const sums={};
+  cs.forEach(c=>{const k=mCur(c)||'?';(sums[k]=sums[k]||{c:0,s:0}).c+=mAmt(c);});
+  ss.forEach(s=>{const k=mCur(s)||'?';(sums[k]=sums[k]||{c:0,s:0}).s+=mAmt(s);});
+  const hot=missC.filter(c=>(Date.now()-(c.uploadedAt||0))>AHRS()*36e5);
+  const oldest=missC.sort((a,b)=>(a.uploadedAt||0)-(b.uploadedAt||0))[0];
+  host.innerHTML=`
+  ${hot.length?`<div class="mc-banner">⚠️ <b>${hot.length}</b> إيصال زبون تجاوز <b>${AHRS()} ساعات</b> دون إيصال مورد مقابل${oldest?` — الأقدم: <b>${esc(oldest.party||oldest.smartName||'')}</b> بقيمة <b>${fmt(mAmt(oldest),0)} ${esc(mCur(oldest))}</b> منذ <b>${ageStr(oldest.uploadedAt)}</b>`:''}.</div>`:''}
+  <div class="mc-alerts">
+    <div class="mc-al red"><div class="k">زبائن دون مقابل</div><div class="v">${missC.length}</div></div>
+    <div class="mc-al org"><div class="k">موردون دون زبون</div><div class="v">${missS.length}</div></div>
+    <div class="mc-al red"><div class="k">فروقات مبالغ</div><div class="v">${diffs.length}</div></div>
+    <div class="mc-al grn"><div class="k">عمليات مكتملة</div><div class="v">${done.length}</div></div>
+    <div class="mc-al"><div class="k">غير مصنّف</div><div class="v">${untyped.length}</div></div>
+  </div>
+  <div class="mc-set">
+    ⚙️ هامش السماح:
+    <select onchange="localStorage.setItem('arkan_mtol',this.value);renderMatch()">
+      ${[0.5,1,2,3,5].map(v=>`<option value="${v}" ${MTOL()==v?'selected':''}>${v}%</option>`).join('')}
+    </select>
+    🔔 تنبيه بعد:
+    <select onchange="localStorage.setItem('arkan_ahrs',this.value);renderMatch()">
+      ${[1,3,6,12,24,48].map(v=>`<option value="${v}" ${AHRS()==v?'selected':''}>${v} ساعة</option>`).join('')}
+    </select>
+    <span style="flex:1"></span>
+    <button class="btn btn-p" style="padding:7px 14px;font-size:12px" onclick="autoMatchAll()">🤖 ربط تلقائي</button>
+    <button class="btn btn-s" style="padding:7px 14px;font-size:12px" onclick="mExport('all')">📄 تقرير المطابقة</button>
+    <button class="btn btn-s" style="padding:7px 14px;font-size:12px" onclick="mExport('missing')">📄 الناقص فقط</button>
+    <button class="btn btn-s" style="padding:7px 14px;font-size:12px" onclick="mCsv()">📊 CSV</button>
+  </div>
+  <div class="mc-sums">
+    ${Object.entries(sums).map(([k,v])=>`<span>💰 ${k} — زبائن: <b>${fmt(v.c,0)}</b> · موردون: <b>${fmt(v.s,0)}</b> · الفرق: <b class="d">${fmt(v.c-v.s,0)}</b></span>`).join('')}
+    ${!Object.keys(sums).length?'<span>لا بيانات بعد — حدد نوع الإيصالات أولًا</span>':''}
+  </div>
+  ${untyped.length?`<div class="mc-set" style="border-color:rgba(255,196,0,.4);background:#fffbf0">
+    🏷️ <b>${untyped.length}</b> إيصال دون نوع — صنّفها لتدخل المطابقة:
+    <span style="flex:1"></span>
+    ${untyped.slice(0,6).map(d=>`<span style="display:inline-flex;gap:4px;align-items:center;background:#fff;border:1px solid rgba(7,29,73,.1);border-radius:9px;padding:4px 8px;font-size:11px">
+      ${esc((d.smartName||d.fileName||'').slice(0,20))}
+      <button style="border:none;background:#0058D9;color:#fff;border-radius:6px;padding:2px 7px;cursor:pointer;font-size:10px" onclick="setRtype('${d.id}','customer')">زبون</button>
+      <button style="border:none;background:#8b5cf6;color:#fff;border-radius:6px;padding:2px 7px;cursor:pointer;font-size:10px" onclick="setRtype('${d.id}','supplier')">مورد</button>
+    </span>`).join('')}
+  </div>`:''}
+  <div class="mc-grid">
+    <div class="mc-pane cst"><h3>👤 إيصالات الزبائن <small>${cs.length} إيصال</small></h3>
+      <div class="mc-list">${cs.length?sortDocs(cs).map(mcCard).join(''):'<div style="text-align:center;color:#96a5c0;padding:30px;font-size:12px">لا إيصالات زبائن — صنّف الإيصالات أو ارفع جديدة بنوع «زبون»</div>'}</div></div>
+    <div class="mc-pane sup"><h3>🏭 إيصالات الموردين <small>${ss.length} إيصال</small></h3>
+      <div class="mc-list">${ss.length?sortDocs(ss).map(mcCard).join(''):'<div style="text-align:center;color:#96a5c0;padding:30px;font-size:12px">لا إيصالات موردين بعد</div>'}</div></div>
+  </div>
+  <div class="mc-miss"><h3>🚨 سجل الإيصالات الناقصة</h3>
+    ${(missC.length||missS.length||diffs.length)?`<div style="overflow:auto"><table>
+      <tr><th>النوع</th><th>الطرف</th><th>المبلغ</th><th>العملة</th><th>الفرق</th><th>العمر</th><th>الحالة</th><th>إجراء</th></tr>
+      ${missC.map(c=>`<tr>
+        <td>زبون دون مورد</td><td>${esc(c.party||c.smartName||'')}</td>
+        <td style="font-family:'IBM Plex Mono',monospace">${fmt(mAmt(c),0)}</td><td>${esc(mCur(c))}</td><td>—</td>
+        <td class="age ${(Date.now()-c.uploadedAt)>AHRS()*36e5?'hot':''}">${ageStr(c.uploadedAt)}</td>
+        <td>${c._sugg?'مطابقة ضعيفة ('+c._sugg.score+')':'بانتظار إيصال المورد'}</td>
+        <td><button style="border:1px solid #0058D9;background:#fff;color:#0056D6;border-radius:7px;padding:3px 9px;font-size:10.5px;cursor:pointer;font-family:inherit" onclick="mSent('${c.id}')">📤 إرسال للمورد</button></td>
+      </tr>`).join('')}
+      ${missS.map(s=>`<tr>
+        <td>مورد دون زبون</td><td>${esc(s.party||s.smartName||'')}</td>
+        <td style="font-family:'IBM Plex Mono',monospace">${fmt(mAmt(s),0)}</td><td>${esc(mCur(s))}</td><td>—</td>
+        <td class="age">${ageStr(s.uploadedAt)}</td><td>غير مرتبط</td>
+        <td><button style="border:1px solid #8b5cf6;background:#fff;color:#6a3bd8;border-radius:7px;padding:3px 9px;font-size:10.5px;cursor:pointer;font-family:inherit" onclick="mPickOpen('${s.id}')">🔗 ربط</button></td>
+      </tr>`).join('')}
+      ${diffs.map(c=>{const own=mAmt(c),oth=linkedSum(c);return `<tr>
+        <td>فرق مبلغ</td><td>${esc(c.party||c.smartName||'')}</td>
+        <td style="font-family:'IBM Plex Mono',monospace">${fmt(own,0)}</td><td>${esc(mCur(c))}</td>
+        <td style="color:#d63333;font-family:'IBM Plex Mono',monospace">${fmt(own-oth,0)} (${(Math.abs(own-oth)/Math.max(own,oth)*100).toFixed(1)}%)</td>
+        <td class="age">${ageStr(c.uploadedAt)}</td><td>مبالغ غير متساوية</td>
+        <td><button style="border:1px solid #0a9e5c;background:#fff;color:#0a7a47;border-radius:7px;padding:3px 9px;font-size:10.5px;cursor:pointer;font-family:inherit" onclick="mSettle('${c.id}')">✓ اعتماد رغم الفرق</button></td>
+      </tr>`;}).join('')}
+    </table></div>`:'<div style="text-align:center;color:#0a9e5c;padding:24px;font-size:13px;font-weight:700">✅ لا عمليات ناقصة — كل شيء مسوّى</div>'}
+  </div>`;
+}
+
+/* ═══ التصدير ═══ */
+function mRows(scope){
+  const cs=rlist('customer');
+  let rows=cs.map(c=>{
+    const others=(c.mIds||[]).map(byId).filter(Boolean);
+    const own=mAmt(c),oth=linkedSum(c),st=mStatusOf(c);
+    return {c,others,own,oth,st};
+  });
+  if(scope==='missing')rows=rows.filter(r=>['missing','weak','diff'].includes(r.st));
+  return rows;
+}
+function mExport(scope){
+  const rows=mRows(scope);
+  if(!rows.length){toast0('لا بيانات للتصدير');return;}
+  const ST={settled:'تمت التسوية',ok:'مطابق',diff:'فرق مبلغ',weak:'مطابقة ضعيفة',missing:'لا مقابل'};
+  const now=new Date().toLocaleString('en-GB');
+  const rid='RPT-'+Date.now().toString(36).toUpperCase();
+  const sums={};rows.forEach(r=>{const k=mCur(r.c)||'?';(sums[k]=sums[k]||{c:0,s:0}).c+=r.own;(sums[k]).s+=r.oth;});
+  const w=window.open('','_blank');
+  w.document.write(`<!doctype html><html dir="rtl" lang="ar"><head><meta charset="utf-8">
+  <title>تقرير مطابقة وتسوية إيصالات ARKAN Rates</title>
+  <style>
+    @page{size:A4;margin:14mm}
+    body{font-family:'Cairo','Segoe UI',sans-serif;color:#071D49;font-size:11px;margin:0;padding:20px}
+    h1{font-size:18px;margin:0 0 4px;color:#0056D6}
+    .meta{font-size:10px;color:#556;line-height:1.9;border-bottom:2px solid #0058D9;padding-bottom:10px;margin-bottom:12px}
+    .sums{display:flex;gap:14px;flex-wrap:wrap;background:#f0f6ff;border-radius:8px;padding:10px;margin-bottom:12px;font-size:10.5px}
+    table{width:100%;border-collapse:collapse;font-size:9.5px;page-break-inside:auto}
+    tr{page-break-inside:avoid}
+    th{background:#071D49;color:#fff;padding:6px;font-size:9px}
+    td{border:1px solid #d5deee;padding:5px;text-align:center}
+    .st-ok{color:#0a9e5c;font-weight:700}.st-bad{color:#d63333;font-weight:700}.st-w{color:#a97b00;font-weight:700}
+    .foot{margin-top:16px;font-size:10px;display:flex;justify-content:space-between;border-top:1px solid #ccd;padding-top:10px}
+    .sig{margin-top:26px;display:flex;gap:60px}
+    .sig div{border-top:1px solid #071D49;padding-top:4px;width:160px;text-align:center;font-size:10px}
+    @media print{button{display:none}}
+  </style></head><body>
+  <button onclick="print()" style="position:fixed;top:10px;left:10px;padding:8px 18px;background:#0058D9;color:#fff;border:none;border-radius:9px;font-family:inherit;cursor:pointer">🖨 طباعة / PDF</button>
+  <h1>تقرير مطابقة وتسوية إيصالات ARKAN Rates</h1>
+  <div class="meta">
+    رقم التقرير: <b>${rid}</b> · تاريخ الإنشاء: ${now} · النطاق: <b>${scope==='missing'?'الإيصالات الناقصة فقط':'جميع العمليات'}</b> · عدد العمليات: <b>${rows.length}</b>
+  </div>
+  <div class="sums">${Object.entries(sums).map(([k,v])=>`<span><b>${k}</b> — زبائن: ${fmt(v.c,0)} · موردون: ${fmt(v.s,0)} · الفرق: <b style="color:#d63333">${fmt(v.c-v.s,0)}</b></span>`).join('')}</div>
+  <table>
+    <tr><th>#</th><th>التاريخ</th><th>الزبون</th><th>مبلغ الزبون</th><th>المورد</th><th>مبلغ المورد</th><th>العملة</th><th>الفرق</th><th>الحالة</th><th>المرجع</th></tr>
+    ${rows.map((r,i)=>{
+      const p=r.c.parsed||{};
+      const cls=['ok','settled'].includes(r.st)?'st-ok':r.st==='weak'?'st-w':'st-bad';
+      return `<tr><td>${i+1}</td><td>${esc(p.date||'')}</td>
+        <td>${esc(r.c.party||p.sender||r.c.smartName||'')}</td>
+        <td>${fmt(r.own,0)}</td>
+        <td>${esc(r.others.map(o=>o.party||o.smartName||'').join(' + ')||'—')}</td>
+        <td>${r.oth?fmt(r.oth,0):'—'}</td><td>${esc(mCur(r.c))}</td>
+        <td>${r.oth?fmt(r.own-r.oth,0):'—'}</td>
+        <td class="${cls}">${ST[r.st]||r.st}</td><td style="direction:ltr">${esc(p.reference||'')}</td></tr>`;
+    }).join('')}
+  </table>
+  <div class="foot"><span>إجمالي العمليات: ${rows.length}</span><span>arkanrates.com · ARKAN Intelligence Archive</span></div>
+  <div class="sig"><div>توقيع المسؤول</div><div>الاعتماد</div></div>
+  <script>setTimeout(()=>print(),600)<\/script></body></html>`);
+  w.document.close();
+}
+function mCsv(){
+  const rows=mRows('all');
+  if(!rows.length){toast0('لا بيانات');return;}
+  const ST={settled:'settled',ok:'matched',diff:'amount_diff',weak:'weak',missing:'missing_supplier'};
+  const head='date,customer,customer_amount,supplier,supplier_amount,currency,difference,status,reference';
+  const lines=rows.map(r=>{const p=r.c.parsed||{};
+    return [p.date||'',(r.c.party||p.sender||'').replace(/,/g,' '),r.own,
+      r.others.map(o=>o.party||o.smartName||'').join('+').replace(/,/g,' '),r.oth,
+      mCur(r.c),r.own-r.oth,ST[r.st],p.reference||''].join(',');});
+  const blob=new Blob(['\ufeff'+head+'\n'+lines.join('\n')],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download='arkan_matching_'+new Date().toISOString().slice(0,10)+'.csv';a.click();
+  toast0('✓ صدر CSV');
+}
+
+/* ═══ بحث طبيعي إضافي ═══ */
+(function(){
+  const _nl=window.nlFilter;
+  window.nlFilter=function(q,docs){
+    let out=_nl(q,docs);
+    const Q=(q||'').trim();
+    if(/بدون مقابل|لم أرسل|دون إيصال مورد|ناقص/.test(Q))
+      out=out.filter(d=>d.rtype==='customer'&&['missing','weak'].includes(mStatusOf(d)));
+    if(/غير مكتمل|غير مسوّ|لم تتم التسوية/.test(Q))
+      out=out.filter(d=>d.rtype==='customer'&&mStatusOf(d)!=='settled'&&mStatusOf(d)!=='ok');
+    if(/\bزبون|زبائن\b/.test(Q)&&!/دون|بدون/.test(Q))out=out.filter(d=>d.rtype==='customer');
+    if(/\bمورد|موردين\b/.test(Q)&&!/دون|بدون/.test(Q))out=out.filter(d=>d.rtype==='supplier');
+    if(/فروقات|فرق المبلغ/.test(Q))out=out.filter(d=>mStatusOf(d)==='diff');
+    return out;
+  };
+})();
+
+/* ═══ نوع الرفع في منطقة الرفع ═══ */
+(function(){
+  const inBox=document.querySelector('.uz .in');
+  if(inBox&&!document.getElementById('uzType')){
+    inBox.insertAdjacentHTML('beforeend',`<div class="uz-type">🏷️ نوع الإيصال القادم:
+      <select id="uzType">
+        <option value="">غير محدد</option>
+        <option value="customer">👤 إيصال زبون</option>
+        <option value="supplier">🏭 إيصال مورد</option>
+      </select></div>`);
+  }
+  /* مطابقة تلقائية أولى بعد التحميل */
+  setTimeout(()=>{try{autoMatchAll(true);}catch(e){}},3500);
+})();
+</script>
+<!-- نافذة الربط اليدوي -->
+<div class="mc-modal" id="mcPick" onclick="if(event.target===this)this.classList.remove('on')">
+  <div class="mc-box">
+    <h3><b id="mcPickTitle">اختر الإيصال المقابل</b><span onclick="document.getElementById('mcPick').classList.remove('on')">✕</span></h3>
+    <div class="bd" id="mcPickList"></div>
+    <div class="mc-foot">
+      <button onclick="document.getElementById('mcPick').classList.remove('on')">إلغاء</button>
+      <button class="p" onclick="mPickOk()">🔗 ربط المحدد</button>
+    </div>
+  </div>
+</div>
+
 <script src="arkan-nav.js?v=10" defer></script>
 <script src="arkan-ai.js?v=8" defer></script>
 <script src="arkan-sense.js?v=4" defer></script>
