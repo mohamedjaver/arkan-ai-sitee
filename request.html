@@ -724,12 +724,12 @@ const RCPT_I18N={
       pending:'Pending — confirmation via WhatsApp',foot:'Request receipt — not a final payment proof',dir:'ltr'}
 };
 function rcptLang(){ try{return localStorage.getItem('arkan_lang')||'ar';}catch(e){return 'ar';} }
-async function buildReceiptCard(){
+async function buildReceiptCanvas(){
   const d=window._pdfData||{};
   const L=RCPT_I18N[rcptLang()]||RCPT_I18N.ar;
   const RTL=L.dir==='rtl';
-  /* دقة مضاعفة ×2 لإخراج HD زجاجي حاد */
-  const S=2, W=1080,H=1760,cv=document.createElement('canvas');
+  /* دقة ×3 لإخراج HD زجاجي حاد حتى مع التكبير */
+  const S=3, W=1080,H=1760,cv=document.createElement('canvas');
   cv.width=W*S;cv.height=H*S;
   const x=cv.getContext('2d');
   x.scale(S,S);
@@ -825,15 +825,45 @@ async function buildReceiptCard(){
   x.fillText(L.foot, W/2, fy+42);
   x.fillStyle='rgba(255,255,255,.45)';x.font='600 24px "IBM Plex Mono",monospace';
   x.fillText('arkanrates.com  ·  +222 36 29 50 50', W/2, fy+82);
-  return await new Promise(res=>cv.toBlob(res,'image/png',0.95));
+  return cv;
+}
+async function buildReceiptCard(){
+  const cv=await buildReceiptCanvas();
+  return await new Promise(res=>cv.toBlob(res,'image/png'));
+}
+/* PDF بسيط يغلّف JPEG — واتساب يرسله كمستند بدون أي ضغط = جودة كاملة */
+function jpegToPdf(jpg,w,h){
+  const pw=595.28, ph=pw*h/w, enc=new TextEncoder();
+  const chunks=[]; let off=0; const ofs=[];
+  const push=s=>{const b=typeof s==='string'?enc.encode(s):s;chunks.push(b);off+=b.length;};
+  push('%PDF-1.4\n');
+  ofs[1]=off; push('1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n');
+  ofs[2]=off; push('2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj\n');
+  ofs[3]=off; push('3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 '+pw.toFixed(2)+' '+ph.toFixed(2)+']/Resources<</XObject<</Im0 4 0 R>>>>/Contents 5 0 R>>endobj\n');
+  ofs[4]=off; push('4 0 obj<</Type/XObject/Subtype/Image/Width '+w+'/Height '+h+'/ColorSpace/DeviceRGB/BitsPerComponent 8/Filter/DCTDecode/Length '+jpg.length+'>>stream\n');
+  push(jpg); push('\nendstream endobj\n');
+  const cs='q '+pw.toFixed(2)+' 0 0 '+ph.toFixed(2)+' 0 0 cm /Im0 Do Q';
+  ofs[5]=off; push('5 0 obj<</Length '+cs.length+'>>stream\n'+cs+'\nendstream endobj\n');
+  const xr=off; let t='xref\n0 6\n0000000000 65535 f \n';
+  for(let i=1;i<=5;i++) t+=String(ofs[i]).padStart(10,'0')+' 00000 n \n';
+  push(t+'trailer<</Size 6/Root 1 0 R>>\nstartxref\n'+xr+'\n%%EOF');
+  const total=chunks.reduce((a,b)=>a+b.length,0), out=new Uint8Array(total); let p=0;
+  for(const c of chunks){out.set(c,p);p+=c.length;}
+  return new Blob([out],{type:'application/pdf'});
+}
+async function buildReceiptPdf(){
+  const cv=await buildReceiptCanvas();
+  const jb=await new Promise(res=>cv.toBlob(res,'image/jpeg',0.95));
+  const jpg=new Uint8Array(await jb.arrayBuffer());
+  return jpegToPdf(jpg,cv.width,cv.height);
 }
 async function sendReceipt(waUrl){
-  let blob=null;
-  try{ blob=await buildReceiptCard(); }catch(e){}
   const ref=(window._pdfData||{}).ref||'req';
-  if(blob){
-    const file=new File([blob],'ARKAN_'+ref+'.png',{type:'image/png'});
-    /* 1) مشاركة أصلية بالصورة (الأفضل — تصل داخل واتساب) */
+  let pdf=null, png=null;
+  try{ pdf=await buildReceiptPdf(); }catch(e){}
+  if(pdf){
+    const file=new File([pdf],'ARKAN_'+ref+'.pdf',{type:'application/pdf'});
+    /* 1) مشاركة كمستند PDF — يصل واتساب بجودة كاملة بدون ضغط */
     if(navigator.canShare&&navigator.canShare({files:[file]})){
       try{
         await navigator.share({files:[file],title:'إيصال تحويل ARKAN',
@@ -841,12 +871,22 @@ async function sendReceipt(waUrl){
         return;
       }catch(e){ if(e&&e.name==='AbortError')return; }
     }
-    /* 2) رجوع: نزّل الصورة ثم افتح واتساب ليرفقها */
+    /* 2) رجوع: نزّل الـPDF ثم افتح واتساب ليرفقه */
     try{
-      const a=document.createElement('a');a.href=URL.createObjectURL(blob);
-      a.download='ARKAN_'+ref+'.png';a.click();
+      const a=document.createElement('a');a.href=URL.createObjectURL(pdf);
+      a.download='ARKAN_'+ref+'.pdf';a.click();
       setTimeout(()=>URL.revokeObjectURL(a.href),4000);
     }catch(e){}
+  } else {
+    /* 3) رجوع أخير: صورة PNG */
+    try{ png=await buildReceiptCard(); }catch(e){}
+    if(png){
+      try{
+        const a=document.createElement('a');a.href=URL.createObjectURL(png);
+        a.download='ARKAN_'+ref+'.png';a.click();
+        setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+      }catch(e){}
+    }
   }
   if(waUrl)window.open(waUrl,'_blank');
 }
