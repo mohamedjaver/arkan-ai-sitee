@@ -76,6 +76,7 @@ html[lang=ar] .sec-h2{letter-spacing:0}
 .btn-ghost-dark:hover{background:#EAF5FF;box-shadow:0 14px 32px -12px rgba(0,153,255,.5);transform:translateY(-2px)}
 
 /* ---------- language switcher ---------- */
+#wChip{position:static!important;box-shadow:none!important;margin-inline-end:10px}
 .lang{display:flex;background:rgba(255,255,255,.08);border:1.5px solid rgba(0,181,255,.4);
   border-radius:999px;padding:3px;gap:2px}
 .lang button{border:0;background:transparent;color:rgba(234,245,255,.75);cursor:pointer;
@@ -431,6 +432,7 @@ body::after{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;opac
       <a href="ai.html">AI</a>
     </div>
     <div class="sp"></div>
+    <a id="wChip" href="wallet.html" hidden></a>
     <div class="lang" id="langSeg" role="group" aria-label="Language">
       <button data-l="ar">عربي</button><button data-l="fr">FR</button><button data-l="en">EN</button><button data-l="pt">PT</button>
     </div>
@@ -1221,5 +1223,6 @@ else loadTiers();
 setInterval(loadTiers,180000);
 </script>
 <script src="arkan-sense.js?v=4" defer></script>
+<script src="arkan-wallet-badge.js" defer></script>
 </body>
 </html>
