@@ -985,6 +985,8 @@ async function sendToChat(ref){
   try{
     if(localStorage.getItem('arkan_chat_pin')){
       localStorage.removeItem('arkan_client_code');
+      var em2=new URLSearchParams(location.search).get('embed');
+      if(em2&&window.parent!==window){try{parent.postMessage('arkanReqDone','*');}catch(e){}return;}
       location.href='chat.html';
       return;
     }
@@ -1041,7 +1043,12 @@ async function sendToChat(ref){
     await fetch(CH_SB+'/rest/v1/conversations?id=eq.'+conv.id,{method:'PATCH',
       headers:Object.assign({'Content-Type':'application/json','Prefer':'return=minimal'},CH_H),
       body:JSON.stringify({last_msg:'طلب تحويل '+amtN.toLocaleString('en-US')+' '+(d.from||''),last_at:new Date().toISOString()})});
-    /* 4) الانتقال للمحادثة */
+    /* 4) الانتقال للمحادثة — أو إغلاق المتصفح الداخلي إن كنا داخله */
+    var emb=new URLSearchParams(location.search).get('embed');
+    if(emb&&window.parent!==window){
+      try{parent.postMessage('arkanReqDone','*');}catch(e){}
+      return;
+    }
     location.href='chat.html?c='+conv.client_code;
   }catch(e){
     if(cb){cb.disabled=false;cb.textContent='💬 متابعة داخل محادثة ARKAN';}
