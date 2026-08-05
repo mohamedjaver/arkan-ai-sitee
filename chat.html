@@ -169,6 +169,26 @@ body.has-txt #micB,body.rec #micB{display:none}
 .dprev{display:block;width:100%;max-height:170px;object-fit:cover;object-position:top;
  border-radius:12px 12px 0 0;margin-bottom:-8px;border:1px solid var(--brd);border-bottom:0;background:#fff;cursor:pointer}
 .dprev+.dcard{border-radius:0 0 12px 12px}
+/* شبكة الإرفاق */
+.agrid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;padding:6px 0 4px}
+.ait{display:flex;flex-direction:column;align-items:center;gap:7px;border:0;background:none;font-size:12px;color:var(--txt);font-weight:500}
+.ait .ic{width:56px;height:56px;border-radius:50%;background:var(--card);border:1px solid var(--brd);
+ display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(14,15,12,.06)}
+.ait .ic svg{width:24px;height:24px}
+.ait.c1 .ic{color:#0B57D0}.ait.c2 .ic{color:#168A52}.ait.c3 .ic{color:#E03E3E}.ait.c4 .ic{color:#7C3AED}
+/* بطاقة طلب تحويل */
+.treq{min-width:225px;border-radius:12px;overflow:hidden;margin-bottom:3px;border:1px solid rgba(255,255,255,.25)}
+.bub.them .treq{border-color:var(--brd)}
+.treq .th2{background:rgba(255,255,255,.15);padding:7px 12px;font-size:11px;font-weight:700;letter-spacing:.02em}
+.bub.them .treq .th2{background:var(--neu);color:var(--dark)}
+.treq .bd2{padding:10px 12px;background:rgba(255,255,255,.08)}
+.bub.them .treq .bd2{background:#fff}
+.treq .am{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums;direction:ltr;text-align:right}
+.treq .rt{font-size:12px;opacity:.85;margin-top:2px}
+.treq .nt{font-size:12px;margin-top:6px;opacity:.9}
+.treq a{display:inline-flex;margin-top:8px;background:var(--dark);color:#fff;text-decoration:none;
+ border-radius:8px;padding:6px 12px;font-size:11.5px;font-weight:600}
+.bub.me .treq a{background:#fff;color:var(--pri)}
 </style>
 </head>
 <body>
@@ -188,7 +208,10 @@ body.has-txt #micB,body.rec #micB{display:none}
     <div id="bar">
       <div id="recBar"><span class="rd"></span><span id="recT">0:00</span>
         <button id="recCancel" onclick="recStop(false)">إلغاء</button></div>
-      <button class="ibtn att" onclick="document.getElementById('fi').click()" title="إرفاق">
+      <button class="ibtn att" onclick="document.getElementById('camI').click()" title="الكاميرا">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 8h3l2-3h6l2 3h3a1 1 0 011 1v10a1 1 0 01-1 1H4a1 1 0 01-1-1V9a1 1 0 011-1z"/><circle cx="12" cy="13" r="3.5"/></svg>
+      </button>
+      <button class="ibtn att" onclick="document.getElementById('shAtt').classList.add('on')" title="إرفاق">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M21 12.5l-8.5 8.5a5.5 5.5 0 01-7.8-7.8L13 5a3.7 3.7 0 015.2 5.2l-8.2 8.2a1.8 1.8 0 01-2.6-2.6L15 8.3"/></svg>
       </button>
       <textarea id="txt" rows="1" placeholder="اكتب رسالة…"></textarea>
@@ -202,6 +225,37 @@ body.has-txt #micB,body.rec #micB{display:none}
   </div>
 </div>
 <input type="file" id="fi" accept="image/*,.pdf" multiple hidden>
+<input type="file" id="camI" accept="image/*" capture="environment" hidden>
+<input type="file" id="phI" accept="image/*" multiple hidden>
+<input type="file" id="dcI" accept=".pdf,application/pdf" multiple hidden>
+
+<!-- شبكة الإرفاق -->
+<div class="sheet" id="shAtt" onclick="if(event.target===this)this.classList.remove('on')">
+  <div class="in"><div class="grab"></div>
+    <div class="agrid">
+      <button class="ait c1" onclick="attPick('phI')">
+        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="M21 16l-5-5-9 8"/></svg></span>الصور</button>
+      <button class="ait c2" onclick="attPick('camI')">
+        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 8h3l2-3h6l2 3h3a1 1 0 011 1v10a1 1 0 01-1 1H4a1 1 0 01-1-1V9a1 1 0 011-1z"/><circle cx="12" cy="13" r="3.5"/></svg></span>الكاميرا</button>
+      <button class="ait c3" onclick="attPick('dcI')">
+        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg></span>مستند PDF</button>
+      <button class="ait c4" onclick="openTreq()">
+        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 10l5-6 5 6M12 4v12"/><path d="M4 20h16"/></svg></span>طلب تحويل</button>
+    </div>
+  </div>
+</div>
+<!-- طلب تحويل -->
+<div class="sheet" id="shTreq" onclick="if(event.target===this)this.classList.remove('on')">
+  <div class="in"><div class="grab"></div><h3>طلب تحويل</h3>
+    <input class="fld" id="tqAmt" inputmode="decimal" placeholder="المبلغ">
+    <div style="display:flex;gap:10px">
+      <select class="fld" id="tqFrom" style="flex:1"><option>AOA</option><option>MRU</option><option>USD</option><option>USDT</option><option>EUR</option><option>CNY</option><option>AED</option></select>
+      <select class="fld" id="tqTo" style="flex:1"><option>MRU</option><option>AOA</option><option>USD</option><option>USDT</option><option>EUR</option><option>CNY</option><option>AED</option></select>
+    </div>
+    <input class="fld" id="tqNote" placeholder="ملاحظة / اسم المستفيد (اختياري)">
+    <button class="wb" onclick="sendTreq()">إرسال الطلب</button>
+  </div>
+</div>
 
 <!-- محادثة جديدة (مالك) -->
 <div class="sheet" id="shNew" onclick="if(event.target===this)this.classList.remove('on')">
@@ -390,6 +444,7 @@ async function renderMsg(m,live){
   let inner='';
   if(m.kind==='text'){ inner=esc(await dec(m.body)).replace(/\n/g,'<br>'); }
   else if(m.kind==='image'){ inner=`<img src="${esc(m.file_url)}" loading="lazy" onclick="window.open(this.src,'_blank')">${m.body?esc(await dec(m.body)):''}`; }
+  else if(m.kind==='treq'&&m.meta&&m.meta.treq){ inner=treqHTML(m.meta.treq); }
   else if(m.kind==='audio'){
     const d=(m.meta&&m.meta.dur)||0;
     inner=`<div class="au">
@@ -614,6 +669,37 @@ async function sendVoice(blob,dur){
   b.ok(data.id);
   sb.from('conversations').update({last_msg:'رسالة صوتية · '+recFmt(dur),last_at:new Date().toISOString()}).eq('id',CONV.id).then(()=>{});
   prog(100);
+}
+/* الإرفاق الموجه */
+function attPick(id){$('shAtt').classList.remove('on');$(id).click();}
+['camI','phI','dcI'].forEach(id=>$(id).addEventListener('change',async e=>{
+  for(const f of e.target.files)await sendFile(f);
+  e.target.value='';
+}));
+/* طلب تحويل */
+function openTreq(){$('shAtt').classList.remove('on');$('shTreq').classList.add('on');}
+async function sendTreq(){
+  const amt=parseFloat(($('tqAmt').value||'').replace(/[^\d.]/g,''));
+  if(!amt||!CONV)return toast('أدخل المبلغ');
+  const t={amount:amt,from:$('tqFrom').value,to:$('tqTo').value,note:$('tqNote').value.trim()};
+  $('shTreq').classList.remove('on');$('tqAmt').value='';$('tqNote').value='';
+  const tid='tmp_'+Date.now();
+  const b=pushBub(tid,treqHTML(t),'');
+  const hash=await sha(CONV.id+'|treq|'+amt+'|'+Date.now());
+  const {data,error}=await sb.from('messages').insert({conv_id:CONV.id,sender:ME,kind:'treq',
+    body:'',meta:{treq:t},hash}).select().single();
+  if(error){b.err();return;}
+  b.ok(data.id);
+  sb.from('conversations').update({last_msg:'طلب تحويل '+amt.toLocaleString('en-US')+' '+t.from,last_at:new Date().toISOString()}).eq('id',CONV.id).then(()=>{});
+}
+function treqHTML(t){
+  return `<div class="treq"><div class="th2">طلب تحويل — ARKAN Rates</div>
+    <div class="bd2">
+      <div class="am">${(+t.amount).toLocaleString('en-US')} ${esc(t.from)}</div>
+      <div class="rt">${esc(t.from)} ← ${esc(t.to)}</div>
+      ${t.note?`<div class="nt">${esc(t.note)}</div>`:''}
+      <a href="request.html" target="_blank">فتح صفحة التحويل</a>
+    </div></div>`;
 }
 let curAu=null;
 function auPlay(btn,url){
