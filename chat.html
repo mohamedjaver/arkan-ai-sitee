@@ -250,6 +250,9 @@ body.client #qbar{display:flex}
 <div id="authGate" style="position:fixed;inset:0;z-index:99999;background:#F6FAFD;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;font-family:Inter,-apple-system,sans-serif">
   <img src="arkan-icon-192.png" style="width:72px;height:72px;border-radius:22px;box-shadow:0 12px 32px rgba(25,169,245,.35)">
   <div style="width:34px;height:34px;border:3px solid rgba(25,169,245,.2);border-top-color:#19A9F5;border-radius:50%;animation:agspin .8s linear infinite"></div>
+  <div id="authGateMsg" style="color:#0B2F70;font-size:14px;font-weight:600">التحقق من هوية المالك…</div>
+  <style>@keyframes agspin{to{transform:rotate(360deg)}}</style>
+</div>
 
 <div id="prog"></div>
 <header id="hd">
@@ -481,8 +484,13 @@ async function bioLogin(){
 
 /* ── تحميل ── */
 async function boot(){
-  $('hSub').classList.add('on');$('hSubT').textContent=IS_OWNER?'وضع المالك — مشفّر':'متصل — مشفّر';
-  if(IS_OWNER){ $('newB').style.display='flex'; await loadConvs(); showList(); listenConvs(); }
+  try{ $('hSub').classList.add('on'); $('hSubT').textContent=IS_OWNER?'وضع المالك':'متصل'; }catch(e){}
+  if(IS_OWNER){
+    try{ $('newB').style.display='flex'; }catch(e){}
+    try{ showList(); }catch(e){}          /* اعرض قائمة المحادثات فوراً */
+    try{ await loadConvs(); }catch(e){ try{$('hSubT').textContent='تعذر تحميل المحادثات';}catch(_){} }
+    try{ listenConvs(); }catch(e){}
+  }
   else{
     const {data,error}=await sb.from('conversations').select('*').eq('client_code',CLIENT_CODE).single();
     if(error||!data){$('hName').textContent='رابط غير صالح';$('hSubT').textContent='تحقق من الرابط مع ARKAN';return;}
@@ -1029,21 +1037,12 @@ if(IS_OWNER){
   /* بوابة أمنية: لا وضع مالك قبل تحقق Firebase (fail-closed) */
   const g=$('authGate'); g.style.display='flex';
   window.__ownerVerified=()=>{
-    g.remove();
-    if(!localStorage.getItem('arkan_chat_pin'))$('pinHint').textContent='أول استخدام: أنشئ رمز PIN جديدًا (4–6 أرقام)';
-    $('shPin').classList.add('on');
-    (async()=>{
-      if(localStorage.getItem('arkan_chat_bio')&&await bioAvailable()){
-        $('bioBtn').style.display='flex';
-        bioLogin();
-      }
-    })();
+    var gg=document.getElementById('authGate'); if(gg) gg.remove();
+    /* كلمة السر السرية كافية — ادخل مباشرة بدون PIN */
+    boot();
   };
 }else boot();
 </script>
-  <div id="authGateMsg" style="color:#0B2F70;font-size:14px;font-weight:600">التحقق من هوية المالك…</div>
-  <style>@keyframes agspin{to{transform:rotate(360deg)}}</style>
-</div>
 <script type="module">
 (async()=>{
   const qp = new URLSearchParams(location.search);
