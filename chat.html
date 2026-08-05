@@ -115,6 +115,42 @@ body.rec .ibtn.att{display:none}
 .bub.me .au .tr i{background:#fff}
 .bub.them .au .tr i{background:var(--pri)}
 .au .du{font-size:11px;font-variant-numeric:tabular-nums;opacity:.8}
+/* ═══ Telegram layer ═══ */
+.avc0{background:linear-gradient(135deg,#0B57D0,#3E8BFF)!important;color:#fff!important}
+.avc1{background:linear-gradient(135deg,#7C3AED,#B07CFF)!important;color:#fff!important}
+.avc2{background:linear-gradient(135deg,#0E9F6E,#3DDC97)!important;color:#fff!important}
+.avc3{background:linear-gradient(135deg,#D97706,#F5B84C)!important;color:#fff!important}
+.avc4{background:linear-gradient(135deg,#DC2626,#F87171)!important;color:#fff!important}
+.avc5{background:linear-gradient(135deg,#0891B2,#4DD6EE)!important;color:#fff!important}
+.bub{box-shadow:0 1px 2px rgba(14,15,12,.06);animation:bpop .16s cubic-bezier(.2,.9,.3,1.2)}
+@keyframes bpop{from{transform:scale(.92) translateY(6px);opacity:0}to{transform:none;opacity:1}}
+.bub.me{background:linear-gradient(135deg,#0B57D0,#2F7BFF);border-bottom-left-radius:6px}
+.bub.them{border-bottom-right-radius:6px}
+.bub.me::after{content:'';position:absolute;bottom:0;inset-inline-end:auto;left:-6px;
+ border:7px solid transparent;border-right-color:#0B57D0;border-bottom:0;border-left:0}
+.bub.them::after{content:'';position:absolute;bottom:0;right:-6px;
+ border:7px solid transparent;border-left-color:var(--card);border-bottom:0;border-right:0}
+.bub.err{opacity:.6}
+.day{position:sticky;top:6px;z-index:2;backdrop-filter:blur(6px);background:rgba(238,241,238,.85)}
+.conv{transition:transform .12s,background .15s}
+.conv:active{transform:scale(.985)}
+.ub{min-width:22px;height:22px;border-radius:11px;background:var(--pri);color:#fff;font-size:11px;font-weight:700;
+ display:flex;align-items:center;justify-content:center;padding:0 6px;margin-top:4px}
+/* زر متحول مايك↔إرسال */
+#sendB{display:none;transition:transform .15s}
+body.has-txt #sendB,body.rec #sendB{display:flex;animation:morph .18s cubic-bezier(.2,.9,.3,1.25)}
+body.has-txt #micB,body.rec #micB{display:none}
+@keyframes morph{from{transform:scale(.6) rotate(-30deg)}to{transform:none}}
+.ibtn:active{transform:scale(.9)}
+.ibtn.send{background:linear-gradient(135deg,#0B57D0,#2F7BFF);box-shadow:0 3px 10px rgba(11,87,208,.3)}
+/* مؤشر الكتابة */
+#hSubT .ty{color:var(--pri);font-weight:600}
+.tybub{align-self:flex-end;background:var(--card);border:1px solid var(--brd);border-radius:16px;
+ border-bottom-right-radius:6px;padding:12px 16px;display:none;gap:4px}
+.tybub.on{display:flex}
+.tybub i{width:7px;height:7px;border-radius:50%;background:#9aa39a;animation:ty 1.2s infinite}
+.tybub i:nth-child(2){animation-delay:.15s}.tybub i:nth-child(3){animation-delay:.3s}
+@keyframes ty{0%,60%,100%{transform:none;opacity:.4}30%{transform:translateY(-5px);opacity:1}}
 </style>
 </head>
 <body>
@@ -181,6 +217,7 @@ const sb=window.supabase.createClient(SB_URL,SB_KEY);
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 const toast=t=>{const e=$('toast');e.textContent=t;e.classList.add('on');clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove('on'),2400);};
+const avc=n=>{let h=0;for(const c of String(n||'A'))h=(h*31+c.charCodeAt(0))>>>0;return 'avc'+(h%6);};
 const prog=p=>{$('prog').style.width=p+'%';if(p>=100)setTimeout(()=>$('prog').style.width='0',400);};
 
 /* ── الهوية ── */
@@ -234,17 +271,26 @@ async function boot(){
     await openConv(data);
   }
 }
+let UNREAD={};
 async function loadConvs(){
   const {data}=await sb.from('conversations').select('*').order('last_at',{ascending:false,nullsFirst:false});
-  CONVS=data||[]; renderConvs();
+  CONVS=data||[];
+  try{
+    const {data:u}=await sb.from('messages').select('conv_id').eq('seen',false).eq('sender',IS_OWNER?'client':'owner');
+    UNREAD={};(u||[]).forEach(r=>UNREAD[r.conv_id]=(UNREAD[r.conv_id]||0)+1);
+  }catch(e){}
+  renderConvs();
 }
 function renderConvs(){
   $('convList').innerHTML=CONVS.length?CONVS.map(c=>`
     <div class="conv" onclick='openConvId("${c.id}")'>
-      <div class="av">${esc((c.client_name||'?')[0])}</div>
+      <div class="av ${avc(c.client_name)}">${esc((c.client_name||'?')[0])}</div>
       <div class="in"><div class="nm">${esc(c.client_name)}</div>
       <div class="lm">${esc(c.last_msg||'محادثة جديدة')}</div></div>
-      <div class="tm">${c.last_at?new Date(c.last_at).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}):''}</div>
+      <div style="display:flex;flex-direction:column;align-items:center">
+        <div class="tm">${c.last_at?new Date(c.last_at).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}):''}</div>
+        ${UNREAD[c.id]?`<div class="ub">${UNREAD[c.id]}</div>`:''}
+      </div>
     </div>`).join(''):
     `<div class="empty">لا محادثات بعد<br>اضغط + لإنشاء محادثة عميل وتوليد رابط دعوة مشفّر</div>`;
 }
@@ -275,21 +321,22 @@ async function openConvId(id){const c=CONVS.find(x=>x.id===id);if(c)await openCo
 async function openConv(c){
   CONV=c; KEY=await convKey(c.client_code,c.id); LASTDAY='';
   $('hName').textContent=IS_OWNER?c.client_name:'ARKAN — التسويات الدولية';
-  $('hAv').textContent=(IS_OWNER?c.client_name:'A')[0].toUpperCase();
+  $('hAv').textContent=(IS_OWNER?c.client_name:'A')[0].toUpperCase();$('hAv').className='av '+avc(IS_OWNER?c.client_name:'ARKAN');
   $('backB').style.display=IS_OWNER?'flex':'none';
   $('infoB').style.display='flex';
   $('pList').classList.remove('on');$('pChat').classList.add('on');
-  $('msgs').innerHTML='';
+  $('msgs').innerHTML='<div class="tybub" id="tyBub"><i></i><i></i><i></i></div>';
   const {data}=await sb.from('messages').select('*').eq('conv_id',c.id).order('created_at');
   for(const m of (data||[]))await renderMsg(m,false);
   scrollEnd(true); markSeen(data||[]);
   if(SUB)sb.removeChannel(SUB);
   SUB=sb.channel('m_'+c.id).on('postgres_changes',
     {event:'INSERT',schema:'public',table:'messages',filter:'conv_id=eq.'+c.id},
-    async p=>{await renderMsg(p.new,true);scrollEnd();markSeen([p.new]);})
+    async p=>{if(RENDERED.has(p.new.id))return;await renderMsg(p.new,true);scrollEnd();markSeen([p.new]);})
    .on('postgres_changes',
     {event:'UPDATE',schema:'public',table:'messages',filter:'conv_id=eq.'+c.id},
     p=>{const el=document.querySelector(`[data-mid="${p.new.id}"] .tick`);if(el&&p.new.seen)el.textContent='✓✓';})
+   .on('broadcast',{event:'typing'},p=>{if(p.payload&&p.payload.who!==ME)tyShow();})
    .subscribe();
 }
 function showList(){$('pChat').classList.remove('on');$('pList').classList.add('on');
@@ -318,7 +365,8 @@ function dayLbl(ts){
 }
 async function renderMsg(m,live){
   const lbl=dayLbl(m.created_at);
-  if(lbl!==LASTDAY){LASTDAY=lbl;$('msgs').insertAdjacentHTML('beforeend',`<div class="day">${lbl}</div>`);}
+  if(lbl!==LASTDAY){LASTDAY=lbl;const tb0=$('tyBub');const dh=`<div class="day">${lbl}</div>`;
+    if(tb0)tb0.insertAdjacentHTML('beforebegin',dh);else $('msgs').insertAdjacentHTML('beforeend',dh);}
   const mine=m.sender===ME;
   const time=new Date(m.created_at).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
   let inner='';
@@ -343,8 +391,9 @@ async function renderMsg(m,live){
       ${IS_OWNER?`<br><button class="ar ${archived?'done':''}" data-arc="${m.id}" onclick="archiveReceipt('${m.id}')" ${archived?'disabled':''}>${archived?'أُرشف في مركز المطابقة ✓':'إضافة للأرشيف والمطابقة'}</button>`:''}</div>`;
   }
   const tick=mine?`<span class="tick">${m.seen?'✓✓':'✓'}</span>`:'';
-  $('msgs').insertAdjacentHTML('beforeend',
-    `<div class="bub ${mine?'me':'them'}" data-mid="${m.id}">${inner}<div class="mt">${time} ${tick}</div></div>`);
+  const tb=$('tyBub');
+  const html=`<div class="bub ${mine?'me':'them'}" data-mid="${m.id}">${inner}<div class="mt">${time} ${tick}</div></div>`;
+  if(tb)tb.insertAdjacentHTML('beforebegin',html);else $('msgs').insertAdjacentHTML('beforeend',html);
   if(!live)return;
 }
 async function markSeen(list){
@@ -353,16 +402,45 @@ async function markSeen(list){
 }
 
 /* ── الإرسال ── */
+const RENDERED=new Set();
 async function sendText(){
   const t=$('txt').value.trim(); if(!t||!CONV)return;
-  $('txt').value='';$('txt').style.height='auto';
+  $('txt').value='';$('txt').style.height='auto';document.body.classList.remove('has-txt');
+  /* ظهور فوري */
+  const tid='tmp_'+Date.now();
+  const time=new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+  $('msgs').insertAdjacentHTML('beforeend',
+    `<div class="bub me" data-mid="${tid}">${esc(t).replace(/\n/g,'<br>')}<div class="mt">${time} <span class="tick">🕓</span></div></div>`);
+  scrollEnd();
   const body=await enc(t);
   const hash=await sha(CONV.id+'|'+body+'|'+Date.now());
-  const {error}=await sb.from('messages').insert({conv_id:CONV.id,sender:ME,kind:'text',body,hash});
-  if(error){toast('لم تُرسل — أعد المحاولة');$('txt').value=t;return;}
-  await sb.from('conversations').update({last_msg:t.slice(0,60),last_at:new Date().toISOString()}).eq('id',CONV.id);
+  const {data,error}=await sb.from('messages').insert({conv_id:CONV.id,sender:ME,kind:'text',body,hash}).select().single();
+  const el=document.querySelector(`[data-mid="${tid}"]`);
+  if(error){if(el){el.classList.add('err');el.querySelector('.tick').textContent='⚠ لم تُرسل';}return;}
+  if(el){el.dataset.mid=data.id;el.querySelector('.tick').textContent='✓';}
+  RENDERED.add(data.id);
+  sb.from('conversations').update({last_msg:t.slice(0,60),last_at:new Date().toISOString()}).eq('id',CONV.id).then(()=>{});
 }
-$('txt').addEventListener('input',function(){this.style.height='auto';this.style.height=Math.min(this.scrollHeight,110)+'px';});
+$('txt').addEventListener('input',function(){
+  this.style.height='auto';this.style.height=Math.min(this.scrollHeight,110)+'px';
+  document.body.classList.toggle('has-txt',!!this.value.trim());
+  tySend();
+});
+let _tyLast=0;
+function tySend(){
+  if(!SUB||Date.now()-_tyLast<1800)return;_tyLast=Date.now();
+  try{SUB.send({type:'broadcast',event:'typing',payload:{who:ME}});}catch(e){}
+}
+let _tyTimer=null;
+function tyShow(){
+  $('hSubT').innerHTML='<span class="ty">يكتب الآن…</span>';
+  const tb=$('tyBub');if(tb){tb.classList.add('on');scrollEnd();}
+  clearTimeout(_tyTimer);
+  _tyTimer=setTimeout(()=>{
+    $('hSubT').textContent=IS_OWNER?'وضع المالك — مشفّر':'متصل — مشفّر';
+    if(tb)tb.classList.remove('on');
+  },3000);
+}
 $('txt').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendText();}});
 
 $('fi').addEventListener('change',async e=>{
