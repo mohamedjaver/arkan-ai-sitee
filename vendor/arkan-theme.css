@@ -1,0 +1,290 @@
+/* ============================================================
+   ARKAN Pay — Brand Identity 2026
+   Design System v1.0 — يُستدعى في جميع صفحات المشروع
+   <link rel="stylesheet" href="/vendor/arkan-theme.css">
+   ============================================================ */
+
+@font-face {
+  font-family: 'Inter';
+  src: local('Inter'), local('SF Pro Display'), local('-apple-system');
+  font-display: swap;
+}
+
+:root {
+  /* ---------- الألوان الأساسية ---------- */
+  --ak-primary:      #19A9F5;
+  --ak-deep:         #0A56B8;
+  --ak-navy:         #0B2F70;
+  --ak-white:        #FFFFFF;
+  --ak-bg:           #F6FAFD;
+
+  /* ---------- الحالات ---------- */
+  --ak-success:      #19C37D;
+  --ak-warning:      #F6A609;
+  --ak-error:        #EF4444;
+
+  /* ---------- مشتقات ---------- */
+  --ak-primary-soft: rgba(25, 169, 245, .10);
+  --ak-deep-soft:    rgba(10, 86, 184, .08);
+  --ak-success-soft: rgba(25, 195, 125, .12);
+  --ak-warning-soft: rgba(246, 166, 9, .12);
+  --ak-error-soft:   rgba(239, 68, 68, .10);
+  --ak-text:         #0B2F70;
+  --ak-text-2:       #4A6491;
+  --ak-text-3:       #8AA3C7;
+  --ak-line:         rgba(11, 47, 112, .08);
+
+  /* ---------- التدرج الرسمي ---------- */
+  --ak-gradient:     linear-gradient(135deg, #0A56B8 0%, #19A9F5 100%);
+  --ak-gradient-v:   linear-gradient(180deg, #19A9F5 0%, #0A56B8 100%);
+
+  /* ---------- الخط ---------- */
+  --ak-font: 'Inter', 'SF Pro Display', -apple-system, BlinkMacSystemFont,
+             'Segoe UI', system-ui, sans-serif;
+
+  /* ---------- الحواف ---------- */
+  --ak-r-btn:   18px;
+  --ak-r-card:  24px;
+  --ak-r-input: 14px;
+  --ak-r-chip:  999px;
+
+  /* ---------- الظلال ---------- */
+  --ak-shadow-soft: 0 4px 24px rgba(11, 47, 112, .06);
+  --ak-shadow-card: 0 8px 32px rgba(11, 47, 112, .08);
+  --ak-shadow-btn:  0 6px 20px rgba(25, 169, 245, .35);
+  --ak-shadow-pop:  0 24px 64px rgba(11, 47, 112, .18);
+
+  /* ---------- الحركة ---------- */
+  --ak-t: 250ms cubic-bezier(.4, 0, .2, 1);
+}
+
+/* ============================================================
+   الأساس
+   ============================================================ */
+* { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body.ak {
+  margin: 0;
+  font-family: var(--ak-font);
+  background: var(--ak-bg);
+  color: var(--ak-text);
+  -webkit-font-smoothing: antialiased;
+  line-height: 1.5;
+}
+
+/* ============================================================
+   الأزرار — 56px / 18px radius / تدرج أزرق
+   ============================================================ */
+.ak-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 56px;
+  padding: 0 28px;
+  border: 0;
+  border-radius: var(--ak-r-btn);
+  background: var(--ak-gradient);
+  color: var(--ak-white);
+  font-family: var(--ak-font);
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: var(--ak-shadow-btn);
+  transition: transform var(--ak-t), box-shadow var(--ak-t), opacity var(--ak-t);
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+.ak-btn:hover   { transform: translateY(-1px); box-shadow: 0 8px 28px rgba(25,169,245,.45); }
+.ak-btn:active  { transform: scale(.97); }
+.ak-btn:focus-visible { outline: 3px solid var(--ak-primary-soft); outline-offset: 2px; }
+.ak-btn[disabled] { opacity: .45; pointer-events: none; }
+
+.ak-btn--ghost {
+  background: var(--ak-white);
+  color: var(--ak-deep);
+  box-shadow: var(--ak-shadow-soft);
+  border: 1.5px solid var(--ak-line);
+}
+.ak-btn--ghost:hover { border-color: var(--ak-primary); box-shadow: var(--ak-shadow-soft); }
+
+.ak-btn--danger  { background: var(--ak-error);   box-shadow: 0 6px 20px rgba(239,68,68,.30); }
+.ak-btn--success { background: var(--ak-success); box-shadow: 0 6px 20px rgba(25,195,125,.30); }
+
+.ak-btn--sm { height: 44px; padding: 0 20px; font-size: 14px; border-radius: 14px; }
+.ak-btn--icon { width: 56px; padding: 0; }
+
+/* ============================================================
+   البطاقات — 24px / Glass / ظل ناعم
+   ============================================================ */
+.ak-card {
+  background: rgba(255, 255, 255, .82);
+  backdrop-filter: blur(18px) saturate(1.4);
+  -webkit-backdrop-filter: blur(18px) saturate(1.4);
+  border: 1px solid rgba(255, 255, 255, .65);
+  border-radius: var(--ak-r-card);
+  box-shadow: var(--ak-shadow-card);
+  padding: 28px;
+  transition: transform var(--ak-t), box-shadow var(--ak-t);
+}
+.ak-card--hover:hover { transform: translateY(-2px); box-shadow: var(--ak-shadow-pop); }
+
+.ak-card--navy {
+  background: linear-gradient(145deg, #0B2F70 0%, #0A56B8 100%);
+  color: var(--ak-white);
+  border: 0;
+}
+
+/* ============================================================
+   الحقول
+   ============================================================ */
+.ak-input {
+  width: 100%;
+  height: 56px;
+  padding: 0 18px;
+  border: 1.5px solid var(--ak-line);
+  border-radius: var(--ak-r-input);
+  background: var(--ak-white);
+  font-family: var(--ak-font);
+  font-size: 16px;
+  color: var(--ak-text);
+  transition: border-color var(--ak-t), box-shadow var(--ak-t);
+}
+.ak-input:focus {
+  outline: none;
+  border-color: var(--ak-primary);
+  box-shadow: 0 0 0 4px var(--ak-primary-soft);
+}
+.ak-input::placeholder { color: var(--ak-text-3); }
+
+/* ============================================================
+   الشارات — حالات الإيصالات
+   ============================================================ */
+.ak-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 12px;
+  border-radius: var(--ak-r-chip);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+.ak-badge--success { background: var(--ak-success-soft); color: #0E8A57; }
+.ak-badge--warning { background: var(--ak-warning-soft); color: #B57905; }
+.ak-badge--error   { background: var(--ak-error-soft);   color: #C0392B; }
+.ak-badge--info    { background: var(--ak-primary-soft); color: var(--ak-deep); }
+
+/* ============================================================
+   الأيقونات — Rounded / 2px stroke
+   ============================================================ */
+.ak-icon {
+  width: 24px;
+  height: 24px;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
+  flex-shrink: 0;
+}
+
+/* ============================================================
+   Popups / Dialogs
+   ============================================================ */
+.ak-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(11, 47, 112, .35);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 1000;
+  animation: ak-fade 250ms ease-in-out;
+}
+.ak-dialog {
+  background: var(--ak-white);
+  border-radius: var(--ak-r-card);
+  box-shadow: var(--ak-shadow-pop);
+  padding: 32px;
+  max-width: 480px;
+  width: 100%;
+  animation: ak-scale 250ms ease-in-out;
+}
+
+/* ============================================================
+   Animations — 250ms Ease In Out
+   ============================================================ */
+@keyframes ak-fade  { from { opacity: 0; } to { opacity: 1; } }
+@keyframes ak-slide { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+@keyframes ak-scale { from { opacity: 0; transform: scale(.94); } to { opacity: 1; transform: scale(1); } }
+
+.ak-fade  { animation: ak-fade  250ms ease-in-out both; }
+.ak-slide { animation: ak-slide 250ms ease-in-out both; }
+.ak-scale { animation: ak-scale 250ms ease-in-out both; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+}
+
+/* ============================================================
+   AI Chat Bubbles
+   ============================================================ */
+.ak-bubble {
+  max-width: 78%;
+  padding: 14px 18px;
+  border-radius: 22px;
+  font-size: 15px;
+  line-height: 1.55;
+  animation: ak-slide 250ms ease-in-out;
+}
+.ak-bubble--user {
+  background: var(--ak-gradient);
+  color: var(--ak-white);
+  border-bottom-left-radius: 6px;   /* RTL */
+  margin-inline-start: auto;
+}
+.ak-bubble--ai {
+  background: var(--ak-white);
+  color: var(--ak-text);
+  border: 1px solid var(--ak-line);
+  border-bottom-right-radius: 6px;  /* RTL */
+  box-shadow: var(--ak-shadow-soft);
+}
+
+/* ============================================================
+   Loading
+   ============================================================ */
+.ak-spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid var(--ak-primary-soft);
+  border-top-color: var(--ak-primary);
+  border-radius: 50%;
+  animation: ak-spin 800ms linear infinite;
+}
+@keyframes ak-spin { to { transform: rotate(360deg); } }
+
+.ak-skeleton {
+  background: linear-gradient(90deg, #EDF3FA 25%, #F6FAFD 50%, #EDF3FA 75%);
+  background-size: 200% 100%;
+  border-radius: 12px;
+  animation: ak-shimmer 1.4s ease-in-out infinite;
+}
+@keyframes ak-shimmer { to { background-position: -200% 0; } }
+
+/* ============================================================
+   Utilities
+   ============================================================ */
+.ak-grad-text {
+  background: var(--ak-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.ak-divider { height: 1px; background: var(--ak-line); border: 0; margin: 20px 0; }
