@@ -293,7 +293,7 @@ footer{border-top:1px solid var(--stroke);margin-top:60px;padding:52px 0 40px;po
 </head>
 <body>
 
-<!-- ============ بوابة التسجيل (تظهر مرة واحدة فقط) ============ -->
+<!-- ============ دخول ARKAN — رقم الهاتف + OTP (نمط NALA) ============ -->
 <style>
 #arkGate{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;
   padding:20px;background:linear-gradient(160deg,#F7FAFD 0%,#EAF3FE 100%);transition:opacity .5s,visibility .5s}
@@ -303,49 +303,155 @@ footer{border-top:1px solid var(--stroke);margin-top:60px;padding:52px 0 40px;po
   animation:gateIn .6s cubic-bezier(.2,.8,.2,1)}
 @keyframes gateIn{from{opacity:0;transform:translateY(26px) scale(.97)}to{opacity:1;transform:none}}
 .gate-card img{width:74px;height:74px;border-radius:20px;margin-bottom:16px}
-.gate-card h2{font-size:1.35rem;font-weight:800;color:#102A43;margin-bottom:6px}
-.gate-card p{font-size:.88rem;color:#486581;margin-bottom:22px;line-height:1.7}
-.gate-fld{text-align:right;margin-bottom:14px}
+.gate-card h2{font-size:1.3rem;font-weight:800;color:#102A43;margin-bottom:6px}
+.gate-card p{font-size:.86rem;color:#486581;margin-bottom:20px;line-height:1.7}
+.gate-fld{text-align:right;margin-bottom:13px}
 .gate-fld label{display:block;font-size:.8rem;font-weight:600;color:#486581;margin-bottom:7px}
 .gate-fld input{width:100%;padding:14px 16px;border-radius:14px;border:1.5px solid #D9E5F2;background:#F8FBFF;
   font-family:inherit;font-size:15px;color:#102A43;outline:none;transition:border .2s,box-shadow .2s;box-sizing:border-box}
 .gate-fld input:focus{border-color:#0099FF;box-shadow:0 0 0 4px rgba(0,153,255,.12)}
+.cc-row{display:flex;gap:8px;margin-bottom:13px}
+.cc{flex:1;padding:11px;border-radius:13px;border:1.5px solid #D9E5F2;background:#F8FBFF;cursor:pointer;
+  font-family:inherit;font-weight:700;font-size:14px;color:#486581;transition:all .2s}
+.cc.on{border-color:#0056D6;background:rgba(0,86,214,.07);color:#0056D6}
 .gate-btn{width:100%;padding:15px;border:none;border-radius:14px;cursor:pointer;font-family:inherit;
   background:linear-gradient(135deg,#0056D6,#0099FF);color:#fff;font-weight:800;font-size:15.5px;
-  box-shadow:0 14px 30px -10px rgba(0,86,214,.5);transition:transform .2s;margin-top:6px}
+  box-shadow:0 14px 30px -10px rgba(0,86,214,.5);transition:transform .2s,opacity .2s;margin-top:4px}
 .gate-btn:active{transform:scale(.97)}
-.gate-note{font-size:.72rem;color:#486581;margin-top:14px}
-.gate-err{display:none;font-size:.8rem;color:#E53935;font-weight:600;margin-top:10px}
+.gate-btn:disabled{opacity:.55;cursor:wait}
+.gate-link{background:none;border:none;color:#0056D6;font-family:inherit;font-size:.82rem;font-weight:700;
+  cursor:pointer;margin-top:12px}
+.gate-note{font-size:.72rem;color:#486581;margin-top:13px;line-height:1.7}
+.gate-err{display:none;font-size:.8rem;color:#E53935;font-weight:600;margin-top:10px;line-height:1.6}
+.otp-in{letter-spacing:12px;text-align:center;font-size:22px!important;font-weight:800;direction:ltr}
 </style>
 <div id="arkGate">
   <div class="gate-card">
     <img src="arkan-logo.svg" alt="ARKAN">
-    <h2>مرحبًا بك في ARKAN Rates</h2>
-    <p>سجّل مرة واحدة فقط للمتابعة —<br>صرف العملات والتسوية الدولية · أنغولا ⇄ موريتانيا</p>
-    <div class="gate-fld"><label>الاسم الكامل</label>
-      <input id="gName" type="text" placeholder="مثال: محمد ولد أحمد" autocomplete="name"></div>
-    <div class="gate-fld"><label>رقم الواتساب</label>
-      <input id="gPhone" type="tel" inputmode="tel" placeholder="+222 أو +244" autocomplete="tel" dir="ltr" style="text-align:left"></div>
-    <button class="gate-btn" onclick="arkRegister()">دخول</button>
-    <div class="gate-err" id="gErr">أدخل الاسم ورقم الواتساب للمتابعة</div>
-    <div class="gate-note">🔒 بياناتك تُحفظ على جهازك فقط · لن تظهر هذه الشاشة مرة أخرى</div>
+
+    <!-- الخطوة 1: الاسم + الرقم -->
+    <div id="gStep1">
+      <h2>مرحبًا بك في ARKAN Rates</h2>
+      <p>سجّل مرة واحدة برقم هاتفك —<br>يصلك رمز تحقق، وبعدها لن تسجّل مرة أخرى</p>
+      <div class="gate-fld"><label>الاسم الكامل</label>
+        <input id="gName" type="text" placeholder="مثال: محمد ولد أحمد" autocomplete="name"></div>
+      <div class="cc-row">
+        <button type="button" class="cc on" id="ccMR" onclick="gCC('+222',this)">🇲🇷 موريتانيا +222</button>
+        <button type="button" class="cc" id="ccAO" onclick="gCC('+244',this)">🇦🇴 أنغولا +244</button>
+      </div>
+      <div class="gate-fld"><label>رقم الهاتف</label>
+        <input id="gPhone" type="tel" inputmode="tel" placeholder="36 29 50 50" autocomplete="tel"
+          dir="ltr" style="text-align:left"></div>
+      <button class="gate-btn" id="gBtn" onclick="arkSendOtp()">إرسال رمز التحقق</button>
+      <div class="gate-err" id="gErr"></div>
+      <div class="gate-note">🔒 تشفير كامل · تحقق KYC · لن تظهر هذه الشاشة مرة أخرى على جهازك</div>
+    </div>
+
+    <!-- الخطوة 2: OTP -->
+    <div id="gStep2" style="display:none">
+      <h2>أدخل رمز التحقق</h2>
+      <p>أرسلنا رمزًا من 6 أرقام إلى<br><b class="ltr" id="gSentTo" style="color:#0056D6"></b></p>
+      <div class="gate-fld">
+        <input id="gOtp" class="otp-in" type="text" inputmode="numeric" maxlength="6" placeholder="••••••"
+          oninput="if(this.value.length===6)arkVerifyOtp()"></div>
+      <button class="gate-btn" id="gVBtn" onclick="arkVerifyOtp()">تأكيد ودخول</button>
+      <button class="gate-link" id="gResend" onclick="arkResend()" disabled>إعادة الإرسال بعد <span id="gTimer">45</span> ث</button>
+      <button class="gate-link" onclick="gBack()">تغيير الرقم ←</button>
+      <div class="gate-err" id="gErr2"></div>
+    </div>
   </div>
 </div>
-<script>
-(function(){
-  try{
-    var u=JSON.parse(localStorage.getItem('arkanClient')||'null');
-    if(u&&u.name){document.getElementById('arkGate').classList.add('hide');}
-  }catch(e){}
+<script type="module">
+import * as ARKAN from './arkan-core.js';
+window._AK=ARKAN;
+let confirmRes=null, verifier=null, cc='+222', timerIv=null;
+
+/* جلسة سابقة؟ اعبر فورًا (Firebase persistence أو النسخة المحلية القديمة) */
+(function localSkip(){
+  try{var u=JSON.parse(localStorage.getItem('arkanClient')||'null');
+    if(u&&u.verified){hideGate();}}catch(e){}
 })();
-function arkRegister(){
+ARKAN.ready.then(ok=>{
+  if(!ok)return; /* شبكة تحجب gstatic: تبقى البوابة المحلية تعمل */
+  ARKAN.fb.onAuthStateChanged(ARKAN.auth,u=>{ if(u&&u.phoneNumber){hideGate();} });
+});
+
+function hideGate(){var g=document.getElementById('arkGate');if(g)g.classList.add('hide');}
+window.gCC=function(c,btn){cc=c;document.querySelectorAll('.cc').forEach(b=>b.classList.remove('on'));btn.classList.add('on');};
+window.gBack=function(){document.getElementById('gStep2').style.display='none';
+  document.getElementById('gStep1').style.display='block';clearInterval(timerIv);};
+
+function fullPhone(){
+  var raw=document.getElementById('gPhone').value.replace(/\D/g,'');
+  if(raw.startsWith('00'))raw=raw.slice(2);
+  if(raw.startsWith('222')||raw.startsWith('244'))return '+'+raw;
+  return cc+raw;
+}
+function err(id,msg){var e=document.getElementById(id);e.textContent=msg;e.style.display='block';}
+function arErr(e){
+  var c=(e&&e.code)||'';
+  if(c.includes('unauthorized-domain'))return 'النطاق غير مفعّل: أضف arkanrates.com في Firebase → Authentication → Settings → Domaines autorisés';
+  if(c.includes('invalid-phone'))return 'رقم الهاتف غير صحيح — تأكد من الرقم';
+  if(c.includes('too-many-requests'))return 'محاولات كثيرة — انتظر دقائق ثم أعد المحاولة';
+  if(c.includes('invalid-verification-code'))return 'الرمز غير صحيح — راجع الرسالة';
+  if(c.includes('code-expired'))return 'انتهت صلاحية الرمز — أعد الإرسال';
+  if(c.includes('quota'))return 'تجاوزت حصة الرسائل اليوم — جرّب لاحقًا';
+  return 'تعذّر الإرسال: '+(e&&e.message||'خطأ غير معروف');
+}
+
+window.arkSendOtp=async function(){
   var n=document.getElementById('gName').value.trim();
-  var p=document.getElementById('gPhone').value.trim();
-  if(!n||p.replace(/\D/g,'').length<8){document.getElementById('gErr').style.display='block';return;}
-  try{localStorage.setItem('arkanClient',JSON.stringify({name:n,phone:p,ts:Date.now()}));}catch(e){}
-  document.getElementById('arkGate').classList.add('hide');
+  var p=fullPhone();
+  document.getElementById('gErr').style.display='none';
+  if(!n){err('gErr','أدخل الاسم الكامل');return;}
+  if(p.replace(/\D/g,'').length<10){err('gErr','أدخل رقم هاتف صحيح');return;}
+  var btn=document.getElementById('gBtn');btn.disabled=true;btn.textContent='جارٍ الإرسال…';
+  try{
+    var ok=await ARKAN.ready;
+    if(!ok)throw new Error('الشبكة تحجب خدمة التحقق — جرّب شبكة أخرى');
+    if(!verifier){verifier=new ARKAN.fb.RecaptchaVerifier(ARKAN.auth,'gBtn',{size:'invisible'});}
+    confirmRes=await ARKAN.fb.signInWithPhoneNumber(ARKAN.auth,p,verifier);
+    sessionStorage.setItem('arkPendName',n);
+    document.getElementById('gSentTo').textContent=p;
+    document.getElementById('gStep1').style.display='none';
+    document.getElementById('gStep2').style.display='block';
+    startTimer();
+    setTimeout(function(){document.getElementById('gOtp').focus();},300);
+  }catch(e){
+    err('gErr',arErr(e));
+    if(verifier){try{verifier.clear();}catch(_){}} verifier=null;
+  }
+  btn.disabled=false;btn.textContent='إرسال رمز التحقق';
+};
+
+window.arkVerifyOtp=async function(){
+  var code=document.getElementById('gOtp').value.trim();
+  document.getElementById('gErr2').style.display='none';
+  if(code.length<6){err('gErr2','أدخل الرمز المكوّن من 6 أرقام');return;}
+  var btn=document.getElementById('gVBtn');btn.disabled=true;btn.textContent='جارٍ التحقق…';
+  try{
+    var cred=await confirmRes.confirm(code);
+    var u=cred.user;
+    var name=sessionStorage.getItem('arkPendName')||'';
+    try{localStorage.setItem('arkanClient',JSON.stringify({name:name,phone:u.phoneNumber,uid:u.uid,verified:true,ts:Date.now()}));}catch(e){}
+    /* حفظ الملف في Firestore (غير حاسم إن رفضته القواعد) */
+    try{await ARKAN.fb.setDoc(ARKAN.fb.doc(ARKAN.db,'clients',u.uid),
+      {name:name,phone:u.phoneNumber,lastLogin:Date.now(),device:navigator.userAgent.slice(0,120)},{merge:true});}catch(e){}
+    clearInterval(timerIv);
+    hideGate();
+  }catch(e){err('gErr2',arErr(e));}
+  btn.disabled=false;btn.textContent='تأكيد ودخول';
+};
+
+window.arkResend=function(){gBack();setTimeout(function(){window.arkSendOtp();},250);};
+function startTimer(){
+  var t=45,el=document.getElementById('gTimer'),b=document.getElementById('gResend');
+  b.disabled=true;clearInterval(timerIv);
+  timerIv=setInterval(function(){t--;el.textContent=t;
+    if(t<=0){clearInterval(timerIv);b.disabled=false;b.innerHTML='إعادة إرسال الرمز';}},1000);
 }
 </script>
+
 
 <div class="grid-bg"></div>
 <canvas id="particles" aria-hidden="true"></canvas>
