@@ -59,60 +59,24 @@
   // ── حقن الأنماط ──
   var css = document.createElement('style');
   css.textContent =
-    '#akTopbar{position:sticky;top:0;z-index:9000;display:flex;align-items:center;justify-content:space-between;' +
-      'height:56px;padding:0 12px;background:rgba(255,255,255,.9);backdrop-filter:blur(14px);' +
-      '-webkit-backdrop-filter:blur(14px);border-bottom:1px solid rgba(11,47,112,.08);' +
-      'font-family:Inter,-apple-system,sans-serif;direction:rtl}' +
-    '#akTopbar .akbtn{width:42px;height:42px;border:none;background:transparent;color:#0B2F70;' +
-      'display:grid;place-items:center;border-radius:12px;cursor:pointer;transition:background .2s}' +
-    '#akTopbar .akbtn:active{background:rgba(25,169,245,.12)}' +
-    '#akTopbar .aktitle{font-size:16px;font-weight:700;color:#0B2F70;display:flex;align-items:center;gap:8px}' +
-    '#akTopbar .aktitle img{width:28px;height:28px;border-radius:9px}' +
-    '#akDrawer{position:fixed;inset:0;z-index:9500;display:none}' +
-    '#akDrawer.on{display:block}' +
-    '#akDrawer .akov{position:absolute;inset:0;background:rgba(11,47,112,.4);backdrop-filter:blur(4px);' +
-      'animation:akfade .25s ease}' +
-    '#akDrawer .akpanel{position:absolute;top:0;right:0;bottom:0;width:280px;max-width:82vw;background:#fff;' +
-      'box-shadow:-8px 0 40px rgba(11,47,112,.2);display:flex;flex-direction:column;' +
-      'animation:akslide .28s cubic-bezier(.4,0,.2,1);direction:rtl}' +
-    '#akDrawer .akhead{display:flex;align-items:center;gap:12px;padding:22px 20px 18px;' +
-      'background:linear-gradient(135deg,#0A56B8,#19A9F5);color:#fff}' +
-    '#akDrawer .akhead img{width:44px;height:44px;border-radius:13px;box-shadow:0 6px 18px rgba(0,0,0,.2)}' +
-    '#akDrawer .akhead b{font-size:17px;display:block}' +
-    '#akDrawer .akhead small{font-size:12px;opacity:.85}' +
-    '#akDrawer .aklinks{flex:1;overflow-y:auto;padding:10px 0}' +
-    '#akDrawer a{display:flex;align-items:center;gap:14px;padding:14px 22px;color:#0B2F70;' +
-      'text-decoration:none;font-size:15px;font-weight:500;transition:background .18s}' +
-    '#akDrawer a:active{background:rgba(25,169,245,.1)}' +
-    '#akDrawer a.active{background:rgba(25,169,245,.12);color:#0A56B8;font-weight:700}' +
-    '#akDrawer a svg{color:#4A6491}' +
-    '#akDrawer a.active svg{color:#19A9F5}' +
-    '#akDrawer .aksep{height:1px;background:rgba(11,47,112,.08);margin:8px 20px}' +
-    '#akDrawer .akownerlbl{font-size:11px;font-weight:700;color:#8AA3C7;padding:6px 22px 4px}' +
+    '#akNavBtns{position:fixed;top:calc(env(safe-area-inset-top, 0px) + 10px);left:0;right:0;z-index:9000;' +
+      'display:flex;justify-content:space-between;padding:0 12px;pointer-events:none;direction:rtl}' +
+    '#akNavBtns .akbtn{width:44px;height:44px;border:1px solid rgba(11,47,112,.1);pointer-events:auto;' +
+      'background:rgba(255,255,255,.85);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);' +
+      'color:#0B2F70;display:grid;place-items:center;border-radius:14px;cursor:pointer;' +
+      'box-shadow:0 4px 16px rgba(11,47,112,.1);transition:transform .18s}' +
+    '#akNavBtns .akbtn:active{transform:scale(.92)}' +
     '@keyframes akfade{from{opacity:0}to{opacity:1}}' +
     '@keyframes akslide{from{transform:translateX(100%)}to{transform:none}}';
   document.head.appendChild(css);
 
-  // ── عنوان الصفحة ──
-  var titles = {
-    'index.html':'ARKAN Pay','app.html':'ARKAN Pay','home-v2.html':'ARKAN Pay',
-    'request.html':'طلب تحويل','rates.html':'الأسعار','chat.html':'المحادثة',
-    'account.html':'حسابي','settlement.html':'التسويات','archive.html':'الأرشيف',
-    'admin.html':'لوحة التحكم','wallet.html':'المحفظة','invoice.html':'الفواتير'
-  };
-  var pageTitle = titles[path] || 'ARKAN Pay';
-
-  // ── بناء الشريط ──
+  // ── الزران العائمان ──
   var bar = document.createElement('div');
-  bar.id = 'akTopbar';
+  bar.id = 'akNavBtns';
   bar.innerHTML =
     '<button class="akbtn" id="akBack" aria-label="رجوع">' + svg('back') + '</button>' +
-    '<div class="aktitle"><img src="arkan-icon-192.png" alt="">' + pageTitle + '</div>' +
     '<button class="akbtn" id="akMenu" aria-label="القائمة">' + svg('menu') + '</button>';
-
-  // ضعه في أعلى body
-  if (document.body.firstChild) document.body.insertBefore(bar, document.body.firstChild);
-  else document.body.appendChild(bar);
+  document.body.appendChild(bar);
 
   // ── زر الرجوع ──
   document.getElementById('akBack').onclick = function () {
