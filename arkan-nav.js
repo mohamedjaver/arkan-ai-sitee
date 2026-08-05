@@ -59,8 +59,7 @@
   // ── حقن الأنماط ──
   var css = document.createElement('style');
   css.textContent =
-    '#akNavBtns{position:fixed;top:calc(env(safe-area-inset-top, 0px) + 10px);left:0;right:0;z-index:9000;' +
-      'display:flex;justify-content:space-between;padding:0 12px;pointer-events:none;direction:rtl}' +
+    '#akNavBtns{position:fixed;top:calc(env(safe-area-inset-top, 0px) + 10px);left:12px;z-index:9000;pointer-events:none}' +
     '#akNavBtns .akbtn{width:44px;height:44px;border:1px solid rgba(11,47,112,.1);pointer-events:auto;' +
       'background:rgba(255,255,255,.85);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);' +
       'color:#0B2F70;display:grid;place-items:center;border-radius:14px;cursor:pointer;' +
@@ -90,15 +89,9 @@
   var bar = document.createElement('div');
   bar.id = 'akNavBtns';
   bar.innerHTML =
-    '<button class="akbtn" id="akBack" aria-label="رجوع">' + svg('back') + '</button>' +
     '<button class="akbtn" id="akMenu" aria-label="القائمة">' + svg('menu') + '</button>';
   document.body.appendChild(bar);
 
-  // ── زر الرجوع ──
-  document.getElementById('akBack').onclick = function () {
-    if (history.length > 1) history.back();
-    else location.href = 'index.html';
-  };
 
   // ── القائمة الجانبية ──
   var drawer = document.createElement('div');
@@ -121,7 +114,10 @@
       '<div class="akhead"><img src="arkan-icon-192.png" alt="">' +
         '<div><b>ARKAN Pay</b><small>' + (isOwner ? 'وضع المالك' : 'الصرف والتسويات') + '</small></div>' +
       '</div>' +
-      '<div class="aklinks">' + linksHTML + ownerHTML + '</div>' +
+      '<div class="aklinks">' +
+        '<a href="#" id="akGoBack" style="border-bottom:1px solid rgba(11,47,112,.06)">' + svg('back',20) + '<span>رجوع للخلف</span></a>' +
+        linksHTML + ownerHTML +
+      '</div>' +
     '</div>';
   document.body.appendChild(drawer);
 
@@ -129,4 +125,11 @@
   var ov = document.getElementById('akOv');
   menuBtn.onclick = function () { drawer.classList.add('on'); };
   ov.onclick = function () { drawer.classList.remove('on'); };
+  var goBack = document.getElementById('akGoBack');
+  if (goBack) goBack.onclick = function (e) {
+    e.preventDefault();
+    drawer.classList.remove('on');
+    if (history.length > 1) history.back();
+    else location.href = 'index.html';
+  };
 })();
