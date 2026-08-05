@@ -1046,36 +1046,82 @@ if(IS_OWNER){
 </div>
 <script type="module">
 (async()=>{
-  if(new URLSearchParams(location.search).get('c')) return;
+  const qp = new URLSearchParams(location.search);
   const ADMIN = 'mohamedarbi0208@gmail.com';
-  const toLogin = () => location.replace('login.html?next=chat.html');
-  const verify = () => { window.__ownerVerified && window.__ownerVerified(); };
 
-  /* ── فحص فوري من localStorage (Firebase يحفظ الجلسة هنا) ── */
+  /* ── 1) رابط عميل ?c=CODE — لا يحتاج أي تحقق ── */
+  if(qp.get('c')) return;
+
+  /* ── 2) عميل مسجّل عنده كود محادثة محفوظ ── */
+  const savedCode = localStorage.getItem('arkan_client_code');
+  if(savedCode) {
+    /* حوّله لرابط عميل عادي */
+    location.replace('chat.html?c=' + savedCode);
+    return;
+  }
+
+  /* ── 3) فحص Firebase Admin (صاحب الحساب) ── */
+  const verify = () => { window.__ownerVerified && window.__ownerVerified(); };
+  const toLogin = () => location.replace('login.html?next=chat.html&_t=' + Date.now());
+
+  /* فحص فوري من localStorage */
   try {
     const fbKey = Object.keys(localStorage).find(k => k.startsWith('firebase:authUser:'));
-    if (fbKey) {
+    if(fbKey) {
       const u = JSON.parse(localStorage.getItem(fbKey) || 'null');
-      if (u && u.email && u.email.toLowerCase() === ADMIN) { verify(); return; }
+      if(u && u.email && u.email.toLowerCase() === ADMIN) { verify(); return; }
     }
   } catch(e) {}
 
-  /* ── احتياط: انتظار Firebase SDK ── */
+  /* ── 4) مستخدم مسجّل (arkan_session) → ابحث عن محادثته ── */
+  try {
+    const sess = JSON.parse(localStorage.getItem('arkan_session') || 'null');
+    if(sess && sess.phone) {
+      /* ابحث عن محادثة باسم المستخدم أو رقمه */
+      const SB_URL = 'https://vyxzlazwpbstigcqvizb.supabase.co';
+      const SB_KEY = 'sb_publishable_scXFuYtWG2dkz8_CaPEvAg_Yj2_sxnO';
+      const r = await fetch(
+        `${SB_URL}/rest/v1/conversations?client_code=not.is.null&order=last_at.desc&limit=1` +
+        `&client_name=eq.${encodeURIComponent(sess.name||sess.phone)}`,
+        { headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY } }
+      );
+      const rows = await r.json();
+      if(rows && rows[0] && rows[0].client_code) {
+        localStorage.setItem('arkan_client_code', rows[0].client_code);
+        location.replace('chat.html?c=' + rows[0].client_code);
+        return;
+      }
+      /* مستخدم مسجّل لكن ليس له محادثة بعد — أنشئ له واحدة */
+      const code = 'AK' + Date.now().toString(36).toUpperCase().slice(-6);
+      const ins = await fetch(`${SB_URL}/rest/v1/conversations`, {
+        method: 'POST',
+        headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY,
+                   'Content-Type': 'application/json', Prefer: 'return=representation' },
+        body: JSON.stringify({ client_name: sess.name || sess.phone, client_code: code })
+      });
+      const conv = await ins.json();
+      if(conv && conv[0]) {
+        localStorage.setItem('arkan_client_code', code);
+        location.replace('chat.html?c=' + code);
+        return;
+      }
+    }
+  } catch(e) {}
+
+  /* ── 5) احتياط Firebase SDK ── */
   try {
     const ARKAN = await import('./arkan-core.js');
     await ARKAN.ready;
     const { onAuthStateChanged } = ARKAN.fb;
     let done = false;
     onAuthStateChanged(ARKAN.auth, u => {
-      if (done) return; done = true;
-      if (u && ARKAN.isAdminEmail(u.email)) verify();
+      if(done) return; done = true;
+      if(u && ARKAN.isAdminEmail(u.email)) verify();
       else toLogin();
     });
-    setTimeout(() => { if (!done) { done = true; toLogin(); } }, 8000);
+    setTimeout(() => { if(!done) { done = true; toLogin(); } }, 8000);
   } catch(e) {
-    const m = document.getElementById('authGateMsg');
-    if (m) m.textContent = 'تعذر التحقق — تأكد من الاتصال';
-    setTimeout(toLogin, 3000);
+    toLogin();
   }
 })();
 </script>
