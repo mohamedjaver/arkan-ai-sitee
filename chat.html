@@ -1046,24 +1046,36 @@ if(IS_OWNER){
 </div>
 <script type="module">
 (async()=>{
-  if(new URLSearchParams(location.search).get('c')) return; /* عميل — لا يعنيه */
-  const toLogin=()=>location.replace('login.html?next=chat.html');
-  try{
-    const ARKAN=await import('./arkan-core.js');
+  if(new URLSearchParams(location.search).get('c')) return;
+  const ADMIN = 'mohamedarbi0208@gmail.com';
+  const toLogin = () => location.replace('login.html?next=chat.html');
+  const verify = () => { window.__ownerVerified && window.__ownerVerified(); };
+
+  /* ── فحص فوري من localStorage (Firebase يحفظ الجلسة هنا) ── */
+  try {
+    const fbKey = Object.keys(localStorage).find(k => k.startsWith('firebase:authUser:'));
+    if (fbKey) {
+      const u = JSON.parse(localStorage.getItem(fbKey) || 'null');
+      if (u && u.email && u.email.toLowerCase() === ADMIN) { verify(); return; }
+    }
+  } catch(e) {}
+
+  /* ── احتياط: انتظار Firebase SDK ── */
+  try {
+    const ARKAN = await import('./arkan-core.js');
     await ARKAN.ready;
     const { onAuthStateChanged } = ARKAN.fb;
-    let done=false;
-    onAuthStateChanged(ARKAN.auth,u=>{
-      if(done)return;
-      done=true;
-      if(u&&ARKAN.isAdminEmail(u.email)){ window.__ownerVerified&&window.__ownerVerified(); }
+    let done = false;
+    onAuthStateChanged(ARKAN.auth, u => {
+      if (done) return; done = true;
+      if (u && ARKAN.isAdminEmail(u.email)) verify();
       else toLogin();
     });
-    setTimeout(()=>{ if(!done){done=true;toLogin();} },12000);
-  }catch(e){
-    const m=document.getElementById('authGateMsg');
-    if(m)m.textContent='تعذر التحقق من الهوية — أعد المحاولة بالاتصال بالإنترنت';
-    /* لا يُفتح وضع المالك أبداً عند الفشل */
+    setTimeout(() => { if (!done) { done = true; toLogin(); } }, 8000);
+  } catch(e) {
+    const m = document.getElementById('authGateMsg');
+    if (m) m.textContent = 'تعذر التحقق — تأكد من الاتصال';
+    setTimeout(toLogin, 3000);
   }
 })();
 </script>
