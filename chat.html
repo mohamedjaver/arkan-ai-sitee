@@ -1045,7 +1045,9 @@ if(IS_OWNER){
   const g=$('authGate'); g.style.display='flex';
   window.__ownerVerified=()=>{
     var gg=document.getElementById('authGate'); if(gg) gg.remove();
-    /* كلمة السر السرية كافية — ادخل مباشرة بدون PIN */
+    /* أظهر زر محادثة جديدة فوراً */
+    var fb=document.getElementById('fabNew'); if(fb) fb.style.display='flex';
+    var nb=document.getElementById('newB'); if(nb) nb.style.display='flex';
     boot();
   };
 }else boot();
