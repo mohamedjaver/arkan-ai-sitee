@@ -1,7 +1,7 @@
 /* ARKAN Rates — Service Worker v2.0
    إستراتيجية: الشبكة أولًا لصفحات HTML والبيانات (لا محتوى قديم أبدًا)
               الكاش أولًا للأصول الثابتة فقط (صور، أيقونات، شعار) */
-const V='arkan-v3.8';
+const V='arkan-v3.9';
 const STATIC=['./arkan-logo.svg','./arkan-icon-512.png','./arkan-touch-180.png','./site-manifest.json'];
 
 self.addEventListener('install',e=>{
@@ -23,7 +23,7 @@ self.addEventListener('activate',e=>{
 
 
 /* ===== Web Share Target: استقبال إيصالات الواتساب (POST محلي) ===== */
-const SHARE_CACHE='arkan-share-v1';
+const SHARE_CACHE='arkan-share-v2';
 
 async function arkHandleShare(req){
   try{
