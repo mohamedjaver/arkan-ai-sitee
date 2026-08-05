@@ -170,7 +170,7 @@ body.has-txt #micB,body.rec #micB{display:none}
  border-radius:12px 12px 0 0;margin-bottom:-8px;border:1px solid var(--brd);border-bottom:0;background:#fff;cursor:pointer}
 .dprev+.dcard{border-radius:0 0 12px 12px}
 /* شبكة الإرفاق */
-.agrid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;padding:6px 0 4px}
+.agrid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px 10px;padding:6px 0 4px}
 .ait{display:flex;flex-direction:column;align-items:center;gap:7px;border:0;background:none;font-size:12px;color:var(--txt);font-weight:500}
 .ait .ic{width:56px;height:56px;border-radius:50%;background:var(--card);border:1px solid var(--brd);
  display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(14,15,12,.06)}
@@ -274,6 +274,8 @@ body.has-txt #micB,body.rec #micB{display:none}
         <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 8h3l2-3h6l2 3h3a1 1 0 011 1v10a1 1 0 01-1 1H4a1 1 0 01-1-1V9a1 1 0 011-1z"/><circle cx="12" cy="13" r="3.5"/></svg></span>الكاميرا</button>
       <button class="ait c3" onclick="attPick('dcI')">
         <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg></span>مستند PDF</button>
+      <button class="ait c4" onclick="pasteClip()">
+        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/><path d="M9 13l2 2 4-4"/></svg></span>من الحافظة</button>
       <button class="ait c4" onclick="openTreq()">
         <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 10l5-6 5 6M12 4v12"/><path d="M4 20h16"/></svg></span>طلب تحويل</button>
     </div>
@@ -664,11 +666,32 @@ function tyShow(){
   },3000);
 }
 $('txt').addEventListener('paste',async e=>{
-  const items=[...(e.clipboardData&&e.clipboardData.items||[])].filter(i=>i.kind==='file');
-  if(!items.length)return;
+  const cd=e.clipboardData;
+  const files=[...(cd&&cd.files||[])];
+  const items=[...(cd&&cd.items||[])].filter(i=>i.kind==='file').map(i=>i.getAsFile()).filter(Boolean);
+  const all=files.length?files:items;
+  if(!all.length){
+    if(cd&&!cd.getData('text'))toast('iOS لا يسمح بلصق PDF — استخدم الإرفاق ← مستند PDF');
+    return;
+  }
   e.preventDefault();
-  for(const it of items){const f=it.getAsFile();if(f)await sendFile(f);}
+  for(const f of all)await sendFile(f);
 });
+async function pasteClip(){
+  $('shAtt').classList.remove('on');
+  try{
+    const items=await navigator.clipboard.read();
+    let sent=0;
+    for(const it of items){
+      const t=it.types.find(t=>t.startsWith('image/'));
+      if(!t)continue;
+      const blob=await it.getType(t);
+      await sendFile(new File([blob],'clipboard_'+Date.now()+'.'+(t.split('/')[1]||'png'),{type:t}));
+      sent++;
+    }
+    if(!sent)toast('لا صورة في الحافظة — انسخ صورة الإيصال أو لقطة شاشة (PDF لا يُلصق في iOS)');
+  }catch(e){toast('اسمح بقراءة الحافظة عند السؤال، أو الصق داخل حقل الكتابة');}
+}
 $('txt').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendText();}});
 
 $('fi').addEventListener('change',async e=>{
