@@ -210,6 +210,20 @@ body.has-txt #micB,body.rec #micB{display:none}
 .bio-btn svg{width:24px;height:24px;color:var(--pri)}
 .bio-btn:active{background:var(--neu)}
 #pinErr{min-height:18px;font-size:12.5px;color:var(--dgr);font-weight:600;margin-top:8px}
+/* العارض الداخلي */
+#dvw{position:fixed;inset:0;z-index:120;background:#0E0F0C;display:none;flex-direction:column}
+#dvw.on{display:flex}
+#dvw .h{display:flex;align-items:center;gap:10px;padding:calc(10px + env(safe-area-inset-top)) 14px 10px;
+ background:rgba(14,15,12,.92);color:#fff;flex-shrink:0}
+#dvw .h b{flex:1;font-size:13.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;direction:ltr;text-align:right}
+#dvw .h button,#dvw .h a{width:38px;height:38px;border-radius:12px;border:1px solid rgba(255,255,255,.2);
+ background:none;color:#fff;display:flex;align-items:center;justify-content:center;text-decoration:none}
+#dvw .h svg{width:19px;height:19px}
+#dvw .b{flex:1;overflow:auto;-webkit-overflow-scrolling:touch;padding:12px;display:flex;flex-direction:column;
+ gap:10px;align-items:center}
+#dvw .b canvas,#dvw .b img{max-width:100%;border-radius:8px;background:#fff;box-shadow:0 4px 18px rgba(0,0,0,.4)}
+#dvw .ld{color:#9aa;font-size:13px;padding:40px 0}
+.ddl.opened{background:var(--ok);border-color:var(--ok);color:#fff;opacity:1}
 </style>
 </head>
 <body>
@@ -303,6 +317,16 @@ body.has-txt #micB,body.rec #micB{display:none}
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M7 3H5a2 2 0 00-2 2v2M17 3h2a2 2 0 012 2v2M7 21H5a2 2 0 01-2-2v-2M17 21h2a2 2 0 002-2v-2"/><path d="M9 9.5v1.5M15 9.5v1.5"/><path d="M9.5 15.5c.7.7 1.6 1 2.5 1s1.8-.3 2.5-1"/></svg>
       الدخول بـ Face ID</button>
   </div>
+</div>
+<div id="dvw">
+  <div class="h">
+    <button onclick="document.getElementById('dvw').classList.remove('on');document.getElementById('dvwB').innerHTML=''">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+    <b id="dvwT"></b>
+    <a id="dvwDl" href="#" target="_blank" download>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 4v12M7 11l5 5 5-5M4 20h16"/></svg></a>
+  </div>
+  <div class="b" id="dvwB"></div>
 </div>
 <div id="toast"></div>
 
@@ -519,7 +543,7 @@ async function renderMsg(m,live){
   const time=new Date(m.created_at).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
   let inner='';
   if(m.kind==='text'){ inner=esc(await dec(m.body)).replace(/\n/g,'<br>'); }
-  else if(m.kind==='image'){ inner=`<img src="${esc(m.file_url)}" loading="lazy" onclick="window.open(this.src,'_blank')">${m.body?esc(await dec(m.body)):''}`; }
+  else if(m.kind==='image'){ inner=`<img src="${esc(m.file_url)}" loading="lazy" onclick="openDocViewer('${esc(m.file_url)}','${esc(m.file_name||'صورة')}')">${m.body?esc(await dec(m.body)):''}`; }
   else if(m.kind==='treq'&&m.meta&&m.meta.treq){ inner=treqHTML(m.meta.treq); }
   else if(m.kind==='audio'){
     const d=(m.meta&&m.meta.dur)||0;
@@ -575,11 +599,15 @@ function extCls(n){n=String(n||'').toLowerCase();
 function docCardHTML(name,url,size,prev,pages){
   const [c,l]=extCls(name);
   const meta=[pages?(pages+' صفحة'):'',size?fsize(size):'',l].filter(Boolean).join(' · ');
-  return (prev?`<img class="dprev" src="${esc(prev)}" loading="lazy" onclick="window.open('${esc(url||prev)}','_blank')">`:'')+
-   `<a class="dcard" href="${esc(url||'#')}" ${url?'target="_blank"':''}>
+  const op=url&&OPENED.has(url);
+  const act=url?`onclick="openDocViewer('${esc(url)}','${esc(name)}')"`:'';
+  return (prev?`<img class="dprev" src="${esc(prev)}" loading="lazy" ${act}>`:'')+
+   `<a class="dcard" data-durl="${esc(url||'')}" ${act} style="cursor:pointer">
     <span class="dic ${c}">${l}</span>
     <span class="din"><b>${esc(name)}</b><small>${meta}</small></span>
-    <span class="ddl"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 4v12M7 11l5 5 5-5"/></svg></span></a>`;
+    <span class="ddl${op?' opened':''}">${op
+      ?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>'
+      :'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 4v12M7 11l5 5 5-5"/></svg>'}</span></a>`;
 }
 function pushBub(tid,inner,st){
   const time=new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
@@ -776,6 +804,49 @@ function treqHTML(t){
       ${t.note?`<div class="nt">${esc(t.note)}</div>`:''}
       <a href="request.html" target="_blank">فتح صفحة التحويل</a>
     </div></div>`;
+}
+/* ═══ العارض الداخلي + حالة المفتوح ═══ */
+const OPENED=new Set(JSON.parse(localStorage.getItem('arkan_opened')||'[]'));
+function markOpened(u){
+  if(!u||OPENED.has(u))return;
+  OPENED.add(u);
+  localStorage.setItem('arkan_opened',JSON.stringify([...OPENED].slice(-500)));
+}
+async function openDocViewer(url,name){
+  markOpened(url);
+  /* حدّث أيقونة البطاقة فورًا */
+  document.querySelectorAll(`[data-durl="${CSS.escape(url)}"] .ddl`).forEach(el=>el.classList.add('opened'));
+  const dv=$('dvw'),bd=$('dvwB');
+  $('dvwT').textContent=name||'';
+  $('dvwDl').href=url;
+  bd.innerHTML='<div class="ld">جارٍ التحميل…</div>';
+  dv.classList.add('on');
+  const isPdf=/\.pdf(\?|$)/i.test(url)||/pdf/i.test(name||'');
+  try{
+    if(isPdf&&window.pdfjsLib){
+      pdfjsLib.GlobalWorkerOptions.workerSrc='vendor/pdf.worker.min.js';
+      const buf=await (await fetch(url)).arrayBuffer();
+      const pdf=await pdfjsLib.getDocument({data:buf}).promise;
+      bd.innerHTML='';
+      const n=Math.min(pdf.numPages,25);
+      for(let i=1;i<=n;i++){
+        const page=await pdf.getPage(i);
+        const vp=page.getViewport({scale:1});
+        const scale=Math.min(2.4,(bd.clientWidth-24)/vp.width*window.devicePixelRatio);
+        const v2=page.getViewport({scale});
+        const cv=document.createElement('canvas');
+        cv.width=v2.width;cv.height=v2.height;
+        cv.style.width=Math.min(bd.clientWidth-24,v2.width/window.devicePixelRatio)+'px';
+        bd.appendChild(cv);
+        await page.render({canvasContext:cv.getContext('2d'),viewport:v2}).promise;
+      }
+      if(pdf.numPages>n)bd.insertAdjacentHTML('beforeend','<div class="ld">…'+(pdf.numPages-n)+' صفحات إضافية — نزّل الملف كاملًا</div>');
+    } else {
+      bd.innerHTML=`<img src="${esc(url)}">`;
+    }
+  }catch(e){
+    bd.innerHTML='<div class="ld">تعذر العرض — استخدم زر التنزيل أعلاه</div>';
+  }
 }
 let curAu=null;
 function auPlay(btn,url){
