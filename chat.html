@@ -247,7 +247,7 @@ body.client #qbar{display:flex}
 </style>
 </head>
 <body>
-<div id="authGate" style="display:none;position:fixed;inset:0;z-index:99999;background:#F6FAFD;display:none;flex-direction:column;align-items:center;justify-content:center;gap:16px;font-family:Inter,-apple-system,sans-serif">
+<div id="authGate" style="position:fixed;inset:0;z-index:99999;background:#F6FAFD;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;font-family:Inter,-apple-system,sans-serif">
   <img src="arkan-icon-192.png" style="width:72px;height:72px;border-radius:22px;box-shadow:0 12px 32px rgba(25,169,245,.35)">
   <div style="width:34px;height:34px;border:3px solid rgba(25,169,245,.2);border-top-color:#19A9F5;border-radius:50%;animation:agspin .8s linear infinite"></div>
 
@@ -1058,6 +1058,8 @@ if(IS_OWNER){
   const verify = () => {
     localStorage.removeItem('arkan_client_code');
     localStorage.setItem('arkan_owner_auth', OWNER_HASH);
+    var g0 = document.getElementById('authGate');
+    if(g0) g0.style.display = 'none';
     window.__ownerVerified && window.__ownerVerified();
   };
   const toLogin = () => location.replace('login.html?next=chat.html&_t=' + Date.now());
@@ -1164,5 +1166,6 @@ if(IS_OWNER){
   }
 })();
 </script>
+<script src="arkan-nav.js" defer></script>
 </body>
 </html>
