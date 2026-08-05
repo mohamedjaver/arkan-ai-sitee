@@ -93,6 +93,28 @@ button{cursor:pointer}
  background:var(--dark);color:#fff;border-radius:999px;padding:9px 18px;font-size:13px;opacity:0;transition:.25s;z-index:99;white-space:nowrap}
 #toast.on{opacity:1;transform:translateX(-50%)}
 #prog{pointer-events:none;position:fixed;top:0;left:0;height:3px;background:var(--pri);width:0;transition:width .3s;z-index:99}
+/* تسجيل صوتي */
+#recBar{display:none;flex:1;align-items:center;gap:10px;background:var(--bg);border:1px solid var(--dgr);
+ border-radius:20px;padding:0 14px;height:44px}
+#recBar.on{display:flex}
+#recBar .rd{width:10px;height:10px;border-radius:50%;background:var(--dgr);animation:blink 1s infinite}
+@keyframes blink{50%{opacity:.25}}
+#recT{font-size:14px;font-variant-numeric:tabular-nums;color:var(--dgr);font-weight:600;flex:1}
+#recBar button{border:0;background:none;font-size:13px;font-weight:600;padding:6px 4px}
+#recCancel{color:var(--sub)}
+body.rec #txt{display:none}
+body.rec .ibtn.att{display:none}
+/* مشغل الصوت */
+.au{display:flex;align-items:center;gap:10px;min-width:190px;padding:2px 0}
+.au .pl{width:36px;height:36px;border-radius:50%;border:0;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.bub.me .au .pl{background:rgba(255,255,255,.22);color:#fff}
+.bub.them .au .pl{background:var(--neu);color:var(--dark)}
+.au .pl svg{width:16px;height:16px}
+.au .tr{flex:1;height:4px;border-radius:4px;background:rgba(127,127,127,.3);position:relative;cursor:pointer}
+.au .tr i{position:absolute;inset-inline-start:0;top:0;bottom:0;border-radius:4px;background:currentColor;width:0}
+.bub.me .au .tr i{background:#fff}
+.bub.them .au .tr i{background:var(--pri)}
+.au .du{font-size:11px;font-variant-numeric:tabular-nums;opacity:.8}
 </style>
 </head>
 <body>
@@ -110,11 +132,16 @@ button{cursor:pointer}
   <div class="pane" id="pChat">
     <div id="msgs"></div>
     <div id="bar">
-      <button class="ibtn" onclick="document.getElementById('fi').click()" title="إرفاق">
+      <div id="recBar"><span class="rd"></span><span id="recT">0:00</span>
+        <button id="recCancel" onclick="recStop(false)">إلغاء</button></div>
+      <button class="ibtn att" onclick="document.getElementById('fi').click()" title="إرفاق">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M21 12.5l-8.5 8.5a5.5 5.5 0 01-7.8-7.8L13 5a3.7 3.7 0 015.2 5.2l-8.2 8.2a1.8 1.8 0 01-2.6-2.6L15 8.3"/></svg>
       </button>
       <textarea id="txt" rows="1" placeholder="اكتب رسالة…"></textarea>
-      <button class="ibtn send" onclick="sendText()" title="إرسال">
+      <button class="ibtn" id="micB" onclick="recToggle()" title="رسالة صوتية">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0014 0M12 18v3"/></svg>
+      </button>
+      <button class="ibtn send" id="sendB" onclick="recActive?recStop(true):sendText()" title="إرسال">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="transform:scaleX(-1)"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4z"/></svg>
       </button>
     </div>
@@ -297,6 +324,13 @@ async function renderMsg(m,live){
   let inner='';
   if(m.kind==='text'){ inner=esc(await dec(m.body)).replace(/\n/g,'<br>'); }
   else if(m.kind==='image'){ inner=`<img src="${esc(m.file_url)}" loading="lazy" onclick="window.open(this.src,'_blank')">${m.body?esc(await dec(m.body)):''}`; }
+  else if(m.kind==='audio'){
+    const d=(m.meta&&m.meta.dur)||0;
+    inner=`<div class="au">
+      <button class="pl" onclick="auPlay(this,'${esc(m.file_url)}')">${AU_PLAY}</button>
+      <span class="tr"><i></i></span>
+      <span class="du" data-d="${recFmt(d)}">${recFmt(d)}</span></div>`;
+  }
   else{ inner=`<a class="fl" href="${esc(m.file_url)}" target="_blank">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg>
     <b>${esc(m.file_name||'ملف')}</b></a>`; }
@@ -356,6 +390,89 @@ async function sendFile(f){
   await sb.from('conversations').update({last_msg:isImg?'📎 صورة إيصال':'📎 '+f.name,last_at:new Date().toISOString()}).eq('id',CONV.id);
   prog(100);
 }
+/* ═══ رسائل صوتية ═══ */
+let recActive=false,recMR=null,recChunks=[],recT0=0,recTimer=null,recMime='';
+function recFmt(sec){return Math.floor(sec/60)+':'+String(Math.floor(sec%60)).padStart(2,'0');}
+async function recToggle(){
+  if(recActive)return recStop(true);
+  if(!CONV)return;
+  if(!navigator.mediaDevices||!window.MediaRecorder)return toast('التسجيل غير مدعوم في هذا المتصفح');
+  let stream;
+  try{stream=await navigator.mediaDevices.getUserMedia({audio:true});}
+  catch(e){return toast('اسمح بالوصول للميكروفون من إعدادات الموقع');}
+  recMime=['audio/mp4','audio/webm;codecs=opus','audio/webm'].find(m=>MediaRecorder.isTypeSupported(m))||'';
+  recMR=new MediaRecorder(stream,recMime?{mimeType:recMime}:undefined);
+  recChunks=[];
+  recMR.ondataavailable=e=>{if(e.data.size)recChunks.push(e.data);};
+  recMR.start(250);
+  recActive=true;recT0=Date.now();
+  document.body.classList.add('rec');
+  document.getElementById('recBar').classList.add('on');
+  document.getElementById('micB').style.display='none';
+  recTimer=setInterval(()=>{
+    const sec=(Date.now()-recT0)/1000;
+    document.getElementById('recT').textContent=recFmt(sec);
+    if(sec>=120)recStop(true); /* حد دقيقتين */
+  },250);
+}
+function recStop(send){
+  if(!recActive)return;
+  recActive=false;clearInterval(recTimer);
+  const dur=Math.round((Date.now()-recT0)/1000);
+  const mr=recMR;
+  mr.onstop=async()=>{
+    mr.stream.getTracks().forEach(t=>t.stop());
+    document.body.classList.remove('rec');
+    document.getElementById('recBar').classList.remove('on');
+    document.getElementById('micB').style.display='flex';
+    if(!send||dur<1||!recChunks.length)return;
+    const blob=new Blob(recChunks,{type:recMime||'audio/mp4'});
+    await sendVoice(blob,dur);
+  };
+  mr.stop();
+}
+async function sendVoice(blob,dur){
+  prog(20);
+  const ext=/mp4/.test(blob.type)?'m4a':'webm';
+  const path=CONV.id+'/vn_'+Date.now()+'.'+ext;
+  const {error}=await sb.storage.from('chat').upload(path,blob,{contentType:blob.type});
+  prog(70);
+  if(error){prog(100);return toast('فشل رفع الصوت');}
+  const url=sb.storage.from('chat').getPublicUrl(path).data.publicUrl;
+  const hash=await sha(CONV.id+'|'+path);
+  await sb.from('messages').insert({conv_id:CONV.id,sender:ME,kind:'audio',
+    body:'',file_url:url,file_name:'voice.'+ext,meta:{dur},hash});
+  await sb.from('conversations').update({last_msg:'رسالة صوتية · '+recFmt(dur),last_at:new Date().toISOString()}).eq('id',CONV.id);
+  prog(100);
+}
+let curAu=null;
+function auPlay(btn,url){
+  const wrap=btn.closest('.au');
+  const bar=wrap.querySelector('.tr i'),du=wrap.querySelector('.du');
+  if(curAu&&curAu._btn!==btn){curAu.pause();}
+  let au=btn._au;
+  if(!au){
+    au=new Audio(url);btn._au=au;au._btn=btn;
+    au.addEventListener('timeupdate',()=>{
+      if(au.duration)bar.style.width=(au.currentTime/au.duration*100)+'%';
+      du.textContent=recFmt(au.currentTime);
+    });
+    au.addEventListener('ended',()=>{btn.innerHTML=AU_PLAY;bar.style.width='0';du.textContent=du.dataset.d;});
+    au.addEventListener('pause',()=>{btn.innerHTML=AU_PLAY;});
+    au.addEventListener('play',()=>{btn.innerHTML=AU_PAUSE;});
+    wrap.querySelector('.tr').addEventListener('click',e=>{
+      if(!au.duration)return;
+      const r=e.currentTarget.getBoundingClientRect();
+      /* RTL: النسبة من اليمين */
+      au.currentTime=au.duration*(1-(e.clientX-r.left)/r.width);
+    });
+  }
+  curAu=au;
+  au.paused?au.play():au.pause();
+}
+const AU_PLAY='<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>';
+const AU_PAUSE='<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>';
+
 async function geminiLite(file,key){
   const b64=await new Promise(r=>{const fr=new FileReader();fr.onload=()=>r(fr.result.split(',')[1]);fr.readAsDataURL(file);});
   const req={contents:[{parts:[{inline_data:{mime_type:file.type,data:b64}},
