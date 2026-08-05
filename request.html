@@ -6,7 +6,7 @@
   <link rel="apple-touch-icon" sizes="180x180" href="arkan-touch-180.png">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>ARKAN — Pagamentos Internacionais | تحويلات دولية</title>
+<title>ARKAN Pay — Pagamentos Internacionais | تحويلات دولية</title>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@500;600;700;800&family=Space+Grotesk:wght@600;700&family=IBM+Plex+Mono:wght@500;700&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#F3F9FF;--card:#FCFEFF;--acc:#0056D6;--acc2:#00A2FF;--gold:#C88A0A;--txt:#102A43;--dim:#486581;--green:#00A860;--stroke:#D8E8F8}
@@ -102,8 +102,8 @@ html.pt-enter body{animation:ptIn .38s cubic-bezier(.22,1,.36,1)}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="config.js"></script>
 <meta property="og:type" content="website">
-<meta property="og:site_name" content="ARKAN SETTLEMENTS">
-<meta property="og:title" content="التحويلات الدولية — ARKAN Rates">
+<meta property="og:site_name" content="ARKAN Pay">
+<meta property="og:title" content="التحويلات الدولية — ARKAN Pay">
 <meta property="og:description" content="تسديد فواتير الموردين الدوليين بقراءة تلقائية للفاتورة ومرجع رسمي.">
 <meta property="og:image" content="https://arkanrates.com/arkan-icon-512.png">
 <meta name="twitter:card" content="summary_large_image">
@@ -336,7 +336,7 @@ async function send(){
   var cc=liveCcy(ccy),a=parseFloat(amt.replace(/[^0-9.]/g,''))||0;
   if(cc&&a){var rt=tierRate(cc,a);estLine='\nEstimativa: ≈ '+Math.round(a*rt).toLocaleString('en-US')+' MRU (1 '+ccy+' = '+rt+')';}
   const msg=
-`ARKAN PAYMENTS — NOVO PEDIDO
+`ARKAN Pay — NOVO PEDIDO
 ${ref}
 ———————————
 Empresa: ${comp}
@@ -946,7 +946,7 @@ async function sendReceipt(waUrl){
     if(navigator.canShare&&navigator.canShare({files:[file]})){
       try{
         await navigator.share({files:[file],title:'إيصال تحويل ARKAN',
-          text:'طلب تحويل '+ref+' عبر ARKAN Rates'});
+          text:'طلب تحويل '+ref+' عبر ARKAN Pay'});
         return;
       }catch(e){ if(e&&e.name==='AbortError')return; }
     }
