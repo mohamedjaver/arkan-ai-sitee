@@ -346,6 +346,7 @@ const prog=p=>{$('prog').style.width=p+'%';if(p>=100)setTimeout(()=>$('prog').st
 /* ── الهوية ── */
 const qp=new URLSearchParams(location.search);
 const CLIENT_CODE=qp.get('c');
+if(CLIENT_CODE)try{localStorage.setItem('arkan_client_code',CLIENT_CODE);}catch(e){}
 const IS_OWNER=!CLIENT_CODE;
 let ME=IS_OWNER?'owner':'client';
 let CONV=null, CONVS=[], KEY=null, SUB=null, LASTDAY='';
@@ -662,6 +663,12 @@ function tyShow(){
     if(tb)tb.classList.remove('on');
   },3000);
 }
+$('txt').addEventListener('paste',async e=>{
+  const items=[...(e.clipboardData&&e.clipboardData.items||[])].filter(i=>i.kind==='file');
+  if(!items.length)return;
+  e.preventDefault();
+  for(const it of items){const f=it.getAsFile();if(f)await sendFile(f);}
+});
 $('txt').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendText();}});
 
 $('fi').addEventListener('change',async e=>{
