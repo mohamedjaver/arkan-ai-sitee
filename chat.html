@@ -1052,26 +1052,20 @@ if(IS_OWNER){
   /* ── 1) رابط عميل ?c=CODE — لا يحتاج أي تحقق ── */
   if(qp.get('c')) return;
 
-  /* ── 2) فحص هوية المالك (أولوية قصوى) ── */
-  const OWNER_PHONES = ['22236295050','36295050','0036295050'];
+  /* ── 2) فحص هوية المالك ── */
+  /* SHA-256 لكلمة سر المالك السرية — لا يمكن عكسها */
+  const OWNER_HASH = '832e00c4fdbf4f76105639cf74a1d1af4c813fdf487171f1ad93453d78301762';
   const verify = () => {
-    localStorage.removeItem('arkan_client_code'); /* امسح أي كود عميل قديم */
+    localStorage.removeItem('arkan_client_code');
+    localStorage.setItem('arkan_owner_auth', OWNER_HASH);
     window.__ownerVerified && window.__ownerVerified();
   };
   const toLogin = () => location.replace('login.html?next=chat.html&_t=' + Date.now());
 
-  /* أ) فحص رقم الهاتف من arkan_session */
-  try {
-    const sess = JSON.parse(localStorage.getItem('arkan_session') || 'null');
-    if(sess && sess.phone) {
-      const ph = sess.phone.replace(/[^0-9]/g,'');
-      if(OWNER_PHONES.some(op => ph.endsWith(op.replace(/[^0-9]/g,'')) || op.replace(/[^0-9]/g,'').endsWith(ph))) {
-        verify(); return;
-      }
-    }
-  } catch(e) {}
+  /* أ) جلسة مالك نشطة (تم التحقق مسبقاً) */
+  if(localStorage.getItem('arkan_owner_auth') === OWNER_HASH) { verify(); return; }
 
-  /* ب) فحص Firebase Admin من localStorage */
+  /* ب) Firebase Admin */
   try {
     const fbKey = Object.keys(localStorage).find(k => k.startsWith('firebase:authUser:'));
     if(fbKey) {
@@ -1079,6 +1073,43 @@ if(IS_OWNER){
       if(u && u.email && u.email.toLowerCase() === ADMIN) { verify(); return; }
     }
   } catch(e) {}
+
+  /* ج) شاشة كلمة سر المالك */
+  const g = document.getElementById('authGate');
+  const gMsg = document.getElementById('authGateMsg');
+  if(g) {
+    g.style.display = 'flex';
+    g.innerHTML = \`
+      <img src="arkan-icon-192.png" style="width:72px;height:72px;border-radius:22px;box-shadow:0 12px 32px rgba(25,169,245,.35)">
+      <div style="font-size:18px;font-weight:700;color:#0B2F70;margin-top:8px">ARKAN Pay</div>
+      <div style="font-size:13px;color:#4A6491;margin-bottom:16px">دخول المالك</div>
+      <input id="ownerPwd" type="password" placeholder="كلمة السر السرية"
+        style="width:260px;height:52px;border:1.5px solid #D0DFF0;border-radius:14px;padding:0 16px;
+               font-size:16px;text-align:center;outline:none;font-family:Inter,-apple-system,sans-serif">
+      <button id="ownerBtn"
+        style="width:260px;height:52px;background:linear-gradient(135deg,#0A56B8,#19A9F5);color:#fff;
+               border:0;border-radius:14px;font-size:16px;font-weight:600;margin-top:10px;cursor:pointer">
+        دخول
+      </button>
+      <div id="ownerErr" style="color:#EF4444;font-size:13px;margin-top:8px;min-height:20px"></div>
+      <style>@keyframes agspin{to{transform:rotate(360deg)}}</style>
+    \`;
+    const inp = document.getElementById('ownerPwd');
+    const btn = document.getElementById('ownerBtn');
+    const err = document.getElementById('ownerErr');
+    const check = async () => {
+      const pwd = inp.value.trim();
+      if(!pwd) return;
+      const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(pwd));
+      const hex = [...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,'0')).join('');
+      if(hex === OWNER_HASH) { verify(); }
+      else { err.textContent = 'كلمة السر غير صحيحة'; inp.value = ''; inp.focus(); }
+    };
+    btn.onclick = check;
+    inp.onkeydown = e => { if(e.key==='Enter') check(); };
+    inp.focus();
+  }
+  return; /* لا toLogin — المالك يُدخل كلمة السر هنا */
 
   /* ── 3) عميل عنده كود محادثة محفوظ ── */
   const savedCode = localStorage.getItem('arkan_client_code');
