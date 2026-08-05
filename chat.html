@@ -1076,30 +1076,24 @@ if(IS_OWNER){
 
   /* ج) شاشة كلمة سر المالك */
   const g = document.getElementById('authGate');
-  const gMsg = document.getElementById('authGateMsg');
   if(g) {
     g.style.display = 'flex';
-    g.innerHTML = \`
-      <img src="arkan-icon-192.png" style="width:72px;height:72px;border-radius:22px;box-shadow:0 12px 32px rgba(25,169,245,.35)">
-      <div style="font-size:18px;font-weight:700;color:#0B2F70;margin-top:8px">ARKAN Pay</div>
-      <div style="font-size:13px;color:#4A6491;margin-bottom:16px">دخول المالك</div>
-      <input id="ownerPwd" type="password" placeholder="كلمة السر السرية"
-        style="width:260px;height:52px;border:1.5px solid #D0DFF0;border-radius:14px;padding:0 16px;
-               font-size:16px;text-align:center;outline:none;font-family:Inter,-apple-system,sans-serif">
-      <button id="ownerBtn"
-        style="width:260px;height:52px;background:linear-gradient(135deg,#0A56B8,#19A9F5);color:#fff;
-               border:0;border-radius:14px;font-size:16px;font-weight:600;margin-top:10px;cursor:pointer">
-        دخول
-      </button>
-      <div id="ownerErr" style="color:#EF4444;font-size:13px;margin-top:8px;min-height:20px"></div>
-      <style>@keyframes agspin{to{transform:rotate(360deg)}}</style>
-    \`;
-    const inp = document.getElementById('ownerPwd');
-    const btn = document.getElementById('ownerBtn');
-    const err = document.getElementById('ownerErr');
+    /* بناء النموذج بـ createElement — بدون template literals */
+    g.innerHTML = '';
+    const mk = (tag,css,txt) => { const el=document.createElement(tag); if(css) el.style.cssText=css; if(txt) el.textContent=txt; return el; };
+    const logo = document.createElement('img');
+    logo.src = 'arkan-icon-192.png';
+    logo.style.cssText = 'width:72px;height:72px;border-radius:22px;box-shadow:0 12px 32px rgba(25,169,245,.35)';
+    const title = mk('div','font-size:18px;font-weight:700;color:#0B2F70;margin-top:8px','ARKAN Pay');
+    const sub   = mk('div','font-size:13px;color:#4A6491;margin-bottom:16px','دخول المالك');
+    const inp   = document.createElement('input');
+    inp.type = 'password'; inp.placeholder = 'كلمة السر السرية';
+    inp.style.cssText = 'width:260px;height:52px;border:1.5px solid #D0DFF0;border-radius:14px;padding:0 16px;font-size:16px;text-align:center;outline:none;font-family:Inter,-apple-system,sans-serif;direction:ltr';
+    const btn = mk('button','width:260px;height:52px;background:linear-gradient(135deg,#0A56B8,#19A9F5);color:#fff;border:0;border-radius:14px;font-size:16px;font-weight:600;margin-top:10px;cursor:pointer;font-family:Inter,-apple-system,sans-serif','دخول');
+    const err = mk('div','color:#EF4444;font-size:13px;margin-top:8px;min-height:20px','');
+    [logo, title, sub, inp, btn, err].forEach(el => g.appendChild(el));
     const check = async () => {
-      const pwd = inp.value.trim();
-      if(!pwd) return;
+      const pwd = inp.value.trim(); if(!pwd) return;
       const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(pwd));
       const hex = [...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,'0')).join('');
       if(hex === OWNER_HASH) { verify(); }
@@ -1107,7 +1101,7 @@ if(IS_OWNER){
     };
     btn.onclick = check;
     inp.onkeydown = e => { if(e.key==='Enter') check(); };
-    inp.focus();
+    setTimeout(() => inp.focus(), 300);
   }
   return; /* لا toLogin — المالك يُدخل كلمة السر هنا */
 
