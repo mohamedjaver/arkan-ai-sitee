@@ -981,6 +981,14 @@ async function chSha(t){var h=await crypto.subtle.digest('SHA-256',new TextEncod
   return Array.from(new Uint8Array(h)).map(function(x){return x.toString(16).padStart(2,'0');}).join('');}
 async function sendToChat(ref){
   var d=window._pdfData||{};
+  /* جهاز المالك: إلى صندوق المحادثات مباشرة — لا يُنشأ له حساب عميل */
+  try{
+    if(localStorage.getItem('arkan_chat_pin')){
+      localStorage.removeItem('arkan_client_code');
+      location.href='chat.html';
+      return;
+    }
+  }catch(e){}
   var cb=document.getElementById('okChatBtn');
   if(cb){cb.disabled=true;cb.textContent='جارٍ فتح محادثتك…';}
   try{
@@ -1011,18 +1019,22 @@ async function sendToChat(ref){
       body:JSON.stringify({conv_id:conv.id,sender:'client',kind:'treq',body:'',
         meta:{treq:{amount:amtN,from:d.from||'',to:d.to||'',note:note},via:'request',ref:ref},
         hash:await chSha(conv.id+'|'+ref)})});
-    /* 3) صورة الإيصال */
+    /* 3) صورة الإيصال — نسخة خفيفة سريعة للمحادثة (JPEG 1080) */
     try{
-      var png=await buildReceiptCard();
-      var path=conv.id+'/req_'+Date.now()+'.png';
+      var cv=await buildReceiptCanvas();
+      var lw=1080, lc=document.createElement('canvas');
+      lc.width=lw; lc.height=Math.round(cv.height*lw/cv.width);
+      lc.getContext('2d').drawImage(cv,0,0,lc.width,lc.height);
+      var jpg=await new Promise(function(r){lc.toBlob(r,'image/jpeg',0.85);});
+      var path=conv.id+'/req_'+Date.now()+'.jpg';
       var up=await fetch(CH_SB+'/storage/v1/object/chat/'+path,{method:'POST',
-        headers:Object.assign({'Content-Type':'image/png'},CH_H),body:png});
+        headers:Object.assign({'Content-Type':'image/jpeg'},CH_H),body:jpg});
       if(up.ok){
         await fetch(CH_SB+'/rest/v1/messages',{method:'POST',
           headers:Object.assign({'Content-Type':'application/json','Prefer':'return=minimal'},CH_H),
           body:JSON.stringify({conv_id:conv.id,sender:'client',kind:'image',body:'',
             file_url:CH_SB+'/storage/v1/object/public/chat/'+path,
-            file_name:'ARKAN_'+ref+'.png',meta:{size:png.size,via:'request',ref:ref},
+            file_name:'ARKAN_'+ref+'.jpg',meta:{size:jpg.size,via:'request',ref:ref},
             hash:await chSha(conv.id+'|'+path)})});
       }
     }catch(e){}
