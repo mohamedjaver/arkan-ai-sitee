@@ -209,6 +209,26 @@ body.has-txt #micB,body.rec #micB{display:none}
  justify-content:center;gap:9px}
 .bio-btn svg{width:24px;height:24px;color:var(--pri)}
 .bio-btn:active{background:var(--neu)}
+.bub img{max-height:320px;min-height:56px;object-fit:cover;background:rgba(127,150,200,.15)}
+.imgerr{font-size:12px;padding:10px;border-radius:10px;background:rgba(255,255,255,.15);cursor:pointer;text-align:center}
+/* شريط خدمات العميل */
+#qbar{display:none;gap:8px;padding:8px 12px 0;overflow-x:auto;flex-shrink:0;scrollbar-width:none}
+#qbar::-webkit-scrollbar{display:none}
+body.client #qbar{display:flex}
+.qchip{flex-shrink:0;display:inline-flex;align-items:center;gap:6px;background:var(--card);
+ border:1px solid var(--brd);border-radius:999px;padding:8px 14px;font-size:12.5px;font-weight:600;color:var(--pri);cursor:pointer}
+.qchip svg{width:15px;height:15px}
+.qchip:active{background:var(--neu)}
+/* المتصفح الداخلي */
+#webv{position:fixed;inset:0;z-index:110;background:var(--bg);display:none;flex-direction:column}
+#webv.on{display:flex}
+#webv .h{display:flex;align-items:center;gap:10px;padding:calc(8px + env(safe-area-inset-top)) 12px 8px;
+ background:var(--card);border-bottom:1px solid var(--brd);flex-shrink:0}
+#webv .h b{flex:1;font-size:14px;color:var(--txt)}
+#webv .h button{width:38px;height:38px;border-radius:12px;border:1px solid var(--brd);background:var(--card);
+ display:flex;align-items:center;justify-content:center;color:var(--txt)}
+#webv .h svg{width:19px;height:19px}
+#webv iframe{flex:1;border:0;width:100%}
 #pinErr{min-height:18px;font-size:12.5px;color:var(--dgr);font-weight:600;margin-top:8px}
 /* العارض الداخلي */
 #dvw{position:fixed;inset:0;z-index:120;background:#0E0F0C;display:none;flex-direction:column}
@@ -239,6 +259,14 @@ body.has-txt #micB,body.rec #micB{display:none}
 <div id="views">
   <div class="pane" id="pList"><div id="convList"></div></div>
   <div class="pane" id="pChat">
+    <div id="qbar">
+      <button class="qchip" onclick="openWeb('request.html?embed=1','طلب تحويل جديد')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 10l5-6 5 6M12 4v12M4 20h16"/></svg>طلب تحويل</button>
+      <button class="qchip" onclick="openWeb('rates.html?embed=1','الأسعار المباشرة')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 20V10M10 20V4M16 20v-7M21 20H3"/></svg>الأسعار</button>
+      <button class="qchip" onclick="openWeb('index.html?embed=1','ARKAN Rates')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 10.5 12 3l9 7.5M5 9.5V21h14V9.5"/></svg>الموقع</button>
+    </div>
     <div id="msgs"></div>
     <div id="bar">
       <div id="recBar"><span class="rd"></span><span id="recT">0:00</span>
@@ -320,6 +348,16 @@ body.has-txt #micB,body.rec #micB{display:none}
       الدخول بـ Face ID</button>
   </div>
 </div>
+<div id="webv">
+  <div class="h">
+    <button onclick="closeWeb()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+    <b id="webvT"></b>
+    <button onclick="document.getElementById('webvF').src=document.getElementById('webvF').src">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12a9 9 0 11-2.6-6.4M21 3v6h-6"/></svg></button>
+  </div>
+  <iframe id="webvF" src="about:blank"></iframe>
+</div>
 <div id="dvw">
   <div class="h">
     <button onclick="document.getElementById('dvw').classList.remove('on');document.getElementById('dvwB').innerHTML=''">
@@ -351,6 +389,7 @@ const CLIENT_CODE=qp.get('c');
 if(CLIENT_CODE)try{localStorage.setItem('arkan_client_code',CLIENT_CODE);}catch(e){}
 const IS_OWNER=!CLIENT_CODE;
 let ME=IS_OWNER?'owner':'client';
+if(!IS_OWNER)document.body.classList.add('client');
 let CONV=null, CONVS=[], KEY=null, SUB=null, LASTDAY='';
 
 /* ── تشفير: مفتاح المحادثة = SHA-256(code|conv_id) — الخادم يخزن نصًا مشفرًا فقط ── */
@@ -546,7 +585,7 @@ async function renderMsg(m,live){
   const time=new Date(m.created_at).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
   let inner='';
   if(m.kind==='text'){ inner=esc(await dec(m.body)).replace(/\n/g,'<br>'); }
-  else if(m.kind==='image'){ inner=`<img src="${esc(m.file_url)}" loading="lazy" onclick="openDocViewer('${esc(m.file_url)}','${esc(m.file_name||'صورة')}')">${m.body?esc(await dec(m.body)):''}`; }
+  else if(m.kind==='image'){ inner=`<img src="${esc(m.file_url)}" loading="lazy" onclick="openDocViewer('${esc(m.file_url)}','${esc(m.file_name||'صورة')}')" onerror="this.style.display='none';this.nextElementSibling&&(this.nextElementSibling.style.display='block')"><div class="imgerr" style="display:none" onclick="var i=this.previousElementSibling;i.style.display='';this.style.display='none';i.src=i.src.split('#')[0]+'#'+Date.now()">تعذر تحميل الصورة — اضغط لإعادة المحاولة</div>${m.body?esc(await dec(m.body)):''}`; }
   else if(m.kind==='treq'&&m.meta&&m.meta.treq){ inner=treqHTML(m.meta.treq); }
   else if(m.kind==='audio'){
     const d=(m.meta&&m.meta.dur)||0;
@@ -878,6 +917,19 @@ async function openDocViewer(url,name){
     bd.innerHTML='<div class="ld">تعذر العرض — استخدم زر التنزيل أعلاه</div>';
   }
 }
+/* المتصفح الداخلي — انتقال سريع وعودة بضغطة */
+function openWeb(url,title){
+  $('webvT').textContent=title||'';
+  $('webvF').src=url;
+  $('webv').classList.add('on');
+}
+function closeWeb(){
+  $('webv').classList.remove('on');
+  $('webvF').src='about:blank';
+}
+window.addEventListener('message',e=>{
+  if(e.data==='arkanReqDone'){closeWeb();toast('وصل طلبك إلى المحادثة');}
+});
 let curAu=null;
 function auPlay(btn,url){
   const wrap=btn.closest('.au');
