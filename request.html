@@ -704,9 +704,10 @@ async function uploadInvoice(){
     <div class="okTitle">تم استلام طلب التحويل</div>
     <div class="okSub">فريق أركان سيؤكد معك عبر واتساب خلال دقائق<br>احتفظ برقم المرجع</div>
     <span class="okRef" id="okRef">—</span>
-    <div class="okBtns">
-      <button class="okWa" id="okSendBtn">إرسال الإيصال عبر واتساب</button>
-      <button class="okClose" id="okCloseBtn" onclick="document.getElementById('okWrap').classList.remove('on')">إغلاق</button>
+    <div class="okBtns" style="flex-direction:column;gap:9px">
+      <button class="okWa" id="okChatBtn">💬 متابعة داخل محادثة ARKAN</button>
+      <button class="okClose" id="okSendBtn" style="border-color:rgba(37,211,102,.5)">إرسال عبر واتساب (خيار ثانٍ)</button>
+      <button class="okClose" id="okCloseBtn" onclick="window._chatT&&clearTimeout(window._chatT);document.getElementById('okWrap').classList.remove('on')">إغلاق</button>
     </div>
   </div>
 </div>
@@ -758,6 +759,17 @@ async function buildReceiptCanvas(){
     ].map(f=>document.fonts.load(f)));
     await document.fonts.ready;
   }catch(e){}
+  /* علم العملة المستلمة — دائري بعد المبلغ الذهبي */
+  let flagImg=null;
+  const FLAGCC={AOA:'ao',MRU:'mr',USD:'us',EUR:'eu',AED:'ae',CNY:'cn'};
+  if(d.recv&&FLAGCC[d.to]){
+    flagImg=await new Promise(res=>{
+      const im=new Image();im.crossOrigin='anonymous';
+      im.onload=()=>res(im);im.onerror=()=>res(null);
+      setTimeout(()=>res(null),2500);
+      im.src='https://flagcdn.com/w160/'+FLAGCC[d.to]+'.png';
+    });
+  }
   const amtN=parseFloat(String(d.amount).replace(/[^\d.]/g,''))||0;
   /* خلفية كحلية */
   const bg=x.createLinearGradient(0,0,0,H);
@@ -792,18 +804,49 @@ async function buildReceiptCanvas(){
   x.fillText(amtN.toLocaleString('en-US'),W/2,578);
   x.fillStyle='#7FDBFF';x.font='700 38px "Archivo",sans-serif';
   x.fillText(d.from||'',W/2,626);
-  x.fillStyle='#7FDBFF';x.font='700 46px "Archivo",sans-serif';
-  x.fillText((d.from||'')+'  →  '+(d.to||''),W/2,682);
-  if(d.rate){ x.fillStyle='rgba(191,227,255,.75)';x.font='600 30px "IBM Plex Mono",monospace';
-    x.fillText(L.rate+d.rate,W/2,736); }
+  if(d.recv){
+    /* المبلغ المستلم بالذهبي + علم العملة */
+    const goldTxt='≈ '+d.recv+' '+(d.to||'');
+    x.font='800 64px "IBM Plex Mono",monospace';
+    const tw=x.measureText(goldTxt).width;
+    const icoR=34, gap=20;
+    const hasIco=!!flagImg||d.to==='USDT';
+    const total=tw+(hasIco?gap+icoR*2:0);
+    const sx=(W-total)/2, by=704;
+    x.textAlign='left';x.fillStyle='#FFD54F';
+    x.fillText(goldTxt,sx,by);
+    if(hasIco){
+      const icx=sx+tw+gap+icoR, icy=by-23;
+      x.save();
+      x.beginPath();x.arc(icx,icy,icoR,0,Math.PI*2);x.clip();
+      if(flagImg){ x.drawImage(flagImg,icx-icoR,icy-icoR,icoR*2,icoR*2); }
+      else { /* USDT */
+        x.fillStyle='#26A17B';x.fillRect(icx-icoR,icy-icoR,icoR*2,icoR*2);
+        x.fillStyle='#fff';x.font='800 44px "Archivo",sans-serif';
+        x.textAlign='center';x.textBaseline='middle';x.fillText('₮',icx,icy+2);
+        x.textBaseline='alphabetic';
+      }
+      x.restore();
+      x.strokeStyle='rgba(255,213,79,.9)';x.lineWidth=3;
+      x.beginPath();x.arc(icx,icy,icoR,0,Math.PI*2);x.stroke();
+    }
+    x.textAlign='center';
+    if(d.rate){ x.fillStyle='rgba(191,227,255,.75)';x.font='600 27px "IBM Plex Mono",monospace';
+      x.fillText(L.rate+d.rate,W/2,748); }
+  } else {
+    x.fillStyle='#7FDBFF';x.font='700 46px "Archivo",sans-serif';
+    x.fillText((d.from||'')+'  →  '+(d.to||''),W/2,682);
+    if(d.rate){ x.fillStyle='rgba(191,227,255,.75)';x.font='600 30px "IBM Plex Mono",monospace';
+      x.fillText(L.rate+d.rate,W/2,736); }
+  }
   /* جدول التفاصيل */
   let ry=800; const rowH=92; const labX=RTL?W-90:90, valX=RTL?90:W-90;
-  function row(label,val,color){
+  function row(label,val){
     x.fillStyle='rgba(255,255,255,.045)';
     if(((ry-800)/rowH)%2===0){x.beginPath();x.roundRect(60,ry-46,W-120,rowH-8,14);x.fill();}
     x.textAlign=RTL?'right':'left';x.fillStyle='rgba(191,227,255,.7)';x.font='600 27px Cairo,sans-serif';
     x.fillText(label,labX,ry);
-    x.textAlign=RTL?'left':'right';x.fillStyle=color||'#FFFFFF';x.font='700 30px Cairo,sans-serif';
+    x.textAlign=RTL?'left':'right';x.fillStyle='#FFFFFF';x.font='700 30px Cairo,sans-serif';
     let v=String(val||'—'); if(v.length>28)v=v.slice(0,27)+'…';
     x.fillText(v,valX,ry);
     ry+=rowH;
@@ -813,7 +856,7 @@ async function buildReceiptCanvas(){
   row(L.benef, d.bname);
   row(L.iban, d.iban);
   if(d.bank) row(L.bank, d.bank);
-  row(L.rccy, d.recv?('≈ '+d.recv+' '+(d.to||'')):d.to, d.recv?'#FFD54F':null);
+  row(L.rccy, d.to);
   row(L.ref, d.ref);
   row(L.dt, d.date);
   /* شارة الحالة — بعد الجدول بمسافة واضحة، مع تمركز عمودي للنص */
@@ -916,14 +959,82 @@ function showProcessing(amount,currency){
 }
 function okToSuccess(ref,waUrl,amount,currency){
   var el=document.getElementById('okWrap');
-  el.querySelector('.okRing').innerHTML=OK_CHECK_SVG;   /* إعادة الحقن تعيد تشغيل رسم الدائرة والعلامة */
+  el.querySelector('.okRing').innerHTML=OK_CHECK_SVG;
   el.querySelector('.okTitle').textContent='تم استلام طلب التحويل';
-  el.querySelector('.okSub').innerHTML='فريق أركان سيؤكد معك عبر واتساب خلال دقائق<br>احتفظ برقم المرجع';
+  el.querySelector('.okSub').innerHTML='سننقلك الآن إلى محادثتك المباشرة مع أركان<br>احتفظ برقم المرجع';
   var refEl=document.getElementById('okRef');refEl.textContent=ref||'—';refEl.style.display='inline-block';
   el.querySelector('.okBtns').style.display='flex';
+  var cb=document.getElementById('okChatBtn');
+  if(cb)cb.onclick=function(){ clearTimeout(window._chatT); sendToChat(ref); };
   var sb=document.getElementById('okSendBtn');
-  if(sb)sb.onclick=function(){ sendReceipt(waUrl); };
+  if(sb)sb.onclick=function(){ clearTimeout(window._chatT); sendReceipt(waUrl); };
+  /* الانتقال التلقائي للمحادثة الداخلية بعد لحظة الاحتفال */
+  window._chatT=setTimeout(function(){ sendToChat(ref); },2200);
   if(navigator.vibrate)navigator.vibrate([12,40,12]);
+}
+
+/* ═══ إرسال الطلب إلى المحادثة الداخلية ثم الانتقال إليها ═══ */
+var CH_SB='https://vyxzlazwpbstigcqvizb.supabase.co';
+var CH_KEY='sb_publishable_scXFuYtWG2dkz8_CaPEvAg_Yj2_sxnO';
+var CH_H={'apikey':CH_KEY,'Authorization':'Bearer '+CH_KEY};
+async function chSha(t){var h=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(t));
+  return Array.from(new Uint8Array(h)).map(function(x){return x.toString(16).padStart(2,'0');}).join('');}
+async function sendToChat(ref){
+  var d=window._pdfData||{};
+  var cb=document.getElementById('okChatBtn');
+  if(cb){cb.disabled=true;cb.textContent='جارٍ فتح محادثتك…';}
+  try{
+    /* 1) محادثة العميل: الموجودة على الجهاز أو أنشئ جديدة باسمه */
+    var code=null,conv=null;
+    try{code=localStorage.getItem('arkan_client_code');}catch(e){}
+    if(code){
+      var r=await fetch(CH_SB+'/rest/v1/conversations?select=id,client_code,client_name&client_code=eq.'+encodeURIComponent(code),{headers:CH_H});
+      var a=await r.json(); if(a&&a[0])conv=a[0];
+    }
+    if(!conv){
+      var alpha='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+      code='';var rnd=crypto.getRandomValues(new Uint8Array(9));
+      for(var i=0;i<9;i++)code+=alpha[rnd[i]%32];
+      var name=(d.sender||'').trim()||('عميل '+(d.senderPhone||ref));
+      var cr=await fetch(CH_SB+'/rest/v1/conversations',{method:'POST',
+        headers:Object.assign({'Content-Type':'application/json','Prefer':'return=representation'},CH_H),
+        body:JSON.stringify({client_name:name,client_code:code})});
+      var ca=await cr.json(); conv=ca&&ca[0];
+      if(conv)try{localStorage.setItem('arkan_client_code',code);}catch(e){}
+    }
+    if(!conv)throw new Error('conv');
+    /* 2) بطاقة الطلب داخل المحادثة */
+    var amtN=parseFloat(String(d.amount).replace(/[^\d.]/g,''))||0;
+    var note=[d.bname,d.bank,d.iban?('حساب '+d.iban):'', 'مرجع '+ref].filter(Boolean).join(' · ');
+    await fetch(CH_SB+'/rest/v1/messages',{method:'POST',
+      headers:Object.assign({'Content-Type':'application/json','Prefer':'return=minimal'},CH_H),
+      body:JSON.stringify({conv_id:conv.id,sender:'client',kind:'treq',body:'',
+        meta:{treq:{amount:amtN,from:d.from||'',to:d.to||'',note:note},via:'request',ref:ref},
+        hash:await chSha(conv.id+'|'+ref)})});
+    /* 3) صورة الإيصال */
+    try{
+      var png=await buildReceiptCard();
+      var path=conv.id+'/req_'+Date.now()+'.png';
+      var up=await fetch(CH_SB+'/storage/v1/object/chat/'+path,{method:'POST',
+        headers:Object.assign({'Content-Type':'image/png'},CH_H),body:png});
+      if(up.ok){
+        await fetch(CH_SB+'/rest/v1/messages',{method:'POST',
+          headers:Object.assign({'Content-Type':'application/json','Prefer':'return=minimal'},CH_H),
+          body:JSON.stringify({conv_id:conv.id,sender:'client',kind:'image',body:'',
+            file_url:CH_SB+'/storage/v1/object/public/chat/'+path,
+            file_name:'ARKAN_'+ref+'.png',meta:{size:png.size,via:'request',ref:ref},
+            hash:await chSha(conv.id+'|'+path)})});
+      }
+    }catch(e){}
+    await fetch(CH_SB+'/rest/v1/conversations?id=eq.'+conv.id,{method:'PATCH',
+      headers:Object.assign({'Content-Type':'application/json','Prefer':'return=minimal'},CH_H),
+      body:JSON.stringify({last_msg:'طلب تحويل '+amtN.toLocaleString('en-US')+' '+(d.from||''),last_at:new Date().toISOString()})});
+    /* 4) الانتقال للمحادثة */
+    location.href='chat.html?c='+conv.client_code;
+  }catch(e){
+    if(cb){cb.disabled=false;cb.textContent='💬 متابعة داخل محادثة ARKAN';}
+    alert('تعذر فتح المحادثة الآن — استخدم زر واتساب');
+  }
 }
 function showSuccess(amount,currency,ref,waUrl){
   var el=document.getElementById('okWrap');
