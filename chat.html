@@ -264,7 +264,13 @@ body.client #qbar{display:flex}
 </header>
 
 <div id="views">
-  <div class="pane" id="pList"><div id="convList"></div></div>
+  <div class="pane" id="pList">
+    <button id="fabNew" onclick="openNew()" style="position:fixed;bottom:calc(24px + env(safe-area-inset-bottom));left:20px;z-index:8500;display:none;align-items:center;gap:8px;height:54px;padding:0 22px;background:linear-gradient(135deg,#0A56B8,#19A9F5);color:#fff;border:0;border-radius:16px;font-family:Inter,-apple-system,sans-serif;font-size:15px;font-weight:700;box-shadow:0 8px 24px rgba(25,169,245,.4);cursor:pointer">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+      محادثة جديدة
+    </button>
+    <div id="convList"></div>
+  </div>
   <div class="pane" id="pChat">
     <div id="qbar">
       <button class="qchip" onclick="openWeb('request.html?embed=1','طلب تحويل جديد')">
@@ -487,6 +493,7 @@ async function boot(){
   try{ $('hSub').classList.add('on'); $('hSubT').textContent=IS_OWNER?'وضع المالك':'متصل'; }catch(e){}
   if(IS_OWNER){
     try{ $('newB').style.display='flex'; }catch(e){}
+    try{ document.getElementById('fabNew').style.display='flex'; }catch(e){}
     try{ showList(); }catch(e){}          /* اعرض قائمة المحادثات فوراً */
     try{ await loadConvs(); }catch(e){ try{$('hSubT').textContent='تعذر تحميل المحادثات';}catch(_){} }
     try{ listenConvs(); }catch(e){}
@@ -550,7 +557,7 @@ async function openConv(c){
   $('hAv').textContent=(IS_OWNER?c.client_name:'A')[0].toUpperCase();$('hAv').className='av '+avc(IS_OWNER?c.client_name:'ARKAN');
   $('backB').style.display=IS_OWNER?'flex':'none';
   $('infoB').style.display='flex';
-  $('pList').classList.remove('on');$('pChat').classList.add('on');
+  $('pList').classList.remove('on');$('pChat').classList.add('on');var fb=document.getElementById('fabNew');if(fb)fb.style.display='none';
   $('msgs').innerHTML='<div class="tybub" id="tyBub"><i></i><i></i><i></i></div>';
   const {data}=await sb.from('messages').select('*').eq('conv_id',c.id).order('created_at');
   for(const m of (data||[]))await renderMsg(m,false);
@@ -565,7 +572,7 @@ async function openConv(c){
    .on('broadcast',{event:'typing'},p=>{if(p.payload&&p.payload.who!==ME)tyShow();})
    .subscribe();
 }
-function showList(){$('pChat').classList.remove('on');$('pList').classList.add('on');
+function showList(){$('pChat').classList.remove('on');$('pList').classList.add('on');var fb=document.getElementById('fabNew');if(fb&&IS_OWNER)fb.style.display='flex';
   $('backB').style.display='none';$('infoB').style.display='none';
   $('hName').textContent='ARKAN Chat';$('hAv').textContent='A';
   if(SUB){sb.removeChannel(SUB);SUB=null;}CONV=null;}
