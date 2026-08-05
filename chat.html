@@ -189,6 +189,27 @@ body.has-txt #micB,body.rec #micB{display:none}
 .treq a{display:inline-flex;margin-top:8px;background:var(--dark);color:#fff;text-decoration:none;
  border-radius:8px;padding:6px 12px;font-size:11.5px;font-weight:600}
 .bub.me .treq a{background:#fff;color:var(--pri)}
+/* دخول المالك — وسط الشاشة */
+#shPin{align-items:center!important;background:rgba(8,43,96,.55);backdrop-filter:blur(8px)}
+#shPin .in{border-radius:22px;max-width:360px;width:calc(100% - 40px);padding:26px 22px calc(26px + env(safe-area-inset-bottom)*0);
+ animation:pinIn .25s cubic-bezier(.2,.9,.3,1.15);text-align:center}
+@keyframes pinIn{from{transform:scale(.92) translateY(14px);opacity:0}to{transform:none;opacity:1}}
+#shPin .grab{display:none}
+.pin-logo{width:64px;height:64px;border-radius:20px;background:linear-gradient(135deg,#0B57D0,#2F7BFF);
+ color:#fff;font-size:26px;font-weight:700;display:flex;align-items:center;justify-content:center;
+ margin:0 auto 14px;box-shadow:0 8px 22px rgba(11,87,208,.35)}
+#shPin h3{text-align:center;font-size:20px;margin:0 0 4px}
+#shPin p{text-align:center}
+#pinIn{text-align:center;font-size:26px;letter-spacing:14px;font-weight:700;direction:ltr;height:60px;
+ border-radius:14px;border:1.5px solid var(--brd)}
+#pinIn:focus{border-color:var(--pri);box-shadow:0 0 0 4px rgba(11,87,208,.1)}
+#shPin .wb{height:52px;border-radius:14px;font-size:16px;box-shadow:0 6px 16px rgba(11,87,208,.28)}
+.bio-btn{width:100%;height:52px;border-radius:14px;border:1.5px solid var(--brd);background:var(--card);
+ color:var(--txt);font-size:15px;font-weight:600;margin-top:10px;display:flex;align-items:center;
+ justify-content:center;gap:9px}
+.bio-btn svg{width:24px;height:24px;color:var(--pri)}
+.bio-btn:active{background:var(--neu)}
+#pinErr{min-height:18px;font-size:12.5px;color:var(--dgr);font-weight:600;margin-top:8px}
 </style>
 </head>
 <body>
@@ -271,10 +292,16 @@ body.has-txt #micB,body.rec #micB{display:none}
 </div>
 <!-- PIN المالك -->
 <div class="sheet" id="shPin">
-  <div class="in"><div class="grab"></div><h3>دخول المالك</h3>
-    <p style="font-size:13px;color:var(--sub);margin:0 0 10px" id="pinHint">أدخل رمز PIN الخاص بك</p>
-    <input class="fld" id="pinIn" type="password" inputmode="numeric" placeholder="PIN">
+  <div class="in"><div class="grab"></div>
+    <div class="pin-logo">A</div>
+    <h3>ARKAN Chat</h3>
+    <p style="font-size:13px;color:var(--sub);margin:0 0 16px" id="pinHint">أدخل رمز PIN الخاص بك</p>
+    <input class="fld" id="pinIn" type="password" inputmode="numeric" maxlength="6" placeholder="••••" autocomplete="off">
+    <div id="pinErr"></div>
     <button class="wb" onclick="pinGo()">دخول</button>
+    <button class="bio-btn" id="bioBtn" style="display:none" onclick="bioLogin()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M7 3H5a2 2 0 00-2 2v2M17 3h2a2 2 0 012 2v2M7 21H5a2 2 0 01-2-2v-2M17 21h2a2 2 0 002-2v-2"/><path d="M9 9.5v1.5M15 9.5v1.5"/><path d="M9.5 15.5c.7.7 1.6 1 2.5 1s1.8-.3 2.5-1"/></svg>
+      الدخول بـ Face ID</button>
   </div>
 </div>
 <div id="toast"></div>
@@ -325,12 +352,61 @@ async function sha(s){
 }
 
 /* ── وضع المالك: PIN محلي ── */
+function pinOk(){
+  $('shPin').classList.remove('on');boot();
+  /* عرض تفعيل Face ID مرة واحدة بعد أول دخول ناجح */
+  if(!localStorage.getItem('arkan_chat_bio')&&!localStorage.getItem('arkan_bio_asked')){
+    localStorage.setItem('arkan_bio_asked','1');
+    setTimeout(async()=>{
+      if(await bioAvailable()&&confirm('تفعيل الدخول بـ Face ID لهذا الجهاز؟'))bioSetup();
+    },900);
+  }
+}
 function pinGo(){
   const v=$('pinIn').value.trim(); if(!v)return;
+  $('pinErr').textContent='';
   const saved=localStorage.getItem('arkan_chat_pin');
-  if(!saved){localStorage.setItem('arkan_chat_pin',v);$('shPin').classList.remove('on');boot();toast('حُفظ الرمز — أهلًا بك');}
-  else if(saved===v){$('shPin').classList.remove('on');boot();}
-  else toast('رمز غير صحيح');
+  if(!saved){
+    if(v.length<4){$('pinErr').textContent='الرمز 4 أرقام على الأقل';return;}
+    localStorage.setItem('arkan_chat_pin',v);toast('حُفظ الرمز — أهلًا بك');pinOk();
+  }
+  else if(saved===v){pinOk();}
+  else{$('pinErr').textContent='رمز غير صحيح';$('pinIn').value='';
+    $('pinIn').animate([{transform:'translateX(0)'},{transform:'translateX(-8px)'},{transform:'translateX(8px)'},{transform:'translateX(0)'}],{duration:220});}
+}
+$('pinIn').addEventListener('keydown',e=>{if(e.key==='Enter')pinGo();});
+
+/* ═══ Face ID عبر WebAuthn ═══ */
+async function bioAvailable(){
+  try{return window.PublicKeyCredential&&await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();}
+  catch(e){return false;}
+}
+const b64u=b=>btoa(String.fromCharCode(...new Uint8Array(b))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+const u64b=t=>Uint8Array.from(atob(t.replace(/-/g,'+').replace(/_/g,'/')),c=>c.charCodeAt(0));
+async function bioSetup(){
+  try{
+    const cred=await navigator.credentials.create({publicKey:{
+      challenge:crypto.getRandomValues(new Uint8Array(32)),
+      rp:{name:'ARKAN Chat',id:location.hostname},
+      user:{id:crypto.getRandomValues(new Uint8Array(16)),name:'owner@arkan',displayName:'مالك ARKAN'},
+      pubKeyCredParams:[{type:'public-key',alg:-7},{type:'public-key',alg:-257}],
+      authenticatorSelection:{authenticatorAttachment:'platform',userVerification:'required'},
+      timeout:60000}});
+    localStorage.setItem('arkan_chat_bio',b64u(cred.rawId));
+    toast('فُعّل Face ID لهذا الجهاز');
+  }catch(e){toast('لم يُفعّل Face ID');}
+}
+async function bioLogin(){
+  const id=localStorage.getItem('arkan_chat_bio');
+  if(!id)return;
+  try{
+    await navigator.credentials.get({publicKey:{
+      challenge:crypto.getRandomValues(new Uint8Array(32)),
+      rpId:location.hostname,
+      allowCredentials:[{type:'public-key',id:u64b(id),transports:['internal']}],
+      userVerification:'required',timeout:60000}});
+    pinOk();
+  }catch(e){$('pinErr').textContent='لم يكتمل Face ID — استخدم الرمز';}
 }
 
 /* ── تحميل ── */
@@ -793,8 +869,14 @@ function makeThumb(blob){
 window.addEventListener('error',e=>{try{toast('خطأ: '+(e.message||'').slice(0,60))}catch(_){}});
 window.addEventListener('unhandledrejection',e=>{try{toast('خطأ: '+String(e.reason&&e.reason.message||e.reason).slice(0,60))}catch(_){}});
 if(IS_OWNER){
-  if(!localStorage.getItem('arkan_chat_pin'))$('pinHint').textContent='أول استخدام: أنشئ رمز PIN جديدًا وسيُطلب في كل دخول';
+  if(!localStorage.getItem('arkan_chat_pin'))$('pinHint').textContent='أول استخدام: أنشئ رمز PIN جديدًا (4–6 أرقام)';
   $('shPin').classList.add('on');
+  (async()=>{
+    if(localStorage.getItem('arkan_chat_bio')&&await bioAvailable()){
+      $('bioBtn').style.display='flex';
+      bioLogin(); /* محاولة تلقائية — وإن رفضها المتصفح يبقى الزر */
+    }
+  })();
 }else boot();
 </script>
 </body>
