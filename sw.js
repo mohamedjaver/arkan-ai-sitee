@@ -1,7 +1,7 @@
 /* ARKAN Rates — Service Worker v2.0
    إستراتيجية: الشبكة أولًا لصفحات HTML والبيانات (لا محتوى قديم أبدًا)
               الكاش أولًا للأصول الثابتة فقط (صور، أيقونات، شعار) */
-const V='arkan-v3.6';
+const V='arkan-v3.7';
 const STATIC=['./arkan-logo.svg','./arkan-icon-512.png','./arkan-touch-180.png','./site-manifest.json'];
 
 self.addEventListener('install',e=>{
@@ -43,9 +43,9 @@ async function arkHandleShare(req){
     await cache.put(arkUrl('__shared__/index.json'),
       new Response(JSON.stringify({note:note,files:idx,at:Date.now()}),
         {headers:{'Content-Type':'application/json'}}));
-    return Response.redirect(arkUrl('settlement.html?shared='+idx.length),303);
+    return Response.redirect(arkUrl('share.html?shared='+idx.length),303);
   }catch(err){
-    return Response.redirect(arkUrl('settlement.html?shared=error'),303);
+    return Response.redirect(arkUrl('share.html?shared=error'),303);
   }
 }
 function arkUrl(p){return new URL(p,self.registration.scope).href;}
