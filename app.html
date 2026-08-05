@@ -1,1356 +1,1371 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <link rel="icon" href="arkan-icon-512.png">
-  <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>ARKAN Rates — صرف العملات وتسديد فواتير الموردين</title>
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<meta name="description" content="صرف العملات وتسديد فواتير الموردين — بمرجع رسمي وتنفيذ خلال دقائق. موريتانيا · أنغولا · الصين.">
-<meta name="theme-color" content="#F7FAFD">
-<link rel="manifest" href="site-manifest.json">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<link rel="canonical" href="https://arkanrates.com/">
-<meta property="og:type" content="website">
-<meta property="og:site_name" content="ARKAN Rates">
-<meta property="og:title" content="ARKAN Rates — صرف العملات وتسديد فواتير الموردين">
-<meta property="og:description" content="تحويلات دولية بأقل تكلفة، مع شفافية كاملة في كل معاملة.">
-<meta property="og:image" content="https://arkanrates.com/arkan-icon-512.png">
-<meta property="og:url" content="https://arkanrates.com/">
-<meta name="twitter:card" content="summary_large_image">
-<script type="application/ld+json">
-{"@context":"https://schema.org","@type":"FinancialService","name":"ARKAN Rates",
-"description":"صرف العملات وتسديد فواتير الموردين الدوليين","url":"https://arkanrates.com/",
-"telephone":"+22236295050","areaServed":["MR","AO","CN"],
-"currenciesAccepted":"MRU, AOA, USD, EUR, CNY","availableLanguage":["ar","fr","pt"]}
-</script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#06255C">
+<title>ARKAN Rates — المنصة المالية أنغولا ⇄ موريتانيا</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<script src="vendor/pdf.min.js" onerror="var s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';document.head.appendChild(s)"></script>
+<script src="vendor/tesseract.min.js" onerror="var s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/tesseract.js@4.1.4/dist/tesseract.min.js';document.head.appendChild(s)"></script>
 <style>
-/* ============================================================
-   ARKAN Rates — Design System
-   ============================================================ */
 :root{
-    --bg:#F7FAFD; --card:#FFFFFF; --card2:#F8FBFF; --line:#D9E5F2;
-    --txt:#102A43; --muted:#486581; --gold:#C88A0A; --violet:#0056D6;
-    --acc:#0056D6; --acc2:#0099FF; --accD:#003B8F;
-    --green:#0A9E5C; --red:#E53935; --radius:24px;
-  }
+  --navy:#06255C; --navy2:#0A3A8C; --blue:#0B57C9; --azure:#2E86F5; --sky:#EAF2FD;
+  --ice:#F5F8FC; --white:#FFFFFF; --ink:#0C1B33; --slate:#5A6B85; --line:#E3EAF4;
+  --gold:#C9A24B; --green:#0FA968; --red:#E04C4C; --amber:#E8A13C;
+  --r-lg:22px; --r-md:16px; --r-sm:12px;
+  --shadow-card:0 10px 30px -12px rgba(6,37,92,.14);
+  --shadow-float:0 24px 60px -20px rgba(6,37,92,.28);
+  --grad-bai:linear-gradient(135deg,#06255C 0%,#0B57C9 55%,#2E86F5 100%);
+  --grad-mru:linear-gradient(135deg,#0B3B2E 0%,#0FA968 90%);
+  --grad-usdt:linear-gradient(135deg,#0E3C36 0%,#26A17B 90%);
+  --grad-eur:linear-gradient(135deg,#1A2B6D 0%,#4C63D2 90%);
+  --grad-usd:linear-gradient(135deg,#123B26 0%,#2E7D4F 90%);
+}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html{scroll-behavior:smooth}
-body{background:linear-gradient(180deg,#F3F9FF 0%,#EAF4FF 45%,#E1F0FF 100%);background-attachment:fixed;
-  background-attachment:fixed;
-  color:var(--txt);
-  font-family:'IBM Plex Sans Arabic','SF Pro Display',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;
-  line-height:1.7; overflow-x:hidden; -webkit-font-smoothing:antialiased;
-}
-a{text-decoration:none;color:inherit}
-button,input,select,textarea{font-family:inherit}
-input,select,textarea{font-size:16px}
-/* المحتوى يطفو فوق الخلفية الثابتة */
-.wrap,header,section,footer,main,.layer{position:relative;z-index:1}
-::selection{background:rgba(0,153,255,.14)}
-.num{font-variant-numeric:tabular-nums;font-feature-settings:"tnum"}
-.ltr{direction:ltr;unicode-bidi:isolate}
-.wrap{max-width:1180px;margin:0 auto;padding:0 24px}
+body{font-family:'IBM Plex Sans Arabic',system-ui,sans-serif;background:var(--ice);color:var(--ink);
+  min-height:100dvh;overflow-x:hidden}
+.ltr{direction:ltr;font-family:'Space Grotesk','IBM Plex Sans Arabic',sans-serif}
+.num{font-family:'Space Grotesk',sans-serif;font-variant-numeric:tabular-nums;direction:ltr;display:inline-block}
+button{font-family:inherit;border:none;background:none;cursor:pointer;color:inherit}
+input,select,textarea{font-family:inherit;font-size:15px}
+::selection{background:rgba(46,134,245,.25)}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
 
-/* ===== خلفية متوهجة هادئة ===== */
-.orb{position:fixed;border-radius:50%;filter:blur(90px);pointer-events:none;z-index:0}
-.orb-1{top:-16%;right:-8%;width:56vw;height:56vw;max-width:760px;max-height:760px;
-  background:radial-gradient(circle,rgba(0,153,255,.14),transparent 68%)}
-.orb-2{bottom:-20%;left:-12%;width:60vw;height:60vw;max-width:820px;max-height:820px;
-  background:radial-gradient(circle,rgba(0,181,255,.06),transparent 68%)}
-@keyframes drift1{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-3%,4%) scale(1.06)}}
-@keyframes drift2{0%,100%{transform:translate(0,0) scale(1.04)}50%{transform:translate(4%,-3%) scale(.97)}}
-#particles{position:fixed;inset:0;z-index:0;pointer-events:none}
-.grid-bg{position:fixed;inset:0;z-index:0;pointer-events:none;
-  background-image:linear-gradient(rgba(59,130,246,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(59,130,246,.045) 1px,transparent 1px);
-  background-size:64px 64px}
-@keyframes gridShift{from{background-position:0 0}to{background-position:64px 64px}}
-.layer{position:relative;z-index:1}
+/* ===== APP SHELL ===== */
+#app{max-width:480px;margin:0 auto;min-height:100dvh;position:relative;background:var(--ice);
+  box-shadow:0 0 80px rgba(6,37,92,.08)}
+@media(min-width:900px){#app{max-width:920px}}
+.view{display:none;padding:0 18px 110px;animation:viewIn .38s cubic-bezier(.2,.8,.2,1)}
+.view.active{display:block}
+@keyframes viewIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
 
-/* ===== NAVBAR ===== */
-nav.bar{position:sticky;top:0;z-index:40;background:rgba(11,15,25,.72);
-  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid var(--stroke)}
-.bar-in{display:flex;align-items:center;justify-content:space-between;gap:20px;
-  max-width:1180px;margin:0 auto;padding:16px 24px}
-.logo{display:flex;align-items:center;gap:11px}
-.logo .sq{width:42px;height:42px;border-radius:12px;object-fit:cover;display:block;
-  box-shadow:0 6px 22px rgba(59,130,246,.35)}
-.logo .nm{font-weight:800;font-size:19px;letter-spacing:.04em}
-.links{display:flex;align-items:center;gap:30px}
-.links a{font-size:14.5px;color:var(--txt-2);transition:color .2s;font-weight:500}
-.links a:hover{color:var(--txt)}
-.btn-login{padding:10px 22px;border-radius:var(--r-sm);border:1px solid var(--stroke-2);
-  background:transparent;color:var(--txt);font-size:14px;font-weight:600;cursor:pointer;transition:.22s}
-.btn-login:hover{border-color:rgba(0,153,255,.14);background:rgba(0,153,255,.14)}
-.menu-btn{display:none;width:40px;height:40px;border-radius:11px;border:1px solid var(--stroke-2);
-  background:transparent;cursor:pointer;flex-direction:column;justify-content:center;align-items:center;gap:5px}
-.menu-btn i{display:block;width:17px;height:1.8px;background:var(--txt);border-radius:2px;transition:.28s}
-.menu-btn.on i:nth-child(1){transform:translateY(6.8px) rotate(45deg)}
-.menu-btn.on i:nth-child(2){opacity:0}
-.menu-btn.on i:nth-child(3){transform:translateY(-6.8px) rotate(-45deg)}
-.drawer{display:none;flex-direction:column;background:rgba(11,15,25,.97);border-bottom:1px solid var(--stroke)}
-.drawer.on{display:flex}
-.drawer a{padding:15px 24px;font-size:15px;color:var(--txt-3);border-bottom:1px solid var(--stroke)}
+/* ===== TOP BAR ===== */
+.topbar{position:sticky;top:0;z-index:40;display:flex;align-items:center;gap:12px;
+  padding:14px 18px;background:rgba(245,248,252,.82);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+  border-bottom:1px solid rgba(227,234,244,.7)}
+.avatar{width:42px;height:42px;border-radius:14px;background:var(--grad-bai);display:grid;place-items:center;
+  color:#fff;font-weight:700;font-size:15px;letter-spacing:.5px;box-shadow:var(--shadow-card)}
+.tb-meta{flex:1;min-width:0}
+.tb-hello{font-size:12.5px;color:var(--slate)}
+.tb-name{font-size:16px;font-weight:700}
+.tb-btn{width:40px;height:40px;border-radius:13px;background:#fff;border:1px solid var(--line);
+  display:grid;place-items:center;position:relative;transition:transform .2s}
+.tb-btn:active{transform:scale(.92)}
+.tb-btn .dot{position:absolute;top:9px;left:10px;width:8px;height:8px;border-radius:50%;background:var(--red);
+  border:2px solid #fff}
+svg{display:block}
 
-/* ===== أساسيات مشتركة ===== */
-.sec{padding:88px 0}
-.sec-head{margin-bottom:44px}
-.sec-head .kicker{font-size:12.5px;font-weight:700;letter-spacing:.16em;color:var(--blue-live);margin-bottom:12px}
-.sec-head h2{font-size:clamp(1.7rem,3.5vw,2.4rem);font-weight:800;letter-spacing:-.02em;line-height:1.25}
-.sec-head p{color:var(--txt-2);font-size:1rem;margin-top:12px;max-width:600px}
-.card{background:var(--glass);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
-  box-shadow:0 8px 32px rgba(16,42,67,.10),inset 0 1px 0 #EDF3FA;contain:layout;
-  border:1px solid var(--stroke);border-radius:var(--r-lg);padding:30px}
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:9px;padding:15px 30px;
-  border-radius:var(--r-md);border:none;font-size:15px;font-weight:700;cursor:pointer;
-  transition:transform .18s,box-shadow .25s,background .22s}
-.btn:active{transform:scale(.985)}
-.btn-primary{background:var(--blue);color:#fff;box-shadow:0 10px 30px rgba(59,130,246,.3)}
-.btn-primary:hover{background:#2f74e8;box-shadow:0 16px 42px rgba(59,130,246,.45)}
-.btn-ghost{background:transparent;border:1px solid var(--stroke-2);color:var(--txt)}
-.btn-ghost:hover{border-color:rgba(59,130,246,.5);background:rgba(59,130,246,.07)}
-.live-dot{width:7px;height:7px;border-radius:50%;background:var(--up);
-  box-shadow:0 0 10px var(--up);animation:pulse 2s ease-in-out infinite;display:inline-block}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+/* ===== CORRIDOR RIBBON (signature) ===== */
+.corridor{margin:14px 0 4px;border-radius:var(--r-md);background:var(--navy);color:#fff;overflow:hidden;position:relative;
+  padding:12px 16px;display:flex;align-items:center;justify-content:space-between;box-shadow:var(--shadow-card)}
+.corridor::before{content:"";position:absolute;inset:0;background:
+  radial-gradient(600px 120px at 80% -20%,rgba(46,134,245,.5),transparent 60%)}
+.cor-city{position:relative;text-align:center}
+.cor-city b{display:block;font-size:13.5px}
+.cor-city span{font-size:10.5px;opacity:.65;letter-spacing:1px}
+.cor-path{position:relative;flex:1;height:2px;margin:0 14px;background:rgba(255,255,255,.18);border-radius:2px}
+.cor-pulse{position:absolute;top:50%;right:0;width:9px;height:9px;border-radius:50%;background:var(--gold);
+  transform:translateY(-50%);box-shadow:0 0 12px var(--gold);animation:corMove 3.2s ease-in-out infinite}
+@keyframes corMove{0%{right:0;opacity:0}12%{opacity:1}88%{opacity:1}100%{right:calc(100% - 9px);opacity:0}}
+.cor-rate{position:relative;text-align:center;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.14);
+  border-radius:10px;padding:5px 12px}
+.cor-rate b{font-size:14px}.cor-rate span{font-size:10px;opacity:.7;display:block}
 
-/* ===== HERO ===== */
-.hero{padding:78px 0 20px}
-.hero .badge{display:inline-flex;align-items:center;gap:10px;font-size:12.5px;font-weight:600;
-  color:var(--txt-3);padding:9px 18px;border:1px solid var(--stroke-2);border-radius:100px;
-  background:var(--glass);margin-bottom:28px}
-.hero h1{font-size:clamp(2.1rem,5.6vw,3.5rem);font-weight:800;line-height:1.2;letter-spacing:-.03em;margin-bottom:20px;max-width:900px}
-.hero h1 .accent{color:var(--blue-live)}
-.hero .lead{color:var(--txt-2);font-size:clamp(1rem,1.6vw,1.1rem);max-width:620px;margin-bottom:34px}
-.hero-cta{display:flex;gap:13px;flex-wrap:wrap;margin-bottom:52px}
-.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
-.stat{background:var(--glass);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
-  box-shadow:0 8px 32px rgba(16,42,67,.10),inset 0 1px 0 #EDF3FA;border:1px solid var(--stroke);
-  border-radius:var(--r-md);padding:22px 20px;transition:.28s}
-.stat:hover{transform:translateY(-4px);background:var(--glass-hover);border-color:var(--stroke-2)}
-.stat b{display:block;font-size:1.45rem;font-weight:800;letter-spacing:-.02em;margin-bottom:4px}
-.stat span{font-size:.82rem;color:var(--txt-2);line-height:1.5}
+/* ===== WALLET CARDS ===== */
+.wallets{display:flex;gap:14px;overflow-x:auto;padding:18px 2px 22px;scroll-snap-type:x mandatory;
+  -ms-overflow-style:none;scrollbar-width:none}
+.wallets::-webkit-scrollbar{display:none}
+.wcard{min-width:286px;scroll-snap-align:start;border-radius:var(--r-lg);padding:20px;color:#fff;position:relative;
+  overflow:hidden;box-shadow:var(--shadow-float);transition:transform .25s}
+.wcard:active{transform:scale(.97)}
+.wcard::after{content:"";position:absolute;width:220px;height:220px;border-radius:50%;
+  background:rgba(255,255,255,.08);top:-90px;left:-60px}
+.wcard::before{content:"";position:absolute;width:150px;height:150px;border-radius:50%;
+  background:rgba(255,255,255,.06);bottom:-70px;right:-30px}
+.w-aoa{background:var(--grad-bai)}.w-mru{background:var(--grad-mru)}.w-usdt{background:var(--grad-usdt)}
+.w-eur{background:var(--grad-eur)}.w-usd{background:var(--grad-usd)}
+.wc-top{display:flex;justify-content:space-between;align-items:center;position:relative}
+.wc-cur{font-size:13px;font-weight:600;letter-spacing:1.5px;opacity:.9}
+.wc-flag{font-size:20px}
+.wc-bal{font-size:27px;font-weight:700;margin:16px 0 4px;position:relative}
+.wc-sub{font-size:12px;opacity:.75;position:relative}
+.wc-foot{display:flex;justify-content:space-between;margin-top:16px;font-size:11.5px;opacity:.85;position:relative}
+.wc-chip{width:34px;height:24px;border-radius:6px;background:linear-gradient(135deg,#E8CE8A,#C9A24B);position:relative}
 
-/* ===== CONVERTER ===== */
-.conv{max-width:620px}
-.conv-row{margin-bottom:14px}
-.conv-row label{display:block;font-size:.82rem;font-weight:600;color:var(--txt-2);margin-bottom:9px}
-.conv-input{display:flex;gap:10px;align-items:stretch}
-.conv-input input{flex:1;min-width:0;background:rgba(0,0,0,.28);border:1px solid var(--stroke-2);
-  border-radius:var(--r-sm);padding:16px 18px;color:var(--txt);font-size:36px;font-weight:700;letter-spacing:-.02em;
-  outline:none;transition:.22s;font-variant-numeric:tabular-nums}
-.conv-input input:focus{border-color:rgba(59,130,246,.5);box-shadow:0 0 0 4px rgba(59,130,246,.1)}
-.conv-input input[readonly]{color:var(--blue-live);background:rgba(59,130,246,.05)}
-.conv-input select{background:rgba(0,0,0,.28);border:1px solid var(--stroke-2);border-radius:var(--r-sm);
-  padding:0 16px;color:var(--txt);font-size:16px;font-weight:700;outline:none;cursor:pointer;
-  min-width:112px;transition:.22s;letter-spacing:.04em}
-.conv-input select:focus{border-color:rgba(59,130,246,.5);box-shadow:0 0 0 4px rgba(59,130,246,.1)}
-.conv-input select option{background:#FFFFFF;color:#fff}
-.swap-wrap{display:flex;justify-content:center;margin:2px 0 8px}
-.swap{width:44px;height:44px;border-radius:50%;background:rgba(59,130,246,.1);
-  border:1px solid rgba(59,130,246,.28);color:var(--blue-live);display:grid;place-items:center;
-  cursor:pointer;transition:transform .38s cubic-bezier(.34,1.4,.64,1),background .22s}
-.swap:hover{transform:rotate(180deg);background:rgba(59,130,246,.18)}
-.conv-out{margin:22px 0;padding:26px;border-radius:var(--r-md);
-  border:1px solid rgba(59,130,246,.24);background:linear-gradient(150deg,rgba(59,130,246,.09),rgba(255,255,255,.01))}
-.conv-out .lbl{font-size:.8rem;color:var(--txt-2);margin-bottom:8px}
-.conv-out .big{font-size:44px;font-weight:800;letter-spacing:-.02em;line-height:1.1;color:var(--blue-live);
-  font-variant-numeric:tabular-nums;word-break:break-word}
-.conv-out .rate{font-size:.85rem;color:var(--txt-2);margin-top:11px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.conv-note{font-size:.8rem;color:var(--txt-2);text-align:center;margin-top:14px}
+/* ===== QUICK ACTIONS ===== */
+.qa{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:6px 0 22px}
+.qa-item{background:#fff;border:1px solid var(--line);border-radius:var(--r-md);padding:14px 6px 12px;
+  display:flex;flex-direction:column;align-items:center;gap:8px;transition:transform .2s,box-shadow .2s}
+.qa-item:active{transform:translateY(2px) scale(.96)}
+.qa-item:hover{box-shadow:var(--shadow-card)}
+.qa-ic{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;background:var(--sky);color:var(--blue)}
+.qa-item span{font-size:11.5px;font-weight:600;color:var(--ink)}
 
+/* ===== SECTIONS ===== */
+.sec{margin-bottom:24px}
+.sec-h{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px}
+.sec-h h2{font-size:16px;font-weight:700}
+.sec-h button{font-size:12.5px;color:var(--blue);font-weight:600}
+.card{background:#fff;border:1px solid var(--line);border-radius:var(--r-md);box-shadow:0 4px 14px -8px rgba(6,37,92,.08)}
 
-/* ===== FLAG CURRENCY DROPDOWN ===== */
-.fdd{position:relative;flex-shrink:0}
-.fdd-btn{display:flex;align-items:center;gap:9px;background:rgba(0,0,0,.28);border:1px solid var(--stroke-2);
-  border-radius:var(--r-sm);padding:0 14px;height:100%;min-height:58px;min-width:126px;cursor:pointer;
-  transition:.22s;color:var(--txt)}
-.fdd-btn:hover{border-color:rgba(59,130,246,.45)}
-.fdd.on .fdd-btn{border-color:rgba(0,153,255,.14);box-shadow:0 0 0 4px rgba(59,130,246,.1)}
-.fdd-flag{width:26px;height:26px;border-radius:50%;object-fit:cover;flex-shrink:0;
-  box-shadow:0 0 0 1px #D9E5F2}
-.fdd-code{font-size:1rem;font-weight:700;letter-spacing:.05em;flex:1;text-align:right}
-.fdd-car{transition:transform .25s;opacity:.5;flex-shrink:0}
-.fdd.on .fdd-car{transform:rotate(180deg);opacity:1}
-.fdd-list{position:absolute;top:calc(100% + 8px);left:0;right:0;min-width:270px;z-index:60;
-  background:rgba(18,24,41,.98);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
-  border:1px solid var(--stroke-2);border-radius:var(--r-md);padding:7px;
-  max-height:330px;overflow-y:auto;-webkit-overflow-scrolling:touch;
-  box-shadow:0 24px 64px rgba(0,0,0,.55);opacity:0;visibility:hidden;transform:translateY(-8px);
-  transition:opacity .2s,transform .2s,visibility .2s}
-.fdd.on .fdd-list{opacity:1;visibility:visible;transform:none}
-.fdd-item{display:flex;align-items:center;gap:12px;width:100%;padding:11px 12px;border-radius:10px;
-  background:transparent;border:none;cursor:pointer;color:var(--txt);text-align:right;transition:.15s}
-.fdd-item:hover{background:rgba(255,255,255,.055)}
-.fdd-item.sel{background:rgba(59,130,246,.13)}
-.fdd-item .c{font-size:.94rem;font-weight:700;letter-spacing:.04em;min-width:44px}
-.fdd-item .n{font-size:.82rem;color:var(--txt-2);flex:1}
-.fdd-item .ck{opacity:0;color:var(--blue-live);flex-shrink:0}
-.fdd-item.sel .ck{opacity:1}
+/* rates */
+.rate-row{display:flex;align-items:center;gap:12px;padding:13px 16px;border-bottom:1px solid var(--line)}
+.rate-row:last-child{border-bottom:none}
+.rate-pair{flex:1}
+.rate-pair b{font-size:14px;display:block}
+.rate-pair span{font-size:11.5px;color:var(--slate)}
+.rate-val{text-align:left}
+.rate-val b{font-size:15px;display:block}
+.chg{font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px}
+.chg.up{color:var(--green);background:rgba(15,169,104,.1)}
+.chg.dn{color:var(--red);background:rgba(224,76,76,.1)}
 
-/* ===== EXCHANGE DESK ===== */
-.desk{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:20px}
-.pair{background:var(--glass);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
-  box-shadow:0 8px 32px rgba(16,42,67,.10),inset 0 1px 0 #EDF3FA;border:1px solid var(--stroke);
-  border-radius:var(--r-lg);padding:26px;transition:transform .32s cubic-bezier(.22,1,.36,1),background .32s,border-color .32s,box-shadow .32s}
-.pair:hover{transform:translateY(-4px);background:var(--glass-hover);border-color:var(--stroke-2);
-  box-shadow:0 22px 60px rgba(0,0,0,.36)}
-.pair-top{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:18px}
-.pair-code{font-size:1.02rem;font-weight:800;letter-spacing:.06em}
-.pair-name{font-size:.78rem;color:var(--txt-2);margin-top:3px}
-.pair-live{display:inline-flex;align-items:center;gap:6px;font-size:.7rem;font-weight:700;
-  color:var(--blue-live);background:rgba(96,165,250,.1);border:1px solid rgba(96,165,250,.24);
-  border-radius:100px;padding:4px 11px;white-space:nowrap}
-.pair-mid{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:16px}
-.pair-val{font-size:2.6rem;font-weight:800;letter-spacing:-.03em;line-height:1;font-variant-numeric:tabular-nums}
-.pair-chg{font-size:.85rem;font-weight:700}
-.pair-chg.up{color:var(--up)}.pair-chg.down{color:var(--down)}
-.spark{width:100%;height:44px;margin-bottom:16px;display:block}
-.pair-bs{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--stroke);
-  border-radius:var(--r-sm);overflow:hidden;border:1px solid var(--stroke)}
-.bs{background:rgba(16,42,67,.10);padding:13px 15px}
-.bs .k{font-size:.72rem;color:var(--txt-2);margin-bottom:4px}
-.bs .v{font-size:1.02rem;font-weight:700;font-variant-numeric:tabular-nums}
+/* operations */
+.op{display:flex;align-items:center;gap:13px;padding:13px 16px;border-bottom:1px solid var(--line);cursor:pointer;
+  transition:background .15s}
+.op:hover{background:var(--sky)}
+.op:last-child{border-bottom:none}
+.op-ic{width:42px;height:42px;border-radius:13px;display:grid;place-items:center;flex-shrink:0}
+.op-ic.in{background:rgba(15,169,104,.12);color:var(--green)}
+.op-ic.out{background:rgba(11,87,201,.1);color:var(--blue)}
+.op-ic.wait{background:rgba(232,161,60,.14);color:var(--amber)}
+.op-meta{flex:1;min-width:0}
+.op-meta b{font-size:13.5px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.op-meta span{font-size:11.5px;color:var(--slate)}
+.op-amt{text-align:left}
+.op-amt b{font-size:13.5px;display:block}
+.op-amt span{font-size:10.5px;color:var(--slate)}
+.badge{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;margin-top:2px}
+.badge.ok{background:rgba(15,169,104,.1);color:var(--green)}
+.badge.pend{background:rgba(232,161,60,.14);color:var(--amber)}
+.badge.proc{background:rgba(46,134,245,.12);color:var(--blue)}
 
-/* ===== FEATURES ===== */
-.feats{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px}
-.feat{background:var(--glass);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
-  box-shadow:0 8px 32px rgba(16,42,67,.10),inset 0 1px 0 #EDF3FA;border:1px solid var(--stroke);
-  border-radius:var(--r-lg);padding:30px 26px;transition:.3s}
-.feat:hover{transform:translateY(-4px);background:var(--glass-hover);border-color:var(--stroke-2)}
-.feat .n{font-size:.95rem;font-weight:800;color:var(--blue-live);letter-spacing:.1em;margin-bottom:14px}
-.feat h3{font-size:1.08rem;font-weight:700;margin-bottom:9px}
-.feat p{font-size:.88rem;color:var(--txt-2);line-height:1.75}
+/* beneficiaries */
+.bens{display:flex;gap:14px;overflow-x:auto;padding:4px 2px 8px;scrollbar-width:none}
+.bens::-webkit-scrollbar{display:none}
+.ben{display:flex;flex-direction:column;align-items:center;gap:7px;min-width:64px}
+.ben-av{width:54px;height:54px;border-radius:19px;display:grid;place-items:center;color:#fff;font-weight:700;
+  font-size:16px;box-shadow:var(--shadow-card)}
+.ben span{font-size:11px;font-weight:600;color:var(--ink);white-space:nowrap}
+.ben small{font-size:9.5px;color:var(--slate)}
 
-/* ===== FORMS ===== */
-.field{margin-bottom:16px}
-.field label{display:block;font-size:.82rem;font-weight:600;color:var(--txt-2);margin-bottom:8px}
-.field .fdd-btn{min-height:52px;width:100%}
-.field input,.field select,.field textarea{width:100%;background:rgba(0,0,0,.28);
-  border:1px solid var(--stroke-2);border-radius:var(--r-sm);padding:14px 16px;color:var(--txt);
-  font-size:16px;outline:none;transition:.22s}
-.field input:focus,.field select:focus,.field textarea:focus{
-  border-color:rgba(59,130,246,.5);box-shadow:0 0 0 4px rgba(59,130,246,.1)}
-.field textarea{resize:vertical;min-height:88px}
-.field select option{background:#FFFFFF;color:#fff}
-.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+/* ===== BOTTOM NAV ===== */
+.bnav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;z-index:50;
+  display:flex;justify-content:space-around;padding:10px 8px calc(10px + env(safe-area-inset-bottom));
+  background:rgba(255,255,255,.88);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border-top:1px solid var(--line)}
+@media(min-width:900px){.bnav{max-width:920px}}
+.bn-item{display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--slate);font-size:10.5px;
+  font-weight:600;padding:4px 10px;border-radius:12px;transition:color .2s,transform .2s;position:relative}
+.bn-item.active{color:var(--blue)}
+.bn-item.active::before{content:"";position:absolute;top:-10px;width:22px;height:3px;border-radius:3px;
+  background:var(--grad-bai)}
+.bn-item:active{transform:scale(.9)}
+.bn-fab{width:54px;height:54px;border-radius:19px;background:var(--grad-bai);color:#fff;display:grid;
+  place-items:center;margin-top:-26px;box-shadow:0 12px 28px -8px rgba(11,87,201,.55);transition:transform .2s}
+.bn-fab:active{transform:scale(.92) rotate(90deg)}
 
-/* ===== UPLOAD (invoice) ===== */
-.drop{border:1.6px dashed rgba(59,130,246,.34);border-radius:var(--r-md);padding:34px 24px;
-  text-align:center;cursor:pointer;background:rgba(59,130,246,.035);transition:.25s;margin-bottom:22px}
-.drop:hover{border-color:rgba(59,130,246,.62);background:rgba(59,130,246,.07)}
-.drop .t{font-size:1rem;font-weight:700;margin-bottom:6px}
-.drop .s{font-size:.83rem;color:var(--txt-2)}
-.drop .r{margin-top:12px;font-size:.85rem;font-variant-numeric:tabular-nums}
-.inv-notes{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
-.inv-notes span{font-size:.78rem;color:var(--txt-2);background:rgba(0,0,0,.22);
-  border:1px solid var(--stroke);border-radius:100px;padding:7px 15px}
+/* ===== TRANSFER WIZARD ===== */
+.steps{display:flex;align-items:center;gap:6px;margin:16px 0 20px}
+.stp{flex:1;height:4px;border-radius:4px;background:var(--line);position:relative;overflow:hidden}
+.stp.done::after{content:"";position:absolute;inset:0;background:var(--grad-bai);border-radius:4px;
+  animation:fillStep .4s ease}
+@keyframes fillStep{from{transform:scaleX(0);transform-origin:right}to{transform:scaleX(1)}}
+.wz-title{font-size:19px;font-weight:700;margin-bottom:4px}
+.wz-sub{font-size:12.5px;color:var(--slate);margin-bottom:18px}
+.fld{margin-bottom:14px}
+.fld label{display:block;font-size:12px;font-weight:600;color:var(--slate);margin-bottom:7px}
+.fld input,.fld select,.fld textarea{width:100%;padding:14px 16px;border-radius:var(--r-sm);border:1.5px solid var(--line);
+  background:#fff;transition:border .2s,box-shadow .2s;outline:none}
+.fld input:focus,.fld select:focus{border-color:var(--azure);box-shadow:0 0 0 4px rgba(46,134,245,.12)}
+.fld-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.amount-box{background:#fff;border:1.5px solid var(--line);border-radius:var(--r-md);padding:16px;margin-bottom:14px}
+.amount-box .lbl{font-size:11.5px;color:var(--slate);font-weight:600;margin-bottom:8px;display:flex;justify-content:space-between}
+.amount-line{display:flex;align-items:center;gap:10px}
+.amount-line input{flex:1;border:none;outline:none;font-size:26px;font-weight:700;font-family:'Space Grotesk';
+  direction:ltr;text-align:left;background:transparent;min-width:0}
+.cur-pick{display:flex;align-items:center;gap:6px;background:var(--sky);border-radius:11px;padding:8px 12px;
+  font-weight:700;font-size:13.5px;color:var(--navy);flex-shrink:0}
+.rate-strip{display:flex;align-items:center;justify-content:center;gap:8px;margin:6px 0 14px;font-size:12px;color:var(--slate)}
+.rate-strip b{color:var(--blue)}
+.fee-table{background:var(--sky);border-radius:var(--r-sm);padding:14px 16px;margin-bottom:16px}
+.fee-line{display:flex;justify-content:space-between;font-size:13px;padding:4px 0;color:var(--slate)}
+.fee-line.total{border-top:1px dashed rgba(11,87,201,.25);margin-top:8px;padding-top:10px;color:var(--ink);font-weight:700;font-size:14.5px}
+.btn{width:100%;padding:16px;border-radius:var(--r-md);font-weight:700;font-size:15px;transition:transform .2s,box-shadow .2s;text-align:center}
+.btn-pri{background:var(--grad-bai);color:#fff;box-shadow:0 12px 26px -10px rgba(11,87,201,.5)}
+.btn-pri:active{transform:scale(.97)}
+.btn-ghost{background:#fff;border:1.5px solid var(--line);color:var(--ink);margin-top:10px}
+.upload{border:2px dashed rgba(11,87,201,.3);border-radius:var(--r-md);padding:26px 16px;text-align:center;
+  background:rgba(46,134,245,.04);cursor:pointer;transition:border .2s;margin-bottom:16px}
+.upload:hover{border-color:var(--azure)}
+.upload b{display:block;font-size:14px;margin:10px 0 4px}
+.upload span{font-size:12px;color:var(--slate)}
 
-/* ===== FOOTER ===== */
-footer{border-top:1px solid var(--stroke);margin-top:60px;padding:52px 0 40px;position:relative;z-index:1}
-.f-grid{display:grid;grid-template-columns:1.7fr 1fr 1fr;gap:40px;margin-bottom:38px}
-.f-col h5{font-size:.85rem;font-weight:700;margin-bottom:16px}
-.f-col a,.f-col p{display:block;font-size:.86rem;color:var(--txt-2);padding:6px 0;transition:.2s}
-.f-col a:hover{color:var(--blue-live)}
-.f-bot{border-top:1px solid var(--stroke);padding-top:24px;text-align:center;font-size:.82rem;color:var(--txt-2)}
+/* timeline */
+.tl{padding:4px 8px}
+.tl-item{display:flex;gap:14px;position:relative;padding-bottom:26px}
+.tl-item:last-child{padding-bottom:4px}
+.tl-item::before{content:"";position:absolute;right:13px;top:30px;bottom:0;width:2px;background:var(--line)}
+.tl-item:last-child::before{display:none}
+.tl-item.done::before{background:var(--green)}
+.tl-dot{width:28px;height:28px;border-radius:50%;background:#fff;border:2px solid var(--line);display:grid;
+  place-items:center;flex-shrink:0;z-index:1;font-size:12px;color:var(--slate)}
+.tl-item.done .tl-dot{background:var(--green);border-color:var(--green);color:#fff}
+.tl-item.now .tl-dot{border-color:var(--azure);color:var(--azure);animation:pulse 1.6s infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(46,134,245,.35)}50%{box-shadow:0 0 0 8px rgba(46,134,245,0)}}
+.tl-meta b{font-size:13.5px;display:block}
+.tl-meta span{font-size:11.5px;color:var(--slate)}
 
-/* ===== TOAST ===== */
-#toast{position:fixed;bottom:24px;left:24px;z-index:200;background:rgba(18,24,41,.97);
-  border:1px solid var(--stroke-2);border-right:3px solid var(--blue);border-radius:var(--r-md);
-  padding:15px 22px;font-size:.9rem;box-shadow:0 22px 60px rgba(16,42,67,.10);
-  opacity:0;transform:translateY(14px);pointer-events:none;transition:.3s cubic-bezier(.22,1,.36,1);max-width:340px}
-#toast.on{opacity:1;transform:none}
+/* ===== CHAT ===== */
+.conv{display:flex;align-items:center;gap:13px;padding:14px 16px;border-bottom:1px solid var(--line);cursor:pointer;
+  transition:background .15s}
+.conv:hover{background:var(--sky)}
+.conv-av{width:48px;height:48px;border-radius:16px;display:grid;place-items:center;color:#fff;font-weight:700;flex-shrink:0}
+.conv-meta{flex:1;min-width:0}
+.conv-meta b{font-size:13.5px;display:flex;align-items:center;gap:6px}
+.conv-meta p{font-size:12px;color:var(--slate);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+.conv-side{text-align:left;flex-shrink:0}
+.conv-side time{font-size:10.5px;color:var(--slate);display:block}
+.unread{display:inline-grid;place-items:center;min-width:20px;height:20px;border-radius:10px;background:var(--blue);
+  color:#fff;font-size:10.5px;font-weight:700;margin-top:4px;padding:0 6px}
+.pin{color:var(--gold);font-size:11px}
+.chat-screen{position:fixed;inset:0;z-index:60;background:var(--ice);max-width:480px;margin:0 auto;display:none;
+  flex-direction:column;animation:viewIn .3s ease}
+@media(min-width:900px){.chat-screen{max-width:920px}}
+.chat-screen.open{display:flex}
+.ch-head{display:flex;align-items:center;gap:12px;padding:14px 16px;background:rgba(255,255,255,.9);
+  backdrop-filter:blur(16px);border-bottom:1px solid var(--line)}
+.ch-body{flex:1;overflow-y:auto;padding:18px 16px;display:flex;flex-direction:column;gap:10px}
+.msg{max-width:78%;padding:11px 14px;border-radius:16px;font-size:13.5px;line-height:1.6;position:relative;
+  animation:msgIn .3s ease}
+@keyframes msgIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.msg.them{background:#fff;border:1px solid var(--line);border-bottom-right-radius:5px;align-self:flex-start}
+.msg.me{background:var(--grad-bai);color:#fff;border-bottom-left-radius:5px;align-self:flex-end}
+.msg .who{font-size:10.5px;font-weight:700;color:var(--blue);margin-bottom:3px;display:block}
+.msg .tick{font-size:9.5px;opacity:.65;display:block;text-align:left;margin-top:4px}
+.msg.sys{align-self:center;background:rgba(11,87,201,.07);color:var(--navy);font-size:11.5px;font-weight:600;
+  border-radius:20px;padding:7px 16px;max-width:92%;text-align:center}
+.receipt-card{background:#fff;border:1px solid var(--line);border-radius:var(--r-md);overflow:hidden;max-width:82%;
+  align-self:flex-end;box-shadow:var(--shadow-card);animation:msgIn .3s ease}
+.rc-img{height:110px;background:linear-gradient(135deg,#EAF2FD,#D6E6FB);display:grid;place-items:center;color:var(--blue)}
+.rc-body{padding:12px 14px}
+.rc-body b{font-size:13px;display:block}
+.rc-body span{font-size:11px;color:var(--slate)}
+.rc-verify{display:flex;align-items:center;gap:7px;background:rgba(15,169,104,.08);padding:9px 14px;font-size:11.5px;
+  font-weight:700;color:var(--green);border-top:1px solid rgba(15,169,104,.15)}
+.typing{display:flex;gap:4px;padding:12px 16px;background:#fff;border:1px solid var(--line);border-radius:16px;
+  border-bottom-right-radius:5px;align-self:flex-start;width:fit-content}
+.typing i{width:7px;height:7px;border-radius:50%;background:var(--slate);animation:ty 1.2s infinite}
+.typing i:nth-child(2){animation-delay:.15s}.typing i:nth-child(3){animation-delay:.3s}
+@keyframes ty{0%,60%,100%{transform:none;opacity:.4}30%{transform:translateY(-5px);opacity:1}}
+.ch-input{display:flex;gap:10px;padding:12px 16px calc(12px + env(safe-area-inset-bottom));background:#fff;
+  border-top:1px solid var(--line)}
+.ch-input input{flex:1;border:1.5px solid var(--line);border-radius:14px;padding:12px 16px;outline:none}
+.ch-input input:focus{border-color:var(--azure)}
+.ch-send{width:46px;height:46px;border-radius:14px;background:var(--grad-bai);color:#fff;display:grid;place-items:center;flex-shrink:0}
 
-/* ===== RESPONSIVE ===== */
-@media(max-width:900px){
-  .links{display:none}
-  .menu-btn{display:flex}
-  .stats{grid-template-columns:repeat(2,1fr)}
-  .f-grid{grid-template-columns:1fr 1fr;gap:28px}
-}
-@media(max-width:600px){
-  .wrap{padding:0 18px}
-  .sec{padding:60px 0}
-  .hero{padding:52px 0 12px}
-  .stats{grid-template-columns:1fr 1fr;gap:12px}
-  .grid-2{grid-template-columns:1fr}
-  .f-grid{grid-template-columns:1fr}
-  .hero-cta{flex-direction:column}
-  .hero-cta .btn{width:100%}
-  .card{padding:22px}
-  .conv-out .big{font-size:34px}
-  .conv-input input{font-size:28px}
-  .card,.stat,.feat,.pair{border-radius:16px}
-  .pair-val{font-size:2.1rem}
-  #toast{left:16px;right:16px;bottom:16px;max-width:none}
-}
+/* ===== ARCHIVE ===== */
+.search-box{display:flex;align-items:center;gap:10px;background:#fff;border:1.5px solid var(--line);
+  border-radius:var(--r-md);padding:13px 16px;margin:14px 0 12px}
+.search-box input{flex:1;border:none;outline:none;font-size:14px;background:transparent}
+.chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:14px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex-shrink:0;font-size:12px;font-weight:600;padding:7px 14px;border-radius:20px;background:#fff;
+  border:1px solid var(--line);color:var(--slate);transition:all .2s}
+.chip.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+.doc{display:flex;gap:13px;padding:14px 16px;border-bottom:1px solid var(--line);cursor:pointer;transition:background .15s}
+.doc:hover{background:var(--sky)}
+.doc:last-child{border-bottom:none}
+.doc-ic{width:44px;height:44px;border-radius:13px;display:grid;place-items:center;flex-shrink:0;
+  background:var(--sky);color:var(--blue)}
+.doc-meta{flex:1;min-width:0}
+.doc-meta b{font-size:13px;display:block}
+.doc-meta span{font-size:11px;color:var(--slate);display:block;margin-top:2px}
+.tags{display:flex;gap:5px;margin-top:6px;flex-wrap:wrap}
+.tag{font-size:9.5px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(11,87,201,.08);color:var(--blue)}
+.tag.g{background:rgba(201,162,75,.12);color:#9A7B2F}
+.tag.warn{background:rgba(224,76,76,.1);color:var(--red)}
+.export-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}
+.exp-btn{padding:12px;border-radius:var(--r-sm);background:#fff;border:1.5px solid var(--line);font-weight:700;
+  font-size:12.5px;display:flex;align-items:center;justify-content:center;gap:7px;transition:all .2s}
+.exp-btn:hover{border-color:var(--azure);color:var(--blue)}
+
+/* ===== DASHBOARD ===== */
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:14px 0 20px}
+.kpi{background:#fff;border:1px solid var(--line);border-radius:var(--r-md);padding:16px;position:relative;overflow:hidden}
+.kpi.hero{grid-column:1/-1;background:var(--grad-bai);color:#fff;border:none;box-shadow:var(--shadow-float)}
+.kpi.hero::after{content:"";position:absolute;width:200px;height:200px;border-radius:50%;
+  background:rgba(255,255,255,.07);top:-80px;left:-40px}
+.kpi .k-lbl{font-size:11.5px;color:var(--slate);font-weight:600}
+.kpi.hero .k-lbl{color:rgba(255,255,255,.75)}
+.kpi .k-val{font-size:22px;font-weight:700;margin-top:6px}
+.kpi.hero .k-val{font-size:30px}
+.kpi .k-sub{font-size:11px;margin-top:4px;color:var(--slate)}
+.kpi.hero .k-sub{color:rgba(255,255,255,.7)}
+.bars{display:flex;align-items:flex-end;gap:9px;height:120px;padding:16px 16px 8px}
+.bar-w{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end}
+.bar{width:100%;max-width:34px;border-radius:8px 8px 4px 4px;background:linear-gradient(180deg,var(--azure),var(--blue));
+  animation:barUp .7s cubic-bezier(.2,.8,.2,1) backwards}
+.bar-w:nth-child(2) .bar{animation-delay:.06s}.bar-w:nth-child(3) .bar{animation-delay:.12s}
+.bar-w:nth-child(4) .bar{animation-delay:.18s}.bar-w:nth-child(5) .bar{animation-delay:.24s}
+.bar-w:nth-child(6) .bar{animation-delay:.3s}.bar-w:nth-child(7) .bar{animation-delay:.36s}
+@keyframes barUp{from{transform:scaleY(0);transform-origin:bottom}to{transform:scaleY(1)}}
+.bar-w span{font-size:9.5px;color:var(--slate);font-weight:600}
+.sup{display:flex;align-items:center;gap:12px;padding:13px 16px;border-bottom:1px solid var(--line)}
+.sup:last-child{border-bottom:none}
+.sup-av{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;color:#fff;font-weight:700;font-size:13px}
+.sup b{font-size:13px;display:block}.sup span{font-size:11px;color:var(--slate)}
+.sup .amt{margin-right:auto;text-align:left;font-weight:700;font-size:13.5px}
+
+/* ===== NOTIFS DRAWER / SHEET / TOAST ===== */
+.overlay{position:fixed;inset:0;background:rgba(6,27,51,.45);z-index:70;opacity:0;pointer-events:none;
+  transition:opacity .3s;backdrop-filter:blur(3px)}
+.overlay.open{opacity:1;pointer-events:auto}
+.sheet{position:fixed;bottom:0;left:50%;transform:translate(-50%,105%);width:100%;max-width:480px;z-index:80;
+  background:#fff;border-radius:26px 26px 0 0;padding:14px 20px calc(24px + env(safe-area-inset-bottom));
+  transition:transform .38s cubic-bezier(.2,.8,.2,1);max-height:82dvh;overflow-y:auto;box-shadow:var(--shadow-float)}
+.sheet.open{transform:translate(-50%,0)}
+.sheet-bar{width:44px;height:5px;border-radius:5px;background:var(--line);margin:0 auto 16px}
+.sheet h3{font-size:17px;font-weight:700;margin-bottom:14px}
+.ntf{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
+.ntf:last-child{border:none}
+.ntf-ic{width:40px;height:40px;border-radius:13px;display:grid;place-items:center;flex-shrink:0}
+.ntf b{font-size:13px;display:block}.ntf p{font-size:12px;color:var(--slate);margin-top:2px}
+.ntf time{font-size:10px;color:var(--slate)}
+#toast{position:fixed;top:18px;left:50%;transform:translate(-50%,-140%);z-index:100;background:var(--navy);color:#fff;
+  padding:13px 22px;border-radius:16px;font-size:13.5px;font-weight:600;box-shadow:var(--shadow-float);
+  transition:transform .4s cubic-bezier(.2,.8,.2,1);display:flex;align-items:center;gap:10px;max-width:90%}
+#toast.show{transform:translate(-50%,0)}
+
+/* skeleton */
+.sk{background:linear-gradient(90deg,var(--line) 25%,#F0F4FA 50%,var(--line) 75%);background-size:200% 100%;
+  animation:shimmer 1.4s infinite;border-radius:8px}
+@keyframes shimmer{to{background-position:-200% 0}}
+
+.login{position:fixed;inset:0;z-index:200;background:var(--grad-bai);display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:22px;color:#fff;transition:opacity .5s,visibility .5s}
+.login.hide{opacity:0;visibility:hidden}
+.login-logo{width:86px;height:86px;border-radius:26px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);
+  display:grid;place-items:center;font-size:34px;font-weight:700;font-family:'Space Grotesk';
+  box-shadow:0 20px 50px rgba(0,0,0,.25);animation:logoIn .8s cubic-bezier(.2,.8,.2,1)}
+@keyframes logoIn{from{transform:scale(.6);opacity:0}to{transform:scale(1);opacity:1}}
+.login h1{font-size:24px;font-weight:700}
+.login p{font-size:13px;opacity:.75;margin-top:-14px}
+.bio-btn{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.25);
+  color:#fff;padding:15px 34px;border-radius:18px;font-weight:700;font-size:15px;backdrop-filter:blur(8px);
+  transition:transform .2s}
+.bio-btn:active{transform:scale(.95)}
 </style>
-  <link rel="stylesheet" href="arkan-theme.css">
-  <link rel="stylesheet" href="arkan-light.css">
-  <script src="arkan-gate.js"></script>
 </head>
 <body>
 
-<div class="grid-bg"></div>
-<canvas id="particles" aria-hidden="true"></canvas>
-<div class="orb orb-1"></div><div class="orb orb-2"></div>
+<!-- LOGIN -->
+<div class="login" id="login">
+  <svg viewBox="0 0 64 64" fill="none" width="86" height="86" style="filter:drop-shadow(0 20px 40px rgba(0,0,0,.3));animation:logoIn .8s cubic-bezier(.2,.8,.2,1)">
+    <defs><linearGradient id="lgA" x1="8" y1="56" x2="56" y2="8">
+      <stop offset="0" stop-color="#0058D9"/><stop offset="1" stop-color="#00B5FF"/></linearGradient></defs>
+    <rect x="2" y="2" width="60" height="60" rx="16" fill="#071D49"/>
+    <rect x="2" y="2" width="60" height="60" rx="16" stroke="url(#lgA)" stroke-width="2.5"/>
+    <path d="M14 46 L32 14 L50 46" stroke="url(#lgA)" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M22 38 L42 38" stroke="#C9A24B" stroke-width="4" stroke-linecap="round"/>
+  </svg>
+  <h1>ARKAN Rates</h1>
+  <p>المنصة المالية · أنغولا ⇄ موريتانيا</p>
+  <button class="bio-btn" onclick="unlock()">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 11a3 3 0 0 0-3 3c0 1.5.5 3 1 4m4-7.5c.6.8 1 1.9 1 3 0 2-.5 3.5-1 4.5M7 9a6 6 0 0 1 10 0m-13 3a9 9 0 0 1 2-5.7M21 12c0-1.5-.4-3-1-4.2"/></svg>
+    الدخول بالبصمة / Face ID
+  </button>
+</div>
 
-<!-- ============ NAVBAR ============ -->
-<nav class="bar">
-  <div class="bar-in">
-    <a href="#top" class="logo">
-      <img class="sq" src="arkan-logo.svg" alt="ARKAN">
-      <span class="nm">ARKAN</span>
-    </a>
-    <div class="links">
-      <a href="#rates">الأسعار</a>
-      <a href="#convert">التحويل</a>
-      <a href="#invoices">المؤسسات</a>
-      <a class="btn-login" href="account.html" style="text-decoration:none;display:inline-flex;align-items:center;justify-content:center">حسابي</a>
+<div id="app">
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <svg viewBox="0 0 64 64" fill="none" width="42" height="42" style="border-radius:14px;box-shadow:var(--shadow-card)">
+      <rect x="2" y="2" width="60" height="60" rx="16" fill="#071D49"/>
+      <rect x="2" y="2" width="60" height="60" rx="16" stroke="url(#lgA2)" stroke-width="2.5"/>
+      <defs><linearGradient id="lgA2" x1="8" y1="56" x2="56" y2="8"><stop offset="0" stop-color="#0058D9"/><stop offset="1" stop-color="#00B5FF"/></linearGradient></defs>
+      <path d="M14 46 L32 14 L50 46" stroke="url(#lgA2)" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M22 38 L42 38" stroke="#C9A24B" stroke-width="4" stroke-linecap="round"/>
+    </svg>
+    <div class="tb-meta">
+      <div class="tb-hello" id="greet">مساء الخير 👋</div>
+      <div class="tb-name">محمد جافر</div>
     </div>
-    <button class="menu-btn" id="mBtn" onclick="toggleDrawer()" aria-label="القائمة"><i></i><i></i><i></i></button>
-  </div>
-  <div class="drawer" id="drawer">
-    <a href="#rates" onclick="toggleDrawer()">الأسعار</a>
-    <a href="#convert" onclick="toggleDrawer()">التحويل</a>
-    <a href="#invoices" onclick="toggleDrawer()">المؤسسات</a>
-    <a href="#request" onclick="toggleDrawer()">طلب تحويل</a>
-    <a href="account.html">حسابي</a>
-    <a href="settlement.html">لوحة التسوية</a>
-  </div>
-</nav>
+    <button class="tb-btn" onclick="openSheet('notifSheet')" aria-label="الإشعارات">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0C1B33" stroke-width="1.8"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+      <span class="dot"></span>
+    </button>
+    <button class="tb-btn" onclick="openSheet('setSheet')" aria-label="الإعدادات">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#0C1B33" stroke-width="1.8"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+    </button>
+  </header>
 
-<!-- ============ HERO ============ -->
-<header class="hero layer" id="top"><div class="wrap">
-  <div class="badge"><span class="live-dot"></span>موريتانيا · أنغولا · الصين</div>
-  <h1>حوّل أموالك إلى <span class="accent">أي مكان في العالم</span> بثقة المؤسسات</h1>
-  <p class="lead">صرف العملات وتحويل الأموال بين موريتانيا وأنغولا والصين، وتسديد فواتير الموردين الدوليين — بمرجع رسمي وتنفيذ خلال دقائق.</p>
-  <div class="hero-cta">
-    <button class="btn btn-primary" onclick="scrollTo_('#convert')">ابدأ التحويل الآن</button>
-    <button class="btn btn-ghost" onclick="scrollTo_('#invoices')">تسديد فاتورة مورد</button>
-  </div>
-  <div class="stats">
-    <div class="stat"><b class="num">+11</b><span>عملة مدعومة</span></div>
-    <div class="stat"><b class="num">30</b><span>دقيقة سعر مثبّت عند التأكيد</span></div>
-    <div class="stat"><b>دقائق</b><span>زمن التنفيذ</span></div>
-    <div class="stat"><b class="num">24/7</b><span>تسوية مستمرة</span></div>
-  </div>
-</div></header>
+  <!-- ============ HOME ============ -->
+  <section class="view active" id="v-home">
+    <div class="corridor">
+      <div class="cor-city"><b>لواندا</b><span>AOA</span></div>
+      <div class="cor-path"><i class="cor-pulse"></i></div>
+      <div class="cor-rate"><b class="num">1 USDT = 1,180 Kz</b><span>السعر المباشر · محدّث الآن</span></div>
+      <div class="cor-path"><i class="cor-pulse" style="animation-delay:1.6s"></i></div>
+      <div class="cor-city"><b>نواكشوط</b><span>MRU</span></div>
+    </div>
 
-<!-- ============ CONVERTER ============ -->
-<section class="sec layer" id="convert"><div class="wrap">
-  <div class="sec-head">
-    <div class="kicker">CONVERTER</div>
-    <h2>حاسبة التحويل</h2>
-    <p>احسب المبلغ الذي يستلمه المستفيد بسعر اليوم — بشفافية كاملة قبل الطلب.</p>
-  </div>
-  <div class="card conv">
-    <div class="conv-row">
-      <label for="amtIn">المبلغ</label>
-      <div class="conv-input">
-        <input id="amtIn" type="number" inputmode="decimal" value="1000" oninput="calc()" aria-label="المبلغ">
-        <div class="fdd" id="fddFrom"></div>
+    <!-- WALLETS -->
+    <div class="wallets" id="wallets">
+      <div class="wcard w-aoa">
+        <div class="wc-top"><span class="wc-cur">AOA · KWANZA</span><span class="wc-flag">🇦🇴</span></div>
+        <div class="wc-bal num">48,250,000 Kz</div>
+        <div class="wc-sub">محفظة أنغولا · BAI / BFA / ATLANTICO</div>
+        <div class="wc-foot"><div class="wc-chip"></div><span class="ltr">**** 4471 · ARKAN ATIVOS</span></div>
+      </div>
+      <div class="wcard w-mru">
+        <div class="wc-top"><span class="wc-cur">MRU · OUGUIYA</span><span class="wc-flag">🇲🇷</span></div>
+        <div class="wc-bal num">1,860,400 MRU</div>
+        <div class="wc-sub">محفظة موريتانيا · Bankily / Masrvi / BPM</div>
+        <div class="wc-foot"><div class="wc-chip"></div><span class="ltr">**** 0208 · ARKAN INTL</span></div>
+      </div>
+      <div class="wcard w-usdt">
+        <div class="wc-top"><span class="wc-cur">USDT · TRC20</span><span class="wc-flag">₮</span></div>
+        <div class="wc-bal num">126,540.00 ₮</div>
+        <div class="wc-sub">محفظة التسوية الدولية</div>
+        <div class="wc-foot"><div class="wc-chip"></div><span class="ltr">TTXU…m7td</span></div>
+      </div>
+      <div class="wcard w-eur">
+        <div class="wc-top"><span class="wc-cur">EUR</span><span class="wc-flag">🇪🇺</span></div>
+        <div class="wc-bal num">32,900.00 €</div>
+        <div class="wc-sub">محفظة اليورو · تسويات أوروبا</div>
+        <div class="wc-foot"><div class="wc-chip"></div><span class="ltr">**** 7726</span></div>
+      </div>
+      <div class="wcard w-usd">
+        <div class="wc-top"><span class="wc-cur">USD</span><span class="wc-flag">🇺🇸</span></div>
+        <div class="wc-bal num">58,120.00 $</div>
+        <div class="wc-sub">محفظة الدولار · الصين / الموردون</div>
+        <div class="wc-foot"><div class="wc-chip"></div><span class="ltr">**** 3350</span></div>
       </div>
     </div>
-    <div class="swap-wrap">
-      <button class="swap" onclick="swapC()" aria-label="تبديل العملتين">
-        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M7 16V4m0 0L4 7m3-3l3 3M17 8v12m0 0l3-3m-3 3l-3-3"/></svg>
-      </button>
+
+    <!-- QUICK ACTIONS -->
+    <div class="qa">
+      <button class="qa-item" onclick="go('v-transfer')">
+        <div class="qa-ic"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
+        <span>تحويل</span></button>
+      <button class="qa-item" onclick="go('v-transfer');toast('⚡ صرف فوري بين المحافظ')">
+        <div class="qa-ic"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M7 16l-4-4 4-4M3 12h13M17 8l4 4-4 4M21 12h-6"/></svg></div>
+        <span>صرف</span></button>
+      <button class="qa-item" onclick="go('v-archive')">
+        <div class="qa-ic"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="3" y="4" width="18" height="4" rx="1"/><path d="M5 8v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8M10 12h4"/></svg></div>
+        <span>الأرشيف</span></button>
+      <button class="qa-item" onclick="go('v-chats')">
+        <div class="qa-ic"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
+        <span>محادثة</span></button>
     </div>
-    <div class="conv-row">
-      <label for="toC">إلى عملة</label>
-      <div class="conv-input">
-        <input id="outIn" type="text" readonly value="0" aria-label="المبلغ المستلم">
-        <div class="fdd" id="fddTo"></div>
+
+    <!-- LIVE RATES -->
+    <div class="sec">
+      <div class="sec-h"><h2>الأسعار المباشرة</h2><button onclick="toast('🔄 تم تحديث الأسعار')">تحديث</button></div>
+      <div class="card">
+        <div class="rate-row"><div class="rate-pair"><b>USDT → AOA</b><span>تيثر / كوانزا أنغولي</span></div>
+          <div class="rate-val"><b class="num">1,180 Kz</b></div><span class="chg up">+0.8%</span></div>
+        <div class="rate-row"><div class="rate-pair"><b>USDT → MRU</b><span>تيثر / أوقية موريتانية</span></div>
+          <div class="rate-val"><b class="num">39.85</b></div><span class="chg up">+0.2%</span></div>
+        <div class="rate-row"><div class="rate-pair"><b>AOA → MRU</b><span>الممر المباشر لواندا ⇄ نواكشوط</span></div>
+          <div class="rate-val"><b class="num">0.0338</b></div><span class="chg dn">−0.4%</span></div>
+        <div class="rate-row"><div class="rate-pair"><b>USD → CNY</b><span>ممر الصين · الموردون</span></div>
+          <div class="rate-val"><b class="num">7.18 ¥</b></div><span class="chg up">+0.1%</span></div>
       </div>
     </div>
-    <div class="conv-out">
-      <div class="lbl">المبلغ المستلم</div>
-      <div class="big num" id="outBig">0</div>
-      <div class="rate"><span class="live-dot"></span><span id="rateTxt">—</span></div>
-    </div>
-    <button class="btn btn-primary" style="width:100%" onclick="goToRequest()">طلب تحويل</button>
-    <div class="conv-note">السعر مثبّت 30 دقيقة بعد تأكيد الطلب</div>
-  </div>
-</div></section>
 
-<!-- ============ EXCHANGE DESK ============ -->
-<section class="sec layer" id="rates"><div class="wrap">
-  <div class="sec-head">
-    <div class="kicker">EXCHANGE DESK</div>
-    <h2>أسعار اليوم</h2>
-    <p>أسعار الشراء والبيع محدّثة يوميًا مقابل الأوقية الموريتانية.</p>
-  </div>
-  <div class="desk" id="deskGrid"></div>
-</div></section>
-
-<!-- ============ FEATURES ============ -->
-<section class="sec layer" id="why"><div class="wrap">
-  <div class="sec-head">
-    <div class="kicker">WHY ARKAN</div>
-    <h2>لماذا ARKAN</h2>
-  </div>
-  <div class="feats">
-    <div class="feat"><div class="n num">01</div><h3>سرعة فورية</h3><p>تحويلات تتم في ثوانٍ مع تحديث لحظي للأسعار.</p></div>
-    <div class="feat"><div class="n num">02</div><h3>أمان مؤسسي</h3><p>تشفير بنكي وتوثيق على مستوى المؤسسات المالية.</p></div>
-    <div class="feat"><div class="n num">03</div><h3>أقل رسوم</h3><p>نسبة تنافسية تصل إلى 0.5% على التحويلات الدولية.</p></div>
-    <div class="feat"><div class="n num">04</div><h3>تغطية عالمية</h3><p>دعم أكثر من 50 عملة وتحويل لأكثر من 180 دولة.</p></div>
-  </div>
-</div></section>
-
-<!-- ============ SUPPLIER INVOICES ============ -->
-<section class="sec layer" id="invoices"><div class="wrap">
-  <div class="sec-head">
-    <div class="kicker">SUPPLIER INVOICES</div>
-    <h2>تسديد فواتير الموردين</h2>
-    <p>ارفع فاتورة موردك — نقرأ المبلغ واسم الشركة تلقائيًا، ونرد بعرض السعر خلال دقائق.</p>
-  </div>
-  <div class="card" style="max-width:720px">
-    <div class="drop" id="drop" onclick="pickInvoice()">
-      <div class="t" id="dropT">ارفع الفاتورة — صورة أو PDF</div>
-      <div class="s" id="dropS">قراءة تلقائية للمبلغ واسم الشركة</div>
-      <div class="r" id="dropR"></div>
-    </div>
-    <div class="field"><label for="ivComp">اسم الشركة / المورد</label>
-      <input id="ivComp" placeholder="مثال: LUANDA IMPORT LDA"></div>
-    <div class="grid-2">
-      <div class="field"><label for="ivAmt">مبلغ الفاتورة</label>
-        <input id="ivAmt" inputmode="decimal" placeholder="مثال: 41,860"></div>
-      <div class="field"><label for="ivCcy">عملة الفاتورة</label>
-        <div class="fdd" id="fddIvCcy"></div></div>
-    </div>
-    <div class="grid-2">
-      <div class="field"><label for="ivDest">بلد المورد</label>
-        <input id="ivDest" placeholder="مثال: الصين / البرتغال"></div>
-      <div class="field"><label for="ivWho">اسمك ورقم هاتفك</label>
-        <input id="ivWho" placeholder="مثال: محمد — 36295050"></div>
-    </div>
-    <button class="btn btn-primary" style="width:100%" onclick="sendInvoice()">أرسل الفاتورة للتسديد</button>
-    <div class="inv-notes">
-      <span>دفع مباشر للمورد</span><span>إيصال تحويل رسمي</span><span>سعر مثبّت 30 دقيقة</span>
-    </div>
-  </div>
-</div></section>
-
-<!-- ============ NEW REQUEST ============ -->
-<section class="sec layer" id="request"><div class="wrap">
-  <div class="sec-head">
-    <div class="kicker">NEW REQUEST</div>
-    <h2>طلب تحويل</h2>
-    <div id="reqSummary" style="display:none;background:var(--glass);border:1px solid var(--stroke-2);border-radius:16px;padding:16px;margin-bottom:16px">
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <span style="color:var(--txt-2);font-size:13px">تحوّل</span>
-        <b id="reqSumFrom" style="font-size:15px">—</b>
+    <!-- BENEFICIARIES -->
+    <div class="sec">
+      <div class="sec-h"><h2>المستفيدون الأخيرون</h2><button onclick="toast('قريبًا: دفتر المستفيدين الكامل')">الكل</button></div>
+      <div class="bens">
+        <div class="ben"><div class="ben-av" style="background:var(--grad-bai)">أ</div><span>أحمد ولد محمد</span><small>Bankily</small></div>
+        <div class="ben"><div class="ben-av" style="background:var(--grad-mru)">J</div><span>João Miguel</span><small>BAI</small></div>
+        <div class="ben"><div class="ben-av" style="background:var(--grad-usdt)">L</div><span>Li Wei 供应商</span><small>USDT</small></div>
+        <div class="ben"><div class="ben-av" style="background:var(--grad-eur)">س</div><span>سيدي بوبكر</span><small>Masrvi</small></div>
+        <div class="ben"><div class="ben-av" style="background:var(--grad-usd)">C</div><span>Carla Neto</span><small>ATLANTICO</small></div>
       </div>
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px">
-        <span style="color:var(--txt-2);font-size:13px">يستلم</span>
-        <b id="reqSumTo" style="font-size:15px;color:var(--gold)">—</b>
+    </div>
+
+    <!-- RECENT OPS -->
+    <div class="sec">
+      <div class="sec-h"><h2>العمليات الأخيرة</h2><button onclick="go('v-archive')">السجل الكامل</button></div>
+      <div class="card">
+        <div class="op" onclick="openChat()">
+          <div class="op-ic out"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
+          <div class="op-meta"><b>تحويل → João Miguel · BAI لواندا</b><span>TRF-2481 · اليوم 14:22</span></div>
+          <div class="op-amt"><b class="num">−8,400,000 Kz</b><span class="badge proc">تسوية المورد</span></div>
+        </div>
+        <div class="op" onclick="openChat()">
+          <div class="op-ic in"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M11 18l-6-6 6-6"/></svg></div>
+          <div class="op-meta"><b>استلام من أحمد ولد محمد · Bankily</b><span>TRF-2480 · اليوم 11:05</span></div>
+          <div class="op-amt"><b class="num">+240,000 MRU</b><span class="badge ok">مكتمل</span></div>
+        </div>
+        <div class="op" onclick="openChat()">
+          <div class="op-ic wait"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg></div>
+          <div class="op-meta"><b>تسوية Li Wei · مورّد قوانغتشو</b><span>TRF-2479 · أمس 19:40</span></div>
+          <div class="op-amt"><b class="num">−22,000 ₮</b><span class="badge pend">بانتظار الإيصال</span></div>
+        </div>
+        <div class="op" onclick="openChat()">
+          <div class="op-ic in"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M11 18l-6-6 6-6"/></svg></div>
+          <div class="op-meta"><b>استلام Carla Neto · ATLANTICO</b><span>TRF-2478 · أمس 10:12</span></div>
+          <div class="op-amt"><b class="num">+5,100,000 Kz</b><span class="badge ok">مكتمل</span></div>
+        </div>
       </div>
-      <div onclick="scrollTo_('.conv')" style="text-align:center;margin-top:12px;color:var(--blue-live);font-size:12px;cursor:pointer">✎ تعديل المبلغ أو العملة</div>
     </div>
-    <p>أرسل تفاصيل تحويلك — نرد بعرض السعر والتأكيد خلال دقائق.</p>
-  </div>
-  <div class="card" style="max-width:720px">
-    <div class="grid-2">
-      <div class="field"><label for="rName">الاسم الكامل</label><input id="rName" placeholder="محمد الأمين"></div>
-      <div class="field"><label for="rPhone">رقم الهاتف / واتساب</label><input id="rPhone" inputmode="tel" placeholder="+222 36 29 50 50"></div>
-    </div>
-    <div class="grid-2">
-      <div class="field" id="rFromWrap" style="display:none"><label for="rFrom">من عملة</label><div class="fdd" id="fddRFrom"></div></div>
-      <div class="field" id="rToWrap" style="display:none"><label for="rTo">إلى عملة</label><div class="fdd" id="fddRTo"></div></div>
-    </div>
-    <div class="field" id="rAmtWrap" style="display:none"><label for="rAmt">المبلغ</label><input id="rAmt" type="number" inputmode="decimal" placeholder="1000"></div>
-    <div class="field"><label for="rMethod">طريقة الاستلام</label>
-      <select id="rMethod">
-        <option>تحويل بنكي</option>
-        <option>Bankily / Masrvi</option>
-        <option>نقدًا — نواكشوط</option>
-        <option>نقدًا — لواندا</option>
-        <option>تحويل للمورد مباشرة</option>
-      </select></div>
-    <div class="field"><label for="rNote">ملاحظات (اختياري)</label>
-      <textarea id="rNote" placeholder="رقم الفاتورة، اسم المستفيد، أي تفاصيل إضافية"></textarea></div>
-    <button class="btn btn-primary" style="width:100%" onclick="sendRequest()">إرسال الطلب</button>
-  </div>
-</div></section>
+  </section>
 
-<!-- ============ ARKAN SERVICES ============ -->
-<section class="sec layer" id="services"><div class="wrap">
-  <div class="sec-head">
-    <div class="kicker">ALL SERVICES</div>
-    <h2>خدمات ومنصّات أركان</h2>
-    <p>كل أدوات أركان في مكان واحد — الأسعار، الطلبات، الأرشيف، التسويات، والمزيد.</p>
-  </div>
-  <div id="arkan-services" class="ark-apps-grid"></div>
-</div></section>
+  <!-- ============ TRANSFER ============ -->
+  <section class="view" id="v-transfer">
+    <div class="steps"><div class="stp done" id="s1"></div><div class="stp" id="s2"></div><div class="stp" id="s3"></div><div class="stp" id="s4"></div></div>
 
-<!-- ============ FOOTER ============ -->
-<footer><div class="wrap">
-  <div class="f-grid">
-    <div class="f-col">
-      <div class="logo" style="margin-bottom:14px"><img class="sq" src="arkan-logo.svg" alt="ARKAN"><span class="nm">ARKAN</span></div>
-      <p>منصة مؤسسية لصرف العملات الأجنبية وتسديد فواتير الموردين الدوليين بين موريتانيا وأنغولا والصين.</p>
+    <!-- STEP 1 -->
+    <div class="wz" id="wz1">
+      <div class="wz-title">تحويل جديد</div>
+      <div class="wz-sub">أنشئ التحويل في أقل من 30 ثانية · الأطراف والوجهة</div>
+      <div class="fld"><label>المرسِل (العميل)</label>
+        <select><option>أحمد ولد محمد · +222 36xx xx50</option><option>سيدي بوبكر · +222 46xx</option><option>عميل جديد…</option></select></div>
+      <div class="fld"><label>المستفيد</label>
+        <select><option>João Miguel · BAI Luanda · IBAN AO06…4471</option><option>Li Wei · USDT TRC20</option><option>Carla Neto · ATLANTICO</option><option>مستفيد جديد…</option></select></div>
+      <div class="fld-row">
+        <div class="fld"><label>من عملة</label><select id="curFrom"><option>MRU</option><option>AOA</option><option>USDT</option><option>EUR</option><option>USD</option></select></div>
+        <div class="fld"><label>إلى عملة</label><select id="curTo"><option>AOA</option><option>MRU</option><option>USDT</option><option>EUR</option><option>USD</option></select></div>
+      </div>
+      <button class="btn btn-pri" onclick="wzGo(2)">متابعة</button>
     </div>
-    <div class="f-col"><h5>المنصة</h5>
-      <a href="#rates">أسعار اليوم</a><a href="#convert">حاسبة التحويل</a>
-      <a href="#invoices">تسديد الفواتير</a><a href="#request">طلب تحويل</a>
+
+    <!-- STEP 2 -->
+    <div class="wz" id="wz2" style="display:none">
+      <div class="wz-title">المبلغ والسعر</div>
+      <div class="wz-sub">سعر مثبّت لمدة 15 دقيقة</div>
+      <div class="amount-box">
+        <div class="lbl"><span>المبلغ المرسَل</span><span>الرصيد: <b class="num">1,860,400 MRU</b></span></div>
+        <div class="amount-line"><input class="num" id="amtIn" type="text" inputmode="decimal" value="240,000" oninput="calc()"><div class="cur-pick">🇲🇷 MRU</div></div>
+      </div>
+      <div class="rate-strip">⇄ سعر الصرف المثبّت: <b class="num">1 MRU = 29.61 Kz</b></div>
+      <div class="amount-box">
+        <div class="lbl"><span>المبلغ المستلَم</span><span>وصول متوقع: <b>أقل من ساعتين</b></span></div>
+        <div class="amount-line"><input class="num" id="amtOut" type="text" value="7,106,400" readonly><div class="cur-pick">🇦🇴 AOA</div></div>
+      </div>
+      <div class="fee-table">
+        <div class="fee-line"><span>رسوم المنصة (0.9%)</span><b class="num">2,160 MRU</b></div>
+        <div class="fee-line"><span>رسوم التسوية البنكية</span><b class="num">400 MRU</b></div>
+        <div class="fee-line total"><span>الإجمالي المطلوب دفعه</span><b class="num">242,560 MRU</b></div>
+      </div>
+      <button class="btn btn-pri" onclick="wzGo(3)">متابعة</button>
+      <button class="btn btn-ghost" onclick="wzGo(1)">رجوع</button>
     </div>
-    <div class="f-col"><h5>الدعم</h5>
-      <a href="https://wa.me/22236295050" target="_blank" rel="noopener">واتساب</a>
-      <a href="rates.html">بوابة الأسعار</a>
-      <a href="request.html">تحويلات الشركات</a>
-      <a href="settlement.html">لوحة التسوية</a>
+
+    <!-- STEP 3 -->
+    <div class="wz" id="wz3" style="display:none">
+      <div class="wz-title">إرفاق الإيصال</div>
+      <div class="wz-sub">الذكاء الاصطناعي يقرأ الإيصال ويطابقه تلقائيًا</div>
+      <input type="file" id="rcFile" accept="image/*,.pdf" hidden onchange="realScan(this.files[0])">
+      <div class="upload" onclick="document.getElementById('rcFile').click()">
+        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#0B57C9" stroke-width="1.6" style="margin:0 auto"><path d="M12 16V4m0 0L7 9m5-5 5 5M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>
+        <b>اضغط لرفع إيصال الدفع</b><span>صورة · PDF · من الكاميرا أو WhatsApp</span>
+      </div>
+      <div id="aiResult" style="display:none">
+        <div class="card" style="padding:16px;margin-bottom:16px">
+          <div style="display:flex;align-items:center;gap:9px;margin-bottom:12px">
+            <span id="aiIcon" style="width:34px;height:34px;border-radius:11px;background:rgba(15,169,104,.12);display:grid;place-items:center">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0FA968" stroke-width="2.2"><path d="M20 6 9 17l-5-5"/></svg></span>
+            <b style="font-size:14px" id="aiTitle">تحقّق AI</b>
+          </div>
+          <div class="fee-line"><span>البنك</span><b id="aiBank">—</b></div>
+          <div class="fee-line"><span>المبلغ المقروء</span><b class="num" id="aiAmt">—</b></div>
+          <div class="fee-line"><span>المرجع</span><b class="ltr num" id="aiTxn">—</b></div>
+          <div class="fee-line"><span>التاريخ</span><b class="ltr num" id="aiDate">—</b></div>
+          <div class="fee-line"><span>فحص التكرار</span><b id="aiDup">—</b></div>
+          <div class="fee-line"><span>درجة المخاطر</span><b id="aiRisk">—</b></div>
+        </div>
+      </div>
+      <button class="btn btn-pri" onclick="wzGo(4)">تأكيد وإرسال</button>
+      <button class="btn btn-ghost" onclick="wzGo(2)">رجوع</button>
     </div>
+
+    <!-- STEP 4: TIMELINE -->
+    <div class="wz" id="wz4" style="display:none">
+      <div class="wz-title">تم إنشاء التحويل 🎉</div>
+      <div class="wz-sub ltr" style="text-align:right">TRF-2482 · <span class="num">240,000 MRU → 7,106,400 Kz</span></div>
+      <div class="card" style="padding:18px 14px;margin-bottom:16px">
+        <div class="tl">
+          <div class="tl-item done"><div class="tl-dot">✓</div><div class="tl-meta"><b>تم الإنشاء</b><span>اليوم · الآن</span></div></div>
+          <div class="tl-item done"><div class="tl-dot">✓</div><div class="tl-meta"><b>تم استلام الدفع</b><span>إيصال Bankily متحقَّق بواسطة AI</span></div></div>
+          <div class="tl-item now"><div class="tl-dot">●</div><div class="tl-meta"><b>معالجة المورّد</b><span>جاري التنفيذ في لواندا…</span></div></div>
+          <div class="tl-item"><div class="tl-dot">4</div><div class="tl-meta"><b>التسوية</b><span>BAI · IBAN AO06…4471</span></div></div>
+          <div class="tl-item"><div class="tl-dot">5</div><div class="tl-meta"><b>مكتمل</b><span>إشعار تلقائي للعميل + PDF</span></div></div>
+        </div>
+      </div>
+      <button class="btn btn-pri" onclick="openChat()">فتح محادثة التحويل 💬</button>
+      <button class="btn btn-ghost" onclick="wzGo(1);go('v-home')">العودة للرئيسية</button>
+    </div>
+  </section>
+
+  <!-- ============ CHATS LIST ============ -->
+  <section class="view" id="v-chats">
+    <div class="search-box">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5A6B85" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4-4"/></svg>
+      <input placeholder="بحث في المحادثات…">
+    </div>
+    <div class="card">
+      <div class="conv" onclick="openChat()">
+        <div class="conv-av" style="background:var(--grad-bai)">TR</div>
+        <div class="conv-meta"><b><span class="pin">📌</span> TRF-2482 · أحمد ← João</b><p>AI: تم التحقق من الإيصال ✓ · بانتظار المورد</p></div>
+        <div class="conv-side"><time>14:31</time><span class="unread">3</span></div>
+      </div>
+      <div class="conv" onclick="openChat()">
+        <div class="conv-av" style="background:var(--grad-usdt)">LW</div>
+        <div class="conv-meta"><b>Li Wei · تسوية قوانغتشو</b><p>请确认收款地址 · بانتظار عنوان USDT</p></div>
+        <div class="conv-side"><time>12:08</time><span class="unread">1</span></div>
+      </div>
+      <div class="conv" onclick="openChat()">
+        <div class="conv-av" style="background:var(--grad-mru)">CO</div>
+        <div class="conv-meta"><b>الامتثال · Compliance</b><p>مطلوب موافقتك على تحويل يتجاوز الحد اليومي</p></div>
+        <div class="conv-side"><time>أمس</time></div>
+      </div>
+      <div class="conv" onclick="openChat()">
+        <div class="conv-av" style="background:var(--grad-eur)">CN</div>
+        <div class="conv-meta"><b>Carla Neto · ATLANTICO</b><p>Obrigada! تم الاستلام بنجاح 🙏</p></div>
+        <div class="conv-side"><time>أمس</time></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ ARCHIVE ============ -->
+  <section class="view" id="v-archive">
+    <div class="search-box">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5A6B85" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4-4"/></svg>
+      <input id="arcSearch" placeholder="ابحث: عميل، مرجع، بنك، مبلغ، نص OCR…" oninput="arcRender()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0B57C9" stroke-width="2"><path d="M12 2v4m0 12v4M2 12h4m12 0h4"/><circle cx="12" cy="12" r="4"/></svg>
+    </div>
+    <input type="file" id="arcFiles" accept="image/*,.pdf" multiple hidden onchange="arcUpload(this.files)">
+    <button class="btn btn-pri" style="margin-bottom:12px" onclick="document.getElementById('arcFiles').click()">＋ إضافة إيصالات (قراءة AI فورية)</button>
+    <div id="arcStatus" style="display:none;font-size:12.5px;font-weight:600;color:var(--blue);background:var(--sky);border-radius:12px;padding:10px 14px;margin-bottom:12px"></div>
+    <div class="chips">
+      <button class="chip on" onclick="chip(this,'')">الكل</button>
+      <button class="chip" onclick="chip(this,'AOA')">🇦🇴 أنغولا</button>
+      <button class="chip" onclick="chip(this,'MRU')">🇲🇷 موريتانيا</button>
+      <button class="chip" onclick="chip(this,'BAI')">BAI</button>
+      <button class="chip" onclick="chip(this,'Bankily')">Bankily</button>
+      <button class="chip" onclick="chip(this,'ATLANTICO')">ATLANTICO</button>
+      <button class="chip" onclick="chip(this,'USDT')">USDT</button>
+      <button class="chip" onclick="chip(this,'⚠')">⚠️ تنبيهات</button>
+    </div>
+    <div class="card" id="arcLive" style="display:none;margin-bottom:12px"></div>
+    <div class="card" id="arcDemo">
+      <div class="doc" onclick="toast('📄 فتح الإيصال + نص OCR الكامل')">
+        <div class="doc-ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 15h6M9 11h2"/></svg></div>
+        <div class="doc-meta"><b>إيصال BAI · <span class="num">8,400,000 Kz</span> · João Miguel</b>
+          <span>TRF-2481 · REF <span class="ltr num">BAI-772041</span> · اليوم 14:22</span>
+          <div class="tags"><span class="tag">تحويل صادر</span><span class="tag g">تسوية مورد</span><span class="tag">AI ✓ مطابق</span></div></div>
+      </div>
+      <div class="doc" onclick="toast('📄 فتح الإيصال + نص OCR الكامل')">
+        <div class="doc-ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 15h6M9 11h2"/></svg></div>
+        <div class="doc-meta"><b>إيصال Bankily · <span class="num">242,560 MRU</span> · أحمد ولد محمد</b>
+          <span>TRF-2482 · REF <span class="ltr num">BK-88412073</span> · اليوم 14:29</span>
+          <div class="tags"><span class="tag">دفع عميل</span><span class="tag">AI ✓ مطابق</span><span class="tag g">مخاطر منخفضة</span></div></div>
+      </div>
+      <div class="doc" onclick="toast('⚠️ إيصال مكرر — تم الحظر تلقائيًا')">
+        <div class="doc-ic" style="background:rgba(224,76,76,.1);color:var(--red)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0zM12 9v4m0 4h.01"/></svg></div>
+        <div class="doc-meta"><b>محاولة إيصال مكرر · <span class="num">242,560 MRU</span></b>
+          <span>نفس المرجع BK-88412073 · حُظر فورًا</span>
+          <div class="tags"><span class="tag warn">⚠️ احتيال محتمل</span><span class="tag warn">محظور</span></div></div>
+      </div>
+      <div class="doc" onclick="toast('📄 فتح الإيصال + نص OCR الكامل')">
+        <div class="doc-ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 15h6M9 11h2"/></svg></div>
+        <div class="doc-meta"><b>إيصال ATLANTICO · <span class="num">5,100,000 Kz</span> · Carla Neto</b>
+          <span>TRF-2478 · REF <span class="ltr num">ATL-90113</span> · أمس 10:12</span>
+          <div class="tags"><span class="tag">استلام</span><span class="tag">AI ✓ مطابق</span></div></div>
+      </div>
+      <div class="doc" onclick="toast('📄 فتح إيصال USDT · TronScan')">
+        <div class="doc-ic" style="background:rgba(38,161,123,.1);color:#26A17B"><b style="font-size:15px">₮</b></div>
+        <div class="doc-meta"><b>تسوية USDT · <span class="num">22,000 ₮</span> · Li Wei</b>
+          <span>TRF-2479 · TX <span class="ltr num">a91f…e02c</span> · أمس 19:40</span>
+          <div class="tags"><span class="tag">TRC20</span><span class="tag g">مورّد الصين</span><span class="tag" style="background:rgba(232,161,60,.14);color:#B87A1E">بانتظار التأكيد</span></div></div>
+      </div>
+    </div>
+    <div class="export-row">
+      <button class="exp-btn" onclick="arcPdf()">📕 PDF</button>
+      <button class="exp-btn" onclick="arcCsv('xls')">📗 Excel</button>
+      <button class="exp-btn" onclick="arcCsv('csv')">📄 CSV</button>
+    </div>
+  </section>
+
+  <!-- ============ DASHBOARD ============ -->
+  <section class="view" id="v-dash">
+    <div class="kpis">
+      <div class="kpi hero">
+        <div class="k-lbl">حجم اليوم · Volume</div>
+        <div class="k-val num">21,740,000 Kz</div>
+        <div class="k-sub">≈ <span class="num">18,420 USDT</span> · عبر 4 عملات وبلدين</div>
+      </div>
+      <div class="kpi"><div class="k-lbl">ربح اليوم</div><div class="k-val num" style="color:var(--green)">+196 ₮</div><div class="k-sub num">هامش 1.07%</div></div>
+      <div class="kpi"><div class="k-lbl">الفارق (Spread)</div><div class="k-val num">2.4%</div><div class="k-sub">AOA/MRU المتوسط</div></div>
+      <div class="kpi"><div class="k-lbl">تحويلات معلّقة</div><div class="k-val num" style="color:var(--amber)">6</div><div class="k-sub">3 بانتظار إيصال</div></div>
+      <div class="kpi"><div class="k-lbl">مكتملة اليوم</div><div class="k-val num" style="color:var(--green)">28</div><div class="k-sub num">+12% عن أمس</div></div>
+    </div>
+
+    <div class="sec">
+      <div class="sec-h"><h2>حجم الأسبوع</h2><button onclick="toast('عرض تقرير الشهر الكامل')">الشهر</button></div>
+      <div class="card">
+        <div class="bars">
+          <div class="bar-w"><div class="bar" style="height:42%"></div><span>سبت</span></div>
+          <div class="bar-w"><div class="bar" style="height:58%"></div><span>أحد</span></div>
+          <div class="bar-w"><div class="bar" style="height:35%"></div><span>اثنين</span></div>
+          <div class="bar-w"><div class="bar" style="height:72%"></div><span>ثلاثاء</span></div>
+          <div class="bar-w"><div class="bar" style="height:64%"></div><span>أربعاء</span></div>
+          <div class="bar-w"><div class="bar" style="height:88%;background:linear-gradient(180deg,#E8CE8A,#C9A24B)"></div><span>اليوم</span></div>
+          <div class="bar-w"><div class="bar" style="height:20%;opacity:.35"></div><span>جمعة</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="sec-h"><h2>أرصدة الموردين</h2><button onclick="toast('إدارة الموردين')">إدارة</button></div>
+      <div class="card">
+        <div class="sup"><div class="sup-av" style="background:var(--grad-bai)">JM</div><div><b>João Miguel · لواندا</b><span>BAI · تسوية AOA</span></div><div class="amt num" style="color:var(--green)">+12.4M Kz</div></div>
+        <div class="sup"><div class="sup-av" style="background:var(--grad-usdt)">LW</div><div><b>Li Wei · قوانغتشو</b><span>USDT TRC20</span></div><div class="amt num" style="color:var(--red)">−22,000 ₮</div></div>
+        <div class="sup"><div class="sup-av" style="background:var(--grad-mru)">سب</div><div><b>سيدي بوبكر · نواكشوط</b><span>Bankily / BPM</span></div><div class="amt num" style="color:var(--green)">+380,000 MRU</div></div>
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="sec-h"><h2>التوزيع الجغرافي</h2></div>
+      <div class="card" style="padding:16px">
+        <div class="fee-line"><span>🇦🇴 أنغولا · AOA</span><b class="num">58%</b></div>
+        <div style="height:8px;border-radius:8px;background:var(--line);margin:6px 0 12px"><div style="width:58%;height:100%;border-radius:8px;background:var(--grad-bai)"></div></div>
+        <div class="fee-line"><span>🇲🇷 موريتانيا · MRU</span><b class="num">27%</b></div>
+        <div style="height:8px;border-radius:8px;background:var(--line);margin:6px 0 12px"><div style="width:27%;height:100%;border-radius:8px;background:var(--grad-mru)"></div></div>
+        <div class="fee-line"><span>₮ USDT · دولي</span><b class="num">15%</b></div>
+        <div style="height:8px;border-radius:8px;background:var(--line);margin:6px 0 2px"><div style="width:15%;height:100%;border-radius:8px;background:var(--grad-usdt)"></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- BOTTOM NAV -->
+  <nav class="bnav">
+    <button class="bn-item active" data-v="v-home" onclick="go('v-home',this)">
+      <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="m3 10 9-7 9 7v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></svg>الرئيسية</button>
+    <button class="bn-item" data-v="v-chats" onclick="go('v-chats',this)">
+      <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>المحادثات</button>
+    <button class="bn-fab" onclick="go('v-transfer',null)" aria-label="تحويل جديد">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg></button>
+    <button class="bn-item" data-v="v-archive" onclick="go('v-archive',this)">
+      <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="3" y="4" width="18" height="4" rx="1"/><path d="M5 8v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8M10 12h4"/></svg>الأرشيف</button>
+    <button class="bn-item" data-v="v-dash" onclick="go('v-dash',this)">
+      <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M3 3v18h18"/><path d="M7 15v3m5-8v8m5-13v13"/></svg>اللوحة</button>
+  </nav>
+</div>
+
+<!-- CHAT SCREEN -->
+<div class="chat-screen" id="chatScreen">
+  <div class="ch-head">
+    <button class="tb-btn" onclick="closeChat()" style="border:none;background:var(--sky)">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0C1B33" stroke-width="2"><path d="m9 6 6 6-6 6"/></svg></button>
+    <div class="conv-av" style="background:var(--grad-bai);width:42px;height:42px;border-radius:14px">TR</div>
+    <div class="tb-meta">
+      <div class="tb-name" style="font-size:14.5px">TRF-2482 · أحمد ← João Miguel</div>
+      <div class="tb-hello" style="color:var(--green)">● العميل + المشغّل + المورّد + AI</div>
+    </div>
+    <button class="tb-btn" onclick="toast('📌 المثبّتات: تفاصيل بنك المستفيد + السعر')">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0C1B33" stroke-width="1.8"><path d="M12 17v5m-5-9 1.2-6.5L7 4h10l-1.2 2.5L17 13z"/></svg></button>
   </div>
-  <div class="f-bot">ARKAN Rates © 2026 — منصة التحويلات المالية الذكية<br><span style="font-size:.72rem;opacity:.5" class="ltr">v2.0 · 2026-07-22</span></div>
-</div></footer>
+  <div class="ch-body" id="chBody">
+    <div class="msg sys">🔐 محادثة مشفّرة · أُنشئت تلقائيًا مع التحويل TRF-2482</div>
+    <div class="msg them"><span class="who">أحمد (العميل)</span>السلام عليكم، أرسلت المبلغ عبر بنكيلي، الإيصال مرفق 👇<span class="tick">14:28</span></div>
+    <div class="receipt-card">
+      <div class="rc-img"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg></div>
+      <div class="rc-body"><b>إيصال Bankily · <span class="num">242,560 MRU</span></b><span class="ltr num">REF BK-88412073 · 14:27</span></div>
+      <div class="rc-verify"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6 9 17l-5-5"/></svg> تحقّق AI: المبلغ والمرجع مطابقان · لا تكرار</div>
+    </div>
+    <div class="msg sys">🤖 AI: تم التحقق تلقائيًا — درجة المخاطر 4/100 · أُخطر المورّد</div>
+    <div class="msg me">تمام أحمد، الدفع مؤكّد ✓ التسوية جارية في لواندا الآن<span class="tick">14:31 ✓✓</span></div>
+    <div class="msg them"><span class="who">João (المورّد) · مترجم من البرتغالية</span>سأنفذ التحويل إلى BAI خلال 40 دقيقة<span class="tick">14:33</span></div>
+    <div class="typing"><i></i><i></i><i></i></div>
+  </div>
+  <div class="ch-input">
+    <button class="tb-btn" style="border:none;background:var(--sky);flex-shrink:0" onclick="toast('📎 صورة · PDF · صوت · موقع · بيانات بنكية')">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#0B57C9" stroke-width="1.9"><path d="m21.4 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg></button>
+    <input id="chMsg" placeholder="اكتب رسالة…" onkeydown="if(event.key==='Enter')sendMsg()">
+    <button class="ch-send" onclick="sendMsg()">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="transform:scaleX(-1)"><path d="m22 2-7 20-4-9-9-4z"/><path d="M22 2 11 13"/></svg></button>
+  </div>
+</div>
+
+<!-- NOTIFICATIONS SHEET -->
+<div class="overlay" id="ovl" onclick="closeSheets()"></div>
+<div class="sheet" id="notifSheet">
+  <div class="sheet-bar"></div>
+  <h3>الإشعارات</h3>
+  <div class="ntf"><div class="ntf-ic" style="background:rgba(15,169,104,.12);color:var(--green)">✓</div>
+    <div><b>المورّد أكّد الدفع</b><p>João Miguel نفّذ تسوية <span class="num">8.4M Kz</span> · TRF-2481</p><time>قبل 12 دقيقة</time></div></div>
+  <div class="ntf"><div class="ntf-ic" style="background:rgba(46,134,245,.12);color:var(--blue)">🤖</div>
+    <div><b>تم التحقق من الإيصال</b><p>AI طابق إيصال Bankily مع TRF-2482 بنجاح</p><time>قبل 20 دقيقة</time></div></div>
+  <div class="ntf"><div class="ntf-ic" style="background:rgba(224,76,76,.1);color:var(--red)">⚠️</div>
+    <div><b>إيصال مكرر محظور</b><p>محاولة إعادة استخدام المرجع BK-88412073</p><time>قبل 25 دقيقة</time></div></div>
+  <div class="ntf"><div class="ntf-ic" style="background:rgba(201,162,75,.14);color:#9A7B2F">📈</div>
+    <div><b>تغيّر السعر</b><p>USDT/AOA ارتفع إلى <span class="num">1,180 Kz</span> (+0.8%)</p><time>قبل ساعة</time></div></div>
+  <div class="ntf"><div class="ntf-ic" style="background:rgba(232,161,60,.14);color:var(--amber)">🛡️</div>
+    <div><b>الامتثال يحتاج موافقة</b><p>تحويل يتجاوز الحد اليومي بانتظار اعتمادك</p><time>قبل 3 ساعات</time></div></div>
+</div>
+
+
+<div class="sheet" id="setSheet">
+  <div class="sheet-bar"></div>
+  <h3>الإعدادات · المحرك</h3>
+  <div class="fld"><label>مفتاح Gemini API (لقراءة أدق للإيصالات — يشمل الكوانزا)</label>
+    <input id="gemKeyIn" type="password" placeholder="AIza…" class="ltr"></div>
+  <button class="btn btn-pri" onclick="saveGemKey()">حفظ المفتاح</button>
+  <div class="card" style="padding:14px 16px;margin-top:14px">
+    <div class="fee-line"><span>محرك OCR المحلي</span><b id="stOcr">جارٍ الفحص…</b></div>
+    <div class="fee-line"><span>محرك PDF</span><b id="stPdf">جارٍ الفحص…</b></div>
+    <div class="fee-line"><span>Gemini AI</span><b id="stGem">—</b></div>
+    <div class="fee-line"><span>إيصالات محفوظة</span><b class="num" id="stCnt">0</b></div>
+  </div>
+  <button class="btn btn-ghost" onclick="if(confirm('مسح كل الإيصالات المحفوظة محليًا؟')){ARK.clear();arcRender();toast('🗑️ تم المسح');}">مسح الأرشيف المحلي</button>
+</div>
 
 <div id="toast"></div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.1.0/tesseract.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script>
-/* ============================================================
-   ARKAN Rates — منطق التطبيق (Vanilla JS)
-   ============================================================ */
-var WA='22236295050';
+/* greeting by hour */
+(function(){const h=new Date().getHours();const g=h<12?'صباح الخير ☀️':h<18?'مساء الخير 👋':'مساء النور 🌙';
+document.getElementById('greet').textContent=g;})();
 
+function unlock(){
+  const l=document.getElementById('login');
+  toastMini();l.classList.add('hide');
+  setTimeout(()=>toast('✅ تم الدخول بأمان · جهاز موثوق'),600);
+}
+function toastMini(){if(navigator.vibrate)navigator.vibrate(20);}
 
+let curView='v-home';
+function go(id,btn){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.querySelectorAll('.bn-item').forEach(b=>b.classList.toggle('active',b.dataset.v===id));
+  curView=id;window.scrollTo({top:0,behavior:'smooth'});
+  if(id==='v-transfer')wzGo(1);
+}
+function chip(el){el.parentElement.querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));el.classList.add('on');}
 
-/* ---------- تحديث تلقائي: يكتشف نسخة جديدة ويحمّلها فورًا ---------- */
-(function(){
-  if(!('serviceWorker' in navigator))return;
-  navigator.serviceWorker.getRegistrations().then(function(regs){
-    regs.forEach(function(reg){
-      reg.update();
-      reg.addEventListener('updatefound',function(){
-        var nw=reg.installing;
-        if(!nw)return;
-        nw.addEventListener('statechange',function(){
-          if(nw.state==='installed'&&navigator.serviceWorker.controller){
-            nw.postMessage('skipWaiting');
-          }
-        });
-      });
-    });
-  }).catch(function(){});
-  var reloaded=false;
-  navigator.serviceWorker.addEventListener('controllerchange',function(){
-    if(reloaded)return; reloaded=true; location.reload();
-  });
-})();
-
-/* ---------- 0) الخلفية الحية: جسيمات مترابطة ---------- */
-(function(){
-  var cv=document.getElementById('particles'); if(!cv)return;
-  var ctx=cv.getContext('2d'), ps=[], W, H, RAF;
-  var COLORS=['59,130,246','96,165,250','139,92,246'];
-  function seed(){
-    ps=[];
-    var COUNT=innerWidth<700?42:80;
-    for(var i=0;i<COUNT;i++){
-      ps.push({x:Math.random()*W,y:Math.random()*H,
-        size:Math.random()*1.7+.5,
-        sx:0, sy:0,
-        op:Math.random()*.45+.18,
-        col:COLORS[Math.floor(Math.random()*COLORS.length)]});
-    }
+let step=1;
+function wzGo(n){
+  step=n;
+  for(let i=1;i<=4;i++){
+    document.getElementById('wz'+i).style.display=i===n?'block':'none';
+    document.getElementById('s'+i).classList.toggle('done',i<=n);
   }
-  function size(){W=cv.width=innerWidth;H=cv.height=innerHeight;seed();}
-  size(); addEventListener('resize',size,{passive:true});
-  addEventListener('load',function(){size();loop();}); setTimeout(function(){size();loop();},700);
-  function loop(){
-    ctx.clearRect(0,0,W,H);
-    for(var i=0;i<ps.length;i++){
-      var p=ps[i];
-      p.x+=p.sx; p.y+=p.sy;
-      if(p.x<0)p.x=W; if(p.x>W)p.x=0; if(p.y<0)p.y=H; if(p.y>H)p.y=0;
-      ctx.beginPath(); ctx.arc(p.x,p.y,p.size,0,Math.PI*2);
-      ctx.fillStyle='rgba('+p.col+','+p.op+')'; ctx.fill();
-      for(var j=i+1;j<ps.length;j++){
-        var q=ps[j], dx=p.x-q.x, dy=p.y-q.y, d=Math.sqrt(dx*dx+dy*dy);
-        if(d<110){
-          ctx.beginPath(); ctx.moveTo(p.x,p.y); ctx.lineTo(q.x,q.y);
-          ctx.strokeStyle='rgba('+p.col+','+(.10*(1-d/110))+')';
-          ctx.lineWidth=.6; ctx.stroke();
-        }
-      }
-    }
-    /* ثابت: رسم واحد، يتحرك مع التمرير فقط */
-  }
-  loop();
-  /* توفير الطاقة: إيقاف عند إخفاء التبويب */
-  document.addEventListener('visibilitychange',function(){
-    if(document.hidden){cancelAnimationFrame(RAF);}else{loop();}
-  });
-})();
-
-/* ---------- 1) العملات: رموز نصية فقط ---------- */
-var CURRENCIES=[
-  {c:'MRU',f:'mr',n:'أوقية موريتانية'},
-  {c:'AOA',f:'ao',n:'كوانزا أنغولية'},
-  {c:'USD',f:'us',n:'دولار أمريكي'},
-  {c:'EUR',f:'eu',n:'يورو'},
-  {c:'CNY',f:'cn',n:'يوان صيني'},
-  {c:'AED',f:'ae',n:'درهم إماراتي'},
-  {c:'MAD',f:'ma',n:'درهم مغربي'},
-  {c:'SAR',f:'sa',n:'ريال سعودي'},
-  {c:'GBP',f:'gb',n:'جنيه إسترليني'},
-  {c:'TRY',f:'tr',n:'ليرة تركية'},
-  {c:'XOF',f:'sn',n:'فرنك غرب أفريقي'}
-];
-/* قيمة الوحدة بالأوقية — مرجع واحد يضبط كل الحسابات */
-var MRU={MRU:1, AOA:0.360, USD:420, EUR:485, CNY:59, AED:114, MAD:42, SAR:112, GBP:560, TRY:12.4, XOF:0.72};
-function rate(from,to){return MRU[from]/MRU[to];}
-
-function fmt(n,max){
-  if(!isFinite(n))return '0';
-  max=(max===undefined)?(n>=1000?0:(n>=1?2:6)):max;
-  return n.toLocaleString('en-US',{maximumFractionDigits:max});
+  if(n===4){toast('🎉 تم إنشاء التحويل TRF-2482');}
+  window.scrollTo({top:0,behavior:'smooth'});
 }
-function ccyMeta(code){
-  for(var i=0;i<CURRENCIES.length;i++)if(CURRENCIES[i].c===code)return CURRENCIES[i];
-  return CURRENCIES[0];
-}
-function flagImg(m){
-  return '<img class="fdd-flag" src="https://flagcdn.com/w80/'+m.f+'.png" alt="'+m.c+'" loading="lazy">';
-}
-/* ===== مكوّن اختيار العملة بالعلم ===== */
-var FDD={};
-function buildFdd(hostId,value,onChange){
-  var host=document.getElementById(hostId);
-  if(!host)return;
-  FDD[hostId]={value:value,onChange:onChange};
-  function render(){
-    var v=FDD[hostId].value, m=ccyMeta(v);
-    host.innerHTML=
-      '<button type="button" class="fdd-btn" aria-haspopup="listbox">'+
-        flagImg(m)+'<span class="fdd-code">'+m.c+'</span>'+
-        '<svg class="fdd-car" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>'+
-      '</button>'+
-      '<div class="fdd-list" role="listbox">'+
-        CURRENCIES.map(function(x){
-          return '<button type="button" class="fdd-item'+(x.c===v?' sel':'')+'" data-c="'+x.c+'">'+
-            flagImg(x)+'<span class="c">'+x.c+'</span><span class="n">'+x.n+'</span>'+
-            '<svg class="ck" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>'+
-          '</button>';
-        }).join('')+
-      '</div>';
-    host.querySelector('.fdd-btn').onclick=function(e){
-      e.stopPropagation();
-      var wasOpen=host.classList.contains('on');
-      document.querySelectorAll('.fdd.on').forEach(function(o){o.classList.remove('on');});
-      if(!wasOpen)host.classList.add('on');
-    };
-    host.querySelectorAll('.fdd-item').forEach(function(b){
-      b.onclick=function(e){
-        e.stopPropagation();
-        FDD[hostId].value=b.dataset.c;
-        host.classList.remove('on');
-        render();
-        if(FDD[hostId].onChange)FDD[hostId].onChange(b.dataset.c);
-      };
-    });
-  }
-  render();
-  FDD[hostId].set=function(val){FDD[hostId].value=val;render();};
-}
-function fddVal(id){return FDD[id]?FDD[id].value:'MRU';}
-document.addEventListener('click',function(){
-  document.querySelectorAll('.fdd.on').forEach(function(o){o.classList.remove('on');});
-});
-buildFdd('fddFrom','AOA',function(){calc();});
-buildFdd('fddTo','MRU',function(){calc();});
-buildFdd('fddRFrom','AOA',null);
-buildFdd('fddRTo','MRU',null);
-buildFdd('fddIvCcy','USD',null);
-
-/* ---------- 2) الحاسبة ---------- */
 function calc(){
-  var a=parseFloat(document.getElementById('amtIn').value)||0;
-  var f=fddVal('fddFrom'), t=fddVal('fddTo');
-  var r=rate(f,t), out=a*r;
-  document.getElementById('outIn').value=fmt(out);
-  document.getElementById('outBig').textContent=fmt(out)+' '+t;
-  document.getElementById('rateTxt').textContent='سعر الصرف المطبق: 1 '+f+' = '+fmt(r,6)+' '+t;
+  const raw=document.getElementById('amtIn').value.replace(/[^\d.]/g,'');
+  const v=parseFloat(raw)||0;
+  document.getElementById('amtOut').value=(v*29.61).toLocaleString('en-US',{maximumFractionDigits:0});
 }
-function swapC(){
-  var a=fddVal('fddFrom'), b=fddVal('fddTo');
-  FDD['fddFrom'].set(b); FDD['fddTo'].set(a);
-  calc();
-}
-calc();
 
-/* ---------- 3) أسعار اليوم + Sparkline ---------- */
-var PAIRS=[
-  {c:'AOA',n:'كوانزا أنغولية'},
-  {c:'USD',n:'دولار أمريكي'},
-  {c:'EUR',n:'يورو'},
-  {c:'CNY',n:'يوان صيني'}
-];
-/* توليد سلسلة شبه واقعية ثابتة لكل عملة (بذرة ثابتة = لا وميض عند إعادة التحميل) */
-function series(seed,base){
-  var out=[],v=base,x=seed;
-  for(var i=0;i<24;i++){
-    x=(x*9301+49297)%233280;
-    var d=((x/233280)-0.5)*base*0.012;
-    v=v+d; out.push(v);
+function openChat(){document.getElementById('chatScreen').classList.add('open');}
+function closeChat(){document.getElementById('chatScreen').classList.remove('open');}
+function sendMsg(){
+  const inp=document.getElementById('chMsg');if(!inp.value.trim())return;
+  const b=document.getElementById('chBody');
+  const m=document.createElement('div');m.className='msg me';
+  m.innerHTML=inp.value+'<span class="tick">'+new Date().toLocaleTimeString('ar',{hour:'2-digit',minute:'2-digit'})+' ✓</span>';
+  b.insertBefore(m,b.querySelector('.typing'));inp.value='';b.scrollTop=b.scrollHeight;
+  setTimeout(()=>{const t=m.querySelector('.tick');t.textContent=t.textContent.replace('✓','✓✓');},900);
+}
+
+function openSheet(id){document.getElementById('ovl').classList.add('open');document.getElementById(id).classList.add('open');}
+function closeSheets(){document.getElementById('ovl').classList.remove('open');
+  document.querySelectorAll('.sheet').forEach(s=>s.classList.remove('open'));}
+
+let toastTimer;
+function toast(msg){
+  const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');
+  clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),2600);
+}
+
+
+/* ═══════════════════ ARKAN ENGINE (settlement.html) ═══════════════════ */
+/* ═══════════ ARKAN CORE ENGINE — مستخرج حرفيًا من settlement.html (المحرك المجرَّب) ═══════════ */
+
+let _ocrWorker=null;
+
+function arkNorm(t){
+  t=(t||'')+'';
+  t=t.replace(/[\u00A0\u202F\u2007\u2009\u2060]/g,' ');
+  t=t.replace(/[\u200e\u200f\u061c\u202a-\u202e]/g,'');
+  t=t.replace(/[٠-٩۰-۹]/g,d=>ARK_AR_DIG[d]||d);
+  t=t.replace(/[\u066B]/g,',').replace(/[\u066C]/g,' ');
+  return t.replace(/[ \t]+/g,' ');
+}
+
+function arkStripFooter(t){
+  const cuts=['Este documento foi gerado','Documento processado pelo','Capital Social','Em caso de d','Para valida','Banco Angolano de Investimentos, S.A','Registo no BNA','Sociedade Aberta'];
+  let end=t.length;
+  for(const c of cuts){const i=t.indexOf(c);if(i>150&&i<end)end=i;}
+  return t.slice(0,end);
+}
+
+function arkDetectCcy(t){
+  for(const c of ARK_CCY)if(c.hint.test(t))return c;
+  return null;
+}
+
+function arkBank(t){
+  for(const [re,name,ccy] of ARK_BANKS)if(re.test(t))return {bank:name,ccy};
+  return {bank:null,ccy:null};
+}
+
+function arkAmount(t,ccyDef){
+  const sym=ccyDef?ccyDef.sym:'(?:Kz|MRU|UM|USDT|USD|EUR|AOA|₮|€|\\$)';
+  const tryMatch=(re)=>{
+    let m,best=null;const R=new RegExp(re,'gi');
+    while((m=R.exec(t))!==null){
+      const raw=m[1];if(!arkPlausible(raw))continue;
+      const pre=t.slice(Math.max(0,m.index-26),m.index);
+      if(ARK_BLOCK.test(pre))continue;
+      const v=arkNum(raw);
+      if(v!=null&&v>0){best={v,raw};break;}
+    }
+    return best;
+  };
+  /* 1) وسم صريح (Montante / Amount Sent / المبلغ ...) */
+  for(const lbl of ARK_LABELS){
+    const i=t.toLowerCase().indexOf(lbl);
+    if(i===-1)continue;
+    const seg=t.slice(i,i+90);
+    const r=tryMatch('(?:'+sym+')?\\s*:?=?\\s*'+ARK_MONEY);
+    const rr=(function(){let m;const R=new RegExp('(?:'+sym+')?\\s*:?=?\\s*'+ARK_MONEY,'i');m=seg.match(R);
+      if(m&&arkPlausible(m[1])){const v=arkNum(m[1]);if(v!=null&&v>0)return {v,raw:m[1],src:'label:'+lbl};}return null;})();
+    if(rr)return rr;
   }
-  return out;
+  /* 2) ملتصق برمز العملة: Kz 4 000 000,00  /  MRU 2400000 */
+  let r=tryMatch(sym+'\\s*'+ARK_MONEY);
+  if(r)return {...r,src:'sym-pre'};
+  /* 3) الرمز بعد الرقم: 4.000.000,00 Kz */
+  r=tryMatch(ARK_MONEY+'\\s*'+sym);
+  if(r)return {...r,src:'sym-post'};
+  /* 4) أكبر رقم منطقي */
+  const all=[];let m;const R=new RegExp(ARK_MONEY,'g');
+  while((m=R.exec(t))!==null){
+    if(!arkPlausible(m[1]))continue;
+    const pre=t.slice(Math.max(0,m.index-26),m.index);
+    if(ARK_BLOCK.test(pre))continue;
+    const v=arkNum(m[1]);if(v!=null&&v>=100)all.push(v);
+  }
+  if(all.length)return {v:Math.max(...all),raw:null,src:'max'};
+  return null;
 }
-function sparkPath(vals,w,h){
-  var mn=Math.min.apply(null,vals), mx=Math.max.apply(null,vals), rg=(mx-mn)||1;
-  return vals.map(function(v,i){
-    var x=(i/(vals.length-1))*w, y=h-((v-mn)/rg)*(h-6)-3;
-    return (i?'L':'M')+x.toFixed(1)+' '+y.toFixed(1);
-  }).join(' ');
+
+function arkTxn(t,ccy){
+  let m;
+  if(ccy==='AOA'){
+    m=t.match(/N[uú]mero de Opera[cç][aã]o\s*:?\s*([0-9]{6,})/i)||t.match(/Movimento\s*:?\s*([0-9]{6,})/i)
+     ||t.match(/Refer[eê]ncia\s*:?\s*([0-9]{6,})/i)||t.match(/CHAVE\s*:?\s*([0-9]{6,})/i);
+    if(m)return m[1];
+  }
+  m=t.match(/\b([a-f0-9]{64})\b/i);if(m)return m[1];
+  m=t.match(/\b(TR[0-9]{6,})\b/i);if(m)return m[1];
+  m=t.match(/Txn\s*ID\s*:?\s*([0-9A-Za-z]{8,})/i);if(m)return m[1];
+  m=t.match(/(?:Transaction|Trans|Order|Opera[cç][aã]o|رقم العملية|المرجع)\s*(?:ID|N[ºo°]|:)?\s*:?\s*([0-9A-Za-z]{8,})/i);
+  return m?m[1]:null;
 }
-function renderDesk(){
-  var g=document.getElementById('deskGrid');
-  g.innerHTML=PAIRS.map(function(p,idx){
-    var base=MRU[p.c];
-    var vals=series(idx*137+7, base);
-    var chg=((vals[vals.length-1]-vals[0])/vals[0])*100;
-    var up=chg>=0;
-    var col=up?'#0A9E5C':'#E53935';
-    var uid='sp'+idx;
-    var buy=base*0.995, sell=base*1.005;
-    return '<article class="pair">'+
-      '<div class="pair-top">'+
-        '<div><div class="pair-code ltr">'+p.c+' / MRU</div><div class="pair-name">'+p.n+'</div></div>'+
-        '<span class="pair-live"><span class="live-dot"></span>حي</span>'+
-      '</div>'+
-      '<div class="pair-mid">'+
-        '<span class="pair-val num">'+fmt(base,base<1?3:2)+'</span>'+
-        '<span class="pair-chg '+(up?'up':'down')+' num ltr">'+(up?'+':'')+chg.toFixed(2)+'%</span>'+
-      '</div>'+
-      '<svg class="spark" viewBox="0 0 300 44" preserveAspectRatio="none" aria-hidden="true">'+
-        '<defs><linearGradient id="'+uid+'" x1="0" y1="0" x2="0" y2="1">'+
-        '<stop offset="0%" stop-color="'+col+'" stop-opacity=".28"/>'+
-        '<stop offset="100%" stop-color="'+col+'" stop-opacity="0"/></linearGradient></defs>'+
-        '<path d="'+sparkPath(vals,300,44)+' L300 44 L0 44 Z" fill="url(#'+uid+')" stroke="none"/>'+
-        '<path d="'+sparkPath(vals,300,44)+'" fill="none" stroke="'+col+'" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/>'+
-      '</svg>'+
-      '<div class="pair-bs">'+
-        '<div class="bs"><div class="k">سعر الشراء</div><div class="v num">'+fmt(buy,buy<1?4:2)+'</div></div>'+
-        '<div class="bs"><div class="k">سعر البيع</div><div class="v num">'+fmt(sell,sell<1?4:2)+'</div></div>'+
-      '</div>'+
-    '</article>';
+
+function arkAcct(t){
+  let m=t.match(/\b(AO06\s*[0-9\s]{15,30})\b/i);if(m)return m[1].replace(/\s/g,'');
+  m=t.match(/Receiver\s*:?[\s]*([0-9 ]{8,30})/i);if(m)return m[1].replace(/\s/g,'');
+  m=t.match(/(?:Conta\s*\/?\s*IBAN|IBAN|حساب\s*بنكي)\s*:?\s*([A-Z0-9 ]{10,34})/i);if(m)return m[1].replace(/\s/g,'');
+  m=t.match(/\b(2[0-9]{7})\b/);return m?m[1]:null;
+}
+
+function arkDate(t){
+  let m=t.match(/\b([0-3]?[0-9][\/\-\.][0-1]?[0-9][\/\-\.](?:20)?[0-9]{2})\b/);
+  if(m)return m[1];
+  m=t.match(/\b(20[0-9]{2}[\/\-][0-1][0-9][\/\-][0-3][0-9])\b/);
+  return m?m[1]:null;
+}
+
+function arkanCore(rawText){
+  const t0=arkNorm(rawText);
+  if(!t0||t0.replace(/\s/g,'').length<12)
+    return {ok:false,amount:null,ccy:null,txn:null,acct:null,date:null,bank:null,app:null,src:null,name:null,err:'لا يوجد نص مقروء',text:t0};
+  const t=arkStripFooter(t0);
+  const b=arkBank(t);
+  let cd=arkDetectCcy(t);
+  if(!cd&&b.ccy)cd=ARK_CCY.find(x=>x.c===b.ccy)||null;
+  const a=arkAmount(t,cd);
+  const ccy=cd?cd.c:(b.ccy||null);
+  let amount=a?a.v:null;
+  /* USDT: مبالغ ضخمة بلا كسور غالبًا خطأ قراءة */
+  if(ccy==='USDT'&&amount!=null&&amount>1e7)amount=null;
+  let name=null;const nm=t.match(/(?:Nome|PARA|Benefici[aá]rio|إلى)\s*:?\s*([A-ZÀ-Ú][A-ZÀ-Ú .]{4,45})/);
+  if(nm)name=nm[1].trim();
+  return {
+    ok:amount!=null, amount, ccy,
+    txn:arkTxn(t,ccy), acct:arkAcct(t), date:arkDate(t),
+    bank:b.bank, app:b.bank, name,
+    src:a?a.src:null,
+    err:amount==null?'لم يُعثر على المبلغ':null,
+    text:t
+  };
+}
+
+async function ocrWorker(){
+  if(_ocrWorker)return _ocrWorker;
+  /* هل النسخة المحلية متاحة؟ */
+  let local=false;
+  try{const r=await fetch('vendor/eng.traineddata.gz',{method:'HEAD'});local=r.ok;}catch(e){}
+  toast(local?'تحميل محرك القراءة من خادمك (مرة واحدة)...':'تحميل محرك القراءة من CDN...');
+  const build=async(cfg)=>await Promise.race([
+    Tesseract.createWorker('eng',1,cfg),
+    new Promise((_,rej)=>setTimeout(()=>rej(new Error('انتهت المهلة — الشبكة بطيئة')),120000))
+  ]);
+  try{
+    if(local){
+      _ocrWorker=await build({workerPath:'vendor/worker.min.js',corePath:'vendor/',langPath:'vendor',
+                              workerBlobURL:false,gzip:true});
+    }else{
+      if(!_ocrWurl){
+        const WU=['https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.1.0/worker.min.js',
+                  'https://unpkg.com/tesseract.js@5.1.0/dist/worker.min.js',
+                  'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.0/dist/worker.min.js'];
+        for(const u of WU){try{const r=await fetch(u);if(!r.ok)continue;
+          _ocrWurl=URL.createObjectURL(new Blob([await r.text()],{type:'text/javascript'}));break;}catch(e){}}
+        if(!_ocrWurl)throw new Error('تعذّر تحميل محرك القراءة — الشبكة تحجب CDN');
+      }
+      _ocrWorker=await build({workerPath:_ocrWurl,workerBlobURL:false,
+        corePath:'https://cdn.jsdelivr.net/npm/tesseract.js-core@5.1.0/tesseract-core-simd.wasm.js',
+        langPath:'https://tessdata.projectnaptha.com/4.0.0'});
+    }
+    await _ocrWorker.setParameters({tessedit_pageseg_mode:'6'});
+    window.ARK_LOCAL=local;
+  }catch(e){
+    _ocrWorker=null;
+    toast((e&&e.message)?('OCR: '+e.message):'محرك القراءة محجوب — أدخل البيانات يدويًا');
+    throw e;
+  }
+  return _ocrWorker;
+}
+
+async function pdfText(dataUrl){
+  const bytes=atob(dataUrl.split(',')[1]);
+  const arr=new Uint8Array(bytes.length);
+  for(let i=0;i<bytes.length;i++)arr[i]=bytes.charCodeAt(i);
+  try{await Promise.race([window._pdfReady,new Promise(r=>setTimeout(r,6000))]);}catch(e){}
+  let pdf;
+  try{ pdf=await pdfjsLib.getDocument({data:arr.slice()}).promise; }
+  catch(e){
+    /* فشل العامل → إعادة المحاولة على الخيط الرئيسي */
+    pdfjsLib.GlobalWorkerOptions.workerSrc="";
+    pdf=await pdfjsLib.getDocument({data:arr.slice()}).promise;
+  }
+  let txt='';
+  for(let p=1;p<=pdf.numPages;p++){
+    const page=await pdf.getPage(p);
+    const c=await page.getTextContent();
+    txt+=' '+c.items.map(i=>i.str).join(' ');
+  }
+  if(txt.replace(/\s/g,'').length>=40)return txt;
+  /* PDF ممسوح ضوئيًا (بلا طبقة نص) → تحويل الصفحات لصور ثم OCR */
+  if(!window.Tesseract)return txt;
+  let out='';
+  const N=Math.min(pdf.numPages,3);
+  for(let p=1;p<=N;p++){
+    try{
+      const page=await pdf.getPage(p);
+      const vp=page.getViewport({scale:2.2});
+      const cv=document.createElement('canvas');
+      cv.width=vp.width;cv.height=vp.height;
+      await page.render({canvasContext:cv.getContext('2d'),viewport:vp}).promise;
+      out+=' '+(await imageText(cv.toDataURL('image/png')).catch(()=>''));
+    }catch(e){}
+  }
+  return (out.trim().length>txt.trim().length)?out:txt;
+}
+
+async function imageText(dataUrl){
+  const pre=await preprocessImage(dataUrl).catch(()=>dataUrl);
+  const w=await ocrWorker();
+  const {data}=await w.recognize(pre);
+  return data.text||'';
+}
+
+function isPdfFile(dataUrl,type,name){
+  if(/pdf/i.test(type||''))return true;
+  if(/\.pdf$/i.test(name||''))return true;
+  const b=(dataUrl||'').split(',')[1]||'';
+  return b.slice(0,8)==='JVBERi0x'||b.slice(0,6)==='JVBERi';
+}
+
+async function geminiToText(dataUrl, type, name){
+  const key = ARKAN_GEMINI.getKey();
+  const b64 = dataUrl.split(',')[1];
+  const lname = String(name||'').toLowerCase();
+  const mime = type || (lname.endsWith('.pdf') ? 'application/pdf' : 'image/jpeg');
+  const prompt = 'Extract ALL text from this financial receipt VERBATIM, exactly as written. Preserve original field labels and language (Portuguese/Arabic/French; Angolan banks BCI/BAI/BFA/ATLANTICO/Bankily). Keep labels like Montante, Numero de Operacao, Movimento, Data, Referencia, IBAN, importancia, Valor. Return ONLY the raw text, no translation, no JSON, no commentary.';
+  const data = await gemFetch(key,{contents:[{parts:[{text:prompt},{inline_data:{mime_type:mime,data:b64}}]}],generationConfig:{temperature:0.1}});
+  if(data.error) throw new Error(data.error.message||'Gemini error');
+  return (data.candidates?.[0]?.content?.parts?.[0]?.text||'').trim();
+}
+
+async function gemFetch(key, body){
+  const MODELS=['gemini-2.5-flash','gemini-2.0-flash','gemini-flash-latest'];
+  let last=null;
+  for(const m of MODELS){
+    const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+m+':generateContent?key='+encodeURIComponent(key),
+      {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    const d=await r.json().catch(()=>({}));
+    if(r.ok) return d;
+    last=new Error((d.error&&d.error.message)||('HTTP '+r.status));
+    if(r.status!==429&&r.status!==404&&r.status!==503) throw last;
+  }
+  throw last||new Error('Gemini unavailable');
+}
+
+async function anyReceiptText(dataUrl,type,name){
+  // ═══ Gemini أولاً (إن وُجد مفتاح) — أدق، يدعم PDF وكل البنوك ═══
+  try{
+    if(window.ARKAN_GEMINI && ARKAN_GEMINI.getKey()){
+      const gtxt = await geminiToText(dataUrl, type, name);
+      if(gtxt && gtxt.replace(/\s/g,'').length > 15) return gtxt;
+    }
+  }catch(ge){ console.warn('Gemini→محلي:', ge && ge.message); }
+  // ═══ احتياط محلي ═══
+  if(isPdfFile(dataUrl,type,name)){
+    if(!window.pdfjsLib)throw new Error('محرك PDF لم يُحمَّل');
+    return await pdfText(dataUrl);
+  }
+  if(window.Tesseract)return await imageText(dataUrl);
+  throw new Error('محرك الصور لم يُحمَّل');
+}
+
+window.ARKAN_GEMINI = (function(){
+  function getKey(){ return (localStorage.getItem('gemKey')||'').trim(); }
+  function setKey(k){ localStorage.setItem('gemKey', (k||'').trim()); }
+
+  async function readReceipt(file, onStatus){
+    const key = getKey();
+    if(!key){ throw new Error('NO_KEY'); }
+    onStatus && onStatus('جارٍ قراءة الملف...');
+
+    const b64 = await new Promise((res,rej)=>{
+      const r=new FileReader(); r.onload=()=>res(r.result.split(',')[1]); r.onerror=rej; r.readAsDataURL(file);
+    });
+
+    // نوع الملف: صورة أو PDF
+    const mime = file.type || (file.name.toLowerCase().endsWith('.pdf') ? 'application/pdf' : 'image/jpeg');
+
+    const prompt = 'أنت محلل إيصالات مالية خبير. اقرأ هذا الإيصال (قد يكون بالعربية أو البرتغالية أو الفرنسية من بنوك أنغولا مثل BCI/BAI/BFA/ATLANTICO أو Bankily الموريتاني). استخرج البيانات بصيغة JSON فقط بلا أي شرح:\n{"amount":رقم بلا فواصل,"currency":"MRU أو AOA أو USDT أو USD أو EUR أو CNY أو AED","bank":"اسم البنك","date":"YYYY-MM-DD","txn":"رقم العملية/المرجع","sender":"اسم المرسل","receiver":"اسم المستقبل"}\nإن غاب أي حقل ضع null. أرجع JSON فقط.';
+
+    onStatus && onStatus('يحلّل Gemini الإيصال...');
+    const data = await gemFetch(key, {
+      contents:[{ parts:[ {text:prompt}, {inline_data:{mime_type:mime, data:b64}} ] }],
+      generationConfig:{ temperature:0.1 }
+    });
+    if(data.error){ throw new Error(data.error.message || 'API_ERROR'); }
+    let txt = (data.candidates?.[0]?.content?.parts?.[0]?.text || '').replace(/```json|```/g,'').trim();
+    let parsed=null; try{ parsed=JSON.parse(txt); }catch(e){}
+    return { parsed, raw:txt };
+  }
+
+  return { readReceipt, getKey, setKey };
+})();
+
+window._pdfReady=(async function(){
+  if(!window.pdfjsLib)return false;
+  /* 1) نسخة المستودع — نفس النطاق، لا حجب ولا CORS */
+  try{
+    const r=await fetch('vendor/pdf.worker.min.js',{method:'HEAD'});
+    if(r.ok){pdfjsLib.GlobalWorkerOptions.workerSrc='vendor/pdf.worker.min.js';window.ARK_LOCAL=true;return true;}
+  }catch(e){}
+  /* 2) CDN احتياطي عبر blob */
+  const U=["https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js",
+           "https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js",
+           "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js"];
+  for(let i=0;i<U.length;i++){
+    try{const r=await fetch(U[i]);if(!r.ok)continue;
+      pdfjsLib.GlobalWorkerOptions.workerSrc=URL.createObjectURL(new Blob([await r.text()],{type:"text/javascript"}));
+      return true;}catch(e){}
+  }
+  /* 3) الخيط الرئيسي */
+  pdfjsLib.GlobalWorkerOptions.workerSrc="";
+  return false;
+})();
+
+/* ═══════════════════ التخزين الآمن (localStorage + احتياط ذاكرة) ═══════════════════ */
+const ARK=(function(){
+  let mem=[];const KEY='arkanRatesArchive';
+  function load(){try{return JSON.parse(localStorage.getItem(KEY)||'[]')}catch(e){return mem}}
+  function save(a){mem=a;try{localStorage.setItem(KEY,JSON.stringify(a))}catch(e){}}
+  return{all:()=>load(),add(r){const a=load();a.unshift(r);save(a);return a},
+    clear(){save([])},refs:()=>load().map(r=>r.txn).filter(Boolean)};
+})();
+
+/* ═══════════════════ درجة المخاطر ═══════════════════ */
+function riskScore(r,dup){
+  let sc=4;
+  if(dup)sc+=60;
+  if(!r.txn)sc+=15;
+  if(!r.amount)sc+=25;
+  if(!r.bank)sc+=8;
+  return Math.min(sc,100);
+}
+function riskLabel(sc){return sc<20?['منخفضة','var(--green)']:sc<50?['متوسطة','var(--amber)']:['⚠️ عالية','var(--red)'];}
+
+/* ═══════════════════ قراءة إيصال التحويل (خطوة 3) ═══════════════════ */
+async function realScan(file){
+  if(!file)return;
+  const box=document.getElementById('aiResult');box.style.display='block';
+  document.getElementById('aiTitle').textContent='🤖 AI يقرأ الإيصال…';
+  try{
+    const dataUrl=await new Promise((res,rej)=>{const fr=new FileReader();
+      fr.onload=()=>res(fr.result);fr.onerror=rej;fr.readAsDataURL(file);});
+    toast('🤖 OCR جارٍ · '+(ARKAN_GEMINI.getKey()?'Gemini':'المحرك المحلي'));
+    const text=await anyReceiptText(dataUrl,file.type,file.name);
+    const r=arkanCore(text);
+    const dup=r.txn&&ARK.refs().includes(r.txn);
+    const sc=riskScore(r,dup);const[lb,cl]=riskLabel(sc);
+    document.getElementById('aiBank').textContent=r.bank||'غير محدد';
+    document.getElementById('aiAmt').textContent=r.amount?(Number(r.amount).toLocaleString('en-US')+' '+(r.ccy||'')):'—';
+    document.getElementById('aiTxn').textContent=r.txn||'—';
+    document.getElementById('aiDate').textContent=r.date||'—';
+    document.getElementById('aiDup').textContent=dup?'⚠️ مكرر — محظور':'لا يوجد تكرار';
+    document.getElementById('aiDup').style.color=dup?'var(--red)':'var(--green)';
+    document.getElementById('aiRisk').textContent=lb+' · '+sc+'/100';
+    document.getElementById('aiRisk').style.color=cl;
+    if(dup){
+      document.getElementById('aiTitle').textContent='🚫 إيصال مكرر — حُظر';
+      document.getElementById('aiIcon').innerHTML='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#E04C4C" stroke-width="2.2"><path d="M18 6 6 18M6 6l12 12"/></svg>';
+      document.getElementById('aiIcon').style.background='rgba(224,76,76,.12)';
+      toast('🚫 هذا المرجع مستخدم سابقًا — حُظر فورًا');
+    }else{
+      document.getElementById('aiTitle').textContent='تحقّق AI · الإيصال مقروء ✓';
+      ARK.add({ts:Date.now(),name:file.name,amount:r.amount,ccy:r.ccy,bank:r.bank,
+        txn:r.txn,date:r.date,text:(r.text||text||'').slice(0,4000),risk:sc,src:'transfer'});
+      arcRender();
+      toast('✅ قُرئ الإيصال وأُرشف تلقائيًا');
+    }
+  }catch(e){
+    document.getElementById('aiTitle').textContent='تعذّرت القراءة — أدخل يدويًا';
+    toast('⚠️ '+(e&&e.message||'خطأ في القراءة'));
+  }
+}
+
+/* ═══════════════════ الأرشيف: رفع دفعة (طابور تسلسلي) ═══════════════════ */
+async function arcUpload(files){
+  const list=[...files];if(!list.length)return;
+  const st=document.getElementById('arcStatus');st.style.display='block';
+  for(let i=0;i<list.length;i++){
+    const f=list[i];
+    st.textContent='🤖 قراءة '+(i+1)+'/'+list.length+' · '+f.name;
+    try{
+      const dataUrl=await new Promise((res,rej)=>{const fr=new FileReader();
+        fr.onload=()=>res(fr.result);fr.onerror=rej;fr.readAsDataURL(f);});
+      const text=await anyReceiptText(dataUrl,f.type,f.name);
+      const r=arkanCore(text);
+      const dup=r.txn&&ARK.refs().includes(r.txn);
+      ARK.add({ts:Date.now(),name:f.name,amount:r.amount,ccy:r.ccy,bank:r.bank,
+        txn:r.txn,date:r.date,text:(r.text||text||'').slice(0,4000),
+        risk:riskScore(r,dup),dup:!!dup,src:'archive'});
+    }catch(e){
+      ARK.add({ts:Date.now(),name:f.name,amount:null,ccy:null,bank:null,txn:null,date:null,
+        text:'',risk:70,needsReview:true,src:'archive'});
+    }
+    arcRender();
+  }
+  st.textContent='✅ اكتملت قراءة '+list.length+' إيصال';
+  setTimeout(()=>st.style.display='none',3000);
+  document.getElementById('arcFiles').value='';
+}
+
+/* ═══════════════════ عرض الأرشيف الحي + بحث + فلاتر ═══════════════════ */
+let arcFilter='';
+function chip(el,f){el.parentElement.querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));
+  el.classList.add('on');if(f!==undefined){arcFilter=f;arcRender();}}
+function arcRender(){
+  const wrap=document.getElementById('arcLive');if(!wrap)return;
+  const q=(document.getElementById('arcSearch')?.value||'').trim().toLowerCase();
+  let items=ARK.all();
+  if(arcFilter==='⚠')items=items.filter(r=>r.dup||r.needsReview||r.risk>=50);
+  else if(arcFilter)items=items.filter(r=>(r.ccy||'')===arcFilter||(r.bank||'').toUpperCase().includes(arcFilter.toUpperCase()));
+  if(q)items=items.filter(r=>[r.name,r.bank,r.txn,r.ccy,r.date,String(r.amount||''),r.text]
+    .join(' ').toLowerCase().includes(q));
+  document.getElementById('stCnt')&&(document.getElementById('stCnt').textContent=ARK.all().length);
+  if(!items.length){wrap.style.display='none';return;}
+  wrap.style.display='block';
+  wrap.innerHTML=items.map((r,i)=>{
+    const[lb,cl]=riskLabel(r.risk||4);
+    const warn=r.dup?'<span class="tag warn">⚠️ مكرر</span>':r.needsReview?'<span class="tag warn">يحتاج مراجعة</span>':'<span class="tag">AI ✓</span>';
+    return '<div class="doc" onclick="arcView('+i+')">'
+      +'<div class="doc-ic'+(r.dup||r.needsReview?'" style="background:rgba(224,76,76,.1);color:var(--red)':'')+'">'
+      +'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 15h6M9 11h2"/></svg></div>'
+      +'<div class="doc-meta"><b>'+(r.bank||'إيصال')+' · <span class="num">'
+      +(r.amount?Number(r.amount).toLocaleString('en-US')+' '+(r.ccy||''):'بلا مبلغ')+'</span></b>'
+      +'<span>'+(r.txn?('REF <span class="ltr num">'+r.txn+'</span> · '):'')+(r.date||new Date(r.ts).toLocaleDateString('ar'))+'</span>'
+      +'<div class="tags">'+warn+'<span class="tag g">'+lb+' '+(r.risk||4)+'/100</span>'
+      +(r.src==='transfer'?'<span class="tag">من تحويل</span>':'')+'</div></div></div>';
   }).join('');
 }
-renderDesk();
-
-/* أسعار حية من الملف المنشور إن وُجد */
-fetch('rates-data.json?t='+Date.now()).then(function(r){return r.ok?r.json():null;}).then(function(d){
-  if(!d||!d.r)return;
-  d.r.forEach(function(row){ if(row.ccy&&row.w&&MRU[row.ccy]!==undefined)MRU[row.ccy]=parseFloat(row.w)||MRU[row.ccy]; });
-  renderDesk(); calc();
-}).catch(function(){});
-
-/* ---------- 4) واجهة ---------- */
-function toggleDrawer(){
-  document.getElementById('drawer').classList.toggle('on');
-  document.getElementById('mBtn').classList.toggle('on');
+let _arcItems=[];
+function arcView(i){
+  const q=(document.getElementById('arcSearch')?.value||'').trim().toLowerCase();
+  let items=ARK.all();
+  if(arcFilter==='⚠')items=items.filter(r=>r.dup||r.needsReview||r.risk>=50);
+  else if(arcFilter)items=items.filter(r=>(r.ccy||'')===arcFilter||(r.bank||'').toUpperCase().includes(arcFilter.toUpperCase()));
+  if(q)items=items.filter(r=>[r.name,r.bank,r.txn,r.ccy,r.date,String(r.amount||''),r.text].join(' ').toLowerCase().includes(q));
+  const r=items[i];if(!r)return;
+  alert('📄 '+(r.bank||'إيصال')+'\nالمبلغ: '+(r.amount?Number(r.amount).toLocaleString()+' '+(r.ccy||''):'—')
+    +'\nالمرجع: '+(r.txn||'—')+'\nالتاريخ: '+(r.date||'—')+'\n\n— نص OCR —\n'+(r.text||'').slice(0,600));
 }
 
-/* نقل قيم الحاسبة إلى نموذج الطلب (بلا تكرار كتابة) */
-function goToRequest(){
-  var amt = document.getElementById('amtIn').value;
-  var from = (window.fddVal?fddVal('fddFrom'):'AOA');
-  var to = (window.fddVal?fddVal('fddTo'):'MRU');
-  // انسخ للنموذج المخفي
-  var rAmt = document.getElementById('rAmt'); if(rAmt) rAmt.value = amt;
-  // اضبط قوائم النموذج المخفية إن أمكن
-  try{ if(window.FDD){ if(FDD['fddRFrom'])FDD['fddRFrom'].set(from); if(FDD['fddRTo'])FDD['fddRTo'].set(to); } }catch(e){}
-  window.__reqFrom = from; window.__reqTo = to; window.__reqAmt = amt;
-  // اعرض الملخص
-  var out = document.getElementById('outBig') ? document.getElementById('outBig').textContent : '';
-  var sum = document.getElementById('reqSummary');
-  if(sum){
-    sum.style.display='block';
-    document.getElementById('reqSumFrom').textContent = amt + ' ' + from;
-    document.getElementById('reqSumTo').textContent = out + ' ' + to;
-  }
-  scrollTo_('#request');
-  setTimeout(function(){ var n=document.getElementById('rName'); if(n) n.focus(); }, 400);
+/* ═══════════════════ التصدير ═══════════════════ */
+function arcCsv(kind){
+  const rows=[['التاريخ','البنك','المبلغ','العملة','المرجع','المخاطر','المصدر']]
+    .concat(ARK.all().map(r=>[r.date||new Date(r.ts).toLocaleDateString('en-GB'),r.bank||'',r.amount||'',r.ccy||'',r.txn||'',r.risk||'',r.src||'']));
+  const csv='\uFEFF'+rows.map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(',')).join('\n');
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([csv],{type:kind==='xls'?'application/vnd.ms-excel':'text/csv;charset=utf-8'}));
+  a.download='ARKAN-Archive-'+new Date().toISOString().slice(0,10)+(kind==='xls'?'.xls':'.csv');
+  a.click();toast('📗 تم تصدير '+ARK.all().length+' سجل');
 }
-
-function scrollTo_(sel){
-  var el=document.querySelector(sel);
-  if(el)el.scrollIntoView({behavior:'smooth',block:'start'});
-}
-var _t;
-function toast(m){
-  var el=document.getElementById('toast');
-  el.textContent=m; el.classList.add('on');
-  clearTimeout(_t); _t=setTimeout(function(){el.classList.remove('on');},3200);
-}
-
-/* ---------- 5) إرسال الطلبات ---------- */
-function sendRequest(){
-  var n=val('rName'), p=val('rPhone'), a=val('rAmt');
-  if(!n||!p||!a){toast('أكمل الاسم ورقم الهاتف والمبلغ');return;}
-  var f=fddVal('fddRFrom'), t=fddVal('fddRTo');
-  var m=document.getElementById('rMethod').value, note=val('rNote');
-  var ref='ARK-'+Date.now().toString().slice(-6);
-  var out=parseFloat(a)*rate(f,t);
-  var msg='ARKAN Rates — طلب تحويل\n'+ref+'\n\n'+
-    'الاسم: '+n+'\nالهاتف: '+p+'\n'+
-    'المبلغ: '+fmt(parseFloat(a))+' '+f+'\n'+
-    'المستلم: '+fmt(out)+' '+t+'\n'+
-    'طريقة الاستلام: '+m+(note?'\nملاحظات: '+note:'');
-  save('arkan-requests',{ref:ref,name:n,phone:p,amount:a,from:f,to:t,method:m,note:note,ts:Date.now()});
-  if(window.arkanTrack)arkanTrack('submit_order',{from:f,to:t});
-  toast('تم إنشاء الطلب '+ref);
-  openWA(msg);
-}
-function sendInvoice(){
-  var c=val('ivComp'), a=val('ivAmt'), w=val('ivWho');
-  if(!c||!a||!w){toast('أكمل اسم الشركة والمبلغ وبياناتك');return;}
-  var cc=fddVal('fddIvCcy'), d=val('ivDest');
-  var ref='INV-'+Date.now().toString().slice(-6);
-  var msg='ARKAN Rates — تسديد فاتورة مورد\n'+ref+'\n\n'+
-    'المورد: '+c+'\nالمبلغ: '+a+' '+cc+
-    (d?'\nبلد المورد: '+d:'')+'\nمقدم الطلب: '+w;
-  save('arkan-invoices',{ref:ref,company:c,amount:a,ccy:cc,dest:d,who:w,ts:Date.now()});
-  if(window.arkanTrack)arkanTrack('submit_invoice',{ccy:cc});
-  toast('تم إنشاء الطلب '+ref);
-  openWA(msg);
-}
-function val(id){var e=document.getElementById(id);return e?e.value.trim():'';}
-function save(key,obj){
-  try{var a=JSON.parse(localStorage.getItem(key)||'[]');a.push(obj);localStorage.setItem(key,JSON.stringify(a));}catch(e){}
-}
-function openWA(msg){
-  setTimeout(function(){window.open('https://wa.me/'+WA+'?text='+encodeURIComponent(msg),'_blank');},520);
-}
-
-/* ---------- 6) محرك قراءة الفواتير — نسخة مطوّرة ---------- */
-var OCR_STATE={raw:'',busy:false};
-
-function pickInvoice(){
-  if(OCR_STATE.busy){toast('القراءة جارية…');return;}
-  var inp=document.createElement('input');
-  inp.type='file'; inp.accept='image/*,application/pdf';
-  inp.onchange=function(){ if(inp.files[0])readInvoice(inp.files[0]); };
-  inp.click();
-}
-
-/* ===== معالجات صور متعددة: كل واحدة تُجرَّب وتُقيَّم ===== */
-function toCanvas(img,scale){
-  var c=document.createElement('canvas');
-  c.width=Math.round(img.width*scale); c.height=Math.round(img.height*scale);
-  var x=c.getContext('2d',{willReadFrequently:true});
-  x.imageSmoothingEnabled=true; x.imageSmoothingQuality='high';
-  x.fillStyle='#fff'; x.fillRect(0,0,c.width,c.height);
-  x.drawImage(img,0,0,c.width,c.height);
-  return c;
-}
-function grayData(c){
-  var x=c.getContext('2d',{willReadFrequently:true});
-  var d=x.getImageData(0,0,c.width,c.height);
-  return {ctx:x,img:d,p:d.data};
-}
-/* 1) تباين تكيفي */
-function vContrast(img,scale){
-  var c=toCanvas(img,scale), g=grayData(c), p=g.p, sum=0;
-  for(var i=0;i<p.length;i+=4)sum+=(p[i]*0.299+p[i+1]*0.587+p[i+2]*0.114);
-  var avg=sum/(p.length/4);
-  for(var j=0;j<p.length;j+=4){
-    var v=(p[j]*0.299+p[j+1]*0.587+p[j+2]*0.114-avg)*2.0+avg;
-    v=v<0?0:(v>255?255:v);
-    p[j]=p[j+1]=p[j+2]=v;
-  }
-  g.ctx.putImageData(g.img,0,0);
-  return c.toDataURL('image/png');
-}
-/* 2) عتبة Otsu (أبيض/أسود نقي) — الأفضل للقطات الشاشة */
-function vOtsu(img,scale){
-  var c=toCanvas(img,scale), g=grayData(c), p=g.p;
-  var hist=new Array(256).fill(0), n=p.length/4, i, gv;
-  for(i=0;i<p.length;i+=4){
-    gv=Math.round(p[i]*0.299+p[i+1]*0.587+p[i+2]*0.114);
-    p[i]=p[i+1]=p[i+2]=gv; hist[gv]++;
-  }
-  var sumAll=0; for(i=0;i<256;i++)sumAll+=i*hist[i];
-  var sumB=0,wB=0,mx=0,thr=128;
-  for(i=0;i<256;i++){
-    wB+=hist[i]; if(!wB)continue;
-    var wF=n-wB; if(!wF)break;
-    sumB+=i*hist[i];
-    var mB=sumB/wB, mF=(sumAll-sumB)/wF;
-    var between=wB*wF*(mB-mF)*(mB-mF);
-    if(between>mx){mx=between;thr=i;}
-  }
-  for(i=0;i<p.length;i+=4){
-    var b=p[i]>thr?255:0;
-    p[i]=p[i+1]=p[i+2]=b;
-  }
-  g.ctx.putImageData(g.img,0,0);
-  return c.toDataURL('image/png');
-}
-/* 3) عكس الألوان — للقطات الداكنة أو الفواتير المصوّرة بإضاءة خلفية */
-function vInvert(img,scale){
-  var c=toCanvas(img,scale), g=grayData(c), p=g.p;
-  for(var i=0;i<p.length;i+=4){
-    var v=255-Math.round(p[i]*0.299+p[i+1]*0.587+p[i+2]*0.114);
-    p[i]=p[i+1]=p[i+2]=v;
-  }
-  g.ctx.putImageData(g.img,0,0);
-  return c.toDataURL('image/png');
-}
-/* 4) الأصلية مكبّرة فقط */
-function vPlain(img,scale){ return toCanvas(img,scale).toDataURL('image/png'); }
-
-function loadImg(src){
-  return new Promise(function(ok,bad){
-    var im=new Image();
-    im.onload=function(){ok(im);};
-    im.onerror=bad;
-    im.src=src;
-  });
-}
-
-/* ===== تقييم جودة النص المستخرج ===== */
-function scoreText(t){
-  if(!t)return 0;
-  var clean=t.replace(/\s/g,'');
-  if(clean.length<12)return 0;
-  var digits=(t.match(/\d/g)||[]).length;
-  var letters=(t.match(/[A-Za-z\u0600-\u06FF]/g)||[]).length;
-  var junk=(t.match(/[^\w\s\u0600-\u06FF.,:%\/()\-+\u00a0€$£¥]/g)||[]).length;
-  var kw=/TOTAL|MONTANT|VALOR|INVOICE|FACTURE|FATURA|AMOUNT|الإجمالي|المجموع|فاتورة/i.test(t)?60:0;
-  return letters*1 + digits*1.6 + kw - junk*1.4;
-}
-
-/* ===== PDF: نص مباشر، وإن فشل نُحوّل الصفحات لصور ونقرأها ===== */
-async function pdfExtract(dataUrl,onProgress){
-  if(!window.pdfjsLib)return '';
-  var pdf=await pdfjsLib.getDocument({url:dataUrl}).promise;
-  var pages=Math.min(pdf.numPages,3), txt='';
-  for(var i=1;i<=pages;i++){
-    var pg=await pdf.getPage(i);
-    var tc=await pg.getTextContent();
-    txt+=tc.items.map(function(x){return x.str;}).join(' ')+'\n';
-  }
-  if(txt.replace(/\s/g,'').length>40)return txt;
-  /* PDF ممسوح ضوئيًا: نرسم الصفحات ونقرأها بـ OCR */
-  onProgress&&onProgress('PDF ممسوح — جارٍ التحويل لصورة…');
-  var out='';
-  for(var k=1;k<=pages;k++){
-    var page=await pdf.getPage(k);
-    var vp=page.getViewport({scale:2.2});
-    var cv=document.createElement('canvas');
-    cv.width=vp.width; cv.height=vp.height;
-    await page.render({canvasContext:cv.getContext('2d'),viewport:vp}).promise;
-    out+=await ocrBest(cv.toDataURL('image/png'),onProgress)+'\n';
-  }
-  return out;
-}
-
-/* ===== OCR متعدد المحاولات: يجرّب 3 معالجات ويأخذ الأفضل ===== */
-async function ocrBest(dataUrl,onProgress){
-  if(!window.Tesseract){
-    onProgress&&onProgress('محرك القراءة غير متاح — تحقق من الاتصال');
-    return '';
-  }
-  var img;
-  try{ img=await loadImg(dataUrl); }catch(e){ return ''; }
-  var scale=Math.max(1,Math.min(3.4,1900/img.width));
-
-  /* المعالجات مُجهَّزة مسبقًا مرة واحدة (توفير وقت) */
-  var prepared=[];
-  try{ prepared.push({n:'أبيض/أسود', u:vOtsu(img,scale)}); }catch(e){}
-  try{ prepared.push({n:'تباين',     u:vContrast(img,scale)}); }catch(e){}
-  try{ prepared.push({n:'أصلية',     u:vPlain(img,scale)}); }catch(e){}
-
-  var best='', bestScore=-1;
-
-  /* مراحل اللغة: نبدأ بالإنجليزية وحدها (أسرع وأدق للفواتير)،
-     ثم نضيف الفرنسية والبرتغالية فقط إن لزم. العربية أخيرًا وعند الحاجة. */
-  var stages=[
-    {langs:['eng'],              psms:['6','4'],  label:'سريع'},
-    {langs:['eng','fra','por'],  psms:['6','11'], label:'موسّع'}
-  ];
-
-  for(var s=0;s<stages.length;s++){
-    var stage=stages[s], worker=null;
-    try{
-      onProgress&&onProgress('تهيئة المحرك ('+stage.label+')…');
-      worker=await Tesseract.createWorker(stage.langs,1,{
-        workerBlobURL:true,
-        logger:function(m){
-          if(m.status==='recognizing text'&&onProgress)
-            onProgress('جارٍ القراءة… '+Math.round((m.progress||0)*100)+'%');
-        }
-      });
-      try{ await worker.setParameters({preserve_interword_spaces:'1'}); }catch(e){}
-
-      for(var v=0;v<prepared.length;v++){
-        for(var pi=0;pi<stage.psms.length;pi++){
-          try{ await worker.setParameters({tessedit_pageseg_mode:stage.psms[pi]}); }catch(e){}
-          onProgress&&onProgress('محاولة '+(v*stage.psms.length+pi+1)+' — '+prepared[v].n);
-          try{
-            var r=await worker.recognize(prepared[v].u);
-            var t=(r.data&&r.data.text)||'';
-            var sc=scoreText(t);
-            if(sc>bestScore){bestScore=sc;best=t;}
-            if(sc>320){ v=99; pi=99; break; }   /* ممتاز: توقف */
-          }catch(e){}
-        }
-        if(bestScore>320)break;
-      }
-
-      /* لم نصل لشيء مفيد؟ جرّب عكس الألوان */
-      if(bestScore<45){
-        try{
-          onProgress&&onProgress('محاولة إضافية — عكس الألوان');
-          await worker.setParameters({tessedit_pageseg_mode:'6'});
-          var ri=await worker.recognize(vInvert(img,scale));
-          var ti=(ri.data&&ri.data.text)||'';
-          var si=scoreText(ti);
-          if(si>bestScore){bestScore=si;best=ti;}
-        }catch(e){}
-      }
-    }catch(e){
-      onProgress&&onProgress('تعذّرت تهيئة المحرك — إعادة المحاولة…');
-    } finally {
-      if(worker){ try{ await worker.terminate(); }catch(e){} }
-    }
-    /* نتيجة كافية؟ لا داعي للمرحلة التالية */
-    if(bestScore>150)break;
-  }
-  return best;
-}
-
-/* ===== مستخرجات ===== */
-function normNum(raw){
-  raw=String(raw).replace(/[\s\u00a0'`]/g,'');
-  var m=raw.match(/^(.*?)([.,])(\d{1,2})$/), i, d='';
-  if(m&&m[3].length<=2){i=m[1];d='.'+m[3];}else i=raw;
-  var v=parseFloat(i.replace(/[.,]/g,'')+d);
-  return isNaN(v)?null:v;
-}
-function extractAmount(t){
-  if(!t)return null;
-  /* توحيد: إزالة أسطر فارغة وتوحيد المسافات */
-  var lines=t.split(/[\n\r]+/).map(function(l){return l.replace(/\s+/g,' ').trim();}).filter(Boolean);
-  var keys=['TOTAL AMOUNT','GRAND TOTAL','AMOUNT DUE','TOTAL DUE','BALANCE DUE','INVOICE TOTAL',
-    'TOTAL INVOICE','TOTAL PRICE','TOTAL VALUE','TOTAL PAYABLE','SAY TOTAL','TOTAL:',
-    'MONTANT TOTAL','TOTAL GENERAL','TOTAL GÉNÉRAL','NET A PAYER','NET À PAYER','A PAYER','TOTAL TTC','MONTANT',
-    'VALOR TOTAL','TOTAL A PAGAR','TOTAL GERAL','MONTANTE','IMPORTE TOTAL',
-    'الاجمالي','الإجمالي','المجموع','المبلغ الاجمالي','المبلغ الإجمالي','اجمالي','الصافي','القيمة',
-    'TOTAL FOB','TOTAL CIF','TOTAL EXW','TOTAL CFR','TOTAL CNF','TOTAL USD','TOTAL EUR','TOTAL CNY','TOTAL'];
-  function numsIn(line){
-    /* يدعم: 41,860.00 · 25 400,00 · USD41860 · 1.234.567,89 */
-    return (line.match(/[0-9][0-9.,\s\u00a0']{0,22}[0-9]|[0-9]{3,}/g)||[])
-      .map(function(s){return normNum(s);})
-      .filter(function(v){return v!==null&&v>=10&&v<1e12;});
-  }
-  var best=null,bestScore=-1;
-  for(var i=0;i<lines.length;i++){
-    var up=lines[i].toUpperCase(), score=0;
-    for(var k=0;k<keys.length;k++){
-      if(up.indexOf(keys[k])>=0){score=Math.max(score,keys.length-k);break;}
-    }
-    if(!score)continue;
-    var nums=numsIn(lines[i]);
-    /* الرقم قد يكون في السطر التالي (جداول الفواتير) */
-    if(!nums.length&&i+1<lines.length)nums=numsIn(lines[i+1]);
-    if(!nums.length)continue;
-    var mx=Math.max.apply(null,nums);
-    if(score>bestScore||(score===bestScore&&mx>(best||0))){best=mx;bestScore=score;}
-  }
-  if(best)return best;
-  /* بديل 1: رقم ملاصق لرمز عملة */
-  var m2=t.match(/(?:USD|EUR|CNY|RMB|AED|GBP|MRU|AOA|US\$|\$|€|£|¥)\s*([0-9][0-9.,\s]{2,})/i);
-  if(m2){var v2=normNum(m2[1]); if(v2&&v2>=10)return v2;}
-  var m3=t.match(/([0-9][0-9.,\s]{2,})\s*(?:USD|EUR|CNY|RMB|AED|GBP|MRU|AOA|\$|€|£|¥)/i);
-  if(m3){var v3=normNum(m3[1]); if(v3&&v3>=10)return v3;}
-  /* بديل 2: أكبر رقم منطقي في المستند */
-  var all=(t.match(/[0-9][0-9.,\s]{2,}/g)||[]).map(function(s){return normNum(s);})
-    .filter(function(v){return v!==null&&v>=100&&v<1e12;});
-  return all.length?Math.max.apply(null,all):null;
-}
-function extractCompany(t){
-  var lines=t.split(/\n/).map(function(l){return l.replace(/\s+/g,' ').trim();})
-    .filter(function(l){return l.length>3;});
-  var suf=/\b(LDA|LTD|LLC|CO\.?,? ?LTD|COMPANY|SARL|S\.A\.R\.L|SA|SAS|GMBH|INC|BV|PTE|TRADING|IMPORT|EXPORT|INDUSTR|FACTORY|GROUP|LIMITED|ENTERPRISE|MACHINERY|TECHNOLOG)\b/i;
-  var skip=/^(INVOICE|FACTURE|FATURA|PROFORMA|COMMERCIAL|PACKING|DATE|N[o\u00ba\u00b0]|REF|TEL|FAX|E-?MAIL|WWW|HTTP|BANK|IBAN|SWIFT|ADDRESS|BILL TO|SHIP TO|فاتورة|التاريخ|رقم)/i;
-  for(var i=0;i<Math.min(lines.length,20);i++){
-    if(skip.test(lines[i]))continue;
-    if(suf.test(lines[i])&&lines[i].length<80)
-      return lines[i].replace(/[^\w\s&.,\-\u0600-\u06FF]/g,'').trim();
-  }
-  for(var j=0;j<Math.min(lines.length,10);j++){
-    if(skip.test(lines[j]))continue;
-    var caps=lines[j].replace(/[^A-Z]/g,'').length;
-    if(caps>=5&&lines[j].split(/\s+/).length>=2&&lines[j].length<70)return lines[j].trim();
-  }
-  for(i=0;i<Math.min(lines.length,20);i++){
-    var L=lines[i];
-    if(/^(شركة|مؤسسة|مجموعة|مصنع|معمل|مكتب|متجر)\s/.test(L)&&L.length<70)
-      return L.replace(/[^\w\s&.,\-\u0600-\u06FF]/g,'').trim();
-  }
-  /* سطر يلي كلمة المورد */
-  for(i=0;i<lines.length-1;i++){
-    if(/\b(SUPPLIER|SELLER|VENDOR|SHIPPER|FOURNISSEUR|EXPORTADOR|المورد|البائع)\b/i.test(lines[i])){
-      var nx=lines[i+1];
-      if(nx&&!skip.test(nx)&&nx.length<80)return nx.replace(/[^\w\s&.,\-\u0600-\u06FF]/g,'').trim();
-    }
-  }
-  return null;
-}
-function extractCcy(t){
-  if(!t)return null;
-  var up=t.toUpperCase();
-  /* (?![A-Z]) بدل \b ليعمل مع الملاصق للأرقام: USD12,300 */
-  if(/(?:^|[^A-Z])EUR(?![A-Z])|€|EURO/.test(up))return 'EUR';
-  if(/(?:^|[^A-Z])(CNY|RMB)(?![A-Z])|YUAN|¥/.test(up))return 'CNY';
-  if(/(?:^|[^A-Z])AED(?![A-Z])|DIRHAM|DHS/.test(up))return 'AED';
-  if(/(?:^|[^A-Z])GBP(?![A-Z])|£|STERLING/.test(up))return 'GBP';
-  if(/(?:^|[^A-Z])MAD(?![A-Z])/.test(up))return 'MAD';
-  if(/(?:^|[^A-Z])SAR(?![A-Z])|RIYAL/.test(up))return 'SAR';
-  if(/(?:^|[^A-Z])AOA(?![A-Z])|KWANZA/.test(up))return 'AOA';
-  if(/(?:^|[^A-Z])MRU(?![A-Z])|OUGUIYA/.test(up))return 'MRU';
-  if(/(?:^|[^A-Z])USD(?![A-Z])|US\$|DOLLAR|\$/.test(up))return 'USD';
-  return null;
-}
-function ocrEngineReady(){ return !!window.Tesseract; }
-function pasteInvoiceText(){
-  var t=prompt('الصق نص الفاتورة هنا (انسخه من ملف PDF أو من تطبيق آخر):');
-  if(!t||t.length<10)return;
-  applyExtract(t);
-}
-function applyExtract(txt){
-  var amount=extractAmount(txt), company=extractCompany(txt), ccy=extractCcy(txt);
-  var got=[];
-  if(company){document.getElementById('ivComp').value=company;got.push(company.slice(0,28));}
-  if(amount){document.getElementById('ivAmt').value=fmt(amount,2);got.push(fmt(amount,2));}
-  if(ccy&&window.FDD&&FDD['fddIvCcy']){FDD['fddIvCcy'].set(ccy);got.push(ccy);}
-  var T=document.getElementById('dropT'), R=document.getElementById('dropR');
-  if(got.length){
-    T.textContent='قُرئت الفاتورة';
-    R.innerHTML='<span style="color:#0A9E5C">'+got.join(' \u00b7 ')+'</span>';
-    ['ivComp','ivAmt'].forEach(function(id){
-      var el=document.getElementById(id);
-      if(el&&el.value){el.style.transition='background .4s';el.style.background='rgba(74,222,128,.14)';
-        setTimeout(function(){el.style.background='';},1100);}
-    });
-  }else{
-    R.innerHTML='<span style="color:#E53935">لم أتعرّف على المبلغ أو اسم الشركة</span>';
-  }
-  return got.length;
-}
-async function readInvoice(file){
-  var T=document.getElementById('dropT'), R=document.getElementById('dropR');
-  var setP=function(m){T.textContent=m;};
-  OCR_STATE.busy=true;
-  setP('جارٍ التحضير…'); R.textContent='';
-  if(window.arkanTrack)arkanTrack('upload_invoice');
-  try{
-    var dataUrl=await new Promise(function(ok,bad){
-      var fr=new FileReader(); fr.onload=function(){ok(fr.result);}; fr.onerror=bad; fr.readAsDataURL(file);
-    });
-    var txt='';
-    if(file.type==='application/pdf'){
-      txt=await pdfExtract(dataUrl,setP);
-    }else{
-      txt=await ocrBest(dataUrl,setP);
-    }
-    OCR_STATE.raw=txt||'';
-    var amount=extractAmount(txt), company=extractCompany(txt), ccy=extractCcy(txt);
-    var got=[];
-    if(company){document.getElementById('ivComp').value=company;got.push(company.slice(0,28));}
-    if(amount){document.getElementById('ivAmt').value=fmt(amount,2);got.push(fmt(amount,2));}
-    if(ccy&&FDD['fddIvCcy']){FDD['fddIvCcy'].set(ccy);got.push(ccy);}
-
-    T.textContent = got.length ? 'قُرئت الفاتورة' : 'ارفع الفاتورة — صورة أو PDF';
-    var html='';
-    if(got.length)html+='<span style="color:#0A9E5C">'+got.join(' · ')+'</span>';
-    var missing=[];
-    if(!company)missing.push('اسم الشركة');
-    if(!amount)missing.push('المبلغ');
-    if(missing.length)html+='<div style="color:#E53935;margin-top:6px;font-size:.8rem">تعذّر استخراج: '+missing.join(' و')+' — أدخله يدويًا</div>';
-    if(OCR_STATE.raw.replace(/\s/g,'').length>15){
-      html+='<div style="margin-top:10px"><button type="button" class="btn btn-ghost" style="padding:8px 16px;font-size:.78rem" onclick="event.stopPropagation();showRaw()">عرض النص المقروء</button></div>';
-    }else{
-      html+='<div style="color:#E53935;margin-top:6px;font-size:.8rem">لم يُقرأ أي نص — جرّب صورة أوضح أو أقرب</div>';
-    }
-    R.innerHTML=html;
-    ['ivComp','ivAmt'].forEach(function(id){
-      var el=document.getElementById(id);
-      if(el&&el.value){
-        el.style.transition='background .4s';
-        el.style.background='rgba(74,222,128,.13)';
-        setTimeout(function(){el.style.background='';},1100);
-      }
-    });
-  }catch(e){
-    T.textContent='ارفع الفاتورة — صورة أو PDF';
-    R.innerHTML='<span style="color:#E53935">تعذّرت القراءة — أدخل البيانات يدويًا</span>';
-  }
-  OCR_STATE.busy=false;
-}
-function showRaw(){
-  var w=window.open('','_blank');
-  if(!w){toast('اسمح بالنوافذ المنبثقة لعرض النص');return;}
-  w.document.write('<meta charset="utf-8"><title>النص المقروء</title>'+
-    '<body style="background:#F7FAFD;color:#e8ecf1;font-family:monospace;padding:24px;white-space:pre-wrap;line-height:1.8;font-size:13px">'+
-    (OCR_STATE.raw||'').replace(/[<>&]/g,function(c){return {'<':'&lt;','>':'&gt;','&':'&amp;'}[c];})+'<script src="arkan-wallet-badge.js" defer></script>
-</body>');
+function arcPdf(){
+  const items=ARK.all();
+  const w=window.open('','_blank');
+  w.document.write('<html dir="rtl"><head><meta charset="utf-8"><title>ARKAN Rates — تقرير الأرشيف</title>'
+    +'<style>body{font-family:-apple-system,sans-serif;padding:30px;color:#0C1B33}h1{color:#06255C}'
+    +'table{width:100%;border-collapse:collapse;margin-top:16px}th,td{border:1px solid #E3EAF4;padding:8px 10px;font-size:12px;text-align:right}'
+    +'th{background:#06255C;color:#fff}tr:nth-child(even){background:#F5F8FC}.r{color:#E04C4C;font-weight:bold}</style></head><body>'
+    +'<h1>ARKAN Rates · تقرير الإيصالات</h1><p>'+new Date().toLocaleString('ar')+' · '+items.length+' سجل</p>'
+    +'<table><tr><th>التاريخ</th><th>البنك</th><th>المبلغ</th><th>المرجع</th><th>المخاطر</th></tr>'
+    +items.map(r=>'<tr'+(r.dup?' class="r"':'')+'><td>'+(r.date||new Date(r.ts).toLocaleDateString('ar'))+'</td><td>'+(r.bank||'—')
+      +'</td><td>'+(r.amount?Number(r.amount).toLocaleString()+' '+(r.ccy||''):'—')+'</td><td>'+(r.txn||'—')
+      +'</td><td>'+(r.risk||4)+'/100'+(r.dup?' ⚠️ مكرر':'')+'</td></tr>').join('')
+    +'</table><script>window.print()<\/script></body></html>');
   w.document.close();
 }
-</script>
-<script src="config.js"></script>
-<script src="integrations.js"></script>
-<script src="i18n.js"></script>
 
-<!-- ARKAN Firebase registration hook v3 -->
-<script>
-/* ربط الزر فوراً (سكربت عادي — لا يعتمد على module) */
-(function(){
-  function bindBtn(){
-    var btns = document.querySelectorAll('button[onclick*="sendRequest"]');
-    btns.forEach(function(b){
-      b.removeAttribute('onclick');
-      b.addEventListener('click', function(e){
-        e.preventDefault();
-        if (window.arkanSubmit) window.arkanSubmit();
-        else alert('جاري تحميل النظام... أعد المحاولة بعد ثانية');
-      });
-    });
-  }
-  if (document.readyState !== 'loading') bindBtn();
-  else document.addEventListener('DOMContentLoaded', bindBtn);
-})();
-</script>
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
-import { getFirestore, doc, setDoc, getDoc, collection, serverTimestamp }
-  from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyCtL-OySTK9FeyD0h-31BiupYFtGBxbJ_U",
-  authDomain: "arkan-rates-prod.firebaseapp.com",
-  projectId: "arkan-rates-prod",
-  storageBucket: "arkan-rates-prod.firebasestorage.app",
-  messagingSenderId: "1039254650364",
-  appId: "1:1039254650364:web:7972ce9eb77c24004d0679"
-};
-const db = getFirestore(initializeApp(firebaseConfig, 'arkan-reg'));
-
-const normPhone = p => (p||'').replace(/[^\d]/g,'');
-const makePin = () => String(Math.floor(1000 + Math.random()*9000));
-const makeRef = () => 'AK' + Date.now().toString(36).toUpperCase().slice(-6);
-
-function showPinModal(pin, ref, waUrl){
-  const wrap = document.createElement('div');
-  wrap.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.72);backdrop-filter:blur(6px);padding:22px;font-family:inherit';
-  wrap.innerHTML = '<div style="width:100%;max-width:380px;background:#FFFFFF;border:1px solid rgba(0,181,255,.06);border-radius:24px;padding:28px 22px;text-align:center;color:#102A43">'
-    + '<div style="width:60px;height:60px;margin:0 auto 16px;border-radius:50%;background:rgba(0,168,255,.05);display:grid;place-items:center;font-size:28px">✓</div>'
-    + '<h3 style="margin:0 0 6px;font-size:19px;font-weight:700">تم إنشاء حسابك</h3>'
-    + '<p style="margin:0 0 20px;font-size:13px;color:#486581;line-height:1.7">احفظ رمزك للدخول لاحقاً على <b style="color:#C88A0A">account.html</b></p>'
-    + '<div style="background:#F8FBFF;border:1px solid #E4EEF9;border-radius:16px;padding:16px;margin-bottom:12px"><div style="font-size:12px;color:#486581;margin-bottom:6px">رمزك الشخصي</div><div style="font-size:38px;font-weight:800;letter-spacing:.3em;color:#C88A0A;direction:ltr">'+pin+'</div></div>'
-    + '<div style="background:#F8FBFF;border:1px solid #E4EEF9;border-radius:14px;padding:12px;margin-bottom:20px"><div style="font-size:12px;color:#486581;margin-bottom:4px">رقمك المرجعي</div><div style="font-size:16px;font-weight:700;letter-spacing:.1em;color:#0056D6;direction:ltr">'+ref+'</div></div>'
-    + '<button id="arkWaGo" style="width:100%;padding:15px;border:0;border-radius:14px;cursor:pointer;background:linear-gradient(135deg,#0A9E5C,#25b378);color:#04150d;font-weight:700;font-size:15px;font-family:inherit;margin-bottom:10px">إرسال الطلب عبر واتساب</button>'
-    + '<button id="arkClose" style="width:100%;padding:13px;border:1px solid #D9E5F2;border-radius:14px;cursor:pointer;background:transparent;color:#486581;font-weight:600;font-family:inherit">حفظت الرمز — إغلاق</button>'
-    + '</div>';
-  document.body.appendChild(wrap);
-  wrap.querySelector('#arkWaGo').onclick = function(){ window.open(waUrl, '_blank'); };
-  wrap.querySelector('#arkClose').onclick = function(){ wrap.remove(); };
+/* ═══════════════════ الإعدادات ═══════════════════ */
+function saveGemKey(){
+  const v=document.getElementById('gemKeyIn').value.trim();
+  if(!v){toast('أدخل المفتاح أولاً');return;}
+  ARKAN_GEMINI.setKey(v);document.getElementById('gemKeyIn').value='';
+  engineStatus();toast('✅ حُفظ مفتاح Gemini — القراءة الآن أدق');
 }
-
-// ═══ محرك الأسعار والربح ═══
-let ARK_RATES = {};   // ccy -> {w,m,r,thr,thrM,buy}
-async function loadArkRates(){
-  try {
-    const res = await fetch('rates-data.json?t='+Date.now(), {cache:'no-store'});
-    const d = await res.json();
-    ARK_RATES = { MRU:{w:1,m:1,r:1,thr:0,thrM:0,buy:1} };
-    (d.r||[]).forEach(x => ARK_RATES[x.ccy] = {w:+x.w,m:+x.m,r:+x.r,thr:+x.thr||0,thrM:+x.thrM||0,buy:+x.buy||0});
-    if (!ARK_RATES.USD && ARK_RATES.USDT) ARK_RATES.USD = {...ARK_RATES.USDT};
-  } catch(e){ console.warn('rates load failed', e); }
+async function engineStatus(){
+  const g=document.getElementById('stGem'),o=document.getElementById('stOcr'),p=document.getElementById('stPdf');
+  if(g)g.textContent=ARKAN_GEMINI.getKey()?'✓ مفعّل':'غير مفعّل (المحلي يعمل)';
+  if(o)o.textContent=window.Tesseract?'✓ جاهز'+(window.ARK_LOCAL?' (vendor)':''):'✗ غير محمّل';
+  if(p)p.textContent=window.pdfjsLib?'✓ جاهز':'✗ غير محمّل';
+  const c=document.getElementById('stCnt');if(c)c.textContent=ARK.all().length;
 }
-loadArkRates();
-
-// اختيار الشريحة حسب المبلغ + حساب الربح بالأوقية
-function arkTier(cc, amt){
-  const r = ARK_RATES[cc]; if(!r) return 'r';
-  if (r.thr && amt >= r.thr) return 'w';
-  if (r.thrM && amt >= r.thrM) return 'm';
-  return 'r';
-}
-function arkCompute(from, to, amount){
-  // نحسب دائماً بالنسبة للعملة غير الأوقية (المصدر أو الوجهة)
-  const src = (from !== 'MRU') ? from : to;
-  const R = ARK_RATES[src];
-  if (!R){ return { tier:'r', sellRate:0, buyRate:0, received:0, profit:0 }; }
-  const tier = arkTier(src, amount);
-  const sell = R[tier];        // سعر البيع (أوقية لكل وحدة)
-  const buy  = R.buy || 0;     // سعر الشراء
-  let received, profit;
-  if (from !== 'MRU'){
-    // العميل يرسل عملة أجنبية → يستلم أوقية (أو العكس عبر الوسيط)
-    received = to === 'MRU' ? amount * sell : amount * (sell / (ARK_RATES[to]?.[tier]||1));
-    profit   = amount * (sell - buy);          // ربحك بالأوقية = الفرق × الكمية
-  } else {
-    // العميل يرسل أوقية → يستلم عملة أجنبية
-    received = amount / sell;
-    profit   = received * (sell - buy);
-  }
-  return { tier, sellRate:sell, buyRate:buy, received, profit: Math.max(0, profit) };
-}
-
-window.arkanSubmit = async function(){
-  const g = id => document.getElementById(id);
-  const name = (g('rName')?.value||'').trim();
-  const phone = normPhone((g('rPhone')?.value||'').trim());
-  const amount = parseFloat((g('rAmt')?.value||'').replace(/[^\d.]/g,''))||0;
-  if (!name || !phone || !amount){ if(window.toast) toast('أكمل الاسم ورقم الهاتف والمبلغ'); else alert('أكمل الاسم ورقم الهاتف والمبلغ'); return; }
-  if (phone.length < 8){ if(window.toast) toast('أدخل رقم واتساب صحيحاً'); return; }
-
-  const from = (window.fddVal ? fddVal('fddRFrom') : 'USDT') || 'USDT';
-  const to   = (window.fddVal ? fddVal('fddRTo')   : 'MRU')  || 'MRU';
-  const comp = arkCompute(from, to, amount);
-  const out  = comp.received;
-  const fm   = window.fmt || (v => v.toLocaleString('en-US',{maximumFractionDigits:2}));
-
-  try {
-    const uref = doc(db,'users',phone);
-    const snap = await getDoc(uref);
-    let pin, ref;
-    if (snap.exists()){ pin = snap.data().pin; ref = snap.data().ref; }
-    else {
-      pin = makePin(); ref = makeRef();
-      await setDoc(uref, { name, phone, pin, ref, balance:0, role:'client', status:'pending', createdAt: serverTimestamp() });
-    }
-    await setDoc(doc(collection(db,'transactions')), {
-      uid: phone, clientName: name, clientRef: ref, from, to, amount, received: out,
-      tier: comp.tier, sellRate: comp.sellRate, buyRate: comp.buyRate,
-      profit: Math.round(comp.profit),
-      type:'out', dp:2, status:'pending', createdAt: serverTimestamp()
-    });
-    const msg = 'ARKAN SETTLEMENTS — طلب تحويل\nالاسم: '+name+'\nرمز دخولي: '+pin+'\nرقمي المرجعي: '+ref+'\n\nأرسل: '+fm(amount)+' '+from+'\nيستلم: '+(out?fm(out):'?')+' '+to;
-    const waUrl = 'https://wa.me/22236295050?text=' + encodeURIComponent(msg);
-    if (window.toast) toast('تم إنشاء الطلب — احفظ رمزك');
-    showPinModal(pin, ref, waUrl);
-  } catch(e){
-    console.error('ARKAN reg error:', e);
-    alert('تعذّر الاتصال بقاعدة البيانات.\nالسبب: ' + (e.code||e.message||e) + '\n\nتأكد أن قواعد Firestore منشورة.');
-  }
-};
+setTimeout(engineStatus,1500);
+arcRender();
 </script>
-
-
-<script type="module">
-  import * as ARKAN from './arkan-core.js';
-  window.ARKAN = ARKAN; /* مصدر الأسعار والجلسة الموحّد */
-</script>
-<script src="arkan-nav.js" defer></script>
-<script src="arkan-ai.js" defer></script>
 </body>
 </html>
