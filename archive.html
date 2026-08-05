@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#F3F9FF">
-<title>ARKAN Intelligence Archive</title>
+<title>ARKAN Pay — Intelligence Archive</title>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="icon" href="arkan-icon-512.png">
 <meta name="apple-mobile-web-app-title" content="ARKAN">
@@ -1104,7 +1104,7 @@ function exportArchive(){
     setTimeout(()=>URL.revokeObjectURL(x.href),4000);};
   dl(csv,'ARKAN_ARCHIVE_'+stamp+'.csv','text/csv;charset=utf-8');
   /* JSON كامل للذكاء الاصطناعي */
-  const meta={exported:new Date().toISOString(),source:'ARKAN Intelligence Archive',docs:rows.length,
+  const meta={exported:new Date().toISOString(),source:'ARKAN Pay — Intelligence Archive',docs:rows.length,
     note:'ملف تحليلي لـ Claude Cowork — كل مستند بحقوله وتنبيهاته وسلسلته'};
   setTimeout(()=>dl(JSON.stringify({meta,receipts:rows},null,1),'ARKAN_ARCHIVE_'+stamp+'.json','application/json'),600);
   toast0('📤 صُدّر '+rows.length+' مستند (CSV + JSON) — أسقطهما في مجلد Cowork');
@@ -1875,7 +1875,7 @@ function mExport(scope){
   const sums={};rows.forEach(r=>{const k=mCur(r.c)||'?';(sums[k]=sums[k]||{c:0,s:0}).c+=r.own;(sums[k]).s+=r.oth;});
   const w=window.open('','_blank');
   w.document.write(`<!doctype html><html dir="rtl" lang="ar"><head><meta charset="utf-8">
-  <title>تقرير مطابقة وتسوية إيصالات ARKAN Rates</title>
+  <title>تقرير مطابقة وتسوية إيصالات ARKAN Pay</title>
   <style>
     @page{size:A4;margin:14mm}
     body{font-family:'Cairo','Segoe UI',sans-serif;color:#071D49;font-size:11px;margin:0;padding:20px}
@@ -1893,7 +1893,7 @@ function mExport(scope){
     @media print{button{display:none}}
   </style></head><body>
   <button onclick="print()" style="position:fixed;top:10px;left:10px;padding:8px 18px;background:#0058D9;color:#fff;border:none;border-radius:9px;font-family:inherit;cursor:pointer">طباعة / PDF</button>
-  <h1>تقرير مطابقة وتسوية إيصالات ARKAN Rates</h1>
+  <h1>تقرير مطابقة وتسوية إيصالات ARKAN Pay</h1>
   <div class="meta">
     رقم التقرير: <b>${rid}</b> · تاريخ الإنشاء: ${now} · النطاق: <b>${scope==='missing'?'الإيصالات الناقصة فقط':'جميع العمليات'}</b> · عدد العمليات: <b>${rows.length}</b>
   </div>
@@ -1912,7 +1912,7 @@ function mExport(scope){
         <td class="${cls}">${ST[r.st]||r.st}</td><td style="direction:ltr">${esc(p.reference||'')}</td></tr>`;
     }).join('')}
   </table>
-  <div class="foot"><span>إجمالي العمليات: ${rows.length}</span><span>arkanrates.com · ARKAN Intelligence Archive</span></div>
+  <div class="foot"><span>إجمالي العمليات: ${rows.length}</span><span>arkanrates.com · ARKAN Pay — Intelligence Archive</span></div>
   <div class="sig"><div>توقيع المسؤول</div><div>الاعتماد</div></div>
   <script>setTimeout(()=>print(),600)<\/script></body></html>`);
   w.document.close();
@@ -2226,7 +2226,7 @@ function mJson(){
 
 <style id="wiseSkin">
 /* ═══════════════════════════════════════════════════════════════
-   ARKAN Financial Archive — Wise-grade banking skin
+   ARKAN Pay Archive — Wise-grade banking skin
    خط واحد: IBM Plex Sans Arabic (خط الموقع الرئيسي) · أوزان 400–700
    ═══════════════════════════════════════════════════════════════ */
 :root{
@@ -2685,7 +2685,7 @@ window.exportPdfReport=function(){
   const w=window.open('','_blank');
   if(!w){toast0('اسمح بالنوافذ المنبثقة ثم أعد المحاولة');return;}
   w.document.write(`<!doctype html><html dir="rtl" lang="ar"><head><meta charset="utf-8">
-  <title>كشف الإيصالات — ARKAN Financial Archive</title>
+  <title>كشف الإيصالات — ARKAN Pay Archive</title>
   <style>
     @page{size:A4;margin:12mm}
     *{box-sizing:border-box}
