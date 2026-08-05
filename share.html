@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>إرسال الإيصال — ARKAN</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F5F7F6;--card:#fff;--txt:#0E0F0C;--sub:#60645F;--brd:#E2E5E1;--pri:#0B57D0;--dark:#082B60;--ok:#168A52;--dgr:#C93636;--neu:#EEF1EE}
+*{box-sizing:border-box;font-family:'IBM Plex Sans Arabic',system-ui,sans-serif;touch-action:manipulation}
+body{margin:0;background:var(--bg);color:var(--txt);min-height:100dvh;padding:calc(16px + env(safe-area-inset-top)) 16px calc(24px + env(safe-area-inset-bottom))}
+.hd{display:flex;align-items:center;gap:12px;margin-bottom:18px}
+.hd .lg{width:44px;height:44px;border-radius:14px;background:linear-gradient(135deg,#0B57D0,#2F7BFF);color:#fff;
+ font-weight:700;font-size:19px;display:flex;align-items:center;justify-content:center}
+.hd b{font-size:18px}
+.hd small{display:block;color:var(--sub);font-size:12px;font-weight:500}
+.files{display:flex;gap:10px;overflow:auto;padding-bottom:6px;margin-bottom:16px}
+.fitem{flex-shrink:0;width:96px;background:var(--card);border:1px solid var(--brd);border-radius:12px;padding:8px;text-align:center}
+.fitem img{width:80px;height:80px;object-fit:cover;border-radius:8px;background:var(--neu)}
+.fitem .pdf{width:80px;height:80px;border-radius:8px;background:#E03E3E;color:#fff;font-weight:800;font-size:13px;
+ display:flex;align-items:center;justify-content:center}
+.fitem small{display:block;font-size:9.5px;color:var(--sub);margin-top:5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;direction:ltr}
+h3{font-size:15px;margin:0 0 10px}
+.opt{width:100%;background:var(--card);border:1px solid var(--brd);border-radius:16px;padding:15px;display:flex;
+ align-items:center;gap:12px;font-size:15px;font-weight:600;color:var(--txt);margin-bottom:10px;cursor:pointer;text-align:right}
+.opt:active{background:var(--neu)}
+.opt .ic{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.opt .ic.blue{background:#E9F0FC;color:var(--pri)}
+.opt .ic.dark{background:var(--neu);color:var(--dark)}
+.opt .ic svg{width:22px;height:22px}
+.opt small{display:block;font-size:11.5px;color:var(--sub);font-weight:500;margin-top:2px}
+#convs{display:none}
+.cv{width:100%;background:var(--card);border:1px solid var(--brd);border-radius:14px;padding:12px 14px;display:flex;
+ align-items:center;gap:11px;margin-bottom:8px;cursor:pointer;font-size:14.5px;font-weight:600;color:var(--txt);text-align:right}
+.cv:active{background:var(--neu)}
+.cv .av{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#0B57D0,#3E8BFF);color:#fff;
+ font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+#st{position:fixed;inset:0;background:rgba(8,43,96,.55);backdrop-filter:blur(6px);display:none;
+ align-items:center;justify-content:center;flex-direction:column;gap:14px;color:#fff;font-size:15px;font-weight:600;z-index:9}
+#st.on{display:flex}
+.sp{width:44px;height:44px;border:4px solid rgba(255,255,255,.25);border-top-color:#fff;border-radius:50%;animation:sp 1s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.done{color:var(--ok);text-align:center;padding:36px 16px}
+.done .ck{width:72px;height:72px;border-radius:50%;background:#E7F6EC;color:var(--ok);display:flex;align-items:center;
+ justify-content:center;margin:0 auto 14px}
+.done .ck svg{width:36px;height:36px}
+.wb{display:inline-flex;align-items:center;justify-content:center;height:48px;border-radius:12px;border:0;
+ background:var(--pri);color:#fff;font-size:15px;font-weight:600;padding:0 22px;text-decoration:none;margin-top:14px}
+</style>
+</head>
+<body>
+<div class="hd"><div class="lg">A</div><div><b>إرسال الإيصال</b><small>ARKAN — التسويات الدولية</small></div></div>
+<div class="files" id="fl"></div>
+<div id="pick">
+  <h3>أين تريد إرساله؟</h3>
+  <button class="opt" onclick="showConvs()">
+    <span class="ic blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M21 12a8.5 8.5 0 01-8.5 8.5c-1.4 0-2.8-.34-4-.95L3 21l1.5-5.3A8.5 8.5 0 1121 12z"/></svg></span>
+    <span>إلى محادثة<small>يصل فورًا مع قراءة Gemini والأرشفة</small></span>
+  </button>
+  <button class="opt" onclick="location.href='settlement.html?shared='+N">
+    <span class="ic dark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 20V10M10 20V4M16 20v-7M21 20H3"/></svg></span>
+    <span>إلى التسويات / الأرشيف<small>المسار المعتاد للمعالجة الجماعية</small></span>
+  </button>
+</div>
+<div id="convs"><h3>اختر المحادثة</h3><div id="cl"></div></div>
+<div id="st"><div class="sp"></div><span id="stT">جارٍ الإرسال…</span></div>
+<script>
+const SB='https://vyxzlazwpbstigcqvizb.supabase.co';
+const KEY='sb_publishable_scXFuYtWG2dkz8_CaPEvAg_Yj2_sxnO';
+const H={'apikey':KEY,'Authorization':'Bearer '+KEY};
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const N=new URLSearchParams(location.search).get('shared')||0;
+let FILES=[];
+
+async function loadShared(){
+  try{
+    const cache=await caches.open('arkan-share-v1');
+    const ir=await cache.match(new URL('__shared__/index.json',location.href).href);
+    if(!ir){$('fl').innerHTML='<div style="color:var(--sub);font-size:13px">لا ملفات — شارك إيصالًا من تطبيق البنك أولًا</div>';return;}
+    const idx=await ir.json();
+    for(const f of (idx.files||[])){
+      const r=await cache.match(new URL('__shared__/'+f.id,location.href).href);
+      if(!r)continue;
+      const blob=await r.blob();
+      FILES.push({name:f.name,blob});
+      const isPdf=/pdf/i.test(f.type)||/\.pdf$/i.test(f.name);
+      $('fl').insertAdjacentHTML('beforeend',
+        `<div class="fitem">${isPdf?'<div class="pdf">PDF</div>':`<img src="${URL.createObjectURL(blob)}">`}<small>${esc(f.name)}</small></div>`);
+    }
+  }catch(e){}
+}
+async function showConvs(){
+  $('pick').style.display='none';$('convs').style.display='block';
+  /* عميل معروف على هذا الجهاز؟ أرسل لمحادثته مباشرة */
+  const cc=localStorage.getItem('arkan_client_code');
+  const r=await fetch(SB+'/rest/v1/conversations?select=id,client_name,client_code&order=last_at.desc.nullslast',{headers:H});
+  const convs=await r.json();
+  if(cc){
+    const mine=convs.find(c=>c.client_code===cc);
+    if(mine){sendTo(mine,'client');return;}
+  }
+  $('cl').innerHTML=convs.map(c=>
+    `<button class="cv" onclick='sendTo(${JSON.stringify(c)},"owner")'>
+      <span class="av">${esc((c.client_name||'?')[0])}</span>${esc(c.client_name)}</button>`).join('')
+    ||'<div style="color:var(--sub);font-size:13px">لا محادثات بعد — أنشئ واحدة من صفحة الشات</div>';
+}
+async function sha(s){const h=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));
+  return [...new Uint8Array(h)].map(x=>x.toString(16).padStart(2,'0')).join('');}
+async function sendTo(conv,as){
+  $('st').classList.add('on');
+  let sent=0;
+  for(const f of FILES){
+    try{
+      $('stT').textContent='رفع '+(sent+1)+' من '+FILES.length+'…';
+      const ext=(f.name.split('.').pop()||'bin').toLowerCase();
+      const path=conv.id+'/'+Date.now()+'_'+Math.random().toString(36).slice(2,6)+'.'+ext;
+      const up=await fetch(SB+'/storage/v1/object/chat/'+path,{method:'POST',
+        headers:Object.assign({'Content-Type':f.blob.type||'application/octet-stream'},H),body:f.blob});
+      if(!up.ok)continue;
+      const url=SB+'/storage/v1/object/public/chat/'+path;
+      const isImg=/^image\//.test(f.blob.type);
+      const hash=await sha(conv.id+'|'+path);
+      const ins=await fetch(SB+'/rest/v1/messages',{method:'POST',
+        headers:Object.assign({'Content-Type':'application/json','Prefer':'return=minimal'},H),
+        body:JSON.stringify({conv_id:conv.id,sender:as,kind:isImg?'image':'file',body:'',
+          file_url:url,file_name:f.name,meta:{size:f.blob.size,via:'share_target'},hash})});
+      if(ins.ok)sent++;
+    }catch(e){}
+  }
+  try{
+    await fetch(SB+'/rest/v1/conversations?id=eq.'+conv.id,{method:'PATCH',
+      headers:Object.assign({'Content-Type':'application/json','Prefer':'return=minimal'},H),
+      body:JSON.stringify({last_msg:'إيصال عبر المشاركة',last_at:new Date().toISOString()})});
+    const c=await caches.open('arkan-share-v1');
+    for(const k of await c.keys())await c.delete(k);
+  }catch(e){}
+  $('st').classList.remove('on');
+  document.body.innerHTML=`<div class="done">
+    <div class="ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4.5 12.5l5 5L19.5 7"/></svg></div>
+    <div style="font-size:17px;font-weight:700">أُرسل ${sent} إيصال إلى ${esc(conv.client_name)}</div>
+    <div style="font-size:13px;color:var(--sub);margin-top:4px">سيُقرأ ويُؤرشف تلقائيًا</div>
+    <a class="wb" href="chat.html${as==='client'?('?c='+conv.client_code):''}">فتح المحادثة</a>
+  </div>`;
+}
+loadShared();
+</script>
+</body>
+</html>
