@@ -1,0 +1,426 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1">
+<title>ARKAN Chat — محادثات العملاء</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="vendor/supabase.js"></script>
+<style>
+:root{--bg:#F5F7F6;--card:#fff;--txt:#0E0F0C;--sub:#60645F;--brd:#E2E5E1;
+ --pri:#0B57D0;--dark:#082B60;--ok:#168A52;--warn:#B76A00;--dgr:#C93636;--neu:#EEF1EE}
+*{box-sizing:border-box;font-family:'IBM Plex Sans Arabic',system-ui,sans-serif;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--bg);color:var(--txt);height:100dvh;display:flex;flex-direction:column;overflow:hidden}
+button{cursor:pointer}
+/* رأس */
+#hd{background:var(--card);border-bottom:1px solid var(--brd);padding:calc(10px + env(safe-area-inset-top)) 14px 10px;
+ display:flex;align-items:center;gap:10px;flex-shrink:0}
+#hd .av{width:38px;height:38px;border-radius:50%;background:var(--dark);color:#fff;display:flex;align-items:center;
+ justify-content:center;font-weight:700;font-size:15px;flex-shrink:0}
+#hd .tt{flex:1;min-width:0}
+#hd .tt b{font-size:15px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#hd .tt small{font-size:11px;color:var(--sub);display:flex;align-items:center;gap:5px}
+#hd .tt small .d{width:7px;height:7px;border-radius:50%;background:#b6bdb6}
+#hd .tt small.on .d{background:var(--ok)}
+.hbtn{width:38px;height:38px;border-radius:12px;border:1px solid var(--brd);background:var(--card);
+ display:flex;align-items:center;justify-content:center;color:var(--txt)}
+.hbtn svg{width:19px;height:19px}
+/* قوائم */
+#views{flex:1;min-height:0;display:flex;flex-direction:column}
+.pane{flex:1;min-height:0;overflow:auto;-webkit-overflow-scrolling:touch;display:none;flex-direction:column}
+.pane.on{display:flex}
+#convList{padding:12px 14px calc(20px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:10px}
+.conv{background:var(--card);border:1px solid var(--brd);border-radius:16px;padding:13px 14px;display:flex;gap:12px;
+ align-items:center;transition:background .15s}
+.conv:active{background:var(--neu)}
+.conv .av{width:44px;height:44px;border-radius:50%;background:var(--neu);color:var(--dark);font-weight:700;
+ display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.conv .in{flex:1;min-width:0}
+.conv .nm{font-weight:600;font-size:15px}
+.conv .lm{font-size:12.5px;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+.conv .tm{font-size:11px;color:var(--sub);flex-shrink:0;align-self:flex-start;font-variant-numeric:tabular-nums}
+.empty{text-align:center;color:var(--sub);padding:48px 24px;font-size:14px;line-height:2}
+/* الشات */
+#msgs{flex:1;min-height:0;overflow:auto;-webkit-overflow-scrolling:touch;padding:14px 12px;display:flex;flex-direction:column;gap:6px}
+.day{align-self:center;background:var(--neu);color:var(--sub);border-radius:999px;padding:4px 14px;font-size:11px;margin:8px 0 4px}
+.bub{max-width:82%;border-radius:16px;padding:9px 12px;font-size:14.5px;line-height:1.7;position:relative;
+ word-break:break-word;animation:pop .18s ease}
+@keyframes pop{from{transform:translateY(6px);opacity:0}to{transform:none;opacity:1}}
+.bub.me{align-self:flex-start;background:var(--pri);color:#fff;border-bottom-left-radius:5px}
+.bub.them{align-self:flex-end;background:var(--card);border:1px solid var(--brd);border-bottom-right-radius:5px}
+.bub .mt{display:flex;gap:5px;align-items:center;justify-content:flex-end;font-size:10px;opacity:.75;margin-top:3px;
+ font-variant-numeric:tabular-nums}
+.bub.me .mt{color:#DCE8FF}
+.bub.them .mt{color:var(--sub)}
+.bub img{max-width:100%;border-radius:10px;display:block;margin-bottom:4px;cursor:pointer}
+.bub .fl{display:flex;align-items:center;gap:9px;background:rgba(255,255,255,.14);border-radius:10px;padding:9px;
+ text-decoration:none;color:inherit;margin-bottom:3px}
+.bub.them .fl{background:var(--neu)}
+.bub .fl svg{width:22px;height:22px;flex-shrink:0}
+.bub .fl b{font-size:12.5px;word-break:break-all}
+.rc{margin-top:6px;background:rgba(255,255,255,.12);border-radius:10px;padding:8px 10px;font-size:12px;line-height:1.9}
+.bub.them .rc{background:#F0F6FF;border:1px solid #D9E7FB}
+.rc b{font-variant-numeric:tabular-nums}
+.rc .ar{display:inline-flex;align-items:center;gap:5px;background:var(--dark);color:#fff;border:0;border-radius:8px;
+ padding:5px 11px;font-size:11.5px;margin-top:5px}
+.rc .ar.done{background:var(--ok)}
+/* الإدخال */
+#bar{flex-shrink:0;background:var(--card);border-top:1px solid var(--brd);
+ padding:9px 10px calc(9px + env(safe-area-inset-bottom));display:flex;gap:8px;align-items:flex-end}
+#txt{flex:1;border:1px solid var(--brd);border-radius:20px;background:var(--bg);padding:11px 15px;font-size:15px;
+ resize:none;max-height:110px;min-height:44px;outline:0}
+#txt:focus{border-color:var(--pri)}
+.ibtn{width:44px;height:44px;border-radius:50%;border:1px solid var(--brd);background:var(--card);
+ display:flex;align-items:center;justify-content:center;color:var(--sub);flex-shrink:0}
+.ibtn.send{background:var(--pri);border-color:var(--pri);color:#fff}
+.ibtn svg{width:20px;height:20px}
+/* نوافذ */
+.sheet{position:fixed;inset:0;background:rgba(14,15,12,.45);display:none;align-items:flex-end;justify-content:center;z-index:90}
+.sheet.on{display:flex}
+.sheet .in{background:var(--card);border-radius:20px 20px 0 0;width:min(560px,100%);max-height:80vh;overflow:auto;
+ padding:8px 18px calc(22px + env(safe-area-inset-bottom));animation:up .2s ease}
+@keyframes up{from{transform:translateY(28px);opacity:0}to{transform:none;opacity:1}}
+.grab{width:40px;height:4px;border-radius:4px;background:var(--brd);margin:6px auto 14px}
+.sheet h3{margin:0 0 12px;font-size:18px}
+.fld{width:100%;height:52px;border:1px solid var(--brd);border-radius:12px;padding:0 14px;font-size:15px;margin-bottom:10px;outline:0;background:var(--card)}
+.fld:focus{border-color:var(--pri)}
+.wb{width:100%;height:48px;border-radius:12px;border:0;background:var(--pri);color:#fff;font-size:15px;font-weight:600;margin-top:4px}
+.wb.sec{background:var(--card);border:1px solid var(--brd);color:var(--txt)}
+.codebox{background:var(--neu);border:1px dashed var(--brd);border-radius:12px;padding:12px;text-align:center;
+ font-size:13px;margin:10px 0;word-break:break-all;direction:ltr}
+#toast{position:fixed;bottom:calc(90px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%) translateY(20px);
+ background:var(--dark);color:#fff;border-radius:999px;padding:9px 18px;font-size:13px;opacity:0;transition:.25s;z-index:99;white-space:nowrap}
+#toast.on{opacity:1;transform:translateX(-50%)}
+#prog{position:fixed;top:0;left:0;height:3px;background:var(--pri);width:0;transition:width .3s;z-index:99}
+</style>
+</head>
+<body>
+<div id="prog"></div>
+<header id="hd">
+  <button class="hbtn" id="backB" style="display:none" onclick="showList()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg></button>
+  <div class="av" id="hAv">A</div>
+  <div class="tt"><b id="hName">ARKAN Chat</b><small id="hSub"><span class="d"></span><span id="hSubT">جارٍ الاتصال…</span></small></div>
+  <button class="hbtn" id="newB" style="display:none" onclick="openNew()" title="محادثة جديدة"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
+  <button class="hbtn" id="infoB" style="display:none" onclick="openInfo()" title="بيانات المحادثة"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg></button>
+</header>
+
+<div id="views">
+  <div class="pane" id="pList"><div id="convList"></div></div>
+  <div class="pane" id="pChat">
+    <div id="msgs"></div>
+    <div id="bar">
+      <button class="ibtn" onclick="document.getElementById('fi').click()" title="إرفاق">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M21 12.5l-8.5 8.5a5.5 5.5 0 01-7.8-7.8L13 5a3.7 3.7 0 015.2 5.2l-8.2 8.2a1.8 1.8 0 01-2.6-2.6L15 8.3"/></svg>
+      </button>
+      <textarea id="txt" rows="1" placeholder="اكتب رسالة…"></textarea>
+      <button class="ibtn send" onclick="sendText()" title="إرسال">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="transform:scaleX(-1)"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4z"/></svg>
+      </button>
+    </div>
+  </div>
+</div>
+<input type="file" id="fi" accept="image/*,.pdf" multiple hidden>
+
+<!-- محادثة جديدة (مالك) -->
+<div class="sheet" id="shNew" onclick="if(event.target===this)this.classList.remove('on')">
+  <div class="in"><div class="grab"></div><h3>محادثة عميل جديدة</h3>
+    <input class="fld" id="nName" placeholder="اسم العميل">
+    <button class="wb" onclick="createConv()">إنشاء وتوليد رابط الدعوة</button>
+    <div id="nOut"></div>
+  </div>
+</div>
+<!-- بيانات المحادثة -->
+<div class="sheet" id="shInfo" onclick="if(event.target===this)this.classList.remove('on')">
+  <div class="in"><div class="grab"></div><h3 id="iName">المحادثة</h3><div id="iBody"></div></div>
+</div>
+<!-- PIN المالك -->
+<div class="sheet" id="shPin">
+  <div class="in"><div class="grab"></div><h3>دخول المالك</h3>
+    <p style="font-size:13px;color:var(--sub);margin:0 0 10px" id="pinHint">أدخل رمز PIN الخاص بك</p>
+    <input class="fld" id="pinIn" type="password" inputmode="numeric" placeholder="PIN">
+    <button class="wb" onclick="pinGo()">دخول</button>
+  </div>
+</div>
+<div id="toast"></div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════
+   ARKAN Chat — Supabase Realtime · تشفير AES-GCM · بصمات SHA-256
+   ═══════════════════════════════════════════════════════════ */
+const SB_URL='https://vyxzlazwpbstigcqvizb.supabase.co';
+const SB_KEY='sb_publishable_scXFuYtWG2dkz8_CaPEvAg_Yj2_sxnO';
+const sb=window.supabase.createClient(SB_URL,SB_KEY);
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const toast=t=>{const e=$('toast');e.textContent=t;e.classList.add('on');clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove('on'),2400);};
+const prog=p=>{$('prog').style.width=p+'%';if(p>=100)setTimeout(()=>$('prog').style.width='0',400);};
+
+/* ── الهوية ── */
+const qp=new URLSearchParams(location.search);
+const CLIENT_CODE=qp.get('c');
+const IS_OWNER=!CLIENT_CODE;
+let ME=IS_OWNER?'owner':'client';
+let CONV=null, CONVS=[], KEY=null, SUB=null, LASTDAY='';
+
+/* ── تشفير: مفتاح المحادثة = SHA-256(code|conv_id) — الخادم يخزن نصًا مشفرًا فقط ── */
+async function convKey(code,cid){
+  const raw=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(code+'|'+cid));
+  return crypto.subtle.importKey('raw',raw,'AES-GCM',false,['encrypt','decrypt']);
+}
+async function enc(txt){
+  if(!KEY)return txt;
+  const iv=crypto.getRandomValues(new Uint8Array(12));
+  const ct=await crypto.subtle.encrypt({name:'AES-GCM',iv},KEY,new TextEncoder().encode(txt));
+  const b=new Uint8Array(iv.length+ct.byteLength);b.set(iv);b.set(new Uint8Array(ct),12);
+  return 'enc1:'+btoa(String.fromCharCode(...b));
+}
+async function dec(s){
+  if(!s||!s.startsWith('enc1:'))return s;
+  try{
+    const b=Uint8Array.from(atob(s.slice(5)),c=>c.charCodeAt(0));
+    const pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:b.slice(0,12)},KEY,b.slice(12));
+    return new TextDecoder().decode(pt);
+  }catch(e){return '🔒 تعذر فك التشفير';}
+}
+async function sha(s){
+  const h=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));
+  return [...new Uint8Array(h)].map(x=>x.toString(16).padStart(2,'0')).join('');
+}
+
+/* ── وضع المالك: PIN محلي ── */
+function pinGo(){
+  const v=$('pinIn').value.trim(); if(!v)return;
+  const saved=localStorage.getItem('arkan_chat_pin');
+  if(!saved){localStorage.setItem('arkan_chat_pin',v);$('shPin').classList.remove('on');boot();toast('حُفظ الرمز — أهلًا بك');}
+  else if(saved===v){$('shPin').classList.remove('on');boot();}
+  else toast('رمز غير صحيح');
+}
+
+/* ── تحميل ── */
+async function boot(){
+  $('hSub').classList.add('on');$('hSubT').textContent=IS_OWNER?'وضع المالك — مشفّر':'متصل — مشفّر';
+  if(IS_OWNER){ $('newB').style.display='flex'; await loadConvs(); showList(); listenConvs(); }
+  else{
+    const {data,error}=await sb.from('conversations').select('*').eq('client_code',CLIENT_CODE).single();
+    if(error||!data){$('hName').textContent='رابط غير صالح';$('hSubT').textContent='تحقق من الرابط مع ARKAN';return;}
+    await openConv(data);
+  }
+}
+async function loadConvs(){
+  const {data}=await sb.from('conversations').select('*').order('last_at',{ascending:false,nullsFirst:false});
+  CONVS=data||[]; renderConvs();
+}
+function renderConvs(){
+  $('convList').innerHTML=CONVS.length?CONVS.map(c=>`
+    <div class="conv" onclick='openConvId("${c.id}")'>
+      <div class="av">${esc((c.client_name||'?')[0])}</div>
+      <div class="in"><div class="nm">${esc(c.client_name)}</div>
+      <div class="lm">${esc(c.last_msg||'محادثة جديدة')}</div></div>
+      <div class="tm">${c.last_at?new Date(c.last_at).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}):''}</div>
+    </div>`).join(''):
+    `<div class="empty">لا محادثات بعد<br>اضغط + لإنشاء محادثة عميل وتوليد رابط دعوة مشفّر</div>`;
+}
+function listenConvs(){
+  sb.channel('convs').on('postgres_changes',{event:'*',schema:'public',table:'conversations'},()=>loadConvs()).subscribe();
+}
+
+/* ── إنشاء محادثة (مالك) ── */
+function openNew(){$('nOut').innerHTML='';$('nName').value='';$('shNew').classList.add('on');}
+async function createConv(){
+  const name=$('nName').value.trim(); if(!name)return toast('أدخل اسم العميل');
+  const code=[...crypto.getRandomValues(new Uint8Array(9))].map(b=>'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[b%32]).join('');
+  const {data,error}=await sb.from('conversations').insert({client_name:name,client_code:code}).select().single();
+  if(error)return toast('خطأ: '+error.message);
+  CONVS.unshift(data);renderConvs();
+  const link=location.origin+location.pathname+'?c='+code;
+  $('nOut').innerHTML=`<div class="codebox">${link}</div>
+    <button class="wb" onclick="shareLink('${link}','${esc(name)}')">مشاركة الرابط عبر واتساب</button>
+    <button class="wb sec" onclick="navigator.clipboard.writeText('${link}').then(()=>toast('نُسخ الرابط'))">نسخ الرابط</button>`;
+}
+function shareLink(link,name){
+  const msg=encodeURIComponent('مرحبًا '+name+'،\nهذا رابط محادثتك الآمنة مع ARKAN — أرسل إيصالاتك ورسائلك مباشرة:\n'+link);
+  window.open('https://wa.me/?text='+msg,'_blank');
+}
+
+/* ── فتح محادثة ── */
+async function openConvId(id){const c=CONVS.find(x=>x.id===id);if(c)await openConv(c);}
+async function openConv(c){
+  CONV=c; KEY=await convKey(c.client_code,c.id); LASTDAY='';
+  $('hName').textContent=IS_OWNER?c.client_name:'ARKAN — التسويات الدولية';
+  $('hAv').textContent=(IS_OWNER?c.client_name:'A')[0].toUpperCase();
+  $('backB').style.display=IS_OWNER?'flex':'none';
+  $('infoB').style.display='flex';
+  $('pList').classList.remove('on');$('pChat').classList.add('on');
+  $('msgs').innerHTML='';
+  const {data}=await sb.from('messages').select('*').eq('conv_id',c.id).order('created_at');
+  for(const m of (data||[]))await renderMsg(m,false);
+  scrollEnd(true); markSeen(data||[]);
+  if(SUB)sb.removeChannel(SUB);
+  SUB=sb.channel('m_'+c.id).on('postgres_changes',
+    {event:'INSERT',schema:'public',table:'messages',filter:'conv_id=eq.'+c.id},
+    async p=>{await renderMsg(p.new,true);scrollEnd();markSeen([p.new]);})
+   .on('postgres_changes',
+    {event:'UPDATE',schema:'public',table:'messages',filter:'conv_id=eq.'+c.id},
+    p=>{const el=document.querySelector(`[data-mid="${p.new.id}"] .tick`);if(el&&p.new.seen)el.textContent='✓✓';})
+   .subscribe();
+}
+function showList(){$('pChat').classList.remove('on');$('pList').classList.add('on');
+  $('backB').style.display='none';$('infoB').style.display='none';
+  $('hName').textContent='ARKAN Chat';$('hAv').textContent='A';
+  if(SUB){sb.removeChannel(SUB);SUB=null;}CONV=null;}
+
+function openInfo(){
+  if(!CONV)return;
+  $('iName').textContent=IS_OWNER?CONV.client_name:'المحادثة';
+  const link=location.origin+location.pathname+'?c='+CONV.client_code;
+  $('iBody').innerHTML=`
+    <p style="font-size:13px;color:var(--sub);line-height:2">التشفير: AES-256-GCM من الجهاز — الخادم يخزن نصًا مشفرًا فقط.<br>كل رسالة تحمل بصمة SHA-256 قابلة للتوثيق على البلوكتشين.</p>
+    ${IS_OWNER?`<div class="codebox">${link}</div>
+    <button class="wb sec" onclick="navigator.clipboard.writeText('${link}').then(()=>toast('نُسخ'))">نسخ رابط الدعوة</button>`:''}`;
+  $('shInfo').classList.add('on');
+}
+
+/* ── الرسائل ── */
+function scrollEnd(now){const m=$('msgs');m.scrollTo({top:m.scrollHeight,behavior:now?'auto':'smooth'});}
+function dayLbl(ts){
+  const d=new Date(ts),t=new Date(),y=new Date(Date.now()-864e5);
+  if(d.toDateString()===t.toDateString())return 'اليوم';
+  if(d.toDateString()===y.toDateString())return 'أمس';
+  return d.toLocaleDateString('en-GB');
+}
+async function renderMsg(m,live){
+  const lbl=dayLbl(m.created_at);
+  if(lbl!==LASTDAY){LASTDAY=lbl;$('msgs').insertAdjacentHTML('beforeend',`<div class="day">${lbl}</div>`);}
+  const mine=m.sender===ME;
+  const time=new Date(m.created_at).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+  let inner='';
+  if(m.kind==='text'){ inner=esc(await dec(m.body)).replace(/\n/g,'<br>'); }
+  else if(m.kind==='image'){ inner=`<img src="${esc(m.file_url)}" loading="lazy" onclick="window.open(this.src,'_blank')">${m.body?esc(await dec(m.body)):''}`; }
+  else{ inner=`<a class="fl" href="${esc(m.file_url)}" target="_blank">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg>
+    <b>${esc(m.file_name||'ملف')}</b></a>`; }
+  /* بيانات الإيصال المقروءة */
+  const meta=m.meta||{};
+  if(meta.amount){
+    const archived=!!meta.archived;
+    inner+=`<div class="rc">قراءة Gemini: <b>${(+meta.amount).toLocaleString('en-US')} ${esc(meta.currency||'')}</b>
+      ${meta.bank?' · '+esc(meta.bank):''}${meta.reference?' · مرجع <b dir="ltr">'+esc(meta.reference)+'</b>':''}
+      ${IS_OWNER?`<br><button class="ar ${archived?'done':''}" data-arc="${m.id}" onclick="archiveReceipt('${m.id}')" ${archived?'disabled':''}>${archived?'أُرشف في مركز المطابقة ✓':'إضافة للأرشيف والمطابقة'}</button>`:''}</div>`;
+  }
+  const tick=mine?`<span class="tick">${m.seen?'✓✓':'✓'}</span>`:'';
+  $('msgs').insertAdjacentHTML('beforeend',
+    `<div class="bub ${mine?'me':'them'}" data-mid="${m.id}">${inner}<div class="mt">${time} ${tick}</div></div>`);
+  if(!live)return;
+}
+async function markSeen(list){
+  const ids=list.filter(m=>m.sender!==ME&&!m.seen).map(m=>m.id);
+  if(ids.length)await sb.from('messages').update({seen:true}).in('id',ids);
+}
+
+/* ── الإرسال ── */
+async function sendText(){
+  const t=$('txt').value.trim(); if(!t||!CONV)return;
+  $('txt').value='';$('txt').style.height='auto';
+  const body=await enc(t);
+  const hash=await sha(CONV.id+'|'+body+'|'+Date.now());
+  const {error}=await sb.from('messages').insert({conv_id:CONV.id,sender:ME,kind:'text',body,hash});
+  if(error){toast('لم تُرسل — أعد المحاولة');$('txt').value=t;return;}
+  await sb.from('conversations').update({last_msg:t.slice(0,60),last_at:new Date().toISOString()}).eq('id',CONV.id);
+}
+$('txt').addEventListener('input',function(){this.style.height='auto';this.style.height=Math.min(this.scrollHeight,110)+'px';});
+$('txt').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendText();}});
+
+$('fi').addEventListener('change',async e=>{
+  for(const f of e.target.files)await sendFile(f);
+  e.target.value='';
+});
+async function sendFile(f){
+  if(!CONV)return;
+  if(f.size>15*1024*1024)return toast('الملف أكبر من 15MB');
+  prog(15);
+  const path=CONV.id+'/'+Date.now()+'_'+Math.random().toString(36).slice(2,7)+'.'+(f.name.split('.').pop()||'bin');
+  const {error}=await sb.storage.from('chat').upload(path,f,{contentType:f.type||'application/octet-stream'});
+  prog(60);
+  if(error){prog(100);return toast('فشل الرفع: '+error.message);}
+  const url=sb.storage.from('chat').getPublicUrl(path).data.publicUrl;
+  const isImg=/^image\//.test(f.type);
+  let meta=null;
+  /* قراءة Gemini للمالك إن توفر المفتاح */
+  const gk=localStorage.getItem('gemKey');
+  if(isImg&&gk){ try{ meta=await geminiLite(f,gk); }catch(e){} }
+  prog(85);
+  const hash=await sha(CONV.id+'|'+path);
+  await sb.from('messages').insert({conv_id:CONV.id,sender:ME,kind:isImg?'image':'file',
+    body:'',file_url:url,file_name:f.name,meta,hash});
+  await sb.from('conversations').update({last_msg:isImg?'📎 صورة إيصال':'📎 '+f.name,last_at:new Date().toISOString()}).eq('id',CONV.id);
+  prog(100);
+}
+async function geminiLite(file,key){
+  const b64=await new Promise(r=>{const fr=new FileReader();fr.onload=()=>r(fr.result.split(',')[1]);fr.readAsDataURL(file);});
+  const req={contents:[{parts:[{inline_data:{mime_type:file.type,data:b64}},
+    {text:'استخرج من هذا الإيصال البنكي JSON فقط بلا أي نص آخر: {"amount":0,"currency":"","bank":"","reference":"","date":"","sender":"","beneficiary":""}'}]}],
+    generationConfig:{temperature:0,maxOutputTokens:300}};
+  for(const m of ['gemini-2.5-flash','gemini-2.0-flash','gemini-1.5-flash']){
+    try{
+      const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+m+':generateContent?key='+encodeURIComponent(key),
+        {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(req)});
+      if(!r.ok)continue;
+      const j=await r.json();
+      const t=(j.candidates?.[0]?.content?.parts?.[0]?.text||'').replace(/```json|```/g,'').trim();
+      const p=JSON.parse(t);
+      if(p&&p.amount)return p;
+    }catch(e){}
+  }
+  return null;
+}
+
+/* ── الأرشفة: كتابة مباشرة في IndexedDB الخاص بالأرشيف ── */
+async function archiveReceipt(mid){
+  const {data:m}=await sb.from('messages').select('*').eq('id',mid).single();
+  if(!m||!m.meta)return;
+  try{
+    const blob=await (await fetch(m.file_url)).blob();
+    const thumb=await makeThumb(blob);
+    const rec={id:'chat_'+mid,fileName:m.file_name||'chat_receipt.jpg',uploadedAt:Date.now(),
+      blob,thumb,engine:'gemini',ocrConfidence:85,ocrText:'',
+      parsed:{amount:+m.meta.amount||0,currency:m.meta.currency||'',bank:m.meta.bank||'',
+        reference:m.meta.reference||'',date:m.meta.date||'',sender:m.meta.sender||'',beneficiary:m.meta.beneficiary||''},
+      rtype:'customer',party:CONV.client_name||'',
+      smartName:(m.meta.bank||'RCPT')+'_'+(m.meta.amount||'')+'_'+(m.meta.currency||''),
+      audit:[{ts:Date.now(),action:'وصل عبر ARKAN Chat من '+(CONV.client_name||'عميل')+' — بصمة '+String(m.hash||'').slice(0,12)}]};
+    await new Promise((res,rej)=>{
+      const rq=indexedDB.open('arkanArchive',2);
+      rq.onerror=()=>rej(rq.error);
+      rq.onsuccess=()=>{const db=rq.result;
+        const tx=db.transaction('docs','readwrite');
+        tx.objectStore('docs').put(rec);
+        tx.oncomplete=()=>{db.close();res();};tx.onerror=()=>rej(tx.error);};
+    });
+    const meta2=Object.assign({},m.meta,{archived:true});
+    await sb.from('messages').update({meta:meta2}).eq('id',mid);
+    const b=document.querySelector(`[data-arc="${mid}"]`);
+    if(b){b.textContent='أُرشف في مركز المطابقة ✓';b.classList.add('done');b.disabled=true;}
+    toast('أُضيف للأرشيف كدفعة زبون — افتح مركز المطابقة');
+  }catch(e){toast('تعذر الأرشفة: '+e.message);}
+}
+function makeThumb(blob){
+  return new Promise(res=>{
+    const img=new Image();
+    img.onload=()=>{const c=document.createElement('canvas');const s=140/Math.max(img.width,img.height);
+      c.width=img.width*s;c.height=img.height*s;
+      c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+      res(c.toDataURL('image/jpeg',.7));URL.revokeObjectURL(img.src);};
+    img.onerror=()=>res('');
+    img.src=URL.createObjectURL(blob);
+  });
+}
+
+/* ── البدء ── */
+if(IS_OWNER){
+  if(!localStorage.getItem('arkan_chat_pin'))$('pinHint').textContent='أول استخدام: أنشئ رمز PIN جديدًا وسيُطلب في كل دخول';
+  $('shPin').classList.add('on');
+}else boot();
+</script>
+</body>
+</html>
