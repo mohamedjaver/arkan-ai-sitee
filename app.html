@@ -361,10 +361,14 @@ footer{border-top:1px solid var(--stroke);margin-top:60px;padding:52px 0 40px;po
     </div>
   </div>
 </div>
+<script>window.ARKAN_OTP_URL="";/* ← ضع رابط Railway هنا بعد النشر */</script>
 <script type="module">
 import * as ARKAN from './arkan-core.js';
 window._AK=ARKAN;
 let confirmRes=null, verifier=null, cc='+222', timerIv=null;
+/* عنوان خادم OTP واتساب — يُضبط بعد نشر Railway */
+const OTP_API = (window.ARKAN_OTP_URL||'').replace(/\/$/,'');
+let otpMode='wa'; /* wa: واتساب | fb: احتياط Firebase SMS */
 
 /* جلسة سابقة؟ اعبر فورًا (Firebase persistence أو النسخة المحلية القديمة) */
 (function localSkip(){
@@ -406,17 +410,37 @@ window.arkSendOtp=async function(){
   if(!n){err('gErr','أدخل الاسم الكامل');return;}
   if(p.replace(/\D/g,'').length<10){err('gErr','أدخل رقم هاتف صحيح');return;}
   var btn=document.getElementById('gBtn');btn.disabled=true;btn.textContent='جارٍ الإرسال…';
+  sessionStorage.setItem('arkPendName',n);
+  /* ── المسار الأول: رمز عبر واتساب ── */
+  if(OTP_API){
+    try{
+      var r=await fetch(OTP_API+'/otp/send',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({phone:p})});
+      var j=await r.json();
+      if(j.ok){
+        otpMode='wa';
+        document.getElementById('gSentTo').textContent=p;
+        document.querySelector('#gStep2 p').innerHTML='أرسلنا رمزًا من 6 أرقام إلى <b>واتسابك</b><br><b class="ltr" style="color:#0056D6">'+p+'</b>';
+        document.getElementById('gStep1').style.display='none';
+        document.getElementById('gStep2').style.display='block';
+        startTimer();setTimeout(function(){document.getElementById('gOtp').focus();},300);
+        btn.disabled=false;btn.textContent='إرسال رمز التحقق';return;
+      }
+      if(r.status===429||r.status===400){err('gErr',j.err||'تعذّر الإرسال');btn.disabled=false;btn.textContent='إرسال رمز التحقق';return;}
+      /* خطأ خادم → جرّب الاحتياط */
+    }catch(e){/* الخادم غير متاح → الاحتياط */}
+  }
+  /* ── الاحتياط: Firebase SMS ── */
   try{
     var ok=await ARKAN.ready;
     if(!ok)throw new Error('الشبكة تحجب خدمة التحقق — جرّب شبكة أخرى');
     if(!verifier){verifier=new ARKAN.fb.RecaptchaVerifier(ARKAN.auth,'gBtn',{size:'invisible'});}
     confirmRes=await ARKAN.fb.signInWithPhoneNumber(ARKAN.auth,p,verifier);
-    sessionStorage.setItem('arkPendName',n);
+    otpMode='fb';
     document.getElementById('gSentTo').textContent=p;
     document.getElementById('gStep1').style.display='none';
     document.getElementById('gStep2').style.display='block';
-    startTimer();
-    setTimeout(function(){document.getElementById('gOtp').focus();},300);
+    startTimer();setTimeout(function(){document.getElementById('gOtp').focus();},300);
   }catch(e){
     err('gErr',arErr(e));
     if(verifier){try{verifier.clear();}catch(_){}} verifier=null;
@@ -429,17 +453,33 @@ window.arkVerifyOtp=async function(){
   document.getElementById('gErr2').style.display='none';
   if(code.length<6){err('gErr2','أدخل الرمز المكوّن من 6 أرقام');return;}
   var btn=document.getElementById('gVBtn');btn.disabled=true;btn.textContent='جارٍ التحقق…';
+  var name=sessionStorage.getItem('arkPendName')||'';
   try{
-    var cred=await confirmRes.confirm(code);
-    var u=cred.user;
-    var name=sessionStorage.getItem('arkPendName')||'';
-    try{localStorage.setItem('arkanClient',JSON.stringify({name:name,phone:u.phoneNumber,uid:u.uid,verified:true,ts:Date.now()}));}catch(e){}
-    /* حفظ الملف في Firestore (غير حاسم إن رفضته القواعد) */
-    try{await ARKAN.fb.setDoc(ARKAN.fb.doc(ARKAN.db,'clients',u.uid),
-      {name:name,phone:u.phoneNumber,lastLogin:Date.now(),device:navigator.userAgent.slice(0,120)},{merge:true});}catch(e){}
+    var uid='',phone=fullPhone();
+    if(otpMode==='wa'){
+      var r=await fetch(OTP_API+'/otp/verify',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({phone:phone,code:code})});
+      var j=await r.json();
+      if(!j.ok)throw {message:j.err||'الرمز غير صحيح',code:'custom'};
+      uid=j.uid||('wa_'+phone.replace(/\D/g,''));
+      /* دخول Firebase الحقيقي بالتوكن المخصص */
+      if(j.fbToken){
+        try{var ok=await ARKAN.ready;
+          if(ok){var cred=await ARKAN.fb.signInWithCustomToken(ARKAN.auth,j.fbToken);uid=cred.user.uid;}
+        }catch(e){console.warn('customToken:',e.message);}
+      }
+    }else{
+      var cred2=await confirmRes.confirm(code);
+      uid=cred2.user.uid;
+    }
+    try{localStorage.setItem('arkanClient',JSON.stringify({name:name,phone:phone,uid:uid,verified:true,via:otpMode,ts:Date.now()}));}catch(e){}
+    try{var ok2=await ARKAN.ready;
+      if(ok2)await ARKAN.fb.setDoc(ARKAN.fb.doc(ARKAN.db,'clients',uid),
+        {name:name,phone:phone,via:otpMode,lastLogin:Date.now(),device:navigator.userAgent.slice(0,120)},{merge:true});
+    }catch(e){}
     clearInterval(timerIv);
     hideGate();
-  }catch(e){err('gErr2',arErr(e));}
+  }catch(e){err('gErr2',e&&e.code==='custom'?e.message:arErr(e));}
   btn.disabled=false;btn.textContent='تأكيد ودخول';
 };
 
