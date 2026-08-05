@@ -1050,7 +1050,11 @@ if(IS_OWNER){
     var nb=document.getElementById('newB'); if(nb) nb.style.display='flex';
     boot();
   };
-}else boot();
+}else{
+  /* عميل — أخفِ شاشة التحقق فوراً وادخل مباشرة */
+  var gc=document.getElementById('authGate'); if(gc) gc.remove();
+  boot();
+}
 </script>
 <script type="module">
 (async()=>{
