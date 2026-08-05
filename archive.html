@@ -2635,6 +2635,100 @@ setTimeout(()=>{try{renderKPIs();}catch(e){}},400);
 })();
 </script>
 
+<style>
+/* توحيد اللون: أزرق ARKAN بدل الأخضر الليموني */
+.w-btn.pri{background:var(--w-pri)!important;color:#fff!important}
+#wNav .fab{background:var(--w-pri)!important;color:#fff!important;box-shadow:0 4px 14px rgba(11,87,208,.35)!important}
+.uz.drag{border-color:var(--w-pri)!important}
+</style>
+<script>
+/* ═══ كشف PDF شامل — بلا مكتبات، RTL A4، كل معطيات الإيصالات ═══ */
+window.exportPdfReport=function(){
+  const docs=sortDocs(CACHE.filter(d=>d.parsed&&(d.parsed.amount||d.parsed.bank||d.parsed.date)));
+  if(!docs.length){toast0('لا توجد إيصالات مقروءة للتصدير');return;}
+  const now=new Date().toLocaleString('en-GB');
+  const rid='ST-'+Date.now().toString(36).toUpperCase();
+  const sums={};docs.forEach(d=>{const p=d.parsed||{};if(p.amount&&p.currency)sums[p.currency]=(sums[p.currency]||0)+(+p.amount);});
+  const TY={customer:'زبون',supplier:'مورد'};
+  const MST={settled:'تمت التسوية',ok:'مطابق',diff:'فرق قيمة',weak:'مطابقة ضعيفة',missing:'دون مقابل',none:'—'};
+  const F=(k,v)=>v?`<div class="pf"><span>${k}</span><b dir="ltr">${String(v).replace(/</g,'&lt;')}</b></div>`:'';
+  const w=window.open('','_blank');
+  if(!w){toast0('اسمح بالنوافذ المنبثقة ثم أعد المحاولة');return;}
+  w.document.write(`<!doctype html><html dir="rtl" lang="ar"><head><meta charset="utf-8">
+  <title>كشف الإيصالات — ARKAN Financial Archive</title>
+  <style>
+    @page{size:A4;margin:12mm}
+    *{box-sizing:border-box}
+    body{font-family:'IBM Plex Sans Arabic','Segoe UI',sans-serif;color:#0E0F0C;font-size:11px;margin:0;padding:16px;background:#fff}
+    h1{font-size:19px;margin:0;color:#082B60}
+    h1 span{color:#0B57D0}
+    .meta{font-size:10px;color:#60645F;line-height:1.9;border-bottom:2px solid #0B57D0;padding-bottom:8px;margin-bottom:10px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px}
+    .sums{display:flex;gap:14px;flex-wrap:wrap;background:#EEF1EE;border-radius:8px;padding:8px 12px;margin-bottom:12px;font-size:11px}
+    .sums b{font-variant-numeric:tabular-nums}
+    table{width:100%;border-collapse:collapse;font-size:9px}
+    tr{page-break-inside:avoid}
+    th{background:#082B60;color:#fff;padding:5px 4px;font-size:8.5px;font-weight:600}
+    td{border:1px solid #E2E5E1;padding:4px;text-align:center;font-variant-numeric:tabular-nums}
+    td.r{text-align:right}
+    .st-ok{color:#168A52;font-weight:700}.st-bad{color:#C93636;font-weight:700}.st-w{color:#B76A00;font-weight:700}
+    h2{font-size:14px;color:#082B60;margin:18px 0 8px;page-break-after:avoid}
+    .pcard{display:flex;gap:10px;border:1px solid #E2E5E1;border-radius:10px;padding:8px;margin-bottom:8px;page-break-inside:avoid}
+    .pcard img{width:72px;height:72px;object-fit:cover;border-radius:8px;border:1px solid #E2E5E1;flex-shrink:0}
+    .pgrid{flex:1;display:grid;grid-template-columns:repeat(3,1fr);gap:3px 10px}
+    .pf{font-size:8.5px;color:#60645F;display:flex;gap:4px;min-width:0}
+    .pf b{color:#0E0F0C;font-weight:600;word-break:break-all;font-variant-numeric:tabular-nums}
+    .pnm{grid-column:1/-1;font-size:10.5px;font-weight:700;color:#082B60}
+    .foot{margin-top:14px;font-size:9.5px;color:#60645F;display:flex;justify-content:space-between;border-top:1px solid #E2E5E1;padding-top:8px}
+    .sig{margin-top:24px;display:flex;gap:60px}
+    .sig div{border-top:1px solid #0E0F0C;padding-top:4px;width:150px;text-align:center;font-size:10px}
+    @media print{#pbtn{display:none}}
+  </style></head><body>
+  <button id="pbtn" onclick="print()" style="position:fixed;top:10px;left:10px;padding:9px 20px;background:#0B57D0;color:#fff;border:0;border-radius:10px;font-family:inherit;font-size:13px;cursor:pointer">طباعة / حفظ PDF</button>
+  <h1>ARKAN <span>Financial Archive</span> — كشف الإيصالات</h1>
+  <div class="meta">
+    <span>رقم الكشف: <b>${rid}</b></span><span>تاريخ الإنشاء: ${now}</span>
+    <span>عدد الإيصالات: <b>${docs.length}</b></span><span>arkanrates.com</span>
+  </div>
+  <div class="sums">${Object.entries(sums).map(([k,v])=>`<span>${k}: <b>${fmt(v,0)}</b></span>`).join('')||'—'}</div>
+  <table>
+    <tr><th>#</th><th>التاريخ</th><th>الوقت</th><th>النوع</th><th>الطرف</th><th>المستفيد</th><th>البنك</th><th>المبلغ</th><th>العملة</th><th>المرجع</th><th>المطابقة</th><th>ثقة</th></tr>
+    ${docs.map((d,i)=>{const p=d.parsed||{};
+      const st=(window.mStatusOf&&d.rtype)?mStatusOf(d):'none';
+      const cls=['ok','settled'].includes(st)?'st-ok':st==='none'?'':st==='weak'?'st-w':'st-bad';
+      return `<tr><td>${i+1}</td><td>${p.date||''}</td><td>${p.time||''}</td>
+      <td>${TY[d.rtype]||'—'}</td>
+      <td class="r">${(d.party||p.sender||'').replace(/</g,'&lt;')}</td>
+      <td class="r">${(p.beneficiary||'').replace(/</g,'&lt;')}</td>
+      <td>${(p.bank||'').replace(/</g,'&lt;')}</td>
+      <td><b>${p.amount?fmt(p.amount,0):''}</b></td><td>${p.currency||''}</td>
+      <td dir="ltr">${(p.reference||p.transaction_id||'').toString().slice(0,16)}</td>
+      <td class="${cls}">${MST[st]||''}</td><td>${d.ocrConfidence||0}%</td></tr>`;}).join('')}
+  </table>
+  <h2>تفاصيل الإيصالات الكاملة</h2>
+  ${docs.map((d,i)=>{const p=d.parsed||{};return `<div class="pcard">
+    ${d.thumb?`<img src="${d.thumb}">`:''}
+    <div class="pgrid">
+      <div class="pnm">${i+1}. ${(d.smartName||d.fileName||'').replace(/</g,'&lt;')} ${d.rtype?'· '+TY[d.rtype]:''} ${d.settled?'· تمت التسوية':''}</div>
+      ${F('المبلغ',p.amount?fmt(p.amount)+' '+(p.currency||''):'')}
+      ${F('التاريخ',p.date)}${F('الوقت',p.time)}
+      ${F('البنك',p.bank)}${F('الفرع',p.branch)}
+      ${F('المرسل',p.sender)}${F('المستفيد',p.beneficiary)}
+      ${F('المرجع',p.reference)}${F('رقم العملية',p.transaction_id)}
+      ${F('IBAN',p.iban)}${F('SWIFT',p.swift)}
+      ${F('المحفظة',p.wallet_address)}${F('الرسوم',p.fee)}
+      ${F('سعر الصرف',p.exchange_rate)}${F('الدولة',p.country)}
+      ${F('الحالة',p.status)}${F('ثقة OCR',(d.ocrConfidence||0)+'%')}
+      ${F('السلسلة',d.chainId)}${F('رُفع',new Date(d.uploadedAt).toLocaleString('en-GB'))}
+      ${p.notes?F('ملاحظات',p.notes):''}
+    </div></div>`;}).join('')}
+  <div class="foot"><span>إجمالي: ${docs.length} إيصال · ${Object.entries(sums).map(([k,v])=>fmt(v,0)+' '+k).join(' · ')}</span><span>${rid}</span></div>
+  <div class="sig"><div>توقيع المسؤول</div><div>الاعتماد</div></div>
+  <script>setTimeout(()=>print(),700)<\/script></body></html>`);
+  w.document.close();
+  toast0('جُهّز الكشف — اطبع أو احفظ PDF');
+};
+</script>
+
 <script src="arkan-nav.js?v=10" defer></script>
 <script src="arkan-ai.js?v=8" defer></script>
 <script src="arkan-sense.js?v=4" defer></script>
