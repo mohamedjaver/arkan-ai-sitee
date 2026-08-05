@@ -1401,8 +1401,7 @@ function showRaw(){
   if(!w){toast('اسمح بالنوافذ المنبثقة لعرض النص');return;}
   w.document.write('<meta charset="utf-8"><title>النص المقروء</title>'+
     '<body style="background:#F7FAFD;color:#e8ecf1;font-family:monospace;padding:24px;white-space:pre-wrap;line-height:1.8;font-size:13px">'+
-    (OCR_STATE.raw||'').replace(/[<>&]/g,function(c){return {'<':'&lt;','>':'&gt;','&':'&amp;'}[c];})+'<script src="arkan-wallet-badge.js" defer></script>
-</body>');
+    (OCR_STATE.raw||'').replace(/[<>&]/g,function(c){return {'<':'&lt;','>':'&gt;','&':'&amp;'}[c];})+'</body>');
   w.document.close();
 }
 </script>
@@ -1551,6 +1550,7 @@ window.arkanSubmit = async function(){
   import * as ARKAN from './arkan-core.js';
   window.ARKAN = ARKAN; /* مصدر الأسعار والجلسة الموحّد */
 </script>
+<script src="arkan-wallet-badge.js" defer></script>
 <script src="arkan-nav.js" defer></script>
 <script src="arkan-ai.js" defer></script>
 </body>
