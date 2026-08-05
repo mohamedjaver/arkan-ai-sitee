@@ -425,6 +425,7 @@ const ARKAN_ARCHIVE_BUILD='2026-08-03.14';
   <div id="v_arch"><div id="tl"></div></div>
   <div id="v_chains" style="display:none"></div>
   <div id="v_match" style="display:none"></div>
+  <div id="v_clients" style="display:none"></div>
   <div id="v_stats" style="display:none"></div>
 
 </div>
@@ -1407,13 +1408,16 @@ function setView(v){
   $('v_chains').style.display=v==='chains'?'':'none';
   $('v_stats').style.display=v==='stats'?'':'none';
   $('v_match').style.display=v==='match'?'':'none';
+  $('v_clients').style.display=v==='clients'?'':'none';
   if(v==='chains')renderChains();
   if(v==='stats')renderStats();
   if(v==='match'&&window.renderMatch)renderMatch();
+  if(v==='clients'&&window.renderClients)renderClients();
 }
 function renderAll(){renderKPIs();renderChips();renderInsights();renderTimeline();
   if(VIEW==='chains')renderChains(); if(VIEW==='stats')renderStats();
-  if(VIEW==='match'&&window.renderMatch)renderMatch();}
+  if(VIEW==='match'&&window.renderMatch)renderMatch();
+  if(VIEW==='clients'&&window.renderClients)renderClients();}
 
 /* ═══ boot ═══ */
 document.getElementById('tl').addEventListener('click',e=>{
@@ -2476,6 +2480,7 @@ if(hd){hd.insertAdjacentHTML('beforeend',
 /* ── التبويبات الخمسة ── */
 const TABS=[
  ['overview','نظرة عامة','home'],['recs','الإيصالات','receipt'],
+ ['clients','الزبائن','user'],
  ['match','المطابقة','link'],['chains','التسويات','zap'],['reports','التقارير','chart']];
 const vt=document.querySelector('.vtabs');
 if(vt){vt.innerHTML=TABS.map(([k,l,i])=>
@@ -2484,6 +2489,7 @@ window.setTab=function(t){
   document.querySelectorAll('.vt,[data-nav]').forEach(b=>b.classList.toggle('on',(b.dataset.t||b.dataset.nav)===t));
   document.body.classList.toggle('tab-recs',t==='recs');
   if(t==='overview'||t==='recs')setView('arch');
+  else if(t==='clients')setView('clients');
   else if(t==='match')setView('match');
   else if(t==='chains')setView('chains');
   else if(t==='reports'){setView('stats');wReports();}
@@ -2801,6 +2807,180 @@ if(acc){
   btn.onclick=()=>syncChatReceipts(true);
   acc.appendChild(btn);
 }
+})();
+</script>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   بوابة زبائن الأرشيف + المزامنة السحابية (كل الأجهزة)
+   ═══════════════════════════════════════════════════════════════ */
+(function(){
+const AR_SB='https://vyxzlazwpbstigcqvizb.supabase.co';
+const AR_KEY='sb_publishable_scXFuYtWG2dkz8_CaPEvAg_Yj2_sxnO';
+const AR_H={'apikey':AR_KEY,'Authorization':'Bearer '+AR_KEY};
+
+/* ═══ المزامنة السحابية ═══ */
+function cloudBody(d){
+  const c=Object.assign({},d);
+  delete c.blob; delete c._sugg; delete c._fromCloud;
+  if(c.audit&&c.audit.length>60)c.audit=c.audit.slice(-60);
+  return c;
+}
+const pushQ=new Map();
+async function cloudPush(d){
+  if(!d||!d.id||d._fromCloud){if(d)delete d._fromCloud;return;}
+  pushQ.set(d.id,d);
+  clearTimeout(cloudPush._t);
+  cloudPush._t=setTimeout(flushPush,900);
+}
+async function flushPush(){
+  const items=[...pushQ.values()]; pushQ.clear();
+  for(const d of items){
+    try{
+      let fu=d._fileUrl||'';
+      if(!fu&&d.blob&&d.blob.size<12*1024*1024){
+        const path=encodeURIComponent(d.id);
+        const up=await fetch(AR_SB+'/storage/v1/object/archive/'+path,{method:'POST',
+          headers:Object.assign({'Content-Type':d.blob.type||'application/octet-stream','x-upsert':'true'},AR_H),
+          body:d.blob});
+        if(up.ok){fu=AR_SB+'/storage/v1/object/public/archive/'+path;d._fileUrl=fu;}
+      }
+      const row={id:d.id,data:cloudBody(d),file_url:fu,updated_at:new Date().toISOString()};
+      await fetch(AR_SB+'/rest/v1/archive_docs?on_conflict=id',{method:'POST',
+        headers:Object.assign({'Content-Type':'application/json','Prefer':'resolution=merge-duplicates,return=minimal'},AR_H),
+        body:JSON.stringify(row)});
+      d._cloudTs=Date.now();
+    }catch(e){}
+  }
+}
+/* التقط كل حفظ محلي وادفعه للسحابة */
+const _put=window.putDoc;
+window.putDoc=async function(d){
+  const r=await _put(d);
+  try{cloudPush(d);}catch(e){}
+  return r;
+};
+
+async function cloudPull(manual){
+  try{
+    const last=localStorage.getItem('arkan_cloud_ts')||'1970-01-01';
+    const r=await fetch(AR_SB+'/rest/v1/archive_docs?select=id,data,file_url,updated_at&updated_at=gt.'+encodeURIComponent(last)+'&order=updated_at.asc&limit=200',{headers:AR_H});
+    if(!r.ok)return;
+    const rows=await r.json();
+    if(!rows.length){if(manual)toast0('الأرشيف متزامن على كل الأجهزة ✓');return;}
+    let added=0,updated=0,maxTs=last;
+    for(const row of rows){
+      maxTs=row.updated_at;
+      const local=CACHE.find(x=>x.id===row.id);
+      const d=row.data||{};
+      if(!local){
+        d._fromCloud=true; d._fileUrl=row.file_url||'';
+        if(row.file_url&&!d.blob){
+          try{d.blob=await (await fetch(row.file_url)).blob();}catch(e){}
+        }
+        try{await putDoc(d);CACHE.unshift(d);added++;}catch(e){}
+      } else {
+        /* دمج الحقول القابلة للتغير — آخر كتابة تفوز */
+        const rt=new Date(row.updated_at).getTime();
+        if(rt>(local._cloudTs||0)+1500){
+          ['party','rtype','mIds','mMeta','settled','settledAt','parsed','smartName','audit','needsReview','verifiedByUser','ocrConfidence','engine','chainId']
+            .forEach(k=>{if(d[k]!==undefined)local[k]=d[k];});
+          local._fromCloud=true; local._cloudTs=rt;
+          try{await putDoc(local);updated++;}catch(e){}
+        }
+      }
+    }
+    localStorage.setItem('arkan_cloud_ts',maxTs);
+    if(added||updated){
+      toast0('مزامنة: '+(added?added+' جديد':'')+(added&&updated?' · ':'')+(updated?updated+' محدث':''));
+      try{if(window.autoMatchAll)await autoMatchAll(true);}catch(e){}
+      renderAll();
+    } else if(manual)toast0('الأرشيف متزامن ✓');
+  }catch(e){if(manual)toast0('خطأ المزامنة: '+e.message);}
+}
+window.cloudPull=cloudPull;
+/* رفع أولي للسجلات القديمة غير المرفوعة (تدريجيًا) */
+async function seedCloud(){
+  try{
+    const r=await fetch(AR_SB+'/rest/v1/archive_docs?select=id&limit=1000',{headers:AR_H});
+    const have=new Set((await r.json()).map(x=>x.id));
+    const missing=CACHE.filter(d=>!have.has(d.id)).slice(0,40);
+    for(const d of missing)cloudPush(d);
+  }catch(e){}
+}
+setTimeout(()=>{cloudPull(false).then(()=>seedCloud());},4500);
+setInterval(()=>cloudPull(false),75000);
+
+/* زر يدوي في الحساب */
+const acc2=document.querySelector('#wAccSheet .in');
+if(acc2){
+  const b=document.createElement('button');
+  b.className='w-it';
+  b.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" style="width:20px;height:20px;color:var(--w-sub)"><path d="M17.5 19a4.5 4.5 0 001-8.9A6 6 0 006.7 8.5 4.5 4.5 0 007 19h10.5z"/></svg> المزامنة السحابية للأرشيف <small>الآن</small>';
+  b.onclick=()=>cloudPull(true);
+  acc2.appendChild(b);
+}
+
+/* ═══ بوابة الزبائن ═══ */
+function clientKey(d){return (d.party||'').trim();}
+function clientsAgg(){
+  const map=new Map();
+  CACHE.forEach(d=>{
+    const k=clientKey(d); if(!k)return;
+    if(!map.has(k))map.set(k,{name:k,docs:[],sums:{},cust:0,sup:0,unsettled:0});
+    const c=map.get(k); c.docs.push(d);
+    const p=d.parsed||{};
+    if(p.amount&&p.currency){(c.sums[p.currency]=c.sums[p.currency]||0);c.sums[p.currency]+=+p.amount;}
+    if(d.rtype==='customer'){c.cust++;
+      if(window.mStatusOf&&['missing','weak','diff'].includes(mStatusOf(d)))c.unsettled++;}
+    if(d.rtype==='supplier')c.sup++;
+  });
+  return [...map.values()].sort((a,b)=>b.docs.length-a.docs.length);
+}
+window.assignClient=async function(id){
+  const d=byId?byId(id):CACHE.find(x=>x.id===id); if(!d)return;
+  const names=[...new Set(CACHE.map(clientKey).filter(Boolean))];
+  const v=prompt('اسم الزبون لهذه المعاملة:\n(موجودون: '+names.slice(0,8).join('، ')+(names.length>8?'…':'')+')',d.party||'');
+  if(v===null||!v.trim())return;
+  const old=d.party||'—';
+  d.party=v.trim();
+  if(!d.rtype)d.rtype='customer';
+  audit(d,'نُسبت المعاملة للزبون: '+old+' → '+d.party);
+  await putDoc(d);
+  toast0('سُجلت باسم '+d.party+' — ستُعمم على كل الأجهزة');
+  renderAll();
+};
+let CL_OPEN=null;
+window.renderClients=function(){
+  const host=$('v_clients'); if(!host)return;
+  const cls=clientsAgg();
+  const unassigned=sortDocs(CACHE.filter(d=>!clientKey(d)&&(d.parsed?.amount||d.parsed?.bank)));
+  const rowDoc=d=>{const p=d.parsed||{};
+    return `<div class="w-row" style="cursor:pointer" onclick="openDoc('${d.id}')">
+      <span class="dot" style="background:${d.rtype==='customer'?'#0B57D0':d.rtype==='supplier'?'#082B60':'#96a5c0'}"></span>
+      <span class="t" style="min-width:0"><b style="font-weight:600">${esc(d.smartName||d.fileName||'')}</b>
+        <small style="display:block;color:var(--w-sub);font-size:11px">${esc(p.bank||'')} · ${esc(p.date||new Date(d.uploadedAt).toLocaleDateString('en-GB'))}${d.rtype?' · '+(d.rtype==='customer'?'زبون':'مورد'):''}</small></span>
+      <span class="n">${p.amount?fmt(p.amount,0)+' '+esc(p.currency||''):''}</span>
+      <button onclick="event.stopPropagation();assignClient('${d.id}')" style="border:1px solid var(--w-brd);background:var(--w-card);border-radius:8px;padding:4px 10px;font-size:11px;cursor:pointer;color:var(--w-pri);font-weight:600;margin-inline-start:8px">${clientKey(d)?'نقل':'نسب لزبون'}</button>
+    </div>`;};
+  host.innerHTML=`
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+      <h2 style="font-size:18px;font-weight:700;flex:1;margin:0">زبائن الأرشيف <small style="color:var(--w-sub);font-weight:500;font-size:12px">${cls.length} زبون · ${unassigned.length} غير منسوب</small></h2>
+    </div>
+    ${cls.map(c=>`<div class="kpis" style="margin-bottom:12px">
+      <div class="w-sec" style="cursor:pointer" onclick="CL_OPEN=CL_OPEN==='${esc(c.name)}'?null:'${esc(c.name)}';renderClients()">
+        <span style="width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#0B57D0,#3E8BFF);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:14px;font-weight:700">${esc(c.name[0]||'?')}</span>
+        <span style="flex:1">${esc(c.name)}
+          <small style="display:block;color:var(--w-sub);font-size:11px;font-weight:500">${c.docs.length} معاملة · ${c.cust} دفعة · ${c.sup} سند${c.unsettled?' · <b style="color:#C93636">'+c.unsettled+' غير مسوّى</b>':''}</small></span>
+        <span style="font-size:12px;color:var(--w-txt);font-weight:600;text-align:left;direction:ltr">${Object.entries(c.sums).map(([k,v])=>fmt(v,0)+' '+k).join('<br>')}</span>
+      </div>
+      ${CL_OPEN===c.name?sortDocs(c.docs).map(rowDoc).join(''):''}
+    </div>`).join('')||'<div style="text-align:center;color:var(--w-sub);padding:30px;font-size:13px">لا زبائن بعد — انسب أي معاملة من القائمة أدناه</div>'}
+    <div class="kpis" style="margin-top:20px">
+      <div class="w-sec">معاملات غير منسوبة <small style="color:var(--w-sub);font-weight:500;font-size:11px;margin-inline-start:auto">اضغط "نسب لزبون" لتسجيلها</small></div>
+      ${unassigned.length?unassigned.slice(0,40).map(rowDoc).join(''):'<div class="w-row"><span class="t" style="color:var(--w-ok);font-weight:600">كل المعاملات منسوبة لزبائن ✓</span></div>'}
+    </div>`;
+};
 })();
 </script>
 
