@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta name="theme-color" content="#070A14">
+  <meta name="theme-color" content="#F6FAFD">
   <link rel="icon" href="arkan-icon-512.png">
   <link rel="apple-touch-icon" href="apple-touch-icon.png?v=2026">
 <meta charset="UTF-8">
@@ -9,28 +9,28 @@
 <title>ARKAN Pay — أسعار الصرف اليوم</title>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@500;600;700;800&family=Space+Grotesk:wght@600;700&family=IBM+Plex+Mono:wght@500;700&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#080916;--card:#101122;--acc:#8B72FF;--acc2:#B9A8FF;--gold:#E8C24A;--gold2:#F5DE8B;--txt:#EDEAFB;--dim:#8B8FA8;--green:#3DDC97;--stroke:rgba(255,255,255,.08)}
+:root{--bg:#F6FAFD;--card:#FFFFFF;--acc:#0A56B8;--acc2:#0D3AA0;--gold:#0A56B8;--gold2:#3498DB;--txt:#06133A;--dim:#3C4C74;--green:#0F9D6B;--stroke:#D9E2F2}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-body{background:linear-gradient(180deg,#14122B 0%,#0D0E20 30%,#080916 68%,#050610 100%);background-attachment:fixed;min-height:100vh;font-family:'Cairo',sans-serif;color:var(--txt);padding-bottom:40px}
+body{background:linear-gradient(180deg,#F6FAFD 0%,#EAF2FB 55%,#E1EBF7 100%);background-attachment:fixed;min-height:100vh;font-family:'Cairo',sans-serif;color:var(--txt);padding-bottom:40px}
 .wrap{max-width:540px;margin:0 auto;padding:30px 18px}
 .logo{display:flex;align-items:center;gap:13px;justify-content:center;margin-bottom:6px}
-.logo img{width:52px;height:52px;border-radius:14px;box-shadow:0 8px 26px rgba(91,63,209,.5)}
+.logo img{width:52px;height:52px;border-radius:14px;box-shadow:0 8px 26px rgba(0,39,118,.5)}
 h1{text-align:center;font-size:22px;font-weight:800;letter-spacing:.5px}
 h1 span{color:var(--acc2)}
 .sub{text-align:center;color:var(--dim);font-size:12px;letter-spacing:2px;margin:5px 0 22px;font-family:'IBM Plex Mono'}
-.card{background:linear-gradient(150deg,rgba(255,255,255,.08),rgba(255,255,255,.02));border:1px solid var(--stroke);border-radius:22px;padding:22px 18px;backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);box-shadow:0 10px 34px rgba(0,0,0,.4);margin-bottom:16px}
+.card{background:#FFFFFF;border:1px solid var(--stroke);border-radius:22px;padding:22px 18px;box-shadow:0 14px 36px -18px rgba(0,26,82,.22);margin-bottom:16px}
 .card h2{font-size:15px;margin-bottom:14px}
 label{display:block;font-size:12px;color:var(--dim);margin:12px 0 6px;font-weight:600}
-input,select{width:100%;background:rgba(0,0,0,.3);border:1px solid var(--stroke);border-radius:14px;padding:15px;color:var(--txt);font-size:18px;font-family:'IBM Plex Mono';outline:none;text-align:center}
+input,select{width:100%;background:#FFFFFF;border:1px solid var(--stroke);border-radius:14px;padding:15px;color:var(--txt);font-size:18px;font-family:'IBM Plex Mono';outline:none;text-align:center}
 input:focus,select:focus{border-color:var(--acc)}
 select{font-family:'Cairo';font-size:16px}
-.res{background:linear-gradient(135deg,rgba(139,114,255,.16),rgba(91,63,209,.06));border:1px solid rgba(183,163,255,.3);border-radius:18px;padding:18px;margin-top:16px;text-align:center}
+.res{background:linear-gradient(135deg,rgba(13,58,160,.16),rgba(0,39,118,.06));border:1px solid rgba(13,58,160,.3);border-radius:18px;padding:18px;margin-top:16px;text-align:center}
 .res .lbl{font-size:12px;color:var(--acc2);font-weight:700;margin-bottom:4px}
-.res .big{font-size:32px;font-weight:800;font-family:'IBM Plex Mono';color:#fff;line-height:1.2}
+.res .big{font-size:32px;font-weight:800;font-family:'IBM Plex Mono';color:#002776;line-height:1.2}
 .res .cur{font-size:14px;color:var(--acc2);font-weight:700}
 .res .rate{font-size:11px;color:var(--dim);margin-top:6px;font-family:'IBM Plex Mono'}
 .tier{display:flex;gap:8px;margin-top:12px}
-.tierbox{flex:1;background:rgba(0,0,0,.25);border:1px solid var(--stroke);border-radius:14px;padding:12px;text-align:center}
+.tierbox{flex:1;background:#EEF3FB;border:1px solid var(--stroke);border-radius:14px;padding:12px;text-align:center}
 .tierbox.on{background:rgba(61,220,151,.12);border-color:rgba(61,220,151,.4)}
 .tierbox .t{font-size:11px;color:var(--dim)}
 .tierbox .v{font-size:16px;font-weight:800;font-family:'IBM Plex Mono';margin-top:3px}
@@ -96,8 +96,8 @@ html.pt-enter body{animation:ptIn .38s cubic-bezier(.22,1,.36,1)}
 <body>
 <div class="wrap">
   <a href="./" style="display:flex;align-items:center;justify-content:center;gap:11px;margin-bottom:20px;text-decoration:none">
-    <img src="arkan-logo.svg" alt="ARKAN" style="width:36px;height:36px;border-radius:10px;box-shadow:0 6px 20px rgba(124,92,255,.45)">
-    <span style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:15px;letter-spacing:.02em;direction:ltr;color:#EDEAFB"><b>ARKAN</b> <span style="color:#B9A8FF">SETTLEMENTS</span></span>
+    <img src="arkan-logo.svg" alt="ARKAN" style="width:36px;height:36px;border-radius:10px;box-shadow:0 6px 20px rgba(0,39,118,.45)">
+    <span style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:15px;letter-spacing:.02em;direction:ltr;color:#06133A"><b>ARKAN</b> <span style="color:#0D3AA0">SETTLEMENTS</span></span>
   </a>
   
   <h1>أسعار الصرف اليوم</h1>
@@ -133,7 +133,7 @@ function render(){
     app.innerHTML='<div class="card"><div class="empty">لا توجد أسعار.<br>اطلب الرابط المحدّث من ARKAN.</div></div>';
     return;
   }
-  const rows=DATA.r.map(x=>`<div class="cc">${SYM[x.ccy]||x.ccy} ${x.ccy}</div><div class="pw">${x.w}</div><div class="pr" style="color:#B9A8FF">${x.m!=null?x.m:'—'}</div><div class="pr">${x.r}</div>`).join('');
+  const rows=DATA.r.map(x=>`<div class="cc">${SYM[x.ccy]||x.ccy} ${x.ccy}</div><div class="pw">${x.w}</div><div class="pr" style="color:#0D3AA0">${x.m!=null?x.m:'—'}</div><div class="pr">${x.r}</div>`).join('');
   const _whoP=window.arkanT?arkanT('اسمك (اختياري)'):'اسمك (اختياري)';
   app.innerHTML=`
     <div class="card">
@@ -186,7 +186,7 @@ function setMode(m){
     bR.textContent=T('أريد أوقية ← كم عملة؟');
     if($('amtLabel'))$('amtLabel').textContent=T('المبلغ بـ')+' '+cSym;
   } else {
-    bR.style.cssText='flex:1;padding:10px;border-radius:12px;border:1px solid rgba(139,114,255,.5);background:rgba(139,114,255,.12);color:#B9A8FF;font-family:Cairo;font-size:13px;font-weight:700;cursor:pointer';
+    bR.style.cssText='flex:1;padding:10px;border-radius:12px;border:1px solid rgba(13,58,160,.5);background:rgba(13,58,160,.12);color:#0D3AA0;font-family:Cairo;font-size:13px;font-weight:700;cursor:pointer';
     bF.style.cssText='flex:1;padding:10px;border-radius:12px;border:1px solid rgba(255,255,255,.08);background:transparent;color:#8B8FA8;font-family:Cairo;font-size:13px;font-weight:700;cursor:pointer';
     bF.textContent=T('أدفع عملة ← أستلم أوقية');
     bR.textContent=T('أريد أوقية ← كم عملة؟');
