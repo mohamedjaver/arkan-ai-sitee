@@ -5167,6 +5167,10 @@ function flagEmoji(c){return {AOA:'🇦🇴',MRU:'🇲🇷',CNY:'🇨🇳',AED:'
 
 
 /* نشر للرابط الثابت — يحدّث ملف JSON على GitHub، الرابط يبقى ثابتًا */
+/* ═══ ARKAN Security Hardening ═══ */
+try{localStorage.removeItem('arkan-ghtoken');}catch(e){}           /* امسح أي رمز قديم مخزّن بشكل دائم */
+window.addEventListener('pagehide',()=>{try{sessionStorage.removeItem('arkan-ghtoken');}catch(e){}}); /* لا يبقى الرمز بعد إغلاق الصفحة */
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 const GH_OWNER='mohamedjaver',GH_REPO='arkan-ai-sitee',GH_FILE='rates-data.json';
 const FS_PROJECT='arkan-rates-prod';
 const FS_KEY='AIzaSyCtL-OySTK9FeyD0h-31BiupYFtGBxbJ_U';
@@ -5223,11 +5227,11 @@ service cloud.firestore {
 async function publishViaGitHub(){
   const valid=pubRows.filter(x=>x.ccy&&(x.w>0||x.m>0||x.r>0));
   if(!valid.length){toast('سعّر عملة أولًا');return;}
-  let token=localStorage.getItem('arkan-ghtoken');
+  let token=sessionStorage.getItem('arkan-ghtoken');
   if(!token){
-    token=prompt('أدخل رمز GitHub (fine-grained، صلاحية Contents) — يُحفظ محليًا مرة واحدة:');
+    token=prompt('أدخل رمز GitHub (fine-grained · Contents فقط · صلاحية يوم واحد) — لا يُحفظ بعد إغلاق الصفحة:');
     if(!token)return;
-    localStorage.setItem('arkan-ghtoken',token);
+    sessionStorage.setItem('arkan-ghtoken',token);
   }
   const wa=($('pubWa')?$('pubWa').value:'22236295050').replace(/[^0-9]/g,'')||'22236295050';
   const data={r:valid,wa,ts:Date.now(),date:new Date().toLocaleDateString('en-GB')};
@@ -5259,7 +5263,7 @@ async function publishViaGitHub(){
     }else{
       const e=await r.json();
       toast('فشل: '+(e.message||'تحقق من الرمز'));
-      if(r.status===401){localStorage.removeItem('arkan-ghtoken');toast('الرمز غير صالح — أعد المحاولة');}
+      if(r.status===401){sessionStorage.removeItem('arkan-ghtoken');toast('الرمز غير صالح — أعد المحاولة');}
     }
   }catch(e){toast('خطأ اتصال: '+e.message);}
 }
