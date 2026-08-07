@@ -256,11 +256,22 @@ app.use((req, res, next) => {
 });
 
 /* Firebase Admin */
-let fbReady = false;
+let fbReady = false; let fbErr = null;
 try {
-  const svc = JSON.parse(process.env.FB_SERVICE_JSON || '{}');
+  let raw = process.env.FB_SERVICE_B64
+    ? Buffer.from(process.env.FB_SERVICE_B64, 'base64').toString('utf8')
+    : (process.env.FB_SERVICE_JSON || '');
+  raw = raw.trim();
+  if ((raw.startsWith("'") && raw.endsWith("'")) || (raw.startsWith('"') && raw.endsWith('"') && raw.indexOf('{') > 0)) raw = raw.slice(1, -1);
+  // إصلاح الاقتباسات الذكية من iOS
+  raw = raw.replace(/[\u201C\u201D\u2018\u2019]/g, '"');
+  let svc = {};
+  if (raw) svc = JSON.parse(raw);
+  if (svc.private_key && !svc.private_key.includes('\n')) svc.private_key = svc.private_key.replace(/\\n/g, '\n');
   if (svc.project_id) { admin.initializeApp({ credential: admin.credential.cert(svc) }); fbReady = true; }
-} catch (e) { console.error('FB init:', e.message); }
+  else if (raw) fbErr = 'missing project_id';
+  else fbErr = 'FB_SERVICE_JSON empty';
+} catch (e) { fbErr = e.message.slice(0, 120); console.error('FB init:', e.message); }
 
 /* أدوات OTP */
 const otpCodes = new Map(); // phone -> {hash, exp, tries}
@@ -373,6 +384,7 @@ app.get('/health', (req, res) => res.json({
   ok: true,
   pending: Object.values(DB.orders).filter(o => o.status === 'pending').length,
   fb: fbReady,
+  fb_err: fbErr,
   wa: !!process.env.WA_TOKEN,
   sb: !!process.env.SUPABASE_JWT_SECRET
 }));
