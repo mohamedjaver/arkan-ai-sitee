@@ -1,7 +1,6 @@
 <!doctype html>
 <html lang="ar" dir="rtl">
 <head>
-<script src="arkan-gate.js"></script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover,interactive-widget=resizes-content">
 <meta name="theme-color" content="#F6FAFD">
@@ -613,7 +612,7 @@ async function boot(){
   }
   bmsg('التحقق من الجلسة…');
   const sess=getSession();
-  if(!sess){location.replace('login.html?next=chat-v2.html');return;}
+  if(!sess){bmsg('يلزم تسجيل الدخول…');setTimeout(()=>location.replace('account.html?next=chat-v2.html'),400);return;}
   if(!sess.pin&&!window.ARKAN_ID_TOKEN){{const r=await askPin(sess.phone);sess.pin=r.pin;sess.phone=r.phone;}}
   let jwt;
   bmsg('تأكيد الهوية…');
