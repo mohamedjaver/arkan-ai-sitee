@@ -374,6 +374,7 @@ app.post('/supabase-token', async (req, res) => {
     hist.push(nowMs()); sbHits.set(p, hist);
 
     const { firebaseIdToken, pin } = req.body || {};
+    const isOwner = OWNER_PHONES.includes(p);
     let verified = false;
     if (firebaseIdToken && fbReady) {
       const decoded = await admin.auth().verifyIdToken(firebaseIdToken);
@@ -382,6 +383,11 @@ app.post('/supabase-token', async (req, res) => {
     } else if (pin && fbReady) {
       const snap = await findUserDoc(p);
       verified = !!snap && String(snap.data().pin) === String(pin);
+    } else if (!isOwner && fbReady) {
+      /* عميل بلا PIN: وجود حسابه = تحقّق سابق عبر OTP واتساب عند التسجيل.
+         المالك مستثنى (يتطلب PIN دائمًا لحماية لوحة الإدارة). */
+      const snap = await findUserDoc(p);
+      verified = !!snap;
     }
     if (!verified) return res.status(401).json({ error: 'auth failed' });
 

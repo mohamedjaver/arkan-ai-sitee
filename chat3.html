@@ -513,9 +513,10 @@ function getSession(){
   try{
     const s=JSON.parse(localStorage.getItem('arkan_session')||'null');
     if(s&&s.phone&&s.pin)return {phone:normPh(s.phone),name:s.name||'',pin:String(s.pin),via:'pin'};
-    /* جلسة arkanClient قديمة بلا PIN: نحاول ترقيتها من arkan_session إن أمكن، وإلا تُعامل كغير مسجّلة */
+    /* جلسة عميل موثّقة عبر OTP (بلا PIN) — الخادم يصدر التوكن بوجود الحساب */
     const c=JSON.parse(localStorage.getItem('arkanClient')||'null');
-    if(c&&c.phone&&c.pin)return {phone:normPh(c.phone),name:c.name||'',pin:String(c.pin),via:'pin'};
+    if(c&&c.phone&&c.verified)return {phone:normPh(c.phone),name:c.name||'',via:'otp'};
+    if(s&&s.phone)return {phone:normPh(s.phone),name:s.name||'',via:'otp'};
   }catch(e){}
   return null;
 }
@@ -553,15 +554,9 @@ function askPin(phone){
 async function getJWT(sess){
   const cached=JSON.parse(localStorage.getItem('arkan_sb_jwt')||'null');
   if(cached&&cached.phone===sess.phone&&cached.exp>Date.now()/1000+300)return cached;
-  const body={phone:sess.phone};
-  if(sess.via==='otp'){
-    try{ // إن توفّر Firebase idToken من الجلسة الحالية
-      if(window.ARKAN_ID_TOKEN)body.firebaseIdToken=window.ARKAN_ID_TOKEN;
-      else if(sess.pin)body.pin=sess.pin;
-    }catch(e){}
-  }
+  const body={phone:sess.phone,name:sess.name||''};
   if(sess.pin)body.pin=sess.pin;
-  body.name=sess.name||'';
+  if(window.ARKAN_ID_TOKEN)body.firebaseIdToken=window.ARKAN_ID_TOKEN;
   const r=await fetch(AUTH_URL,{method:'POST',
     headers:{'Content-Type':'application/json'},
     body:JSON.stringify(body)});
@@ -612,18 +607,17 @@ async function boot(){
   }
   bmsg('التحقق من الجلسة…');
   const sess=getSession();
-  if(!sess||!sess.pin){bmsg('يلزم تسجيل الدخول…');setTimeout(()=>location.replace('account.html?next=chat-v2.html'),400);return;}
+  if(!sess){bmsg('يلزم تسجيل الدخول…');setTimeout(()=>location.replace('account.html?next=chat-v2.html'),400);return;}
   let jwt;
   bmsg('تأكيد الهوية…');
   try{jwt=await getJWT(sess);}
   catch(e){
-    /* فشل التحقق: الجلسة قديمة/تالفة — أعد التوجيه لتسجيل الدخول (بلا نافذة PIN) */
     localStorage.removeItem('arkan_sb_jwt');
     bmsg('يلزم تسجيل الدخول…');
     setTimeout(()=>location.replace('account.html?next=chat-v2.html'),500);
     return;
   }
-  try{localStorage.setItem('arkan_session',JSON.stringify({phone:sess.phone,pin:sess.pin,name:sess.name||''}));}catch(e){}
+  try{localStorage.setItem('arkan_session',JSON.stringify({phone:sess.phone,pin:sess.pin||'',name:sess.name||''}));}catch(e){}
   bmsg('الاتصال بالخادم…');
   MY_ID=jwt.user_id;
   sb=window.supabase.createClient(SB_URL,SB_KEY,{
