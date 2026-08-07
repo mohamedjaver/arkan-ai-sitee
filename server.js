@@ -402,7 +402,14 @@ app.get('/bootstrap-owner', async (req, res) => {
     const pin = String(req.query.pin || '').replace(/\D/g, '');
     if (pin.length !== 4) return res.status(400).json({ ok: false, err: 'أضف ?pin=رمز من 4 أرقام' });
     const existing = await findUserDoc(p);
-    if (existing) return res.status(409).json({ ok: false, err: 'حساب المالك موجود مسبقًا — استخدم تغيير الرمز من الإعدادات' });
+    if (existing) {
+      /* إعادة تعيين رمز المالك — محمية بمفتاح الخادم السري */
+      if (req.query.key && req.query.key === process.env.SUPABASE_JWT_SECRET) {
+        await existing.ref.update({ pin, role: 'owner', pinChangedAt: Date.now() });
+        return res.json({ ok: true, msg: 'تم تحديث رمز المالك — ادخل الآن من chat-v2.html', phone: p });
+      }
+      return res.status(409).json({ ok: false, err: 'حساب المالك موجود مسبقًا — استخدم تغيير الرمز من الإعدادات' });
+    }
     await admin.firestore().doc(`users/${p}`).set({
       name: 'Mohamed Javer', phone: p, pin, role: 'owner',
       createdAt: Date.now(), via: 'bootstrap'
