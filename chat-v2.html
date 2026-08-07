@@ -33,6 +33,8 @@ svg{display:block}
 /* ═══ الشاشات ═══ */
 .screen{position:fixed;inset:0;display:flex;flex-direction:column;background:var(--paper);
   transition:transform .28s cubic-bezier(.32,.72,.28,1)}
+#scList,#scChat{visibility:hidden}
+body.ready #scList,body.ready #scChat{visibility:visible}
 #scList{z-index:10}
 #scChat{z-index:20;transform:translateX(-100%)}
 #scChat.on{transform:none}
@@ -648,6 +650,7 @@ async function boot(){
   const {data:me}=await sb.from('chat_users').select('*').eq('id',MY_ID).single();
   MY_PROFILE=me||{};MY_ROLE=me?.role||'customer';
   document.body.dataset.booted='1';
+  document.body.classList.add('ready');
   {var _bs=document.getElementById('bootScreen');if(_bs)_bs.remove();}
 
   flushQueue(); /* رسائل معلّقة من جلسة سابقة */
