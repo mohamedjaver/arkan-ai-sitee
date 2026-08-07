@@ -14,6 +14,8 @@
   st.textContent='body{visibility:hidden!important}';
   (document.head||document.documentElement).appendChild(st);
   function allow(){ var e=document.getElementById('ark-gate-style'); if(e)e.remove(); }
+  /* شبكة أمان: أظهر body دائمًا بعد ثانية مهما حدث — يمنع الصفحة البيضاء نهائيًا */
+  setTimeout(function(){ var e=document.getElementById('ark-gate-style'); if(e)e.remove(); },1200);
   function denyLogin(){ location.replace((needClient?'account.html':'login.html')+'?next='+encodeURIComponent(here)); }
   function denyHome(){ location.replace('index.html'); }
   function session(){ try{return JSON.parse(localStorage.getItem('arkan_session')||'null');}catch(e){return null;} }
