@@ -1,0 +1,76 @@
+<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>تشخيص المحادثة</title></head>
+<body style="font-family:system-ui;padding:16px;background:#0B2F70;color:#fff;font-size:13px;line-height:1.6">
+<h2 style="margin:0 0 12px">🔬 تشخيص دخول العميل للمحادثة</h2>
+<div id="log"></div>
+<button onclick="localStorage.clear();location.reload()" style="margin-top:20px;padding:12px 20px;border:0;border-radius:10px;background:#e2483d;color:#fff;font-weight:700">مسح كل الجلسات وإعادة الاختبار</button>
+<script src="vendor/supabase.js"></script>
+<script>
+const SB_URL='https://vyxzlazwpbstigcqvizb.supabase.co';
+const SB_KEY='sb_publishable_scXFuYtWG2dkz8_CaPEvAg_Yj2_sxnO';
+const AUTH_URL='https://arkan-ai-site-production.up.railway.app/supabase-token';
+const L=document.getElementById('log');
+function log(m,ok){L.innerHTML+='<div style="padding:9px 12px;margin:5px 0;border-radius:8px;background:'+(ok===true?'#0a7d3c':ok===false?'#b32c22':'#1a4a8c')+';word-break:break-all">'+m+'</div>';}
+function normPh(p){let d=String(p||'').replace(/\D/g,'');if(d.startsWith('00'))d=d.slice(2);if(/^\d{8}$/.test(d))d='222'+d;else if(/^9\d{8}$/.test(d))d='244'+d;return d;}
+
+(async function(){
+  // 1) الجلسات المحفوظة
+  let sess=null,client=null;
+  try{sess=JSON.parse(localStorage.getItem('arkan_session')||'null');}catch(e){}
+  try{client=JSON.parse(localStorage.getItem('arkanClient')||'null');}catch(e){}
+  log('1️⃣ arkan_session: '+(sess?JSON.stringify(sess):'❌ لا يوجد'), !!sess);
+  log('1️⃣ arkanClient: '+(client?JSON.stringify(client):'❌ لا يوجد'), !!client);
+
+  // 2) أي رقم سيُستخدم؟
+  let phone=null,pin=null,via=null;
+  if(sess&&sess.phone&&sess.pin){phone=normPh(sess.phone);pin=sess.pin;via='pin';}
+  else if(client&&client.phone&&client.verified){phone=normPh(client.phone);via='otp';}
+  else if(sess&&sess.phone){phone=normPh(sess.phone);via='otp';}
+  if(!phone){log('2️⃣ ❌ لا توجد جلسة صالحة — يجب تسجيل الدخول أولًا من app.html',false);return;}
+  log('2️⃣ الرقم المطبّع: '+phone+' | via='+via+' | pin='+(pin||'بلا'),true);
+
+  // 3) طلب JWT من الخادم
+  log('3️⃣ جارٍ طلب JWT من الخادم...');
+  const body={phone:phone,name:(client&&client.name)||(sess&&sess.name)||''};
+  if(pin)body.pin=pin;
+  let jwtRes;
+  try{
+    const r=await fetch(AUTH_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    const txt=await r.text();
+    if(!r.ok){log('3️⃣ ❌ الخادم رفض ('+r.status+'): '+txt,false);
+      log('👈 هذا هو السبب. الخادم لا يصدر توكن لهذا العميل.',false);return;}
+    jwtRes=JSON.parse(txt);
+    log('3️⃣ ✅ الخادم أصدر توكن. user_id='+jwtRes.user_id+' role='+jwtRes.arkan_role,true);
+  }catch(e){log('3️⃣ ❌ فشل الاتصال بالخادم: '+e.message,false);return;}
+
+  // 4) اتصال Supabase
+  log('4️⃣ جارٍ الاتصال بـ Supabase...');
+  let sb;
+  try{
+    sb=window.supabase.createClient(SB_URL,SB_KEY,{global:{headers:{Authorization:'Bearer '+jwtRes.token}}});
+    log('4️⃣ ✅ عميل Supabase جاهز',true);
+  }catch(e){log('4️⃣ ❌ '+e.message,false);return;}
+
+  // 5) استدعاء الدالة
+  log('5️⃣ جارٍ استدعاء ensure_my_conversation...');
+  try{
+    const {data,error}=await sb.rpc('ensure_my_conversation',{p_name:body.name,p_phone:phone,p_lang:'ar'});
+    if(error){log('5️⃣ ❌ خطأ الدالة: '+error.message+' | '+(error.hint||'')+' | '+(error.details||''),false);
+      log('👈 هذا هو السبب. الدالة فشلت.',false);return;}
+    const row=Array.isArray(data)?data[0]:data;
+    log('5️⃣ ✅ الدالة نجحت. النتيجة: '+JSON.stringify(row),true);
+    if(!row||!row.conversation_id){
+      log('6️⃣ ⚠️ لا محادثة (conversation_id فارغ). الدور='+jwtRes.arkan_role,false);
+      if(jwtRes.arkan_role!=='customer')log('👈 السبب: هذا الحساب مصنّف كـ '+jwtRes.arkan_role+' وليس عميلًا — المالك لا محادثة له. سجّل بحساب عميل مختلف.',false);
+      else log('👈 السبب: لا يوجد مالك في chat_users، أو خطأ RLS.',false);
+      return;
+    }
+    // 6) قراءة المحادثة
+    const {data:c,error:ce}=await sb.from('conversations_v2').select('*').eq('id',row.conversation_id).single();
+    if(ce){log('6️⃣ ❌ تعذّر قراءة المحادثة: '+ce.message,false);return;}
+    log('6️⃣ ✅✅✅ المحادثة موجودة وتُقرأ! id='+c.id,true);
+    log('🎉 كل شيء يعمل. المحادثة يجب أن تفتح في chat-v2. إن لم تفتح فالمشكلة في عرض الواجهة فقط.',true);
+  }catch(e){log('5️⃣ ❌ استثناء: '+e.message,false);}
+})();
+</script></body></html>
