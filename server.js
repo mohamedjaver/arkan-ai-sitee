@@ -280,7 +280,7 @@ const OTP_SALT = process.env.OTP_SALT || crypto.randomBytes(16).toString('hex');
 const otpHash = c => crypto.createHash('sha256').update(OTP_SALT + c).digest('hex');
 const nowMs = () => Date.now();
 setInterval(() => { for (const [k, v] of otpCodes) if (v.exp < nowMs()) otpCodes.delete(k); }, 60000);
-const normPhone = p => { let d = String(p || '').replace(/\D/g, ''); if (d.startsWith('00')) d = d.slice(2); return d; };
+const normPhone = p => { let d = String(p || '').replace(/\D/g, ''); if (d.startsWith('00')) d = d.slice(2); if (/^\d{8}$/.test(d)) d = '222' + d; else if (/^9\d{8}$/.test(d)) d = '244' + d; return d; };
 const validPhone = d => /^(222\d{8}|244\d{9})$/.test(d);
 
 /* إرسال واتساب */

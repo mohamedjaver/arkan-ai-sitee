@@ -526,6 +526,9 @@ function askPin(phone){
       const p=inp.value.replace(/\D/g,'');
       if(p.length!==4){w.querySelector('#pinErr').textContent='الرمز 4 أرقام';return;}
       let ph=(pIn.style.display!=='none'&&pIn.value)?pIn.value.replace(/\D/g,''):phone;
+      /* تطبيع: رقم محلي موريتاني (8 أرقام) أو أنغولي (9 أرقام تبدأ بـ9) */
+      if(/^\d{8}$/.test(ph))ph='222'+ph;
+      else if(/^9\d{8}$/.test(ph))ph='244'+ph;
       if(!/^(222\d{8}|244\d{9})$/.test(ph)){w.querySelector('#pinErr').textContent='رقم غير صالح — موريتانيا (222…) أو أنغولا (244…)';pIn.style.display='inline-block';w.querySelector('#pinPhoneTxt').style.display='none';w.querySelector('#pinChg').style.display='none';return;}
       w.remove();res({pin:p,phone:ph});
     };
