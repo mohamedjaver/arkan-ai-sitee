@@ -345,6 +345,16 @@ const OWNER_PHONES = ['22236295050'];
 const sbHits = new Map();
 const phoneToUuid = p => uuidv5(String(p).replace(/\D/g, ''), ARKAN_NS);
 
+/* البحث عن مستند المستخدم بالصيغتين: دولية (222XXXXXXXX) ومحلية (XXXXXXXX) */
+async function findUserDoc(p) {
+  const fs = admin.firestore();
+  let snap = await fs.doc(`users/${p}`).get();
+  if (snap.exists) return snap;
+  if (p.startsWith('222')) { snap = await fs.doc(`users/${p.slice(3)}`).get(); if (snap.exists) return snap; }
+  if (p.startsWith('244')) { snap = await fs.doc(`users/${p.slice(3)}`).get(); if (snap.exists) return snap; }
+  return null;
+}
+
 app.post('/supabase-token', async (req, res) => {
   try {
     if (!process.env.SUPABASE_JWT_SECRET) return res.status(503).json({ error: 'SUPABASE_JWT_SECRET غير مضبوط' });
@@ -358,11 +368,11 @@ app.post('/supabase-token', async (req, res) => {
     let verified = false;
     if (firebaseIdToken && fbReady) {
       const decoded = await admin.auth().verifyIdToken(firebaseIdToken);
-      const snap = await admin.firestore().doc(`users/${p}`).get();
-      verified = snap.exists && !!decoded.uid;
+      const snap = await findUserDoc(p);
+      verified = !!snap && !!decoded.uid;
     } else if (pin && fbReady) {
-      const snap = await admin.firestore().doc(`users/${p}`).get();
-      verified = snap.exists && String(snap.data().pin) === String(pin);
+      const snap = await findUserDoc(p);
+      verified = !!snap && String(snap.data().pin) === String(pin);
     }
     if (!verified) return res.status(401).json({ error: 'auth failed' });
 
@@ -396,10 +406,10 @@ app.post('/change-pin', async (req, res) => {
     if (newPin.length !== 4) return res.status(400).json({ ok: false, err: 'الرمز الجديد 4 أرقام' });
     if (newPin === oldPin) return res.status(400).json({ ok: false, err: 'الرمز الجديد مطابق للقديم' });
 
-    const ref = admin.firestore().doc(`users/${p}`);
-    const snap = await ref.get();
-    if (!snap.exists || String(snap.data().pin) !== oldPin)
+    const snap0 = await findUserDoc(p);
+    if (!snap0 || String(snap0.data().pin) !== oldPin)
       return res.status(401).json({ ok: false, err: 'الرمز الحالي غير صحيح' });
+    const ref = snap0.ref;
 
     await ref.update({ pin: newPin, pinChangedAt: Date.now() });
     res.json({ ok: true });
