@@ -376,20 +376,25 @@ app.post('/supabase-token', async (req, res) => {
     const { firebaseIdToken, pin } = req.body || {};
     const isOwner = OWNER_PHONES.includes(p);
     let verified = false;
+    let diag = { isOwner, fbReady, phone: p };
     if (firebaseIdToken && fbReady) {
       const decoded = await admin.auth().verifyIdToken(firebaseIdToken);
       const snap = await findUserDoc(p);
       verified = !!snap && !!decoded.uid;
+      diag.path = 'firebaseIdToken'; diag.found = !!snap;
     } else if (pin && fbReady) {
       const snap = await findUserDoc(p);
+      diag.path = 'pin'; diag.found = !!snap;
+      diag.storedPin = snap ? String(snap.data().pin) : null;
+      diag.storedId = snap ? snap.id : null;
+      diag.gotPin = String(pin);
       verified = !!snap && String(snap.data().pin) === String(pin);
     } else if (!isOwner && fbReady) {
-      /* عميل بلا PIN: وجود حسابه = تحقّق سابق عبر OTP واتساب عند التسجيل.
-         المالك مستثنى (يتطلب PIN دائمًا لحماية لوحة الإدارة). */
       const snap = await findUserDoc(p);
+      diag.path = 'account-exists'; diag.found = !!snap;
       verified = !!snap;
     }
-    if (!verified) return res.status(401).json({ error: 'auth failed' });
+    if (!verified) return res.status(401).json({ error: 'auth failed', diag });
 
     const sub = phoneToUuid(p);
     const role = OWNER_PHONES.includes(p) ? 'owner' : 'customer';
