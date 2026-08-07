@@ -512,10 +512,10 @@ function normPh(p){let d=String(p||'').replace(/\D/g,'');if(d.startsWith('00'))d
 function getSession(){
   try{
     const s=JSON.parse(localStorage.getItem('arkan_session')||'null');
-    if(s&&s.phone&&s.pin)return {phone:normPh(s.phone),name:s.name||'',pin:s.pin,via:'pin'};
+    if(s&&s.phone&&s.pin)return {phone:normPh(s.phone),name:s.name||'',pin:String(s.pin),via:'pin'};
+    /* جلسة arkanClient قديمة بلا PIN: نحاول ترقيتها من arkan_session إن أمكن، وإلا تُعامل كغير مسجّلة */
     const c=JSON.parse(localStorage.getItem('arkanClient')||'null');
-    if(c&&c.phone)return {phone:normPh(c.phone),name:c.name||'',via:'otp'};
-    if(s&&s.phone)return {phone:normPh(s.phone),name:s.name||'',via:'otp'};
+    if(c&&c.phone&&c.pin)return {phone:normPh(c.phone),name:c.name||'',pin:String(c.pin),via:'pin'};
   }catch(e){}
   return null;
 }
@@ -612,19 +612,16 @@ async function boot(){
   }
   bmsg('التحقق من الجلسة…');
   const sess=getSession();
-  if(!sess){bmsg('يلزم تسجيل الدخول…');setTimeout(()=>location.replace('account.html?next=chat-v2.html'),400);return;}
-  if(!sess.pin&&!window.ARKAN_ID_TOKEN){{const r=await askPin(sess.phone);sess.pin=r.pin;sess.phone=r.phone;}}
+  if(!sess||!sess.pin){bmsg('يلزم تسجيل الدخول…');setTimeout(()=>location.replace('account.html?next=chat-v2.html'),400);return;}
   let jwt;
   bmsg('تأكيد الهوية…');
   try{jwt=await getJWT(sess);}
   catch(e){
+    /* فشل التحقق: الجلسة قديمة/تالفة — أعد التوجيه لتسجيل الدخول (بلا نافذة PIN) */
     localStorage.removeItem('arkan_sb_jwt');
-    let tries=0,ok=false;
-    while(tries<2&&!ok){
-      tries++;{const r=await askPin(sess.phone);sess.pin=r.pin;sess.phone=r.phone;}
-      try{jwt=await getJWT(sess);ok=true;}catch(e2){}
-    }
-    if(!ok){bfail('تعذّر تسجيل الدخول — تحقق من الرقم والرمز، أو أنشئ حسابًا');return;}
+    bmsg('يلزم تسجيل الدخول…');
+    setTimeout(()=>location.replace('account.html?next=chat-v2.html'),500);
+    return;
   }
   try{localStorage.setItem('arkan_session',JSON.stringify({phone:sess.phone,pin:sess.pin,name:sess.name||''}));}catch(e){}
   bmsg('الاتصال بالخادم…');
