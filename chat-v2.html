@@ -662,25 +662,21 @@ async function boot(){
     $('scList').style.display='none';
     let convId=row&&row.conversation_id;
     if(!convId){
-      /* احتياطي: أنشئ/استرجع المحادثة مباشرة */
+      /* أعد استدعاء الدالة (security definer تنشئ المحادثة وتتجاوز RLS) */
       bmsg('تجهيز محادثتك…');
       try{
-        let {data:ex}=await sb.from('conversations_v2').select('id,secret,last_message_id').eq('customer_id',MY_ID).maybeSingle();
-        if(!ex){
-          const {data:own}=await sb.from('chat_users').select('id').eq('role','owner').order('created_at').limit(1).maybeSingle();
-          if(own){
-            const {data:nc,error:ce}=await sb.from('conversations_v2')
-              .insert({customer_id:MY_ID,owner_id:own.id}).select().single();
-            if(!ce&&nc){ex=nc;
-              await sb.from('messages_v2').insert({conversation_id:nc.id,sender_id:own.id,type:'system',
-                text:'مرحبًا بك في ARKAN. أرسل المبلغ والعملة المطلوبة وسنخبرك بالسعر والبديلة المتوفرة.'});
-            }else console.warn('conv create:',ce&&ce.message);
-          }else{bfail('لم يتم تفعيل حساب الإدارة بعد — تواصل معنا عبر واتساب');return;}
+        const {data:d2,error:e2}=await sb.rpc('ensure_my_conversation',
+          {p_name:sess.name||'',p_phone:sess.phone,p_lang:'ar'});
+        if(!e2){const r2=Array.isArray(d2)?d2[0]:d2; if(r2)convId=r2.conversation_id;}
+        else console.warn('ensure retry:',e2.message);
+        /* إن نجحت الدالة لكن أعادت null، ابحث عن المحادثة مباشرة */
+        if(!convId){
+          const {data:ex}=await sb.from('conversations_v2').select('id').eq('customer_id',MY_ID).maybeSingle();
+          if(ex)convId=ex.id;
         }
-        if(ex)convId=ex.id;
       }catch(e){console.warn('fallback conv:',e);}
     }
-    if(!convId){bfail('تعذّر تجهيز المحادثة — حدّث الصفحة');return;}
+    if(!convId){bfail('تعذّر تجهيز المحادثة. تأكد من تنفيذ إعداد قاعدة البيانات، ثم أعد المحاولة.');return;}
     const {data:c}=await sb.from('conversations_v2').select('*').eq('id',convId).single();
     if(!c){bfail('تعذّر فتح المحادثة');return;}
     await openConv(c,row&&row.is_new);
