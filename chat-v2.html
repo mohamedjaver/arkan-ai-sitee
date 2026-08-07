@@ -492,12 +492,35 @@ let FILTER='all', REPLY=null, PROFILES={}, SIGNED={}, XREQS={};
 /* ═══ 1) الهوية: جلسة → Supabase JWT (RLS حقيقي) ═══ */
 function getSession(){
   try{
+    const s=JSON.parse(localStorage.getItem('arkan_session')||'null');
+    if(s&&s.phone&&s.pin)return {phone:String(s.phone).replace(/[^\d]/g,''),name:s.name||'',pin:s.pin,via:'pin'};
     const c=JSON.parse(localStorage.getItem('arkanClient')||'null');
     if(c&&c.phone)return {phone:String(c.phone).replace(/[^\d]/g,''),name:c.name||'',via:'otp'};
-    const s=JSON.parse(localStorage.getItem('arkan_session')||'null');
-    if(s&&s.phone)return {phone:String(s.phone).replace(/[^\d]/g,''),name:s.name||'',pin:s.pin,via:'pin'};
+    if(s&&s.phone)return {phone:String(s.phone).replace(/[^\d]/g,''),name:s.name||'',via:'otp'};
   }catch(e){}
   return null;
+}
+/* نافذة إدخال PIN — تُستخدم عندما لا تحمل الجلسة إثبات هوية */
+function askPin(phone){
+  return new Promise(res=>{
+    const w=document.createElement('div');
+    w.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(11,47,112,.55);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:24px';
+    w.innerHTML=`<div style="background:#fff;border-radius:24px;padding:28px 22px;max-width:340px;width:100%;text-align:center;box-shadow:0 24px 64px rgba(11,47,112,.35)">
+      <div style="font-weight:800;font-size:19px;color:#0B2F70">تأكيد الهوية</div>
+      <div style="color:#5b6b8c;font-size:13.5px;margin:8px 0 16px">أدخل الرمز السري (PIN) لحسابك<br>+${phone}</div>
+      <input id="pinIn" inputmode="numeric" maxlength="4" placeholder="••••" style="width:150px;text-align:center;font-size:26px;letter-spacing:12px;padding:12px;border:2px solid #19A9F5;border-radius:14px;outline:none">
+      <div id="pinErr" style="color:#e2483d;font-size:12.5px;min-height:18px;margin-top:8px"></div>
+      <button id="pinGo" style="width:100%;margin-top:6px;padding:14px;border:0;border-radius:14px;background:linear-gradient(135deg,#19A9F5,#0A56B8);color:#fff;font-weight:800;font-size:15.5px">دخول</button>
+    </div>`;
+    document.body.appendChild(w);
+    const inp=w.querySelector('#pinIn');inp.focus();
+    w.querySelector('#pinGo').onclick=()=>{
+      const p=inp.value.replace(/\D/g,'');
+      if(p.length!==4){w.querySelector('#pinErr').textContent='الرمز 4 أرقام';return;}
+      w.remove();res(p);
+    };
+    inp.addEventListener('keydown',e=>{if(e.key==='Enter')w.querySelector('#pinGo').click();});
+  });
 }
 async function getJWT(sess){
   const cached=JSON.parse(localStorage.getItem('arkan_sb_jwt')||'null');
@@ -546,10 +569,21 @@ async function dec(s){
 async function boot(){
   const sess=getSession();
   if(!sess){location.replace('login.html?next=chat-v2.html');return;}
+  if(!sess.pin&&!window.ARKAN_ID_TOKEN){sess.pin=await askPin(sess.phone);}
   let jwt;
   try{jwt=await getJWT(sess);}
-  catch(e){toast('تعذر تسجيل الدخول — تحقق من رقم الهاتف والرمز السري');
-    $('convList').innerHTML='<div class="empty">تعذر تسجيل الدخول للمحادثات.<br>حاول مجددًا لاحقًا.</div>';return;}
+  catch(e){
+    /* رمز خاطئ؟ امنحه محاولات إضافية */
+    localStorage.removeItem('arkan_sb_jwt');
+    let tries=0,ok=false;
+    while(tries<2&&!ok){
+      tries++;sess.pin=await askPin(sess.phone);
+      try{jwt=await getJWT(sess);ok=true;}catch(e2){}
+    }
+    if(!ok){toast('تعذر تسجيل الدخول — تحقق من رقم الهاتف والرمز السري');
+      $('convList').innerHTML='<div class="empty">تعذر تسجيل الدخول للمحادثات.<br>حاول مجددًا لاحقًا.</div>';return;}
+  }
+  try{localStorage.setItem('arkan_session',JSON.stringify({phone:sess.phone,pin:sess.pin,name:sess.name||''}));}catch(e){}
   MY_ID=jwt.user_id;
   sb=window.supabase.createClient(SB_URL,SB_KEY,{
     global:{headers:{Authorization:'Bearer '+jwt.token}},
