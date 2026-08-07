@@ -658,10 +658,30 @@ async function boot(){
   if(MY_ROLE==='customer'){
     /* العميل: يدخل مباشرة إلى محادثته الدائمة مع ARKAN */
     $('scList').style.display='none';
-    if(!row||!row.conversation_id){toast('الخدمة قيد التفعيل — حاول بعد قليل');return;}
-    const {data:c}=await sb.from('conversations_v2').select('*').eq('id',row.conversation_id).single();
-    if(!c){toast('تعذّر فتح المحادثة');return;}
-    await openConv(c,row.is_new);
+    let convId=row&&row.conversation_id;
+    if(!convId){
+      /* احتياطي: أنشئ/استرجع المحادثة مباشرة */
+      bmsg('تجهيز محادثتك…');
+      try{
+        let {data:ex}=await sb.from('conversations_v2').select('id,secret,last_message_id').eq('customer_id',MY_ID).maybeSingle();
+        if(!ex){
+          const {data:own}=await sb.from('chat_users').select('id').eq('role','owner').order('created_at').limit(1).maybeSingle();
+          if(own){
+            const {data:nc,error:ce}=await sb.from('conversations_v2')
+              .insert({customer_id:MY_ID,owner_id:own.id}).select().single();
+            if(!ce&&nc){ex=nc;
+              await sb.from('messages_v2').insert({conversation_id:nc.id,sender_id:own.id,type:'system',
+                text:'مرحبًا بك في ARKAN. أرسل المبلغ والعملة المطلوبة وسنخبرك بالسعر والبديلة المتوفرة.'});
+            }else console.warn('conv create:',ce&&ce.message);
+          }else{bfail('لم يتم تفعيل حساب الإدارة بعد — تواصل معنا عبر واتساب');return;}
+        }
+        if(ex)convId=ex.id;
+      }catch(e){console.warn('fallback conv:',e);}
+    }
+    if(!convId){bfail('تعذّر تجهيز المحادثة — حدّث الصفحة');return;}
+    const {data:c}=await sb.from('conversations_v2').select('*').eq('id',convId).single();
+    if(!c){bfail('تعذّر فتح المحادثة');return;}
+    await openConv(c,row&&row.is_new);
     try{await importPendingTreq();}catch(e){console.warn('treq:',e);}
   }else{
     /* المالك/الطاقم: لوحة المحادثات */
