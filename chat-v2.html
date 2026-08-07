@@ -306,6 +306,9 @@ svg{display:block}
         <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="3.4"/><path d="M5 20c1.4-3.3 4-5 7-5s5.6 1.7 7 5"/></svg>
       </button>
       <h1>ARKAN <span>Chat</span></h1>
+      <button class="hbtn" onclick="arkanLogout()" aria-label="تسجيل الخروج" title="تسجيل الخروج">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>
+      </button>
       <button class="hbtn" onclick="location.href='app.html'" aria-label="الرئيسية">
         <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11l8-7 8 7v9a1 1 0 0 1-1 1h-5v-6h-4v6H5a1 1 0 0 1-1-1z"/></svg>
       </button>
@@ -1424,6 +1427,13 @@ function quoteHTML(m){return renderStatus(m);}
 /* ═══ إقلاع ═══ */
 toggleMic();
 boot();
+
+/* ═══ تسجيل الخروج — تبديل الحساب ═══ */
+function arkanLogout(){
+  if(!confirm('تسجيل الخروج من هذا الحساب؟'))return;
+  ['arkan_session','arkanClient','arkan_sb_jwt','arkan_pending_treq'].forEach(k=>{try{localStorage.removeItem(k);}catch(e){}});
+  location.replace('chat-v2.html');
+}
 document.addEventListener('visibilitychange',()=>{
   if(document.visibilityState==='visible'&&CONV)sb.rpc('mark_conversation_read',{cid:CONV.id});
 });

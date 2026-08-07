@@ -82,6 +82,8 @@ body{font-family:Inter,'IBM Plex Sans Arabic',system-ui,sans-serif;background:va
       <input class="in" id="pinNew2" inputmode="numeric" maxlength="4" placeholder="••••" style="text-align:center;letter-spacing:8px;direction:ltr">
       <button class="save" id="pinB" onclick="changePin()" style="background:linear-gradient(135deg,#0B2F70,#0A56B8)">تغيير الرمز السري</button>
     </div>
+
+    <button class="save" onclick="if(confirm('تسجيل الخروج من هذا الحساب؟')){['arkan_session','arkanClient','arkan_sb_jwt','arkan_pending_treq'].forEach(k=>{try{localStorage.removeItem(k)}catch(e){}});location.replace('chat-v2.html');}" style="margin-top:18px;background:linear-gradient(135deg,#E2483D,#B32C22)">تسجيل الخروج / تبديل الحساب</button>
   </div>
 </div>
 <input type="file" id="fCam" accept="image/*" capture="user" hidden>
