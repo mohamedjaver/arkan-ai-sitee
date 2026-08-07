@@ -507,17 +507,26 @@ function askPin(phone){
     w.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(11,47,112,.55);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:24px';
     w.innerHTML=`<div style="background:#fff;border-radius:24px;padding:28px 22px;max-width:340px;width:100%;text-align:center;box-shadow:0 24px 64px rgba(11,47,112,.35)">
       <div style="font-weight:800;font-size:19px;color:#0B2F70">تأكيد الهوية</div>
-      <div style="color:#5b6b8c;font-size:13.5px;margin:8px 0 16px">أدخل الرمز السري (PIN) لحسابك<br>+${phone}</div>
+      <div style="color:#5b6b8c;font-size:13.5px;margin:8px 0 4px">أدخل الرمز السري (PIN) لحسابك</div>
+      <div id="pinPhoneWrap" style="margin:0 0 14px">
+        <span id="pinPhoneTxt" style="color:#0A56B8;font-weight:700;direction:ltr;display:inline-block">+${phone}</span>
+        <a id="pinChg" style="color:#19A9F5;font-size:12px;cursor:pointer;margin-inline-start:8px;text-decoration:underline">تغيير الرقم</a>
+        <input id="pinPhoneIn" inputmode="numeric" placeholder="222XXXXXXXX" style="display:none;width:190px;text-align:center;font-size:16px;padding:9px;border:2px solid #cfe3ff;border-radius:12px;outline:none;direction:ltr;margin-top:6px">
+      </div>
       <input id="pinIn" inputmode="numeric" maxlength="4" placeholder="••••" style="width:150px;text-align:center;font-size:26px;letter-spacing:12px;padding:12px;border:2px solid #19A9F5;border-radius:14px;outline:none">
       <div id="pinErr" style="color:#e2483d;font-size:12.5px;min-height:18px;margin-top:8px"></div>
       <button id="pinGo" style="width:100%;margin-top:6px;padding:14px;border:0;border-radius:14px;background:linear-gradient(135deg,#19A9F5,#0A56B8);color:#fff;font-weight:800;font-size:15.5px">دخول</button>
     </div>`;
     document.body.appendChild(w);
     const inp=w.querySelector('#pinIn');inp.focus();
+    const pIn=w.querySelector('#pinPhoneIn');
+    w.querySelector('#pinChg').onclick=()=>{pIn.style.display='inline-block';pIn.value=phone;w.querySelector('#pinPhoneTxt').style.display='none';w.querySelector('#pinChg').style.display='none';pIn.focus();};
     w.querySelector('#pinGo').onclick=()=>{
       const p=inp.value.replace(/\D/g,'');
       if(p.length!==4){w.querySelector('#pinErr').textContent='الرمز 4 أرقام';return;}
-      w.remove();res(p);
+      let ph=(pIn.style.display!=='none'&&pIn.value)?pIn.value.replace(/\D/g,''):phone;
+      if(!/^(222\d{8}|244\d{9})$/.test(ph)){w.querySelector('#pinErr').textContent='رقم غير صالح — موريتانيا (222…) أو أنغولا (244…)';pIn.style.display='inline-block';w.querySelector('#pinPhoneTxt').style.display='none';w.querySelector('#pinChg').style.display='none';return;}
+      w.remove();res({pin:p,phone:ph});
     };
     inp.addEventListener('keydown',e=>{if(e.key==='Enter')w.querySelector('#pinGo').click();});
   });
@@ -569,7 +578,7 @@ async function dec(s){
 async function boot(){
   const sess=getSession();
   if(!sess){location.replace('login.html?next=chat-v2.html');return;}
-  if(!sess.pin&&!window.ARKAN_ID_TOKEN){sess.pin=await askPin(sess.phone);}
+  if(!sess.pin&&!window.ARKAN_ID_TOKEN){{const r=await askPin(sess.phone);sess.pin=r.pin;sess.phone=r.phone;}}
   let jwt;
   try{jwt=await getJWT(sess);}
   catch(e){
@@ -577,7 +586,7 @@ async function boot(){
     localStorage.removeItem('arkan_sb_jwt');
     let tries=0,ok=false;
     while(tries<2&&!ok){
-      tries++;sess.pin=await askPin(sess.phone);
+      tries++;{const r=await askPin(sess.phone);sess.pin=r.pin;sess.phone=r.phone;}
       try{jwt=await getJWT(sess);ok=true;}catch(e2){}
     }
     if(!ok){toast('تعذر تسجيل الدخول — تحقق من رقم الهاتف والرمز السري');
