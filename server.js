@@ -392,6 +392,28 @@ app.post('/supabase-token', async (req, res) => {
   }
 });
 
+/* ── تهيئة حساب المالك (مرة واحدة) ──
+   يعمل فقط لهاتف OWNER_PHONES وفقط إن لم يوجد الحساب. يُفتح من المتصفح:
+   /bootstrap-owner?pin=XXXX */
+app.get('/bootstrap-owner', async (req, res) => {
+  try {
+    if (!fbReady) return res.status(503).json({ ok: false, err: 'Firebase غير جاهز' });
+    const p = OWNER_PHONES[0];
+    const pin = String(req.query.pin || '').replace(/\D/g, '');
+    if (pin.length !== 4) return res.status(400).json({ ok: false, err: 'أضف ?pin=رمز من 4 أرقام' });
+    const existing = await findUserDoc(p);
+    if (existing) return res.status(409).json({ ok: false, err: 'حساب المالك موجود مسبقًا — استخدم تغيير الرمز من الإعدادات' });
+    await admin.firestore().doc(`users/${p}`).set({
+      name: 'Mohamed Javer', phone: p, pin, role: 'owner',
+      createdAt: Date.now(), via: 'bootstrap'
+    });
+    res.json({ ok: true, msg: 'تم إنشاء حساب المالك — ادخل الآن من chat-v2.html', phone: p });
+  } catch (e) {
+    console.error('bootstrap-owner:', e.message);
+    res.status(500).json({ ok: false, err: 'خطأ في الخادم' });
+  }
+});
+
 /* ── تغيير الرمز السري PIN ── */
 const pinHits = new Map();
 app.post('/change-pin', async (req, res) => {
