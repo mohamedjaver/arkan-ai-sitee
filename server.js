@@ -348,11 +348,18 @@ const phoneToUuid = p => uuidv5(String(p).replace(/\D/g, ''), ARKAN_NS);
 /* البحث عن مستند المستخدم بالصيغتين: دولية (222XXXXXXXX) ومحلية (XXXXXXXX) */
 async function findUserDoc(p) {
   const fs = admin.firestore();
-  const variants = [p, '00' + p];
-  if (p.startsWith('222') || p.startsWith('244')) { const local = p.slice(3); variants.push(local, '00' + local); }
+  const digits = String(p).replace(/\D/g, '');
+  const local = digits.replace(/^(222|244)/, '');
+  const variants = [...new Set([digits, '00' + digits, local, '00' + local, '00244' + local, '244' + local])];
+  // 1) بحث بمعرّف المستند
   for (const v of variants) {
     const snap = await fs.doc(`users/${v}`).get();
     if (snap.exists) return snap;
+  }
+  // 2) بحث بحقل phone (يغطي أي صيغة تخزين)
+  for (const v of variants) {
+    const q = await fs.collection('users').where('phone', '==', v).limit(1).get();
+    if (!q.empty) return q.docs[0];
   }
   return null;
 }
