@@ -616,6 +616,7 @@ async function boot(){
   if(MY_ROLE==='customer'){
     /* العميل: يدخل مباشرة إلى محادثته الدائمة مع ARKAN */
     $('scList').style.display='none';
+    if(!row||!row.conversation_id){toast('الخدمة قيد التفعيل — حاول بعد قليل');return;}
     const {data:c}=await sb.from('conversations_v2').select('*').eq('id',row.conversation_id).single();
     await openConv(c,row.is_new);
   }else{
