@@ -628,9 +628,17 @@ async function boot(){
     $('scList').style.display='none';
     if(!row||!row.conversation_id){toast('الخدمة قيد التفعيل — حاول بعد قليل');return;}
     const {data:c}=await sb.from('conversations_v2').select('*').eq('id',row.conversation_id).single();
+    if(!c){toast('تعذّر فتح المحادثة');return;}
     await openConv(c,row.is_new);
-    await importPendingTreq();
+    try{await importPendingTreq();}catch(e){console.warn('treq:',e);}
   }else{
+    /* المالك/الطاقم: لوحة المحادثات */
+    const pend=localStorage.getItem('arkan_pending_treq');
+    if(pend){
+      /* المالك لا ينشئ طلبًا لنفسه — طلبات التحويل تخص العملاء */
+      localStorage.removeItem('arkan_pending_treq');
+      toast('طلبات التحويل تُنشأ من حساب العميل — تظهر لك هنا فور إرسالها');
+    }
     buildFilters();
     await loadConvs();
     listenConvs();
@@ -1429,7 +1437,12 @@ function quoteHTML(m){return renderStatus(m);}
 
 /* ═══ إقلاع ═══ */
 toggleMic();
-boot();
+boot().catch(e=>{
+  console.error('boot fatal:',e);
+  try{toast('حدث خطأ — أعد المحاولة');}catch(_){}
+  const cl=document.getElementById('convList');
+  if(cl)cl.innerHTML='<div class="empty">تعذّر التحميل — حدّث الصفحة.<br><button onclick="location.reload()" style="margin-top:10px;padding:10px 18px;border:0;border-radius:12px;background:#19A9F5;color:#fff;font-weight:700">إعادة التحميل</button></div>';
+});
 
 /* ═══ تسجيل الخروج — تبديل الحساب ═══ */
 function arkanLogout(){
