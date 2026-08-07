@@ -387,10 +387,16 @@ window.gBack=function(){document.getElementById('gStep2').style.display='none';
   document.getElementById('gStep1').style.display='block';clearInterval(timerIv);};
 
 function fullPhone(){
-  var raw=document.getElementById('gPhone').value.replace(/\D/g,'');
-  if(raw.startsWith('00'))raw=raw.slice(2);
-  if(raw.startsWith('222')||raw.startsWith('244'))return '+'+raw;
-  return cc+raw;
+  return canonPhone(document.getElementById('gPhone').value, cc);
+}
+/* ═══ الصيغة القانونية الموحّدة للأرقام في كل المشروع ═══
+   المخرج دائمًا: أرقام فقط بصيغة دولية بلا + أو 00 (مثل 22236295050 أو 244946762418) */
+function canonPhone(input, defaultCc){
+  var d=String(input||'').replace(/\D/g,'');
+  if(d.startsWith('00'))d=d.slice(2);
+  if(d.startsWith('222')||d.startsWith('244'))return d;
+  var ccDigits=String(defaultCc||'+222').replace(/\D/g,'')||'222';
+  return ccDigits+d;
 }
 function err(id,msg){var e=document.getElementById(id);e.textContent=msg;e.style.display='block';}
 function arErr(e){
@@ -1445,7 +1451,7 @@ const firebaseConfig = {
 };
 const db = getFirestore(initializeApp(firebaseConfig, 'arkan-reg'));
 
-const normPhone = p => (p||'').replace(/[^\d]/g,'');
+const normPhone = p => canonPhone(p, '+222');
 const makePin = () => String(Math.floor(1000 + Math.random()*9000));
 const makeRef = () => 'AK' + Date.now().toString(36).toUpperCase().slice(-6);
 

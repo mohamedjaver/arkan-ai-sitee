@@ -291,7 +291,7 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
-import { getFirestore, doc, getDoc, collection, query, where, orderBy, onSnapshot }
+import { getFirestore, doc, getDoc, getDocs, collection, query, where, orderBy, limit, onSnapshot }
   from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -308,7 +308,7 @@ const RATES_URL = 'https://arkanrates.com/rates-data.json';
 
 const $ = id => document.getElementById(id);
 const fmt = (v,dp=2) => Number.isFinite(v) ? v.toLocaleString('en-US',{minimumFractionDigits:dp,maximumFractionDigits:dp}) : '—';
-const normPhone = p => (p||'').replace(/[^\d]/g,'');
+const normPhone = p => { let d=String(p||'').replace(/\D/g,''); if(d.startsWith('00'))d=d.slice(2); if(d.startsWith('222')||d.startsWith('244'))return d; if(/^\d{8}$/.test(d))return '222'+d; if(/^9\d{8}$/.test(d))return '244'+d; return d; };
 
 const FLAGS = { USDT:'tether', MRU:'mr', USD:'us', EUR:'eu', CNY:'cn', AED:'ae', AOA:'ao', GBP:'gb', SAR:'sa', MAD:'ma', TRY:'tr' };
 const NAMES = { USDT:'تيثر', MRU:'أوقية موريتانية', USD:'دولار أمريكي', EUR:'يورو', CNY:'يوان صيني', AED:'درهم إماراتي', AOA:'كوانزا أنغولي', GBP:'جنيه إسترليني', SAR:'ريال سعودي', MAD:'درهم مغربي', TRY:'ليرة تركية' };
@@ -431,17 +431,32 @@ function gErr(m){ const e=$('gErr'); e.textContent=m; e.classList.add('on'); }
 async function login(phone, pin, silent){
   if(!silent){ $('gEnter').disabled=true; $('gEnter').textContent='...'; }
   try {
-    const snap = await getDoc(doc(db,'users',phone));
-    if (!snap.exists() || String(snap.data().pin)!==String(pin)){
+    // بحث مرن: جرّب صيغ الرقم المختلفة (يعالج حسابات قديمة بصيغ متعددة)
+    const d=String(phone).replace(/\D/g,'');
+    const local=d.replace(/^(222|244)/,'');
+    const variants=[...new Set([d,'00'+d,local,'00244'+local,'244'+local,'00222'+local,'222'+local])];
+    let snap=null, foundId=null;
+    for(const v of variants){
+      const s=await getDoc(doc(db,'users',v));
+      if(s.exists()){snap=s;foundId=v;break;}
+    }
+    // إن لم يوجد بالمعرّف، ابحث بحقل phone
+    if(!snap){
+      for(const v of variants){
+        const q=await getDocs(query(collection(db,'users'),where('phone','==',v),limit(1)));
+        if(!q.empty){snap=q.docs[0];foundId=q.docs[0].id;break;}
+      }
+    }
+    if (!snap || String(snap.data().pin)!==String(pin)){
       if(!silent) gErr('رقم أو رمز غير صحيح');
       localStorage.removeItem('arkan_session'); return;
     }
-    SESSION = {phone,pin};
+    SESSION = {phone:d,pin};
     localStorage.setItem('arkan_session', JSON.stringify(SESSION));
     USER = snap.data();
     const nxt=new URLSearchParams(location.search).get('next');
     if(nxt&&/^[a-z0-9_-]+\.html$/i.test(nxt)){location.href=nxt;return;}
-    openApp(phone);
+    openApp(foundId);
   } catch(e){ console.error(e); if(!silent) gErr('تعذّر الاتصال — حاول ثانية'); }
   finally { $('gEnter').disabled=false; $('gEnter').textContent='دخول'; }
 }
