@@ -25,7 +25,7 @@
     { href: 'index.html',      icon: 'home',     label: 'الرئيسية' },
     { href: 'request.html',    icon: 'send',     label: 'طلب تحويل' },
     { href: 'rates.html',      icon: 'trending', label: 'الأسعار' },
-    { href: 'chat.html',       icon: 'message',  label: 'المحادثة' },
+    { href: 'chat-v2.html',       icon: 'message',  label: 'المحادثة' },
     { href: 'account.html',    icon: 'user',     label: 'حسابي' }
   ];
   // روابط المالك فقط

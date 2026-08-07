@@ -619,6 +619,7 @@ async function boot(){
     if(!row||!row.conversation_id){toast('الخدمة قيد التفعيل — حاول بعد قليل');return;}
     const {data:c}=await sb.from('conversations_v2').select('*').eq('id',row.conversation_id).single();
     await openConv(c,row.is_new);
+    await importPendingTreq();
   }else{
     buildFilters();
     await loadConvs();
@@ -1300,6 +1301,25 @@ const XSTATUS={awaiting_quote:'بانتظار الرد',quoted:'تم تقديم 
 const XFLOW=['accepted','awaiting_payment','receipt_received','verifying','processing','completed'];
 
 function openXForm(){if(MY_ROLE!=='customer')return toast('العميل هو من ينشئ الطلب');$('shX').classList.add('on');}
+/* طلب تحويل قادم من request.html — يُنشأ كطلب بديلة موثق داخل المحادثة */
+async function importPendingTreq(){
+  let t=null;try{t=JSON.parse(localStorage.getItem('arkan_pending_treq')||'null');}catch(e){}
+  if(!t||!t.amount)return;
+  if(Date.now()-(t.ts||0)>3600000){localStorage.removeItem('arkan_pending_treq');return;}
+  try{
+    const row={conversation_id:CONV.id,customer_id:MY_ID,pay_amount:t.amount,
+      pay_currency:t.from||'MRU',receive_currency:t.to||'AOA',country:null,
+      receiving_method:'bank',bank_name:t.bank||null,
+      beneficiary_name:t.beneficiary||('مرجع '+(t.ref||'')),
+      note:[t.iban?('حساب '+t.iban):'',t.ref?('مرجع '+t.ref):''].filter(Boolean).join(' · ')||null};
+    const {data,error}=await sb.from('exchange_requests_v2').insert(row).select().single();
+    if(error||!data)throw error;
+    await insertMsg({conversation_id:CONV.id,type:'exchange_request',
+      meta:{request_id:data.id,request_no:data.request_no,...row}});
+    localStorage.removeItem('arkan_pending_treq');
+    refreshXHeader();toast('تم إنشاء طلبك · '+data.request_no);
+  }catch(e){console.error('pending treq:',e);}
+}
 async function submitX(){
   const amt=parseFloat($('xAmt').value);
   if(!amt||amt<=0)return toast('أدخل المبلغ');

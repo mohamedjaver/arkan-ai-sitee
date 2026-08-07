@@ -1002,87 +1002,19 @@ function okToSuccess(ref,waUrl,amount,currency){
   if(navigator.vibrate)navigator.vibrate([12,40,12]);
 }
 
-/* ═══ إرسال الطلب إلى المحادثة الداخلية ثم الانتقال إليها ═══ */
-var CH_SB='https://vyxzlazwpbstigcqvizb.supabase.co';
-var CH_KEY='sb_publishable_scXFuYtWG2dkz8_CaPEvAg_Yj2_sxnO';
-var CH_H={'apikey':CH_KEY,'Authorization':'Bearer '+CH_KEY};
-async function chSha(t){var h=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(t));
-  return Array.from(new Uint8Array(h)).map(function(x){return x.toString(16).padStart(2,'0');}).join('');}
+/* ═══ إرسال الطلب إلى محادثة ARKAN v2 ═══
+   نحفظ تفاصيل الطلب محليًا، وchat-v2 ينشئه داخل المحادثة الموثقة (RLS) */
 async function sendToChat(ref){
   var d=window._pdfData||{};
-  /* جهاز المالك: إلى صندوق المحادثات مباشرة — لا يُنشأ له حساب عميل */
-  try{
-    if(localStorage.getItem('arkan_chat_pin')){
-      localStorage.removeItem('arkan_client_code');
-      var em2=new URLSearchParams(location.search).get('embed');
-      if(em2&&window.parent!==window){try{parent.postMessage('arkanReqDone','*');}catch(e){}return;}
-      location.href='chat.html';
-      return;
-    }
-  }catch(e){}
-  var cb=document.getElementById('okChatBtn');
-  if(cb){cb.disabled=true;cb.textContent='جارٍ فتح محادثتك…';}
-  try{
-    /* 1) محادثة العميل: الموجودة على الجهاز أو أنشئ جديدة باسمه */
-    var code=null,conv=null;
-    try{code=localStorage.getItem('arkan_client_code');}catch(e){}
-    if(code){
-      var r=await fetch(CH_SB+'/rest/v1/conversations?select=id,client_code,client_name&client_code=eq.'+encodeURIComponent(code),{headers:CH_H});
-      var a=await r.json(); if(a&&a[0])conv=a[0];
-    }
-    if(!conv){
-      var alpha='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-      code='';var rnd=crypto.getRandomValues(new Uint8Array(9));
-      for(var i=0;i<9;i++)code+=alpha[rnd[i]%32];
-      var name=(d.sender||'').trim()||('عميل '+(d.senderPhone||ref));
-      var cr=await fetch(CH_SB+'/rest/v1/conversations',{method:'POST',
-        headers:Object.assign({'Content-Type':'application/json','Prefer':'return=representation'},CH_H),
-        body:JSON.stringify({client_name:name,client_code:code})});
-      var ca=await cr.json(); conv=ca&&ca[0];
-      if(conv)try{localStorage.setItem('arkan_client_code',code);}catch(e){}
-    }
-    if(!conv)throw new Error('conv');
-    /* 2) بطاقة الطلب داخل المحادثة */
-    var amtN=parseFloat(String(d.amount).replace(/[^\d.]/g,''))||0;
-    var note=[d.bname,d.bank,d.iban?('حساب '+d.iban):'', 'مرجع '+ref].filter(Boolean).join(' · ');
-    await fetch(CH_SB+'/rest/v1/messages',{method:'POST',
-      headers:Object.assign({'Content-Type':'application/json','Prefer':'return=minimal'},CH_H),
-      body:JSON.stringify({conv_id:conv.id,sender:'client',kind:'treq',body:'',
-        meta:{treq:{amount:amtN,from:d.from||'',to:d.to||'',note:note},via:'request',ref:ref},
-        hash:await chSha(conv.id+'|'+ref)})});
-    /* 3) صورة الإيصال — نسخة خفيفة سريعة للمحادثة (JPEG 1080) */
-    try{
-      var cv=await buildReceiptCanvas();
-      var lw=1080, lc=document.createElement('canvas');
-      lc.width=lw; lc.height=Math.round(cv.height*lw/cv.width);
-      lc.getContext('2d').drawImage(cv,0,0,lc.width,lc.height);
-      var jpg=await new Promise(function(r){lc.toBlob(r,'image/jpeg',0.85);});
-      var path=conv.id+'/req_'+Date.now()+'.jpg';
-      var up=await fetch(CH_SB+'/storage/v1/object/chat/'+path,{method:'POST',
-        headers:Object.assign({'Content-Type':'image/jpeg'},CH_H),body:jpg});
-      if(up.ok){
-        await fetch(CH_SB+'/rest/v1/messages',{method:'POST',
-          headers:Object.assign({'Content-Type':'application/json','Prefer':'return=minimal'},CH_H),
-          body:JSON.stringify({conv_id:conv.id,sender:'client',kind:'image',body:'',
-            file_url:CH_SB+'/storage/v1/object/public/chat/'+path,
-            file_name:'ARKAN_'+ref+'.jpg',meta:{size:jpg.size,via:'request',ref:ref},
-            hash:await chSha(conv.id+'|'+path)})});
-      }
-    }catch(e){}
-    await fetch(CH_SB+'/rest/v1/conversations?id=eq.'+conv.id,{method:'PATCH',
-      headers:Object.assign({'Content-Type':'application/json','Prefer':'return=minimal'},CH_H),
-      body:JSON.stringify({last_msg:'طلب تحويل '+amtN.toLocaleString('en-US')+' '+(d.from||''),last_at:new Date().toISOString()})});
-    /* 4) الانتقال للمحادثة — أو إغلاق المتصفح الداخلي إن كنا داخله */
-    var emb=new URLSearchParams(location.search).get('embed');
-    if(emb&&window.parent!==window){
-      try{parent.postMessage('arkanReqDone','*');}catch(e){}
-      return;
-    }
-    location.href='chat.html?c='+conv.client_code;
-  }catch(e){
-    if(cb){cb.disabled=false;cb.textContent='💬 متابعة داخل محادثة ARKAN';}
-    alert('تعذر فتح المحادثة الآن — استخدم زر واتساب');
-  }
+  var amtN=parseFloat(String(d.amount).replace(/[^\d.]/g,''))||0;
+  try{localStorage.setItem('arkan_pending_treq',JSON.stringify({
+    ref:ref,amount:amtN,from:d.from||'MRU',to:d.to||'AOA',
+    beneficiary:d.bname||'',bank:d.bank||'',iban:d.iban||'',
+    sender:d.sender||'',senderPhone:d.senderPhone||'',ts:Date.now()
+  }));}catch(e){}
+  var emb=new URLSearchParams(location.search).get('embed');
+  if(emb&&window.parent!==window){try{parent.postMessage('arkanReqDone','*');}catch(e){}return;}
+  location.href='chat-v2.html';
 }
 function showSuccess(amount,currency,ref,waUrl){
   var el=document.getElementById('okWrap');
