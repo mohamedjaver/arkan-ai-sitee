@@ -439,6 +439,8 @@ async function login(phone, pin, silent){
     SESSION = {phone,pin};
     localStorage.setItem('arkan_session', JSON.stringify(SESSION));
     USER = snap.data();
+    const nxt=new URLSearchParams(location.search).get('next');
+    if(nxt&&/^[a-z0-9_-]+\.html$/i.test(nxt)){location.href=nxt;return;}
     openApp(phone);
   } catch(e){ console.error(e); if(!silent) gErr('تعذّر الاتصال — حاول ثانية'); }
   finally { $('gEnter').disabled=false; $('gEnter').textContent='دخول'; }

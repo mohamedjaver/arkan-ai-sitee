@@ -10,12 +10,6 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="vendor/supabase.js"></script>
-<script>
-/* حارس تحميل Supabase — fallback إلى CDN إن فشل الملف المحلي */
-if(!window.supabase||!window.supabase.createClient){
-  document.write('<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"><\/script>');
-}
-</script>
 <style>
 /* ═══ ARKAN Pay 2026 · نظام الألوان المعتمد ═══ */
 :root{
@@ -301,17 +295,18 @@ svg{display:block}
 </style>
 </head>
 <body>
+<div id="bootScreen" style="position:fixed;inset:0;z-index:9000;background:#F6FAFD;display:flex;align-items:center;justify-content:center;font-family:system-ui;color:#0B2F70">
+  <div style="text-align:center">
+    <div style="width:44px;height:44px;border:3px solid #cfe3ff;border-top-color:#19A9F5;border-radius:50%;animation:bspin .8s linear infinite;margin:0 auto 14px"></div>
+    <div id="bootMsg" style="font-size:13px;color:#5b6b8c">جارٍ التحميل…</div>
+  </div>
+</div>
+<style>@keyframes bspin{to{transform:rotate(360deg)}}</style>
 <script>
-window.addEventListener('error',function(e){
-  if(document.body&&!document.body.dataset.booted&&!document.querySelector('.screen.on,#scList[style*="block"]')){
-    var m=(e&&e.message)||'خطأ غير معروف';
-    var d=document.getElementById('errBox');
-    if(!d){d=document.createElement('div');d.id='errBox';
-      d.style.cssText='position:fixed;inset:0;z-index:99999;background:#fff;display:flex;align-items:center;justify-content:center;padding:28px;text-align:center;font-family:system-ui;color:#0B2F70';
-      document.body.appendChild(d);}
-    d.innerHTML='<div>تعذّر التحميل.<br><small style="color:#8497b8;font-size:11px;direction:ltr;display:block;margin:8px 0">'+String(m).slice(0,120)+'</small><button onclick="location.reload()" style="margin-top:10px;padding:11px 20px;border:0;border-radius:12px;background:#19A9F5;color:#fff;font-weight:800">إعادة المحاولة</button></div>';
-  }
-});
+function bmsg(t){var e=document.getElementById('bootMsg');if(e)e.textContent=t;}
+function bfail(t){var s=document.getElementById('bootScreen');if(s)s.innerHTML='<div style="text-align:center;padding:28px;font-family:system-ui;color:#0B2F70"><div style="font-size:15px;font-weight:700;margin-bottom:6px">تعذّر التحميل</div><div style="font-size:12px;color:#8497b8;direction:ltr;margin-bottom:14px">'+String(t).slice(0,140)+'</div><button onclick="location.reload()" style="padding:11px 22px;border:0;border-radius:12px;background:#19A9F5;color:#fff;font-weight:800">إعادة المحاولة</button> <button onclick="localStorage.removeItem(\'arkan_session\');localStorage.removeItem(\'arkanClient\');location.href=\'account.html?next=chat-v2.html\'" style="padding:11px 22px;border:0;border-radius:12px;background:#0B2F70;color:#fff;font-weight:800;margin-top:8px">تسجيل الدخول</button></div>';}
+window.addEventListener('error',function(e){bfail((e&&e.message)||'خطأ');});
+window.addEventListener('unhandledrejection',function(e){bfail((e&&e.reason&&e.reason.message)||'خطأ في الاتصال');});
 </script>
 
 <div id="offline">لا يوجد اتصال — سيُعاد الإرسال تلقائيًا</div>
@@ -600,28 +595,40 @@ async function dec(s){
 }
 
 /* ═══ 3) الإقلاع ═══ */
+async function loadSupabase(){
+  if(window.supabase&&window.supabase.createClient)return true;
+  return new Promise(res=>{
+    const s=document.createElement('script');
+    s.src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js';
+    s.onload=()=>res(!!(window.supabase&&window.supabase.createClient));
+    s.onerror=()=>res(false);
+    document.head.appendChild(s);
+  });
+}
 async function boot(){
+  bmsg('التحقق من المكوّنات…');
   if(!window.supabase||!window.supabase.createClient){
-    document.body.innerHTML='<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:30px;text-align:center;font-family:system-ui;color:#0B2F70"><div>تعذّر تحميل مكوّن أساسي (اتصال ضعيف).<br><button onclick="location.reload()" style="margin-top:14px;padding:12px 22px;border:0;border-radius:12px;background:#19A9F5;color:#fff;font-weight:800;font-size:15px">إعادة المحاولة</button></div></div>';
-    return;
+    const ok=await loadSupabase();
+    if(!ok){bfail('تعذّر تحميل Supabase — اتصال ضعيف');return;}
   }
+  bmsg('التحقق من الجلسة…');
   const sess=getSession();
   if(!sess){location.replace('login.html?next=chat-v2.html');return;}
   if(!sess.pin&&!window.ARKAN_ID_TOKEN){{const r=await askPin(sess.phone);sess.pin=r.pin;sess.phone=r.phone;}}
   let jwt;
+  bmsg('تأكيد الهوية…');
   try{jwt=await getJWT(sess);}
   catch(e){
-    /* رمز خاطئ؟ امنحه محاولات إضافية */
     localStorage.removeItem('arkan_sb_jwt');
     let tries=0,ok=false;
     while(tries<2&&!ok){
       tries++;{const r=await askPin(sess.phone);sess.pin=r.pin;sess.phone=r.phone;}
       try{jwt=await getJWT(sess);ok=true;}catch(e2){}
     }
-    if(!ok){toast('تعذر تسجيل الدخول — تحقق من رقم الهاتف والرمز السري');
-      $('convList').innerHTML='<div class="empty">تعذر تسجيل الدخول للمحادثات.<br>حاول مجددًا لاحقًا.</div>';return;}
+    if(!ok){bfail('تعذّر تسجيل الدخول — تحقق من الرقم والرمز، أو أنشئ حسابًا');return;}
   }
   try{localStorage.setItem('arkan_session',JSON.stringify({phone:sess.phone,pin:sess.pin,name:sess.name||''}));}catch(e){}
+  bmsg('الاتصال بالخادم…');
   MY_ID=jwt.user_id;
   sb=window.supabase.createClient(SB_URL,SB_KEY,{
     global:{headers:{Authorization:'Bearer '+jwt.token}},
@@ -629,6 +636,7 @@ async function boot(){
   });
   try{sb.realtime.setAuth(jwt.token);}catch(e){}
 
+  bmsg('تهيئة المحادثة…');
   /* إنشاء/استرجاع المحادثة الدائمة — idempotent (يتحمّل الفشل) */
   let row=null;
   try{
@@ -641,6 +649,7 @@ async function boot(){
   const {data:me}=await sb.from('chat_users').select('*').eq('id',MY_ID).single();
   MY_PROFILE=me||{};MY_ROLE=me?.role||'customer';
   document.body.dataset.booted='1';
+  {var _bs=document.getElementById('bootScreen');if(_bs)_bs.remove();}
 
   flushQueue(); /* رسائل معلّقة من جلسة سابقة */
   window.addEventListener('online',()=>{$('offline').classList.remove('on');flushQueue();});
