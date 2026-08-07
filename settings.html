@@ -71,6 +71,17 @@ body{font-family:Inter,'IBM Plex Sans Arabic',system-ui,sans-serif;background:va
     <div class="fld"><label>اللغة المفضلة</label>
       <select id="fLang"><option value="ar">العربية</option><option value="fr">Français</option><option value="pt">Português</option></select></div>
     <button class="save" id="saveB" onclick="save()">حفظ التغييرات</button>
+
+    <div style="margin-top:26px;padding-top:20px;border-top:1px solid #E3EDF9">
+      <div style="font-weight:800;font-size:15.5px;color:#0B2F70;margin-bottom:12px">🔒 الأمان — تغيير الرمز السري</div>
+      <label class="lb">الرمز الحالي</label>
+      <input class="in" id="pinOld" inputmode="numeric" maxlength="4" placeholder="••••" style="text-align:center;letter-spacing:8px;direction:ltr">
+      <label class="lb">الرمز الجديد (4 أرقام)</label>
+      <input class="in" id="pinNew" inputmode="numeric" maxlength="4" placeholder="••••" style="text-align:center;letter-spacing:8px;direction:ltr">
+      <label class="lb">تأكيد الرمز الجديد</label>
+      <input class="in" id="pinNew2" inputmode="numeric" maxlength="4" placeholder="••••" style="text-align:center;letter-spacing:8px;direction:ltr">
+      <button class="save" id="pinB" onclick="changePin()" style="background:linear-gradient(135deg,#0B2F70,#0A56B8)">تغيير الرمز السري</button>
+    </div>
   </div>
 </div>
 <input type="file" id="fCam" accept="image/*" capture="user" hidden>
@@ -149,6 +160,30 @@ async function save(){
   toast('حُفظت التغييرات ✓');
 }
 boot();
+
+/* ═══ تغيير الرمز السري ═══ */
+const PIN_API='https://arkan-ai-site-production.up.railway.app';
+async function changePin(){
+  const o=$('pinOld').value.replace(/\D/g,''),n=$('pinNew').value.replace(/\D/g,''),n2=$('pinNew2').value.replace(/\D/g,'');
+  if(o.length!==4)return toast('أدخل الرمز الحالي');
+  if(n.length!==4)return toast('الرمز الجديد 4 أرقام');
+  if(n!==n2)return toast('الرمزان غير متطابقين');
+  let phone='';try{const s=JSON.parse(localStorage.getItem('arkan_session')||'{}');phone=s.phone||'';}catch(e){}
+  if(!phone)return toast('سجّل دخولك أولًا');
+  $('pinB').disabled=true;$('pinB').textContent='جارٍ التغيير…';
+  try{
+    const r=await fetch(PIN_API+'/change-pin',{method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({phone,oldPin:o,newPin:n})});
+    const j=await r.json();
+    if(!j.ok)throw new Error(j.err||'فشل');
+    try{const s=JSON.parse(localStorage.getItem('arkan_session')||'{}');s.pin=n;
+      localStorage.setItem('arkan_session',JSON.stringify(s));}catch(e){}
+    ['pinOld','pinNew','pinNew2'].forEach(i=>$(i).value='');
+    toast('تم تغيير الرمز السري ✓');
+  }catch(e){toast(e.message||'تعذر التغيير');}
+  $('pinB').disabled=false;$('pinB').textContent='تغيير الرمز السري';
+}
 </script>
 </body>
 </html>

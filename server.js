@@ -380,6 +380,35 @@ app.post('/supabase-token', async (req, res) => {
   }
 });
 
+/* ── تغيير الرمز السري PIN ── */
+const pinHits = new Map();
+app.post('/change-pin', async (req, res) => {
+  try {
+    if (!fbReady) return res.status(503).json({ ok: false, err: 'الخدمة غير متاحة مؤقتًا' });
+    const p = normPhone(req.body.phone);
+    if (!validPhone(p)) return res.status(400).json({ ok: false, err: 'رقم غير صالح' });
+    const hist = (pinHits.get(p) || []).filter(t => nowMs() - t < 3600000);
+    if (hist.length >= 5) return res.status(429).json({ ok: false, err: 'محاولات كثيرة — انتظر ساعة' });
+    hist.push(nowMs()); pinHits.set(p, hist);
+
+    const oldPin = String(req.body.oldPin || '').replace(/\D/g, '');
+    const newPin = String(req.body.newPin || '').replace(/\D/g, '');
+    if (newPin.length !== 4) return res.status(400).json({ ok: false, err: 'الرمز الجديد 4 أرقام' });
+    if (newPin === oldPin) return res.status(400).json({ ok: false, err: 'الرمز الجديد مطابق للقديم' });
+
+    const ref = admin.firestore().doc(`users/${p}`);
+    const snap = await ref.get();
+    if (!snap.exists || String(snap.data().pin) !== oldPin)
+      return res.status(401).json({ ok: false, err: 'الرمز الحالي غير صحيح' });
+
+    await ref.update({ pin: newPin, pinChangedAt: Date.now() });
+    res.json({ ok: true });
+  } catch (e) {
+    console.error('change-pin:', e.message);
+    res.status(500).json({ ok: false, err: 'خطأ في الخادم' });
+  }
+});
+
 app.get('/health', (req, res) => res.json({
   ok: true,
   pending: Object.values(DB.orders).filter(o => o.status === 'pending').length,
