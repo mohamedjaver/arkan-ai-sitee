@@ -395,6 +395,9 @@ function canonPhone(input, defaultCc){
   var d=String(input||'').replace(/\D/g,'');
   if(d.startsWith('00'))d=d.slice(2);
   if(d.startsWith('222')||d.startsWith('244'))return d;
+  // رقم محلي: استنتج الدولة من الطول والبادئة (متطابق مع الخادم)
+  if(/^\d{8}$/.test(d))return '222'+d;      // موريتانيا: 8 أرقام
+  if(/^9\d{8}$/.test(d))return '244'+d;     // أنغولا: 9 أرقام تبدأ بـ9
   var ccDigits=String(defaultCc||'+222').replace(/\D/g,'')||'222';
   return ccDigits+d;
 }
