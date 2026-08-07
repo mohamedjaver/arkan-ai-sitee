@@ -12,6 +12,8 @@
 import express from 'express';
 import crypto from 'crypto';
 import admin from 'firebase-admin';
+import jwt from 'jsonwebtoken';
+import { v5 as uuidv5 } from 'uuid';
 
 const app = express();
 app.use(express.json({ limit: '32kb' }));
@@ -115,6 +117,59 @@ app.post('/otp/verify', async (req, res) => {
   }
 });
 
-app.get('/health', (req, res) => res.json({ ok: true, fb: fbReady, wa: !!process.env.WA_TOKEN }));
+/* ═══ ARKAN Chat v2 — إصدار Supabase JWT (يفعّل RLS الحقيقي) ═══
+   Env جديد في Railway: SUPABASE_JWT_SECRET (من Supabase → Settings → API → JWT Secret) */
+const ARKAN_NS = '7c9e6679-7425-40de-944b-e07fc1f90ae7'; // لا تغيّره أبدًا بعد الإطلاق
+const OWNER_PHONES = ['22236295050'];
+const sbHits = new Map(); // phone -> [timestamps]
+
+const phoneToUuid = (phone) => uuidv5(String(phone).replace(/\D/g, ''), ARKAN_NS);
+
+app.post('/supabase-token', async (req, res) => {
+  try {
+    if (!process.env.SUPABASE_JWT_SECRET) return res.status(503).json({ error: 'SUPABASE_JWT_SECRET غير مضبوط' });
+    const p = normPhone(req.body.phone);
+    if (!validPhone(p)) return res.status(400).json({ error: 'invalid phone' });
+
+    const hist = (sbHits.get(p) || []).filter(t => now() - t < 3600000);
+    if (hist.length >= 20) return res.status(429).json({ error: 'محاولات كثيرة — انتظر ساعة' });
+    hist.push(now()); sbHits.set(p, hist);
+
+    const { firebaseIdToken, pin } = req.body || {};
+    let verified = false;
+
+    if (firebaseIdToken && fbReady) {
+      const decoded = await admin.auth().verifyIdToken(firebaseIdToken);
+      const snap = await admin.firestore().doc(`users/${p}`).get();
+      verified = snap.exists && !!decoded.uid;
+    } else if (pin && fbReady) {
+      const snap = await admin.firestore().doc(`users/${p}`).get();
+      verified = snap.exists && String(snap.data().pin) === String(pin);
+    }
+
+    if (!verified) return res.status(401).json({ error: 'auth failed' });
+
+    const sub = phoneToUuid(p);
+    const role = OWNER_PHONES.includes(p) ? 'owner' : 'customer';
+    const ts = Math.floor(Date.now() / 1000);
+
+    const token = jwt.sign({
+      sub,
+      role: 'authenticated',   // دور Postgres — لا تغيّره
+      aud: 'authenticated',
+      arkan_role: role,
+      phone: p,
+      iat: ts,
+      exp: ts + 60 * 60 * 24,  // 24 ساعة
+    }, process.env.SUPABASE_JWT_SECRET);
+
+    res.json({ token, user_id: sub, arkan_role: role, expires_in: 86400 });
+  } catch (e) {
+    console.error('supabase-token:', e.message);
+    res.status(500).json({ error: 'server error' });
+  }
+});
+
+app.get('/health', (req, res) => res.json({ ok: true, fb: fbReady, wa: !!process.env.WA_TOKEN, sb: !!process.env.SUPABASE_JWT_SECRET }));
 
 app.listen(process.env.PORT || 3000, () => console.log('ARKAN OTP يعمل ✓'));

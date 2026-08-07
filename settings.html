@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>ARKAN — إعدادات الحساب</title>
+<link rel="icon" href="favicon.svg">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="vendor/supabase.js"></script>
+<style>
+:root{--sky:#19A9F5;--blue:#0A56B8;--navy:#0B2F70;--paper:#F6FAFD;--ink:#0B1B33;--mut:#5B6B85;
+  --line:rgba(11,47,112,.08);--grad:linear-gradient(135deg,#19A9F5,#0A56B8);
+  --sat:env(safe-area-inset-top,0px);--sab:env(safe-area-inset-bottom,0px)}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{font-family:Inter,'IBM Plex Sans Arabic',system-ui,sans-serif;background:var(--paper);color:var(--ink);min-height:100vh}
+.head{display:flex;align-items:center;gap:12px;padding:calc(var(--sat) + 14px) 18px 14px}
+.head h1{font-size:19px;font-weight:800}
+.back{width:38px;height:38px;border-radius:13px;background:#fff;border:1px solid var(--line);display:grid;place-items:center}
+.wrap{max-width:520px;margin:0 auto;padding:6px 18px calc(var(--sab) + 30px)}
+.avbox{display:flex;flex-direction:column;align-items:center;gap:14px;margin:14px 0 26px}
+.avatar{width:112px;height:112px;border-radius:50%;background:var(--grad);color:#fff;display:grid;place-items:center;
+  font-size:42px;font-weight:800;background-size:cover;background-position:center;position:relative;
+  box-shadow:0 10px 30px rgba(10,86,184,.25)}
+.avatar .edit{position:absolute;bottom:2px;inset-inline-end:2px;width:34px;height:34px;border-radius:50%;
+  background:#fff;border:1px solid var(--line);display:grid;place-items:center;color:var(--navy);box-shadow:0 3px 10px rgba(11,47,112,.15)}
+.avbtns{display:flex;gap:10px}
+.avbtns button{font-size:12.5px;font-weight:700;padding:9px 15px;border-radius:999px;background:#fff;
+  border:1px solid var(--line);color:var(--navy);cursor:pointer;font-family:inherit}
+.avbtns button.d{color:#DC2626}
+.card{background:#fff;border:1px solid var(--line);border-radius:20px;padding:18px;box-shadow:0 4px 18px rgba(11,47,112,.05)}
+.fld{margin-bottom:15px}
+.fld label{display:block;font-size:12px;font-weight:700;color:var(--mut);margin-bottom:6px}
+.fld input,.fld select{width:100%;background:var(--paper);border:1px solid var(--line);border-radius:13px;
+  padding:13px 15px;font:inherit;font-size:15px;outline:0}
+.fld input:focus,.fld select:focus{border-color:var(--sky);box-shadow:0 0 0 3px rgba(25,169,245,.14)}
+.fld input[readonly]{opacity:.65}
+.save{width:100%;margin-top:8px;padding:15px;border:0;border-radius:15px;background:var(--grad);color:#fff;
+  font:inherit;font-weight:800;font-size:15px;cursor:pointer;box-shadow:0 8px 22px rgba(10,86,184,.3)}
+.save:disabled{opacity:.55}
+#toast{position:fixed;bottom:calc(var(--sab) + 26px);inset-inline-start:50%;transform:translate(-50%,12px);
+  background:var(--navy);color:#fff;font-size:13px;font-weight:600;border-radius:12px;padding:11px 18px;
+  opacity:0;pointer-events:none;transition:.22s;z-index:99}
+#toast.on{opacity:1;transform:translate(-50%,0)}
+</style>
+</head>
+<body>
+<div class="head">
+  <button class="back" onclick="history.length>1?history.back():location.href='chat-v2.html'">
+    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#0B2F70" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+  </button>
+  <h1>إعدادات الحساب</h1>
+</div>
+<div class="wrap">
+  <div class="avbox">
+    <div class="avatar" id="av" onclick="pick('img')">
+      <span id="avL">؟</span>
+      <span class="edit"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 8h3l2-2h6l2 2h3v11H4z"/><circle cx="12" cy="13" r="3.2"/></svg></span>
+    </div>
+    <div class="avbtns">
+      <button onclick="pick('cam')">📷 التقاط بالكاميرا</button>
+      <button onclick="pick('img')">🖼 من الهاتف</button>
+      <button class="d" id="delB" onclick="delAvatar()" style="display:none">حذف الصورة</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="fld"><label>الاسم الكامل</label><input id="fName" placeholder="الاسم الكامل"></div>
+    <div class="fld"><label>رقم الهاتف</label><input id="fPhone" readonly dir="ltr"></div>
+    <div class="fld"><label>الدولة</label>
+      <select id="fCty"><option value="">—</option><option>موريتانيا</option><option>أنغولا</option><option>الصين</option><option>الإمارات</option><option>المغرب</option><option>السنغال</option><option>أخرى</option></select></div>
+    <div class="fld"><label>اللغة المفضلة</label>
+      <select id="fLang"><option value="ar">العربية</option><option value="fr">Français</option><option value="pt">Português</option></select></div>
+    <button class="save" id="saveB" onclick="save()">حفظ التغييرات</button>
+  </div>
+</div>
+<input type="file" id="fCam" accept="image/*" capture="user" hidden>
+<input type="file" id="fImg" accept="image/*" hidden>
+<div id="toast"></div>
+
+<script>
+const SB_URL='https://vyxzlazwpbstigcqvizb.supabase.co';
+const SB_KEY='sb_publishable_scXFuYtWG2dkz8_CaPEvAg_Yj2_sxnO';
+const $=id=>document.getElementById(id);
+const toast=t=>{const e=$('toast');e.textContent=t;e.classList.add('on');clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove('on'),2500);};
+let sb=null,ME=null,MY_ID=null;
+
+async function boot(){
+  const jwt=JSON.parse(localStorage.getItem('arkan_sb_jwt')||'null');
+  if(!jwt||jwt.exp<Date.now()/1000){location.replace('chat-v2.html');return;}
+  MY_ID=jwt.user_id;
+  sb=window.supabase.createClient(SB_URL,SB_KEY,{global:{headers:{Authorization:'Bearer '+jwt.token}}});
+  const {data}=await sb.from('chat_users').select('*').eq('id',MY_ID).single();
+  ME=data||{};
+  $('fName').value=ME.full_name||'';
+  $('fPhone').value='+'+(ME.phone||jwt.phone||'');
+  $('fCty').value=ME.country||'';
+  $('fLang').value=ME.preferred_language||'ar';
+  paintAvatar(ME.avatar_url,ME.full_name);
+}
+function paintAvatar(url,name){
+  const av=$('av');
+  if(url){av.style.backgroundImage=`url('${url}?t=${Date.now()}')`;$('avL').textContent='';$('delB').style.display='inline-block';}
+  else{av.style.backgroundImage='';$('avL').textContent=(name||'؟')[0];$('delB').style.display='none';}
+}
+function pick(k){ ({cam:$('fCam'),img:$('fImg')})[k].click(); }
+['fCam','fImg'].forEach(id=>$(id).addEventListener('change',e=>{
+  const f=e.target.files[0];e.target.value='';if(f)upAvatar(f);
+}));
+
+async function upAvatar(f){
+  if(!f.type.startsWith('image/'))return toast('يرجى اختيار صورة');
+  if(f.size>10*1024*1024)return toast('الحد الأقصى 10MB');
+  toast('جارٍ ضغط الصورة…');
+  const img=await createImageBitmap(f).catch(()=>null);
+  if(!img)return toast('تعذر قراءة الصورة');
+  const S=512,sc=Math.max(S/img.width,S/img.height);
+  const cv=document.createElement('canvas');cv.width=S;cv.height=S;
+  const ctx=cv.getContext('2d');
+  ctx.drawImage(img,(S-img.width*sc)/2,(S-img.height*sc)/2,img.width*sc,img.height*sc);
+  const blob=await new Promise(r=>cv.toBlob(r,'image/jpeg',.85));
+  toast('جارٍ الرفع…');
+  const path=`${MY_ID}/avatar.jpg`;
+  const up=await sb.storage.from('avatars').upload(path,blob,{contentType:'image/jpeg',upsert:true});
+  if(up.error)return toast('فشل الرفع');
+  const url=sb.storage.from('avatars').getPublicUrl(path).data.publicUrl;
+  const {error}=await sb.from('chat_users').update({avatar_url:url}).eq('id',MY_ID);
+  if(error)return toast('تعذر الحفظ');
+  ME.avatar_url=url;paintAvatar(url,ME.full_name);
+  toast('تم تحديث الصورة ✓'); /* Realtime على chat_users يحدّثها فورًا لدى المالك */
+}
+async function delAvatar(){
+  if(!confirm('حذف الصورة الشخصية؟'))return;
+  await sb.storage.from('avatars').remove([`${MY_ID}/avatar.jpg`]);
+  await sb.from('chat_users').update({avatar_url:null}).eq('id',MY_ID);
+  ME.avatar_url=null;paintAvatar(null,$('fName').value);
+  toast('حُذفت الصورة');
+}
+async function save(){
+  const name=$('fName').value.trim();
+  if(name.length<3)return toast('أدخل الاسم الكامل');
+  $('saveB').disabled=true;
+  const {error}=await sb.from('chat_users').update({
+    full_name:name,country:$('fCty').value||null,preferred_language:$('fLang').value
+  }).eq('id',MY_ID);
+  $('saveB').disabled=false;
+  if(error)return toast('تعذر الحفظ');
+  localStorage.setItem('arkan_lang',$('fLang').value);
+  paintAvatar(ME.avatar_url,name);
+  toast('حُفظت التغييرات ✓');
+}
+boot();
+</script>
+</body>
+</html>
