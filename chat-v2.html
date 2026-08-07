@@ -607,11 +607,14 @@ async function boot(){
   });
   try{sb.realtime.setAuth(jwt.token);}catch(e){}
 
-  /* إنشاء/استرجاع المحادثة الدائمة — idempotent */
-  const {data,error}=await sb.rpc('ensure_my_conversation',
-    {p_name:sess.name,p_phone:sess.phone,p_lang:localStorage.getItem('arkan_lang')||'ar'});
-  if(error){toast('خطأ في تهيئة المحادثة');console.error(error);return;}
-  const row=Array.isArray(data)?data[0]:data;
+  /* إنشاء/استرجاع المحادثة الدائمة — idempotent (يتحمّل الفشل) */
+  let row=null;
+  try{
+    const {data,error}=await sb.rpc('ensure_my_conversation',
+      {p_name:sess.name,p_phone:sess.phone,p_lang:localStorage.getItem('arkan_lang')||'ar'});
+    if(!error)row=Array.isArray(data)?data[0]:data;
+    else console.warn('ensure_my_conversation:',error.message);
+  }catch(e){console.warn('rpc:',e);}
 
   const {data:me}=await sb.from('chat_users').select('*').eq('id',MY_ID).single();
   MY_PROFILE=me||{};MY_ROLE=me?.role||'customer';
