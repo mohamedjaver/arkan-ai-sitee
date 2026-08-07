@@ -508,13 +508,14 @@ let CONV=null, CONVS=[], MSGS=[], KEY=null, SUB=null, PRES=null;
 let FILTER='all', REPLY=null, PROFILES={}, SIGNED={}, XREQS={};
 
 /* ═══ 1) الهوية: جلسة → Supabase JWT (RLS حقيقي) ═══ */
+function normPh(p){let d=String(p||'').replace(/\D/g,'');if(d.startsWith('00'))d=d.slice(2);if(/^\d{8}$/.test(d))d='222'+d;else if(/^9\d{8}$/.test(d))d='244'+d;return d;}
 function getSession(){
   try{
     const s=JSON.parse(localStorage.getItem('arkan_session')||'null');
-    if(s&&s.phone&&s.pin)return {phone:String(s.phone).replace(/[^\d]/g,''),name:s.name||'',pin:s.pin,via:'pin'};
+    if(s&&s.phone&&s.pin)return {phone:normPh(s.phone),name:s.name||'',pin:s.pin,via:'pin'};
     const c=JSON.parse(localStorage.getItem('arkanClient')||'null');
-    if(c&&c.phone)return {phone:String(c.phone).replace(/[^\d]/g,''),name:c.name||'',via:'otp'};
-    if(s&&s.phone)return {phone:String(s.phone).replace(/[^\d]/g,''),name:s.name||'',via:'otp'};
+    if(c&&c.phone)return {phone:normPh(c.phone),name:c.name||'',via:'otp'};
+    if(s&&s.phone)return {phone:normPh(s.phone),name:s.name||'',via:'otp'};
   }catch(e){}
   return null;
 }
@@ -529,7 +530,7 @@ function askPin(phone){
       <div id="pinPhoneWrap" style="margin:0 0 14px">
         <span id="pinPhoneTxt" style="color:#0A56B8;font-weight:700;direction:ltr;display:inline-block">+${phone}</span>
         <a id="pinChg" style="color:#19A9F5;font-size:12px;cursor:pointer;margin-inline-start:8px;text-decoration:underline">تغيير الرقم</a>
-        <input id="pinPhoneIn" inputmode="numeric" placeholder="222XXXXXXXX" style="display:none;width:190px;text-align:center;font-size:16px;padding:9px;border:2px solid #cfe3ff;border-radius:12px;outline:none;direction:ltr;margin-top:6px">
+        <input id="pinPhoneIn" inputmode="numeric" value="${phone}" placeholder="222XXXXXXXX" style="display:none;width:210px;text-align:center;font-size:16px;padding:9px;border:2px solid #cfe3ff;border-radius:12px;outline:none;direction:ltr;margin-top:6px">
       </div>
       <input id="pinIn" inputmode="numeric" maxlength="4" placeholder="••••" style="width:150px;text-align:center;font-size:26px;letter-spacing:12px;padding:12px;border:2px solid #19A9F5;border-radius:14px;outline:none">
       <div id="pinErr" style="color:#e2483d;font-size:12.5px;min-height:18px;margin-top:8px"></div>
@@ -542,10 +543,7 @@ function askPin(phone){
     w.querySelector('#pinGo').onclick=()=>{
       const p=inp.value.replace(/\D/g,'');
       if(p.length!==4){w.querySelector('#pinErr').textContent='الرمز 4 أرقام';return;}
-      let ph=(pIn.style.display!=='none'&&pIn.value)?pIn.value.replace(/\D/g,''):phone;
-      /* تطبيع: رقم محلي موريتاني (8 أرقام) أو أنغولي (9 أرقام تبدأ بـ9) */
-      if(/^\d{8}$/.test(ph))ph='222'+ph;
-      else if(/^9\d{8}$/.test(ph))ph='244'+ph;
+      let ph=(pIn.style.display!=='none'&&pIn.value)?normPh(pIn.value):normPh(phone);
       if(!/^(222\d{8}|244\d{9})$/.test(ph)){w.querySelector('#pinErr').textContent='رقم غير صالح — موريتانيا (222…) أو أنغولا (244…)';pIn.style.display='inline-block';w.querySelector('#pinPhoneTxt').style.display='none';w.querySelector('#pinChg').style.display='none';return;}
       w.remove();res({pin:p,phone:ph});
     };
