@@ -1,0 +1,36 @@
+<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>تشخيص</title></head>
+<body style="font-family:system-ui;padding:20px;background:#0B2F70;color:#fff;font-size:14px">
+<h2>تشخيص chat-v2</h2>
+<div id="log"></div>
+<script>
+var L=document.getElementById('log');
+function log(m,ok){L.innerHTML+='<div style="padding:8px;margin:4px 0;border-radius:8px;background:'+(ok?'#0a7d3c':'#b32c22')+'">'+m+'</div>';}
+window.onerror=function(m,s,l,c,e){log('❌ خطأ: '+m+' (سطر '+l+')',false);return true;};
+log('1. الصفحة تحمّل ✓',true);
+var sc=document.createElement('script');
+sc.src='vendor/supabase.js';
+sc.onload=function(){
+  log('2. vendor/supabase.js حُمّل ✓',true);
+  if(window.supabase&&window.supabase.createClient){log('3. supabase.createClient متاح ✓',true);}
+  else{log('3. ❌ supabase.createClient غير موجود',false);}
+  test4();
+};
+sc.onerror=function(){log('2. ❌ فشل تحميل vendor/supabase.js',false);test4cdn();};
+document.head.appendChild(sc);
+function test4(){
+  try{
+    var s=JSON.parse(localStorage.getItem('arkan_session')||'null');
+    var c=JSON.parse(localStorage.getItem('arkanClient')||'null');
+    log('4. الجلسة: session='+(s?JSON.stringify(s).slice(0,60):'لا يوجد')+' | client='+(c?JSON.stringify(c).slice(0,60):'لا يوجد'),!!(s||c));
+  }catch(e){log('4. ❌ خطأ قراءة الجلسة: '+e.message,false);}
+}
+function test4cdn(){
+  var s2=document.createElement('script');
+  s2.src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js';
+  s2.onload=function(){log('2b. supabase من CDN حُمّل ✓',true);test4();};
+  s2.onerror=function(){log('2b. ❌ فشل CDN أيضًا — مشكلة شبكة',false);};
+  document.head.appendChild(s2);
+}
+</script></body></html>
