@@ -471,7 +471,7 @@ svg{display:block}
    ═══════════════════════════════════════════════════════════════ */
 const SB_URL='https://vyxzlazwpbstigcqvizb.supabase.co';
 const SB_KEY='sb_publishable_scXFuYtWG2dkz8_CaPEvAg_Yj2_sxnO';
-const AUTH_URL = SB_URL + '/functions/v1/arkan-token'; // Edge Function — لا حاجة لـ Railway
+const AUTH_URL = 'https://arkan-ai-site-production.up.railway.app/supabase-token'; // خادم ARKAN OTP على Railway
 const MAX_FILE = 25*1024*1024, MAX_REC_SEC = 300;
 
 const $=id=>document.getElementById(id);
@@ -512,7 +512,7 @@ async function getJWT(sess){
   if(sess.pin)body.pin=sess.pin;
   body.name=sess.name||'';
   const r=await fetch(AUTH_URL,{method:'POST',
-    headers:{'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY},
+    headers:{'Content-Type':'application/json'},
     body:JSON.stringify(body)});
   if(!r.ok)throw new Error('auth');
   const j=await r.json();
