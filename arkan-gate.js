@@ -9,13 +9,15 @@
   var needAdmin = ADMIN.indexOf(here)>-1;
   var needClient = CLIENT_STRICT.indexOf(here)>-1;
 
-  /* إخفاء فوري حتى التحقق */
-  var st=document.createElement('style'); st.id='ark-gate-style';
-  st.textContent='body{visibility:hidden!important}';
-  (document.head||document.documentElement).appendChild(st);
+  /* إخفاء فوري حتى التحقق — عدا الصفحات ذات شاشة الإقلاع الخاصة */
+  var SELF_LOADER=['chat-v2.html'];
+  if(SELF_LOADER.indexOf(here)===-1){
+    var st=document.createElement('style'); st.id='ark-gate-style';
+    st.textContent='body{visibility:hidden!important}';
+    (document.head||document.documentElement).appendChild(st);
+  }
   function allow(){ var e=document.getElementById('ark-gate-style'); if(e)e.remove(); }
-  /* شبكة أمان: أظهر body دائمًا بعد ثانية مهما حدث — يمنع الصفحة البيضاء نهائيًا */
-  setTimeout(function(){ var e=document.getElementById('ark-gate-style'); if(e)e.remove(); },1200);
+  setTimeout(allow, 900);
   function denyLogin(){ location.replace((needClient?'account.html':'login.html')+'?next='+encodeURIComponent(here)); }
   function denyHome(){ location.replace('index.html'); }
   function session(){ try{return JSON.parse(localStorage.getItem('arkan_session')||'null');}catch(e){return null;} }
