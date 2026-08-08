@@ -1060,14 +1060,17 @@ function okToSuccess(ref,waUrl,amount,currency){
 async function sendToChat(ref){
   var d=window._pdfData||{};
   var amtN=parseFloat(String(d.amount).replace(/[^\d.]/g,''))||0;
+  var phone=(d.senderPhone||'').replace(/\D/g,'');
   try{localStorage.setItem('arkan_pending_treq',JSON.stringify({
     ref:ref,amount:amtN,from:d.from||'MRU',to:d.to||'AOA',
     beneficiary:d.bname||'',bank:d.bank||'',iban:d.iban||'',
-    sender:d.sender||'',senderPhone:d.senderPhone||'',ts:Date.now()
+    sender:d.sender||'',senderPhone:phone,ts:Date.now()
   }));}catch(e){}
   var emb=new URLSearchParams(location.search).get('embed');
   if(emb&&window.parent!==window){try{parent.postMessage('arkanReqDone','*');}catch(e){}return;}
-  location.href='chat-v2.html';
+  /* افتح المحادثة الجديدة (chat2) برقم العميل */
+  if(phone)location.href='chat2.html?phone='+encodeURIComponent(phone)+'&name='+encodeURIComponent(d.sender||'');
+  else location.href='chat2.html';
 }
 function showSuccess(amount,currency,ref,waUrl){
   var el=document.getElementById('okWrap');

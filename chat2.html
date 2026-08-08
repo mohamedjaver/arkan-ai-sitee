@@ -113,15 +113,18 @@ function lmsg(m){$('loadMsg').textContent=m;}
 
 async function boot(){
   const code=new URLSearchParams(location.search).get('c');
+  const phone=new URLSearchParams(location.search).get('phone');
+  const pname=new URLSearchParams(location.search).get('name')||'';
   const saved=JSON.parse(localStorage.getItem('arkan_chat2')||'null');
 
-  // 1) رابط عميل ?c=CODE
-  if(code){
+  // 1) رابط عميل ?c=CODE أو ?phone=RRR
+  if(code||phone){
     lmsg('فتح محادثتك…');
     try{
-      const r=await fetch(API+'/chat-api/session?c='+encodeURIComponent(code));
+      const q=code?('c='+encodeURIComponent(code)):('phone='+encodeURIComponent(phone)+'&name='+encodeURIComponent(pname));
+      const r=await fetch(API+'/chat-api/session?'+q);
       const txt=await r.text();
-      if(!r.ok){showErr('رابط غير صالح ('+r.status+'): '+txt.slice(0,200));return;}
+      if(!r.ok){showErr('تعذّر فتح المحادثة ('+r.status+'): '+txt.slice(0,150));return;}
       const j=JSON.parse(txt);
       TOKEN=j.token;ROLE='customer';MY_ID=j.user_id;CONV=j.conversation;
       localStorage.setItem('arkan_chat2',JSON.stringify({token:j.token,role:'customer',conv:j.conversation,name:j.name}));

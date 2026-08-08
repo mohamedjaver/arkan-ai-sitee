@@ -578,18 +578,23 @@ app.use('/chat-api', (req, res, next) => {
 app.get('/chat-api/session', async (req, res) => {
   try {
     const code = String(req.query.c || '').replace(/[^A-Za-z0-9]/g, '').toUpperCase();
-    if (!code) return res.status(400).json({ error: 'no code' });
-    // resolve_chat_link (security definer) يتجاوز RLS ويُنشئ المحادثة
-    const rr = await sbRpc('resolve_chat_link', { p_code: code });
-    if (!rr.ok || !Array.isArray(rr.data) || !rr.data.length) {
-      return res.status(404).json({ error: 'not found', sb: JSON.stringify(rr.data).slice(0, 200) });
+    const phone = req.query.phone ? normPhone(req.query.phone) : null;
+    let row = null;
+
+    if (code) {
+      const rr = await sbRpc('resolve_chat_link', { p_code: code });
+      if (rr.ok && Array.isArray(rr.data) && rr.data.length) row = rr.data[0];
+    } else if (phone) {
+      // جلسة بالرقم: أنشئ حساب العميل + كوده + محادثته، ثم حُلّها
+      const rr = await sbRpc('api_ensure_customer', { p_phone: phone, p_name: req.query.name || '' });
+      if (rr.ok && Array.isArray(rr.data) && rr.data.length) row = rr.data[0];
     }
-    const row = rr.data[0];
+    if (!row) return res.status(404).json({ error: 'not found', sb: 'no row' });
+
     const ts = Math.floor(Date.now() / 1000);
     const token = arkanSign({ uid: row.out_customer_id, role: 'customer', conv: row.out_conversation_id, iat: ts, exp: ts + 86400 * 30 });
-    // بيانات المحادثة
     const conv = { id: row.out_conversation_id, customer_id: row.out_customer_id };
-    res.json({ token, user_id: row.out_customer_id, role: 'customer', name: row.out_name || '', conversation: conv });
+    res.json({ token, user_id: row.out_customer_id, role: 'customer', name: row.out_name || '', code: row.out_code || null, conversation: conv });
   } catch (e) { console.error('chat-api/session:', e.message); res.status(500).json({ error: 'server', msg: e.message }); }
 });
 
