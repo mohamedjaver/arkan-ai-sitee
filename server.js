@@ -386,6 +386,14 @@ app.get('/chat-link/:code', async (req, res) => {
       return res.status(404).json({ error: 'code not found', status: r.status, sb: String(raw).slice(0, 300) });
     }
     const row = rows[0];
+    let convData = null;
+    try {
+      const rc = await fetch(`${sbUrl}/rest/v1/conversations_v2?id=eq.${row.out_conversation_id}&select=*`, {
+        headers: { 'apikey': SB_ANON, 'Authorization': `Bearer ${SB_ANON}` }
+      });
+      const arr = await rc.json();
+      if (Array.isArray(arr) && arr.length) convData = arr[0];
+    } catch (e) {}
 
     // أصدر توكن للعميل (sub = customer_id من القاعدة مباشرة)
     const ts = Math.floor(Date.now() / 1000);
@@ -396,6 +404,7 @@ app.get('/chat-link/:code', async (req, res) => {
     res.json({
       token, user_id: row.out_customer_id, arkan_role: 'customer',
       conversation_id: row.out_conversation_id, name: row.out_name || '',
+      conversation: convData,
       expires_in: 86400 * 30
     });
   } catch (e) {
