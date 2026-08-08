@@ -103,8 +103,9 @@ async function boot(){
     lmsg('فتح محادثتك…');
     try{
       const r=await fetch(API+'/chat-api/session?c='+encodeURIComponent(code));
-      if(!r.ok){showErr('رابط غير صالح أو منتهٍ');return;}
-      const j=await r.json();
+      const txt=await r.text();
+      if(!r.ok){showErr('رابط غير صالح ('+r.status+'): '+txt.slice(0,200));return;}
+      const j=JSON.parse(txt);
       TOKEN=j.token;ROLE='customer';MY_ID=j.user_id;CONV=j.conversation;
       localStorage.setItem('arkan_chat2',JSON.stringify({token:j.token,role:'customer',conv:j.conversation,name:j.name}));
       return openCustomer(j.conversation,j.name);
