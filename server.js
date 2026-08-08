@@ -648,6 +648,27 @@ app.post('/chat-api/read', async (req, res) => {
   res.json({ ok: true });
 });
 
+/* رفع ملف (صوت/صورة/مستند) عبر الخادم */
+app.post('/chat-api/upload', express.raw({ type: '*/*', limit: '30mb' }), async (req, res) => {
+  try {
+    const s = authArkan({ headers: req.headers, query: req.query });
+    if (!s) return res.status(401).json({ error: 'unauthorized' });
+    const ext = (req.query.ext || 'bin').replace(/[^a-z0-9]/gi, '');
+    const conv = String(req.query.conv || '').replace(/[^a-z0-9-]/gi, '');
+    if (s.role !== 'owner' && s.conv !== conv) return res.status(403).json({ error: 'forbidden' });
+    const path = `${conv}/${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${ext}`;
+    const sbUrl = process.env.SUPABASE_URL || 'https://vyxzlazwpbstigcqvizb.supabase.co';
+    const up = await fetch(`${sbUrl}/storage/v1/object/chat-media/${path}`, {
+      method: 'POST',
+      headers: { 'apikey': SB_PUB, 'Authorization': `Bearer ${SB_PUB}`, 'Content-Type': req.headers['content-type'] || 'application/octet-stream' },
+      body: req.body
+    });
+    if (!up.ok) { const t = await up.text(); return res.status(502).json({ error: 'upload failed', sb: t.slice(0, 200) }); }
+    const publicUrl = `${sbUrl}/storage/v1/object/public/chat-media/${path}`;
+    res.json({ path, url: publicUrl });
+  } catch (e) { console.error('upload:', e.message); res.status(500).json({ error: 'server', msg: e.message }); }
+});
+
 app.get('/health', (req, res) => res.json({
   ok: true,
   pending: Object.values(DB.orders).filter(o => o.status === 'pending').length,
