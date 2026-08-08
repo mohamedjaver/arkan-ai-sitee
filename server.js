@@ -372,15 +372,12 @@ app.get('/chat-link/:code', async (req, res) => {
     const code = String(req.params.code || '').replace(/[^A-Za-z0-9]/g, '').toUpperCase();
     if (code.length < 4) return res.status(400).json({ error: 'invalid code' });
 
-    // وقّع توكن service_role بأنفسنا (نملك السر) — يتجاوز RLS لاستدعاء الدالة
-    const svcTs = Math.floor(Date.now() / 1000);
-    const svcToken = jwt.sign({
-      role: 'service_role', iss: 'supabase', iat: svcTs, exp: svcTs + 300
-    }, process.env.SUPABASE_JWT_SECRET);
+    // الدالة security definer وممنوحة لـ anon — المفتاح العام يكفي
+    const SB_ANON = process.env.SUPABASE_ANON_KEY || 'sb_publishable_scXFuYtWG2dkz8_CaPEvAg_Yj2_sxnO';
     const sbUrl = process.env.SUPABASE_URL || 'https://vyxzlazwpbstigcqvizb.supabase.co';
     const r = await fetch(`${sbUrl}/rest/v1/rpc/resolve_chat_link`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'apikey': svcToken, 'Authorization': `Bearer ${svcToken}` },
+      headers: { 'Content-Type': 'application/json', 'apikey': SB_ANON, 'Authorization': `Bearer ${SB_ANON}` },
       body: JSON.stringify({ p_code: code })
     });
     const raw = await r.text();
