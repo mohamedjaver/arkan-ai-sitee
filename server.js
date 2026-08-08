@@ -390,12 +390,12 @@ app.get('/chat-link/:code', async (req, res) => {
     // أصدر توكن للعميل (sub = customer_id من القاعدة مباشرة)
     const ts = Math.floor(Date.now() / 1000);
     const token = jwt.sign({
-      sub: row.customer_id, role: 'authenticated', aud: 'authenticated',
-      arkan_role: 'customer', phone: row.customer_phone || '', iat: ts, exp: ts + 86400 * 30,
+      sub: row.out_customer_id, role: 'authenticated', aud: 'authenticated',
+      arkan_role: 'customer', phone: row.out_phone || '', iat: ts, exp: ts + 86400 * 30,
     }, process.env.SUPABASE_JWT_SECRET);
     res.json({
-      token, user_id: row.customer_id, arkan_role: 'customer',
-      conversation_id: row.conversation_id, name: row.customer_name || '',
+      token, user_id: row.out_customer_id, arkan_role: 'customer',
+      conversation_id: row.out_conversation_id, name: row.out_name || '',
       expires_in: 86400 * 30
     });
   } catch (e) {
