@@ -197,10 +197,15 @@ async function openOwner(){
 async function loadConversations(){
   try{
     const r=await fetch(API+'/chat-api/conversations',{headers:{Authorization:'Bearer '+TOKEN}});
+    if(!r.ok){
+      const t=await r.text();
+      $('clist').innerHTML='<div style="padding:30px;text-align:center;color:#e2483d">تعذّر جلب المحادثات ('+r.status+')<br><small style="color:var(--mut)">'+t.slice(0,100)+'</small><br><button onclick="ownerLogout()" style="margin-top:12px;padding:10px 20px;border:0;border-radius:10px;background:var(--grad);color:#fff;font-weight:700">إعادة تسجيل الدخول</button></div>';
+      return;
+    }
     const j=await r.json();
     CONVS=j.conversations||[];
     renderConvs();
-  }catch(e){}
+  }catch(e){$('clist').innerHTML='<div style="padding:30px;text-align:center;color:#e2483d">تعذّر الاتصال: '+e.message+'</div>';}
 }
 function renderConvs(){
   if(!CONVS.length){$('clist').innerHTML='<div style="padding:40px;text-align:center;color:var(--mut)">لا محادثات بعد.<br>ستظهر محادثات العملاء هنا.</div>';return;}
