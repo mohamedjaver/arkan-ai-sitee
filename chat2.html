@@ -208,7 +208,13 @@ async function loadConversations(){
   }catch(e){$('clist').innerHTML='<div style="padding:30px;text-align:center;color:#e2483d">تعذّر الاتصال: '+e.message+'</div>';}
 }
 function renderConvs(){
-  if(!CONVS.length){$('clist').innerHTML='<div style="padding:40px;text-align:center;color:var(--mut)">لا محادثات بعد.<br>ستظهر محادثات العملاء هنا.</div>';return;}
+  if(!CONVS.length){
+    $('clist').innerHTML=`<div style="padding:40px 20px;text-align:center;color:var(--mut)">
+      لا محادثات بعد.<br>ستظهر محادثات العملاء هنا فور تواصلهم.
+      <button onclick="diagConvs()" style="display:block;margin:20px auto 0;padding:10px 20px;border:1px solid var(--line);border-radius:10px;color:var(--navy);font-size:13px">🔬 تشخيص</button>
+    </div>`;
+    return;
+  }
   $('clist').innerHTML=CONVS.map(c=>{
     const cu=c.customer||{};const nm=cu.full_name||cu.phone||'عميل';
     const un=c.unread_owner||0;
@@ -219,6 +225,13 @@ function renderConvs(){
       <div class="meta"><div class="tm">${c.last_message_at?fmtTime(c.last_message_at):''}</div>${un?`<div class="un">${un}</div>`:''}</div>
     </div>`;
   }).join('');
+}
+async function diagConvs(){
+  try{
+    const r=await fetch(API+'/chat-api/conversations',{headers:{Authorization:'Bearer '+TOKEN}});
+    const t=await r.text();
+    alert('الحالة: '+r.status+'\n\nالرد:\n'+t.slice(0,400));
+  }catch(e){alert('خطأ اتصال: '+e.message);}
 }
 let CUR_CUST=null;
 async function openConvOwner(convId,name,code,phone,avatar){
