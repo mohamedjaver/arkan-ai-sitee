@@ -637,14 +637,17 @@ app.post('/chat-api/send', async (req, res) => {
 });
 
 app.get('/chat-api/conversations', async (req, res) => {
-  const s = authArkan(req); if (!s || s.role !== 'owner') return res.status(403).json({ error: 'forbidden' });
+  const s = authArkan(req);
+  if (!s) return res.status(401).json({ error: 'no token', hint: 'التوكن مفقود أو غير صالح — أعد تسجيل الدخول' });
+  if (s.role !== 'owner') return res.status(403).json({ error: 'not owner', role: s.role });
   const r = await sbRpc('api_owner_conversations', {});
+  if (!r.ok) return res.status(502).json({ error: 'rpc failed', sb: JSON.stringify(r.data).slice(0, 200) });
   const list = (Array.isArray(r.data) ? r.data : []).map(c => ({
     id: c.id, customer_id: c.customer_id, last_preview: c.last_preview,
     last_message_at: c.last_message_at, unread_owner: c.unread_owner,
     customer: { full_name: c.full_name, phone: c.phone, access_code: c.access_code, avatar_url: c.avatar_url }
   }));
-  res.json({ conversations: list });
+  res.json({ conversations: list, count: list.length });
 });
 
 app.post('/chat-api/read', async (req, res) => {
