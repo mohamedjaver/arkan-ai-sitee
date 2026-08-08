@@ -22,8 +22,17 @@ input,textarea{font:inherit;color:inherit}
 .b.me{align-self:flex-start;background:var(--grad);color:#fff;border-bottom-left-radius:5px}
 .b.them{align-self:flex-end;background:#fff;border-bottom-right-radius:5px}
 .b.sys{align-self:center;background:rgba(11,47,112,.06);color:var(--mut);font-size:12.5px;text-align:center;max-width:88%;border-radius:12px}
-.b .t{font-size:10px;opacity:.6;margin-top:3px;text-align:left}
+.b .t{font-size:10px;opacity:.6;margin-top:3px;text-align:left;display:flex;align-items:center;gap:3px;justify-content:flex-start}
 .b.me .t{color:rgba(255,255,255,.85)}
+.tick{font-size:11px}
+.tick.read{color:#7fd4ff}
+.top .av img,.crow .av img{width:100%;height:100%;border-radius:50%;object-fit:cover}
+.avwrap{position:relative}
+.online-dot{position:absolute;bottom:1px;left:1px;width:11px;height:11px;background:#22c55e;border:2px solid #fff;border-radius:50%}
+.typing{display:inline-flex;gap:3px;align-items:center}
+.typing span{width:6px;height:6px;background:var(--mut);border-radius:50%;animation:tp 1.2s infinite}
+.typing span:nth-child(2){animation-delay:.2s}.typing span:nth-child(3){animation-delay:.4s}
+@keyframes tp{0%,60%,100%{opacity:.3;transform:translateY(0)}30%{opacity:1;transform:translateY(-3px)}}
 .day{align-self:center;background:rgba(11,47,112,.08);color:var(--mut);font-size:11px;padding:3px 12px;border-radius:20px;margin:6px 0}
 .bar{background:#fff;border-top:1px solid var(--line);padding:8px 12px calc(8px + env(safe-area-inset-bottom));display:flex;align-items:center;gap:8px;flex-shrink:0}
 .bar input{flex:1;background:var(--paper);border:1px solid var(--line);border-radius:22px;padding:11px 16px;font-size:15px;outline:none}
@@ -195,20 +204,23 @@ function renderConvs(){
   $('clist').innerHTML=CONVS.map(c=>{
     const cu=c.customer||{};const nm=cu.full_name||cu.phone||'عميل';
     const un=c.unread_owner||0;
-    return `<div class="crow" onclick="openConvOwner('${c.id}','${(nm+'').replace(/'/g,'')}','${cu.access_code||''}','${cu.phone||''}')">
-      <div class="av">${(nm[0]||'ع').toUpperCase()}</div>
+    const av=cu.avatar_url?`<img src="${cu.avatar_url}">`:(nm[0]||'ع').toUpperCase();
+    return `<div class="crow" onclick="openConvOwner('${c.id}','${(nm+'').replace(/'/g,'')}','${cu.access_code||''}','${cu.phone||''}','${cu.avatar_url||''}')">
+      <div class="av">${av}</div>
       <div class="info"><div class="nm">${nm}</div><div class="pv">${c.last_preview||''}</div></div>
       <div class="meta"><div class="tm">${c.last_message_at?fmtTime(c.last_message_at):''}</div>${un?`<div class="un">${un}</div>`:''}</div>
     </div>`;
   }).join('');
 }
 let CUR_CUST=null;
-async function openConvOwner(convId,name,code,phone){
-  CONV={id:convId};CUR_CUST={name,code,phone};
+async function openConvOwner(convId,name,code,phone,avatar){
+  CONV={id:convId};CUR_CUST={name,code,phone,avatar};
   $('ownerTop').classList.add('hide');$('clist').classList.add('hide');
   $('chatTop').classList.remove('hide');$('msgs').classList.remove('hide');$('bar').classList.remove('hide');
   $('backBtn').classList.remove('hide');$('linkBtn').classList.remove('hide');
-  $('chatName').textContent=name;$('chatAv').textContent=(name[0]||'ع').toUpperCase();$('chatSt').textContent=phone||'';
+  $('chatName').textContent=name;
+  $('chatAv').innerHTML=avatar?`<img src="${avatar}">`:(name[0]||'ع').toUpperCase();
+  $('chatSt').textContent=phone||'';
   await loadMessages();
   fetch(API+'/chat-api/read',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+TOKEN},body:JSON.stringify({conversation_id:convId})});
 }
@@ -243,14 +255,15 @@ function renderMsgs(){
     const day=fmtDay(m.created_at);
     if(day!==lastDay){html+=`<div class="day">${day}</div>`;lastDay=day;}
     if(m.type==='system'){html+=`<div class="b sys">${esc(m.text)}</div>`;continue;}
-    const mine=m.sender_id===MY_ID||(ROLE==='customer'&&m.sender_id!==null&&m.type!=='system'&&isCustomerMsg(m));
-    const cls=(m.sender_id===MY_ID)?'me':'them';
+    const isMine=(m.sender_id===MY_ID);
+    const cls=isMine?'me':'them';
     let body='';
     if(m.type==='text')body=esc(m.text);
     else if(m.type==='audio')body=`<div style="display:flex;align-items:center;gap:8px;min-width:150px"><button onclick="playAudio('${m.media_path}',this)" style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.25);display:grid;place-items:center;font-size:14px">▶</button><span style="flex:1">🎤 رسالة صوتية</span><span style="font-size:11px;opacity:.7">${m.audio_duration?fmtDur(m.audio_duration):''}</span></div>`;
     else if(m.type==='image')body=`<img src="${m.media_path}" style="max-width:220px;border-radius:12px;display:block" onclick="window.open('${m.media_path}')">`;
     else body=`<a href="${m.media_path}" target="_blank" style="color:inherit;text-decoration:underline">📎 ${esc(m.text||'ملف')}</a>`;
-    html+=`<div class="b ${cls}">${body}<div class="t">${fmtTime(m.created_at)}</div></div>`;
+    const tick=isMine?`<span class="tick ${m.delivery_status==='read'?'read':''}">${m.delivery_status==='read'?'✓✓':'✓'}</span>`:'';
+    html+=`<div class="b ${cls}">${body}<div class="t">${fmtTime(m.created_at)}${tick}</div></div>`;
   }
   box.innerHTML=html;
   if(near)box.scrollTop=box.scrollHeight;

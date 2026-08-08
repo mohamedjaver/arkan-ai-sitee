@@ -637,7 +637,7 @@ app.get('/chat-api/conversations', async (req, res) => {
   const list = (Array.isArray(r.data) ? r.data : []).map(c => ({
     id: c.id, customer_id: c.customer_id, last_preview: c.last_preview,
     last_message_at: c.last_message_at, unread_owner: c.unread_owner,
-    customer: { full_name: c.full_name, phone: c.phone, access_code: c.access_code }
+    customer: { full_name: c.full_name, phone: c.phone, access_code: c.access_code, avatar_url: c.avatar_url }
   }));
   res.json({ conversations: list });
 });
@@ -667,6 +667,20 @@ app.post('/chat-api/upload', express.raw({ type: '*/*', limit: '30mb' }), async 
     const publicUrl = `${sbUrl}/storage/v1/object/public/chat-media/${path}`;
     res.json({ path, url: publicUrl });
   } catch (e) { console.error('upload:', e.message); res.status(500).json({ error: 'server', msg: e.message }); }
+});
+
+/* الملف الشخصي: جلب */
+app.get('/chat-api/profile', async (req, res) => {
+  const s = authArkan(req); if (!s) return res.status(401).json({ error: 'unauthorized' });
+  const r = await sbRpc('api_get_profile', { p_uid: s.uid });
+  res.json({ profile: Array.isArray(r.data) ? r.data[0] : r.data });
+});
+
+/* الملف الشخصي: تحديث الاسم/الصورة */
+app.post('/chat-api/profile', async (req, res) => {
+  const s = authArkan(req); if (!s) return res.status(401).json({ error: 'unauthorized' });
+  await sbRpc('api_update_profile', { p_uid: s.uid, p_name: req.body.name || null, p_avatar: req.body.avatar_url || null });
+  res.json({ ok: true });
 });
 
 app.get('/health', (req, res) => res.json({
