@@ -606,6 +606,35 @@ async function boot(){
     if(!ok){bfail('تعذّر تحميل Supabase — اتصال ضعيف');return;}
   }
   bmsg('التحقق من الجلسة…');
+
+  /* ═══ رابط مباشر ?c=CODE — يفتح محادثة العميل بلا تسجيل ولا PIN ═══ */
+  const linkCode=new URLSearchParams(location.search).get('c');
+  if(linkCode){
+    bmsg('فتح محادثتك…');
+    try{
+      const r=await fetch('https://arkan-ai-site-production.up.railway.app/chat-link/'+encodeURIComponent(linkCode));
+      if(!r.ok){bfail('رابط غير صالح أو منتهٍ');return;}
+      const j=await r.json();
+      /* احفظ التوكن كجلسة دائمة على هذا الجهاز */
+      localStorage.setItem('arkan_sb_jwt',JSON.stringify({token:j.token,user_id:j.user_id,role:'customer',phone:j.phone||'',exp:Math.floor(Date.now()/1000)+(j.expires_in||2592000)}));
+      localStorage.setItem('arkan_chat_link',linkCode);
+      MY_ID=j.user_id;MY_ROLE='customer';
+      sb=window.supabase.createClient(SB_URL,SB_KEY,{global:{headers:{Authorization:'Bearer '+j.token}},realtime:{params:{apikey:SB_KEY}}});
+      try{sb.realtime.setAuth(j.token);}catch(e){}
+      document.body.dataset.booted='1';document.body.classList.add('ready');
+      {var _b=document.getElementById('bootScreen');if(_b)_b.remove();}
+      const {data:c}=await sb.from('conversations_v2').select('*').eq('id',j.conversation_id).single();
+      if(!c){bfail('تعذّر فتح المحادثة');return;}
+      $('scList').style.display='none';
+      await openConv(c,false);
+      try{await importPendingTreq();}catch(e){}
+      flushQueue();
+      window.addEventListener('online',()=>{$('offline').classList.remove('on');flushQueue();});
+      window.addEventListener('offline',()=>$('offline').classList.add('on'));
+      return;
+    }catch(e){bfail('تعذّر فتح الرابط: '+(e.message||e));return;}
+  }
+
   const sess=getSession();
   if(!sess){bmsg('يلزم تسجيل الدخول…');setTimeout(()=>location.replace('account.html?next=chat-v2.html'),400);return;}
   let jwt;
@@ -798,7 +827,22 @@ async function openConv(c,isNew){
   const act=(XREQS[c.id]||[])[0];
   if(act){$('hReq').textContent=act.request_no;$('hReq').classList.remove('hide');}
   else $('hReq').classList.add('hide');
-  $('hInfo').onclick=()=>MY_ROLE!=='customer'&&other.phone?toast(`${other.full_name||''} · ${other.phone} · ${other.country||''}`):null;
+  $('hInfo').onclick=async ()=>{
+    if(MY_ROLE==='customer')return;
+    if(!other.phone){toast('لا بيانات');return;}
+    /* احصل على كود العميل وابنِ الرابط */
+    try{
+      const {data:code}=await sb.rpc('get_customer_code',{p_phone:other.phone});
+      if(code){
+        const link=location.origin+'/chat-v2.html?c='+code;
+        try{await navigator.clipboard.writeText(link);toast('نُسخ رابط العميل ✓');}catch(e){
+          prompt('رابط محادثة العميل (انسخه):',link);
+        }
+      }else{
+        toast(`${other.full_name||''} · ${other.phone}`);
+      }
+    }catch(e){toast(`${other.full_name||''} · ${other.phone}`);}
+  };
 
   await loadMsgs();
   $('quick').classList.toggle('hide',!(MY_ROLE==='customer'&&(isNew||MSGS.filter(m=>m.sender_id===MY_ID).length===0)));

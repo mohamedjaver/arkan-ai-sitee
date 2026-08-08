@@ -364,6 +364,43 @@ async function findUserDoc(p) {
   return null;
 }
 
+/* ═══ نظام الروابط: توكن من كود الوصول (بلا PIN) ═══
+   GET /chat-link/:code → يصدر Supabase JWT للعميل صاحب الكود */
+app.get('/chat-link/:code', async (req, res) => {
+  try {
+    if (!process.env.SUPABASE_JWT_SECRET) return res.status(503).json({ error: 'not configured' });
+    const code = String(req.params.code || '').replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+    if (code.length < 4) return res.status(400).json({ error: 'invalid code' });
+
+    // استدعِ Supabase لحل الكود إلى عميل
+    const sbUrl = process.env.SUPABASE_URL || 'https://vyxzlazwpbstigcqvizb.supabase.co';
+    const sbKey = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_JWT_SECRET;
+    const r = await fetch(`${sbUrl}/rest/v1/rpc/resolve_chat_link`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': sbKey, 'Authorization': `Bearer ${sbKey}` },
+      body: JSON.stringify({ p_code: code })
+    });
+    const rows = await r.json();
+    if (!Array.isArray(rows) || !rows.length) return res.status(404).json({ error: 'code not found' });
+    const row = rows[0];
+
+    // أصدر توكن للعميل (sub = customer_id من القاعدة مباشرة)
+    const ts = Math.floor(Date.now() / 1000);
+    const token = jwt.sign({
+      sub: row.customer_id, role: 'authenticated', aud: 'authenticated',
+      arkan_role: 'customer', phone: row.customer_phone || '', iat: ts, exp: ts + 86400 * 30,
+    }, process.env.SUPABASE_JWT_SECRET);
+    res.json({
+      token, user_id: row.customer_id, arkan_role: 'customer',
+      conversation_id: row.conversation_id, name: row.customer_name || '',
+      expires_in: 86400 * 30
+    });
+  } catch (e) {
+    console.error('chat-link:', e.message);
+    res.status(500).json({ error: 'server error' });
+  }
+});
+
 app.post('/supabase-token', async (req, res) => {
   try {
     if (!process.env.SUPABASE_JWT_SECRET) return res.status(503).json({ error: 'SUPABASE_JWT_SECRET غير مضبوط' });
