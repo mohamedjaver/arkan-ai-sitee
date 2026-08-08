@@ -624,8 +624,8 @@ async function boot(){
       try{sb.realtime.setAuth(j.token);}catch(e){}
       document.body.dataset.booted='1';document.body.classList.add('ready');
       {var _b=document.getElementById('bootScreen');if(_b)_b.remove();}
-      const {data:c}=await sb.from('conversations_v2').select('*').eq('id',j.conversation_id).single();
-      if(!c){bfail('تعذّر فتح المحادثة');return;}
+      const {data:c,error:cerr}=await sb.from('conversations_v2').select('*').eq('id',j.conversation_id).single();
+      if(cerr||!c){bfail('تعذّر فتح المحادثة: '+(cerr?cerr.message+' | '+(cerr.code||''):'لا بيانات')+' | conv='+j.conversation_id);return;}
       $('scList').style.display='none';
       await openConv(c,false);
       try{await importPendingTreq();}catch(e){}
