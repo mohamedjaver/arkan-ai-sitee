@@ -517,6 +517,162 @@ app.post('/change-pin', async (req, res) => {
   }
 });
 
+/* ═══════════════════════════════════════════════════════════════
+   ARKAN Chat API — طبقة وسيطة كاملة عبر الخادم (تلغي اعتماد RLS)
+   كل العمليات تُوقّع بتوكن ARKAN خاص، والخادم ينفّذها بصلاحية service
+   ═══════════════════════════════════════════════════════════════ */
+const SB_REST = (process.env.SUPABASE_URL || 'https://vyxzlazwpbstigcqvizb.supabase.co') + '/rest/v1';
+const SB_PUB = process.env.SUPABASE_ANON_KEY || 'sb_publishable_scXFuYtWG2dkz8_CaPEvAg_Yj2_sxnO';
+const sbHeaders = { 'apikey': SB_PUB, 'Authorization': `Bearer ${SB_PUB}`, 'Content-Type': 'application/json' };
+
+/* توكن ARKAN بسيط (HMAC) — يثبت هوية العميل/المالك للخادم */
+function arkanSign(payload) {
+  const b = Buffer.from(JSON.stringify(payload)).toString('base64url');
+  const sig = crypto.createHmac('sha256', process.env.SUPABASE_JWT_SECRET).update(b).digest('base64url');
+  return b + '.' + sig;
+}
+function arkanVerify(tok) {
+  try {
+    const [b, sig] = String(tok).split('.');
+    const exp = crypto.createHmac('sha256', process.env.SUPABASE_JWT_SECRET).update(b).digest('base64url');
+    if (sig !== exp) return null;
+    const p = JSON.parse(Buffer.from(b, 'base64url').toString());
+    if (p.exp && p.exp < Math.floor(Date.now() / 1000)) return null;
+    return p;
+  } catch (e) { return null; }
+}
+function authArkan(req) {
+  const h = req.headers.authorization || '';
+  const tok = h.startsWith('Bearer ') ? h.slice(7) : (req.query.t || '');
+  return arkanVerify(tok);
+}
+async function sbGet(path) {
+  const r = await fetch(`${SB_REST}/${path}`, { headers: sbHeaders });
+  return r.ok ? r.json() : [];
+}
+async function sbPost(path, body, prefer) {
+  const h = { ...sbHeaders }; if (prefer) h.Prefer = prefer;
+  const r = await fetch(`${SB_REST}/${path}`, { method: 'POST', headers: h, body: JSON.stringify(body) });
+  const t = await r.text(); try { return { ok: r.ok, data: JSON.parse(t) }; } catch { return { ok: r.ok, data: t }; }
+}
+async function sbPatch(path, body) {
+  const r = await fetch(`${SB_REST}/${path}`, { method: 'PATCH', headers: { ...sbHeaders, Prefer: 'return=representation' }, body: JSON.stringify(body) });
+  const t = await r.text(); try { return { ok: r.ok, data: JSON.parse(t) }; } catch { return { ok: r.ok, data: t }; }
+}
+
+/* CORS للـ chat API */
+app.use('/chat-api', (req, res, next) => {
+  const o = req.headers.origin || '';
+  if (SITE_ORIGINS.includes(o)) res.setHeader('Access-Control-Allow-Origin', o);
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  if (req.method === 'OPTIONS') return res.sendStatus(204);
+  next();
+});
+
+/* جلسة المحادثة: من كود الرابط → توكن ARKAN + بيانات المحادثة */
+app.get('/chat-api/session', async (req, res) => {
+  try {
+    const code = String(req.query.c || '').replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+    const phone = req.query.phone ? normPhone(req.query.phone) : null;
+    let cust = null;
+    if (code) {
+      const rows = await sbGet(`chat_users?access_code=eq.${code}&role=eq.customer&select=id,full_name,phone`);
+      cust = rows[0];
+    } else if (phone) {
+      const uid = phoneToUuid(phone);
+      const rows = await sbGet(`chat_users?id=eq.${uid}&select=id,full_name,phone,role`);
+      cust = rows[0];
+    }
+    if (!cust) return res.status(404).json({ error: 'not found' });
+
+    // المالك
+    const owners = await sbGet(`chat_users?role=eq.owner&select=id&order=created_at&limit=1`);
+    const ownerId = owners[0] && owners[0].id;
+    if (!ownerId) return res.status(503).json({ error: 'no owner' });
+
+    // المحادثة (أنشئها إن لزم)
+    let convs = await sbGet(`conversations_v2?customer_id=eq.${cust.id}&select=*`);
+    let conv = convs[0];
+    if (!conv) {
+      const ins = await sbPost('conversations_v2', { customer_id: cust.id, owner_id: ownerId }, 'return=representation');
+      conv = Array.isArray(ins.data) ? ins.data[0] : ins.data;
+      await sbPost('messages_v2', {
+        conversation_id: conv.id, sender_id: ownerId, type: 'system',
+        text: 'مرحبًا بك في ARKAN. أرسل المبلغ والعملة المطلوبة وسنخبرك بالسعر والبديلة المتوفرة.', delivery_status: 'sent'
+      }, 'return=minimal');
+      await sbPatch(`conversations_v2?id=eq.${conv.id}`, { last_message_at: new Date().toISOString(), last_preview: 'رسالة ترحيب', unread_customer: 1 });
+    }
+
+    const ts = Math.floor(Date.now() / 1000);
+    const token = arkanSign({ uid: cust.id, role: 'customer', conv: conv.id, iat: ts, exp: ts + 86400 * 30 });
+    res.json({ token, user_id: cust.id, role: 'customer', name: cust.full_name || '', conversation: conv });
+  } catch (e) { console.error('chat-api/session:', e.message); res.status(500).json({ error: 'server' }); }
+});
+
+/* جلسة المالك: بالهاتف + PIN */
+app.post('/chat-api/owner-session', async (req, res) => {
+  try {
+    const p = normPhone(req.body.phone);
+    const pin = String(req.body.pin || '');
+    if (!OWNER_PHONES.includes(p)) return res.status(403).json({ error: 'not owner' });
+    const snap = await findUserDoc(p);
+    if (!snap || String(snap.data().pin) !== pin) return res.status(401).json({ error: 'auth' });
+    const uid = phoneToUuid(p);
+    // تأكد من وجود صف المالك
+    await sbPost('chat_users', { id: uid, phone: p, full_name: 'ARKAN', role: 'owner' }, 'resolution=merge-duplicates');
+    const ts = Math.floor(Date.now() / 1000);
+    const token = arkanSign({ uid, role: 'owner', iat: ts, exp: ts + 86400 });
+    res.json({ token, user_id: uid, role: 'owner' });
+  } catch (e) { console.error('owner-session:', e.message); res.status(500).json({ error: 'server' }); }
+});
+
+/* رسائل محادثة */
+app.get('/chat-api/messages', async (req, res) => {
+  const s = authArkan(req); if (!s) return res.status(401).json({ error: 'unauthorized' });
+  const conv = String(req.query.conv || '');
+  if (s.role !== 'owner' && s.conv !== conv) return res.status(403).json({ error: 'forbidden' });
+  const msgs = await sbGet(`messages_v2?conversation_id=eq.${conv}&order=created_at.asc&select=*`);
+  res.json({ messages: msgs });
+});
+
+/* إرسال رسالة */
+app.post('/chat-api/send', async (req, res) => {
+  const s = authArkan(req); if (!s) return res.status(401).json({ error: 'unauthorized' });
+  const { conversation_id, type, text, media_path, mime_type, file_size, audio_duration, waveform_data, meta } = req.body || {};
+  if (s.role !== 'owner' && s.conv !== conversation_id) return res.status(403).json({ error: 'forbidden' });
+  const row = {
+    conversation_id, sender_id: s.uid, type: type || 'text',
+    text: text || null, media_path: media_path || null, mime_type: mime_type || null,
+    file_size: file_size || null, audio_duration: audio_duration || null,
+    waveform_data: waveform_data || null, meta: meta || null, delivery_status: 'sent'
+  };
+  const r = await sbPost('messages_v2', row, 'return=representation');
+  const msg = Array.isArray(r.data) ? r.data[0] : r.data;
+  // حدّث المعاينة والعدادات
+  const preview = type === 'text' ? (text || '').slice(0, 60) : (type === 'audio' ? '🎤 رسالة صوتية' : type === 'image' ? '📷 صورة' : '📎 ملف');
+  const upd = { last_message_at: new Date().toISOString(), last_preview: preview };
+  if (s.role === 'owner') upd.unread_customer = 1; else upd.unread_owner = 1;
+  await sbPatch(`conversations_v2?id=eq.${conversation_id}`, upd);
+  res.json({ message: msg });
+});
+
+/* قائمة محادثات المالك */
+app.get('/chat-api/conversations', async (req, res) => {
+  const s = authArkan(req); if (!s || s.role !== 'owner') return res.status(403).json({ error: 'forbidden' });
+  const convs = await sbGet(`conversations_v2?select=*,customer:chat_users!conversations_v2_customer_id_fkey(full_name,phone,access_code)&order=last_message_at.desc.nullslast`);
+  res.json({ conversations: convs });
+});
+
+/* وضع علامة مقروء */
+app.post('/chat-api/read', async (req, res) => {
+  const s = authArkan(req); if (!s) return res.status(401).json({ error: 'unauthorized' });
+  const conv = req.body.conversation_id;
+  const upd = s.role === 'owner' ? { unread_owner: 0 } : { unread_customer: 0 };
+  await sbPatch(`conversations_v2?id=eq.${conv}`, upd);
+  res.json({ ok: true });
+});
+
 app.get('/health', (req, res) => res.json({
   ok: true,
   pending: Object.values(DB.orders).filter(o => o.status === 'pending').length,
