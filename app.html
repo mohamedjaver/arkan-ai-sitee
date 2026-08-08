@@ -482,7 +482,7 @@ window.arkVerifyOtp=async function(){
       var cred2=await confirmRes.confirm(code);
       uid=cred2.user.uid;
     }
-    try{localStorage.setItem('arkanClient',JSON.stringify({name:name,phone:phone,uid:uid,verified:true,via:otpMode,ts:Date.now()}));}catch(e){}
+    try{localStorage.setItem('arkanClient',JSON.stringify({name:name,phone:phone,uid:uid,verified:true,via:otpMode,ts:Date.now(),st:(typeof j!=='undefined'&&j&&j.sessionToken)||''}));}catch(e){}
     try{var ok2=await ARKAN.ready;
       if(ok2)await ARKAN.fb.setDoc(ARKAN.fb.doc(ARKAN.db,'clients',uid),
         {name:name,phone:phone,via:otpMode,lastLogin:Date.now(),device:navigator.userAgent.slice(0,120)},{merge:true});
@@ -518,7 +518,7 @@ function startTimer(){
       <a href="#rates">الأسعار</a>
       <a href="#convert">التحويل</a>
       <a href="#invoices">المؤسسات</a>
-      <a href="chat2.html">المحادثة</a>
+      <a href="chat-v2.html">المحادثة</a>
       <a class="btn-login" href="account.html" style="text-decoration:none;display:inline-flex;align-items:center;justify-content:center">حسابي</a>
     </div>
     <button class="menu-btn" id="mBtn" onclick="toggleDrawer()" aria-label="القائمة"><i></i><i></i><i></i></button>
@@ -528,7 +528,7 @@ function startTimer(){
     <a href="#convert" onclick="toggleDrawer()">التحويل</a>
     <a href="#invoices" onclick="toggleDrawer()">المؤسسات</a>
     <a href="#request" onclick="toggleDrawer()">طلب تحويل</a>
-    <a href="chat2.html">المحادثة مع ARKAN</a>
+    <a href="chat-v2.html">المحادثة مع ARKAN</a>
     <a href="account.html">حسابي</a>
     <a href="settlement.html">لوحة التسوية</a>
   </div>
@@ -1539,10 +1539,11 @@ window.arkanSubmit = async function(){
       pin = makePin(); ref = makeRef();
       await setDoc(uref, { name, phone, pin, ref, balance:0, role:'client', status:'pending', createdAt: serverTimestamp() });
     }
-    /* جلسة كاملة (مع PIN) — دخول مباشر للمحادثة بلا طلب رمز */
+    /* جلسة بلا PIN — الهوية تُثبت عبر sessionToken الصادر من OTP.
+       (أمنيًا: لا يُخزَّن PIN في المتصفح إطلاقًا) */
     try{
       const digits=String(phone).replace(/\D/g,'');
-      localStorage.setItem('arkan_session',JSON.stringify({phone:digits,pin:String(pin),name:name}));
+      localStorage.setItem('arkan_session',JSON.stringify({phone:digits,name:name}));
     }catch(e){}
     await setDoc(doc(collection(db,'transactions')), {
       uid: phone, clientName: name, clientRef: ref, from, to, amount, received: out,

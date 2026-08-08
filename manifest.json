@@ -2,7 +2,7 @@
   "name": "ARKAN Pay",
   "short_name": "ARKAN Pay",
   "description": "Smart Cross-Border Payments",
-  "start_url": "./settlement.html",
+  "start_url": "./app.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",

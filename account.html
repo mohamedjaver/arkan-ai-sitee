@@ -451,8 +451,17 @@ async function login(phone, pin, silent){
       if(!silent) gErr('رقم أو رمز غير صحيح');
       localStorage.removeItem('arkan_session'); return;
     }
-    SESSION = {phone:d,pin};
+    SESSION = {phone:d};
     localStorage.setItem('arkan_session', JSON.stringify(SESSION));
+    /* توكن خادم موقّع (24 ساعة) بدل تخزين PIN — يُستخدم للدخول الصامت ولـ chat-v2 */
+    try{
+      const tr=await fetch('https://arkan-ai-site-production.up.railway.app/supabase-token',{
+        method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({phone:d,pin:String(pin),name:(snap.data().name||'')})});
+      if(tr.ok){const tj=await tr.json();
+        localStorage.setItem('arkan_sb_jwt',JSON.stringify({token:tj.token,user_id:tj.user_id,
+          role:tj.arkan_role,phone:d,exp:Math.floor(Date.now()/1000)+(tj.expires_in||86400)}));}
+    }catch(e){}
     USER = snap.data();
     const nxt=new URLSearchParams(location.search).get('next');
     if(nxt&&/^[a-z0-9_-]+\.html$/i.test(nxt)){location.href=nxt;return;}
@@ -542,12 +551,43 @@ function renderTx(snap){
 
 $('refChip').onclick = () => { navigator.clipboard?.writeText(USER?.ref||''); toast('نُسخ الرقم المرجعي'); };
 document.querySelectorAll('[data-act]').forEach(el=>el.onclick=()=>{ if(el.dataset.act==='deposit') window.open(`https://wa.me/${WA}?text=${encodeURIComponent('مرحباً، أريد إيداعاً. رقمي المرجعي: '+(USER?.ref||''))}`,'_blank'); });
-$('logoutRow').onclick = () => { localStorage.removeItem('arkan_session'); location.reload(); };
+$('logoutRow').onclick = () => { ['arkan_session','arkan_sb_jwt','arkanClient'].forEach(k=>localStorage.removeItem(k)); location.reload(); };
 
 loadRates();
 paintPickers();
 const saved = JSON.parse(localStorage.getItem('arkan_session')||'null');
-if (saved?.phone && saved?.pin) login(saved.phone, saved.pin, true);
+(function(){
+  if(!saved?.phone) return;
+  /* دخول صامت: يتطلب توكن خادم صالحًا لنفس الرقم — لا إعادة تشغيل PIN مخزّن */
+  try{
+    const j=JSON.parse(localStorage.getItem('arkan_sb_jwt')||'null');
+    if(j&&j.phone===String(saved.phone).replace(/\D/g,'')&&j.exp>Date.now()/1000+300){
+      silentOpen(saved.phone);
+    }
+  }catch(e){}
+})();
+async function silentOpen(phoneRaw){
+  try{
+    const d=String(phoneRaw).replace(/\D/g,'');
+    const variants=[d, d.startsWith('222')?d.slice(3):('222'+d)];
+    let snap=null, foundId=null;
+    for(const v of variants){
+      const s=await getDoc(doc(db,'users',v));
+      if(s.exists()){snap=s;foundId=v;break;}
+    }
+    if(!snap){
+      for(const v of variants){
+        const q=await getDocs(query(collection(db,'users'),where('phone','==',v),limit(1)));
+        if(!q.empty){snap=q.docs[0];foundId=q.docs[0].id;break;}
+      }
+    }
+    if(!snap) return;
+    SESSION={phone:d}; USER=snap.data();
+    const nxt=new URLSearchParams(location.search).get('next');
+    if(nxt&&/^[a-z0-9_-]+\.html$/i.test(nxt)){location.href=nxt;return;}
+    openApp(foundId);
+  }catch(e){console.warn('silentOpen:',e.message);}
+}
 </script>
 <script type="module">
   import * as ARKAN from './arkan-core.js';
