@@ -383,8 +383,11 @@ app.get('/chat-link/:code', async (req, res) => {
       headers: { 'Content-Type': 'application/json', 'apikey': svcToken, 'Authorization': `Bearer ${svcToken}` },
       body: JSON.stringify({ p_code: code })
     });
-    const rows = await r.json();
-    if (!Array.isArray(rows) || !rows.length) return res.status(404).json({ error: 'code not found' });
+    const raw = await r.text();
+    let rows; try{ rows = JSON.parse(raw); }catch(e){ rows = null; }
+    if (!Array.isArray(rows) || !rows.length) {
+      return res.status(404).json({ error: 'code not found', status: r.status, sb: String(raw).slice(0, 300) });
+    }
     const row = rows[0];
 
     // أصدر توكن للعميل (sub = customer_id من القاعدة مباشرة)

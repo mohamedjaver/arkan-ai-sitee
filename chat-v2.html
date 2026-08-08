@@ -613,8 +613,9 @@ async function boot(){
     bmsg('فتح محادثتك…');
     try{
       const r=await fetch('https://arkan-ai-site-production.up.railway.app/chat-link/'+encodeURIComponent(linkCode));
-      if(!r.ok){bfail('رابط غير صالح أو منتهٍ');return;}
-      const j=await r.json();
+      const jtxt=await r.text();
+      if(!r.ok){bfail('رابط غير صالح ('+r.status+'): '+jtxt.slice(0,200));return;}
+      const j=JSON.parse(jtxt);
       /* احفظ التوكن كجلسة دائمة على هذا الجهاز */
       localStorage.setItem('arkan_sb_jwt',JSON.stringify({token:j.token,user_id:j.user_id,role:'customer',phone:j.phone||'',exp:Math.floor(Date.now()/1000)+(j.expires_in||2592000)}));
       localStorage.setItem('arkan_chat_link',linkCode);
