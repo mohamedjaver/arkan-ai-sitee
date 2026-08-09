@@ -490,6 +490,38 @@ app.get('/bootstrap-owner', async (req, res) => {
   }
 });
 
+/* ── إنشاء/إعادة تعيين رمز عميل — للمالك فقط (بنفس مفتاح bootstrap) ──
+   جسر تشغيلي حتى تفعيل WhatsApp OTP. الاستخدام من المتصفح:
+   /admin/set-pin?phone=244XXXXXXXXX&pin=XXXX&key=<SECRET url-encoded> */
+app.get('/admin/set-pin', async (req, res) => {
+  try {
+    if (!fbReady) return res.status(503).json({ ok: false, err: 'Firebase غير جاهز' });
+    const key = String(req.headers['x-arkan-key'] || req.query.key || '').trim();
+    const sec = String(process.env.SUPABASE_JWT_SECRET || '').trim();
+    const h = s => crypto.createHash('sha256').update(s).digest();
+    if (!sec || !crypto.timingSafeEqual(h(key), h(sec)))
+      return res.status(403).json({ ok: false, err: 'forbidden' });
+    const p = normPhone(req.query.phone);
+    if (!validPhone(p)) return res.status(400).json({ ok: false, err: 'رقم غير صالح — موريتانيا (222…) أو أنغولا (244…)' });
+    const pin = String(req.query.pin || '').replace(/\D/g, '');
+    if (pin.length !== 4) return res.status(400).json({ ok: false, err: 'الرمز 4 أرقام' });
+    const name = String(req.query.name || '').slice(0, 60);
+    const snap = await findUserDoc(p);
+    if (snap) {
+      await snap.ref.update({ pin, pinChangedAt: Date.now() });
+      return res.json({ ok: true, msg: 'تم تحديث رمز العميل', phone: p, action: 'updated' });
+    }
+    await admin.firestore().doc(`users/${p}`).set({
+      name: name || 'عميل أركان', phone: p, pin, role: 'customer',
+      createdAt: Date.now(), via: 'admin-set-pin'
+    });
+    res.json({ ok: true, msg: 'تم إنشاء حساب العميل', phone: p, action: 'created' });
+  } catch (e) {
+    console.error('admin/set-pin:', e.message);
+    res.status(500).json({ ok: false, err: 'خطأ في الخادم' });
+  }
+});
+
 /* ── تغيير الرمز السري PIN ── */
 const pinHits = new Map();
 app.post('/change-pin', async (req, res) => {
