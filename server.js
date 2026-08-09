@@ -464,8 +464,8 @@ app.post('/supabase-token', async (req, res) => {
 app.get('/bootstrap-owner', async (req, res) => {
   try {
     if (!fbReady) return res.status(503).json({ ok: false, err: 'Firebase غير جاهز' });
-    /* حماية إلزامية: مفتاح سري في الترويسة (مقارنة آمنة زمنيًا) — للإنشاء ولإعادة التعيين معًا */
-    const key = String(req.headers['x-arkan-key'] || '');
+    /* حماية إلزامية: مفتاح سري (ترويسة x-arkan-key أو ?key= للمتصفح) — مقارنة آمنة زمنيًا */
+    const key = String(req.headers['x-arkan-key'] || req.query.key || '');
     const sec = String(process.env.SUPABASE_JWT_SECRET || '');
     const kb = Buffer.from(key), sb2 = Buffer.from(sec);
     const keyOk = sec && kb.length === sb2.length && crypto.timingSafeEqual(kb, sb2);
