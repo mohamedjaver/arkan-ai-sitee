@@ -24,7 +24,7 @@ button{background:linear-gradient(135deg,#19A9F5,#0A56B8);color:#fff;font-weight
 <script>
 const API='https://arkan-ai-site-production.up.railway.app';
 const SB_URL='https://vyxzlazwpbstigcqvizb.supabase.co';
-const SB_KEY='sb_publishable_scXFuYtWG2dkz8_CaPEvAg_Yj2_sxnO';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ5eHpsYXp3cGJzdGlnY3F2aXpiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU5MTU5OTcsImV4cCI6MjEwMTQ5MTk5N30.fxMt_jH4z8t7uVnFLLHyNobu6zsgu_ZwVGLibuqWj38';
 const out=document.getElementById('out');
 function step(t,cls,msg){const d=document.createElement('div');d.className='step '+cls;d.innerHTML='<b>'+t+'</b>'+msg;out.appendChild(d);return d;}
 function norm(p){let d=String(p||'').replace(/\D/g,'');if(d.startsWith('00'))d=d.slice(2);if(/^\d{8}$/.test(d))d='222'+d;else if(/^9\d{8}$/.test(d))d='244'+d;return d;}
