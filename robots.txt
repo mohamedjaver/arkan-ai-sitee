@@ -1,5 +1,14 @@
 User-agent: *
 Allow: /
+Disallow: /chat.html
+Disallow: /chat2.html
+Disallow: /chat3.html
+Disallow: /chatdiag.html
+Disallow: /diag2.html
+Disallow: /deltest.html
 Disallow: /settlement.html
-
+Disallow: /archive.html
+Disallow: /admin.html
+Disallow: /rates-admin.html
+Disallow: /ping.html
 Sitemap: https://arkanrates.com/sitemap.xml
