@@ -9,6 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="vendor/supabase.js"></script>
+<script src="arkan-e2ee.js"></script>
 <style>
 /* ═══ ARKAN Pay 2026 · نظام الألوان المعتمد ═══ */
 :root{
@@ -504,7 +505,7 @@ const smartName=n=>{if(!n)return '';const dot=n.lastIndexOf('.');if(dot<0||n.len
 const uuid=()=>crypto.randomUUID();
 
 let sb=null, MY_ID=null, MY_ROLE='customer', MY_PROFILE=null;
-let CONV=null, CONVS=[], MSGS=[], KEY=null, SUB=null, PRES=null;
+let CONV=null, CONVS=[], MSGS=[], KEY=null, SUB=null, PRES=null, E2EE={convKey:null,ready:false};
 let FILTER='all', REPLY=null, PROFILES={}, SIGNED={}, XREQS={};
 
 /* ═══ 1) الهوية: جلسة → Supabase JWT (RLS حقيقي) ═══ */
@@ -586,6 +587,8 @@ async function convKey(secret,cid){
   return crypto.subtle.importKey('raw',raw,'AES-GCM',false,['encrypt','decrypt']);
 }
 async function enc(txt){
+  /* v2 أولًا: مفتاح محادثة E2EE — القاعدة ترى ciphertext فقط */
+  if(E2EE.ready&&E2EE.convKey)return ArkanE2EE.encMsg(E2EE.convKey,txt);
   if(!KEY)return txt;
   const iv=crypto.getRandomValues(new Uint8Array(12));
   const ct=await crypto.subtle.encrypt({name:'AES-GCM',iv},KEY,new TextEncoder().encode(txt));
@@ -593,7 +596,12 @@ async function enc(txt){
   return 'enc1:'+btoa(String.fromCharCode(...b));
 }
 async function dec(s){
-  if(!s||!s.startsWith('enc1:'))return s;
+  if(!s)return s;
+  if(s.startsWith('enc2:')){
+    if(!E2EE.convKey)return '🔒 رسالة مشفرة — استرجع مفاتيحك من الإعدادات';
+    try{return await ArkanE2EE.decMsg(E2EE.convKey,s);}catch(e){return '🔒 تعذر فك التشفير';}
+  }
+  if(!s.startsWith('enc1:'))return s;
   try{const b=Uint8Array.from(atob(s.slice(5)),c=>c.charCodeAt(0));
     const pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:b.slice(0,12)},KEY,b.slice(12));
     return new TextDecoder().decode(pt);
@@ -829,7 +837,14 @@ async function openConvId(id){
 /* ═══ 5) فتح المحادثة ═══ */
 const LIVE={}, ONLINE=new Set();
 async function openConv(c,isNew){
-  CONV=c;KEY=await convKey(c.secret,c.id);
+  CONV=c;KEY=await convKey(c.secret,c.id); /* v1 legacy — لفك الرسائل القديمة فقط */
+  /* ═══ E2EE v2: مفتاح محادثة حقيقي — السيرفر يرى المغلفات فقط ═══ */
+  E2EE={convKey:null,ready:false};
+  try{
+    const r=await ArkanE2EE.bootE2EE(sb,MY_ID,c);
+    E2EE={convKey:r.convKey,ready:r.ready,need:r.need||null};
+    if(r.need==='restore')toast('جهاز جديد — استرجع مفاتيحك من الإعدادات لقراءة الرسائل المشفرة');
+  }catch(e){console.warn('e2ee boot:',e&&e.name);}
   $('scChat').classList.add('on');
   const otherId=MY_ROLE==='customer'?c.owner_id:c.customer_id;
   if(!PROFILES[otherId]){
@@ -974,11 +989,27 @@ async function signedUrl(path,exp=3600){
   SIGNED[path]={url:data.signedUrl,exp:Date.now()+(exp-60)*1000};
   return data.signedUrl;
 }
+/* وسائط E2EE v2: تنزيل ciphertext → فك محلي → Object URL (كاش بالذاكرة فقط) */
+const DECURL={};
+function msgByPath(path){return MSGS.find(m=>m.media_path===path);}
+async function mediaUrl(path,exp){
+  const m=msgByPath(path);
+  if(!(m&&m.encryption_version===2&&m.enc_file_key))return signedUrl(path,exp); /* legacy v1 */
+  if(DECURL[path])return DECURL[path];
+  if(!E2EE.convKey){toast('🔒 وسائط مشفرة — استرجع مفاتيحك من الإعدادات');return null;}
+  const su=await signedUrl(path,exp);if(!su)return null;
+  try{
+    const buf=await (await fetch(su)).arrayBuffer();
+    const blob=await ArkanE2EE.decFile(E2EE.convKey,buf,m.enc_file_iv,m.enc_file_key,m.mime_type);
+    DECURL[path]=URL.createObjectURL(blob);
+    return DECURL[path];
+  }catch(e){toast('تعذر فك الوسائط');return null;}
+}
 async function toggleVoice(mid){
   const el=document.querySelector(`.voice[data-mid="${mid}"]`);if(!el)return;
   if(AUD_MID===mid&&AUD){AUD.paused?AUD.play():AUD.pause();return;}
   stopAudio(); /* رسالة واحدة فقط في كل مرة */
-  const url=await signedUrl(el.dataset.path);if(!url)return toast('تعذر تحميل الصوت');
+  const url=await mediaUrl(el.dataset.path);if(!url)return toast("تعذر تحميل الصوت");
   AUD=new Audio(url);AUD_MID=mid;
   AUD.playbackRate=parseFloat(el.querySelector('.spd').textContent)||1;
   if(POS[mid])AUD.currentTime=POS[mid];
@@ -1035,12 +1066,12 @@ function autoNext(mid){
 async function hydrateMedia(){
   for(const img of document.querySelectorAll('img.ph[data-path]')){
     if(img.src)continue;
-    const u=await signedUrl(img.dataset.path);
+    const u=await mediaUrl(img.dataset.path);
     if(u){img.src=u;img.onclick=()=>{$('imgFull').src=u;$('imgDl').href=u;$('imgView').classList.add('on');};}
   }
 }
 async function openFile(path,name){
-  const u=await signedUrl(path,600);if(!u)return toast('تعذر فتح الملف');
+  const u=await mediaUrl(path,600);if(!u)return toast("تعذر فتح الملف");
   const a=document.createElement('a');a.href=u;a.download=name;a.target='_blank';a.click();
 }
 
@@ -1111,10 +1142,13 @@ async function insertMsg(row){
   const local={...row,id:row.id||uuid(),created_at:new Date().toISOString(),
     delivery_status:'sent',_pending:true};
   MSGS.push(local);await renderAll(false);jumpBottom();
-  const payload={id:local.id,conversation_id:row.conversation_id,sender_id:MY_ID,type:row.type,
+  const payload={id:local.id,client_msg_id:local.id, /* unique في القاعدة — يمنع التكرار عند إعادة الإرسال */
+    conversation_id:row.conversation_id,sender_id:MY_ID,type:row.type,
     text:row.text||null,media_path:row.media_path||null,mime_type:row.mime_type||null,
     file_name:row.file_name||null,file_size:row.file_size||null,audio_duration:row.audio_duration||null,
-    waveform_data:row.waveform_data||null,reply_to_message_id:row.reply_to_message_id||null,meta:row.meta||null};
+    waveform_data:row.waveform_data||null,reply_to_message_id:row.reply_to_message_id||null,meta:row.meta||null,
+    encryption_version:row.encryption_version||((row.text&&String(row.text).startsWith('enc2:'))?2:1),
+    enc_file_key:row.enc_file_key||null,enc_file_iv:row.enc_file_iv||null};
   if(!navigator.onLine){queuePush(payload);
     const i=MSGS.findIndex(m=>m.id===local.id);MSGS[i]._pending=false;MSGS[i].delivery_status='failed';
     renderAll(false);return null;}
@@ -1246,11 +1280,18 @@ async function sendFile(raw){
   const path=`${CONV.id}/${Date.now()}_${SAFE_NAME(f.name)}`;
   showUp(isImg?'جارٍ رفع الصورة…':'جارٍ رفع '+smartName(f.name));
   try{
-    await uploadXHR(path,f,setUp);
+    /* بند 11: الأصل لا يغادر الجهاز — تشفير محلي بمفتاح ملف فريد مغلف بمفتاح المحادثة */
+    let upBlob=f, encMeta={};
+    if(E2EE.ready&&E2EE.convKey){
+      const ef=await ArkanE2EE.encFile(E2EE.convKey,f);
+      upBlob=ef.blob;
+      encMeta={enc_file_iv:ef.enc_file_iv,enc_file_key:ef.enc_file_key,encryption_version:2};
+    }
+    await uploadXHR(path,upBlob,setUp);
     hideUp();
     await insertMsg({conversation_id:CONV.id,type,text:caption?await enc(caption):null,
       media_path:path,mime_type:f.type,file_name:f.name,file_size:f.size,
-      reply_to_message_id:REPLY?.id||null});
+      reply_to_message_id:REPLY?.id||null,...encMeta});
     cancelReply();
   }catch(e){hideUp();toast('فشل الرفع — حاول مجددًا');}
 }
@@ -1407,11 +1448,18 @@ async function sendVoice(){
   discardRec();
   showUp('جارٍ إرسال الرسالة الصوتية…');
   try{
-    await uploadXHR(path,blob,setUp);
+    /* بند 12: التسجيل يُشفَّر محليًا قبل أي رفع — لا يُرفع الأصل أبدًا */
+    let upBlob=blob, encMeta={};
+    if(E2EE.ready&&E2EE.convKey){
+      const ef=await ArkanE2EE.encFile(E2EE.convKey,blob);
+      upBlob=ef.blob;
+      encMeta={enc_file_iv:ef.enc_file_iv,enc_file_key:ef.enc_file_key,encryption_version:2};
+    }
+    await uploadXHR(path,upBlob,setUp);
     hideUp();
     await insertMsg({conversation_id:CONV.id,type:'audio',media_path:path,
       mime_type:recMime||'audio/mp4',file_size:blob.size,audio_duration:Math.round(dur*10)/10,
-      waveform_data:wf,reply_to_message_id:REPLY?.id||null});
+      waveform_data:wf,reply_to_message_id:REPLY?.id||null,...encMeta});
     cancelReply();haptic(15);
   }catch(e){hideUp();toast('فشل رفع التسجيل — حاول مجددًا');}
 }
