@@ -512,9 +512,10 @@ function normPh(p){let d=String(p||'').replace(/\D/g,'');if(d.startsWith('00'))d
 function getSession(){
   try{
     const s=JSON.parse(localStorage.getItem('arkan_session')||'null');
-    if(s&&s.phone&&s.pin)return {phone:normPh(s.phone),name:s.name||'',pin:String(s.pin),via:'pin'};
-    /* جلسة عميل موثّقة عبر OTP (بلا PIN) — الخادم يصدر التوكن بوجود الحساب */
+    /* جلسة OTP موثّقة: تحمل sessionToken (st) موقّعًا من الخادم — لا PIN أبدًا */
     const c=JSON.parse(localStorage.getItem('arkanClient')||'null');
+    if(c&&c.phone&&c.st)return {phone:normPh(c.phone),name:c.name||'',st:c.st,via:'otp'};
+    if(s&&s.phone&&s.pin)return {phone:normPh(s.phone),name:s.name||'',pin:String(s.pin),via:'pin'};
     if(c&&c.phone&&c.verified)return {phone:normPh(c.phone),name:c.name||'',via:'otp'};
     if(s&&s.phone)return {phone:normPh(s.phone),name:s.name||'',via:'otp'};
   }catch(e){}
@@ -555,11 +556,22 @@ async function getJWT(sess){
   const cached=JSON.parse(localStorage.getItem('arkan_sb_jwt')||'null');
   if(cached&&cached.phone===sess.phone&&cached.exp>Date.now()/1000+300)return cached;
   const body={phone:sess.phone,name:sess.name||''};
-  if(sess.pin)body.pin=sess.pin;
+  if(sess.st)body.sessionToken=sess.st;
+  else if(sess.pin)body.pin=sess.pin;
   if(window.ARKAN_ID_TOKEN)body.firebaseIdToken=window.ARKAN_ID_TOKEN;
-  const r=await fetch(AUTH_URL,{method:'POST',
+  let r=await fetch(AUTH_URL,{method:'POST',
     headers:{'Content-Type':'application/json'},
     body:JSON.stringify(body)});
+  /* جلسة قديمة بلا إثبات (401) → اطلب PIN مرة واحدة — لا يُحفظ أبدًا */
+  if(r.status===401){
+    const ask=await askPin(sess.phone);
+    if(!ask||!ask.pin)throw new Error('auth');
+    body.phone=normPh(ask.phone||sess.phone);
+    body.pin=String(ask.pin);delete body.sessionToken;
+    r=await fetch(AUTH_URL,{method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(body)});
+  }
   if(!r.ok)throw new Error('auth');
   const j=await r.json();
   const out={token:j.token,user_id:j.user_id,role:j.arkan_role,phone:sess.phone,
@@ -652,7 +664,8 @@ async function boot(){
     setTimeout(()=>location.replace('account.html?next=chat-v2.html'),500);
     return;
   }
-  try{localStorage.setItem('arkan_session',JSON.stringify({phone:sess.phone,pin:sess.pin||'',name:sess.name||''}));}catch(e){}
+  /* أمني: لا يُخزَّن PIN في المتصفح أبدًا — الهاتف والاسم فقط */
+  try{localStorage.setItem('arkan_session',JSON.stringify({phone:sess.phone,name:sess.name||''}));}catch(e){}
   bmsg('الاتصال بالخادم…');
   MY_ID=jwt.user_id;
   sb=window.supabase.createClient(SB_URL,SB_KEY,{
