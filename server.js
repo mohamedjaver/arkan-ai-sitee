@@ -329,10 +329,13 @@ app.post('/otp/verify', async (req, res) => {
     rec.tries++;
     if (otpHash(code) !== rec.hash) return res.status(400).json({ ok: false, err: 'الرمز غير صحيح' });
     otpCodes.delete(phone);
-    if (!fbReady) return res.json({ ok: true, fbToken: null });
+    /* sessionToken (HMAC، 90 يومًا) — يُصدَر فقط بعد نجاح OTP. يحل محل تخزين PIN نهائيًا */
+    const ts0 = Math.floor(Date.now() / 1000);
+    const sessionToken = arkanSign({ typ: 'sess', phone, uid: 'wa_' + phone, iat: ts0, exp: ts0 + 86400 * 90 });
+    if (!fbReady) return res.json({ ok: true, fbToken: null, sessionToken });
     const uid = 'wa_' + phone;
     const fbToken = await admin.auth().createCustomToken(uid, { phone: '+' + phone, via: 'whatsapp' });
-    res.json({ ok: true, fbToken, uid });
+    res.json({ ok: true, fbToken, uid, sessionToken });
   } catch (e) {
     console.error('otp/verify:', e.message);
     res.status(500).json({ ok: false, err: 'خطأ في التحقق' });
@@ -422,28 +425,24 @@ app.post('/supabase-token', async (req, res) => {
     if (hist.length >= 20) return res.status(429).json({ error: 'محاولات كثيرة — انتظر ساعة' });
     hist.push(nowMs()); sbHits.set(p, hist);
 
-    const { firebaseIdToken, pin } = req.body || {};
-    const isOwner = OWNER_PHONES.includes(p);
+    const { firebaseIdToken, pin, sessionToken } = req.body || {};
     let verified = false;
-    let diag = { isOwner, fbReady, phone: p };
-    if (firebaseIdToken && fbReady) {
+    /* إثبات مطلوب دائمًا: sessionToken (بعد OTP) أو Firebase idToken أو PIN.
+       لا يوجد أي مسار "الحساب موجود = دخول" — هذا كان ثغرة استيلاء. */
+    if (sessionToken) {
+      const sp = arkanVerify(sessionToken);
+      verified = !!sp && sp.typ === 'sess' && sp.phone === p;
+    }
+    if (!verified && firebaseIdToken && fbReady) {
       const decoded = await admin.auth().verifyIdToken(firebaseIdToken);
       const snap = await findUserDoc(p);
       verified = !!snap && !!decoded.uid;
-      diag.path = 'firebaseIdToken'; diag.found = !!snap;
-    } else if (pin && fbReady) {
-      const snap = await findUserDoc(p);
-      diag.path = 'pin'; diag.found = !!snap;
-      diag.storedPin = snap ? String(snap.data().pin) : null;
-      diag.storedId = snap ? snap.id : null;
-      diag.gotPin = String(pin);
-      verified = !!snap && String(snap.data().pin) === String(pin);
-    } else if (!isOwner && fbReady) {
-      const snap = await findUserDoc(p);
-      diag.path = 'account-exists'; diag.found = !!snap;
-      verified = !!snap;
     }
-    if (!verified) return res.status(401).json({ error: 'auth failed', diag });
+    if (!verified && pin && fbReady) {
+      const snap = await findUserDoc(p);
+      verified = !!snap && String(snap.data().pin) === String(pin);
+    }
+    if (!verified) return res.status(401).json({ error: 'auth failed' });
 
     const sub = phoneToUuid(p);
     const role = OWNER_PHONES.includes(p) ? 'owner' : 'customer';
@@ -465,17 +464,19 @@ app.post('/supabase-token', async (req, res) => {
 app.get('/bootstrap-owner', async (req, res) => {
   try {
     if (!fbReady) return res.status(503).json({ ok: false, err: 'Firebase غير جاهز' });
+    /* حماية إلزامية: مفتاح سري في الترويسة (مقارنة آمنة زمنيًا) — للإنشاء ولإعادة التعيين معًا */
+    const key = String(req.headers['x-arkan-key'] || '');
+    const sec = String(process.env.SUPABASE_JWT_SECRET || '');
+    const kb = Buffer.from(key), sb2 = Buffer.from(sec);
+    const keyOk = sec && kb.length === sb2.length && crypto.timingSafeEqual(kb, sb2);
+    if (!keyOk) return res.status(403).json({ ok: false, err: 'forbidden' });
     const p = OWNER_PHONES[0];
     const pin = String(req.query.pin || '').replace(/\D/g, '');
     if (pin.length !== 4) return res.status(400).json({ ok: false, err: 'أضف ?pin=رمز من 4 أرقام' });
     const existing = await findUserDoc(p);
     if (existing) {
-      /* إعادة تعيين رمز المالك — محمية بمفتاح الخادم السري */
-      if (req.query.key && req.query.key === process.env.SUPABASE_JWT_SECRET) {
-        await existing.ref.update({ pin, role: 'owner', pinChangedAt: Date.now() });
-        return res.json({ ok: true, msg: 'تم تحديث رمز المالك — ادخل الآن من chat-v2.html', phone: p });
-      }
-      return res.status(409).json({ ok: false, err: 'حساب المالك موجود مسبقًا — استخدم تغيير الرمز من الإعدادات' });
+      await existing.ref.update({ pin, role: 'owner', pinChangedAt: Date.now() });
+      return res.json({ ok: true, msg: 'تم تحديث رمز المالك — ادخل الآن من chat-v2.html', phone: p });
     }
     await admin.firestore().doc(`users/${p}`).set({
       name: 'Mohamed Javer', phone: p, pin, role: 'owner',
@@ -578,18 +579,14 @@ app.use('/chat-api', (req, res, next) => {
 app.get('/chat-api/session', async (req, res) => {
   try {
     const code = String(req.query.c || '').replace(/[^A-Za-z0-9]/g, '').toUpperCase();
-    const phone = req.query.phone ? normPhone(req.query.phone) : null;
     let row = null;
-
+    /* أُزيل مسار ?phone= نهائيًا (كان يمنح توكن 30 يومًا لأي حساب بمجرد معرفة الرقم).
+       الجلسات تُمنح فقط عبر رابط code موقّع أو عبر /otp/verify → sessionToken. */
     if (code) {
       const rr = await sbRpc('resolve_chat_link', { p_code: code });
       if (rr.ok && Array.isArray(rr.data) && rr.data.length) row = rr.data[0];
-    } else if (phone) {
-      // جلسة بالرقم: أنشئ حساب العميل + كوده + محادثته، ثم حُلّها
-      const rr = await sbRpc('api_ensure_customer', { p_phone: phone, p_name: req.query.name || '' });
-      if (rr.ok && Array.isArray(rr.data) && rr.data.length) row = rr.data[0];
     }
-    if (!row) return res.status(404).json({ error: 'not found', sb: 'no row' });
+    if (!row) return res.status(404).json({ error: 'not found' });
 
     const ts = Math.floor(Date.now() / 1000);
     const token = arkanSign({ uid: row.out_customer_id, role: 'customer', conv: row.out_conversation_id, iat: ts, exp: ts + 86400 * 30 });
