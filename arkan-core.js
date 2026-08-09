@@ -88,7 +88,8 @@ export function arkCompute(from, to, amount) {
 export function rate(from, to, amount = 0) { return arkCompute(from, to, amount).received / (amount || 1); }
 
 export function getSession() { try { return JSON.parse(localStorage.getItem('arkan_session') || 'null'); } catch { return null; } }
-export function saveSession(phone, pin, name) { const prev=getSession()||{}; localStorage.setItem('arkan_session', JSON.stringify({ phone, pin, name: name||prev.name||'' })); }
+/* أمني: لا يُخزَّن PIN في المتصفح — يُتجاهل الوسيط pin عمدًا */
+export function saveSession(phone, pin, name) { const prev=getSession()||{}; localStorage.setItem('arkan_session', JSON.stringify({ phone, name: name||prev.name||'' })); }
 export function clearSession() { localStorage.removeItem('arkan_session'); }
 export async function clientLogin(phone, pin) {
   await ready; needFB(); const { doc, getDoc } = fb; phone = normPhone(phone);
