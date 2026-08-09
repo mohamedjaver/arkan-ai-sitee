@@ -646,7 +646,7 @@ async function boot(){
     setTimeout(()=>location.replace('account.html?next=chat-v2.html'),500);
     return;
   }
-  try{localStorage.setItem('arkan_session',JSON.stringify({phone:sess.phone,pin:sess.pin||'',name:sess.name||''}));}catch(e){}
+  try{localStorage.setItem('arkan_session',JSON.stringify({phone:sess.phone,name:sess.name||''}));}catch(e){}
   bmsg('الاتصال بالخادم…');
   MY_ID=jwt.user_id;
   sb=window.supabase.createClient(SB_URL,SB_KEY,{
