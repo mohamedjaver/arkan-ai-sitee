@@ -490,6 +490,28 @@ app.get('/bootstrap-owner', async (req, res) => {
   }
 });
 
+/* ── تشخيص ذاتي: هل يقبل Supabase توكناتنا HS256؟ (محمي بنفس المفتاح) ── */
+app.get('/diag/sb', async (req, res) => {
+  try {
+    const key = String(req.headers['x-arkan-key'] || req.query.key || '').trim();
+    const sec = String(process.env.SUPABASE_JWT_SECRET || '').trim();
+    const h = s => crypto.createHash('sha256').update(s).digest();
+    if (!sec || !crypto.timingSafeEqual(h(key), h(sec)))
+      return res.status(403).json({ ok: false, err: 'forbidden' });
+    const sub = phoneToUuid(OWNER_PHONES[0]);
+    const ts = Math.floor(Date.now() / 1000);
+    const token = jwt.sign({ sub, role: 'authenticated', aud: 'authenticated',
+      arkan_role: 'owner', phone: OWNER_PHONES[0], iat: ts, exp: ts + 300 }, sec);
+    const url = (process.env.SUPABASE_URL || 'https://vyxzlazwpbstigcqvizb.supabase.co')
+      + `/rest/v1/chat_users?id=eq.${sub}&select=id,role,phone`;
+    const r = await fetch(url, { headers: {
+      'apikey': process.env.SUPABASE_ANON_KEY || SB_PUB,
+      'Authorization': 'Bearer ' + token } });
+    const body = await r.text();
+    res.json({ ok: r.ok, status: r.status, sub, body: body.slice(0, 300) });
+  } catch (e) { res.status(500).json({ ok: false, err: e.message }); }
+});
+
 /* ── إنشاء/إعادة تعيين رمز عميل — للمالك فقط (بنفس مفتاح bootstrap) ──
    جسر تشغيلي حتى تفعيل WhatsApp OTP. الاستخدام من المتصفح:
    /admin/set-pin?phone=244XXXXXXXXX&pin=XXXX&key=<SECRET url-encoded> */
