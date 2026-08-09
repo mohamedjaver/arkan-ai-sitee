@@ -1,7 +1,7 @@
 /* ARKAN GATE v2 — حماية بأدوار: عام / عميل / أدمن (fail-closed) */
 (function(){
   var here=(location.pathname.split('/').pop()||'index.html');
-  var PUBLIC=['index.html','home-v2.html','login.html','offline.html','brand.html'];
+  var PUBLIC=['index.html','home-v2.html','account.html','offline.html','brand.html'];
   var ADMIN =['settlement.html','admin.html','rates-admin.html','archive.html','trading.html','invoice.html'];
   /* صفحات تتطلب حساب عميل مسجلًا دائمًا — تجاوز الأدمن لا يكفي */
   var CLIENT_STRICT=['request.html','chat-v2.html','settings.html','app.html'];
@@ -18,7 +18,7 @@
   }
   function allow(){ var e=document.getElementById('ark-gate-style'); if(e)e.remove(); }
   setTimeout(allow, 900);
-  function denyLogin(){ location.replace((needClient?'account.html':'login.html')+'?next='+encodeURIComponent(here)); }
+  function denyLogin(){ location.replace((needClient?'account.html':'account.html')+'?next='+encodeURIComponent(here)); }
   function denyHome(){ location.replace('index.html'); }
   function session(){ try{return JSON.parse(localStorage.getItem('arkan_session')||'null');}catch(e){return null;} }
   function clientSession(){
