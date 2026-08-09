@@ -464,11 +464,12 @@ app.post('/supabase-token', async (req, res) => {
 app.get('/bootstrap-owner', async (req, res) => {
   try {
     if (!fbReady) return res.status(503).json({ ok: false, err: 'Firebase غير جاهز' });
-    /* حماية إلزامية: مفتاح سري (ترويسة x-arkan-key أو ?key= للمتصفح) — مقارنة آمنة زمنيًا */
-    const key = String(req.headers['x-arkan-key'] || req.query.key || '');
-    const sec = String(process.env.SUPABASE_JWT_SECRET || '');
-    const kb = Buffer.from(key), sb2 = Buffer.from(sec);
-    const keyOk = sec && kb.length === sb2.length && crypto.timingSafeEqual(kb, sb2);
+    /* حماية إلزامية: مفتاح سري (ترويسة x-arkan-key أو ?key=) — مقارنة بصمات آمنة زمنيًا
+       تتحمل مسافات/أسطر زائدة في قيمة المتغير على Railway */
+    const key = String(req.headers['x-arkan-key'] || req.query.key || '').trim();
+    const sec = String(process.env.SUPABASE_JWT_SECRET || '').trim();
+    const h = s => crypto.createHash('sha256').update(s).digest();
+    const keyOk = !!sec && crypto.timingSafeEqual(h(key), h(sec));
     if (!keyOk) return res.status(403).json({ ok: false, err: 'forbidden' });
     const p = OWNER_PHONES[0];
     const pin = String(req.query.pin || '').replace(/\D/g, '');
