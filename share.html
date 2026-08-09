@@ -140,7 +140,7 @@ async function sendTo(conv,as){
     <div class="ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4.5 12.5l5 5L19.5 7"/></svg></div>
     <div style="font-size:17px;font-weight:700">أُرسل ${sent} إيصال إلى ${esc(conv.client_name)}</div>
     <div style="font-size:13px;color:var(--sub);margin-top:4px">سيُقرأ ويُؤرشف تلقائيًا</div>
-    <a class="wb" href="chat.html${as==='client'?('?c='+conv.client_code):''}">فتح المحادثة</a>
+    <a class="wb" href="chat-v2.html${as==='client'?('?c='+conv.client_code):''}">فتح المحادثة</a>
   </div>`;
 }
 loadShared();
