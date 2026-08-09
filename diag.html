@@ -1,0 +1,92 @@
+<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex">
+<title>ARKAN — فحص المنظومة</title>
+<style>
+body{font-family:Inter,system-ui;background:#0B2F70;color:#fff;margin:0;padding:18px 14px 40px}
+h1{font-size:19px;margin:6px 0 14px}
+.step{background:rgba(255,255,255,.08);border-radius:14px;padding:12px 14px;margin:9px 0;font-size:14.5px;line-height:1.5}
+.step b{display:block;font-size:13px;opacity:.8;margin-bottom:4px}
+.ok{border-inline-start:4px solid #2ecc71}.bad{border-inline-start:4px solid #e74c3c}
+.wait{border-inline-start:4px solid #f1c40f}
+code{direction:ltr;display:inline-block;background:rgba(0,0,0,.25);border-radius:6px;padding:1px 6px;font-size:12px;word-break:break-all}
+input,button{font:inherit;border-radius:12px;border:0;padding:12px;width:100%;box-sizing:border-box;margin-top:8px}
+button{background:linear-gradient(135deg,#19A9F5,#0A56B8);color:#fff;font-weight:800}
+#login{display:none;background:rgba(255,255,255,.1);border-radius:14px;padding:14px;margin-top:10px}
+</style></head><body>
+<h1>🔍 فحص منظومة المحادثة</h1>
+<div id="out"></div>
+<div id="login">
+  <b>أدخل بياناتك لإكمال الفحص:</b>
+  <input id="ph" inputmode="numeric" placeholder="رقم الهاتف (222… أو 244…)" style="direction:ltr;text-align:center">
+  <input id="pn" inputmode="numeric" maxlength="4" placeholder="الرمز السري" style="direction:ltr;text-align:center;letter-spacing:8px">
+  <button onclick="run(document.getElementById('ph').value,document.getElementById('pn').value)">فحص</button>
+</div>
+<script>
+const API='https://arkan-ai-site-production.up.railway.app';
+const SB_URL='https://vyxzlazwpbstigcqvizb.supabase.co';
+const SB_KEY='sb_publishable_scXFuYtWG2dkz8_CaPEvAg_Yj2_sxnO';
+const out=document.getElementById('out');
+function step(t,cls,msg){const d=document.createElement('div');d.className='step '+cls;d.innerHTML='<b>'+t+'</b>'+msg;out.appendChild(d);return d;}
+function norm(p){let d=String(p||'').replace(/\D/g,'');if(d.startsWith('00'))d=d.slice(2);if(/^\d{8}$/.test(d))d='222'+d;else if(/^9\d{8}$/.test(d))d='244'+d;return d;}
+
+async function run(phone,pin){
+  out.innerHTML='';document.getElementById('login').style.display='none';
+  const p=norm(phone);
+  step('1) الهاتف بعد التطبيع','ok','<code>'+p+'</code>');
+
+  /* 2) توكن جديد تمامًا — تجاهل كامل لأي كاش */
+  let tok=null;
+  try{
+    const r=await fetch(API+'/supabase-token',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(pin?{phone:p,pin:String(pin)}:{phone:p})});
+    const t=await r.text();
+    if(r.ok){tok=JSON.parse(t);step('2) توكن جديد من الخادم','ok','دور: <code>'+tok.arkan_role+'</code> · هوية: <code>'+String(tok.user_id).slice(0,13)+'…</code>');}
+    else{step('2) توكن من الخادم','bad','HTTP '+r.status+' → <code>'+t.slice(0,200)+'</code>');
+      if(r.status===401&&!pin){document.getElementById('login').style.display='block';document.getElementById('ph').value=p;}
+      return;}
+  }catch(e){step('2) توكن من الخادم','bad','فشل الاتصال: '+e.message);return;}
+
+  /* 3) قراءة صفي من chat_users مباشرة */
+  try{
+    const r=await fetch(SB_URL+'/rest/v1/chat_users?id=eq.'+tok.user_id+'&select=id,role,phone,full_name',
+      {headers:{'apikey':SB_KEY,'Authorization':'Bearer '+tok.token}});
+    const t=await r.text();
+    if(r.ok){const a=JSON.parse(t);
+      if(a.length)step('3) صفي في القاعدة','ok','دور: <code>'+a[0].role+'</code> · الاسم: '+(a[0].full_name||'—'));
+      else step('3) صفي في القاعدة','bad','استعلام ناجح لكن <b>0 صفوف</b> — RLS يحجب أو الهوية غير مطابقة');
+    } else step('3) صفي في القاعدة','bad','HTTP '+r.status+' → <code>'+t.slice(0,250)+'</code>');
+  }catch(e){step('3) قراءة القاعدة','bad',e.message);}
+
+  /* 4) دالة إنشاء/استرجاع المحادثة */
+  try{
+    const r=await fetch(SB_URL+'/rest/v1/rpc/ensure_my_conversation',{method:'POST',
+      headers:{'apikey':SB_KEY,'Authorization':'Bearer '+tok.token,'Content-Type':'application/json'},
+      body:JSON.stringify({p_name:'',p_phone:p,p_lang:'ar'})});
+    const t=await r.text();
+    if(r.ok){const a=JSON.parse(t);const row=Array.isArray(a)?a[0]:a;
+      if(row&&row.conversation_id)step('4) المحادثة الدائمة','ok','معرّف: <code>'+String(row.conversation_id).slice(0,13)+'…</code>');
+      else step('4) المحادثة الدائمة','bad','الدالة نجحت لكن أعادت: <code>'+t.slice(0,200)+'</code>');
+    } else step('4) المحادثة الدائمة','bad','HTTP '+r.status+' → <code>'+t.slice(0,250)+'</code>');
+  }catch(e){step('4) دالة المحادثة','bad',e.message);}
+
+  /* 5) قائمة المحادثات (منظور المالك) */
+  try{
+    const r=await fetch(SB_URL+'/rest/v1/conversations_v2?select=id,customer_id,last_preview,last_message_at',
+      {headers:{'apikey':SB_KEY,'Authorization':'Bearer '+tok.token}});
+    const t=await r.text();
+    if(r.ok){const a=JSON.parse(t);step('5) المحادثات المرئية لي','ok','العدد: <b>'+a.length+'</b>'+(a.length?' · آخر معاينة: '+(a[0].last_preview||'—'):''));}
+    else step('5) قائمة المحادثات','bad','HTTP '+r.status+' → <code>'+t.slice(0,200)+'</code>');
+  }catch(e){step('5) القائمة','bad',e.message);}
+
+  step('الخلاصة','wait','صوّر هذه الشاشة كاملة وأرسلها.');
+}
+
+/* تشغيل تلقائي بجلسة محفوظة إن وجدت، وإلا اطلب البيانات */
+(function(){
+  let s=null;try{s=JSON.parse(localStorage.getItem('arkan_session')||'null');}catch(e){}
+  let c=null;try{c=JSON.parse(localStorage.getItem('arkanClient')||'null');}catch(e){}
+  const p=(s&&s.phone)||(c&&c.phone)||'';
+  if(p){step('جلسة محفوظة','ok','<code>'+norm(p)+'</code> — الفحص يبدأ…');run(p,'');}
+  else document.getElementById('login').style.display='block';
+})();
+</script></body></html>
