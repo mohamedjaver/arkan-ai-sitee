@@ -376,7 +376,7 @@ app.get('/chat-link/:code', async (req, res) => {
     if (code.length < 4) return res.status(400).json({ error: 'invalid code' });
 
     // الدالة security definer وممنوحة لـ anon — المفتاح العام يكفي
-    const SB_ANON = process.env.SUPABASE_ANON_KEY || 'sb_publishable_scXFuYtWG2dkz8_CaPEvAg_Yj2_sxnO';
+    const SB_ANON = process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ5eHpsYXp3cGJzdGlnY3F2aXpiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU5MTU5OTcsImV4cCI6MjEwMTQ5MTk5N30.fxMt_jH4z8t7uVnFLLHyNobu6zsgu_ZwVGLibuqWj38';
     const sbUrl = process.env.SUPABASE_URL || 'https://vyxzlazwpbstigcqvizb.supabase.co';
     const r = await fetch(`${sbUrl}/rest/v1/rpc/resolve_chat_link`, {
       method: 'POST',
@@ -578,7 +578,7 @@ app.post('/change-pin', async (req, res) => {
    كل العمليات تُوقّع بتوكن ARKAN خاص، والخادم ينفّذها بصلاحية service
    ═══════════════════════════════════════════════════════════════ */
 const SB_REST = (process.env.SUPABASE_URL || 'https://vyxzlazwpbstigcqvizb.supabase.co') + '/rest/v1';
-const SB_PUB = process.env.SUPABASE_ANON_KEY || 'sb_publishable_scXFuYtWG2dkz8_CaPEvAg_Yj2_sxnO';
+const SB_PUB = process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ5eHpsYXp3cGJzdGlnY3F2aXpiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU5MTU5OTcsImV4cCI6MjEwMTQ5MTk5N30.fxMt_jH4z8t7uVnFLLHyNobu6zsgu_ZwVGLibuqWj38';
 const sbHeaders = { 'apikey': SB_PUB, 'Authorization': `Bearer ${SB_PUB}`, 'Content-Type': 'application/json' };
 
 /* توكن ARKAN بسيط (HMAC) — يثبت هوية العميل/المالك للخادم */
