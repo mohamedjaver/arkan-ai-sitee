@@ -7,7 +7,7 @@
   'use strict';
 
   // لا تُظهر الشريط في صفحات معيّنة (login, splash)
-  var HIDE_ON = ['login.html', 'offline.html', 'index.html', 'app.html', 'home-v2.html', ''];
+  var HIDE_ON = ['account.html', 'login.html', 'offline.html', 'index.html', 'app.html', 'home-v2.html', ''];
   var path = location.pathname.split('/').pop() || 'index.html';
   if (HIDE_ON.indexOf(path) !== -1) return;
 
