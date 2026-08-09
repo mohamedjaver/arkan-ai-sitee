@@ -1068,9 +1068,8 @@ async function sendToChat(ref){
   }));}catch(e){}
   var emb=new URLSearchParams(location.search).get('embed');
   if(emb&&window.parent!==window){try{parent.postMessage('arkanReqDone','*');}catch(e){}return;}
-  /* افتح المحادثة الجديدة (chat2) برقم العميل */
-  if(phone)location.href='chat2.html?phone='+encodeURIComponent(phone)+'&name='+encodeURIComponent(d.sender||'');
-  else location.href='chat2.html';
+  /* الصفحة المعتمدة الوحيدة للمحادثة: chat-v2 — جلسة العميل تفتح محادثته الدائمة */
+  location.href='chat-v2.html';
 }
 function showSuccess(amount,currency,ref,waUrl){
   var el=document.getElementById('okWrap');
