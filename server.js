@@ -508,7 +508,18 @@ app.get('/diag/sb', async (req, res) => {
       'apikey': process.env.SUPABASE_ANON_KEY || SB_PUB,
       'Authorization': 'Bearer ' + token } });
     const body = await r.text();
-    res.json({ ok: r.ok, status: r.status, sub, body: body.slice(0, 300) });
+    // فحص إضافي: جرّب نفس التوكن لكن بمفتاح anon المكتوب في ملفات المتصفح
+    const FILE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ5eHpsYXp3cGJzdGlnY3F2aXpiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU5MTU5OTcsImV4cCI6MjEwMTQ5MTk5N30.fxMt_jH4z8t7uVnFLLHyNobu6zsgu_ZwVGLibuqWj38';
+    let r2body = '', r2status = 0;
+    try {
+      const r2 = await fetch(url, { headers: { 'apikey': FILE_ANON, 'Authorization': 'Bearer ' + token } });
+      r2status = r2.status; r2body = (await r2.text()).slice(0, 200);
+    } catch (e) { r2body = e.message; }
+    const envAnon = (process.env.SUPABASE_ANON_KEY || SB_PUB);
+    res.json({ ok: r.ok, status: r.status, sub,
+      env_anon_prefix: String(envAnon).slice(0, 12),
+      env_anon_status: r.status, env_anon_body: body.slice(0, 150),
+      file_anon_status: r2status, file_anon_body: r2body });
   } catch (e) { res.status(500).json({ ok: false, err: e.message }); }
 });
 
