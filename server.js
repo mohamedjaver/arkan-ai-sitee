@@ -344,6 +344,9 @@ app.post('/otp/verify', async (req, res) => {
 
 /* ── Supabase JWT — بوابة ARKAN Chat v2 (RLS حقيقي) ── */
 const ARKAN_NS = '7c9e6679-7425-40de-944b-e07fc1f90ae7'; // لا تغيّره أبدًا
+/* أمني/حاسم: قيمة نظيفة واحدة للسر — تُزيل أي مسافة/سطر زائد من متغير Railway
+   (كان اللصق يترك فراغًا يفسد التوقيع فترفضه Supabase) */
+const JWT_SECRET = String(process.env.SUPABASE_JWT_SECRET || '').trim();
 const OWNER_PHONES = ['22236295050'];
 const sbHits = new Map();
 const phoneToUuid = p => uuidv5(String(p).replace(/\D/g, ''), ARKAN_NS);
@@ -403,7 +406,7 @@ app.get('/chat-link/:code', async (req, res) => {
     const token = jwt.sign({
       sub: row.out_customer_id, role: 'authenticated', aud: 'authenticated',
       arkan_role: 'customer', phone: row.out_phone || '', iat: ts, exp: ts + 86400 * 30,
-    }, process.env.SUPABASE_JWT_SECRET);
+    }, JWT_SECRET);
     res.json({
       token, user_id: row.out_customer_id, arkan_role: 'customer',
       conversation_id: row.out_conversation_id, name: row.out_name || '',
@@ -450,7 +453,7 @@ app.post('/supabase-token', async (req, res) => {
     const token = jwt.sign({
       sub, role: 'authenticated', aud: 'authenticated',
       arkan_role: role, phone: p, iat: ts, exp: ts + 86400,
-    }, process.env.SUPABASE_JWT_SECRET);
+    }, JWT_SECRET);
     res.json({ token, user_id: sub, arkan_role: role, expires_in: 86400 });
   } catch (e) {
     console.error('supabase-token:', e.message);
@@ -467,7 +470,7 @@ app.get('/bootstrap-owner', async (req, res) => {
     /* حماية إلزامية: مفتاح سري (ترويسة x-arkan-key أو ?key=) — مقارنة بصمات آمنة زمنيًا
        تتحمل مسافات/أسطر زائدة في قيمة المتغير على Railway */
     const key = String(req.headers['x-arkan-key'] || req.query.key || '').trim();
-    const sec = String(process.env.SUPABASE_JWT_SECRET || '').trim();
+    const sec = JWT_SECRET;
     const h = s => crypto.createHash('sha256').update(s).digest();
     const keyOk = !!sec && crypto.timingSafeEqual(h(key), h(sec));
     if (!keyOk) return res.status(403).json({ ok: false, err: 'forbidden' });
@@ -494,7 +497,7 @@ app.get('/bootstrap-owner', async (req, res) => {
 app.get('/diag/sb', async (req, res) => {
   try {
     const key = String(req.headers['x-arkan-key'] || req.query.key || '').trim();
-    const sec = String(process.env.SUPABASE_JWT_SECRET || '').trim();
+    const sec = JWT_SECRET;
     const h = s => crypto.createHash('sha256').update(s).digest();
     if (!sec || !crypto.timingSafeEqual(h(key), h(sec)))
       return res.status(403).json({ ok: false, err: 'forbidden' });
@@ -530,7 +533,7 @@ app.get('/admin/set-pin', async (req, res) => {
   try {
     if (!fbReady) return res.status(503).json({ ok: false, err: 'Firebase غير جاهز' });
     const key = String(req.headers['x-arkan-key'] || req.query.key || '').trim();
-    const sec = String(process.env.SUPABASE_JWT_SECRET || '').trim();
+    const sec = JWT_SECRET;
     const h = s => crypto.createHash('sha256').update(s).digest();
     if (!sec || !crypto.timingSafeEqual(h(key), h(sec)))
       return res.status(403).json({ ok: false, err: 'forbidden' });
@@ -595,13 +598,13 @@ const sbHeaders = { 'apikey': SB_PUB, 'Authorization': `Bearer ${SB_PUB}`, 'Cont
 /* توكن ARKAN بسيط (HMAC) — يثبت هوية العميل/المالك للخادم */
 function arkanSign(payload) {
   const b = Buffer.from(JSON.stringify(payload)).toString('base64url');
-  const sig = crypto.createHmac('sha256', process.env.SUPABASE_JWT_SECRET).update(b).digest('base64url');
+  const sig = crypto.createHmac('sha256', JWT_SECRET).update(b).digest('base64url');
   return b + '.' + sig;
 }
 function arkanVerify(tok) {
   try {
     const [b, sig] = String(tok).split('.');
-    const exp = crypto.createHmac('sha256', process.env.SUPABASE_JWT_SECRET).update(b).digest('base64url');
+    const exp = crypto.createHmac('sha256', JWT_SECRET).update(b).digest('base64url');
     if (sig !== exp) return null;
     const p = JSON.parse(Buffer.from(b, 'base64url').toString());
     if (p.exp && p.exp < Math.floor(Date.now() / 1000)) return null;
