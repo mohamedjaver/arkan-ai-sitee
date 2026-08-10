@@ -283,22 +283,30 @@ setInterval(() => { for (const [k, v] of otpCodes) if (v.exp < nowMs()) otpCodes
 const normPhone = p => { let d = String(p || '').replace(/\D/g, ''); if (d.startsWith('00')) d = d.slice(2); if (/^\d{8}$/.test(d)) d = '222' + d; else if (/^9\d{8}$/.test(d)) d = '244' + d; return d; };
 const validPhone = d => /^(222\d{8}|244\d{9})$/.test(d);
 
-/* إرسال واتساب */
+/* إرسال واتساب — قالب أولًا، وإن تعذر (حساب تجريبي بلا قوالب) نص حر ضمن نافذة 24 ساعة */
 async function waSend(phone, code) {
   const url = `https://graph.facebook.com/v21.0/${process.env.WA_PHONE_ID}/messages`;
+  const H = { Authorization: `Bearer ${process.env.WA_TOKEN}`, 'Content-Type': 'application/json' };
   const tpl = process.env.WA_TEMPLATE || 'arkan_otp';
-  const body = {
+  const tplBody = {
     messaging_product: 'whatsapp', to: phone, type: 'template',
     template: { name: tpl, language: { code: 'ar' }, components: [
       { type: 'body', parameters: [{ type: 'text', text: code }] },
       { type: 'button', sub_type: 'url', index: '0', parameters: [{ type: 'text', text: code }] }
     ] }
   };
-  const r = await fetch(url, { method: 'POST',
-    headers: { Authorization: `Bearer ${process.env.WA_TOKEN}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify(body) });
-  const j = await r.json();
-  if (!r.ok) throw new Error(j.error?.message || `WA ${r.status}`);
+  let r = await fetch(url, { method: 'POST', headers: H, body: JSON.stringify(tplBody) });
+  let j = await r.json();
+  if (r.ok) return j;
+  const tplErr = j.error?.message || `WA ${r.status}`;
+  /* خطة بديلة: رسالة نصية (تنجح فقط إن راسل العميلُ الرقمَ خلال آخر 24 ساعة) */
+  const txtBody = {
+    messaging_product: 'whatsapp', to: phone, type: 'text',
+    text: { body: `🔐 أركان — رمز التحقق الخاص بك: ${code}\nصالح لمدة 5 دقائق. لا تشاركه مع أي أحد.` }
+  };
+  r = await fetch(url, { method: 'POST', headers: H, body: JSON.stringify(txtBody) });
+  j = await r.json();
+  if (!r.ok) throw new Error((j.error?.message || `WA ${r.status}`) + ' | template: ' + tplErr);
   return j;
 }
 
