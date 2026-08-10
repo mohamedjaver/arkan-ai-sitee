@@ -15,8 +15,8 @@
    ثم يعيد التحميل نظيفًا. علامة في sessionStorage تمنع التكرار. */
 (function(){
   try{
-    if(!sessionStorage.getItem('arkan_sw_cleared_m2')){
-      sessionStorage.setItem('arkan_sw_cleared_m2','1');
+    if(!sessionStorage.getItem('arkan_sw_cleared_m4')){
+      sessionStorage.setItem('arkan_sw_cleared_m4','1');
       var didWork=false;
       if('serviceWorker' in navigator){
         navigator.serviceWorker.getRegistrations().then(function(rs){
@@ -210,6 +210,9 @@ body.ready #scList,body.ready #scChat{visibility:visible}
   padding:6px 8px 6px 14px;box-shadow:0 1px 5px rgba(11,47,112,.05)}
 #txt{flex:1;border:0;outline:0;background:none;resize:none;max-height:110px;padding:7px 6px;line-height:1.5;font-size:15px}
 .cico{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;color:var(--mut);flex:none}
+.attb{width:46px;height:46px;border-radius:50%;background:rgba(25,169,245,.12);color:var(--blue);display:grid;place-items:center;flex:none;border:0;transition:.15s}
+.attb:active{transform:scale(.92);background:rgba(25,169,245,.22)}
+.attb svg{width:24px;height:24px}
 .cico svg{width:21px;height:21px}
 .micb,.sndb{width:46px;height:46px;border-radius:50%;background:var(--grad);color:#fff;display:grid;place-items:center;
   flex:none;box-shadow:0 4px 14px rgba(10,86,184,.35);touch-action:none;user-select:none;-webkit-user-select:none}
@@ -403,7 +406,10 @@ window.addEventListener('unhandledrejection',function(e){bfail((e&&e.reason&&e.r
     </div>
 
     <div class="crow" id="crow">
-      <button class="micb" id="micb" aria-label="اضغط باستمرار للتسجيل">
+      <button class="attb" id="attb" onclick="openAttach()" aria-label="إرفاق ملف / إيصال / صورة">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+      </button>
+      <button class="micb" id="micb" aria-label="اضغط باستمرار للتسجيل الصوتي">
         <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
       </button>
       <button class="sndb" id="sndb" aria-label="إرسال">
@@ -411,13 +417,10 @@ window.addEventListener('unhandledrejection',function(e){bfail((e&&e.reason&&e.r
       </button>
       <div class="cin">
         <textarea id="txt" rows="1" placeholder="اكتب رسالة…"></textarea>
-        <button class="cico" onclick="openAttach()" aria-label="مرفقات">
-          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.5l-8.5 8.5a5.5 5.5 0 0 1-7.8-7.8L13 5a3.7 3.7 0 0 1 5.2 5.2l-8.2 8.2a1.9 1.9 0 0 1-2.6-2.6L15 8.3"/></svg>
+        <button class="cico" onclick="openXForm()" aria-label="طلب بديلة" style="color:var(--blue)">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 10h11l-3-3M17 14H6l3 3"/><circle cx="12" cy="12" r="10"/></svg>
         </button>
       </div>
-      <button class="cico" onclick="openXForm()" aria-label="طلب بديلة" style="color:var(--blue)">
-        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 10h11l-3-3M17 14H6l3 3"/><circle cx="12" cy="12" r="10"/></svg>
-      </button>
     </div>
 
     <div id="recBar">
@@ -619,8 +622,8 @@ async function enc(txt){
 async function dec(s){
   if(!s)return s;
   if(s.startsWith('enc2:')){
-    if(!E2EE.convKey)return '🔒 رسالة مشفرة — استرجع مفاتيحك من الإعدادات';
-    try{return await ArkanE2EE.decMsg(E2EE.convKey,s);}catch(e){return '🔒 تعذر فك التشفير';}
+    if(!E2EE.convKey)return '(رسالة تجريبية قديمة)';
+    try{return await ArkanE2EE.decMsg(E2EE.convKey,s);}catch(e){return '(رسالة تجريبية قديمة)';}
   }
   if(!s.startsWith('enc1:'))return s;
   try{const b=Uint8Array.from(atob(s.slice(5)),c=>c.charCodeAt(0));
@@ -868,14 +871,10 @@ async function openConvId(id){
 /* ═══ 5) فتح المحادثة ═══ */
 const LIVE={}, ONLINE=new Set();
 async function openConv(c,isNew){
-  CONV=c;KEY=await convKey(c.secret,c.id); /* v1 legacy — لفك الرسائل القديمة فقط */
-  /* ═══ E2EE v2: مفتاح محادثة حقيقي — السيرفر يرى المغلفات فقط ═══ */
+  CONV=c;KEY=await convKey(c.secret,c.id); /* مفتاح المحادثة المشترك — يعمل من كل أجهزة المالك فورًا */
+  /* E2EE v2 مُعطّل مؤقتًا: enc1 (مفتاح المحادثة) يعمل من الطرفين وعلى عدة أجهزة بلا استرجاع مفاتيح.
+     الرسائل مشفّرة AES-GCM على القناة؛ يُعاد E2EE الكامل لاحقًا كميزة متقدمة. */
   E2EE={convKey:null,ready:false};
-  try{
-    const r=await ArkanE2EE.bootE2EE(sb,MY_ID,c);
-    E2EE={convKey:r.convKey,ready:r.ready,need:r.need||null};
-    if(r.need==='restore')toast('جهاز جديد — استرجع مفاتيحك من الإعدادات لقراءة الرسائل المشفرة');
-  }catch(e){console.warn('e2ee boot:',e&&e.name);}
   $('scChat').classList.add('on');
   const otherId=MY_ROLE==='customer'?c.owner_id:c.customer_id;
   if(!PROFILES[otherId]){
