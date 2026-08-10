@@ -369,6 +369,37 @@ app.post('/otp/reset-pin', async (req, res) => {
   }
 });
 
+/* ── إنشاء/فحص قالب OTP عبر الخادم — للمالك فقط (نفس مفتاح bootstrap)
+   /admin/create-otp-template?key=<SECRET>            → ينشئ القالب
+   /admin/create-otp-template?key=<SECRET>&check=1    → يفحص حالته */
+app.get('/admin/create-otp-template', async (req, res) => {
+  try {
+    const key = String(req.headers['x-arkan-key'] || req.query.key || '').trim();
+    const h = s => crypto.createHash('sha256').update(s).digest();
+    if (!JWT_SECRET || !crypto.timingSafeEqual(h(key), h(JWT_SECRET)))
+      return res.status(403).json({ ok: false, err: 'forbidden' });
+    if (!process.env.WA_TOKEN) return res.status(503).json({ ok: false, err: 'WA_TOKEN غير مضبوط' });
+    const WABA = process.env.WA_WABA_ID || '2131288834407860';
+    const base = `https://graph.facebook.com/v21.0/${WABA}/message_templates`;
+    const H = { Authorization: `Bearer ${process.env.WA_TOKEN}`, 'Content-Type': 'application/json' };
+    if (req.query.check) {
+      const r = await fetch(base + '?name=arkan_otp&fields=name,status,language,category', { headers: H });
+      return res.status(r.status).json(await r.json());
+    }
+    const r = await fetch(base, { method: 'POST', headers: H, body: JSON.stringify({
+      name: 'arkan_otp', language: 'ar', category: 'AUTHENTICATION',
+      components: [
+        { type: 'BODY', add_security_recommendation: true },
+        { type: 'FOOTER', code_expiration_minutes: 5 },
+        { type: 'BUTTONS', buttons: [{ type: 'OTP', otp_type: 'COPY_CODE' }] }
+      ] }) });
+    res.status(r.status).json(await r.json());
+  } catch (e) {
+    console.error('create-otp-template:', e.message);
+    res.status(500).json({ ok: false, err: e.message });
+  }
+});
+
 /* ── Supabase JWT — بوابة ARKAN Chat v2 (RLS حقيقي) ── */
 const ARKAN_NS = '7c9e6679-7425-40de-944b-e07fc1f90ae7'; // لا تغيّره أبدًا
 /* أمني/حاسم: قيمة نظيفة واحدة للسر — تُزيل أي مسافة/سطر زائد من متغير Railway
