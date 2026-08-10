@@ -619,8 +619,8 @@ async function enc(txt){
 async function dec(s){
   if(!s)return s;
   if(s.startsWith('enc2:')){
-    if(!E2EE.convKey)return '🔒 رسالة مشفرة — استرجع مفاتيحك من الإعدادات';
-    try{return await ArkanE2EE.decMsg(E2EE.convKey,s);}catch(e){return '🔒 تعذر فك التشفير';}
+    if(!E2EE.convKey)return '(رسالة تجريبية قديمة)';
+    try{return await ArkanE2EE.decMsg(E2EE.convKey,s);}catch(e){return '(رسالة تجريبية قديمة)';}
   }
   if(!s.startsWith('enc1:'))return s;
   try{const b=Uint8Array.from(atob(s.slice(5)),c=>c.charCodeAt(0));
@@ -868,14 +868,10 @@ async function openConvId(id){
 /* ═══ 5) فتح المحادثة ═══ */
 const LIVE={}, ONLINE=new Set();
 async function openConv(c,isNew){
-  CONV=c;KEY=await convKey(c.secret,c.id); /* v1 legacy — لفك الرسائل القديمة فقط */
-  /* ═══ E2EE v2: مفتاح محادثة حقيقي — السيرفر يرى المغلفات فقط ═══ */
+  CONV=c;KEY=await convKey(c.secret,c.id); /* مفتاح المحادثة المشترك — يعمل من كل أجهزة المالك فورًا */
+  /* E2EE v2 مُعطّل مؤقتًا: enc1 (مفتاح المحادثة) يعمل من الطرفين وعلى عدة أجهزة بلا استرجاع مفاتيح.
+     الرسائل مشفّرة AES-GCM على القناة؛ يُعاد E2EE الكامل لاحقًا كميزة متقدمة. */
   E2EE={convKey:null,ready:false};
-  try{
-    const r=await ArkanE2EE.bootE2EE(sb,MY_ID,c);
-    E2EE={convKey:r.convKey,ready:r.ready,need:r.need||null};
-    if(r.need==='restore')toast('جهاز جديد — استرجع مفاتيحك من الإعدادات لقراءة الرسائل المشفرة');
-  }catch(e){console.warn('e2ee boot:',e&&e.name);}
   $('scChat').classList.add('on');
   const otherId=MY_ROLE==='customer'?c.owner_id:c.customer_id;
   if(!PROFILES[otherId]){
