@@ -44,13 +44,14 @@
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{height:100%}
-body{font-family:Inter,'IBM Plex Sans Arabic',system-ui,sans-serif;background:var(--paper);color:var(--ink);
+body{font-family:-apple-system,BlinkMacSystemFont,system-ui,'SF Pro Text','IBM Plex Sans Arabic',Inter,sans-serif;background:var(--paper);color:var(--ink);
   overflow:hidden;overscroll-behavior:none;font-size:15px}
 button{font:inherit;border:0;background:none;cursor:pointer;color:inherit}
 input,textarea,select{font:inherit;color:inherit}
 ::selection{background:rgba(25,169,245,.25)}
 .hide{display:none!important}
 svg{display:block}
+svg[fill="none"]:not([stroke]){stroke:currentColor}
 
 /* ═══ الشاشات ═══ */
 .screen{position:fixed;inset:0;display:flex;flex-direction:column;background:var(--paper);
@@ -384,6 +385,9 @@ window.addEventListener('unhandledrejection',function(e){bfail((e&&e.reason&&e.r
       <div class="s" id="hSub"><span class="on"></span><span id="hSubT">متصل</span></div>
     </div>
     <span class="reqchip hide" id="hReq"></span>
+    <button class="hbtn" style="width:36px;height:36px" id="hDay" onclick="openDayLog()" aria-label="إيصالات اليوم">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h4"/></svg>
+    </button>
     <button class="hbtn" style="width:36px;height:36px" id="hInfo" aria-label="معلومات">
       <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>
     </button>
@@ -504,6 +508,22 @@ window.addEventListener('unhandledrejection',function(e){bfail((e&&e.reason&&e.r
     <button class="pbtn" onclick="submitQuote()">إرسال العرض</button>
     <div style="height:10px"></div>
     <button class="gbtn" onclick="advanceStatus()" id="qAdv">تحديث حالة العملية ←</button>
+  </div>
+</div>
+
+<!-- ═══ سجل إيصالات اليوم ═══ -->
+<div class="sheet" id="shDay">
+  <div class="bg" onclick="closeSheet('shDay')"></div>
+  <div class="card"><div class="grab"></div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+      <b style="font-size:16px">🧾 إيصالات اليوم</b><span id="dayDate" style="color:var(--mut);font-size:12px"></span>
+    </div>
+    <div id="dayList" style="max-height:44vh;overflow:auto;display:flex;flex-direction:column;gap:10px;padding:6px 0"></div>
+    <div id="dayTot" style="font-weight:800;padding:8px 2px;border-top:1px dashed rgba(10,86,184,.2)"></div>
+    <div style="display:flex;gap:8px;margin-top:4px">
+      <button class="gbtn" style="flex:1" onclick="dlDayAll()">⬇ تنزيل الكل</button>
+      <button class="gbtn" style="flex:1;background:var(--navy)" onclick="copyDaySummary()">📋 نسخ الملخص</button>
+    </div>
   </div>
 </div>
 
@@ -1272,6 +1292,88 @@ async function startReply(m){
   $('replyBar').classList.add('on');$('txt').focus();
 }
 function cancelReply(){REPLY=null;$('replyBar').classList.remove('on');}
+
+/* ═══ سجل إيصالات اليوم — لكل محادثة، محفوظ محليًا ═══ */
+const DAYLOG_KEY='arkan_daylog_v1';
+function dayStore(){try{return JSON.parse(localStorage.getItem(DAYLOG_KEY)||'{}')}catch(e){return{}}}
+function daySave(s){localStorage.setItem(DAYLOG_KEY,JSON.stringify(s))}
+function localDay(d){const x=new Date(d);return x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0')}
+function dayItems(){const today=localDay(Date.now());
+  return MSGS.filter(m=>['image','receipt','pdf','document'].includes(m.type)&&m.media_path&&localDay(m.created_at)===today);}
+async function openDayLog(){
+  const items=dayItems();const box=$('dayList');
+  $('dayDate').textContent=localDay(Date.now());
+  $('shDay').classList.add('on');
+  if(!items.length){box.innerHTML='<div style="text-align:center;color:var(--mut);padding:22px">لا إيصالات اليوم في هذه المحادثة</div>';$('dayTot').textContent='';return;}
+  const S=dayStore();
+  box.innerHTML=items.map(m=>{
+    const t=new Date(m.created_at),hh=String(t.getHours()).padStart(2,'0')+':'+String(t.getMinutes()).padStart(2,'0');
+    const rec=S[m.id]||{},isImg=m.type==='image';
+    return `<div style="display:flex;gap:10px;align-items:center;background:#F2F8FE;border-radius:14px;padding:8px">
+      ${isImg?`<img data-dpath="${esc(m.media_path)}" style="width:52px;height:52px;border-radius:10px;object-fit:cover;background:#dde9f5">`
+             :`<div style="width:52px;height:52px;border-radius:10px;display:grid;place-items:center;background:#dde9f5;font-size:22px">📄</div>`}
+      <div style="flex:1;min-width:0">
+        <div style="font-size:12px;color:var(--mut)">${hh}${m.sender_id===MY_ID?' · مُرسَل':' · مُستلَم'}</div>
+        <div style="display:flex;gap:6px;margin-top:4px">
+          <input inputmode="decimal" placeholder="المبلغ" value="${rec.a??''}" onchange="setDayAmt('${m.id}','a',this.value)" style="flex:1;min-width:0;padding:9px 10px;border:1px solid rgba(25,169,245,.35);border-radius:10px;font-size:14px;font-weight:700">
+          <select onchange="setDayAmt('${m.id}','c',this.value)" style="padding:9px 8px;border:1px solid rgba(25,169,245,.35);border-radius:10px;font-weight:700;background:#fff">
+            ${['Kz','MRU','USD','EUR','CNY','AED'].map(c=>`<option ${((rec.c||'Kz')===c)?'selected':''}>${c}</option>`).join('')}
+          </select>
+        </div>
+      </div></div>`;
+  }).join('');
+  renderDayTot();
+  for(const im of box.querySelectorAll('img[data-dpath]')){const u=await mediaUrl(im.dataset.dpath,600);if(u)im.src=u;}
+}
+function setDayAmt(id,k,v){const S=dayStore();S[id]=S[id]||{c:'Kz'};S[id][k]=k==='a'?String(v).replace(/[^\d.]/g,''):v;daySave(S);renderDayTot();}
+function renderDayTot(){const S=dayStore(),tot={};
+  dayItems().forEach(m=>{const r=S[m.id];if(r&&parseFloat(r.a))tot[r.c||'Kz']=(tot[r.c||'Kz']||0)+parseFloat(r.a);});
+  const s=Object.entries(tot).map(([c,v])=>`${v.toLocaleString('en-US')} ${c}`).join(' + ');
+  $('dayTot').textContent='الإجمالي: '+(s||'—');}
+async function dlDayAll(){
+  const items=dayItems();if(!items.length)return;
+  toast('جارٍ تنزيل '+items.length+'…');
+  const who=($('hName').textContent||'chat').trim().replace(/\s+/g,'_'),d=localDay(Date.now());let i=0;
+  for(const m of items){i++;
+    try{const u=await mediaUrl(m.media_path,600);if(!u)continue;
+      const b=await (await fetch(u)).blob();
+      const t=new Date(m.created_at),hh=String(t.getHours()).padStart(2,'0')+String(t.getMinutes()).padStart(2,'0');
+      const ext=(m.file_name&&m.file_name.includes('.'))?m.file_name.split('.').pop():(m.type==='image'?'jpg':'pdf');
+      const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=`${who}_${d}_${hh}_${i}.${ext}`;
+      document.body.appendChild(a);a.click();a.remove();
+      setTimeout(u2=>URL.revokeObjectURL(u2),5000,a.href);
+      await new Promise(r=>setTimeout(r,700));
+    }catch(e){}}
+  toast('اكتمل التنزيل ✓');}
+async function copyDaySummary(){
+  const S=dayStore(),items=dayItems(),d=localDay(Date.now());
+  let lines=['🧾 إيصالات اليوم — '+$('hName').textContent,'📅 '+d,''],n=0;
+  items.forEach(m=>{n++;const t=new Date(m.created_at),hh=String(t.getHours()).padStart(2,'0')+':'+String(t.getMinutes()).padStart(2,'0');
+    const r=S[m.id];lines.push(n+') '+hh+' — '+(r&&r.a?parseFloat(r.a).toLocaleString('en-US')+' '+(r.c||'Kz'):'(بدون مبلغ)'));});
+  lines.push('',$('dayTot').textContent,'ARKAN · arkanrates.com');
+  const txt=lines.join('\n');
+  try{await navigator.clipboard.writeText(txt);toast('نُسخ الملخص ✓');}catch(e){prompt('انسخ:',txt);}
+}
+/* ═══ صورتي الشخصية — ضغط مطوّل على الصورة أعلى المحادثة ═══ */
+setTimeout(()=>{const el=$('hAv');if(!el)return;let tm=null;
+  el.addEventListener('pointerdown',()=>{tm=setTimeout(changeMyAvatar,650);});
+  ['pointerup','pointerleave','pointercancel'].forEach(ev=>el.addEventListener(ev,()=>clearTimeout(tm)));
+},0);
+async function changeMyAvatar(){
+  const inp=document.createElement('input');inp.type='file';inp.accept='image/*';
+  inp.onchange=async ()=>{const f=inp.files[0];if(!f)return;
+    try{toast('جارٍ رفع صورتك…');
+      const small=await compressImage(f,512,.85);
+      const path='avatars/'+MY_ID+'.jpg';
+      const {error:eu}=await sb.storage.from('chat-media').upload(path,small,{upsert:true,contentType:'image/jpeg'});
+      if(eu)throw eu;
+      const {data,error}=await sb.storage.from('chat-media').createSignedUrl(path,31536000);
+      if(error||!data)throw error||new Error('sign');
+      const {error:e2}=await sb.from('chat_users').update({avatar_url:data.signedUrl}).eq('id',MY_ID);
+      if(e2)throw e2;
+      toast('تم تحديث صورتك ✓ ستظهر للطرف الآخر');
+    }catch(e){toast('تعذر تحديث الصورة');}
+  };inp.click();}
 
 /* ═══ 9) المرفقات — فحص، ضغط، رفع مع نسبة تقدم ═══ */
 let pendKind='doc';
