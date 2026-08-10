@@ -342,6 +342,33 @@ app.post('/otp/verify', async (req, res) => {
   }
 });
 
+/* ── استعادة الرمز ذاتيًا: تحقق OTP + تعيين رمز جديد في خطوة واحدة ── */
+app.post('/otp/reset-pin', async (req, res) => {
+  try {
+    const phone = normPhone(req.body.phone);
+    if (!validPhone(phone)) return res.status(400).json({ ok: false, err: 'رقم غير صالح' });
+    const code = String(req.body.code || '').replace(/\D/g, '');
+    const newPin = String(req.body.newPin || '').replace(/\D/g, '');
+    if (newPin.length !== 4) return res.status(400).json({ ok: false, err: 'الرمز الجديد 4 أرقام' });
+    const rec = otpCodes.get(phone);
+    if (!rec || rec.exp < nowMs()) return res.status(400).json({ ok: false, err: 'انتهت صلاحية رمز التحقق — أعد الإرسال' });
+    if (rec.tries >= 5) { otpCodes.delete(phone); return res.status(429).json({ ok: false, err: 'محاولات خاطئة كثيرة — أعد الإرسال' }); }
+    rec.tries++;
+    if (otpHash(code) !== rec.hash) return res.status(400).json({ ok: false, err: 'رمز التحقق غير صحيح' });
+    otpCodes.delete(phone);
+    if (!fbReady) return res.status(503).json({ ok: false, err: 'الخدمة غير متاحة مؤقتًا' });
+    const snap = await findUserDoc(phone);
+    if (snap) await snap.ref.update({ pin: newPin, pinChangedAt: Date.now(), via: 'otp-reset' });
+    else await admin.firestore().doc(`users/${phone}`).set({
+      name: 'عميل أركان', phone, pin: newPin, role: 'customer',
+      createdAt: Date.now(), via: 'otp-reset' });
+    res.json({ ok: true });
+  } catch (e) {
+    console.error('otp/reset-pin:', e.message);
+    res.status(500).json({ ok: false, err: 'خطأ في الخادم' });
+  }
+});
+
 /* ── Supabase JWT — بوابة ARKAN Chat v2 (RLS حقيقي) ── */
 const ARKAN_NS = '7c9e6679-7425-40de-944b-e07fc1f90ae7'; // لا تغيّره أبدًا
 /* أمني/حاسم: قيمة نظيفة واحدة للسر — تُزيل أي مسافة/سطر زائد من متغير Railway
