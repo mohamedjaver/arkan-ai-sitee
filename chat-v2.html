@@ -144,12 +144,20 @@ body.ready #scList,body.ready #scChat{visibility:visible}
   padding:5px 8px;font-size:12px;margin-bottom:6px;opacity:.9}
 .them .reply-q{border-color:var(--sky);background:rgba(25,169,245,.08);color:var(--mut)}
 .bub img.ph{max-width:100%;border-radius:12px;display:block;min-height:80px;background:rgba(0,0,0,.05)}
-.filecard{display:flex;align-items:center;gap:10px;min-width:200px}
-.filecard .fi{width:38px;height:38px;border-radius:10px;background:rgba(255,255,255,.2);display:grid;place-items:center;flex:none}
-.them .filecard .fi{background:rgba(25,169,245,.12)}
-.filecard .fi svg{width:19px;height:19px}
-.filecard .fn{font-weight:600;font-size:13px;max-width:170px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;direction:ltr}
-.filecard .fs{font-size:11px;opacity:.75}
+.filecard{display:flex;align-items:center;gap:11px;min-width:230px;cursor:pointer}
+.filecard .fi{width:46px;height:46px;border-radius:12px;background:rgba(255,255,255,.22);display:grid;place-items:center;flex:none;position:relative}
+.them .filecard .fi{background:rgba(25,169,245,.14);color:#0A56B8}
+.filecard .fi.rcp{background:rgba(251,191,36,.9)}
+.them .filecard .fi.rcp{background:rgba(217,119,6,.14);color:#B45309}
+.filecard .fi svg{width:24px;height:24px}
+.filecard .fi .ext{position:absolute;bottom:-3px;font-size:7px;font-weight:800;letter-spacing:.3px;background:#0B2F70;color:#fff;padding:1px 4px;border-radius:5px;line-height:1}
+.them .filecard .fi .ext{background:#0A56B8}
+.filecard .fmeta{flex:1;min-width:0}
+.filecard .fn{font-weight:700;font-size:13.5px;max-width:150px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.filecard .fs{font-size:11.5px;opacity:.7;direction:ltr;text-align:right;margin-top:2px}
+.filecard .fdl{width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.25);display:grid;place-items:center;flex:none}
+.them .filecard .fdl{background:rgba(25,169,245,.12);color:#0A56B8}
+.filecard .fdl svg{width:16px;height:16px}
 .pending{opacity:.65}
 .failed .bub{outline:1.5px solid var(--err)}
 .retry{font-size:11px;color:var(--err);font-weight:700;margin-top:4px;display:inline-flex;gap:4px;align-items:center}
@@ -214,9 +222,12 @@ body.ready #scList,body.ready #scChat{visibility:visible}
 .attb:active{transform:scale(.92);background:rgba(25,169,245,.22)}
 .attb svg{width:24px;height:24px}
 .cico svg{width:21px;height:21px}
-.micb,.sndb{width:46px;height:46px;border-radius:50%;background:var(--grad);color:#fff;display:grid;place-items:center;
+.micb{width:46px;height:46px;border-radius:50%;background:#fff;color:var(--blue);border:2px solid rgba(25,169,245,.35);display:grid;place-items:center;
+  flex:none;box-shadow:0 2px 8px rgba(11,47,112,.08);touch-action:none;user-select:none;-webkit-user-select:none}
+.micb:active{background:rgba(25,169,245,.1);transform:scale(.94)}
+.sndb{width:46px;height:46px;border-radius:50%;background:var(--grad);color:#fff;display:grid;place-items:center;
   flex:none;box-shadow:0 4px 14px rgba(10,86,184,.35);touch-action:none;user-select:none;-webkit-user-select:none}
-.micb svg,.sndb svg{width:21px;height:21px}
+.micb svg,.sndb svg{width:22px;height:22px}
 #sndb{display:none}
 
 /* ═══ التسجيل الحي ═══ */
@@ -988,13 +999,17 @@ async function replyQuote(rid){
   return `<div class="reply-q"><b>${who}</b><br>${esc(String(t).slice(0,70))}</div>`;
 }
 function fileHTML(m){
-  const icon=m.type==='receipt'
-    ?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 3h12v18l-2-1.5L14 21l-2-1.5L10 21l-2-1.5L6 21z"/><path d="M9 8h6M9 12h6"/></svg>'
-    :'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5"/></svg>';
-  const label=m.type==='receipt'?'إيصال بنكي':smartName(m.file_name||'مستند');
+  const isRcp=m.type==='receipt';
+  const ext=((m.mime_type||'').split('/')[1]||(m.file_name||'').split('.').pop()||'').toUpperCase().slice(0,4);
+  const icon=isRcp
+    ?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12v18l-2-1.5L14 21l-2-1.5L10 21l-2-1.5L6 21z"/><path d="M9 8h6M9 12h6M9 16h4"/></svg>'
+    :'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5"/></svg>';
+  const label=isRcp?'إيصال بنكي':smartName(m.file_name||'مستند');
+  const meta=[m.file_size?fmtSz(m.file_size):'',ext].filter(Boolean).join(' · ');
   return `<div class="filecard" onclick="openFile('${esc(m.media_path)}','${esc(m.file_name||'file')}')">
-    <span class="fi">${icon}</span>
-    <div><div class="fn">${esc(label)}</div><div class="fs">${m.file_size?fmtSz(m.file_size):''} · ${(m.mime_type||'').split('/')[1]||''}</div></div>
+    <span class="fi ${isRcp?'rcp':''}">${icon}<b class="ext">${esc(ext||'FILE')}</b></span>
+    <div class="fmeta"><div class="fn">${esc(label)}</div><div class="fs">${esc(meta)}</div></div>
+    <span class="fdl"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v12m0 0l-4-4m4 4l4-4M5 20h14"/></svg></span>
   </div>${m.text?`<div style="margin-top:6px">${esc(m.text)}</div>`:''}`;
 }
 
