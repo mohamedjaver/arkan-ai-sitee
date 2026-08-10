@@ -434,7 +434,7 @@ var DICT={
 "أكمل الاسم ورقم الهاتف والمبلغ":{fr:"Complétez le nom, le téléphone et le montant",pt:"Complete o nome, telefone e montante"},
 "المستلم:":{fr:"Bénéficiaire :",pt:"Beneficiário:"},
 "رقم الفاتورة، اسم المستفيد، أي تفاصيل إضافية":{fr:"N° de facture, nom du bénéficiaire, détails supplémentaires",pt:"N.º da fatura, nome do beneficiário, detalhes adicionais"},
-"محمد الأمين":{fr:"Nom et prénom",pt:"Nome completo"},
+"محمد الأمين":{fr:"ex : Mohamed Lemine",pt:"ex: Mohamed Lemine"},
 "مثال: LUANDA IMPORT LDA":{fr:"Ex. : LUANDA IMPORT LDA",pt:"Ex.: LUANDA IMPORT LDA"},
 "مثال: 41,860":{fr:"Ex. : 41 860",pt:"Ex.: 41.860"},
 "مثال: الصين / البرتغال":{fr:"Ex. : Chine / Portugal",pt:"Ex.: China / Portugal"},
