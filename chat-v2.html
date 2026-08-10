@@ -10,6 +10,27 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="vendor/supabase.js"></script>
 <script src="arkan-e2ee.js"></script>
+<script>
+/* كسر الكاش القديم مرة واحدة: يلغي أي Service Worker قديم يقدّم نسخة بالية،
+   ثم يعيد التحميل نظيفًا. علامة في sessionStorage تمنع التكرار. */
+(function(){
+  try{
+    if(!sessionStorage.getItem('arkan_sw_cleared')){
+      sessionStorage.setItem('arkan_sw_cleared','1');
+      var didWork=false;
+      if('serviceWorker' in navigator){
+        navigator.serviceWorker.getRegistrations().then(function(rs){
+          rs.forEach(function(r){r.unregister();didWork=true;});
+          if(window.caches){caches.keys().then(function(ks){
+            return Promise.all(ks.map(function(c){didWork=true;return caches.delete(c);}));
+          }).then(function(){ if(didWork) location.reload(); });}
+          else if(didWork) location.reload();
+        }).catch(function(){});
+      }
+    }
+  }catch(e){}
+})();
+</script>
 <style>
 /* ═══ ARKAN Pay 2026 · نظام الألوان المعتمد ═══ */
 :root{
