@@ -158,10 +158,11 @@
   .status-on{color:var(--green);font-size:12px;font-weight:600;background:rgba(0,168,255,.05);padding:4px 12px;border-radius:999px}
   .status-wait{color:var(--gold);font-size:12px;font-weight:600;background:rgba(0,181,255,.06);padding:4px 12px;border-radius:999px}
   .logout-r{cursor:pointer} .logout-r .rtxt b{color:var(--red)}
-  .gate{position:fixed;inset:0;z-index:100;background:var(--bg);display:none;place-items:center;padding:24px}
-  .gate.on{display:grid}
+  .gate{position:fixed;inset:0;z-index:100;background:var(--bg);display:none;padding:24px;
+    overflow-y:auto;-webkit-overflow-scrolling:touch}
+  .gate.on{display:flex;flex-direction:column;align-items:center}
   .gate-card{position:relative;z-index:1;width:100%;max-width:380px;background:var(--card);border:1px solid var(--line);
-    border-radius:var(--radius);padding:32px 24px}
+    border-radius:var(--radius);padding:32px 24px;margin:auto 0;margin-bottom:120px}
   .gate .logo{width:60px;height:60px;margin:0 auto 18px;border-radius:18px;object-fit:cover;display:block}
   .gate h1{text-align:center;font-size:22px;font-weight:700;margin-bottom:4px}
   .gate .tag{text-align:center;font-size:13px;color:var(--muted);margin-bottom:26px}
@@ -464,6 +465,18 @@ $('rsSend').onclick = async () => {
   }catch(e){ rsErr('تعذّر الاتصال — حاول ثانية'); }
   finally{ $('rsSend').disabled=false; $('rsSend').textContent='📲 أرسل رمز التحقق إلى واتسابي'; }
 };
+/* تمرير تلقائي للخانة عند التركيز + انتقال تلقائي من رمز التحقق إلى الرمز الجديد */
+['rsOtp','rsPin'].forEach(id=>{
+  $(id).addEventListener('focus',()=>setTimeout(()=>$(id).scrollIntoView({behavior:'smooth',block:'center'}),300));
+});
+$('rsOtp').addEventListener('input',()=>{
+  const v=$('rsOtp').value.replace(/\D/g,'');
+  if(v.length===6){$('rsPin').focus();}
+});
+$('rsPin').addEventListener('input',()=>{
+  if($('rsPin').value.replace(/\D/g,'').length===4)
+    setTimeout(()=>$('rsGo').scrollIntoView({behavior:'smooth',block:'center'}),150);
+});
 $('rsGo').onclick = async () => {
   $('rsErr').classList.remove('on');
   const ph=normPhone($('gPhone').value), otp=$('rsOtp').value.trim(), np=$('rsPin').value.trim();
