@@ -282,6 +282,7 @@
       <input id="gPin" class="pin" type="tel" inputmode="numeric" maxlength="4" placeholder="••••">
       <button class="enter" id="gEnter">دخول</button>
       <div class="err" id="gErr"></div>
+      <p class="hint" style="margin-top:10px"><a href="#" id="gForgot" style="font-weight:700;color:#0A56B8">نسيت رمزك؟ استعده عبر واتساب</a></p>
       <p class="hint">ليس لديك حساب؟ اطلب تحويلاً من <a href="https://arkanrates.com">الصفحة الرئيسية</a> ويصلك رمزك عبر واتساب.</p>
     </div>
   </div>
@@ -426,6 +427,12 @@ $('gEnter').onclick = () => {
   login(phone, pin, false);
 };
 $('gPin').addEventListener('keydown', e=>{ if(e.key==='Enter') $('gEnter').click(); });
+$('gForgot').onclick = e => {
+  e.preventDefault();
+  const ph = ($('gPhone').value||'').trim();
+  const msg = encodeURIComponent('🔐 نسيت رمز الدخول إلى حسابي في أركان\nرقمي: ' + (ph||'—') + '\nأرجو إعادة تعيين الرمز.');
+  location.href = 'https://wa.me/22236295050?text=' + msg;
+};
 function gErr(m){ const e=$('gErr'); e.textContent=m; e.classList.add('on'); }
 
 async function login(phone, pin, silent){
