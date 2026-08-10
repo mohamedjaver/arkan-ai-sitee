@@ -15,8 +15,8 @@
    ثم يعيد التحميل نظيفًا. علامة في sessionStorage تمنع التكرار. */
 (function(){
   try{
-    if(!sessionStorage.getItem('arkan_sw_cleared_m')){
-      sessionStorage.setItem('arkan_sw_cleared_m','1');
+    if(!sessionStorage.getItem('arkan_sw_cleared_m2')){
+      sessionStorage.setItem('arkan_sw_cleared_m2','1');
       var didWork=false;
       if('serviceWorker' in navigator){
         navigator.serviceWorker.getRegistrations().then(function(rs){
@@ -704,18 +704,24 @@ async function boot(){
   try{sb.realtime.setAuth(jwt.token);}catch(e){}
 
   bmsg('تهيئة المحادثة…');
-  /* إنشاء/استرجاع المحادثة الدائمة — idempotent (يتحمّل الفشل) */
+  /* اقرأ الدور أولًا — المالك لا يمرّ بدالة إنشاء محادثة العميل إطلاقًا */
   let row=null,DIAG={rpc:'',me:'',jwtRole:jwt.role||'?',uid:String(MY_ID).slice(0,8)};
-  try{
-    const {data,error}=await sb.rpc('ensure_my_conversation',
-      {p_name:sess.name,p_phone:sess.phone,p_lang:localStorage.getItem('arkan_lang')||'ar'});
-    if(!error)row=Array.isArray(data)?data[0]:data;
-    else{DIAG.rpc=error.message;console.warn('ensure_my_conversation:',error.message);}
-  }catch(e){DIAG.rpc=e.message||String(e);console.warn('rpc:',e);}
-
   const {data:me,error:meErr}=await sb.from('chat_users').select('*').eq('id',MY_ID).single();
   if(meErr)DIAG.me=meErr.message;
-  MY_PROFILE=me||{};MY_ROLE=me?.role||'customer';
+  MY_PROFILE=me||{};
+  /* الدور من القاعدة أو من دور التوكن (owner) — لا تسقط على customer إن كان المالك */
+  MY_ROLE=(me&&me.role)|| (jwt.role==='owner'?'owner':'customer');
+
+  if(MY_ROLE==='customer'){
+    /* العميل فقط: أنشئ/استرجع محادثته الدائمة */
+    try{
+      const {data,error}=await sb.rpc('ensure_my_conversation',
+        {p_name:sess.name,p_phone:sess.phone,p_lang:localStorage.getItem('arkan_lang')||'ar'});
+      if(!error)row=Array.isArray(data)?data[0]:data;
+      else{DIAG.rpc=error.message;console.warn('ensure_my_conversation:',error.message);}
+    }catch(e){DIAG.rpc=e.message||String(e);console.warn('rpc:',e);}
+  }
+
   document.body.dataset.booted='1';
   document.body.classList.add('ready');
   {var _bs=document.getElementById('bootScreen');if(_bs)_bs.remove();}
