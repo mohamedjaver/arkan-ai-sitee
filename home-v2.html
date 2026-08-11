@@ -6,17 +6,17 @@ if(!/legacy=1/.test(location.search)){location.replace('index.html');}</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#2E3A48">
 <title>ARKAN Pay — Move Money Across Africa Instantly</title>
-<link rel="icon" href="arkan-icon-512.png?v=n2">
+<link rel="icon" href="arkan-icon-512.png?v=n3">
 <meta name="apple-mobile-web-app-title" content="ARKAN Pay">
-<link rel="apple-touch-icon" href="apple-touch-icon.png?v=n2">
+<link rel="apple-touch-icon" href="apple-touch-icon.png?v=n3">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
 <style>
 :root{
-  --navy:#002B5C; --navy-2:#003B7E; --navy-3:#2E3A48; --ink:#0a1e4d;
-  --red:#e74c3c; --orange:#003B7E; --amber:#003B7E; --blue:#003B7E;
-  --grad:linear-gradient(120deg,#e74c3c 0%,#003B7E 30%,#003B7E 58%,#003B7E 100%);
-  --grad-rev:linear-gradient(90deg,#003B7E,#003B7E,#003B7E,#e74c3c);
+  --navy:#003B8F; --navy-2:#0058D9; --navy-3:#2E3A48; --ink:#0a1e4d;
+  --red:#e74c3c; --orange:#0058D9; --amber:#0058D9; --blue:#0058D9;
+  --grad:linear-gradient(120deg,#e74c3c 0%,#0058D9 30%,#0058D9 58%,#0058D9 100%);
+  --grad-rev:linear-gradient(90deg,#0058D9,#0058D9,#0058D9,#e74c3c);
   --txt:#0a1e4d; --txt-2:#5a6a8f; --txt-3:#8b97b5;
   --page:#f6f8fc; --card:#ffffff; --stroke:#e3e9f4; --stroke-2:#cdd8ec;
   --up:#1e9e63; --down:#e74c3c; --r:20px; --r-sm:14px;
@@ -122,12 +122,12 @@ a{color:inherit;text-decoration:none}
   padding:20px;overflow:hidden;transition:transform .2s,border-color .2s,box-shadow .2s}
 .card:hover{transform:translateY(-4px);border-color:var(--stroke-2);box-shadow:0 26px 50px -26px rgba(10,30,77,.28)}
 .card::before{content:"";position:absolute;top:0;left:0;right:0;height:3px}
-.gt-1::before{background:linear-gradient(90deg,#e74c3c,#003B7E)}
-.gt-2::before{background:linear-gradient(90deg,#003B7E,#003B7E)}
-.gt-3::before{background:linear-gradient(90deg,#003B7E,#003B7E)}
-.gt-4::before{background:linear-gradient(90deg,#003B7E,#002B5C)}
+.gt-1::before{background:linear-gradient(90deg,#e74c3c,#0058D9)}
+.gt-2::before{background:linear-gradient(90deg,#0058D9,#0058D9)}
+.gt-3::before{background:linear-gradient(90deg,#0058D9,#0058D9)}
+.gt-4::before{background:linear-gradient(90deg,#0058D9,#003B8F)}
 .gt-full::before{background:var(--grad)}
-.gt-rainbow::before{background:linear-gradient(90deg,#e74c3c,#003B7E,#003B7E,#2ecc71,#003B7E,#9b59b6);
+.gt-rainbow::before{background:linear-gradient(90deg,#e74c3c,#0058D9,#0058D9,#2ecc71,#0058D9,#9b59b6);
   background-size:200% 100%;animation:rainbow 6s linear infinite}
 @keyframes rainbow{to{background-position:200% 0}}
 
@@ -158,12 +158,12 @@ a{color:inherit;text-decoration:none}
 /* settlement steps */
 .steps{display:grid;grid-template-columns:repeat(4,1fr);gap:0;position:relative;margin-top:10px}
 .steps::before{content:"";position:absolute;top:26px;left:12%;right:12%;height:2px;
-  background:linear-gradient(90deg,#e74c3c,#003B7E,#003B7E,#003B7E)}
+  background:linear-gradient(90deg,#e74c3c,#0058D9,#0058D9,#0058D9)}
 .step{text-align:center;position:relative;z-index:1;padding:0 8px}
 .step .n{width:54px;height:54px;margin:0 auto 14px;border-radius:50%;display:grid;place-items:center;
   font-family:var(--mono);font-weight:600;font-size:18px;color:#fff;border:4px solid var(--page)}
-.step:nth-child(1) .n{background:#e74c3c}.step:nth-child(2) .n{background:#003B7E}
-.step:nth-child(3) .n{background:#003B7E}.step:nth-child(4) .n{background:#003B7E}
+.step:nth-child(1) .n{background:#e74c3c}.step:nth-child(2) .n{background:#0058D9}
+.step:nth-child(3) .n{background:#0058D9}.step:nth-child(4) .n{background:#0058D9}
 .step h4{font-size:15px;font-weight:700;color:var(--navy)}.step p{font-size:12.5px;color:var(--txt-2);margin-top:5px}
 
 /* wallet preview */
@@ -172,8 +172,8 @@ a{color:inherit;text-decoration:none}
 .wcard .c{font-family:var(--mono);font-weight:600;font-size:13px;opacity:.85}
 .wcard .bal{font-family:var(--mono);font-weight:600;font-size:24px;margin-top:8px}
 .wcard .d{font-size:12px;font-weight:600;margin-top:2px;opacity:.8}
-.w1{background:linear-gradient(135deg,#e74c3c,#003B7E)}.w2{background:linear-gradient(135deg,#003B7E,#003B7E)}
-.w3{background:linear-gradient(135deg,#003B7E,#003B7E)}.w4{background:linear-gradient(135deg,#003B7E,#002B5C);color:#eaf0ff}
+.w1{background:linear-gradient(135deg,#e74c3c,#0058D9)}.w2{background:linear-gradient(135deg,#0058D9,#0058D9)}
+.w3{background:linear-gradient(135deg,#0058D9,#0058D9)}.w4{background:linear-gradient(135deg,#0058D9,#003B8F);color:#eaf0ff}
 
 /* ai features */
 .feat{display:flex;gap:15px;align-items:flex-start}
@@ -185,7 +185,7 @@ a{color:inherit;text-decoration:none}
 /* ---------- visa card product ---------- */
 .visa-wrap{display:grid;grid-template-columns:1fr 1fr;gap:34px;align-items:center}
 .vcard{position:relative;aspect-ratio:1.586;max-width:430px;margin:0 auto;border-radius:0;padding:24px;
-  background:linear-gradient(125deg,#2E3A48 0%,#002B5C 45%,#003B7E 75%,#003B7E 130%);color:#fff;
+  background:linear-gradient(125deg,#2E3A48 0%,#003B8F 45%,#0058D9 75%,#0058D9 130%);color:#fff;
   box-shadow:0 34px 70px -28px rgba(0,26,82,.55);overflow:hidden;width:100%}
 .vcard::before{content:"";position:absolute;inset:0;
   background:radial-gradient(circle at 82% 18%, rgba(255,255,255,.14) 1.4px, transparent 1.4px);
@@ -224,7 +224,7 @@ footer a{color:var(--txt-2)}footer a:hover{color:#fff}
 <!-- NAV -->
 <nav class="nav"><div class="wrap">
   <a class="brand" href="index.html">
-    <span class="mark" style="color:#003B7E"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20 12 4l9 16M7.5 15h9"/></svg></span>
+    <span class="mark" style="color:#0058D9"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20 12 4l9 16M7.5 15h9"/></svg></span>
     ARKAN <span style="color:var(--txt-3);font-weight:600">Rates</span>
   </a>
   <div class="links">
@@ -260,10 +260,10 @@ footer a{color:var(--txt-2)}footer a:hover{color:#fff}
           <stop offset="0%" stop-color="#12307e"/><stop offset="100%" stop-color="#00113a"/>
         </radialGradient>
         <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-          <path d="M0 0 L10 5 L0 10 z" fill="#003B7E"/>
+          <path d="M0 0 L10 5 L0 10 z" fill="#0058D9"/>
         </marker>
         <marker id="arrowB" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-          <path d="M0 0 L10 5 L0 10 z" fill="#003B7E"/>
+          <path d="M0 0 L10 5 L0 10 z" fill="#0058D9"/>
         </marker>
         <marker id="arrowR" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
           <path d="M0 0 L10 5 L0 10 z" fill="#e74c3c"/>
@@ -286,10 +286,10 @@ footer a{color:var(--txt-2)}footer a:hover{color:#fff}
       <!-- CONNECTIONS with directional arrows + moving particles -->
       <g fill="none" stroke-width="2">
         <path id="c1" d="M300 175 Q330 250 380 320" stroke="#e74c3c" class="flow" marker-end="url(#arrowR)" opacity=".8"/>
-        <path id="c2" d="M380 320 Q330 250 315 190" stroke="#003B7E" class="flow" marker-end="url(#arrow)" opacity=".8"/>
-        <path id="c3" d="M380 320 Q560 200 690 140" stroke="#003B7E" class="flow" marker-end="url(#arrowB)" opacity=".85"/>
-        <path id="c4" d="M315 190 Q470 150 588 196" stroke="#003B7E" class="flow" marker-end="url(#arrow)" opacity=".8"/>
-        <path id="c5" d="M430 292 Q580 210 690 150" stroke="#003B7E" class="flow" marker-end="url(#arrowB)" opacity=".7"/>
+        <path id="c2" d="M380 320 Q330 250 315 190" stroke="#0058D9" class="flow" marker-end="url(#arrow)" opacity=".8"/>
+        <path id="c3" d="M380 320 Q560 200 690 140" stroke="#0058D9" class="flow" marker-end="url(#arrowB)" opacity=".85"/>
+        <path id="c4" d="M315 190 Q470 150 588 196" stroke="#0058D9" class="flow" marker-end="url(#arrow)" opacity=".8"/>
+        <path id="c5" d="M430 292 Q580 210 690 150" stroke="#0058D9" class="flow" marker-end="url(#arrowB)" opacity=".7"/>
       </g>
       <g fill="#fff">
         <circle r="3"><animateMotion dur="3.2s" repeatCount="indefinite"><mpath href="#c1"/></animateMotion></circle>
@@ -413,7 +413,7 @@ footer a{color:var(--txt-2)}footer a:hover{color:#fff}
 </div></section>
 
 <footer><div class="wrap">
-  <a class="brand" href="index.html"><span class="mark" style="color:#003B7E"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20 12 4l9 16M7.5 15h9"/></svg></span>ARKAN</a>
+  <a class="brand" href="index.html"><span class="mark" style="color:#0058D9"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20 12 4l9 16M7.5 15h9"/></svg></span>ARKAN</a>
   <div class="sp"></div>
   <a href="rates.html">Rates</a><a href="request.html">Transfer</a><a href="settlement.html">Settlement</a><a href="archive.html">Archive</a>
   <span style="width:100%;color:var(--txt-3)">© 2026 ARKAN INTERNATIONAL TRADING · Mauritania · Angola · China</span>
@@ -438,8 +438,8 @@ footer a{color:var(--txt-2)}footer a:hover{color:#fff}
 /* ---- network nodes ---- */
 (function(){
   const nodes=[
-    {n:'Mauritania',c:'MRU',x:315,y:190,col:'#003B7E'},
-    {n:'Senegal',c:'XOF',x:300,y:175,col:'#003B7E'},
+    {n:'Mauritania',c:'MRU',x:315,y:190,col:'#0058D9'},
+    {n:'Senegal',c:'XOF',x:300,y:175,col:'#0058D9'},
     {n:'Angola',c:'AOA',x:380,y:320,col:'#e74c3c'},
     {n:'Congo',c:'XAF',x:430,y:292,col:'#9b59b6'},
     {n:'UAE',c:'AED',x:588,y:196,col:'#2ecc71'},
@@ -471,12 +471,12 @@ footer a{color:var(--txt-2)}footer a:hover{color:#fff}
 (function(){
   const spark=(col,seed)=>{let d='M0 34';let y=34;for(let i=1;i<=11;i++){y+=(Math.sin(seed+i)*6)-(i*1.4);y=Math.max(6,Math.min(40,y));d+=` L${i*22} ${y.toFixed(0)}`;}return `<svg class="spark" viewBox="0 0 242 48" preserveAspectRatio="none"><polyline points="${d.replace(/[ML]/g,'').trim()}" fill="none" stroke="${col}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/></svg>`;};
   const M=[
-    {gt:'gt-1',bg:'linear-gradient(135deg,#e74c3c,#003B7E)',pair:'USDT / AOA',sub:'Angola',price:'843.50',chg:'+1.20',up:1,vol:'$2.4M',col:'#e74c3c'},
-    {gt:'gt-2',bg:'linear-gradient(135deg,#003B7E,#003B7E)',pair:'USDT / MRU',sub:'Mauritania',price:'39.85',chg:'+0.08',up:1,vol:'$1.1M',col:'#003B7E'},
-    {gt:'gt-3',bg:'linear-gradient(135deg,#003B7E,#003B7E)',pair:'EUR / AOA',sub:'Angola',price:'920.30',chg:'+0.23',up:1,vol:'$3.8M',col:'#003B7E'},
-    {gt:'gt-4',bg:'linear-gradient(135deg,#003B7E,#002B5C)',pair:'CNY / AOA',sub:'China corridor',price:'118.40',chg:'-0.15',up:0,vol:'$1.9M',col:'#003B7E'},
-    {gt:'gt-1',bg:'linear-gradient(135deg,#e74c3c,#003B7E)',pair:'BTC / USDT',sub:'Crypto',price:'67,420',chg:'+1.20',up:1,vol:'$8.2M',col:'#e74c3c'},
-    {gt:'gt-3',bg:'linear-gradient(135deg,#003B7E,#003B7E)',pair:'AED / MRU',sub:'Gulf corridor',price:'10.86',chg:'+0.33',up:1,vol:'$0.9M',col:'#003B7E'}
+    {gt:'gt-1',bg:'linear-gradient(135deg,#e74c3c,#0058D9)',pair:'USDT / AOA',sub:'Angola',price:'843.50',chg:'+1.20',up:1,vol:'$2.4M',col:'#e74c3c'},
+    {gt:'gt-2',bg:'linear-gradient(135deg,#0058D9,#0058D9)',pair:'USDT / MRU',sub:'Mauritania',price:'39.85',chg:'+0.08',up:1,vol:'$1.1M',col:'#0058D9'},
+    {gt:'gt-3',bg:'linear-gradient(135deg,#0058D9,#0058D9)',pair:'EUR / AOA',sub:'Angola',price:'920.30',chg:'+0.23',up:1,vol:'$3.8M',col:'#0058D9'},
+    {gt:'gt-4',bg:'linear-gradient(135deg,#0058D9,#003B8F)',pair:'CNY / AOA',sub:'China corridor',price:'118.40',chg:'-0.15',up:0,vol:'$1.9M',col:'#0058D9'},
+    {gt:'gt-1',bg:'linear-gradient(135deg,#e74c3c,#0058D9)',pair:'BTC / USDT',sub:'Crypto',price:'67,420',chg:'+1.20',up:1,vol:'$8.2M',col:'#e74c3c'},
+    {gt:'gt-3',bg:'linear-gradient(135deg,#0058D9,#0058D9)',pair:'AED / MRU',sub:'Gulf corridor',price:'10.86',chg:'+0.33',up:1,vol:'$0.9M',col:'#0058D9'}
   ];
   document.getElementById('markets-grid').innerHTML=M.map((m,i)=>`
     <div class="card mkt ${m.gt}">
