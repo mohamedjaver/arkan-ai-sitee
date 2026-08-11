@@ -2929,7 +2929,7 @@ async function uploadRC(side){
         rc.push({name:f.name,amount:p.amount,ccy,acct:p.acct||null,txn:p.txn||null,date:p.date||null,
                  ben:p.ben||null,bank:p.bank||null,ok:p.ok!==false,src:p.src||null,link:null,side,_txt:txt});
         if(p.amount!=null)ok++;else fail++;
-      }catch(e){rc.push({name:f.name,amount:null,ccy:(sel!=='AUTO'?sel:'AOA'),err:'تعذّرت القراءة',side});fail++;}
+      }catch(e){rc.push({name:f.name,amount:null,ccy:(sel!=='AUTO'?sel:'AOA'),err:'تعذّرت: '+String((e&&e.message)||e).slice(0,70),side});fail++;}
       if(n%4===0)renderRC();
     }
     if(sel==='AUTO'){const d=rcDomCcy();if(d&&$('rcCcy')){$('rcCcy').value=d;}}
@@ -3866,7 +3866,7 @@ async function imageText(dataUrl){
   return data.text||'';
 }
 /* ================= BUILD / AUTO-UPDATE ================= */
-const ARKAN_BUILD='1025';
+const ARKAN_BUILD='1026';
 function arkanVerLabel(){const e=$('verLbl');if(e)e.textContent=ARKAN_BUILD;}
 function arkanUpdateBanner(b){
   if(document.getElementById('updBar'))return;
@@ -5702,9 +5702,15 @@ label{font-size:12.5px!important;font-weight:700!important;color:#3E4C60!importa
       if(!out.ben&&p.beneficiary)out.ben=p.beneficiary;
       toast('قُرئ بمحرك '+(r.engine==='gemini'?'Gemini':'OCR')+' ✓');
       return out;
-    }catch(e){ return await _old(f); }
+    }catch(e){
+      window.__lastReadErr=String((e&&e.message)||e);
+      if(!window.__errOnce){window.__errOnce=1;toast('المحرك الموحد تعثر: '+window.__lastReadErr.slice(0,50)+' — التحويل للمسار القديم');}
+      return await _old(f);
+    }
   };
 })();
 </script>
+<div id="akBuildTag" style="position:fixed;bottom:calc(64px + env(safe-area-inset-bottom));inset-inline-end:8px;z-index:5;background:rgba(0,59,143,.85);color:#fff;font-size:9.5px;font-weight:700;padding:3px 8px;font-family:monospace;pointer-events:none;opacity:.8"></div>
+<script>document.getElementById('akBuildTag').textContent='v'+ARKAN_BUILD+' · '+(window.ArkanRead?'AR✓':'AR✗')+' · '+(window.pdfjsLib?'PDF✓':'PDF✗');</script>
 </body>
 </html>
