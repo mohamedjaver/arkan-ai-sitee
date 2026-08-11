@@ -518,9 +518,9 @@ app.post('/supabase-token', async (req, res) => {
     const ts = Math.floor(Date.now() / 1000);
     const token = jwt.sign({
       sub, role: 'authenticated', aud: 'authenticated',
-      arkan_role: role, phone: p, iat: ts, exp: ts + 86400,
+      arkan_role: role, phone: p, iat: ts, exp: ts + 86400 * 30,
     }, JWT_SECRET);
-    res.json({ token, user_id: sub, arkan_role: role, expires_in: 86400 });
+    res.json({ token, user_id: sub, arkan_role: role, expires_in: 86400 * 30 });
   } catch (e) {
     console.error('supabase-token:', e.message);
     res.status(500).json({ error: 'server error' });
