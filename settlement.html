@@ -3012,6 +3012,7 @@ function reparseAll(){
 }
 function addRCManual(side){
   side=side||'cli';
+  rcLoad(); /* لا يُكتب فوق دفعة محفوظة */
   const sel=rcCcyV(), ccy=sel==='AUTO'?(rcDomCcy()||'AOA'):sel;
   const raw=String(prompt('المبلغ ('+ccy+') — يمكن إدخال عدة مبالغ مفصولة بفاصلة أو سطر:')||'');
   if(!raw.trim())return;
@@ -3035,6 +3036,7 @@ function rcClearAll(){
   if(!confirm('تفريغ '+(c==='AUTO'?'كل':c)+' إيصالات الدفعة الحالية؟'))return;
   rc=(c==='AUTO')?[]:rc.filter(x=>x.ccy!==c);
   rxRes=null;$('rcRecon').style.display='none';rcPersist();renderRC();
+  toast('تم التفريغ — كشف الحساب أصبح فارغاً');
 }
 
 /* ============ العرض ============ */
@@ -3926,7 +3928,7 @@ async function imageText(dataUrl){
   return data.text||'';
 }
 /* ================= BUILD / AUTO-UPDATE ================= */
-const ARKAN_BUILD='1031';
+const ARKAN_BUILD='1032';
 function arkanVerLabel(){const e=$('verLbl');if(e)e.textContent=ARKAN_BUILD;}
 function arkanUpdateBanner(b){
   if(document.getElementById('updBar'))return;
