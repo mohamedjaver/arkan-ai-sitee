@@ -787,7 +787,7 @@ section#contacts.on{background:#F8FCFF;border-radius:0}
     <div class="legform">
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
         <span style="font-size:12px;color:var(--dim)">① إيصال استلام الأوقية (Bankily / السداد)</span>
-        <button class="btn btn-gold btn-sm" onclick="uploadPayRcpt2()">📷 رفع إيصال الاستلام</button>
+        <button class="btn btn-gold btn-sm" onclick="uploadPayRcpt2()">رفع إيصال الاستلام</button>
       </div>
       <div id="m2aRcptInfo" style="margin-top:6px"></div>
     </div>
@@ -809,7 +809,7 @@ section#contacts.on{background:#F8FCFF;border-radius:0}
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
         <span style="font-size:12px;color:var(--dim)">④ إيصالات الكوانزا المدفوعة: <b id="kbCount" class="num" style="color:var(--txt)">0</b> · المجموع: <b id="kbSum" class="num" style="color:var(--gold2)">0</b></span>
         <span>
-          <button class="btn btn-gold btn-sm" onclick="uploadKB()">📷 رفع إيصالات الدفع</button>
+          <button class="btn btn-gold btn-sm" onclick="uploadKB()">رفع إيصالات الدفع</button>
           <button class="btn btn-line btn-sm" onclick="clearKB()">تصفير</button>
         </span>
       </div>
@@ -3866,7 +3866,7 @@ async function imageText(dataUrl){
   return data.text||'';
 }
 /* ================= BUILD / AUTO-UPDATE ================= */
-const ARKAN_BUILD='1021';
+const ARKAN_BUILD='1022';
 function arkanVerLabel(){const e=$('verLbl');if(e)e.textContent=ARKAN_BUILD;}
 function arkanUpdateBanner(b){
   if(document.getElementById('updBar'))return;
@@ -5648,6 +5648,37 @@ label{color:#A9BBD8!important}
 #lock{background:linear-gradient(180deg,#04143A,#062165)!important}
 #lock h2{color:#EAF2FF!important}
 .type .t2{color:#6E7A85!important}
+</style>
+
+<style id="akClarity">
+/* ═══ وضوح BAI الكامل: أرقام بارزة، صناديق بيضاء، خط موحد ═══ */
+/* صناديق رسائل التأكيد: من الأخضر الداكن إلى بطاقة بيضاء */
+.wa-box{background:#FFFFFF!important;border:1px solid #DDE5F0!important;
+  backdrop-filter:none!important;-webkit-backdrop-filter:none!important;
+  box-shadow:0 1px 3px rgba(0,27,61,.08)!important}
+.wa-box h3{color:#0058D9!important;font-size:13px!important;font-weight:800!important}
+.bubble{background:#F2F6FC!important;border:1px solid #E1E9F4!important;
+  color:#0B2447!important;font-size:13.5px!important;font-weight:600!important;line-height:2!important}
+/* المدخلات الرقمية: كبيرة، عريضة، كحلية */
+input[inputmode="decimal"],input[inputmode="numeric"],input[type="number"]{
+  font-family:'IBM Plex Mono',monospace!important;font-size:18px!important;
+  font-weight:700!important;color:#003B8F!important;letter-spacing:.3px!important}
+/* المبالغ والنتائج */
+.v.num,.num{font-family:'IBM Plex Mono',monospace!important;font-weight:700!important;color:#062165!important}
+.v.gold.num{color:#0058D9!important;font-weight:800!important;font-size:28px!important;letter-spacing:.5px}
+.sum{background:#FFFFFF!important;border:1px solid #DDE5F0!important}
+.sum .k{color:#4E5A6B!important;font-size:12px!important;font-weight:700!important}
+/* بطاقات العمليات المسجلة */
+.tx{background:#FFFFFF!important;border:1.5px solid #C9DBF2!important;box-shadow:0 1px 3px rgba(0,27,61,.06)!important}
+.tx b{font-family:'IBM Plex Mono',monospace!important;color:#062165}
+/* حالة الربح/الخسارة أوضح */
+.green{color:#0F8A3D!important;font-weight:800!important}
+.red{color:#D32F2F!important;font-weight:800!important}
+/* التسميات */
+label{font-size:12.5px!important;font-weight:700!important;color:#3E4C60!important}
+/* أزرار الرفع: نص أبيض ثقيل بلا إيموجي باهت */
+.btn-gold{font-weight:800!important;font-size:14px!important;letter-spacing:.2px}
+.btn-wa{background:#0F8A3D!important;color:#fff!important;border:none!important;font-weight:800!important}
 </style>
 </body>
 </html>
