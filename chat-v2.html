@@ -946,7 +946,6 @@ async function openConv(c,isNew){
   await sb.rpc('mark_conversation_read',{cid:c.id});
 }
 function closeChat(){
-  if(MY_ROLE==='customer'){location.href='app.html';return;}
   $('scChat').classList.remove('on');
   stopAudio();
   if(SUB){sb.removeChannel(SUB);SUB=null;}
@@ -1860,5 +1859,27 @@ body{background:radial-gradient(1100px 600px at 78% -10%, rgba(0,88,217,.55), tr
  radial-gradient(900px 700px at -10% 110%, rgba(0,181,255,.22), transparent 55%),
  linear-gradient(180deg,#04143A 0%,#062165 58%,#003B8F 100%) fixed!important}
 </style>
+
+<script id="akHistNav">
+/* إيماءة الرجوع تغلق الغرفة للقائمة بدل الخروج من الموقع */
+(function(){
+'use strict';
+const _oc=window.openConv;
+window.openConv=async function(c,isNew){
+  const r=await _oc(c,isNew);
+  if(!history.state||!history.state.akRoom)history.pushState({akRoom:1},'','#chat');
+  return r;
+};
+window.addEventListener('popstate',()=>{
+  const sc=document.getElementById('scChat');
+  if(sc&&sc.classList.contains('on')){closeChat();}
+});
+const _cc=window.closeChat;
+window.closeChat=function(){
+  _cc();
+  if(history.state&&history.state.akRoom)history.replaceState({},'',location.pathname);
+};
+})();
+</script>
 </body>
 </html>
