@@ -9,14 +9,14 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="vendor/supabase.js"></script>
 <style>
-:root{--sky:#19A9F5;--blue:#0A56B8;--navy:#0B2F70;--paper:#F6FAFD;--ink:#0B1B33;--mut:#5B6B85;
-  --line:rgba(11,47,112,.08);--grad:linear-gradient(135deg,#19A9F5,#0A56B8);
+:root{--sky:#00509E;--blue:#00509E;--navy:#002B5C;--paper:#F6FAFD;--ink:#0B1B33;--mut:#5B6B85;
+  --line:rgba(11,47,112,.08);--grad:linear-gradient(135deg,#00509E,#00509E);
   --sat:env(safe-area-inset-top,0px);--sab:env(safe-area-inset-bottom,0px)}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 body{font-family:Inter,'IBM Plex Sans Arabic',system-ui,sans-serif;background:var(--paper);color:var(--ink);min-height:100vh}
 .head{display:flex;align-items:center;gap:12px;padding:calc(var(--sat) + 14px) 18px 14px}
 .head h1{font-size:19px;font-weight:800}
-.back{width:38px;height:38px;border-radius:13px;background:#fff;border:1px solid var(--line);display:grid;place-items:center}
+.back{width:38px;height:38px;border-radius:0;background:#fff;border:1px solid var(--line);display:grid;place-items:center}
 .wrap{max-width:520px;margin:0 auto;padding:6px 18px calc(var(--sab) + 30px)}
 .avbox{display:flex;flex-direction:column;align-items:center;gap:14px;margin:14px 0 26px}
 .avatar{width:112px;height:112px;border-radius:50%;background:var(--grad);color:#fff;display:grid;place-items:center;
@@ -25,21 +25,21 @@ body{font-family:Inter,'IBM Plex Sans Arabic',system-ui,sans-serif;background:va
 .avatar .edit{position:absolute;bottom:2px;inset-inline-end:2px;width:34px;height:34px;border-radius:50%;
   background:#fff;border:1px solid var(--line);display:grid;place-items:center;color:var(--navy);box-shadow:0 3px 10px rgba(11,47,112,.15)}
 .avbtns{display:flex;gap:10px}
-.avbtns button{font-size:12.5px;font-weight:700;padding:9px 15px;border-radius:999px;background:#fff;
+.avbtns button{font-size:12.5px;font-weight:700;padding:9px 15px;border-radius:0;background:#fff;
   border:1px solid var(--line);color:var(--navy);cursor:pointer;font-family:inherit}
 .avbtns button.d{color:#DC2626}
-.card{background:#fff;border:1px solid var(--line);border-radius:20px;padding:18px;box-shadow:0 4px 18px rgba(11,47,112,.05)}
+.card{background:#fff;border:1px solid var(--line);border-radius:0;padding:18px;box-shadow:0 4px 18px rgba(11,47,112,.05)}
 .fld{margin-bottom:15px}
 .fld label{display:block;font-size:12px;font-weight:700;color:var(--mut);margin-bottom:6px}
-.fld input,.fld select{width:100%;background:var(--paper);border:1px solid var(--line);border-radius:13px;
+.fld input,.fld select{width:100%;background:var(--paper);border:1px solid var(--line);border-radius:0;
   padding:13px 15px;font:inherit;font-size:15px;outline:0}
 .fld input:focus,.fld select:focus{border-color:var(--sky);box-shadow:0 0 0 3px rgba(25,169,245,.14)}
 .fld input[readonly]{opacity:.65}
-.save{width:100%;margin-top:8px;padding:15px;border:0;border-radius:15px;background:var(--grad);color:#fff;
+.save{width:100%;margin-top:8px;padding:15px;border:0;border-radius:0;background:var(--grad);color:#fff;
   font:inherit;font-weight:800;font-size:15px;cursor:pointer;box-shadow:0 8px 22px rgba(10,86,184,.3)}
 .save:disabled{opacity:.55}
 #toast{position:fixed;bottom:calc(var(--sab) + 26px);inset-inline-start:50%;transform:translate(-50%,12px);
-  background:var(--navy);color:#fff;font-size:13px;font-weight:600;border-radius:12px;padding:11px 18px;
+  background:var(--navy);color:#fff;font-size:13px;font-weight:600;border-radius:0;padding:11px 18px;
   opacity:0;pointer-events:none;transition:.22s;z-index:99}
 #toast.on{opacity:1;transform:translate(-50%,0)}
 </style>
@@ -47,7 +47,7 @@ body{font-family:Inter,'IBM Plex Sans Arabic',system-ui,sans-serif;background:va
 <body>
 <div class="head">
   <button class="back" onclick="history.length>1?history.back():location.href='chat-v2.html'">
-    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#0B2F70" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#002B5C" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
   </button>
   <h1>إعدادات الحساب</h1>
 </div>
@@ -73,14 +73,14 @@ body{font-family:Inter,'IBM Plex Sans Arabic',system-ui,sans-serif;background:va
     <button class="save" id="saveB" onclick="save()">حفظ التغييرات</button>
 
     <div style="margin-top:26px;padding-top:20px;border-top:1px solid #E3EDF9">
-      <div style="font-weight:800;font-size:15.5px;color:#0B2F70;margin-bottom:12px">🔒 الأمان — تغيير الرمز السري</div>
+      <div style="font-weight:800;font-size:15.5px;color:#002B5C;margin-bottom:12px">🔒 الأمان — تغيير الرمز السري</div>
       <label class="lb">الرمز الحالي</label>
       <input class="in" id="pinOld" inputmode="numeric" maxlength="4" placeholder="••••" style="text-align:center;letter-spacing:8px;direction:ltr">
       <label class="lb">الرمز الجديد (4 أرقام)</label>
       <input class="in" id="pinNew" inputmode="numeric" maxlength="4" placeholder="••••" style="text-align:center;letter-spacing:8px;direction:ltr">
       <label class="lb">تأكيد الرمز الجديد</label>
       <input class="in" id="pinNew2" inputmode="numeric" maxlength="4" placeholder="••••" style="text-align:center;letter-spacing:8px;direction:ltr">
-      <button class="save" id="pinB" onclick="changePin()" style="background:linear-gradient(135deg,#0B2F70,#0A56B8)">تغيير الرمز السري</button>
+      <button class="save" id="pinB" onclick="changePin()" style="background:linear-gradient(135deg,#002B5C,#00509E)">تغيير الرمز السري</button>
     </div>
 
     <button class="save" onclick="if(confirm('تسجيل الخروج من هذا الحساب؟')){['arkan_session','arkanClient','arkan_sb_jwt','arkan_pending_treq'].forEach(k=>{try{localStorage.removeItem(k)}catch(e){}});location.replace('chat-v2.html');}" style="margin-top:18px;background:linear-gradient(135deg,#E2483D,#B32C22)">تسجيل الخروج / تبديل الحساب</button>
@@ -187,5 +187,10 @@ async function changePin(){
   $('pinB').disabled=false;$('pinB').textContent='تغيير الرمز السري';
 }
 </script>
+
+<style id="akBaiCss">
+/* ARKAN × BAI override — بلا زخارف عائمة */
+.orb,.orb-1,.orb-2,.grid-bg,#particles,.aurora,.noise{display:none!important}
+</style>
 </body>
 </html>
