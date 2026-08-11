@@ -2909,33 +2909,92 @@ function rcDomCcy(){
 /* ============ رفع دفعة إيصالات ============ */
 async function uploadRC(side){
   side=side||'cli';
-  const inp=document.createElement('input');
+  /* ═══ محرك الدفعات v3 — قبعة كبير مهندسي OCR ═══
+     1) عنصر إدخال مثبّت في DOM (علاج علة WebKit التي تقتل الدفعة بعد الملف الأول)
+     2) لقطة بايتات فورية لكل الملفات قبل أي معالجة
+     3) قراءة محلية متوازية ×6 (PDF نصي/OCR) — ملّيثوانٍ للملف
+     4) Gemini لاحقاً وبالتوازي ×3 لما فشل محلياً فقط */
+  let inp=document.getElementById('akRcInput');
+  if(inp)inp.remove();
+  inp=document.createElement('input');
   inp.type='file';inp.accept='image/*,application/pdf';inp.multiple=true;
+  inp.id='akRcInput';inp.style.cssText='position:fixed;left:-9999px;top:0';
+  document.body.appendChild(inp);
   inp.onchange=async()=>{
-    const files=[...inp.files];if(!files.length)return;
+    const picked=[...inp.files]; if(!picked.length)return;
     const sel=rcCcyV(), pg=$('rcProg');
     const lbl=side==='cli'?'العميل':'المورد';
-    if(pg)pg.style.display='block';
-    let ok=0,n=0,fail=0;
-    for(const f of files){
-      n++;
-      if(pg)pg.textContent='قراءة إيصالات '+lbl+' — '+n+'/'+files.length+'  ·  '+String(f.name).slice(0,22);
-      try{
-        const _R=await arkanRead(f);
-        const txt=_R.text;
-        if(!_R.ok&&_R.err&&!txt)throw new Error(_R.err);
-        const p=arkanParse(txt,f.name);
-        const ccy=p.ccy||(sel!=='AUTO'?sel:null)||'AOA';
-        rc.push({name:f.name,amount:p.amount,ccy,acct:p.acct||null,txn:p.txn||null,date:p.date||null,
-                 ben:p.ben||null,bank:p.bank||null,ok:p.ok!==false,src:p.src||null,link:null,side,_txt:txt});
-        if(p.amount!=null)ok++;else fail++;
-      }catch(e){rc.push({name:f.name,amount:null,ccy:(sel!=='AUTO'?sel:'AOA'),err:'تعذّرت: '+String((e&&e.message)||e).slice(0,70),side});fail++;}
-      if(n%4===0)renderRC();
+    if(pg){pg.style.display='block';pg.textContent='تثبيت '+picked.length+' ملفاً…';}
+    /* 2) لقطة البايتات فوراً — الدفعة محفوظة مهما فعل Safari */
+    const snap=[];
+    for(const f of picked){
+      try{const buf=await f.arrayBuffer();
+        snap.push({name:f.name,type:f.type||'',buf,
+          isPdf:/pdf/i.test(f.type||'')||/\.pdf$/i.test(f.name||'')});}
+      catch(e){snap.push({name:f.name,err:'تعذّر فتح الملف'});}
+    }
+    const t0=performance.now();
+    const slots=snap.map(x=>({name:x.name,amount:null,ccy:(sel!=='AUTO'?sel:'AOA'),
+      acct:null,txn:null,date:null,ben:null,bank:null,ok:true,src:null,link:null,side,err:x.err||null}));
+    slots.forEach(sl=>rc.push(sl));
+    renderRC();
+    let done=0,okN=0;
+    const tick=()=>{if(pg)pg.textContent='قراءة '+lbl+' — '+done+'/'+snap.length+' · مقروء '+okN;};
+    const readLocal=async(x)=>{
+      const file=new File([x.buf],x.name,{type:x.type||(x.isPdf?'application/pdf':'image/jpeg')});
+      const dataUrl=x.isPdf?null:await new Promise((res,rej)=>{const r=new FileReader();
+        r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(file);});
+      const txt=x.isPdf?await pdfText(file):await imageText(dataUrl);
+      return arkanParse(txt,x.name);
+    };
+    /* 3) موجة محلية متوازية */
+    const CONC=6; let idx=0;
+    async function worker(){
+      while(idx<snap.length){
+        const k=idx++; const x=snap[k], sl=slots[k];
+        if(x.err){done++;tick();continue;}
+        try{
+          const p=await readLocal(x);
+          Object.assign(sl,{amount:p.amount??null,ccy:p.ccy||sl.ccy,txn:p.txn||null,
+            acct:p.acct||null,date:p.date||null,ben:p.ben||null,bank:p.bank||null,
+            ok:p.ok!==false,src:'local'});
+          if(sl.amount!=null)okN++;
+        }catch(e){sl.err='محلي: '+String((e&&e.message)||e).slice(0,50);}
+        done++;tick();
+        if(done%5===0)renderRC();
+      }
+    }
+    await Promise.all(Array.from({length:Math.min(CONC,snap.length)},worker));
+    renderRC();
+    const ms=Math.round((performance.now()-t0)/Math.max(1,snap.length));
+    if(pg)pg.textContent='محلي: '+okN+'/'+snap.length+' مقروء · '+ms+'ms/ملف';
+    /* 4) موجة Gemini لما لم يُقرأ فقط — إن وُجد مفتاح */
+    const need=slots.map((sl,k)=>({sl,x:snap[k]})).filter(o=>o.sl.amount==null&&!o.x.err);
+    if(need.length&&window.ArkanRead&&(localStorage.getItem('gemKey')||'').trim()){
+      if(pg)pg.textContent='ذكاء اصطناعي لـ '+need.length+' إيصالاً متبقياً…';
+      let gi=0;
+      async function gworker(){
+        while(gi<need.length){
+          const o=need[gi++];
+          try{
+            const f=new File([o.x.buf],o.x.name,{type:o.x.type||'application/pdf'});
+            const r=await ArkanRead.readAmount(f);
+            if(r.amount!=null){o.sl.amount=r.amount;o.sl.ccy=r.ccy||o.sl.ccy;
+              o.sl.txn=o.sl.txn||r.txn;o.sl.bank=o.sl.bank||r.bank;
+              o.sl.date=o.sl.date||r.date;o.sl.src='gemini';o.sl.err=null;okN++;}
+          }catch(e){}
+          renderRC();
+        }
+      }
+      await Promise.all(Array.from({length:Math.min(3,need.length)},gworker));
     }
     if(sel==='AUTO'){const d=rcDomCcy();if(d&&$('rcCcy')){$('rcCcy').value=d;}}
-    if(pg){pg.textContent='اكتمل: '+ok+' مقروء'+(fail?'  ·  '+fail+' يحتاج إدخال يدوي':'');setTimeout(()=>{pg.style.display='none';},6000);}
+    const miss=slots.filter(sl=>sl.amount==null).length;
+    if(pg){pg.textContent='اكتمل: '+okN+'/'+snap.length+' مقروء'+(miss?' · '+miss+' أدخله يدوياً (زر مبلغ)':'');
+      setTimeout(()=>{pg.style.display='none';},8000);}
     rcPersist();renderRC();
-    toast('إيصالات '+lbl+': '+ok+'/'+files.length+' مقروء');
+    toast('إيصالات '+lbl+': '+okN+'/'+snap.length+' مقروء');
+    inp.remove();
   };
   inp.click();
 }
@@ -3866,7 +3925,7 @@ async function imageText(dataUrl){
   return data.text||'';
 }
 /* ================= BUILD / AUTO-UPDATE ================= */
-const ARKAN_BUILD='1029';
+const ARKAN_BUILD='1030';
 function arkanVerLabel(){const e=$('verLbl');if(e)e.textContent=ARKAN_BUILD;}
 function arkanUpdateBanner(b){
   if(document.getElementById('updBar'))return;
