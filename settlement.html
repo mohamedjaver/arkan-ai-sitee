@@ -3337,11 +3337,11 @@ function uploadPayRcpt2(){
     if(mb.length+files.length>50){toast('الحد 50 إيصال');return;}
     toast('جارٍ قراءة '+files.length+' إيصال...');
     let ok=0;
-    for(const f of files){
+    const _res=await akBatchText(files,(d,n)=>toast('قراءة '+d+'/'+n+'…'));
+    for(const _r of _res){
       try{
-        const _R=await arkanRead(f);
-        const txt=_R.text;
-        if(!_R.ok&&_R.err&&!txt)throw new Error(_R.err);
+        const txt=_r.txt;
+        if(_r.err&&!txt)throw new Error(_r.err);
         if(!txt||txt.replace(/\s/g,'').length<15)throw new Error('لا يوجد نص مقروء في الملف');
         const ex=mruReceiptExtract(txt);
         if(!ex.amount)throw new Error('لم يُعثر على المبلغ');
@@ -3408,11 +3408,12 @@ function uploadKB(){
     if(kb.length+files.length>100){toast('الحد 100 إيصال');return;}
     toast('جارٍ قراءة '+files.length+' ملف...');
     let ok=0,moved=0;const touched=new Set([fid]);
-    for(const f of files){
+    const _res=await akBatchText(files,(d,n)=>toast('قراءة '+d+'/'+n+'…'));
+    for(const _r of _res){
+      const f={name:_r.name};
       try{
-        const _R=await arkanRead(f);
-        const txt=_R.text;
-        if(!_R.ok&&_R.err&&!txt)throw new Error(_R.err);
+        const txt=_r.txt;
+        if(_r.err&&!txt)throw new Error(_r.err);
         if(!txt||txt.replace(/\s/g,'').length<20)throw new Error('لا يوجد نص مقروء');
         const sm=smartRead(txt);
         if(sm.txn&&kb.some(x=>x.txn&&x.txn===sm.txn)){dup++;continue;}
@@ -3929,7 +3930,7 @@ async function imageText(dataUrl){
   return data.text||'';
 }
 /* ================= BUILD / AUTO-UPDATE ================= */
-const ARKAN_BUILD='1034';
+const ARKAN_BUILD='1035';
 function arkanVerLabel(){const e=$('verLbl');if(e)e.textContent=ARKAN_BUILD;}
 function arkanUpdateBanner(b){
   if(document.getElementById('updBar'))return;
@@ -5804,6 +5805,55 @@ function akInput(){
   el.style.cssText='position:fixed;left:-9999px;top:0;width:1px;height:1px;opacity:0';
   document.body.appendChild(el);
   return el;
+}
+</script>
+
+<script id="akBatchCore">
+/* akBatchText: قراءة نصوص دفعة ملفات — محلي متوازٍ أولاً، ثم المحرك الكامل لما فشل */
+async function akBatchText(files,onTick){
+  /* لقطة بايتات فورية */
+  const snap=[];
+  for(const f of files){
+    try{snap.push({name:f.name,type:f.type||'',buf:await f.arrayBuffer(),
+      isPdf:/pdf/i.test(f.type||'')||/\.pdf$/i.test(f.name||'')});}
+    catch(e){snap.push({name:f.name,err:'تعذّر فتح الملف'});}
+  }
+  const res=snap.map(x=>({name:x.name,txt:'',err:x.err||null}));
+  let idx=0,done=0;
+  async function w(){
+    while(idx<snap.length){
+      const k=idx++; const x=snap[k];
+      if(x.err){done++;onTick&&onTick(done,snap.length);continue;}
+      try{
+        const file=new File([x.buf],x.name,{type:x.type||(x.isPdf?'application/pdf':'image/jpeg')});
+        if(x.isPdf){res[k].txt=await pdfText(file);}
+        else{
+          const du=await new Promise((rs,rj)=>{const r=new FileReader();
+            r.onload=()=>rs(r.result);r.onerror=rj;r.readAsDataURL(file);});
+          res[k].txt=await imageText(du);
+        }
+      }catch(e){res[k].err='محلي: '+String((e&&e.message)||e).slice(0,60);}
+      done++;onTick&&onTick(done,snap.length);
+    }
+  }
+  await Promise.all(Array.from({length:Math.min(6,snap.length)},w));
+  /* موجة المحرك الكامل (Gemini النصي) لما لم يُقرأ محلياً */
+  const need=res.map((r,k)=>({r,x:snap[k],k})).filter(o=>!o.x.err&&(!o.r.txt||o.r.txt.replace(/\s/g,'').length<15));
+  let gi=0;
+  async function gw(){
+    while(gi<need.length){
+      const o=need[gi++];
+      try{
+        const file=new File([o.x.buf],o.x.name,{type:o.x.type||'application/pdf'});
+        const _R=await arkanRead(file);
+        if(_R&&_R.text)o.r.txt=_R.text;
+        else if(_R&&_R.err)o.r.err=_R.err;
+      }catch(e){o.r.err=String((e&&e.message)||e).slice(0,60);}
+      onTick&&onTick(done,snap.length);
+    }
+  }
+  if(need.length)await Promise.all(Array.from({length:Math.min(2,need.length)},gw));
+  return res;
 }
 </script>
 </body>
