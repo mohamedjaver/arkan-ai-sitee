@@ -78,7 +78,8 @@ function totalsLine(byCur, t){
   return ks.map(function(k){return nf(byCur[k],2)+' '+(k==='?'?'':k);}).join('  ·  ');
 }
 
-window.ArkanPdfReport={ run: function(docs){
+window.ArkanPdfReport={ run: function(docs,opts){
+  opts=opts||{};
   try{
     var t=L[pickLang()];
     var JS=window.jspdf&&window.jspdf.jsPDF;
@@ -109,7 +110,7 @@ window.ArkanPdfReport={ run: function(docs){
       pdf.setFontSize(9.5);
       var info=[
         [t.gen, today.toLocaleString('en-GB',{dateStyle:'medium',timeStyle:'short'})],
-        [t.count, String(rows.length)],
+        [opts.periodLabel?'الفترة':t.count, opts.periodLabel||String(rows.length)],
         [t.total, totalsLine(dat.byCur,t)],
         [t.cur, mainCur],
         [t.verified, String(okN)],
