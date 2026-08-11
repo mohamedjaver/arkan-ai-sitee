@@ -111,7 +111,7 @@ header{padding:20px 18px 4px;position:relative;z-index:6}
 .brand h1 span{color:var(--acc2)}
 .brand p{font-size:10px;color:var(--dim);letter-spacing:2.5px;margin-top:2px}
 /* ===== أيقونات الأصول: أعلام على كحلي العملية ===== */
-.ic.flagT{background:linear-gradient(150deg,#2E3A48 0%,#0A2A6E 60%,#0D3B8F 100%)!important;
+.ic.flagT{background:linear-gradient(150deg,#0B2447 0%,#0A2A6E 60%,#0D3B8F 100%)!important;
   border:1.5px solid rgba(0,181,255,.55);display:flex;align-items:center;justify-content:center;
   font-size:24px;line-height:1;box-shadow:0 8px 20px rgba(0,30,90,.45), inset 0 1px 0 rgba(255,255,255,.12)}
 .ic.flagT .usdtB{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:50%;
@@ -121,7 +121,7 @@ header{padding:20px 18px 4px;position:relative;z-index:6}
   background:
     radial-gradient(700px 380px at 82% -6%, rgba(0,181,255,.35), transparent 60%),
     radial-gradient(560px 400px at -8% 108%, rgba(0,120,255,.22), transparent 55%),
-    linear-gradient(180deg,#2E3A48 0%,#082468 55%,#0A3A9C 100%);
+    linear-gradient(180deg,#0B2447 0%,#082468 55%,#0A3A9C 100%);
   box-shadow:0 26px 60px -18px rgba(4,20,60,.55)}
 .folio{--aur:#00B5FF}
 .folio::before{content:"";position:absolute;top:-40px;left:50%;transform:translateX(-50%);
@@ -309,7 +309,7 @@ input.ar,select.ar{font-family:'IBM Plex Sans Arabic',sans-serif}
 .star.on{color:var(--gold)}
 nav{position:fixed;bottom:0;left:0;right:0;z-index:90;
   display:flex;padding:10px 14px calc(10px + env(safe-area-inset-bottom));gap:6px;
-  background:#2E3A48;
+  background:#0B2447;
   border-top:1px solid rgba(255,255,255,.06)}
 .nv{flex:1;text-align:center;padding:8px 2px;border-radius:0;cursor:pointer;color:#9FB7D9;transition:.15s}
 .nv svg{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
@@ -426,7 +426,7 @@ body,input,select,textarea,button,.ar,h1,h2,h3{font-family:'IBM Plex Sans Arabic
 #bcModal .bx{background:#fff;border-radius:0;padding:26px 22px 20px;max-width:380px;width:100%;
   text-align:center;box-shadow:0 40px 100px -30px rgba(0,0,0,.8);position:relative;
   border:1.5px solid rgba(0,181,255,.5)}
-#bcModal .bx h4{color:#2E3A48;font-size:14px;margin-bottom:4px;font-weight:700}
+#bcModal .bx h4{color:#0B2447;font-size:14px;margin-bottom:4px;font-weight:700}
 #bcModal svg{width:100%;height:auto}
 #bcModal .rf{font:600 13px 'IBM Plex Mono';color:#003B8F;letter-spacing:1px;margin:8px 0 14px;direction:ltr}
 #bcModal .row{display:flex;gap:10px;justify-content:center}
@@ -2009,7 +2009,7 @@ async function genInvoice(ref){
       <div style="display:flex;align-items:center;gap:14px">
         ${invLogoSVG()}
         <div>
-          <div style="font-size:26px;font-weight:800;letter-spacing:1px;font-family:'IBM Plex Mono';color:#2E3A48">ARKAN<span style="color:#0058D9"> INTERNATIONAL</span></div>
+          <div style="font-size:26px;font-weight:800;letter-spacing:1px;font-family:'IBM Plex Mono';color:#0B2447">ARKAN<span style="color:#0058D9"> INTERNATIONAL</span></div>
           <div style="font-size:11px;letter-spacing:4px;color:#7A8DB8;font-family:'IBM Plex Mono';margin-top:2px">TRADING · EXCHANGE · SETTLEMENT</div>
         </div>
       </div>
@@ -2026,15 +2026,15 @@ async function genInvoice(ref){
         <div style="font-size:19px;font-weight:800;margin-top:5px">${client}</div>
         ${phone?`<div style="font-size:13px;color:#43598A;font-family:'IBM Plex Mono';margin-top:2px">${phone}</div>`:''}
       </div>
-      <div style="border:2px solid #2E3A48;border-radius:0;padding:10px 18px;text-align:center">
+      <div style="border:2px solid #0B2447;border-radius:0;padding:10px 18px;text-align:center">
         <div style="font-size:10px;color:#7A8DB8;font-weight:700;letter-spacing:1px">REF</div>
-        <div style="font-size:22px;font-weight:800;font-family:'IBM Plex Mono';color:#2E3A48;letter-spacing:1px">${t.ref}</div>
+        <div style="font-size:22px;font-weight:800;font-family:'IBM Plex Mono';color:#0B2447;letter-spacing:1px">${t.ref}</div>
       </div>
     </div>
 
     <!-- نوع العملية -->
     <div style="padding:18px 34px 0">
-      <div style="background:#2E3A48;color:#fff;padding:9px 16px;font-size:14px;font-weight:800;border-radius:0;font-family:'IBM Plex Sans Arabic',sans-serif">
+      <div style="background:#0B2447;color:#fff;padding:9px 16px;font-size:14px;font-weight:800;border-radius:0;font-family:'IBM Plex Sans Arabic',sans-serif">
         تفاصيل العملية · ${typeLbl[t.type]||''}
       </div>
       <table style="width:100%;border-collapse:collapse;margin-top:-1px">
@@ -2060,8 +2060,8 @@ async function genInvoice(ref){
     </div>
 
     <!-- تذييل رسمي -->
-    <div style="margin-top:auto;border-top:2px solid #2E3A48;margin:24px 34px 0;padding-top:12px">
-      <div style="text-align:center;font-size:11px;font-weight:800;color:#2E3A48;letter-spacing:.5px">
+    <div style="margin-top:auto;border-top:2px solid #0B2447;margin:24px 34px 0;padding-top:12px">
+      <div style="text-align:center;font-size:11px;font-weight:800;color:#0B2447;letter-spacing:.5px">
         ARKAN INTERNATIONAL TRADING — EXCHANGE & INTERNATIONAL SETTLEMENT
       </div>
       <div style="text-align:center;font-size:10px;color:#7A8DB8;font-family:'IBM Plex Mono';margin-top:5px;line-height:1.7">
@@ -2699,10 +2699,10 @@ async function genReport(){
   const stage=$('pdfStage');
   stage.innerHTML=`
   <div style="width:794px;min-height:1123px;display:flex;flex-direction:column;background:#fff;font-family:'IBM Plex Sans Arabic','IBM Plex Sans Arabic',sans-serif;direction:rtl">
-    <div style="background:linear-gradient(135deg,#2E3A48,#2E3A48 60%,#0A1A3E);padding:30px 36px;display:flex;justify-content:space-between;align-items:center">
+    <div style="background:linear-gradient(135deg,#0058D9,#003B8F);padding:30px 36px;display:flex;justify-content:space-between;align-items:center">
       <div style="display:flex;align-items:center;gap:16px">${invLogoSVG()}
         <div><div style="color:#fff;font-size:23px;font-weight:800;font-family:'IBM Plex Mono'">ARKAN <span style="color:#00B5FF">SETTLEMENT</span></div>
-        <div style="color:#7A8DB8;font-size:12px;margin-top:4px"><span style="letter-spacing:2.5px;font-family:'IBM Plex Mono'">DAILY REPORT</span> <span style="font-family:'IBM Plex Sans Arabic',sans-serif;font-weight:700">— تقرير يومي</span></div></div>
+        <div style="color:rgba(255,255,255,.85);font-size:12px;margin-top:4px"><span style="letter-spacing:2.5px;font-family:'IBM Plex Mono'">DAILY REPORT</span> <span style="font-family:'IBM Plex Sans Arabic',sans-serif;font-weight:700">— تقرير يومي</span></div></div>
       </div>
       <div style="text-align:left"><div style="color:#00B5FF;font-size:20px;font-weight:800;font-family:'IBM Plex Mono'">${new Date().toLocaleDateString('en-GB')}</div>
       <div style="color:#7A8DB8;font-size:13px;margin-top:4px;font-family:'IBM Plex Mono'">${txs.length} عملية</div></div>
@@ -2716,10 +2716,10 @@ async function genReport(){
         </div>
         <div style="flex:1;padding:16px;border-radius:0;background:#F5F9FF;border:1px solid #DCE8F8">
           <div style="font-size:13px;color:#43598A;font-weight:700">عدد العمليات</div>
-          <div style="font-size:26px;font-weight:800;font-family:'IBM Plex Mono';color:#2E3A48">${txs.length}</div>
+          <div style="font-size:26px;font-weight:800;font-family:'IBM Plex Mono';color:#0B2447">${txs.length}</div>
         </div>
       </div>
-      <div style="font-size:16px;font-weight:800;color:#2E3A48;margin-bottom:10px">الربحية حسب العملة</div>
+      <div style="font-size:16px;font-weight:800;color:#0B2447;margin-bottom:10px">الربحية حسب العملة</div>
       <table style="width:100%;border-collapse:collapse;background:#F5F9FF;border-radius:0;overflow:hidden;margin-bottom:24px">
         <tr style="background:#EAF5FF">
           <th style="padding:11px 16px;text-align:right;font-size:13px;color:#003B8F">العملة</th>
@@ -2728,7 +2728,7 @@ async function genReport(){
           <th style="padding:11px 16px;text-align:left;font-size:13px;color:#003B8F">الربح</th>
         </tr>${rows}
       </table>
-      <div style="font-size:16px;font-weight:800;color:#2E3A48;margin-bottom:10px">تفاصيل العمليات</div>
+      <div style="font-size:16px;font-weight:800;color:#0B2447;margin-bottom:10px">تفاصيل العمليات</div>
       <table style="width:100%;border-collapse:collapse">${opRows}</table>
     </div>
     <div style="margin-top:auto;padding:16px 36px 22px;border-top:1px solid #DCE8F8;display:flex;justify-content:space-between;font-size:12px;color:#7A8DB8;font-family:'IBM Plex Mono'">
@@ -3013,7 +3013,8 @@ function reparseAll(){
 function addRCManual(side){
   side=side||'cli';
   rcLoad(); /* لا يُكتب فوق دفعة محفوظة */
-  const sel=rcCcyV(), ccy=sel==='AUTO'?(rcDomCcy()||'AOA'):sel;
+  const NC=c=>({AOA:'Kz',AKZ:'Kz',KZ:'Kz',KWZ:'Kz',UM:'MRU'})[String(c||'').toUpperCase()]||c;
+  const sel=rcCcyV(), ccy=NC(sel==='AUTO'?(rcDomCcy()||'Kz'):sel);
   const raw=String(prompt('المبلغ ('+ccy+') — يمكن إدخال عدة مبالغ مفصولة بفاصلة أو سطر:')||'');
   if(!raw.trim())return;
   const parts=raw.split(/[\n,;]+/).map(s=>parseFloat(String(s).replace(/[^0-9.]/g,''))).filter(v=>v>0);
@@ -3210,12 +3211,12 @@ function rcAuditRows(){
 }
 function rcPdfShell(inner,pg,tot,C){
   return '<div style="width:794px;min-height:1123px;display:flex;flex-direction:column;background:#fff;font-family:\'Cairo\',\'Tajawal\',sans-serif;direction:rtl">'
-  +'<div style="background:linear-gradient(135deg,#2E3A48,#2E3A48 60%,#0A1A3E);padding:26px 34px;display:flex;justify-content:space-between;align-items:center">'
+  +'<div style="background:linear-gradient(135deg,#0058D9,#003B8F);padding:26px 34px;display:flex;justify-content:space-between;align-items:center">'
   +'<div style="display:flex;align-items:center;gap:14px">'+(typeof invLogoSVG==='function'?invLogoSVG():'')
   +'<div><div style="color:#fff;font-size:21px;font-weight:800;font-family:\'IBM Plex Mono\'">ARKAN <span style="color:#00B5FF">SETTLEMENT</span></div>'
-  +'<div style="color:#7A8DB8;font-size:12px;margin-top:4px"><span style="letter-spacing:2.5px;font-family:\'IBM Plex Mono\'">RECONCILIATION</span> <span style="font-weight:700">— تقرير جرد الإيصالات</span></div></div></div>'
-  +'<div style="text-align:left"><div style="color:#00B5FF;font-size:18px;font-weight:800;font-family:\'IBM Plex Mono\'">'+new Date().toLocaleDateString('en-GB')+'</div>'
-  +'<div style="color:#7A8DB8;font-size:12px;margin-top:4px;font-family:\'IBM Plex Mono\'">'+C+' · '+pg+'/'+tot+'</div></div></div>'
+  +'<div style="color:rgba(255,255,255,.85);font-size:12px;margin-top:4px"><span style="letter-spacing:2.5px;font-family:\'IBM Plex Mono\'">RECONCILIATION</span> <span style="font-weight:700">— تقرير جرد الإيصالات</span></div></div></div>'
+  +'<div style="text-align:left"><div style="color:#FFFFFF;font-size:18px;font-weight:800;font-family:\'IBM Plex Mono\'">'+new Date().toLocaleDateString('en-GB')+'</div>'
+  +'<div style="color:rgba(255,255,255,.85);font-size:12px;margin-top:4px;font-family:\'IBM Plex Mono\'">'+C+' · '+pg+'/'+tot+'</div></div></div>'
   +'<div style="height:6px;background:linear-gradient(90deg,#0058D9,#0058D9,#003B8F)"></div>'
   +'<div style="padding:24px 34px;flex:1">'+inner+'</div>'
   +'<div style="padding:14px 34px 20px;border-top:1px solid #DCE8F8;display:flex;justify-content:space-between;font-size:11px;color:#7A8DB8;font-family:\'IBM Plex Mono\'">'
@@ -3229,15 +3230,15 @@ async function rcExportPDF(){
     +'<div style="font-size:20px;font-weight:800;font-family:\'IBM Plex Mono\';color:'+c+';margin-top:4px">'+v+'</div></div>';
   const bg=rcBankGroups();
   let cover='<div style="display:flex;gap:10px;margin-bottom:12px">'
-   +kpi('إيصالات العميل',R.nA+' · '+fmt(R.sA,d),'#2E3A48','#EAF5FF')
-   +kpi('إيصالات المورد',R.nB+' · '+fmt(R.sB,d),'#2E3A48','#F5F9FF')
+   +kpi('إيصالات العميل',R.nA+' · '+fmt(R.sA,d),'#0B2447','#EAF5FF')
+   +kpi('إيصالات المورد',R.nB+' · '+fmt(R.sB,d),'#0B2447','#F5F9FF')
    +kpi('الفرق',(R.diff>0?'+':'')+fmt(R.diff,d),Math.abs(R.diff)<0.01?'#0F9D6B':'#D93838',Math.abs(R.diff)<0.01?'#EAFBF3':'#FFF0F0')+'</div>'
    +'<div style="display:flex;gap:10px;margin-bottom:20px">'
    +kpi('مطابق تام',String(R.ok),'#0F9D6B','#EAFBF3')
    +kpi('مطابق تقريبي',String(R.apx),'#B7791F','#FFF9EC')
    +kpi('لم يصل للمورد',R.missS.length+' · '+fmt(R.sMissS,d),'#D93838','#FFF0F0')
    +kpi('بلا إيصال عميل',R.missC.length+' · '+fmt(R.sMissC,d),'#D93838','#FFF0F0')+'</div>';
-  cover+='<div style="font-size:15px;font-weight:800;color:#2E3A48;margin-bottom:9px">التوزيع حسب البنك</div>'
+  cover+='<div style="font-size:15px;font-weight:800;color:#0B2447;margin-bottom:9px">التوزيع حسب البنك</div>'
    +'<table style="width:100%;border-collapse:collapse;background:#F5F9FF;border-radius:0;overflow:hidden;font-size:12px">'
    +'<tr style="background:#EAF5FF"><th style="padding:9px 12px;text-align:right;color:#003B8F">البنك</th>'
    +'<th style="padding:9px 12px;text-align:left;color:#003B8F">عميل</th><th style="padding:9px 12px;text-align:left;color:#003B8F">مبلغ العميل</th>'
@@ -3254,7 +3255,7 @@ async function rcExportPDF(){
   const rows=rcAuditRows(), PER=22, chunks=[];
   for(let i=0;i<rows.length;i+=PER)chunks.push(rows.slice(i,i+PER));
   const pages=[cover].concat(chunks.map((ch,ix)=>{
-    return '<div style="font-size:15px;font-weight:800;color:#2E3A48;margin-bottom:9px">تفصيل الجرد '+(ix?'(تابع)':'')+'</div>'
+    return '<div style="font-size:15px;font-weight:800;color:#0B2447;margin-bottom:9px">تفصيل الجرد '+(ix?'(تابع)':'')+'</div>'
     +'<table style="width:100%;border-collapse:collapse;font-size:11px">'
     +'<tr style="background:#EAF5FF"><th style="padding:8px 10px;text-align:right;color:#003B8F">الحالة</th>'
     +'<th style="padding:8px 10px;text-align:right;color:#003B8F">الجهة</th>'
@@ -3892,7 +3893,7 @@ async function ocrSelfTest(){
   if(!m){m=document.createElement('div');m.id='ocrDiag';
     m.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(0,10,28,.7);display:flex;align-items:center;justify-content:center;padding:20px';
     m.onclick=e=>{if(e.target===m)m.remove();};document.body.appendChild(m);}
-  m.innerHTML='<div style="background:#2E3A48;border:1px solid rgba(255,255,255,.15);max-width:420px;width:100%;padding:18px;color:#fff"><b style="font-size:15px">فحص محركات القراءة</b><div style="margin-top:10px">'+html+'</div><button onclick="document.getElementById(\'ocrDiag\').remove()" style="margin-top:14px;width:100%;padding:11px;border:none;background:#0058D9;color:#2E3A48;font-weight:800;font-size:13px;cursor:pointer">إغلاق</button></div>';
+  m.innerHTML='<div style="background:#0B2447;border:1px solid rgba(255,255,255,.15);max-width:420px;width:100%;padding:18px;color:#fff"><b style="font-size:15px">فحص محركات القراءة</b><div style="margin-top:10px">'+html+'</div><button onclick="document.getElementById(\'ocrDiag\').remove()" style="margin-top:14px;width:100%;padding:11px;border:none;background:#0058D9;color:#0B2447;font-weight:800;font-size:13px;cursor:pointer">إغلاق</button></div>';
 }
 window.ocrSelfTest=ocrSelfTest;
 /* تحسين الصورة قبل القراءة: تصغير + رمادي + رفع تباين */
@@ -3928,7 +3929,7 @@ async function imageText(dataUrl){
   return data.text||'';
 }
 /* ================= BUILD / AUTO-UPDATE ================= */
-const ARKAN_BUILD='1032';
+const ARKAN_BUILD='1033';
 function arkanVerLabel(){const e=$('verLbl');if(e)e.textContent=ARKAN_BUILD;}
 function arkanUpdateBanner(b){
   if(document.getElementById('updBar'))return;
@@ -5225,7 +5226,7 @@ async function genStatusImage(){
     </div>`).join('');
   const stage=$('pdfStage');
   stage.innerHTML=`
-  <div style="width:600px;height:1067px;background:linear-gradient(165deg,#2E3A48 0%,#2E3A48 40%,#081536 100%);display:flex;flex-direction:column;font-family:'IBM Plex Sans Arabic',sans-serif;position:relative;overflow:hidden;direction:rtl">
+  <div style="width:600px;height:1067px;background:linear-gradient(165deg,#0B2447 0%,#0B2447 40%,#081536 100%);display:flex;flex-direction:column;font-family:'IBM Plex Sans Arabic',sans-serif;position:relative;overflow:hidden;direction:rtl">
     <div style="position:absolute;top:-80px;left:-80px;width:300px;height:300px;background:radial-gradient(circle,rgba(0,181,255,.25),transparent 70%);border-radius:50%"></div>
     <div style="padding:54px 40px 0;text-align:center;z-index:2">
       <div style="display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:10px">
@@ -5558,7 +5559,7 @@ function showBarcode(ref){
   try{
     document.getElementById('bcRef').textContent=ref;
     if(window.JsBarcode){
-      JsBarcode('#bcSvg', ref, {format:'CODE128',lineColor:'#2E3A48',background:'#ffffff',
+      JsBarcode('#bcSvg', ref, {format:'CODE128',lineColor:'#0B2447',background:'#ffffff',
         width:2,height:74,displayValue:false,margin:6});
     }
     document.getElementById('bcModal').classList.add('on');
@@ -5759,7 +5760,11 @@ function akStatementPDF(){
   const sec=(side,title)=>{
     const L=rc.filter(x=>(x.side||'cli')===side);
     if(!L.length)return '';
-    const tot={}; L.forEach(x=>{if(x.amount!=null)tot[x.ccy||'?']=(tot[x.ccy||'?']||0)+x.amount;});
+    const N=c=>({AOA:'Kz',AKZ:'Kz',KZ:'Kz',KWZ:'Kz',UM:'MRU'})[String(c||'').toUpperCase()]||c||'';
+    /* العملة السائدة للجانب — الصفوف بلا عملة (اليدوي القديم) تنضم إليها */
+    const cnt={};L.forEach(x=>{if(x.amount!=null&&N(x.ccy))cnt[N(x.ccy)]=(cnt[N(x.ccy)]||0)+1;});
+    const dom=Object.keys(cnt).sort((a,b)=>cnt[b]-cnt[a])[0]||'Kz';
+    const tot={}; L.forEach(x=>{if(x.amount!=null){const c=N(x.ccy)||dom;tot[c]=(tot[c]||0)+x.amount;}});
     const miss=L.filter(x=>x.amount==null).length;
     return '<h2>'+title+' — '+L.length+' إيصالاً</h2><table><thead><tr><th>#</th><th>الملف</th><th>البنك</th><th>المرجع</th><th>التاريخ</th><th>المبلغ</th></tr></thead><tbody>'
       +L.map(row).join('')+'</tbody></table>'
