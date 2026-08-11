@@ -3866,7 +3866,7 @@ async function imageText(dataUrl){
   return data.text||'';
 }
 /* ================= BUILD / AUTO-UPDATE ================= */
-const ARKAN_BUILD='1023';
+const ARKAN_BUILD='1024';
 function arkanVerLabel(){const e=$('verLbl');if(e)e.textContent=ARKAN_BUILD;}
 function arkanUpdateBanner(b){
   if(document.getElementById('updBar'))return;
@@ -5683,15 +5683,25 @@ label{font-size:12.5px!important;font-weight:700!important;color:#3E4C60!importa
 
 <script src="arkan-read.js?v=1"></script>
 <script id="akUnifiedRead">
-/* كل بوابات الرفع هنا تقرأ بمحرك الأرشيف الموحد */
+/* كل بوابات الرفع تقرأ بمحرك الأرشيف الموحد — بنفس بنية الإرجاع الأصلية */
 (function(){
   if(typeof arkanRead!=='function'||!window.ArkanRead)return;
   const _old=window.arkanRead;
   window.arkanRead=async function(f){
     try{
       const r=await ArkanRead.read(f);
-      toast('قُرئ بمحرك '+(r.engine==='gemini'?'Gemini':'OCR المحلي')+' ✓');
-      return r.text;
+      const out=arkanCore(r.text);       /* نفس محلّل settlement */
+      out.file=f.name; out.text=r.text; out.ok=true;
+      /* إن قصّر المحلل النصي، خذ الحقول المهيكلة من Gemini مباشرة */
+      const p=r.parsed||{};
+      if(out.amount==null&&p.amount)out.amount=+p.amount||null;
+      if(!out.ccy&&p.currency)out.ccy=String(p.currency).replace('AOA','Kz').replace('UM','MRU');
+      if(!out.txn&&(p.reference||p.transaction_id))out.txn=p.reference||p.transaction_id;
+      if(!out.bank&&p.bank)out.bank=p.bank;
+      if(!out.date&&p.date)out.date=p.date;
+      if(!out.ben&&p.beneficiary)out.ben=p.beneficiary;
+      toast('قُرئ بمحرك '+(r.engine==='gemini'?'Gemini':'OCR')+' ✓');
+      return out;
     }catch(e){ return await _old(f); }
   };
 })();
