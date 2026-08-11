@@ -1070,7 +1070,7 @@ async function sendToChat(ref){
   var emb=new URLSearchParams(location.search).get('embed');
   if(emb&&window.parent!==window){try{parent.postMessage('arkanReqDone','*');}catch(e){}return;}
   /* الصفحة المعتمدة الوحيدة للمحادثة: chat-v2 — جلسة العميل تفتح محادثته الدائمة */
-  location.href='chat-v2.html';
+  (window.top||window).location.href='chat-v2.html';
 }
 function showSuccess(amount,currency,ref,waUrl){
   var el=document.getElementById('okWrap');
@@ -1146,6 +1146,30 @@ if(window!==window.top){
     if(/chat-v2|m\.html|wa\.me|whatsapp/.test(h)){e.preventDefault();window.top.location.href=a.href;}
   },true);
 }
+</script>
+
+<script id="akFormSync">
+(function(){
+'use strict';
+/* المبلغ: من الحاسبة إلى النموذج تلقائياً */
+const amt=document.getElementById('amt'), ind=document.getElementById('ind-amt');
+if(amt&&ind){
+  let manual=false;
+  ind.addEventListener('input',()=>{manual=ind.value.trim().length>0;});
+  const mirror=()=>{ if(manual)return;
+    const v=amt.value.replace(/[^\d.]/g,'');
+    ind.value=v?parseFloat(v).toLocaleString('en-US'):''; };
+  amt.addEventListener('input',mirror);
+  amt.addEventListener('change',mirror);
+  mirror();
+}
+/* اسم المستفيد: اسم صاحب الحساب المسجّل — يبقى فقط رقم الحساب */
+try{
+  const sess=JSON.parse(localStorage.getItem('arkan_session')||'null');
+  const bn=document.getElementById('ind-bname');
+  if(sess&&sess.name&&bn&&!bn.value){bn.value=sess.name;}
+}catch(e){}
+})();
 </script>
 </body>
 </html>
