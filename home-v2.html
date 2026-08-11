@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#001a52">
+<meta name="theme-color" content="#001B3D">
 <title>ARKAN Pay — Move Money Across Africa Instantly</title>
 <link rel="icon" href="arkan-icon-512.png">
 <meta name="apple-mobile-web-app-title" content="ARKAN Pay">
@@ -12,10 +12,10 @@
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
 <style>
 :root{
-  --navy:#002776; --navy-2:#0d3aa0; --navy-3:#001a52; --ink:#0a1e4d;
-  --red:#e74c3c; --orange:#e67e22; --amber:#f39c12; --blue:#3498db;
-  --grad:linear-gradient(120deg,#e74c3c 0%,#e67e22 30%,#f39c12 58%,#3498db 100%);
-  --grad-rev:linear-gradient(90deg,#3498db,#f39c12,#e67e22,#e74c3c);
+  --navy:#002B5C; --navy-2:#003B7E; --navy-3:#001B3D; --ink:#0a1e4d;
+  --red:#e74c3c; --orange:#F39200; --amber:#F39200; --blue:#003B7E;
+  --grad:linear-gradient(120deg,#e74c3c 0%,#F39200 30%,#F39200 58%,#003B7E 100%);
+  --grad-rev:linear-gradient(90deg,#003B7E,#F39200,#F39200,#e74c3c);
   --txt:#0a1e4d; --txt-2:#5a6a8f; --txt-3:#8b97b5;
   --page:#f6f8fc; --card:#ffffff; --stroke:#e3e9f4; --stroke-2:#cdd8ec;
   --up:#1e9e63; --down:#e74c3c; --r:20px; --r-sm:14px;
@@ -36,19 +36,19 @@ a{color:inherit;text-decoration:none}
   background:rgba(255,255,255,.92);border-bottom:1px solid var(--stroke)}
 .nav .wrap{display:flex;align-items:center;gap:14px;height:68px}
 .brand{display:flex;align-items:center;gap:11px;font-weight:800;letter-spacing:.04em;font-size:19px;color:var(--navy)}
-.brand .mark{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;background:var(--grad);
+.brand .mark{width:38px;height:38px;border-radius:0;display:grid;place-items:center;background:var(--grad);
   box-shadow:0 8px 22px -8px rgba(231,76,60,.55)}
 .brand .mark svg{width:22px;height:22px;color:#fff}
 .nav .links{display:flex;gap:26px;margin-inline-start:22px;font-size:14.5px;color:var(--txt-2)}
 .nav .links a:hover{color:#fff}
 .nav .sp{flex:1}
 .btn{display:inline-flex;align-items:center;gap:8px;font-weight:700;font-size:14.5px;border:0;cursor:pointer;
-  padding:11px 20px;border-radius:14px;transition:transform .18s,box-shadow .18s,border-color .18s}
+  padding:11px 20px;border-radius:0;transition:transform .18s,box-shadow .18s,border-color .18s}
 .btn-grad{background:var(--navy);color:#fff;box-shadow:0 10px 26px -10px rgba(52,152,219,.6)}
 .btn-grad:hover{transform:translateY(-1px);box-shadow:0 16px 34px -10px rgba(231,76,60,.55)}
 .btn-ghost{background:#fff;border:1px solid var(--stroke-2);color:var(--navy)}
 .btn-ghost:hover{border-color:var(--blue)}
-.nav-toggle{display:none;width:42px;height:42px;border-radius:12px;border:1px solid var(--stroke-2);
+.nav-toggle{display:none;width:42px;height:42px;border-radius:0;border:1px solid var(--stroke-2);
   background:#fff;color:var(--navy);cursor:pointer}
 
 /* ---------- hero ---------- */
@@ -58,7 +58,7 @@ a{color:inherit;text-decoration:none}
   background:radial-gradient(circle at 18% 22%, rgba(255,255,255,.16) 1.6px, transparent 1.6px);
   background-size:26px 26px;opacity:.5}
 .eyebrow{display:inline-flex;align-items:center;gap:9px;font-size:12.5px;font-weight:700;letter-spacing:.12em;
-  text-transform:none;color:#fff;border:1px solid rgba(255,255,255,.55);background:rgba(255,255,255,.16);border-radius:999px;padding:8px 17px;position:relative}
+  text-transform:none;color:#fff;border:1px solid rgba(255,255,255,.55);background:rgba(255,255,255,.16);border-radius:0;padding:8px 17px;position:relative}
 .eyebrow .dot{width:7px;height:7px;border-radius:50%;background:var(--up);box-shadow:0 0 0 4px rgba(46,204,113,.18)}
 .hero h1{font-size:clamp(34px,7vw,68px);font-weight:800;letter-spacing:-.03em;line-height:1.05;margin:22px auto 18px;max-width:15ch}
 .hero p{color:rgba(255,255,255,.92);font-size:clamp(15px,2.6vw,19px);max-width:56ch;margin:0 auto 28px}
@@ -66,7 +66,7 @@ a{color:inherit;text-decoration:none}
 
 /* ---------- africa network globe ---------- */
 .network{margin:26px auto 0;max-width:960px}
-.globe-card{position:relative;border-radius:26px;overflow:hidden;border:1px solid var(--stroke);
+.globe-card{position:relative;border-radius:0;overflow:hidden;border:1px solid var(--stroke);
   background:#fff;box-shadow:0 30px 70px -34px rgba(10,30,77,.25)}
 .globe-card::before{content:"";position:absolute;inset:0;height:4px;background:var(--grad)}
 .globe-head{display:flex;align-items:center;gap:12px;padding:18px 22px 6px}
@@ -117,16 +117,16 @@ a{color:inherit;text-decoration:none}
 .g-3{grid-template-columns:repeat(auto-fill,minmax(min(100%,280px),1fr))}
 
 /* card with gradient top */
-.card{position:relative;background:#fff;border:1px solid var(--stroke);border-radius:var(--r);
+.card{position:relative;background:#fff;border:1px solid var(--stroke);border-radius:0;
   padding:20px;overflow:hidden;transition:transform .2s,border-color .2s,box-shadow .2s}
 .card:hover{transform:translateY(-4px);border-color:var(--stroke-2);box-shadow:0 26px 50px -26px rgba(10,30,77,.28)}
 .card::before{content:"";position:absolute;top:0;left:0;right:0;height:3px}
-.gt-1::before{background:linear-gradient(90deg,#e74c3c,#e67e22)}
-.gt-2::before{background:linear-gradient(90deg,#e67e22,#f39c12)}
-.gt-3::before{background:linear-gradient(90deg,#f39c12,#3498db)}
-.gt-4::before{background:linear-gradient(90deg,#3498db,#002776)}
+.gt-1::before{background:linear-gradient(90deg,#e74c3c,#F39200)}
+.gt-2::before{background:linear-gradient(90deg,#F39200,#F39200)}
+.gt-3::before{background:linear-gradient(90deg,#F39200,#003B7E)}
+.gt-4::before{background:linear-gradient(90deg,#003B7E,#002B5C)}
 .gt-full::before{background:var(--grad)}
-.gt-rainbow::before{background:linear-gradient(90deg,#e74c3c,#e67e22,#f39c12,#2ecc71,#3498db,#9b59b6);
+.gt-rainbow::before{background:linear-gradient(90deg,#e74c3c,#F39200,#F39200,#2ecc71,#003B7E,#9b59b6);
   background-size:200% 100%;animation:rainbow 6s linear infinite}
 @keyframes rainbow{to{background-position:200% 0}}
 
@@ -143,12 +143,12 @@ a{color:inherit;text-decoration:none}
 /* converter */
 .conv{max-width:560px;margin:0 auto}
 .conv .row{display:flex;align-items:center;gap:12px;background:var(--page);border:1px solid var(--stroke-2);
-  border-radius:16px;padding:15px 16px}
+  border-radius:0;padding:15px 16px}
 .conv .row label{font-size:11px;color:var(--txt-3);display:block;margin-bottom:4px;letter-spacing:.08em;text-transform:uppercase}
 .conv .amt{background:none;border:0;color:var(--navy);font-family:var(--mono);font-size:26px;font-weight:600;width:100%;outline:none}
 .conv .cur{display:flex;align-items:center;gap:8px;font-weight:700;background:#fff;color:var(--navy);
-  border:1px solid var(--stroke-2);border-radius:12px;padding:9px 13px;font-size:15px;white-space:nowrap}
-.conv .swap{margin:8px auto;display:grid;place-items:center;width:44px;height:44px;border-radius:14px;cursor:pointer;
+  border:1px solid var(--stroke-2);border-radius:0;padding:9px 13px;font-size:15px;white-space:nowrap}
+.conv .swap{margin:8px auto;display:grid;place-items:center;width:44px;height:44px;border-radius:0;cursor:pointer;
   background:var(--navy);color:#fff;border:0;box-shadow:0 10px 24px -10px rgba(52,152,219,.6);transition:transform .3s}
 .conv .swap:hover{transform:rotate(180deg)}
 .conv .meta{display:flex;justify-content:space-between;font-size:13px;color:var(--txt-2);margin:16px 4px 20px}
@@ -157,41 +157,41 @@ a{color:inherit;text-decoration:none}
 /* settlement steps */
 .steps{display:grid;grid-template-columns:repeat(4,1fr);gap:0;position:relative;margin-top:10px}
 .steps::before{content:"";position:absolute;top:26px;left:12%;right:12%;height:2px;
-  background:linear-gradient(90deg,#e74c3c,#e67e22,#f39c12,#3498db)}
+  background:linear-gradient(90deg,#e74c3c,#F39200,#F39200,#003B7E)}
 .step{text-align:center;position:relative;z-index:1;padding:0 8px}
 .step .n{width:54px;height:54px;margin:0 auto 14px;border-radius:50%;display:grid;place-items:center;
   font-family:var(--mono);font-weight:600;font-size:18px;color:#fff;border:4px solid var(--page)}
-.step:nth-child(1) .n{background:#e74c3c}.step:nth-child(2) .n{background:#e67e22}
-.step:nth-child(3) .n{background:#f39c12}.step:nth-child(4) .n{background:#3498db}
+.step:nth-child(1) .n{background:#e74c3c}.step:nth-child(2) .n{background:#F39200}
+.step:nth-child(3) .n{background:#F39200}.step:nth-child(4) .n{background:#003B7E}
 .step h4{font-size:15px;font-weight:700;color:var(--navy)}.step p{font-size:12.5px;color:var(--txt-2);margin-top:5px}
 
 /* wallet preview */
 .wallet-grid{grid-template-columns:repeat(auto-fill,minmax(min(100%,200px),1fr))}
-.wcard{position:relative;border-radius:18px;padding:18px;overflow:hidden;border:1px solid var(--stroke);color:#04122e}
+.wcard{position:relative;border-radius:0;padding:18px;overflow:hidden;border:1px solid var(--stroke);color:#04122e}
 .wcard .c{font-family:var(--mono);font-weight:600;font-size:13px;opacity:.85}
 .wcard .bal{font-family:var(--mono);font-weight:600;font-size:24px;margin-top:8px}
 .wcard .d{font-size:12px;font-weight:600;margin-top:2px;opacity:.8}
-.w1{background:linear-gradient(135deg,#e74c3c,#e67e22)}.w2{background:linear-gradient(135deg,#e67e22,#f39c12)}
-.w3{background:linear-gradient(135deg,#f39c12,#3498db)}.w4{background:linear-gradient(135deg,#3498db,#002776);color:#eaf0ff}
+.w1{background:linear-gradient(135deg,#e74c3c,#F39200)}.w2{background:linear-gradient(135deg,#F39200,#F39200)}
+.w3{background:linear-gradient(135deg,#F39200,#003B7E)}.w4{background:linear-gradient(135deg,#003B7E,#002B5C);color:#eaf0ff}
 
 /* ai features */
 .feat{display:flex;gap:15px;align-items:flex-start}
-.feat .ic{width:46px;height:46px;flex:none;border-radius:13px;display:grid;place-items:center;color:#fff;background:var(--grad)}
+.feat .ic{width:46px;height:46px;flex:none;border-radius:0;display:grid;place-items:center;color:#fff;background:var(--grad)}
 .feat .ic svg{width:23px;height:23px}
 .feat h4{font-size:16px;font-weight:700;color:var(--navy)}.feat p{font-size:13.5px;color:var(--txt-2);margin-top:4px}
 
 
 /* ---------- visa card product ---------- */
 .visa-wrap{display:grid;grid-template-columns:1fr 1fr;gap:34px;align-items:center}
-.vcard{position:relative;aspect-ratio:1.586;max-width:430px;margin:0 auto;border-radius:22px;padding:24px;
-  background:linear-gradient(125deg,#001a52 0%,#002776 45%,#0d3aa0 75%,#3498db 130%);color:#fff;
+.vcard{position:relative;aspect-ratio:1.586;max-width:430px;margin:0 auto;border-radius:0;padding:24px;
+  background:linear-gradient(125deg,#001B3D 0%,#002B5C 45%,#003B7E 75%,#003B7E 130%);color:#fff;
   box-shadow:0 34px 70px -28px rgba(0,26,82,.55);overflow:hidden;width:100%}
 .vcard::before{content:"";position:absolute;inset:0;
   background:radial-gradient(circle at 82% 18%, rgba(255,255,255,.14) 1.4px, transparent 1.4px);
   background-size:20px 20px;opacity:.55}
 .vcard .row1{display:flex;justify-content:space-between;align-items:flex-start}
 .vcard .bname{font-weight:800;letter-spacing:.06em;font-size:15px}
-.vcard .chip{width:44px;height:32px;border-radius:7px;background:linear-gradient(135deg,#f5d76b,#c9962c);margin-top:26px}
+.vcard .chip{width:44px;height:32px;border-radius:0;background:linear-gradient(135deg,#f5d76b,#c9962c);margin-top:26px}
 .vcard .num{font-family:var(--mono);font-size:clamp(16px,3.6vw,21px);letter-spacing:.14em;margin-top:14px}
 .vcard .row2{display:flex;justify-content:space-between;align-items:flex-end;margin-top:16px}
 .vcard .lbl{font-size:9px;letter-spacing:.12em;opacity:.75}.vcard .val{font-size:13px;font-weight:600}
@@ -259,10 +259,10 @@ footer a{color:var(--txt-2)}footer a:hover{color:#fff}
           <stop offset="0%" stop-color="#12307e"/><stop offset="100%" stop-color="#00113a"/>
         </radialGradient>
         <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-          <path d="M0 0 L10 5 L0 10 z" fill="#f39c12"/>
+          <path d="M0 0 L10 5 L0 10 z" fill="#F39200"/>
         </marker>
         <marker id="arrowB" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-          <path d="M0 0 L10 5 L0 10 z" fill="#3498db"/>
+          <path d="M0 0 L10 5 L0 10 z" fill="#003B7E"/>
         </marker>
         <marker id="arrowR" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
           <path d="M0 0 L10 5 L0 10 z" fill="#e74c3c"/>
@@ -285,10 +285,10 @@ footer a{color:var(--txt-2)}footer a:hover{color:#fff}
       <!-- CONNECTIONS with directional arrows + moving particles -->
       <g fill="none" stroke-width="2">
         <path id="c1" d="M300 175 Q330 250 380 320" stroke="#e74c3c" class="flow" marker-end="url(#arrowR)" opacity=".8"/>
-        <path id="c2" d="M380 320 Q330 250 315 190" stroke="#f39c12" class="flow" marker-end="url(#arrow)" opacity=".8"/>
-        <path id="c3" d="M380 320 Q560 200 690 140" stroke="#3498db" class="flow" marker-end="url(#arrowB)" opacity=".85"/>
-        <path id="c4" d="M315 190 Q470 150 588 196" stroke="#f39c12" class="flow" marker-end="url(#arrow)" opacity=".8"/>
-        <path id="c5" d="M430 292 Q580 210 690 150" stroke="#3498db" class="flow" marker-end="url(#arrowB)" opacity=".7"/>
+        <path id="c2" d="M380 320 Q330 250 315 190" stroke="#F39200" class="flow" marker-end="url(#arrow)" opacity=".8"/>
+        <path id="c3" d="M380 320 Q560 200 690 140" stroke="#003B7E" class="flow" marker-end="url(#arrowB)" opacity=".85"/>
+        <path id="c4" d="M315 190 Q470 150 588 196" stroke="#F39200" class="flow" marker-end="url(#arrow)" opacity=".8"/>
+        <path id="c5" d="M430 292 Q580 210 690 150" stroke="#003B7E" class="flow" marker-end="url(#arrowB)" opacity=".7"/>
       </g>
       <g fill="#fff">
         <circle r="3"><animateMotion dur="3.2s" repeatCount="indefinite"><mpath href="#c1"/></animateMotion></circle>
@@ -437,8 +437,8 @@ footer a{color:var(--txt-2)}footer a:hover{color:#fff}
 /* ---- network nodes ---- */
 (function(){
   const nodes=[
-    {n:'Mauritania',c:'MRU',x:315,y:190,col:'#e67e22'},
-    {n:'Senegal',c:'XOF',x:300,y:175,col:'#3498db'},
+    {n:'Mauritania',c:'MRU',x:315,y:190,col:'#F39200'},
+    {n:'Senegal',c:'XOF',x:300,y:175,col:'#003B7E'},
     {n:'Angola',c:'AOA',x:380,y:320,col:'#e74c3c'},
     {n:'Congo',c:'XAF',x:430,y:292,col:'#9b59b6'},
     {n:'UAE',c:'AED',x:588,y:196,col:'#2ecc71'},
@@ -470,12 +470,12 @@ footer a{color:var(--txt-2)}footer a:hover{color:#fff}
 (function(){
   const spark=(col,seed)=>{let d='M0 34';let y=34;for(let i=1;i<=11;i++){y+=(Math.sin(seed+i)*6)-(i*1.4);y=Math.max(6,Math.min(40,y));d+=` L${i*22} ${y.toFixed(0)}`;}return `<svg class="spark" viewBox="0 0 242 48" preserveAspectRatio="none"><polyline points="${d.replace(/[ML]/g,'').trim()}" fill="none" stroke="${col}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/></svg>`;};
   const M=[
-    {gt:'gt-1',bg:'linear-gradient(135deg,#e74c3c,#e67e22)',pair:'USDT / AOA',sub:'Angola',price:'843.50',chg:'+1.20',up:1,vol:'$2.4M',col:'#e74c3c'},
-    {gt:'gt-2',bg:'linear-gradient(135deg,#e67e22,#f39c12)',pair:'USDT / MRU',sub:'Mauritania',price:'39.85',chg:'+0.08',up:1,vol:'$1.1M',col:'#e67e22'},
-    {gt:'gt-3',bg:'linear-gradient(135deg,#f39c12,#3498db)',pair:'EUR / AOA',sub:'Angola',price:'920.30',chg:'+0.23',up:1,vol:'$3.8M',col:'#f39c12'},
-    {gt:'gt-4',bg:'linear-gradient(135deg,#3498db,#002776)',pair:'CNY / AOA',sub:'China corridor',price:'118.40',chg:'-0.15',up:0,vol:'$1.9M',col:'#3498db'},
-    {gt:'gt-1',bg:'linear-gradient(135deg,#e74c3c,#e67e22)',pair:'BTC / USDT',sub:'Crypto',price:'67,420',chg:'+1.20',up:1,vol:'$8.2M',col:'#e74c3c'},
-    {gt:'gt-3',bg:'linear-gradient(135deg,#f39c12,#3498db)',pair:'AED / MRU',sub:'Gulf corridor',price:'10.86',chg:'+0.33',up:1,vol:'$0.9M',col:'#f39c12'}
+    {gt:'gt-1',bg:'linear-gradient(135deg,#e74c3c,#F39200)',pair:'USDT / AOA',sub:'Angola',price:'843.50',chg:'+1.20',up:1,vol:'$2.4M',col:'#e74c3c'},
+    {gt:'gt-2',bg:'linear-gradient(135deg,#F39200,#F39200)',pair:'USDT / MRU',sub:'Mauritania',price:'39.85',chg:'+0.08',up:1,vol:'$1.1M',col:'#F39200'},
+    {gt:'gt-3',bg:'linear-gradient(135deg,#F39200,#003B7E)',pair:'EUR / AOA',sub:'Angola',price:'920.30',chg:'+0.23',up:1,vol:'$3.8M',col:'#F39200'},
+    {gt:'gt-4',bg:'linear-gradient(135deg,#003B7E,#002B5C)',pair:'CNY / AOA',sub:'China corridor',price:'118.40',chg:'-0.15',up:0,vol:'$1.9M',col:'#003B7E'},
+    {gt:'gt-1',bg:'linear-gradient(135deg,#e74c3c,#F39200)',pair:'BTC / USDT',sub:'Crypto',price:'67,420',chg:'+1.20',up:1,vol:'$8.2M',col:'#e74c3c'},
+    {gt:'gt-3',bg:'linear-gradient(135deg,#F39200,#003B7E)',pair:'AED / MRU',sub:'Gulf corridor',price:'10.86',chg:'+0.33',up:1,vol:'$0.9M',col:'#F39200'}
   ];
   document.getElementById('markets-grid').innerHTML=M.map((m,i)=>`
     <div class="card mkt ${m.gt}">
@@ -506,5 +506,10 @@ footer a{color:var(--txt-2)}footer a:hover{color:#fff}
 </script>
 <script src="arkan-ai.js" defer></script>
 <script src="arkan-nav.js" defer></script>
+
+<style id="akBaiCss">
+/* ARKAN × BAI override — بلا زخارف عائمة */
+.orb,.orb-1,.orb-2,.grid-bg,#particles,.aurora,.noise{display:none!important}
+</style>
 </body>
 </html>
