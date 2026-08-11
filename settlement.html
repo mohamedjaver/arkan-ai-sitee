@@ -2921,10 +2921,10 @@ async function uploadRC(side){
       n++;
       if(pg)pg.textContent='قراءة إيصالات '+lbl+' — '+n+'/'+files.length+'  ·  '+String(f.name).slice(0,22);
       try{
-        const _R=await ArkanRead.readAmount(f);
-        const txt='';
-        const p={amount:_R.amount,ccy:_R.ccy,txn:_R.txn,acct:null,date:_R.date,
-                 ben:null,bank:_R.bank,ok:true,src:_R.eng};
+        const _R=await arkanRead(f);
+        const txt=_R.text;
+        if(!_R.ok&&_R.err&&!txt)throw new Error(_R.err);
+        const p=arkanParse(txt,f.name);
         const ccy=p.ccy||(sel!=='AUTO'?sel:null)||'AOA';
         rc.push({name:f.name,amount:p.amount,ccy,acct:p.acct||null,txn:p.txn||null,date:p.date||null,
                  ben:p.ben||null,bank:p.bank||null,ok:p.ok!==false,src:p.src||null,link:null,side,_txt:txt});
@@ -3866,7 +3866,7 @@ async function imageText(dataUrl){
   return data.text||'';
 }
 /* ================= BUILD / AUTO-UPDATE ================= */
-const ARKAN_BUILD='1028';
+const ARKAN_BUILD='1029';
 function arkanVerLabel(){const e=$('verLbl');if(e)e.textContent=ARKAN_BUILD;}
 function arkanUpdateBanner(b){
   if(document.getElementById('updBar'))return;
@@ -5682,34 +5682,6 @@ label{font-size:12.5px!important;font-weight:700!important;color:#3E4C60!importa
 </style>
 
 <script src="arkan-read.js?v=4"></script>
-<script id="akUnifiedRead">
-/* كل بوابات الرفع تقرأ بمحرك الأرشيف الموحد — بنفس بنية الإرجاع الأصلية */
-(function(){
-  if(typeof arkanRead!=='function'||!window.ArkanRead)return;
-  const _old=window.arkanRead;
-  window.arkanRead=async function(f){
-    try{
-      const r=await ArkanRead.read(f);
-      const out=arkanCore(r.text);       /* نفس محلّل settlement */
-      out.file=f.name; out.text=r.text; out.ok=true;
-      /* إن قصّر المحلل النصي، خذ الحقول المهيكلة من Gemini مباشرة */
-      const p=r.parsed||{};
-      if(out.amount==null&&p.amount)out.amount=+p.amount||null;
-      if(!out.ccy&&p.currency)out.ccy=String(p.currency).replace('AOA','Kz').replace('UM','MRU');
-      if(!out.txn&&(p.reference||p.transaction_id))out.txn=p.reference||p.transaction_id;
-      if(!out.bank&&p.bank)out.bank=p.bank;
-      if(!out.date&&p.date)out.date=p.date;
-      if(!out.ben&&p.beneficiary)out.ben=p.beneficiary;
-      toast('قُرئ بمحرك '+(r.engine==='gemini'?'Gemini':'OCR')+' ✓');
-      return out;
-    }catch(e){
-      window.__lastReadErr=String((e&&e.message)||e);
-      if(!window.__errOnce){window.__errOnce=1;toast('المحرك الموحد تعثر: '+window.__lastReadErr.slice(0,50)+' — التحويل للمسار القديم');}
-      return await _old(f);
-    }
-  };
-})();
-</script>
 <div id="akBuildTag" style="position:fixed;bottom:calc(64px + env(safe-area-inset-bottom));inset-inline-end:8px;z-index:5;background:rgba(0,59,143,.85);color:#fff;font-size:9.5px;font-weight:700;padding:3px 8px;font-family:monospace;pointer-events:none;opacity:.8"></div>
 <script>document.getElementById('akBuildTag').textContent='v'+ARKAN_BUILD+' · '+(window.ArkanRead?'AR✓':'AR✗')+' · '+(window.pdfjsLib?'PDF✓':'PDF✗');</script>
 </body>
