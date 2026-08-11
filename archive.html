@@ -1121,17 +1121,21 @@ async function runDayReport(){
   document.getElementById('dayRepModal').remove();
   try{
     toast0('⏳ يُجهّز التقرير…');
-    if(!_pdfLibsP)_pdfLibsP=(async()=>{
-      if(!window.jspdf)await _loadScript('vendor/jspdf.min.js');
-      if(!window.jspdf.jsPDF.API.autoTable)await _loadScript('vendor/autotable.min.js');
-      if(!window.ARKAN_FONTS)await _loadScript('vendor/arkan-arabic-font.js');
-      if(!window.ArkanPdfReport)await _loadScript('vendor/arkan-pdf-report.js');
-    })();
-    await _pdfLibsP;
+    await _ensurePdfLibs();
     const label=f===t?f:`${f} → ${t}`;
+    if(!window.ArkanPdfReport||!window.ArkanPdfReport.run) throw new Error('محرك التقرير لم يُحمّل');
     window.ArkanPdfReport.run(docs,{periodLabel:label});
     toast0('✓ صدر تقرير '+label);
-  }catch(e){toast0('✗ '+(e.message||'تعذر إنشاء التقرير'));}
+  }catch(e){console.error('report:',e);toast0('✗ '+(e.message||'تعذر إنشاء التقرير'));}
+}
+/* محمّل موحّد وآمن لمكتبات الـPDF — يتحقق من كل خطوة */
+async function _ensurePdfLibs(){
+  if(!window.jspdf||!window.jspdf.jsPDF) await _loadScript('vendor/jspdf.min.js');
+  if(!window.jspdf||!window.jspdf.jsPDF) throw new Error('تعذر تحميل jspdf');
+  const hasAT=()=>{try{return !!window.jspdf.jsPDF.API.autoTable;}catch(_){return false;}};
+  if(!hasAT()) await _loadScript('vendor/autotable.min.js');
+  if(!window.ARKAN_FONTS) await _loadScript('vendor/arkan-arabic-font.js');
+  if(!window.ArkanPdfReport) await _loadScript('vendor/arkan-pdf-report.js');
 }
 
 /* ═══ تقرير PDF — تحميل كسول للمحركات ثم توليد ═══ */
