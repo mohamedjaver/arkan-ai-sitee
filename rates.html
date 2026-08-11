@@ -9,7 +9,7 @@
 <title>ARKAN Pay — أسعار الصرف اليوم</title>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@500;600;700;800&family=Space+Grotesk:wght@600;700&family=IBM+Plex+Mono:wght@500;700&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#F6FAFD;--card:#FFFFFF;--acc:#00509E;--acc2:#003B7E;--gold:#00509E;--gold2:#003B7E;--txt:#06133A;--dim:#3C4C74;--green:#0F9D6B;--stroke:#D9E2F2}
+:root{--bg:#F6FAFD;--card:#FFFFFF;--acc:#03A4FE;--acc2:#03A4FE;--gold:#03A4FE;--gold2:#03A4FE;--txt:#06133A;--dim:#3C4C74;--green:#0F9D6B;--stroke:#D9E2F2}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 body{background:linear-gradient(180deg,#F6FAFD 0%,#EAF2FB 55%,#E1EBF7 100%);background-attachment:fixed;min-height:100vh;font-family:'Cairo',sans-serif;color:var(--txt);padding-bottom:40px}
 .wrap{max-width:540px;margin:0 auto;padding:30px 18px}
@@ -26,7 +26,7 @@ input:focus,select:focus{border-color:var(--acc)}
 select{font-family:'Cairo';font-size:16px}
 .res{background:linear-gradient(135deg,rgba(13,58,160,.16),rgba(0,39,118,.06));border:1px solid rgba(13,58,160,.3);border-radius:0;padding:18px;margin-top:16px;text-align:center}
 .res .lbl{font-size:12px;color:var(--acc2);font-weight:700;margin-bottom:4px}
-.res .big{font-size:32px;font-weight:800;font-family:'IBM Plex Mono';color:#002B5C;line-height:1.2}
+.res .big{font-size:32px;font-weight:800;font-family:'IBM Plex Mono';color:#0884C7;line-height:1.2}
 .res .cur{font-size:14px;color:var(--acc2);font-weight:700}
 .res .rate{font-size:11px;color:var(--dim);margin-top:6px;font-family:'IBM Plex Mono'}
 .tier{display:flex;gap:8px;margin-top:12px}
@@ -97,7 +97,7 @@ html.pt-enter body{animation:ptIn .38s cubic-bezier(.22,1,.36,1)}
 <div class="wrap">
   <a href="./" style="display:flex;align-items:center;justify-content:center;gap:11px;margin-bottom:20px;text-decoration:none">
     <img src="arkan-logo.svg" alt="ARKAN" style="width:36px;height:36px;border-radius:0;box-shadow:0 6px 20px rgba(0,39,118,.45)">
-    <span style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:15px;letter-spacing:.02em;direction:ltr;color:#06133A"><b>ARKAN</b> <span style="color:#003B7E">SETTLEMENTS</span></span>
+    <span style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:15px;letter-spacing:.02em;direction:ltr;color:#06133A"><b>ARKAN</b> <span style="color:#03A4FE">SETTLEMENTS</span></span>
   </a>
   
   <h1>أسعار الصرف اليوم</h1>
@@ -133,7 +133,7 @@ function render(){
     app.innerHTML='<div class="card"><div class="empty">لا توجد أسعار.<br>اطلب الرابط المحدّث من ARKAN.</div></div>';
     return;
   }
-  const rows=DATA.r.map(x=>`<div class="cc">${SYM[x.ccy]||x.ccy} ${x.ccy}</div><div class="pw">${x.w}</div><div class="pr" style="color:#003B7E">${x.m!=null?x.m:'—'}</div><div class="pr">${x.r}</div>`).join('');
+  const rows=DATA.r.map(x=>`<div class="cc">${SYM[x.ccy]||x.ccy} ${x.ccy}</div><div class="pw">${x.w}</div><div class="pr" style="color:#03A4FE">${x.m!=null?x.m:'—'}</div><div class="pr">${x.r}</div>`).join('');
   const _whoP=window.arkanT?arkanT('اسمك (اختياري)'):'اسمك (اختياري)';
   app.innerHTML=`
     <div class="card">
@@ -186,7 +186,7 @@ function setMode(m){
     bR.textContent=T('أريد أوقية ← كم عملة؟');
     if($('amtLabel'))$('amtLabel').textContent=T('المبلغ بـ')+' '+cSym;
   } else {
-    bR.style.cssText='flex:1;padding:10px;border-radius:0;border:1px solid rgba(13,58,160,.5);background:rgba(13,58,160,.12);color:#003B7E;font-family:Cairo;font-size:13px;font-weight:700;cursor:pointer';
+    bR.style.cssText='flex:1;padding:10px;border-radius:0;border:1px solid rgba(13,58,160,.5);background:rgba(13,58,160,.12);color:#03A4FE;font-family:Cairo;font-size:13px;font-weight:700;cursor:pointer';
     bF.style.cssText='flex:1;padding:10px;border-radius:0;border:1px solid rgba(255,255,255,.08);background:transparent;color:#8B8FA8;font-family:Cairo;font-size:13px;font-weight:700;cursor:pointer';
     bF.textContent=T('أدفع عملة ← أستلم أوقية');
     bR.textContent=T('أريد أوقية ← كم عملة؟');
