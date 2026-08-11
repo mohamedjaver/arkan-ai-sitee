@@ -2,8 +2,8 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta name="theme-color" content="#070A14">
-  <link rel="icon" href="arkan-icon-512.png?v=n2">
-  <link rel="apple-touch-icon" href="apple-touch-icon.png?v=n2">
+  <link rel="icon" href="arkan-icon-512.png?v=n3">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png?v=n3">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ARKAN INTERNATIONAL — الصرافة وأنظمة التداول المؤسسية</title>
@@ -14,7 +14,7 @@
 :root{
   --bg:#080916; --bg-2:#070B14; --panel:#0A1020; --panel-2:#0E1528;
   --line:rgba(124,140,255,.14); --line-2:rgba(255,255,255,.055);
-  --gold:#003B7E; --gold-l:#5A82B8; --cyan:#3DE0D0; --blue:#5B8DEF; --violet:#8B72FF;
+  --gold:#0058D9; --gold-l:#4D8DF0; --cyan:#3DE0D0; --blue:#5B8DEF; --violet:#8B72FF;
   --red:#FF4D5E; --green:#1DD17F;
   --txt:#EEF1FA; --muted:#8089A6; --muted-2:#4C5570;
   --max:1220px;
@@ -274,7 +274,7 @@ html.pt-enter body{animation:ptIn .38s cubic-bezier(.22,1,.36,1)}
 <meta property="og:site_name" content="ARKAN SETTLEMENTS">
 <meta property="og:title" content="ARKAN AI — أنظمة التداول المؤسسية">
 <meta property="og:description" content="مؤشرات Pine Script مؤسسية على TradingView: تدفق الأوامر وذكاء السيولة.">
-<meta property="og:image" content="https://arkanrates.com/arkan-icon-512.png?v=n2">
+<meta property="og:image" content="https://arkanrates.com/arkan-icon-512.png?v=n3">
 <meta name="twitter:card" content="summary_large_image">
   <link rel="stylesheet" href="arkan-theme.css">
   <link rel="stylesheet" href="arkan-light.css">
@@ -444,7 +444,7 @@ html.pt-enter body{animation:ptIn .38s cubic-bezier(.22,1,.36,1)}
   </div>
   <div class="foot-grid">
     <div class="foot-about">
-      <a href="#" class="logo"><span class="logo-mark"><svg viewBox="0 0 40 40" fill="none"><path d="M20 3 L34 34 L26 34 L20 18 L14 34 L6 34 Z" fill="url(#lg2)"/><path d="M20 19 L24 28 L16 28 Z" fill="#04060C"/><defs><linearGradient id="lg2" x1="6" y1="3" x2="34" y2="34"><stop stop-color="#003B7E"/><stop offset="1" stop-color="#003B7E"/></linearGradient></defs></svg></span><span><span class="logo-txt en"><b>ARKAN</b></span><span class="logo-sub en">SETTLEMENTS</span></span></a>
+      <a href="#" class="logo"><span class="logo-mark"><svg viewBox="0 0 40 40" fill="none"><path d="M20 3 L34 34 L26 34 L20 18 L14 34 L6 34 Z" fill="url(#lg2)"/><path d="M20 19 L24 28 L16 28 Z" fill="#04060C"/><defs><linearGradient id="lg2" x1="6" y1="3" x2="34" y2="34"><stop stop-color="#0058D9"/><stop offset="1" stop-color="#0058D9"/></linearGradient></defs></svg></span><span><span class="logo-txt en"><b>ARKAN</b></span><span class="logo-sub en">SETTLEMENTS</span></span></a>
       <p>هندسة تدفق الأوامر المؤسساتية في متناول المتداول الجاد.</p>
     </div>
     <div class="foot-links">
@@ -512,7 +512,7 @@ html.pt-enter body{animation:ptIn .38s cubic-bezier(.22,1,.36,1)}
     x.strokeStyle=grad;x.lineWidth=2;x.shadowColor='rgba(61,224,208,.5)';x.shadowBlur=12;x.stroke();x.shadowBlur=0;
     // moving scan dot on line
     const idx=Math.floor((t*.4)%series.length);const dx=(idx/(series.length-1))*W;const dy=baseY+(series[idx]-.5)*amp*2;
-    x.beginPath();x.arc(dx,dy,3,0,7);x.fillStyle='#5A82B8';x.shadowColor='#5A82B8';x.shadowBlur=14;x.fill();x.shadowBlur=0;
+    x.beginPath();x.arc(dx,dy,3,0,7);x.fillStyle='#4D8DF0';x.shadowColor='#4D8DF0';x.shadowBlur=14;x.fill();x.shadowBlur=0;
     // floating data particles
     pts.forEach(p=>{p.y-=p.v;if(p.y<0)p.y=1;const px=p.x*W,py=p.y*H;x.beginPath();x.arc(px,py,p.s,0,7);x.fillStyle='rgba(124,140,255,0.4)';x.fill();});
     requestAnimationFrame(loop);
@@ -531,7 +531,7 @@ html.pt-enter body{animation:ptIn .38s cubic-bezier(.22,1,.36,1)}
     x.clearRect(0,0,c.width,c.height);const W=c.width,H=c.height,mn=Math.min(...d),mx=Math.max(...d);
     x.beginPath();
     d.forEach((val,i)=>{const px=(i/(d.length-1))*W;const py=H-8-((val-mn)/(mx-mn||1))*(H-16);i?x.lineTo(px,py):x.moveTo(px,py);});
-    const g=x.createLinearGradient(0,0,W,0);g.addColorStop(0,'#FF4D5E');g.addColorStop(.4,'#003B7E');g.addColorStop(1,'#1DD17F');
+    const g=x.createLinearGradient(0,0,W,0);g.addColorStop(0,'#FF4D5E');g.addColorStop(.4,'#0058D9');g.addColorStop(1,'#1DD17F');
     x.strokeStyle=g;x.lineWidth=2;x.shadowColor='rgba(29,209,127,.4)';x.shadowBlur=8;x.stroke();x.shadowBlur=0;
     // area
     x.lineTo(W,H);x.lineTo(0,H);x.closePath();const ag=x.createLinearGradient(0,0,0,H);ag.addColorStop(0,'rgba(29,209,127,.18)');ag.addColorStop(1,'rgba(29,209,127,0)');x.fillStyle=ag;x.fill();
@@ -759,24 +759,24 @@ fetch('rates-data.json?t='+Date.now()).then(r=>r.ok?r.json():null).then(d=>{
 </html>
 
 <div id="arkanPay" style="display:none;position:fixed;inset:0;z-index:99999;background:#000c;backdrop-filter:blur(6px);align-items:center;justify-content:center;font-family:'Poppins','Tajawal',sans-serif" onclick="if(event.target===this)this.style.display='none'">
-  <div dir="rtl" style="max-width:440px;width:90%;padding:30px 26px;border:1px solid #003B7E55;border-radius:0;background:linear-gradient(180deg,#101014,#17171c);color:#fff;text-align:center;box-shadow:0 25px 70px #000c">
+  <div dir="rtl" style="max-width:440px;width:90%;padding:30px 26px;border:1px solid #0058D955;border-radius:0;background:linear-gradient(180deg,#101014,#17171c);color:#fff;text-align:center;box-shadow:0 25px 70px #000c">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
-      <span style="font-size:12px;letter-spacing:2px;color:#003B7E">// إتمام الاشتراك</span>
+      <span style="font-size:12px;letter-spacing:2px;color:#0058D9">// إتمام الاشتراك</span>
       <span onclick="document.getElementById('arkanPay').style.display='none'" style="cursor:pointer;color:#777;font-size:24px;line-height:1">&times;</span>
     </div>
     <div style="color:#9a9aa2;font-size:13px;margin-bottom:4px">المبلغ المطلوب</div>
-    <div style="font-size:46px;font-weight:800;color:#003B7E;line-height:1"><span id="arkanAmt">—</span> <span style="font-size:18px;color:#fff">USDT</span></div>
-    <div style="color:#9a9aa2;font-size:13px;margin:6px 0 22px">الشبكة: <b style="color:#003B7E">TRON (TRC20)</b> فقط</div>
+    <div style="font-size:46px;font-weight:800;color:#0058D9;line-height:1"><span id="arkanAmt">—</span> <span style="font-size:18px;color:#fff">USDT</span></div>
+    <div style="color:#9a9aa2;font-size:13px;margin:6px 0 22px">الشبكة: <b style="color:#0058D9">TRON (TRC20)</b> فقط</div>
 
     <div style="text-align:right;font-size:12px;color:#9a9aa2;margin-bottom:6px">عنوان المحفظة</div>
     <div style="display:flex;align-items:center;gap:8px;background:#000;border:1px solid #2a2a30;border-radius:0;padding:11px 12px;margin-bottom:18px">
       <code style="flex:1;font-size:12px;word-break:break-all;direction:ltr;text-align:left;color:#fff">TTXUswnqmRPcqRRZkonxwpH2KDStAJm7td</code>
-      <button onclick="navigator.clipboard.writeText('TTXUswnqmRPcqRRZkonxwpH2KDStAJm7td');this.innerText='✓'" style="background:#003B7E;color:#000;border:0;border-radius:0;padding:9px 14px;font-weight:700;cursor:pointer;font-family:inherit">نسخ</button>
+      <button onclick="navigator.clipboard.writeText('TTXUswnqmRPcqRRZkonxwpH2KDStAJm7td');this.innerText='✓'" style="background:#0058D9;color:#000;border:0;border-radius:0;padding:9px 14px;font-weight:700;cursor:pointer;font-family:inherit">نسخ</button>
     </div>
 
-    <div style="background:#003B7E12;border:1px solid #003B7E33;border-radius:0;padding:10px;font-size:12px;color:#003B7E;margin-bottom:18px">⚠️ حوّل <b>المبلغ بالضبط</b> على شبكة TRC20 فقط — أي خطأ في الشبكة يعني ضياع المبلغ.</div>
+    <div style="background:#0058D912;border:1px solid #0058D933;border-radius:0;padding:10px;font-size:12px;color:#0058D9;margin-bottom:18px">⚠️ حوّل <b>المبلغ بالضبط</b> على شبكة TRC20 فقط — أي خطأ في الشبكة يعني ضياع المبلغ.</div>
 
-    <a href="https://t.me/ArkanAI_Access_Bot" target="_blank" style="display:block;background:#003B7E;color:#000;text-decoration:none;border-radius:0;padding:14px;font-weight:700;font-size:15px">أرسلتُ الدفع — أكّد وفعل عبر Telegram</a>
+    <a href="https://t.me/ArkanAI_Access_Bot" target="_blank" style="display:block;background:#0058D9;color:#000;text-decoration:none;border-radius:0;padding:14px;font-weight:700;font-size:15px">أرسلتُ الدفع — أكّد وفعل عبر Telegram</a>
     <p style="margin:12px 0 0;color:#6b6b73;font-size:11px">أرسل صورة الإيصال في Telegram لتفعيل اشتراكك فورًا.</p>
   </div>
 </div>
@@ -799,11 +799,11 @@ document.addEventListener('click',function(e){
 </script>
 <section dir="rtl" style="max-width:900px;margin:50px auto;padding:0 16px;font-family:'Poppins',sans-serif">
   <div style="text-align:center;margin-bottom:18px">
-    <div style="font-size:13px;letter-spacing:2px;color:#003B7E">// MARKET NEWS</div>
+    <div style="font-size:13px;letter-spacing:2px;color:#0058D9">// MARKET NEWS</div>
     <h2 style="margin:6px 0 0;color:#fff;font-size:26px">أهم أخبار السوق</h2>
     <p style="color:#9a9aa2;font-size:14px;margin:6px 0 0">أحدث الأخبار المؤثرة على سوق الكريبتو — تُحدَّث لحظيًا</p>
   </div>
-  <div style="border:1px solid #003B7E33;border-radius:0;overflow:hidden;box-shadow:0 10px 40px #0008">
+  <div style="border:1px solid #0058D933;border-radius:0;overflow:hidden;box-shadow:0 10px 40px #0008">
     <div class="tradingview-widget-container">
       <div class="tradingview-widget-container__widget"></div>
       <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-timeline.js" async>
