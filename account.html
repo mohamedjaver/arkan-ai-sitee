@@ -15,8 +15,8 @@
 <style>
   :root{
     --bg:#F7FAFD; --card:#FFFFFF; --card2:#F8FBFF; --line:#D9E5F2;
-    --txt:#102A43; --muted:#486581; --gold:#0884C7; --violet:#03A4FE;
-    --acc:#03A4FE; --acc2:#03A4FE; --accD:#0884C7;
+    --txt:#102A43; --muted:#486581; --gold:#002B5C; --violet:#003B7E;
+    --acc:#003B7E; --acc2:#003B7E; --accD:#002B5C;
     --green:#0A9E5C; --red:#E53935; --radius:24px;
   }
   *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -37,7 +37,7 @@
   .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:26px}
   .brand{display:flex;align-items:center;gap:11px}
   .logo{width:42px;height:42px;border-radius:0;object-fit:cover;display:block;box-shadow:0 8px 24px rgba(0,153,255,.14)}
-  img.logo{background:linear-gradient(135deg,var(--violet),#03A4FE)}
+  img.logo{background:linear-gradient(135deg,var(--violet),#003B7E)}
   .brand b{font-size:17px;letter-spacing:.5px}
   .brand small{display:block;font-size:11px;color:var(--muted);font-weight:400}
   .bell{width:42px;height:42px;border-radius:0;border:1px solid var(--line);background:var(--card);
@@ -64,7 +64,7 @@
   .act:active .ic{transform:scale(.93)}
   .act svg{width:22px;height:22px}
   .act span{font-size:12px;color:var(--muted)}
-  .act.gold .ic{background:linear-gradient(135deg,#03A4FE 0%,#03A4FE 55%,#03A4FE 100%);border:none;box-shadow:0 10px 26px rgba(0,181,255,.06)}
+  .act.gold .ic{background:linear-gradient(135deg,#003B7E 0%,#003B7E 55%,#003B7E 100%);border:none;box-shadow:0 10px 26px rgba(0,181,255,.06)}
   .act.gold svg{stroke:#3A2E08}
   .act.gold span{color:var(--txt);font-weight:500}
   .sec{display:flex;align-items:baseline;justify-content:space-between;margin:0 2px 14px}
@@ -112,7 +112,7 @@
   .cpicker b{font-size:14px}
   .cpicker svg{width:13px;height:13px;stroke:var(--muted)}
   .swap{width:44px;height:44px;border-radius:50%;margin:12px auto;display:grid;place-items:center;
-    background:linear-gradient(135deg,var(--violet),#03A4FE);box-shadow:0 8px 22px rgba(0,153,255,.14);cursor:pointer}
+    background:linear-gradient(135deg,var(--violet),#003B7E);box-shadow:0 8px 22px rgba(0,153,255,.14);cursor:pointer}
   .swap svg{width:19px;height:19px;stroke:#fff;transition:transform .5s}
   .conv-result{border-color:rgba(0,181,255,.06);background:linear-gradient(180deg,rgba(0,181,255,.06),var(--card))}
   .conv-result input{color:var(--gold)}
@@ -120,7 +120,7 @@
   .meta b{color:var(--txt);font-weight:500}
   .meta .tier-w{color:var(--gold)} .meta .tier-m{color:#67e8f9} .meta .tier-r{color:var(--txt)}
   .cta{width:100%;margin-top:22px;padding:19px;border:none;border-radius:0;cursor:pointer;
-    background:linear-gradient(135deg,#03A4FE 0%,#03A4FE 55%,#03A4FE 100%);color:#3A2E08;font-family:inherit;font-size:16.5px;font-weight:700;
+    background:linear-gradient(135deg,#003B7E 0%,#003B7E 55%,#003B7E 100%);color:#3A2E08;font-family:inherit;font-size:16.5px;font-weight:700;
     box-shadow:0 14px 34px rgba(0,181,255,.06);transition:transform .15s}
   .cta:active{transform:scale(.98)}
   .picker-menu{position:absolute;top:calc(100% + 8px);inset-inline-end:0;z-index:30;width:220px;max-height:260px;overflow:auto;
@@ -138,11 +138,11 @@
   .nav-it{display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;padding:4px;position:relative}
   .nav-it svg{width:23px;height:23px;stroke:#7A93AD;transition:stroke .2s}
   .nav-it span{font-size:11px;color:#7A93AD;font-weight:600;transition:color .2s}
-  .nav-it.on svg{stroke:#03A4FE} .nav-it.on span{color:#03A4FE;font-weight:800}
-  .nav-it.on::before{content:'';position:absolute;top:-11px;width:28px;height:3px;border-radius:0;background:linear-gradient(90deg,#03A4FE,#03A4FE)}
+  .nav-it.on svg{stroke:#003B7E} .nav-it.on span{color:#003B7E;font-weight:800}
+  .nav-it.on::before{content:'';position:absolute;top:-11px;width:28px;height:3px;border-radius:0;background:linear-gradient(90deg,#003B7E,#003B7E)}
   .acct-head{display:flex;flex-direction:column;align-items:center;margin:14px 0 26px}
   .avatar{width:84px;height:84px;border-radius:0;font-size:32px;font-weight:700;color:#fff;
-    background:linear-gradient(135deg,var(--violet),#03A4FE);display:grid;place-items:center;
+    background:linear-gradient(135deg,var(--violet),#003B7E);display:grid;place-items:center;
     box-shadow:0 14px 36px rgba(0,153,255,.14);margin-bottom:14px}
   .acct-head b{font-size:20px}
   .acct-head small{font-size:13px;color:var(--muted);margin-top:4px}
@@ -172,7 +172,7 @@
   .gate input:focus{border-color:rgba(0,181,255,.06)}
   .gate .pin{text-align:center;letter-spacing:.5em;font-size:22px;font-weight:700;direction:ltr}
   .gate .enter{width:100%;padding:16px;border:0;border-radius:0;cursor:pointer;
-    background:linear-gradient(135deg,#03A4FE 0%,#03A4FE 55%,#03A4FE 100%);color:#3A2E08;font-family:inherit;font-weight:700;font-size:16px}
+    background:linear-gradient(135deg,#003B7E 0%,#003B7E 55%,#003B7E 100%);color:#3A2E08;font-family:inherit;font-weight:700;font-size:16px}
   .gate .enter:disabled{opacity:.5}
   .gate .err{margin-top:14px;padding:12px;border-radius:0;font-size:13px;display:none;
     background:rgba(242,103,106,.12);border:1px solid rgba(242,103,106,.3);color:#F2A0A0}
@@ -283,11 +283,11 @@
       <input id="gPin" class="pin" type="tel" inputmode="numeric" maxlength="4" placeholder="••••">
       <button class="enter" id="gEnter">دخول</button>
       <div class="err" id="gErr"></div>
-      <p class="hint" style="margin-top:10px"><a href="#" id="gForgot" style="font-weight:700;color:#03A4FE">نسيت رمزك؟ عيّنه بنفسك الآن</a></p>
+      <p class="hint" style="margin-top:10px"><a href="#" id="gForgot" style="font-weight:700;color:#003B7E">نسيت رمزك؟ عيّنه بنفسك الآن</a></p>
       <div id="resetBox" style="display:none;margin-top:14px;padding-top:14px;border-top:1px dashed rgba(10,86,184,.25)">
-        <p style="font-weight:800;margin:0 0 10px;color:#0884C7">استعادة الرمز عبر واتساب</p>
+        <p style="font-weight:800;margin:0 0 10px;color:#002B5C">استعادة الرمز عبر واتساب</p>
         <div id="rs1">
-          <button class="enter" id="rsSend" style="background:#03A4FE">📲 أرسل رمز التحقق إلى واتسابي</button>
+          <button class="enter" id="rsSend" style="background:#003B7E">📲 أرسل رمز التحقق إلى واتسابي</button>
         </div>
         <div id="rs2" style="display:none">
           <label>رمز التحقق (6 أرقام وصلك في واتساب)</label>
@@ -583,7 +583,7 @@ function txHTML(t, id){
   const map={done:['done','مكتملة'],pending:['wait','قيد الانتظار'],cancel:['cancel','ملغاة']};
   const b = map[t.status]||map.pending;
   const dt = t.createdAt?.toDate ? t.createdAt.toDate().toLocaleDateString('en-GB') : '—';
-  return `<div class="tx"><div class="ticon out"><svg fill="none" stroke="#03A4FE" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14m-7-7l7 7-7 7"/></svg></div>
+  return `<div class="tx"><div class="ticon out"><svg fill="none" stroke="#003B7E" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14m-7-7l7 7-7 7"/></svg></div>
     <div class="tinfo"><b>${t.from} → ${t.to}</b><small class="num">${dt} · ${(t.clientRef||id.slice(-6)).toUpperCase()}</small></div>
     <div class="tval"><b class="num">${fmt(t.amount||0, t.dp??2)} ${t.from}</b><span class="pill ${b[0]}">${b[1]}</span></div></div>`;
 }
@@ -668,7 +668,7 @@ async function silentOpen(phoneRaw){
 .orb,.orb-1,.orb-2,.grid-bg,#particles,.aurora,.noise{display:none!important}
 </style>
 
-<a id="akChatFab" href="chat-v2.html" style="position:fixed;bottom:calc(84px + env(safe-area-inset-bottom));inset-inline-start:16px;z-index:60;width:52px;height:52px;background:#03A4FE;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 18px rgba(3,164,254,.4)" aria-label="المحادثة">
+<a id="akChatFab" href="chat-v2.html" style="position:fixed;bottom:calc(84px + env(safe-area-inset-bottom));inset-inline-start:16px;z-index:60;width:52px;height:52px;background:#003B7E;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 18px rgba(3,164,254,.4)" aria-label="المحادثة">
 <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" style="width:24px;height:24px"><path d="M21 11.5a8.4 8.4 0 01-9 8.4 8.6 8.6 0 01-3.9-.9L3 20l1-4.9a8.4 8.4 0 1117-3.6z"/></svg></a>
 </body>
 </html>
