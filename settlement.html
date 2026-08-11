@@ -2943,9 +2943,9 @@ async function uploadRC(side){
     const tick=()=>{if(pg)pg.textContent='قراءة '+lbl+' — '+done+'/'+snap.length+' · مقروء '+okN;};
     const readLocal=async(x)=>{
       const file=new File([x.buf],x.name,{type:x.type||(x.isPdf?'application/pdf':'image/jpeg')});
-      const dataUrl=x.isPdf?null:await new Promise((res,rej)=>{const r=new FileReader();
+      const dataUrl=await new Promise((res,rej)=>{const r=new FileReader();
         r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(file);});
-      const txt=x.isPdf?await pdfText(file):await imageText(dataUrl);
+      const txt=x.isPdf?await pdfText(dataUrl):await imageText(dataUrl);
       return arkanParse(txt,x.name);
     };
     /* 3) موجة محلية متوازية */
@@ -3337,7 +3337,8 @@ function uploadPayRcpt2(){
     if(mb.length+files.length>50){toast('الحد 50 إيصال');return;}
     toast('جارٍ قراءة '+files.length+' إيصال...');
     let ok=0;
-    const _res=await akBatchText(files,(d,n)=>toast('قراءة '+d+'/'+n+'…'));
+    let _res;try{_res=await akBatchText(files,(d,n)=>toast('قراءة '+d+'/'+n+'…'));}
+    catch(e){alert('عطل في محرك الدفعات: '+((e&&e.message)||e));return;}
     for(const _r of _res){
       try{
         const txt=_r.txt;
@@ -3408,7 +3409,8 @@ function uploadKB(){
     if(kb.length+files.length>100){toast('الحد 100 إيصال');return;}
     toast('جارٍ قراءة '+files.length+' ملف...');
     let ok=0,moved=0;const touched=new Set([fid]);
-    const _res=await akBatchText(files,(d,n)=>toast('قراءة '+d+'/'+n+'…'));
+    let _res;try{_res=await akBatchText(files,(d,n)=>toast('قراءة '+d+'/'+n+'…'));}
+    catch(e){alert('عطل في محرك الدفعات: '+((e&&e.message)||e));return;}
     for(const _r of _res){
       const f={name:_r.name};
       try{
@@ -3930,7 +3932,7 @@ async function imageText(dataUrl){
   return data.text||'';
 }
 /* ================= BUILD / AUTO-UPDATE ================= */
-const ARKAN_BUILD='1035';
+const ARKAN_BUILD='1036';
 function arkanVerLabel(){const e=$('verLbl');if(e)e.textContent=ARKAN_BUILD;}
 function arkanUpdateBanner(b){
   if(document.getElementById('updBar'))return;
@@ -5826,12 +5828,9 @@ async function akBatchText(files,onTick){
       if(x.err){done++;onTick&&onTick(done,snap.length);continue;}
       try{
         const file=new File([x.buf],x.name,{type:x.type||(x.isPdf?'application/pdf':'image/jpeg')});
-        if(x.isPdf){res[k].txt=await pdfText(file);}
-        else{
-          const du=await new Promise((rs,rj)=>{const r=new FileReader();
-            r.onload=()=>rs(r.result);r.onerror=rj;r.readAsDataURL(file);});
-          res[k].txt=await imageText(du);
-        }
+        const du=await new Promise((rs,rj)=>{const r=new FileReader();
+          r.onload=()=>rs(r.result);r.onerror=rj;r.readAsDataURL(file);});
+        res[k].txt=x.isPdf?await pdfText(du):await imageText(du);
       }catch(e){res[k].err='محلي: '+String((e&&e.message)||e).slice(0,60);}
       done++;onTick&&onTick(done,snap.length);
     }
