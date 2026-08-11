@@ -3866,7 +3866,7 @@ async function imageText(dataUrl){
   return data.text||'';
 }
 /* ================= BUILD / AUTO-UPDATE ================= */
-const ARKAN_BUILD='1014';
+const ARKAN_BUILD='1015';
 function arkanVerLabel(){const e=$('verLbl');if(e)e.textContent=ARKAN_BUILD;}
 function arkanUpdateBanner(b){
   if(document.getElementById('updBar'))return;
@@ -5547,5 +5547,30 @@ input:focus,select:focus{border-color:#03A4FE!important;outline:none!important}
 /* الأرقام والمبالغ داكنة واضحة */
 .num,.lp{color:#22303C!important}
 </style>
+
+<script id="akArchTab">
+/* ═══ دمج الأرشيف الذكي داخل الكونسول — تبويب "الأرشيف" ═══ */
+(function(){
+'use strict';
+/* القسم + الإطار (تحميل كسول عند أول فتح) */
+const sec=document.createElement('section');
+sec.id='archive';
+sec.style.cssText='padding:0!important';
+sec.innerHTML='<iframe id="akArchFrame" title="الأرشيف" style="border:0;width:100%;height:calc(100vh - 76px);display:block;background:#F0F1F2"></iframe>';
+const anysec=document.querySelector('section');
+anysec.parentNode.appendChild(sec);
+/* عنصر التنقل */
+const nav=document.querySelector('.nv').parentNode;
+const it=document.createElement('div');
+it.className='nv'; it.dataset.t='archive';
+it.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px"><path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/></svg><span>الأرشيف</span>';
+nav.appendChild(it);
+it.addEventListener('click',()=>{
+  const f=document.getElementById('akArchFrame');
+  if(!f.src)f.src='archive.html?embed=1';
+  switchTab('archive');
+});
+})();
+</script>
 </body>
 </html>
