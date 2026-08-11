@@ -730,5 +730,47 @@ try{
 }catch(e){}
 })();
 </script>
+
+<script id="akOwnerMode">
+/* ═══ وضع المالك: عند الدخول برقم المالك — شارة "المالك" + خيار الكونسول ═══ */
+(function(){
+'use strict';
+const OWNERS=['36295050'];
+const isOwner=p=>OWNERS.includes(String(p||'').replace(/\D/g,'').slice(-8));
+function apply(){
+  let ph=null;
+  try{ph=(JSON.parse(localStorage.getItem('arkan_session')||'null')||{}).phone;}catch(e){}
+  if(!isOwner(ph))return false;
+  /* 1) الشارة بدل "قيد التفعيل" */
+  const pb=document.getElementById('pendBox');
+  if(pb){pb.textContent='حساب المالك — صلاحيات كاملة';
+    pb.style.cssText+='background:#0058D9;color:#fff;border-color:#0058D9;font-weight:800';}
+  const st=document.getElementById('acctStatus');
+  if(st)st.textContent='المالك';
+  /* 2) settlement في الخيارات: بلاطة في الرئيسية + صف في حسابي */
+  const acts=document.querySelector('.actions');
+  if(acts&&!document.getElementById('akOwnAct')){
+    const d=document.createElement('div');
+    d.className='act'; d.id='akOwnAct';
+    d.style.cssText='border:1.5px solid #0058D9';
+    d.innerHTML='<div class="ic" style="color:#0058D9"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-6h6v6"/></svg></div><span style="color:#0058D9;font-weight:800">الكونسول</span>';
+    d.onclick=()=>location.href='settlement.html';
+    acts.appendChild(d);
+  }
+  const acct=document.getElementById('s-acct');
+  if(acct&&!document.getElementById('akOwnRow')){
+    const r=document.createElement('div');
+    r.id='akOwnRow';
+    r.style.cssText='display:flex;align-items:center;justify-content:space-between;background:#0058D9;color:#fff;padding:15px 16px;margin:12px 0;cursor:pointer;font-weight:800;font-size:14px';
+    r.innerHTML='<span>كونسول التسوية — إدارة المالك</span><span style="font-size:18px">←</span>';
+    r.onclick=()=>location.href='settlement.html';
+    acct.insertBefore(r,acct.firstElementChild.nextElementSibling);
+  }
+  return true;
+}
+/* الجلسة قد تكتمل بعد الدخول الصامت — أعد المحاولة لثوانٍ */
+let n=0;const iv=setInterval(()=>{if(apply()||++n>40)clearInterval(iv);},300);
+})();
+</script>
 </body>
 </html>
