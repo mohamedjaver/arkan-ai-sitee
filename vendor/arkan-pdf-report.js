@@ -222,7 +222,7 @@ window.ArkanPdfReport={ run: function(docs,opts){
       pdf.setDrawColor(LINE); pdf.setLineWidth(.5); pdf.line(M,H-28,W-M,H-28);
     }
 
-    pdf.save('ARKAN_Receipts_'+iso+'.pdf');
+    pdf.save('ARKAN_Receipts_'+(opts.periodLabel?opts.periodLabel.replace(/[^\d]/g,'_').replace(/^_+|_+$/g,''):iso)+'.pdf');
   }catch(e){ console.error(e); alert('PDF error: '+(e.message||e)); }
 }};
 })();
