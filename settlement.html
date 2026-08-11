@@ -771,8 +771,8 @@ section#contacts.on{background:#F8FCFF;border-radius:0}
       </div>
     </div>
 
-    <label style="margin-top:12px">رابط المعاملة (TRONSCAN / بلوك تشين) — اختياري</label>
-    <input type="text" id="rcLink" placeholder="https://tronscan.org/#/transaction/55c44cc..." style="direction:ltr;font-size:16px">
+    <button class="btn btn-gold" style="width:100%;margin-top:12px;padding:14px;font-size:15px" onclick="akStatementPDF()">كشف حساب PDF — كل المبالغ والمجموع</button>
+    <input type="text" id="rcLink" style="display:none">
     <div class="row" style="margin-top:8px">
       <div><label>الجهة / الطرف</label><input type="text" id="rcParty" class="ar" placeholder="اسم العميل أو المورد"></div>
       <div><label>ملاحظة</label><input type="text" id="rcNote" class="ar" placeholder="—"></div>
@@ -2922,6 +2922,7 @@ async function uploadRC(side){
   document.body.appendChild(inp);
   inp.onchange=async()=>{
     const picked=[...inp.files]; if(!picked.length)return;
+    rcLoad(); /* حمّل المخزون أولاً — الدفعة الجديدة تُضاف فوقه لا تحته */
     const sel=rcCcyV(), pg=$('rcProg');
     const lbl=side==='cli'?'العميل':'المورد';
     if(pg){pg.style.display='block';pg.textContent='تثبيت '+picked.length+' ملفاً…';}
@@ -2965,7 +2966,7 @@ async function uploadRC(side){
       }
     }
     await Promise.all(Array.from({length:Math.min(CONC,snap.length)},worker));
-    renderRC();
+    rcPersist(); renderRC();
     const ms=Math.round((performance.now()-t0)/Math.max(1,snap.length));
     if(pg)pg.textContent='محلي: '+okN+'/'+snap.length+' مقروء · '+ms+'ms/ملف';
     /* 4) موجة Gemini لما لم يُقرأ فقط — إن وُجد مفتاح */
@@ -3925,7 +3926,7 @@ async function imageText(dataUrl){
   return data.text||'';
 }
 /* ================= BUILD / AUTO-UPDATE ================= */
-const ARKAN_BUILD='1030';
+const ARKAN_BUILD='1031';
 function arkanVerLabel(){const e=$('verLbl');if(e)e.textContent=ARKAN_BUILD;}
 function arkanUpdateBanner(b){
   if(document.getElementById('updBar'))return;
@@ -5743,5 +5744,47 @@ label{font-size:12.5px!important;font-weight:700!important;color:#3E4C60!importa
 <script src="arkan-read.js?v=4"></script>
 <div id="akBuildTag" style="position:fixed;bottom:calc(64px + env(safe-area-inset-bottom));inset-inline-end:8px;z-index:5;background:rgba(0,59,143,.85);color:#fff;font-size:9.5px;font-weight:700;padding:3px 8px;font-family:monospace;pointer-events:none;opacity:.8"></div>
 <script>document.getElementById('akBuildTag').textContent='v'+ARKAN_BUILD+' · '+(window.ArkanRead?'AR✓':'AR✗')+' · '+(window.pdfjsLib?'PDF✓':'PDF✗');</script>
+
+<script id="akStatement">
+function akStatementPDF(){
+  rcLoad();
+  if(!rc.length){toast('لا إيصالات في الجرد');return;}
+  const F=n=>Number(n||0).toLocaleString('en-US');
+  const today=new Date().toLocaleDateString('en-GB');
+  const row=(b,i)=>'<tr><td>'+(i+1)+'</td><td>'+(b.name||'—').slice(0,26)+'</td><td>'+(b.bank||'—')
+    +'</td><td dir="ltr">'+(b.txn||'—')+'</td><td>'+(b.date||'—')+'</td><td class="a">'
+    +(b.amount!=null?F(b.amount)+' '+(b.ccy||''):'<span class="m">— يدوي</span>')+'</td></tr>';
+  const sec=(side,title)=>{
+    const L=rc.filter(x=>(x.side||'cli')===side);
+    if(!L.length)return '';
+    const tot={}; L.forEach(x=>{if(x.amount!=null)tot[x.ccy||'?']=(tot[x.ccy||'?']||0)+x.amount;});
+    const miss=L.filter(x=>x.amount==null).length;
+    return '<h2>'+title+' — '+L.length+' إيصالاً</h2><table><thead><tr><th>#</th><th>الملف</th><th>البنك</th><th>المرجع</th><th>التاريخ</th><th>المبلغ</th></tr></thead><tbody>'
+      +L.map(row).join('')+'</tbody></table>'
+      +'<div class="tot">المجموع: '+Object.entries(tot).map(([c,v])=>'<b>'+F(v)+' '+c+'</b>').join(' · ')
+      +(miss?' <span class="m">('+miss+' بلا مبلغ)</span>':'')+'</div>';
+  };
+  const html='<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="utf-8"><title>كشف حساب — ARKAN</title><style>'
+   +'body{font-family:"IBM Plex Sans Arabic",Tahoma,sans-serif;margin:26px;color:#0B2447}'
+   +'.hd{display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid #0058D9;padding-bottom:12px;margin-bottom:16px}'
+   +'.hd b{font-size:22px;color:#003B8F}.hd small{color:#4E5A6B}'
+   +'h2{font-size:15px;color:#0058D9;margin:18px 0 8px}'
+   +'table{width:100%;border-collapse:collapse;font-size:12.5px}'
+   +'th{background:#003B8F;color:#fff;padding:8px 6px;font-size:11.5px}'
+   +'td{border:1px solid #D8E2F0;padding:7px 6px;text-align:center}'
+   +'td.a{font-family:ui-monospace,monospace;font-weight:800;color:#003B8F;direction:ltr}'
+   +'.m{color:#D97706;font-weight:700}'
+   +'.tot{margin-top:10px;padding:12px;background:#EAF2FF;border:1.5px solid #0058D9;font-size:15px;text-align:left;direction:ltr}'
+   +'tr:nth-child(even) td{background:#F6F9FE}'
+   +'@media print{.np{display:none}}</style></head><body>'
+   +'<button class="np" onclick="window.print()" style="position:fixed;top:10px;left:10px;padding:9px 20px;background:#003B8F;color:#fff;border:0;font-family:inherit;font-size:13px;cursor:pointer">طباعة / حفظ PDF</button>'
+   +'<div class="hd"><span><b>ARKAN — كشف حساب الإيصالات</b><br><small>ARKAN INTERNATIONAL TRADING · WhatsApp 36295050</small></span><span><small>التاريخ: '+today+'</small></span></div>'
+   +sec('cli','إيصالات العميل')+sec('sup','إيصالات المورد')
+   +'</body></html>';
+  const w=window.open('','_blank');
+  if(!w){toast('اسمح بالنوافذ المنبثقة');return;}
+  w.document.write(html);w.document.close();
+}
+</script>
 </body>
 </html>
