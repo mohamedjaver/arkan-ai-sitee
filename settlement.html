@@ -3866,7 +3866,7 @@ async function imageText(dataUrl){
   return data.text||'';
 }
 /* ================= BUILD / AUTO-UPDATE ================= */
-const ARKAN_BUILD='1016';
+const ARKAN_BUILD='1017';
 function arkanVerLabel(){const e=$('verLbl');if(e)e.textContent=ARKAN_BUILD;}
 function arkanUpdateBanner(b){
   if(document.getElementById('updBar'))return;
@@ -5570,6 +5570,28 @@ it.addEventListener('click',()=>{
   if(!f.src)f.src='archive.html?embed=1';
   switchTab('archive');
 });
+})();
+</script>
+
+<style id="akExclusive">
+/* عرض حصري: لوحة العملات تظهر فقط في تبويب "عملية" */
+body:not([data-tab="new"]) .folio{display:none!important}
+/* تبويب الأرشيف: ملء الشاشة — الأرشيف بشريطه الذاتي فقط */
+body[data-tab="archive"] nav{display:none!important}
+body[data-tab="archive"] header{display:none!important}
+body[data-tab="archive"] #archive{padding:0!important}
+body[data-tab="archive"] #akArchFrame{height:100vh!important}
+#akBack{display:none;position:fixed;top:calc(10px + env(safe-area-inset-top));inset-inline-start:12px;z-index:900;
+  background:#003B7E;color:#fff;border:0;font-family:inherit;font-weight:800;font-size:13px;
+  padding:10px 16px;cursor:pointer;box-shadow:0 4px 14px rgba(0,27,61,.3);align-items:center;gap:6px}
+body[data-tab="archive"] #akBack{display:flex}
+</style>
+<button id="akBack" onclick="switchTab('new')">← الكونسول</button>
+<script id="akExclusiveJs">
+(function(){
+  const _st=window.switchTab;
+  window.switchTab=function(t){_st(t);document.body.dataset.tab=t;window.scrollTo(0,0);};
+  document.body.dataset.tab='new';
 })();
 </script>
 </body>
