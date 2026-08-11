@@ -683,20 +683,11 @@ body{background:radial-gradient(1100px 600px at 78% -10%, rgba(0,88,217,.55), tr
 </style>
 
 <script id="akReqEmbed">
-/* تبويب تحويل = تدفق التحويل الكامل (حاسبة + طلب + مرجع + محادثة) */
+/* تبويب تحويل = الشاشة الأصلية الفورية (بلا إطار) — القفز لحظي كما كان */
 (function(){
   const sec=document.getElementById('s-send'); if(!sec)return;
-  [...sec.children].forEach(c=>c.style.display='none');
-  sec.style.padding='0';
-  const f=document.createElement('iframe');
-  f.id='akReqFrame'; f.title='تحويل';
-  f.style.cssText='border:0;width:100%;height:calc(100vh - 86px);display:block;background:transparent';
-  sec.appendChild(f);
-  const load=()=>{if(!f.src)f.src='request.html?legacy=1&embed=1#individuals';};
-  document.querySelectorAll('[data-s="s-send"],[data-goto="s-send"]').forEach(el=>el.addEventListener('click',load));
-  if(location.hash==='#transfer')load();
-  /* تسخين مسبق: يصبح فتح تبويب التحويل فورياً */
-  window.addEventListener('load',()=>setTimeout(load,1200));
+  [...sec.children].forEach(c=>{if(c.tagName!=='IFRAME')c.style.display='';});
+  const f=document.getElementById('akReqFrame'); if(f)f.remove();
 })();
 </script>
 
@@ -720,8 +711,6 @@ const fire=()=>{
   const home=document.getElementById('s-home');
   if(home&&home.classList.contains('active')){
     done=true;
-    const f=document.getElementById('akReqFrame');
-    if(f&&!f.src)f.src='request.html?legacy=1&embed=1#individuals';
     if(typeof go==='function')go('s-send');
   }
 };
