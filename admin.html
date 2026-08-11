@@ -19,8 +19,8 @@
 <style>
 :root{
     --bg:#F7FAFD; --card:#FFFFFF; --card2:#F8FBFF; --line:#D9E5F2;
-    --txt:#102A43; --muted:#486581; --acc:#03A4FE; --acc2:#03A4FE; --accD:#0884C7;
-    --green:#0A9E5C; --red:#E53935; --gold:#0884C7; --radius:22px;
+    --txt:#102A43; --muted:#486581; --acc:#003B7E; --acc2:#003B7E; --accD:#002B5C;
+    --green:#0A9E5C; --red:#E53935; --gold:#002B5C; --radius:22px;
   }
 *{ box-sizing:border-box; }
 body{background:linear-gradient(180deg,#F3F9FF 0%,#EAF4FF 45%,#E1F0FF 100%);background-attachment:fixed;
@@ -179,7 +179,7 @@ body{font-family:'IBM Plex Sans Arabic',system-ui,sans-serif}
 <div class="wrap">
 <section id="ark-req-panel" class="ark-card" style="margin:14px 0;background:#F7FAFD!important;border:1px solid #D9E5F2!important;border-radius:0;padding:16px;box-shadow:0 10px 30px rgba(16,42,67,.08)">
   <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
-    <span class="ark-eyebrow" style="color:#03A4FE;font-weight:800;letter-spacing:.15em">ARKAN</span>
+    <span class="ark-eyebrow" style="color:#003B7E;font-weight:800;letter-spacing:.15em">ARKAN</span>
     <h3 style="font-weight:800;font-size:17px;margin:0;color:#2E3A48">طلبات الدفع الواردة</h3>
     <span id="ark-req-count" style="margin-inline-start:auto;color:#9FC3E8;font-size:13px;font-weight:700"></span>
     <button id="ark-req-purge" style="border:1px solid rgba(229,57,53,.45);background:rgba(229,57,53,.16);color:#FF8A85;border-radius:0;padding:7px 13px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit">🗑 حذف الكل</button>
@@ -327,7 +327,7 @@ async function showAdminLogin(){
     <p style="text-align:center;margin:0 0 22px;font-size:13px;color:var(--mute)">دخول الأدمن</p>
     <input id="agEmail" type="email" placeholder="البريد" style="width:100%;box-sizing:border-box;background:rgba(8,7,20,.7);border:1px solid var(--line);border-radius:0;padding:13px;color:var(--txt);font-size:15px;outline:0;margin-bottom:12px">
     <input id="agPass" type="password" placeholder="كلمة المرور" style="width:100%;box-sizing:border-box;background:rgba(8,7,20,.7);border:1px solid var(--line);border-radius:0;padding:13px;color:var(--txt);font-size:15px;outline:0;margin-bottom:16px">
-    <button id="agBtn" style="width:100%;padding:15px;border:0;border-radius:0;cursor:pointer;background:linear-gradient(135deg,var(--gold),#0884C7);color:#FFF6E0;font-weight:800;font-size:15px;font-family:'IBM Plex Sans Arabic',sans-serif">دخول</button>
+    <button id="agBtn" style="width:100%;padding:15px;border:0;border-radius:0;cursor:pointer;background:linear-gradient(135deg,var(--gold),#002B5C);color:#FFF6E0;font-weight:800;font-size:15px;font-family:'IBM Plex Sans Arabic',sans-serif">دخول</button>
     <div id="agErr" style="margin-top:12px;font-size:13px;color:#F2A0A0;display:none;text-align:center"></div>
   </div>`;
   document.body.appendChild(g);
@@ -556,7 +556,7 @@ import * as ARKAN from './arkan-core.js'; window.ARKAN = ARKAN;
     g.gain.setValueAtTime(0.0001,AC.currentTime); g.gain.exponentialRampToValueAtTime(0.15,AC.currentTime+0.02);
     g.gain.exponentialRampToValueAtTime(0.0001,AC.currentTime+0.35); o.start(); o.stop(AC.currentTime+0.36); }catch(e){} }
 
-  const pill = s => { const m = { pending:['قيد الانتظار','#0884C7'], accepted:['مقبول','#0A9E5C'], rejected:['مرفوض','#E53935'] }[s] || ['—','#7A93AD'];
+  const pill = s => { const m = { pending:['قيد الانتظار','#002B5C'], accepted:['مقبول','#0A9E5C'], rejected:['مرفوض','#E53935'] }[s] || ['—','#7A93AD'];
     return `<span style="font-size:11px;font-weight:800;padding:3px 10px;border-radius:0;background:${m[1]}18;color:${m[1]};border:1px solid ${m[1]}40">${m[0]}</span>`; };
 
   function pillColor(st){return {pending:'#FFB300',accepted:'#0FAE5A',rejected:'#E53935'}[st]||'#7FDBFF';}
