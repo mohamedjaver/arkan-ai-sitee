@@ -3866,7 +3866,7 @@ async function imageText(dataUrl){
   return data.text||'';
 }
 /* ================= BUILD / AUTO-UPDATE ================= */
-const ARKAN_BUILD='1020';
+const ARKAN_BUILD='1021';
 function arkanVerLabel(){const e=$('verLbl');if(e)e.textContent=ARKAN_BUILD;}
 function arkanUpdateBanner(b){
   if(document.getElementById('updBar'))return;
@@ -5565,11 +5565,9 @@ const it=document.createElement('div');
 it.className='nv'; it.dataset.t='archive';
 it.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px"><path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/></svg><span>الأرشيف</span>';
 nav.appendChild(it);
-it.addEventListener('click',()=>{
-  const f=document.getElementById('akArchFrame');
-  if(!f.src)f.src='archive.html?embed=1';
-  switchTab('archive');
-});
+const akWarm=()=>{const f=document.getElementById('akArchFrame');if(f&&!f.src)f.src='archive.html?embed=1';};
+it.addEventListener('click',()=>{akWarm();switchTab('archive');});
+window.addEventListener('load',()=>setTimeout(akWarm,2500));
 })();
 </script>
 
