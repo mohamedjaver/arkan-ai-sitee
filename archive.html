@@ -2616,8 +2616,13 @@ const wrap=document.querySelector('.wrap');
 if(wrap){wrap.insertAdjacentHTML('afterbegin',`<div id="wSum">
   <div class="lbl">إجمالي قيمة الإيصالات</div>
   <div class="big" id="wSumBig">0</div>
+  <div id="wSumRange" style="display:flex;align-items:center;gap:8px;margin:8px 0 4px;flex-wrap:wrap">
+    <span style="font-size:12px;color:var(--w-sub)">التاريخ:</span>
+    <input type="date" id="wSumDate" onchange="setSumDate(this.value)" style="padding:7px 10px;border:1px solid var(--w-brd);border-radius:10px;font-family:inherit;font-size:13px;background:var(--w-card);color:var(--w-txt)">
+    <button id="wSumClear" onclick="setSumDate('')" style="display:none;padding:7px 12px;border:0;border-radius:10px;background:#eaf2ff;color:#0A56B8;font-weight:700;font-size:12px;font-family:inherit">الكل ✕</button>
+  </div>
   <div class="subrow">
-    <span>هذا الشهر <b id="wSumM">0</b></span>
+    <span id="wSumMWrap">هذا الشهر <b id="wSumM">0</b></span>
     <span>مكتملة <b id="wSumC">0</b></span>
     <span>غير مسوّاة <b class="dgr" id="wSumU">0</b></span>
   </div>
@@ -2626,6 +2631,14 @@ if(wrap){wrap.insertAdjacentHTML('afterbegin',`<div id="wSum">
     <button class="w-btn sec" onclick="setTab('match')">${ic('link')} تسوية</button>
     <button class="w-btn sec" onclick="setTab('reports')">${ic('dl')} تقرير</button>
   </div></div>`);}
+/* فلتر تاريخ اللوحة الرئيسية */
+window.SUM_DATE='';
+window.setSumDate=function(v){
+  window.SUM_DATE=v||'';
+  const c=$$('wSumClear');if(c)c.style.display=v?'inline-block':'none';
+  const di=$$('wSumDate');if(di&&di.value!==window.SUM_DATE)di.value=window.SUM_DATE;
+  if(window.renderKPIs)window.renderKPIs();
+};
 
 /* ── عنوان قائمة الإيصالات + تبديل العرض + تحديد ── */
 const va=$$('v_arch');
@@ -2663,13 +2676,23 @@ window.renderKPIs=function(){
        ['#168A52','معدل دقة OCR',avgC+'%'],['#C93636','غير مطابق',unm.length],
        ['#60645F','سلاسل التسوية',chains]].map(([c,l,v])=>
       `<div class="w-row"><span class="dot" style="background:${c}"></span><span class="t">${l}</span><span class="n">${v}</span></div>`).join('')}`;
-  /* بطاقة الملخص */
-  const vol={};CACHE.forEach(d=>{const p=d.parsed||{};if(p.amount&&p.currency)vol[p.currency]=(vol[p.currency]||0)+p.amount;});
+  /* بطاقة الملخص — تحترم فلتر التاريخ إن وُجد */
+  const _sd=window.SUM_DATE||'';
+  const _inDay=d=>{ if(!_sd)return true;
+    const x=new Date(d.uploadedAt);
+    const ymd=x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0');
+    return ymd===_sd; };
+  const SRC=CACHE.filter(_inDay);
+  const vol={};SRC.forEach(d=>{const p=d.parsed||{};if(p.amount&&p.currency)vol[p.currency]=(vol[p.currency]||0)+p.amount;});
   const top=Object.entries(vol).sort((a,b)=>b[1]-a[1])[0];
-  const done=cs.filter(c=>window.mStatusOf&&['ok','settled'].includes(mStatusOf(c))).length;
-  let uns=0;unm.forEach(c=>{if((c.parsed||{}).currency===(top&&top[0]))uns+=(+c.parsed.amount||0);});
-  if($$('wSumBig'))$$('wSumBig').innerHTML=top?fmt(top[1],0)+' <small>'+top[0]+'</small>':'—';
-  if($$('wSumM'))$$('wSumM').textContent=month;
+  const csD=SRC.filter(d=>d.rtype==='customer');
+  const unmD=csD.filter(c=>window.mStatusOf&&['missing','weak','diff'].includes(mStatusOf(c)));
+  const done=csD.filter(c=>window.mStatusOf&&['ok','settled'].includes(mStatusOf(c))).length;
+  let uns=0;unmD.forEach(c=>{if((c.parsed||{}).currency===(top&&top[0]))uns+=(+c.parsed.amount||0);});
+  const dayCount=SRC.length;
+  const mLbl=$$('wSumMWrap');
+  if(mLbl)mLbl.innerHTML=_sd?('إيصالات اليوم المحدد <b id="wSumM">'+dayCount+'</b>'):('هذا الشهر <b id="wSumM">'+month+'</b>');
+  if($$('wSumBig'))$$('wSumBig').innerHTML=top?fmt(top[1],0)+' <small>'+top[0]+'</small>':(_sd?'0':'—');
   if($$('wSumC'))$$('wSumC').textContent=done;
   if($$('wSumU'))$$('wSumU').textContent=top?fmt(uns,0)+' '+top[0]:'0';
 };
