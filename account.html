@@ -679,5 +679,21 @@ body{background:radial-gradient(1100px 600px at 78% -10%, rgba(0,88,217,.55), tr
 
 .sec h2{color:#EAF2FF!important}
 </style>
+
+<script id="akReqEmbed">
+/* تبويب تحويل = تدفق التحويل الكامل (حاسبة + طلب + مرجع + محادثة) */
+(function(){
+  const sec=document.getElementById('s-send'); if(!sec)return;
+  [...sec.children].forEach(c=>c.style.display='none');
+  sec.style.padding='0';
+  const f=document.createElement('iframe');
+  f.id='akReqFrame'; f.title='تحويل';
+  f.style.cssText='border:0;width:100%;height:calc(100vh - 86px);display:block;background:transparent';
+  sec.appendChild(f);
+  const load=()=>{if(!f.src)f.src='request.html?legacy=1&embed=1#individuals';};
+  document.querySelectorAll('[data-s="s-send"],[data-goto="s-send"]').forEach(el=>el.addEventListener('click',load));
+  if(location.hash==='#transfer')load();
+})();
+</script>
 </body>
 </html>
