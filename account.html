@@ -695,5 +695,14 @@ body{background:radial-gradient(1100px 600px at 78% -10%, rgba(0,88,217,.55), tr
   if(location.hash==='#transfer')load();
 })();
 </script>
+
+<script id="akFabCtl">
+(function(){
+  const fab=document.getElementById('akChatFab'); if(!fab)return;
+  const upd=t=>{fab.style.display=(t==='s-send'||t==='s-rates')?'none':'flex';};
+  document.querySelectorAll('[data-s]').forEach(el=>el.addEventListener('click',()=>upd(el.dataset.s)));
+  document.querySelectorAll('[data-goto]').forEach(el=>el.addEventListener('click',()=>upd(el.dataset.goto)));
+})();
+</script>
 </body>
 </html>
