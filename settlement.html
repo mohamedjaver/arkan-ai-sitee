@@ -3866,7 +3866,7 @@ async function imageText(dataUrl){
   return data.text||'';
 }
 /* ================= BUILD / AUTO-UPDATE ================= */
-const ARKAN_BUILD='1018';
+const ARKAN_BUILD='1019';
 function arkanVerLabel(){const e=$('verLbl');if(e)e.textContent=ARKAN_BUILD;}
 function arkanUpdateBanner(b){
   if(document.getElementById('updBar'))return;
@@ -5592,6 +5592,48 @@ body[data-tab="archive"] #akBack{display:flex}
   const _st=window.switchTab;
   window.switchTab=function(t){_st(t);document.body.dataset.tab=t;window.scrollTo(0,0);};
   document.body.dataset.tab='new';
+})();
+</script>
+
+<script id="akOwnerGate">
+/* ═══ بوابة المالك: رقم الهاتف + كود — بدل شاشة النقاط ═══ */
+(function(){
+'use strict';
+const lock=document.getElementById('lock'); if(!lock)return;
+const pinStage=document.getElementById('pinStage');
+const faceBtn=document.getElementById('faceBtn');
+/* أرقام المالك المسموح بها (آخر 8 أرقام) — قابلة للإضافة من الإعدادات لاحقاً */
+const OWNER_PHONES=(localStorage.getItem('arkan-owner-phones')||'36295050').split(',').map(x=>x.replace(/\D/g,'').slice(-8));
+const norm=v=>String(v||'').replace(/\D/g,'').slice(-8);
+
+if(pinStage)pinStage.style.display='none';
+const st=document.createElement('div');
+st.id='ownerStage';
+st.style.cssText='width:280px;display:flex;flex-direction:column;gap:10px';
+st.innerHTML=`
+  <div style="font-size:12.5px;color:var(--dim);text-align:center;margin-bottom:2px">دخول المالك فقط</div>
+  <input type="tel" id="ogPhone" inputmode="tel" placeholder="رقم الهاتف" autocomplete="tel"
+    style="direction:ltr;text-align:center;font-size:16px;letter-spacing:1px;padding:13px;border:1.5px solid #0058D9;background:#fff">
+  <input type="password" id="ogCode" inputmode="numeric" maxlength="8" placeholder="كود الدخول" autocomplete="current-password"
+    style="direction:ltr;text-align:center;font-size:18px;letter-spacing:6px;padding:13px;border:1.5px solid #0058D9;background:#fff">
+  <button id="ogGo" class="btn btn-gold" style="width:100%;padding:13px;font-size:14px">دخول</button>`;
+lock.insertBefore(st, document.getElementById('lockMsg'));
+if(faceBtn){faceBtn.style.display='';faceBtn.style.width='100%';faceBtn.style.marginTop='2px';st.appendChild(faceBtn);}
+
+const P=document.getElementById('ogPhone'),C=document.getElementById('ogCode'),MSG=document.getElementById('lockMsg');
+P.value=localStorage.getItem('arkan-owner-last')||'';
+function fail(t){MSG.textContent=t;MSG.className='err';C.value='';setTimeout(()=>{MSG.textContent='';MSG.className='';},1800);}
+function tryGo(){
+  const ph=norm(P.value);
+  if(!ph||ph.length<8){fail('أدخل رقم الهاتف كاملاً');return;}
+  if(!OWNER_PHONES.includes(ph)){fail('هذا النظام للمالك فقط');return;}
+  if(C.value!==getPin()){fail('كود خاطئ');return;}
+  localStorage.setItem('arkan-owner-last',P.value.trim());
+  C.value='';lock.style.display='none';
+}
+document.getElementById('ogGo').addEventListener('click',tryGo);
+C.addEventListener('keydown',e=>{if(e.key==='Enter')tryGo();});
+C.addEventListener('input',()=>{if(C.value.length>=getPin().length&&norm(P.value).length>=8)tryGo();});
 })();
 </script>
 </body>
