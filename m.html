@@ -35,13 +35,13 @@ if(!/legacy=1/.test(location.search)){location.replace('chat-v2.html'+location.s
 <style>
 /* ═══ ARKAN Pay 2026 · نظام الألوان المعتمد ═══ */
 :root{
-  --sky:#03A4FE; --blue:#03A4FE; --navy:#0884C7; --paper:#F6FAFD;
+  --sky:#003B7E; --blue:#003B7E; --navy:#002B5C; --paper:#F6FAFD;
   --ink:#0B1B33; --mut:#5B6B85; --line:rgba(11,47,112,.08);
   --glass:rgba(255,255,255,.72); --glass-b:rgba(255,255,255,.55);
   --ok:#16A34A; --warn:#D97706; --err:#DC2626;
   --r-lg:22px; --r-md:16px; --r-sm:12px;
   --sat:env(safe-area-inset-top,0px); --sab:env(safe-area-inset-bottom,0px);
-  --grad:linear-gradient(135deg,#03A4FE,#03A4FE);
+  --grad:linear-gradient(135deg,#003B7E,#003B7E);
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{height:100%}
@@ -147,17 +147,17 @@ body.ready #scList,body.ready #scChat{visibility:visible}
 .bub img.ph{max-width:100%;border-radius:0;display:block;min-height:80px;background:rgba(0,0,0,.05)}
 .filecard{display:flex;align-items:center;gap:11px;min-width:230px;cursor:pointer}
 .filecard .fi{width:46px;height:46px;border-radius:0;background:rgba(255,255,255,.22);display:grid;place-items:center;flex:none;position:relative}
-.them .filecard .fi{background:rgba(25,169,245,.14);color:#03A4FE}
+.them .filecard .fi{background:rgba(25,169,245,.14);color:#003B7E}
 .filecard .fi.rcp{background:rgba(251,191,36,.9)}
 .them .filecard .fi.rcp{background:rgba(217,119,6,.14);color:#B45309}
 .filecard .fi svg{width:24px;height:24px}
-.filecard .fi .ext{position:absolute;bottom:-3px;font-size:7px;font-weight:800;letter-spacing:.3px;background:#0884C7;color:#fff;padding:1px 4px;border-radius:0;line-height:1}
-.them .filecard .fi .ext{background:#03A4FE}
+.filecard .fi .ext{position:absolute;bottom:-3px;font-size:7px;font-weight:800;letter-spacing:.3px;background:#002B5C;color:#fff;padding:1px 4px;border-radius:0;line-height:1}
+.them .filecard .fi .ext{background:#003B7E}
 .filecard .fmeta{flex:1;min-width:0}
 .filecard .fn{font-weight:700;font-size:13.5px;max-width:150px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .filecard .fs{font-size:11.5px;opacity:.7;direction:ltr;text-align:right;margin-top:2px}
 .filecard .fdl{width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.25);display:grid;place-items:center;flex:none}
-.them .filecard .fdl{background:rgba(25,169,245,.12);color:#03A4FE}
+.them .filecard .fdl{background:rgba(25,169,245,.12);color:#003B7E}
 .filecard .fdl svg{width:16px;height:16px}
 .pending{opacity:.65}
 .failed .bub{outline:1.5px solid var(--err)}
@@ -333,16 +333,16 @@ body.ready #scList,body.ready #scChat{visibility:visible}
 </style>
 </head>
 <body>
-<div id="bootScreen" style="position:fixed;inset:0;z-index:9000;background:#F6FAFD;display:flex;align-items:center;justify-content:center;font-family:system-ui;color:#0884C7;visibility:visible!important">
+<div id="bootScreen" style="position:fixed;inset:0;z-index:9000;background:#F6FAFD;display:flex;align-items:center;justify-content:center;font-family:system-ui;color:#002B5C;visibility:visible!important">
   <div style="text-align:center">
-    <div style="width:44px;height:44px;border:3px solid #cfe3ff;border-top-color:#03A4FE;border-radius:50%;animation:bspin .8s linear infinite;margin:0 auto 14px"></div>
+    <div style="width:44px;height:44px;border:3px solid #cfe3ff;border-top-color:#003B7E;border-radius:50%;animation:bspin .8s linear infinite;margin:0 auto 14px"></div>
     <div id="bootMsg" style="font-size:13px;color:#5b6b8c">جارٍ التحميل…</div>
   </div>
 </div>
 <style>@keyframes bspin{to{transform:rotate(360deg)}}</style>
 <script>
 function bmsg(t){var e=document.getElementById('bootMsg');if(e)e.textContent=t;}
-function bfail(t){var s=document.getElementById('bootScreen');if(!s){s=document.createElement('div');s.id='bootScreen';s.style.cssText='position:fixed;inset:0;z-index:99999;background:#fff;display:flex;align-items:center;justify-content:center;padding:24px';document.body.appendChild(s);}s.style.background='#fff';s.innerHTML='<div style="text-align:center;padding:28px;font-family:system-ui;color:#0884C7"><div style="font-size:15px;font-weight:700;margin-bottom:6px">تعذّر التحميل</div><div style="font-size:12px;color:#8497b8;direction:ltr;margin-bottom:14px">'+String(t).slice(0,160)+'</div><button onclick="location.reload()" style="padding:11px 22px;border:0;border-radius:0;background:#03A4FE;color:#fff;font-weight:800">إعادة المحاولة</button> <button onclick="localStorage.removeItem(\'arkan_session\');localStorage.removeItem(\'arkanClient\');location.href=\'account.html?next=chat-v2.html\'" style="padding:11px 22px;border:0;border-radius:0;background:#0884C7;color:#fff;font-weight:800;margin-top:8px">تسجيل الدخول</button></div>';}
+function bfail(t){var s=document.getElementById('bootScreen');if(!s){s=document.createElement('div');s.id='bootScreen';s.style.cssText='position:fixed;inset:0;z-index:99999;background:#fff;display:flex;align-items:center;justify-content:center;padding:24px';document.body.appendChild(s);}s.style.background='#fff';s.innerHTML='<div style="text-align:center;padding:28px;font-family:system-ui;color:#002B5C"><div style="font-size:15px;font-weight:700;margin-bottom:6px">تعذّر التحميل</div><div style="font-size:12px;color:#8497b8;direction:ltr;margin-bottom:14px">'+String(t).slice(0,160)+'</div><button onclick="location.reload()" style="padding:11px 22px;border:0;border-radius:0;background:#003B7E;color:#fff;font-weight:800">إعادة المحاولة</button> <button onclick="localStorage.removeItem(\'arkan_session\');localStorage.removeItem(\'arkanClient\');location.href=\'account.html?next=chat-v2.html\'" style="padding:11px 22px;border:0;border-radius:0;background:#002B5C;color:#fff;font-weight:800;margin-top:8px">تسجيل الدخول</button></div>';}
 window.addEventListener('error',function(e){bfail((e&&e.message)||'خطأ');});
 window.addEventListener('unhandledrejection',function(e){bfail((e&&e.reason&&e.reason.message)||'خطأ في الاتصال');});
 </script>
@@ -564,16 +564,16 @@ function askPin(phone){
     const w=document.createElement('div');
     w.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(11,47,112,.55);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:24px';
     w.innerHTML=`<div style="background:#fff;border-radius:0;padding:28px 22px;max-width:340px;width:100%;text-align:center;box-shadow:0 24px 64px rgba(11,47,112,.35)">
-      <div style="font-weight:800;font-size:19px;color:#0884C7">تأكيد الهوية</div>
+      <div style="font-weight:800;font-size:19px;color:#002B5C">تأكيد الهوية</div>
       <div style="color:#5b6b8c;font-size:13.5px;margin:8px 0 4px">أدخل الرمز السري (PIN) لحسابك</div>
       <div id="pinPhoneWrap" style="margin:0 0 14px">
-        <span id="pinPhoneTxt" style="color:#03A4FE;font-weight:700;direction:ltr;display:inline-block">+${phone}</span>
-        <a id="pinChg" style="color:#03A4FE;font-size:12px;cursor:pointer;margin-inline-start:8px;text-decoration:underline">تغيير الرقم</a>
+        <span id="pinPhoneTxt" style="color:#003B7E;font-weight:700;direction:ltr;display:inline-block">+${phone}</span>
+        <a id="pinChg" style="color:#003B7E;font-size:12px;cursor:pointer;margin-inline-start:8px;text-decoration:underline">تغيير الرقم</a>
         <input id="pinPhoneIn" inputmode="numeric" value="${phone}" placeholder="222XXXXXXXX" style="display:none;width:210px;text-align:center;font-size:16px;padding:9px;border:2px solid #cfe3ff;border-radius:0;outline:none;direction:ltr;margin-top:6px">
       </div>
-      <input id="pinIn" inputmode="numeric" maxlength="4" placeholder="••••" style="width:150px;text-align:center;font-size:26px;letter-spacing:12px;padding:12px;border:2px solid #03A4FE;border-radius:0;outline:none">
+      <input id="pinIn" inputmode="numeric" maxlength="4" placeholder="••••" style="width:150px;text-align:center;font-size:26px;letter-spacing:12px;padding:12px;border:2px solid #003B7E;border-radius:0;outline:none">
       <div id="pinErr" style="color:#e2483d;font-size:12.5px;min-height:18px;margin-top:8px"></div>
-      <button id="pinGo" style="width:100%;margin-top:6px;padding:14px;border:0;border-radius:0;background:linear-gradient(135deg,#03A4FE,#03A4FE);color:#fff;font-weight:800;font-size:15.5px">دخول</button>
+      <button id="pinGo" style="width:100%;margin-top:6px;padding:14px;border:0;border-radius:0;background:linear-gradient(135deg,#003B7E,#003B7E);color:#fff;font-weight:800;font-size:15.5px">دخول</button>
     </div>`;
     document.body.appendChild(w);
     const inp=w.querySelector('#pinIn');inp.focus();
@@ -1410,7 +1410,7 @@ function startLiveWave(stream){
       let peak=0;for(const v of data)peak=Math.max(peak,Math.abs(v-128)/128);
       if(t-last>90){recWave.push(Math.min(1,peak*2.2));last=t;if(recWave.length>400)recWave.shift();}
       ctx.clearRect(0,0,cv.width,cv.height);
-      ctx.fillStyle='#03A4FE';
+      ctx.fillStyle='#003B7E';
       const show=recWave.slice(-56);
       const bw=cv.width/56;
       show.forEach((v,i)=>{
@@ -1638,7 +1638,7 @@ toggleMic();
 boot().catch(e=>{
   console.error('boot fatal:',e);
   try{bfail('عطل: '+(e&&e.message?e.message:e));}catch(_){
-    document.body.innerHTML='<div style="padding:40px;text-align:center;font-family:system-ui;color:#0884C7">تعذّر التحميل — حدّث الصفحة<br><button onclick="location.reload()" style="margin-top:14px;padding:12px 22px;border:0;border-radius:0;background:#03A4FE;color:#fff;font-weight:800">إعادة التحميل</button></div>';
+    document.body.innerHTML='<div style="padding:40px;text-align:center;font-family:system-ui;color:#002B5C">تعذّر التحميل — حدّث الصفحة<br><button onclick="location.reload()" style="margin-top:14px;padding:12px 22px;border:0;border-radius:0;background:#003B7E;color:#fff;font-weight:800">إعادة التحميل</button></div>';
   }
 });
 
