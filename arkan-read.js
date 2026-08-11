@@ -117,7 +117,45 @@ function asText(p,raw){
     'SENDER: '+(p.sender||''),'BENEFICIARY: '+(p.beneficiary||''),'STATUS: '+(p.status||''),
     raw?('RAW: '+raw):''].filter(Boolean).join('\n');
 }
+async function miniGemini(b64,mime){
+  const key=KEY(); if(!key)throw new Error('NOKEY');
+  const P='اقرأ هذا الإيصال البنكي وأعد JSON فقط بلا أي نص آخر: {"amount":0,"currency":"","reference":"","bank":"","date":""}\n- amount: رقم المبلغ فقط بلا فواصل (Montante/المبلغ/Valor/Total). ليس رقم العملية ولا الحساب ولا Movimento.\n- الفواصل الأوروبية: 3.500.000,00 تعني 3500000\n- currency: Kz أو MRU أو USD أو USDT أو EUR أو CNY أو AED (AKZ/AOA→Kz، UM→MRU)';
+  const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key='+encodeURIComponent(key),
+    {method:'POST',headers:{'Content-Type':'application/json'},
+     body:JSON.stringify({contents:[{parts:[{text:P},{inline_data:{mime_type:mime,data:b64}}]}],
+       generationConfig:{temperature:0,maxOutputTokens:100,responseMimeType:'application/json'}})});
+  const j=await r.json().catch(()=>({}));
+  if(!r.ok){const m=(j.error&&j.error.message)||('HTTP '+r.status);
+    if(r.status===429||/quota|exhausted/i.test(m))QUOTA_TRIP++;
+    throw new Error(m);}
+  let t=(((j.candidates||[])[0]||{}).content||{parts:[]}).parts.map(p=>p.text||'').join('');
+  t=t.replace(/```json|```/g,'').trim();
+  const p=JSON.parse(t.slice(t.indexOf('{'),t.lastIndexOf('}')+1));
+  QUOTA_TRIP=0; return p;
+}
 window.ArkanRead={
+  /* readAmount(File) → {amount,ccy,txn,bank,date,eng} — المبلغ فقط، بأخف استدعاء */
+  async readAmount(file){
+    const mime=file.type||'image/jpeg';
+    const isPdf=/pdf/i.test(mime)||/\.pdf$/i.test(file.name||'');
+    let p=null,eng='';
+    if(QUOTA_TRIP<2){
+      try{
+        await new Promise(r=>setTimeout(r,300));
+        p=await miniGemini(await toB64(file),mime); eng='gemini';
+      }catch(e){}
+    }
+    if(!p||!p.amount){
+      const raw=isPdf?await pdfText(file):await ocrText(file);
+      const lp=liteParse(raw);
+      p=p&&p.amount?p:lp; eng=eng||(isPdf?'pdf':'ocr');
+      if(!p.reference&&lp.reference)p.reference=lp.reference;
+      if(!p.bank&&lp.bank)p.bank=lp.bank;
+    }
+    const cy=String(p.currency||'').replace('AKZ','Kz').replace('AOA','Kz').replace('KZ','Kz').replace('UM','MRU');
+    return {amount:(+p.amount||null),ccy:cy||null,txn:p.reference||null,
+            bank:p.bank||null,date:p.date||null,eng};
+  },
   /* read(File|Blob) → {parsed, text, engine} — Gemini أولاً ثم OCR المحلي */
   async read(file,opts){
     opts=opts||{};
