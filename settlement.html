@@ -2921,10 +2921,10 @@ async function uploadRC(side){
       n++;
       if(pg)pg.textContent='قراءة إيصالات '+lbl+' — '+n+'/'+files.length+'  ·  '+String(f.name).slice(0,22);
       try{
-        const _R=await arkanRead(f);
-        const txt=_R.text;
-        if(!_R.ok&&_R.err&&!txt)throw new Error(_R.err);
-        const p=arkanParse(txt,f.name);
+        const _R=await ArkanRead.readAmount(f);
+        const txt='';
+        const p={amount:_R.amount,ccy:_R.ccy,txn:_R.txn,acct:null,date:_R.date,
+                 ben:null,bank:_R.bank,ok:true,src:_R.eng};
         const ccy=p.ccy||(sel!=='AUTO'?sel:null)||'AOA';
         rc.push({name:f.name,amount:p.amount,ccy,acct:p.acct||null,txn:p.txn||null,date:p.date||null,
                  ben:p.ben||null,bank:p.bank||null,ok:p.ok!==false,src:p.src||null,link:null,side,_txt:txt});
@@ -3866,7 +3866,7 @@ async function imageText(dataUrl){
   return data.text||'';
 }
 /* ================= BUILD / AUTO-UPDATE ================= */
-const ARKAN_BUILD='1027';
+const ARKAN_BUILD='1028';
 function arkanVerLabel(){const e=$('verLbl');if(e)e.textContent=ARKAN_BUILD;}
 function arkanUpdateBanner(b){
   if(document.getElementById('updBar'))return;
@@ -5681,7 +5681,7 @@ label{font-size:12.5px!important;font-weight:700!important;color:#3E4C60!importa
 .btn-wa{background:#0F8A3D!important;color:#fff!important;border:none!important;font-weight:800!important}
 </style>
 
-<script src="arkan-read.js?v=3"></script>
+<script src="arkan-read.js?v=4"></script>
 <script id="akUnifiedRead">
 /* كل بوابات الرفع تقرأ بمحرك الأرشيف الموحد — بنفس بنية الإرجاع الأصلية */
 (function(){
