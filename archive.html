@@ -328,7 +328,7 @@ body.selecting #selbar{transform:translateX(-50%) translateY(0)}
 <body>
 <script>
 /* ═══ تحديث ذاتي: يضمن أحدث نسخة دائمًا رغم كل طبقات الكاش ═══ */
-const ARKAN_ARCHIVE_BUILD='2026-08-11.7';
+const ARKAN_ARCHIVE_BUILD='2026-08-11.8';
 (async()=>{
   try{
     const r=await fetch('version.json?t='+Date.now(),{cache:'no-store'});
@@ -3453,5 +3453,15 @@ if(/embed=1/.test(location.search)||window!==window.top){
   document.head.appendChild(st2);
 }
 </script>
+
+<style id="akNightCss">
+/* ═══ خلفية أركان الكحلية الأصلية (تدرج الهيرو) — معممة ═══ */
+body{background:radial-gradient(1100px 600px at 78% -10%, rgba(0,88,217,.55), transparent 60%),
+ radial-gradient(900px 700px at -10% 110%, rgba(0,181,255,.22), transparent 55%),
+ linear-gradient(180deg,#04143A 0%,#062165 58%,#003B8F 100%) fixed!important}
+
+.akrq-h h2{color:#EAF2FF!important}
+.akrq-h span,#akSum~* .t{color:#A9BBD8!important}
+</style>
 </body>
 </html>
