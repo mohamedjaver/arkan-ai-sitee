@@ -1137,5 +1137,15 @@ body{background:radial-gradient(1100px 600px at 78% -10%, rgba(0,88,217,.55), tr
  radial-gradient(900px 700px at -10% 110%, rgba(0,181,255,.22), transparent 55%),
  linear-gradient(180deg,#04143A 0%,#062165 58%,#003B8F 100%) fixed!important}
 </style>
+
+<script id="akEmbedReq">
+if(window!==window.top){
+  document.addEventListener('click',function(e){
+    const a=e.target.closest('a[href]'); if(!a)return;
+    const h=a.getAttribute('href')||'';
+    if(/chat-v2|m\.html|wa\.me|whatsapp/.test(h)){e.preventDefault();window.top.location.href=a.href;}
+  },true);
+}
+</script>
 </body>
 </html>
