@@ -3866,7 +3866,7 @@ async function imageText(dataUrl){
   return data.text||'';
 }
 /* ================= BUILD / AUTO-UPDATE ================= */
-const ARKAN_BUILD='1022';
+const ARKAN_BUILD='1023';
 function arkanVerLabel(){const e=$('verLbl');if(e)e.textContent=ARKAN_BUILD;}
 function arkanUpdateBanner(b){
   if(document.getElementById('updBar'))return;
@@ -5680,5 +5680,21 @@ label{font-size:12.5px!important;font-weight:700!important;color:#3E4C60!importa
 .btn-gold{font-weight:800!important;font-size:14px!important;letter-spacing:.2px}
 .btn-wa{background:#0F8A3D!important;color:#fff!important;border:none!important;font-weight:800!important}
 </style>
+
+<script src="arkan-read.js?v=1"></script>
+<script id="akUnifiedRead">
+/* كل بوابات الرفع هنا تقرأ بمحرك الأرشيف الموحد */
+(function(){
+  if(typeof arkanRead!=='function'||!window.ArkanRead)return;
+  const _old=window.arkanRead;
+  window.arkanRead=async function(f){
+    try{
+      const r=await ArkanRead.read(f);
+      toast('قُرئ بمحرك '+(r.engine==='gemini'?'Gemini':'OCR المحلي')+' ✓');
+      return r.text;
+    }catch(e){ return await _old(f); }
+  };
+})();
+</script>
 </body>
 </html>
