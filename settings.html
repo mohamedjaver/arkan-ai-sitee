@@ -10,8 +10,8 @@ if(!/legacy=1/.test(location.search)){location.replace('account.html');}</script
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="vendor/supabase.js"></script>
 <style>
-:root{--sky:#03A4FE;--blue:#03A4FE;--navy:#0884C7;--paper:#F6FAFD;--ink:#0B1B33;--mut:#5B6B85;
-  --line:rgba(11,47,112,.08);--grad:linear-gradient(135deg,#03A4FE,#03A4FE);
+:root{--sky:#003B7E;--blue:#003B7E;--navy:#002B5C;--paper:#F6FAFD;--ink:#0B1B33;--mut:#5B6B85;
+  --line:rgba(11,47,112,.08);--grad:linear-gradient(135deg,#003B7E,#003B7E);
   --sat:env(safe-area-inset-top,0px);--sab:env(safe-area-inset-bottom,0px)}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 body{font-family:Inter,'IBM Plex Sans Arabic',system-ui,sans-serif;background:var(--paper);color:var(--ink);min-height:100vh}
@@ -48,7 +48,7 @@ body{font-family:Inter,'IBM Plex Sans Arabic',system-ui,sans-serif;background:va
 <body>
 <div class="head">
   <button class="back" onclick="history.length>1?history.back():location.href='chat-v2.html'">
-    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#0884C7" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#002B5C" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
   </button>
   <h1>إعدادات الحساب</h1>
 </div>
@@ -74,14 +74,14 @@ body{font-family:Inter,'IBM Plex Sans Arabic',system-ui,sans-serif;background:va
     <button class="save" id="saveB" onclick="save()">حفظ التغييرات</button>
 
     <div style="margin-top:26px;padding-top:20px;border-top:1px solid #E3EDF9">
-      <div style="font-weight:800;font-size:15.5px;color:#0884C7;margin-bottom:12px">🔒 الأمان — تغيير الرمز السري</div>
+      <div style="font-weight:800;font-size:15.5px;color:#002B5C;margin-bottom:12px">🔒 الأمان — تغيير الرمز السري</div>
       <label class="lb">الرمز الحالي</label>
       <input class="in" id="pinOld" inputmode="numeric" maxlength="4" placeholder="••••" style="text-align:center;letter-spacing:8px;direction:ltr">
       <label class="lb">الرمز الجديد (4 أرقام)</label>
       <input class="in" id="pinNew" inputmode="numeric" maxlength="4" placeholder="••••" style="text-align:center;letter-spacing:8px;direction:ltr">
       <label class="lb">تأكيد الرمز الجديد</label>
       <input class="in" id="pinNew2" inputmode="numeric" maxlength="4" placeholder="••••" style="text-align:center;letter-spacing:8px;direction:ltr">
-      <button class="save" id="pinB" onclick="changePin()" style="background:linear-gradient(135deg,#0884C7,#03A4FE)">تغيير الرمز السري</button>
+      <button class="save" id="pinB" onclick="changePin()" style="background:linear-gradient(135deg,#002B5C,#003B7E)">تغيير الرمز السري</button>
     </div>
 
     <button class="save" onclick="if(confirm('تسجيل الخروج من هذا الحساب؟')){['arkan_session','arkanClient','arkan_sb_jwt','arkan_pending_treq'].forEach(k=>{try{localStorage.removeItem(k)}catch(e){}});location.replace('chat-v2.html');}" style="margin-top:18px;background:linear-gradient(135deg,#E2483D,#B32C22)">تسجيل الخروج / تبديل الحساب</button>
