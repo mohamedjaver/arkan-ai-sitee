@@ -2322,7 +2322,7 @@ function settleDebt(ref){const t=txs.find(x=>x.ref===ref);if(!t)return;t.pay='se
 
 /* ================= ONE SMART BOX — قراءة أي إيصال وكتابة المبلغ ================= */
 async function smartFill(targetId){
-  const inp=document.createElement('input');
+  const inp=akInput();
   inp.type='file';inp.accept='image/*,application/pdf';
   inp.onchange=async()=>{
     const f=inp.files[0];if(!f)return;
@@ -2585,7 +2585,7 @@ function obCcy(fid){
   return 'AOA';
 }
 async function uploadOB(fid){
-  const inp=document.createElement('input');
+  const inp=akInput();
   inp.type='file';inp.accept='image/*,application/pdf';inp.multiple=true;
   inp.onchange=async()=>{
     const files=[...inp.files];if(!files.length)return;
@@ -3330,7 +3330,7 @@ function mbAcct(){
 function setMbMain(a){mbMain=a;reconcileMB();renderPayRcpt2();syncM2AOld();toast('الحساب المرجعي: ...'+String(a).slice(-6));}
 function mbTotal(){return mb.filter(x=>!x.excluded&&x.amount).reduce((s,x)=>s+x.amount,0);}
 function uploadPayRcpt2(){
-  const inp=document.createElement('input');
+  const inp=akInput();
   inp.type='file';inp.accept='image/*,application/pdf';inp.multiple=true;
   inp.onchange=async()=>{
     const files=[...inp.files];if(!files.length)return;
@@ -3401,7 +3401,7 @@ function renderPayRcpt2(){
 }
 function uploadKB(){
   if(!window.pdfjsLib&&!window.Tesseract){toast('محرك القراءة غير متاح');return;}
-  const inp=document.createElement('input');
+  const inp=akInput();
   inp.type='file';inp.accept='application/pdf,image/*';inp.multiple=true;
   inp.onchange=async()=>{
     const files=[...inp.files];if(!files.length)return;
@@ -3498,7 +3498,7 @@ function mruReceiptExtract(txt){
   return {app:r.bank||'بنك موريتاني',amount:r.amount,acct:r.acct,name:r.name,txn:r.txn,ccy:r.ccy};
 }
 function uploadPayRcpt(){
-  const inp=document.createElement('input');
+  const inp=akInput();
   inp.type='file';inp.accept='image/*,application/pdf';
   inp.onchange=()=>{
     const f=inp.files[0];if(!f)return;
@@ -3548,7 +3548,7 @@ function renderPayRcpt(){
 let batch=[]; /* {name,amount|null} — بلا بيانات ملفات إطلاقًا */
 function uploadBatch(){
   if(!window.pdfjsLib){toast('مكتبة PDF لم تحمّل — تحقق من الإنترنت');return;}
-  const inp=document.createElement('input');
+  const inp=akInput();
   inp.type='file';inp.accept='application/pdf,image/*';inp.multiple=true;
   inp.onchange=async()=>{
     const files=[...inp.files];
@@ -3647,7 +3647,7 @@ function saveReceipts(){
   catch(e){toast('المساحة ممتلئة — احذف إيصالات قديمة');return false;}
 }
 function attachReceipt(ref){
-  const inp=document.createElement('input');
+  const inp=akInput();
   inp.type='file';inp.accept='image/*,application/pdf';
   inp.onchange=()=>{
     const f=inp.files[0];if(!f)return;
@@ -3929,7 +3929,7 @@ async function imageText(dataUrl){
   return data.text||'';
 }
 /* ================= BUILD / AUTO-UPDATE ================= */
-const ARKAN_BUILD='1033';
+const ARKAN_BUILD='1034';
 function arkanVerLabel(){const e=$('verLbl');if(e)e.textContent=ARKAN_BUILD;}
 function arkanUpdateBanner(b){
   if(document.getElementById('updBar'))return;
@@ -4241,7 +4241,7 @@ function exportBackup(){
   toast('نُزّلت النسخة الاحتياطية ✓ احفظها بمكان آمن');
 }
 function importBackup(){
-  const inp=document.createElement('input');
+  const inp=akInput();
   inp.type='file';inp.accept='application/json,.json';
   inp.onchange=()=>{
     const f=inp.files[0];if(!f)return;
@@ -5114,7 +5114,7 @@ load();
 /* ================= SUPPLIER INVOICE (خدمات) ================= */
 let _svcRcpt=null;
 async function uploadSvc(){
-  const inp=document.createElement('input');
+  const inp=akInput();
   inp.type='file';inp.accept='image/*,application/pdf';
   inp.onchange=async()=>{
     const f=inp.files[0];if(!f)return;
@@ -5791,6 +5791,19 @@ function akStatementPDF(){
   const w=window.open('','_blank');
   if(!w){toast('اسمح بالنوافذ المنبثقة');return;}
   w.document.write(html);w.document.close();
+}
+</script>
+
+<script id="akInputHelper">
+/* مدخل ملفات مثبّت — يمنع Safari من قتل قائمة الملفات بعد أول await (علة WebKit) */
+function akInput(){
+  const old=document.getElementById('akSharedFile');
+  if(old)old.remove();
+  const el=document.createElement('input');
+  el.id='akSharedFile';
+  el.style.cssText='position:fixed;left:-9999px;top:0;width:1px;height:1px;opacity:0';
+  document.body.appendChild(el);
+  return el;
 }
 </script>
 </body>
