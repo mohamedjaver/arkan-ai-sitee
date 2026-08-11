@@ -708,5 +708,26 @@ body{background:radial-gradient(1100px 600px at 78% -10%, rgba(0,88,217,.55), tr
   document.querySelectorAll('[data-goto]').forEach(el=>el.addEventListener('click',()=>upd(el.dataset.goto)));
 })();
 </script>
+
+<script id="akDeepRoute">
+/* توجيه عميق: #transfer → تبويب التحويل مباشرة بعد أي دخول */
+(function(){
+'use strict';
+if(location.hash!=='#transfer')return;
+let done=false;
+const fire=()=>{
+  if(done)return;
+  const home=document.getElementById('s-home');
+  if(home&&home.classList.contains('active')){
+    done=true;
+    const f=document.getElementById('akReqFrame');
+    if(f&&!f.src)f.src='request.html?legacy=1&embed=1#individuals';
+    if(typeof go==='function')go('s-send');
+  }
+};
+const iv=setInterval(()=>{fire();if(done)clearInterval(iv);},120);
+setTimeout(()=>clearInterval(iv),15000);
+})();
+</script>
 </body>
 </html>
