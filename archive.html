@@ -400,7 +400,7 @@ fill="#FFFFFF" stroke="none">
   <button class="vt" data-v="stats" onclick="setView('stats')">📊 الإحصاءات</button>
   <span style="flex:1"></span>
   <button class="vt" id="upBtn" onclick="upgradeAll()" style="border-color:rgba(0,153,255,.5);color:#0056D6">✦ ترقية القراءات</button>
-  <button class="vt" onclick="exportPdfReport()" title="تقرير PDF احترافي">🧾 تقرير PDF</button>
+  <button class="vt" onclick="openDayReport()" title="تقرير مؤرّخ (اليوم أو نطاق)">🧾 تقرير PDF</button>
   <button class="vt" onclick="exportArchive()" title="تصدير للتحليل في Claude Cowork">📤 تصدير</button>
   <button class="vt" id="selBtn" onclick="toggleSelect()">☑️ تحديد</button>
 </div>
@@ -1058,6 +1058,81 @@ function renderKPIs(){
 }
 
 /* ═══ Insights ═══ */
+
+/* ═══ تقرير مؤرّخ — اليوم افتراضيًا أو نطاق يحدده المستخدم ═══ */
+function _ymd(ts){const d=new Date(ts);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function openDayReport(){
+  let m=document.getElementById('dayRepModal');
+  if(!m){
+    m=document.createElement('div');m.id='dayRepModal';
+    m.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(11,47,112,.35);display:flex;align-items:flex-end;justify-content:center';
+    m.innerHTML=`<div style="background:#fff;width:100%;max-width:440px;border-radius:24px 24px 0 0;padding:22px 20px calc(22px + env(safe-area-inset-bottom));font-family:inherit" onclick="event.stopPropagation()">
+      <div style="width:40px;height:4px;background:#dbe6f5;border-radius:2px;margin:0 auto 16px"></div>
+      <b style="font-size:17px;color:#0B2F70">🧾 تقرير مؤرّخ للإيصالات</b>
+      <div style="display:flex;gap:8px;margin:14px 0">
+        <button id="drToday" class="vt" style="flex:1;background:linear-gradient(135deg,#19A9F5,#0A56B8);color:#fff;border:0;padding:12px;border-radius:14px;font-weight:800">اليوم</button>
+        <button id="drYest" class="vt" style="flex:1;padding:12px;border-radius:14px">أمس</button>
+        <button id="drMonth" class="vt" style="flex:1;padding:12px;border-radius:14px">هذا الشهر</button>
+      </div>
+      <div style="font-size:12px;color:#5b6b8c;margin-bottom:6px">أو نطاق مخصص:</div>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:16px">
+        <input type="date" id="drFrom" style="flex:1;padding:11px;border:1px solid #cfe0f2;border-radius:12px;font-family:inherit;font-size:14px">
+        <span style="color:#5b6b8c">→</span>
+        <input type="date" id="drTo" style="flex:1;padding:11px;border:1px solid #cfe0f2;border-radius:12px;font-family:inherit;font-size:14px">
+      </div>
+      <div id="drCount" style="text-align:center;font-size:13px;color:#0A56B8;font-weight:700;margin-bottom:14px"></div>
+      <div style="display:flex;gap:8px">
+        <button id="drGo" style="flex:2;background:linear-gradient(135deg,#0A56B8,#0B2F70);color:#fff;border:0;padding:15px;border-radius:16px;font-weight:800;font-size:15px;font-family:inherit">تصدير PDF</button>
+        <button onclick="document.getElementById('dayRepModal').remove()" style="flex:1;background:#eef4fb;color:#0B2F70;border:0;padding:15px;border-radius:16px;font-weight:700;font-family:inherit">إلغاء</button>
+      </div>
+    </div>`;
+    m.onclick=()=>m.remove();
+    document.body.appendChild(m);
+    const today=_ymd(Date.now());
+    const setRange=(f,t)=>{m.querySelector('#drFrom').value=f;m.querySelector('#drTo').value=t;updateDrCount();};
+    m.querySelector('#drToday').onclick=()=>setRange(today,today);
+    m.querySelector('#drYest').onclick=()=>{const y=_ymd(Date.now()-864e5);setRange(y,y);};
+    m.querySelector('#drMonth').onclick=()=>setRange(today.slice(0,8)+'01',today);
+    m.querySelector('#drFrom').onchange=updateDrCount;
+    m.querySelector('#drTo').onchange=updateDrCount;
+    m.querySelector('#drGo').onclick=runDayReport;
+    setRange(today,today); // افتراضي: اليوم
+  } else { m.style.display='flex'; }
+}
+function _drDocs(){
+  const f=document.getElementById('drFrom').value, t=document.getElementById('drTo').value;
+  if(!f||!t)return[];
+  const lo=Date.parse(f+'T00:00:00'), hi=Date.parse(t+'T23:59:59');
+  return CACHE.filter(d=>{
+    const ts=d.uploadedAt||0;
+    const okDate=ts>=lo&&ts<=hi;
+    const readable=d.parsed&&(d.parsed.amount||d.parsed.bank||d.parsed.date);
+    return okDate&&readable;
+  });
+}
+function updateDrCount(){
+  const n=_drDocs().length, el=document.getElementById('drCount');
+  if(el)el.textContent=n?`${n} إيصال مقروء في هذا النطاق`:'لا إيصالات في هذا النطاق';
+}
+async function runDayReport(){
+  const docs=_drDocs();
+  if(!docs.length){toast0('لا إيصالات في النطاق المحدد');return;}
+  const f=document.getElementById('drFrom').value, t=document.getElementById('drTo').value;
+  document.getElementById('dayRepModal').remove();
+  try{
+    toast0('⏳ يُجهّز التقرير…');
+    if(!_pdfLibsP)_pdfLibsP=(async()=>{
+      if(!window.jspdf)await _loadScript('vendor/jspdf.min.js');
+      if(!window.jspdf.jsPDF.API.autoTable)await _loadScript('vendor/autotable.min.js');
+      if(!window.ARKAN_FONTS)await _loadScript('vendor/arkan-arabic-font.js');
+      if(!window.ArkanPdfReport)await _loadScript('vendor/arkan-pdf-report.js');
+    })();
+    await _pdfLibsP;
+    const label=f===t?f:`${f} → ${t}`;
+    window.ArkanPdfReport.run(docs,{periodLabel:label});
+    toast0('✓ صدر تقرير '+label);
+  }catch(e){toast0('✗ '+(e.message||'تعذر إنشاء التقرير'));}
+}
 
 /* ═══ تقرير PDF — تحميل كسول للمحركات ثم توليد ═══ */
 let _pdfLibsP=null;
