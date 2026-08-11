@@ -61,10 +61,10 @@ window._pdfReady=(async function(){
   --bg:#F7FAFD;--bg2:#FFFFFF;
   --glass:linear-gradient(180deg,#FFFFFF 0%,#F8FBFF 100%);--glass2:#FFFFFF;
   --stroke:#D9E5F2;--stroke-acc:rgba(0,153,255,.55);
-  --acc:#03A4FE;--acc2:#03A4FE;--accD:#0884C7;
-  --gold:#0884C7;--gold2:#03A4FE;
+  --acc:#003B7E;--acc2:#003B7E;--accD:#002B5C;
+  --gold:#002B5C;--gold2:#003B7E;
   --txt:#102A43;--dim:#486581;
-  --green:#0A9E5C;--red:#E53935;--wa:#25D366;--blue:#03A4FE;--teal:#0F9D6B;
+  --green:#0A9E5C;--red:#E53935;--wa:#25D366;--blue:#003B7E;--teal:#0F9D6B;
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 .cflag{display:inline-block;width:1.5em;height:1.5em;border-radius:50%;background-size:cover;background-position:center;vertical-align:middle;border:1.5px solid rgba(255,255,255,.14);box-shadow:0 2px 6px rgba(0,0,0,.3)}
@@ -96,7 +96,7 @@ body{background:var(--bg);color:var(--txt);
 #lock h2 span{color:var(--acc2)}
 #lock input{width:210px;text-align:center;letter-spacing:14px;font-size:26px;
   padding:15px;border-radius:0;background:#FFFFFF;
-  border:1.5px solid #D5E5F8;color:#0884C7;outline:none;font-family:'IBM Plex Mono',monospace}
+  border:1.5px solid #D5E5F8;color:#002B5C;outline:none;font-family:'IBM Plex Mono',monospace}
 #lock input:focus{border-color:var(--stroke-acc);box-shadow:0 0 0 4px rgba(0,181,255,.15)}
 #lockMsg{font-size:12px;color:var(--dim);min-height:18px}
 #lockMsg.err{color:var(--red)}
@@ -105,7 +105,7 @@ header{padding:20px 18px 4px;position:relative;z-index:6}
 .hex{width:46px;height:46px;flex-shrink:0;border-radius:0;
   background:url("arkan-logo.svg") center/cover;
   box-shadow:0 8px 22px rgba(0,88,217,.5)}
-.hex.txt{background:linear-gradient(140deg,#03A4FE,#03A4FE 55%,#0884C7);
+.hex.txt{background:linear-gradient(140deg,#003B7E,#003B7E 55%,#002B5C);
   display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:22px}
 .brand h1{font-size:16px;font-weight:700;letter-spacing:1.5px}
 .brand h1 span{color:var(--acc2)}
@@ -207,7 +207,7 @@ input,select,textarea{width:100%;padding:14px 16px;border-radius:0;background:#F
   border:1px solid #D5E5F8;color:#102A43;font-size:16px;
   font-family:'IBM Plex Mono',monospace;outline:none;transition:.15s;appearance:none}
 input::placeholder,textarea::placeholder{color:#8FA6C0}
-input:focus,select:focus,textarea:focus{border-color:#03A4FE;box-shadow:0 0 0 4px rgba(0,153,255,.18);outline:none;caret-color:#03A4FE}
+input:focus,select:focus,textarea:focus{border-color:#003B7E;box-shadow:0 0 0 4px rgba(0,153,255,.18);outline:none;caret-color:#003B7E}
 input.ar,select.ar{font-family:'IBM Plex Sans Arabic',sans-serif}
 .row{display:flex;gap:10px}
 .row>div{flex:1}
@@ -240,12 +240,12 @@ input.ar,select.ar{font-family:'IBM Plex Sans Arabic',sans-serif}
 .timer.hot{color:var(--red);border-color:rgba(255,107,107,.5)}
 .btn{width:100%;padding:14px 28px;border:none;border-radius:0;font-size:16px;font-weight:600;
   cursor:pointer;font-family:'IBM Plex Sans Arabic',sans-serif;transition:.15s;margin-top:10px}
-.btn-gold{background:linear-gradient(135deg,#03A4FE 0%,#03A4FE 55%,#03A4FE 100%);color:#fff;font-weight:600;
+.btn-gold{background:linear-gradient(135deg,#003B7E 0%,#003B7E 55%,#003B7E 100%);color:#fff;font-weight:600;
   box-shadow:0 8px 22px rgba(13,71,181,.4)}
 .btn-gold:hover{filter:brightness(1.08);box-shadow:0 12px 30px rgba(0,162,255,.45)}
 .btn:active{transform:scale(.97)}
-.btn-line{background:#EDF6FF;color:#0884C7;border:1px solid #BFD9F7}
-.btn-line:hover{background:#E2F0FF;border-color:#03A4FE}
+.btn-line{background:#EDF6FF;color:#002B5C;border:1px solid #BFD9F7}
+.btn-line:hover{background:#E2F0FF;border-color:#003B7E}
 .btn-wa{background:linear-gradient(135deg,#3BE07F,var(--wa));color:#062b14;box-shadow:0 8px 22px rgba(37,211,102,.25)}
 .btn-sm{padding:8px 13px;font-size:12px;width:auto;margin:0;border-radius:0}
 .btn-row{display:flex;gap:8px}
@@ -272,7 +272,7 @@ input.ar,select.ar{font-family:'IBM Plex Sans Arabic',sans-serif}
 .tx-acts{display:flex;gap:8px;margin-top:9px;flex-wrap:wrap}
 .sum-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .sum-grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
-.sum{background:#FCFEFF;border:1px solid #D8E8F8;border-top:3px solid #03A4FE;border-radius:0;padding:14px;text-align:center;box-shadow:0 8px 22px rgba(0,58,143,.06)}
+.sum{background:#FCFEFF;border:1px solid #D8E8F8;border-top:3px solid #003B7E;border-radius:0;padding:14px;text-align:center;box-shadow:0 8px 22px rgba(0,58,143,.06)}
 .sum:has(.v.green){border-top-color:#00C853}
 .sum:has(.v.gold){border-top-color:#FFB300}
 .sum:has(.v.red){border-top-color:#E53935}
@@ -314,7 +314,7 @@ nav{position:fixed;bottom:0;left:0;right:0;z-index:90;
 .nv{flex:1;text-align:center;padding:8px 2px;border-radius:0;cursor:pointer;color:#9FB7D9;transition:.15s}
 .nv svg{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .nv div{font-size:10px;margin-top:3px;font-weight:600}
-.nv.on{color:#fff;background:linear-gradient(135deg,#03A4FE,#03A4FE);box-shadow:0 8px 22px rgba(0,153,255,.4)}
+.nv.on{color:#fff;background:linear-gradient(135deg,#003B7E,#003B7E);box-shadow:0 8px 22px rgba(0,153,255,.4)}
 .toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%) translateY(80px);
   background:linear-gradient(135deg,var(--acc2),var(--accD));color:#fff;padding:11px 24px;border-radius:0;
   font-size:13px;font-weight:700;transition:.25s;z-index:99;opacity:0;box-shadow:0 10px 30px rgba(0,181,255,.4)}
@@ -325,7 +325,7 @@ nav{position:fixed;bottom:0;left:0;right:0;z-index:90;
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 
 /* ===== GLOBAL LIVE TICKER ===== */
-#tickerBar{position:relative;overflow:hidden;background:linear-gradient(135deg,#0884C7,#006BFF);
+#tickerBar{position:relative;overflow:hidden;background:linear-gradient(135deg,#002B5C,#006BFF);
   border-bottom:1px solid rgba(0,181,255,.25);box-shadow:0 4px 24px rgba(0,88,217,.25);
   backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);z-index:8}
 #tickerBar .tkHead{display:flex;align-items:center;justify-content:space-between;padding:5px 12px 2px}
@@ -428,15 +428,15 @@ body,input,select,textarea,button,.ar,h1,h2,h3{font-family:'IBM Plex Sans Arabic
   border:1.5px solid rgba(0,181,255,.5)}
 #bcModal .bx h4{color:#2E3A48;font-size:14px;margin-bottom:4px;font-weight:700}
 #bcModal svg{width:100%;height:auto}
-#bcModal .rf{font:600 13px 'IBM Plex Mono';color:#0884C7;letter-spacing:1px;margin:8px 0 14px;direction:ltr}
+#bcModal .rf{font:600 13px 'IBM Plex Mono';color:#002B5C;letter-spacing:1px;margin:8px 0 14px;direction:ltr}
 #bcModal .row{display:flex;gap:10px;justify-content:center}
 #bcModal .b{border:0;border-radius:0;padding:11px 18px;font:700 13px 'IBM Plex Sans Arabic';cursor:pointer}
-#bcModal .b.copy{background:linear-gradient(135deg,#03A4FE,#00B5FF);color:#fff}
-#bcModal .b.close{background:#EAF5FF;color:#0884C7}
+#bcModal .b.copy{background:linear-gradient(135deg,#003B7E,#00B5FF);color:#fff}
+#bcModal .b.close{background:#EAF5FF;color:#002B5C}
 
 /* ═══ premium background: subtle financial grid (4%) ═══ */
 body::after{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.04;
-  background-image:linear-gradient(#0884C7 1px,transparent 1px),linear-gradient(90deg,#0884C7 1px,transparent 1px);
+  background-image:linear-gradient(#002B5C 1px,transparent 1px),linear-gradient(90deg,#002B5C 1px,transparent 1px);
   background-size:44px 44px}
 /* ═══ section depth tints ═══ */
 section#new.on{background:#EDF6FF;border-radius:0}
@@ -494,7 +494,7 @@ section#contacts.on{background:#F8FCFF;border-radius:0}
         <stop offset="0" stop-color="#00FFE0"/><stop offset="1" stop-color="#00CFFF"/>
       </linearGradient>
       <linearGradient id="gA" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0" stop-color="#00C2FF"/><stop offset="1" stop-color="#03A4FE"/>
+        <stop offset="0" stop-color="#00C2FF"/><stop offset="1" stop-color="#003B7E"/>
       </linearGradient>
       <linearGradient id="gM" x1="0" y1="0" x2="1" y2="1">
         <stop offset="0" stop-color="#3D8BFF"/><stop offset="1" stop-color="#1F5AFF"/>
@@ -526,7 +526,7 @@ section#contacts.on{background:#F8FCFF;border-radius:0}
       <div class="am"><div class="a1 num" id="balU" style="color:#00B8CC">0</div><div class="a2 num" id="balUu">$0</div></div></div>
     <div class="asset" id="cardA" onclick="selectAsset('A')" style="cursor:pointer"><div class="ic" style="background-image:url('https://flagcdn.com/w160/ao.png')"></div>
       <div class="nm"><div class="n1">AOA</div><div class="n2" id="rateA">— Kz/USDT</div></div>
-      <div class="am"><div class="a1 num" id="balA" style="color:#03A4FE">0</div><div class="a2 num" id="balAu">$0</div></div></div>
+      <div class="am"><div class="a1 num" id="balA" style="color:#003B7E">0</div><div class="a2 num" id="balAu">$0</div></div></div>
     <div class="asset" id="cardM" onclick="selectAsset('M')" style="cursor:pointer"><div class="ic" style="background-image:url('https://flagcdn.com/w160/mr.png')"></div>
       <div class="nm"><div class="n1">MRU</div><div class="n2" id="rateM">— UM/USDT</div></div>
       <div class="am"><div class="a1 num" id="balM" style="color:#2F6BFF">0</div><div class="a2 num" id="balMu">$0</div></div></div>
@@ -561,12 +561,12 @@ section#contacts.on{background:#F8FCFF;border-radius:0}
   </div>
   <div class="types">
     <div class="type on" data-ty="bridge"><div class="t1">جسر تحويل</div><div class="t2">AOA→MRU</div></div>
-    <div class="type" data-ty="trade"><div class="ico"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#03A4FE" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 10l-4 4 4 4M3 14h13M17 14l4-4-4-4M21 10H8"/></svg></div><div class="t1">تداول</div><div class="t2">كل العملات</div></div>
-    <div class="type" data-ty="m2a"><div class="ico"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#03A4FE" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M4 21V10l8-6 8 6v11M9 21v-6h6v6"/></svg></div><div class="t1">بيع أوقية</div><div class="t2">UM → AOA</div></div>
-    <div class="type" data-ty="rcpt"><div class="ico"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#03A4FE" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4v16l2-1 2 1 2-1 2 1 2-1 2 1 2-1V4l-2 1-2-1-2 1-2-1-2 1-2-1zM8 9h8M8 13h8"/></svg></div><div class="t1">الإيصالات</div><div class="t2">كل العملات</div></div>
-    <div class="type" data-ty="svc"><div class="ico"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#03A4FE" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h9l5 5v15H6zM15 2v5h5M9 13h6M9 17h6"/></svg></div><div class="t1">فاتورة مورد</div><div class="t2">دفع دولي</div></div>
-    <div class="type" data-ty="pub"><div class="ico"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#03A4FE" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 010 18M12 3a15 15 0 000 18"/></svg></div><div class="t1">بوابة العملاء</div><div class="t2">نشر الأسعار</div></div>
-    <div class="type wide" data-ty="rep"><div class="ico"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#03A4FE" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18M8 16V9M13 16V5M18 16v-4"/></svg></div><div><div class="t1">التقارير</div><div class="t2">PDF · ربحية كل عملة · اليوم</div></div></div>
+    <div class="type" data-ty="trade"><div class="ico"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#003B7E" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 10l-4 4 4 4M3 14h13M17 14l4-4-4-4M21 10H8"/></svg></div><div class="t1">تداول</div><div class="t2">كل العملات</div></div>
+    <div class="type" data-ty="m2a"><div class="ico"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#003B7E" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M4 21V10l8-6 8 6v11M9 21v-6h6v6"/></svg></div><div class="t1">بيع أوقية</div><div class="t2">UM → AOA</div></div>
+    <div class="type" data-ty="rcpt"><div class="ico"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#003B7E" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4v16l2-1 2 1 2-1 2 1 2-1 2 1 2-1V4l-2 1-2-1-2 1-2-1-2 1-2-1zM8 9h8M8 13h8"/></svg></div><div class="t1">الإيصالات</div><div class="t2">كل العملات</div></div>
+    <div class="type" data-ty="svc"><div class="ico"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#003B7E" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h9l5 5v15H6zM15 2v5h5M9 13h6M9 17h6"/></svg></div><div class="t1">فاتورة مورد</div><div class="t2">دفع دولي</div></div>
+    <div class="type" data-ty="pub"><div class="ico"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#003B7E" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 010 18M12 3a15 15 0 000 18"/></svg></div><div class="t1">بوابة العملاء</div><div class="t2">نشر الأسعار</div></div>
+    <div class="type wide" data-ty="rep"><div class="ico"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#003B7E" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18M8 16V9M13 16V5M18 16v-4"/></svg></div><div><div class="t1">التقارير</div><div class="t2">PDF · ربحية كل عملة · اليوم</div></div></div>
   </div>
 
   <!-- BRIDGE FORM -->
@@ -719,7 +719,7 @@ section#contacts.on{background:#F8FCFF;border-radius:0}
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px">
       <!-- ===== العميل ===== -->
       <div style="background:rgba(0,181,255,.07);border:1px solid var(--stroke);border-radius:0;padding:10px">
-        <div style="font-weight:800;font-size:13px;color:#03A4FE;margin-bottom:8px">إيصالات العميل</div>
+        <div style="font-weight:800;font-size:13px;color:#003B7E;margin-bottom:8px">إيصالات العميل</div>
         <button class="btn btn-gold btn-sm" style="width:100%;font-size:11px" onclick="uploadRC('cli')">رفع دفعة</button>
         <button class="btn btn-line btn-sm" style="width:100%;font-size:11px;margin-top:6px" onclick="addRCManual('cli')">إدخال يدوي</button>
         <div class="sum" style="margin-top:8px;padding:8px">
@@ -1899,7 +1899,7 @@ function invLogoSVG(){
   return `<svg width="58" height="58" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
     <defs>
       <linearGradient id="ivm" x1="0" y1="0.2" x2="1" y2="0.8">
-        <stop offset="0" stop-color="#03A4FE"/><stop offset="0.42" stop-color="#03A4FE"/>
+        <stop offset="0" stop-color="#003B7E"/><stop offset="0.42" stop-color="#003B7E"/>
         <stop offset="0.72" stop-color="#2F7BF6"/><stop offset="1" stop-color="#3FB6F9"/>
       </linearGradient>
     </defs>
@@ -2009,7 +2009,7 @@ async function genInvoice(ref){
       <div style="display:flex;align-items:center;gap:14px">
         ${invLogoSVG()}
         <div>
-          <div style="font-size:26px;font-weight:800;letter-spacing:1px;font-family:'IBM Plex Mono';color:#2E3A48">ARKAN<span style="color:#03A4FE"> INTERNATIONAL</span></div>
+          <div style="font-size:26px;font-weight:800;letter-spacing:1px;font-family:'IBM Plex Mono';color:#2E3A48">ARKAN<span style="color:#003B7E"> INTERNATIONAL</span></div>
           <div style="font-size:11px;letter-spacing:4px;color:#7A8DB8;font-family:'IBM Plex Mono';margin-top:2px">TRADING · EXCHANGE · SETTLEMENT</div>
         </div>
       </div>
@@ -2017,7 +2017,7 @@ async function genInvoice(ref){
         ${dstr}<br>Nouakchott · Luanda · China
       </div>
     </div>
-    <div style="height:3px;background:linear-gradient(90deg,#0884C7,#03A4FE,#03A4FE);margin:14px 34px 0"></div>
+    <div style="height:3px;background:linear-gradient(90deg,#002B5C,#003B7E,#003B7E);margin:14px 34px 0"></div>
 
     <!-- CLIENT + REF -->
     <div style="padding:20px 34px 0;display:flex;justify-content:space-between;align-items:flex-start">
@@ -2056,7 +2056,7 @@ async function genInvoice(ref){
 
     <!-- شكر -->
     <div style="padding:18px 34px 0">
-      <div style="font-size:13px;color:#0884C7;font-weight:700">✦ شكرًا لتعاملكم مع أركان — Merci de votre confiance</div>
+      <div style="font-size:13px;color:#002B5C;font-weight:700">✦ شكرًا لتعاملكم مع أركان — Merci de votre confiance</div>
     </div>
 
     <!-- تذييل رسمي -->
@@ -2690,7 +2690,7 @@ async function genReport(){
   const opRows=txs.map(t=>{
     const s=txSummary(t);
     return `<tr>
-      <td style="padding:9px 14px;font-family:'IBM Plex Mono';font-size:12px;border-bottom:1px solid #E3EEFB;cursor:pointer" onclick="showBarcode('${t.ref}')" title="باركود">${t.ref} <span style="letter-spacing:1px;color:#03A4FE">|||</span></td>
+      <td style="padding:9px 14px;font-family:'IBM Plex Mono';font-size:12px;border-bottom:1px solid #E3EEFB;cursor:pointer" onclick="showBarcode('${t.ref}')" title="باركود">${t.ref} <span style="letter-spacing:1px;color:#003B7E">|||</span></td>
       <td style="padding:9px 14px;font-size:12px;border-bottom:1px solid #E3EEFB">${typeLbl[t.type]||t.type}</td>
       <td style="padding:9px 14px;font-size:12px;border-bottom:1px solid #E3EEFB">${(s.info||'').slice(0,42)}</td>
       <td style="padding:9px 14px;font-family:'IBM Plex Mono';font-size:12px;font-weight:700;border-bottom:1px solid #E3EEFB;text-align:left">${s.p||''}</td>
@@ -2707,11 +2707,11 @@ async function genReport(){
       <div style="text-align:left"><div style="color:#00B5FF;font-size:20px;font-weight:800;font-family:'IBM Plex Mono'">${new Date().toLocaleDateString('en-GB')}</div>
       <div style="color:#7A8DB8;font-size:13px;margin-top:4px;font-family:'IBM Plex Mono'">${txs.length} عملية</div></div>
     </div>
-    <div style="height:6px;background:linear-gradient(90deg,#03A4FE,#03A4FE,#0884C7)"></div>
+    <div style="height:6px;background:linear-gradient(90deg,#003B7E,#003B7E,#002B5C)"></div>
     <div style="padding:28px 36px">
       <div style="display:flex;gap:12px;margin-bottom:22px">
         <div style="flex:1;padding:16px;border-radius:0;background:#EAF5FF;border:1px solid #DDD4FF">
-          <div style="font-size:13px;color:#0884C7;font-weight:700">إجمالي الربح (USD)</div>
+          <div style="font-size:13px;color:#002B5C;font-weight:700">إجمالي الربح (USD)</div>
           <div style="font-size:26px;font-weight:800;font-family:'IBM Plex Mono';color:${usdProfit>=0?'#0F9D6B':'#D93838'}">${fmt(usdProfit)} $</div>
         </div>
         <div style="flex:1;padding:16px;border-radius:0;background:#F5F9FF;border:1px solid #DCE8F8">
@@ -2722,10 +2722,10 @@ async function genReport(){
       <div style="font-size:16px;font-weight:800;color:#2E3A48;margin-bottom:10px">الربحية حسب العملة</div>
       <table style="width:100%;border-collapse:collapse;background:#F5F9FF;border-radius:0;overflow:hidden;margin-bottom:24px">
         <tr style="background:#EAF5FF">
-          <th style="padding:11px 16px;text-align:right;font-size:13px;color:#0884C7">العملة</th>
-          <th style="padding:11px 16px;text-align:left;font-size:13px;color:#0884C7">عمليات</th>
-          <th style="padding:11px 16px;text-align:left;font-size:13px;color:#0884C7">الحجم</th>
-          <th style="padding:11px 16px;text-align:left;font-size:13px;color:#0884C7">الربح</th>
+          <th style="padding:11px 16px;text-align:right;font-size:13px;color:#002B5C">العملة</th>
+          <th style="padding:11px 16px;text-align:left;font-size:13px;color:#002B5C">عمليات</th>
+          <th style="padding:11px 16px;text-align:left;font-size:13px;color:#002B5C">الحجم</th>
+          <th style="padding:11px 16px;text-align:left;font-size:13px;color:#002B5C">الربح</th>
         </tr>${rows}
       </table>
       <div style="font-size:16px;font-weight:800;color:#2E3A48;margin-bottom:10px">تفاصيل العمليات</div>
@@ -3154,7 +3154,7 @@ function rcPdfShell(inner,pg,tot,C){
   +'<div style="color:#7A8DB8;font-size:12px;margin-top:4px"><span style="letter-spacing:2.5px;font-family:\'IBM Plex Mono\'">RECONCILIATION</span> <span style="font-weight:700">— تقرير جرد الإيصالات</span></div></div></div>'
   +'<div style="text-align:left"><div style="color:#00B5FF;font-size:18px;font-weight:800;font-family:\'IBM Plex Mono\'">'+new Date().toLocaleDateString('en-GB')+'</div>'
   +'<div style="color:#7A8DB8;font-size:12px;margin-top:4px;font-family:\'IBM Plex Mono\'">'+C+' · '+pg+'/'+tot+'</div></div></div>'
-  +'<div style="height:6px;background:linear-gradient(90deg,#03A4FE,#03A4FE,#0884C7)"></div>'
+  +'<div style="height:6px;background:linear-gradient(90deg,#003B7E,#003B7E,#002B5C)"></div>'
   +'<div style="padding:24px 34px;flex:1">'+inner+'</div>'
   +'<div style="padding:14px 34px 20px;border-top:1px solid #DCE8F8;display:flex;justify-content:space-between;font-size:11px;color:#7A8DB8;font-family:\'IBM Plex Mono\'">'
   +'<span>WhatsApp 36295050 · ARKAN INTERNATIONAL TRADING</span><span>ARKAN Pay</span></div></div>';
@@ -3177,10 +3177,10 @@ async function rcExportPDF(){
    +kpi('بلا إيصال عميل',R.missC.length+' · '+fmt(R.sMissC,d),'#D93838','#FFF0F0')+'</div>';
   cover+='<div style="font-size:15px;font-weight:800;color:#2E3A48;margin-bottom:9px">التوزيع حسب البنك</div>'
    +'<table style="width:100%;border-collapse:collapse;background:#F5F9FF;border-radius:0;overflow:hidden;font-size:12px">'
-   +'<tr style="background:#EAF5FF"><th style="padding:9px 12px;text-align:right;color:#0884C7">البنك</th>'
-   +'<th style="padding:9px 12px;text-align:left;color:#0884C7">عميل</th><th style="padding:9px 12px;text-align:left;color:#0884C7">مبلغ العميل</th>'
-   +'<th style="padding:9px 12px;text-align:left;color:#0884C7">مورد</th><th style="padding:9px 12px;text-align:left;color:#0884C7">مبلغ المورد</th>'
-   +'<th style="padding:9px 12px;text-align:left;color:#0884C7">الفرق</th></tr>'
+   +'<tr style="background:#EAF5FF"><th style="padding:9px 12px;text-align:right;color:#002B5C">البنك</th>'
+   +'<th style="padding:9px 12px;text-align:left;color:#002B5C">عميل</th><th style="padding:9px 12px;text-align:left;color:#002B5C">مبلغ العميل</th>'
+   +'<th style="padding:9px 12px;text-align:left;color:#002B5C">مورد</th><th style="padding:9px 12px;text-align:left;color:#002B5C">مبلغ المورد</th>'
+   +'<th style="padding:9px 12px;text-align:left;color:#002B5C">الفرق</th></tr>'
    +bg.map(g=>{const df=g.sC-g.sS;return '<tr style="border-top:1px solid #eee">'
      +'<td style="padding:8px 12px;font-weight:700">'+g.bank+'</td>'
      +'<td style="padding:8px 12px;text-align:left;font-family:\'IBM Plex Mono\'">'+g.nC+'</td>'
@@ -3194,12 +3194,12 @@ async function rcExportPDF(){
   const pages=[cover].concat(chunks.map((ch,ix)=>{
     return '<div style="font-size:15px;font-weight:800;color:#2E3A48;margin-bottom:9px">تفصيل الجرد '+(ix?'(تابع)':'')+'</div>'
     +'<table style="width:100%;border-collapse:collapse;font-size:11px">'
-    +'<tr style="background:#EAF5FF"><th style="padding:8px 10px;text-align:right;color:#0884C7">الحالة</th>'
-    +'<th style="padding:8px 10px;text-align:right;color:#0884C7">الجهة</th>'
-    +'<th style="padding:8px 10px;text-align:right;color:#0884C7">الإيصال</th>'
-    +'<th style="padding:8px 10px;text-align:right;color:#0884C7">المرجع</th>'
-    +'<th style="padding:8px 10px;text-align:left;color:#0884C7">المبلغ</th>'
-    +'<th style="padding:8px 10px;text-align:left;color:#0884C7">فرق</th></tr>'
+    +'<tr style="background:#EAF5FF"><th style="padding:8px 10px;text-align:right;color:#002B5C">الحالة</th>'
+    +'<th style="padding:8px 10px;text-align:right;color:#002B5C">الجهة</th>'
+    +'<th style="padding:8px 10px;text-align:right;color:#002B5C">الإيصال</th>'
+    +'<th style="padding:8px 10px;text-align:right;color:#002B5C">المرجع</th>'
+    +'<th style="padding:8px 10px;text-align:left;color:#002B5C">المبلغ</th>'
+    +'<th style="padding:8px 10px;text-align:left;color:#002B5C">فرق</th></tr>'
     +ch.map(r=>'<tr style="border-top:1px solid #f0f0f5">'
       +'<td style="padding:7px 10px;font-weight:700;color:'+r.c+'">'+r.st+'</td>'
       +'<td style="padding:7px 10px;color:#43598A">'+r.side+'</td>'
@@ -3825,12 +3825,12 @@ async function ocrSelfTest(){
     live=(data.text||'').includes('12345')?('✓ قرأ 12345 في '+((Date.now()-t0)/1000).toFixed(1)+'ث'):('قرأ: '+String(data.text||'').trim().slice(0,20));
   }catch(e){live='فشل: '+((e&&e.message)||'').slice(0,60);}
   out.push(['اختبار قراءة حيّ',live]);
-  const html=out.map(([k,v])=>'<div style="display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.08);font-size:12px"><span>'+k+'</span><b style="color:'+(v===true||String(v).startsWith('✓')?'#2ecc71':(v===false||String(v).startsWith('فشل')?'#ff5c5c':'#03A4FE'))+'">'+(v===true?'✓':(v===false?'✗ مفقود':v))+'</b></div>').join('');
+  const html=out.map(([k,v])=>'<div style="display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.08);font-size:12px"><span>'+k+'</span><b style="color:'+(v===true||String(v).startsWith('✓')?'#2ecc71':(v===false||String(v).startsWith('فشل')?'#ff5c5c':'#003B7E'))+'">'+(v===true?'✓':(v===false?'✗ مفقود':v))+'</b></div>').join('');
   let m=document.getElementById('ocrDiag');
   if(!m){m=document.createElement('div');m.id='ocrDiag';
     m.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(0,10,28,.7);display:flex;align-items:center;justify-content:center;padding:20px';
     m.onclick=e=>{if(e.target===m)m.remove();};document.body.appendChild(m);}
-  m.innerHTML='<div style="background:#2E3A48;border:1px solid rgba(255,255,255,.15);max-width:420px;width:100%;padding:18px;color:#fff"><b style="font-size:15px">فحص محركات القراءة</b><div style="margin-top:10px">'+html+'</div><button onclick="document.getElementById(\'ocrDiag\').remove()" style="margin-top:14px;width:100%;padding:11px;border:none;background:#03A4FE;color:#2E3A48;font-weight:800;font-size:13px;cursor:pointer">إغلاق</button></div>';
+  m.innerHTML='<div style="background:#2E3A48;border:1px solid rgba(255,255,255,.15);max-width:420px;width:100%;padding:18px;color:#fff"><b style="font-size:15px">فحص محركات القراءة</b><div style="margin-top:10px">'+html+'</div><button onclick="document.getElementById(\'ocrDiag\').remove()" style="margin-top:14px;width:100%;padding:11px;border:none;background:#003B7E;color:#2E3A48;font-weight:800;font-size:13px;cursor:pointer">إغلاق</button></div>';
 }
 window.ocrSelfTest=ocrSelfTest;
 /* تحسين الصورة قبل القراءة: تصغير + رمادي + رفع تباين */
@@ -3866,7 +3866,7 @@ async function imageText(dataUrl){
   return data.text||'';
 }
 /* ================= BUILD / AUTO-UPDATE ================= */
-const ARKAN_BUILD='1015';
+const ARKAN_BUILD='1016';
 function arkanVerLabel(){const e=$('verLbl');if(e)e.textContent=ARKAN_BUILD;}
 function arkanUpdateBanner(b){
   if(document.getElementById('updBar'))return;
@@ -5123,14 +5123,14 @@ function renderPub(){
         ${PUB_ALL.map(a=>`<option value="${a.ccy}" ${a.ccy===r.ccy?'selected':''}>${a.ccy}</option>`).join('')}
       </select>
       <input type="text" inputmode="decimal" value="${r.w}" onchange="pubRows[${i}].w=parseFloat(this.value)||0" placeholder="جملة" style="${inS};color:var(--gold2)">
-      <input type="text" inputmode="decimal" value="${r.m!=null?r.m:''}" onchange="pubRows[${i}].m=parseFloat(this.value)||0" placeholder="متوسط" style="${inS};color:#03A4FE">
+      <input type="text" inputmode="decimal" value="${r.m!=null?r.m:''}" onchange="pubRows[${i}].m=parseFloat(this.value)||0" placeholder="متوسط" style="${inS};color:#003B7E">
       <input type="text" inputmode="decimal" value="${r.r}" onchange="pubRows[${i}].r=parseFloat(this.value)||0" placeholder="تجزئة" style="${inS};color:var(--txt)">
       <input type="text" inputmode="decimal" value="${r.thr||0}" onchange="pubRows[${i}].thr=parseFloat(this.value)||0" placeholder="حد الجملة" style="${inS};color:var(--acc2);font-size:16px">
       <button class="btn btn-line btn-sm" style="padding:5px 6px" onclick="pubRows.splice(${i},1);renderPub()">✕</button>
     </div>
     <div style="display:flex;justify-content:flex-end;gap:6px;margin:-2px 0 8px;font-size:10px;color:var(--dim)">
       <span>حد المتوسط (فوقه متوسط، دونه تجزئة):</span>
-      <input type="text" inputmode="decimal" value="${r.thrM||0}" onchange="pubRows[${i}].thrM=parseFloat(this.value)||0" placeholder="حد المتوسط" style="width:110px;${inS};color:#03A4FE;font-size:16px">
+      <input type="text" inputmode="decimal" value="${r.thrM||0}" onchange="pubRows[${i}].thrM=parseFloat(this.value)||0" placeholder="حد المتوسط" style="width:110px;${inS};color:#003B7E;font-size:16px">
     </div>`).join('')||'<div class="empty" style="padding:14px 0;color:var(--dim)">أضف عملة لتسعيرها</div>';
 }
 function addPubRow(){
@@ -5157,8 +5157,8 @@ async function genStatusImage(){
         <div style="font-size:12px;color:#7A8DB8">${NAMES[x.ccy]||''}</div>
       </div>
       <div style="text-align:left;direction:ltr">
-        <div style="font-family:'IBM Plex Mono';font-size:24px;font-weight:800;color:#0884C7">${x.w}</div>
-        <div style="font-family:'IBM Plex Mono';font-size:15px;color:#03A4FE">${x.r}</div>
+        <div style="font-family:'IBM Plex Mono';font-size:24px;font-weight:800;color:#002B5C">${x.w}</div>
+        <div style="font-family:'IBM Plex Mono';font-size:15px;color:#003B7E">${x.r}</div>
       </div>
     </div>`).join('');
   const stage=$('pdfStage');
@@ -5170,13 +5170,13 @@ async function genStatusImage(){
         ${invLogoSVG()}
         <div style="font-family:'IBM Plex Mono';font-size:34px;font-weight:800;color:#fff">ARKAN</div>
       </div>
-      <div style="font-size:19px;color:#03A4FE;font-weight:800">أسعار الصرف اليوم</div>
+      <div style="font-size:19px;color:#003B7E;font-weight:800">أسعار الصرف اليوم</div>
       <div style="font-family:'IBM Plex Mono';font-size:15px;color:#7A8DB8;margin-top:5px">${today}</div>
     </div>
     <div style="margin:36px 30px 0;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:0;overflow:hidden;z-index:2">
       <div style="display:flex;flex-direction:row-reverse;justify-content:space-between;padding:16px 24px;background:rgba(0,181,255,.15)">
-        <span style="font-size:15px;color:#03A4FE;font-weight:800">العملة</span>
-        <span style="font-size:13px;color:#03A4FE;font-weight:800;direction:ltr">جملة / تجزئة</span>
+        <span style="font-size:15px;color:#003B7E;font-weight:800">العملة</span>
+        <span style="font-size:13px;color:#003B7E;font-weight:800;direction:ltr">جملة / تجزئة</span>
       </div>
       ${priceRows}
       <div style="padding:12px 24px;text-align:center;font-size:12px;color:#7A8DB8">الأسعار مقابل الأوقية · جملة (أصفر) / تجزئة (بنفسجي)</div>
@@ -5512,38 +5512,38 @@ function showBarcode(ref){
 .orb,.orb-1,.orb-2,.grid-bg,#particles,.aurora,.noise{display:none!important}
 :root{--bg:#F0F1F2!important;--bg2:#FFFFFF!important;
   --glass:#FFFFFF!important;--glass2:#FFFFFF!important;
-  --stroke:#DFE3E6!important;--stroke-acc:#03A4FE!important;
-  --acc:#03A4FE!important;--acc2:#03A4FE!important;--accD:#0884C7!important;
-  --gold:#0884C7!important;--gold2:#03A4FE!important;
+  --stroke:#DFE3E6!important;--stroke-acc:#003B7E!important;
+  --acc:#003B7E!important;--acc2:#003B7E!important;--accD:#002B5C!important;
+  --gold:#002B5C!important;--gold2:#003B7E!important;
   --txt:#22303C!important;--dim:#6E7A85!important}
 body{background:#F0F1F2!important;background-image:none!important}
 .glass,.card{background:#FFFFFF!important;border:1px solid #DFE3E6!important;
   box-shadow:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
 /* بطاقات الأقسام: أبيض + عنوان أزرق — والمختارة معكوسة: أزرق + أبيض (طريقة باي) */
 .type{background:#FFFFFF!important;border:1px solid #DFE3E6!important;box-shadow:none!important;position:relative}
-.type .t1{color:#03A4FE!important;font-weight:800!important}
+.type .t1{color:#003B7E!important;font-weight:800!important}
 .type .t2{font-family:'IBM Plex Sans Arabic',sans-serif!important;color:#6E7A85!important;
   letter-spacing:0!important;font-size:11px!important}
-.type svg{stroke:#03A4FE!important}
-.type.on{background:#03A4FE!important;border:1px solid #03A4FE!important;box-shadow:none!important}
+.type svg{stroke:#003B7E!important}
+.type.on{background:#003B7E!important;border:1px solid #003B7E!important;box-shadow:none!important}
 .type.on .t1{color:#FFFFFF!important}
 .type.on .t2{color:rgba(255,255,255,.85)!important}
 .type.on svg{stroke:#FFFFFF!important}
 /* عناوين زرقاء ساطعة على الفاتح — نصوص بيضاء على الأزرق */
-h1,h2,h3,h4,.card h3{color:#03A4FE!important}
+h1,h2,h3,h4,.card h3{color:#003B7E!important}
 label{color:#6E7A85!important}
 /* الأزرار: أساسي أزرق/أبيض، خطي أزرق */
-.btn-gold{background:#03A4FE!important;color:#FFFFFF!important;border:none!important;box-shadow:none!important}
-.btn-gold:active{background:#0884C7!important}
-.btn-line{border:1.5px solid #03A4FE!important;color:#03A4FE!important;background:#FFFFFF!important}
+.btn-gold{background:#003B7E!important;color:#FFFFFF!important;border:none!important;box-shadow:none!important}
+.btn-gold:active{background:#002B5C!important}
+.btn-line{border:1.5px solid #003B7E!important;color:#003B7E!important;background:#FFFFFF!important}
 /* التنقل السفلي: أزرق باي الساطع بنص أبيض (كقائمة باي) */
-nav{background:#03A4FE!important;border-top:none!important}
+nav{background:#003B7E!important;border-top:none!important}
 nav .nv{color:rgba(255,255,255,.75)!important}
 nav .nv.on,nav .nv:active{color:#FFFFFF!important}
 nav .nv svg{stroke:currentColor!important}
 nav .nv.on{background:rgba(255,255,255,.16)!important}
 input,select,textarea{background:#FFFFFF!important;border:1px solid #DFE3E6!important;color:#22303C!important}
-input:focus,select:focus{border-color:#03A4FE!important;outline:none!important}
+input:focus,select:focus{border-color:#003B7E!important;outline:none!important}
 /* الأرقام والمبالغ داكنة واضحة */
 .num,.lp{color:#22303C!important}
 </style>
