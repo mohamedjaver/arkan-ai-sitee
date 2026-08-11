@@ -73,11 +73,14 @@ async function pdfText(f){
   const buf=await f.arrayBuffer();
   const doc=await pdfjsLib.getDocument({data:buf}).promise;
   let out='';
-  for(let i=1;i<=Math.min(doc.numPages,4);i++){
-    const pg=await doc.getPage(i);
-    const tc=await pg.getTextContent();
-    out+=tc.items.map(it=>it.str).join(' ')+'\n';
-  }
+  try{
+    for(let i=1;i<=Math.min(doc.numPages,4);i++){
+      const pg=await doc.getPage(i);
+      const tc=await pg.getTextContent();
+      out+=tc.items.map(it=>it.str).join(' ')+'\n';
+      pg.cleanup&&pg.cleanup();
+    }
+  }finally{ try{await doc.destroy();}catch(e){} }
   return out;
 }
 async function ocrText(f){
@@ -123,6 +126,7 @@ window.ArkanRead={
     /* Gemini أولاً — إلا إذا انقطعت الحصة في هذه الدفعة */
     if(QUOTA_TRIP<2){
       try{
+        await new Promise(r=>setTimeout(r,350));
         const b64=await toB64(file);
         const parsed=await gemini(b64,mime);
         return {parsed,text:asText(parsed),engine:'gemini'};
