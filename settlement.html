@@ -3866,7 +3866,7 @@ async function imageText(dataUrl){
   return data.text||'';
 }
 /* ================= BUILD / AUTO-UPDATE ================= */
-const ARKAN_BUILD='1019';
+const ARKAN_BUILD='1020';
 function arkanVerLabel(){const e=$('verLbl');if(e)e.textContent=ARKAN_BUILD;}
 function arkanUpdateBanner(b){
   if(document.getElementById('updBar'))return;
@@ -5636,5 +5636,20 @@ C.addEventListener('keydown',e=>{if(e.key==='Enter')tryGo();});
 C.addEventListener('input',()=>{if(C.value.length>=getPin().length&&norm(P.value).length>=8)tryGo();});
 })();
 </script>
+
+<style id="akNightCss">
+/* ═══ خلفية أركان الكحلية الأصلية (تدرج الهيرو) — معممة ═══ */
+body{background:radial-gradient(1100px 600px at 78% -10%, rgba(0,88,217,.55), transparent 60%),
+ radial-gradient(900px 700px at -10% 110%, rgba(0,181,255,.22), transparent 55%),
+ linear-gradient(180deg,#04143A 0%,#062165 58%,#003B8F 100%) fixed!important}
+
+section>h2,section h2{color:#EAF2FF!important}
+.card h2,.card h3,.glass h3{color:#0058D9!important}
+label{color:#A9BBD8!important}
+.card label,.glass label{color:#6E7A85!important}
+#lock{background:linear-gradient(180deg,#04143A,#062165)!important}
+#lock h2{color:#EAF2FF!important}
+.type .t2{color:#6E7A85!important}
+</style>
 </body>
 </html>
