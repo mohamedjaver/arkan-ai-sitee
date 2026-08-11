@@ -34,8 +34,8 @@
    ============================================================ */
 :root{
     --bg:#F7FAFD; --card:#FFFFFF; --card2:#F8FBFF; --line:#D9E5F2;
-    --txt:#102A43; --muted:#486581; --gold:#D97F00; --violet:#003B7E;
-    --acc:#003B7E; --acc2:#00509E; --accD:#002B5C;
+    --txt:#102A43; --muted:#486581; --gold:#0884C7; --violet:#03A4FE;
+    --acc:#03A4FE; --acc2:#03A4FE; --accD:#0884C7;
     --green:#0A9E5C; --red:#E53935; --radius:24px;
   }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -310,17 +310,17 @@ footer{border-top:1px solid var(--stroke);margin-top:60px;padding:52px 0 40px;po
 .gate-fld label{display:block;font-size:.8rem;font-weight:600;color:#486581;margin-bottom:7px}
 .gate-fld input{width:100%;padding:14px 16px;border-radius:0;border:1.5px solid #D9E5F2;background:#F8FBFF;
   font-family:inherit;font-size:15px;color:#102A43;outline:none;transition:border .2s,box-shadow .2s;box-sizing:border-box}
-.gate-fld input:focus{border-color:#00509E;box-shadow:0 0 0 4px rgba(0,153,255,.12)}
+.gate-fld input:focus{border-color:#03A4FE;box-shadow:0 0 0 4px rgba(0,153,255,.12)}
 .cc-row{display:flex;gap:8px;margin-bottom:13px}
 .cc{flex:1;padding:11px;border-radius:0;border:1.5px solid #D9E5F2;background:#F8FBFF;cursor:pointer;
   font-family:inherit;font-weight:700;font-size:14px;color:#486581;transition:all .2s}
-.cc.on{border-color:#003B7E;background:rgba(0,86,214,.07);color:#003B7E}
+.cc.on{border-color:#03A4FE;background:rgba(0,86,214,.07);color:#03A4FE}
 .gate-btn{width:100%;padding:15px;border:none;border-radius:0;cursor:pointer;font-family:inherit;
-  background:linear-gradient(135deg,#003B7E,#00509E);color:#fff;font-weight:800;font-size:15.5px;
+  background:linear-gradient(135deg,#03A4FE,#03A4FE);color:#fff;font-weight:800;font-size:15.5px;
   box-shadow:0 14px 30px -10px rgba(0,86,214,.5);transition:transform .2s,opacity .2s;margin-top:4px}
 .gate-btn:active{transform:scale(.97)}
 .gate-btn:disabled{opacity:.55;cursor:wait}
-.gate-link{background:none;border:none;color:#003B7E;font-family:inherit;font-size:.82rem;font-weight:700;
+.gate-link{background:none;border:none;color:#03A4FE;font-family:inherit;font-size:.82rem;font-weight:700;
   cursor:pointer;margin-top:12px}
 .gate-note{font-size:.72rem;color:#486581;margin-top:13px;line-height:1.7}
 .gate-err{display:none;font-size:.8rem;color:#E53935;font-weight:600;margin-top:10px;line-height:1.6}
@@ -351,7 +351,7 @@ footer{border-top:1px solid var(--stroke);margin-top:60px;padding:52px 0 40px;po
     <!-- الخطوة 2: OTP -->
     <div id="gStep2" style="display:none">
       <h2>أدخل رمز التحقق</h2>
-      <p>أرسلنا رمزًا من 6 أرقام إلى<br><b class="ltr" id="gSentTo" style="color:#003B7E"></b></p>
+      <p>أرسلنا رمزًا من 6 أرقام إلى<br><b class="ltr" id="gSentTo" style="color:#03A4FE"></b></p>
       <div class="gate-fld">
         <input id="gOtp" class="otp-in" type="text" inputmode="numeric" maxlength="6" placeholder="••••••"
           oninput="if(this.value.length===6)arkVerifyOtp()"></div>
@@ -430,7 +430,7 @@ window.arkSendOtp=async function(){
       if(j.ok){
         otpMode='wa';
         document.getElementById('gSentTo').textContent=p;
-        document.querySelector('#gStep2 p').innerHTML='أرسلنا رمزًا من 6 أرقام إلى <b>واتسابك</b><br><b class="ltr" style="color:#003B7E">'+p+'</b>';
+        document.querySelector('#gStep2 p').innerHTML='أرسلنا رمزًا من 6 أرقام إلى <b>واتسابك</b><br><b class="ltr" style="color:#03A4FE">'+p+'</b>';
         document.getElementById('gStep1').style.display='none';
         document.getElementById('gStep2').style.display='block';
         startTimer();setTimeout(function(){document.getElementById('gOtp').focus();},300);
@@ -1464,9 +1464,9 @@ function showPinModal(pin, ref, waUrl){
   wrap.innerHTML = '<div style="width:100%;max-width:380px;background:#FFFFFF;border:1px solid rgba(0,181,255,.06);border-radius:0;padding:28px 22px;text-align:center;color:#102A43">'
     + '<div style="width:60px;height:60px;margin:0 auto 16px;border-radius:50%;background:rgba(0,168,255,.05);display:grid;place-items:center;font-size:28px">✓</div>'
     + '<h3 style="margin:0 0 6px;font-size:19px;font-weight:700">تم إنشاء حسابك</h3>'
-    + '<p style="margin:0 0 20px;font-size:13px;color:#486581;line-height:1.7">احفظ رمزك للدخول لاحقاً على <b style="color:#D97F00">account.html</b></p>'
-    + '<div style="background:#F8FBFF;border:1px solid #E4EEF9;border-radius:0;padding:16px;margin-bottom:12px"><div style="font-size:12px;color:#486581;margin-bottom:6px">رمزك الشخصي</div><div style="font-size:38px;font-weight:800;letter-spacing:.3em;color:#D97F00;direction:ltr">'+pin+'</div></div>'
-    + '<div style="background:#F8FBFF;border:1px solid #E4EEF9;border-radius:0;padding:12px;margin-bottom:20px"><div style="font-size:12px;color:#486581;margin-bottom:4px">رقمك المرجعي</div><div style="font-size:16px;font-weight:700;letter-spacing:.1em;color:#003B7E;direction:ltr">'+ref+'</div></div>'
+    + '<p style="margin:0 0 20px;font-size:13px;color:#486581;line-height:1.7">احفظ رمزك للدخول لاحقاً على <b style="color:#0884C7">account.html</b></p>'
+    + '<div style="background:#F8FBFF;border:1px solid #E4EEF9;border-radius:0;padding:16px;margin-bottom:12px"><div style="font-size:12px;color:#486581;margin-bottom:6px">رمزك الشخصي</div><div style="font-size:38px;font-weight:800;letter-spacing:.3em;color:#0884C7;direction:ltr">'+pin+'</div></div>'
+    + '<div style="background:#F8FBFF;border:1px solid #E4EEF9;border-radius:0;padding:12px;margin-bottom:20px"><div style="font-size:12px;color:#486581;margin-bottom:4px">رقمك المرجعي</div><div style="font-size:16px;font-weight:700;letter-spacing:.1em;color:#03A4FE;direction:ltr">'+ref+'</div></div>'
     + '<button id="arkWaGo" style="width:100%;padding:15px;border:0;border-radius:0;cursor:pointer;background:linear-gradient(135deg,#0A9E5C,#25b378);color:#04150d;font-weight:700;font-size:15px;font-family:inherit;margin-bottom:10px">إرسال الطلب عبر واتساب</button>'
     + '<button id="arkClose" style="width:100%;padding:13px;border:1px solid #D9E5F2;border-radius:0;cursor:pointer;background:transparent;color:#486581;font-weight:600;font-family:inherit">حفظت الرمز — إغلاق</button>'
     + '</div>';
