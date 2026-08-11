@@ -748,15 +748,10 @@ function apply(){
   const st=document.getElementById('acctStatus');
   if(st)st.textContent='المالك';
   /* 2) settlement في الخيارات: بلاطة في الرئيسية + صف في حسابي */
-  const acts=document.querySelector('.actions');
-  if(acts&&!document.getElementById('akOwnAct')){
-    const d=document.createElement('div');
-    d.className='act'; d.id='akOwnAct';
-    d.style.cssText='border:1.5px solid #0058D9';
-    d.innerHTML='<div class="ic" style="color:#0058D9"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-6h6v6"/></svg></div><span style="color:#0058D9;font-weight:800">الكونسول</span>';
-    d.onclick=()=>location.href='settlement.html';
-    acts.appendChild(d);
-  }
+  /* الشريط نفسه زر الكونسول — بلا بلاطات إضافية */
+  if(pb){pb.style.cursor='pointer';
+    pb.innerHTML='حساب المالك — فتح الكونسول <span style="font-size:16px">←</span>';
+    pb.onclick=()=>location.href='settlement.html';}
   const acct=document.getElementById('s-acct');
   if(acct&&!document.getElementById('akOwnRow')){
     const r=document.createElement('div');
