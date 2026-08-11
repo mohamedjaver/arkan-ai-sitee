@@ -1758,6 +1758,7 @@ document.addEventListener('visibilitychange',()=>{
 .orb,.orb-1,.orb-2,.grid-bg,#particles,.aurora,.noise{display:none!important}
 </style>
 
+<script src="arkan-read.js?v=1"></script>
 <script id="akAiReceipts">
 /* ═══ ARKAN AI Receipts — تحليل تلقائي لكل إيصال يُرسل في المحادثة ═══ */
 (function(){
@@ -1771,22 +1772,16 @@ async function b64FromPath(path){
   return {mime:(b.type||'image/jpeg'),data:String(d).split(',')[1]};
 }
 async function akAnalyzeMsg(m){
-  const k=GKEY(); if(!k) throw new Error('لا مفتاح Gemini — أضفه في settlement');
   const {mime,data}=await b64FromPath(m.media_path);
-  const prompt='أنت محلل إيصالات بنكية. استخرج من الصورة JSON فقط بلا أي نص آخر: {"amount":رقم بلا فواصل,"currency":"Kz|MRU|USD|EUR|CNY|AED|USDT","bank":"BAI|BFA|ATL|BIC|BCI|TRON|بنك آخر","ref":"رقم العملية","date":"YYYY-MM-DD"} — إن غاب حقل ضع null.';
-  const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key='+encodeURIComponent(k),{
-    method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({contents:[{parts:[{text:prompt},{inline_data:{mime_type:mime,data:data}}]}],
-      generationConfig:{temperature:0,maxOutputTokens:200}})});
-  if(!r.ok) throw new Error('Gemini HTTP '+r.status);
-  const j=await r.json();
-  let t=(((j.candidates||[])[0]||{}).content||{parts:[]}).parts.map(p=>p.text||'').join('');
-  t=t.replace(/```json|```/g,'').trim();
-  const p=JSON.parse(t.slice(t.indexOf('{'), t.lastIndexOf('}')+1));
+  const blob=await (await fetch('data:'+mime+';base64,'+data)).blob();
+  const r=await ArkanRead.read(new File([blob],'receipt',{type:mime}));
+  const p=r.parsed||{};
   const S=dayStore(); const cur=S[m.id]||{};
-  S[m.id]={a:cur.a||(p.amount!=null?String(p.amount):''),
-           c:cur.c||( ['Kz','MRU','USD','EUR','CNY','AED','USDT'].includes(p.currency)?p.currency:'Kz'),
-           bank:p.bank||cur.bank||'', ref:p.ref||cur.ref||'', dt:p.date||cur.dt||'', ai:1};
+  const cy=String(p.currency||'').replace('AOA','Kz');
+  S[m.id]={a:cur.a||(p.amount?String(p.amount):''),
+           c:cur.c||(['Kz','MRU','USD','EUR','CNY','AED','USDT'].includes(cy)?cy:'Kz'),
+           bank:p.bank||cur.bank||'', ref:p.reference||p.transaction_id||cur.ref||'',
+           dt:p.date||cur.dt||'', ai:1, eng:r.engine};
   daySave(S);
   return S[m.id];
 }
