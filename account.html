@@ -520,7 +520,7 @@ async function login(phone, pin, silent){
     }
     SESSION = {phone:d};
     localStorage.setItem('arkan_session', JSON.stringify(SESSION));
-    /* توكن خادم موقّع (24 ساعة) بدل تخزين PIN — يُستخدم للدخول الصامت ولـ chat-v2 */
+    /* توكن خادم موقّع (30 يوماً) بدل تخزين PIN — يُستخدم للدخول الصامت ولـ chat-v2 */
     try{
       const tr=await fetch('https://arkan-ai-site-production.up.railway.app/supabase-token',{
         method:'POST',headers:{'Content-Type':'application/json'},
@@ -716,6 +716,18 @@ const fire=()=>{
 };
 const iv=setInterval(()=>{fire();if(done)clearInterval(iv);},120);
 setTimeout(()=>clearInterval(iv),15000);
+})();
+</script>
+
+<script id="akPrefillPhone">
+/* إن انتهت الجلسة: عبّئ الهاتف المحفوظ — يتبقى الرمز فقط */
+(function(){
+try{
+  const saved=JSON.parse(localStorage.getItem('arkan_session')||'null');
+  if(!saved||!saved.phone)return;
+  const el=document.getElementById('gPhone')||document.querySelector('#s-login input[type="tel"],input[placeholder*="+222"]');
+  if(el&&!el.value)el.value=saved.phone;
+}catch(e){}
 })();
 </script>
 </body>
