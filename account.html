@@ -189,6 +189,8 @@
   <link rel="stylesheet" href="arkan-theme.css">
   <link rel="stylesheet" href="arkan-light.css">
   <script src="arkan-gate.js"></script>
+<link rel="prefetch" href="chat-v2.html">
+<link rel="prefetch" href="request.html">
 </head>
 <body>
 <div class="stage">
@@ -693,6 +695,8 @@ body{background:radial-gradient(1100px 600px at 78% -10%, rgba(0,88,217,.55), tr
   const load=()=>{if(!f.src)f.src='request.html?legacy=1&embed=1#individuals';};
   document.querySelectorAll('[data-s="s-send"],[data-goto="s-send"]').forEach(el=>el.addEventListener('click',load));
   if(location.hash==='#transfer')load();
+  /* تسخين مسبق: يصبح فتح تبويب التحويل فورياً */
+  window.addEventListener('load',()=>setTimeout(load,1200));
 })();
 </script>
 
