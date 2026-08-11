@@ -19,7 +19,7 @@
   --bg:#070A14; --bg2:#12102a; --bg3:#0E1322;
   --panel:rgba(23,20,50,.62); --line:rgba(255,255,255,.08);
   --violet:#7c5cff; --violet-2:#a78bfa; --cyan:#22d3ee; --cyan-2:#67e8f9;
-  --gold:#03A4FE; --gold-2:#d4a94a; --txt:#eef0ff; --mute:#9aa0c0; --dim:#6b7096;
+  --gold:#003B7E; --gold-2:#d4a94a; --txt:#eef0ff; --mute:#9aa0c0; --dim:#6b7096;
   --up:#34d399; --down:#f87171;
   color-scheme:dark;
 }
@@ -341,7 +341,7 @@ function updateProfitPrev(i){
   const row = model.r[i]; const buy = num(row.buy);
   if (!buy || !row.r){ el.textContent = 'الربح/وحدة: —'; return; }
   const pW = (num(row.w)-buy), pM = (num(row.m)-buy), pR = (num(row.r)-buy);
-  el.innerHTML = `ربح: <span style="color:#03A4FE">${pW.toFixed(3)}</span> · <span style="color:#67e8f9">${pM.toFixed(3)}</span> · <span style="color:#31d0aa">${pR.toFixed(3)}</span>`;
+  el.innerHTML = `ربح: <span style="color:#003B7E">${pW.toFixed(3)}</span> · <span style="color:#67e8f9">${pM.toFixed(3)}</span> · <span style="color:#31d0aa">${pR.toFixed(3)}</span>`;
 }
 $('date').addEventListener('input', e => model.date = e.target.value.trim());
 
