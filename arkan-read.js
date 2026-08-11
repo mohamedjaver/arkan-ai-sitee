@@ -18,6 +18,7 @@ ${GEM_SCHEMA}
 'use strict';
 const KEY=()=> (localStorage.getItem('gemKey')||'').trim();
 const MODELS=['gemini-2.5-flash','gemini-2.0-flash','gemini-flash-latest'];
+let QUOTA_TRIP=0; /* قاطع: بعد فشلي حصة متتاليين ننتقل محلياً لبقية الدفعة */
 
 async function toB64(f){
   return new Promise((res,rej)=>{const r=new FileReader();
@@ -33,11 +34,13 @@ async function gemini(b64,mime){
       const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+m+':generateContent?key='+encodeURIComponent(key),
         {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
       const j=await r.json().catch(()=>({}));
-      if(!r.ok){last=(j.error&&j.error.message)||('HTTP '+r.status);continue;}
+      if(!r.ok){last=(j.error&&j.error.message)||('HTTP '+r.status);
+        if(r.status===429||/quota|exhausted/i.test(last)){QUOTA_TRIP++;break;}
+        continue;}
       let t=(((j.candidates||[])[0]||{}).content||{parts:[]}).parts.map(p=>p.text||'').join('');
       t=t.replace(/```json|```/g,'').trim();
       const p=JSON.parse(t.slice(t.indexOf('{'),t.lastIndexOf('}')+1));
-      return p;
+      QUOTA_TRIP=0; return p;
     }catch(e){last=e.message;}
   }
   throw new Error('Gemini: '+last);
@@ -61,17 +64,48 @@ async function worker(){
   await _w.setParameters({tessedit_pageseg_mode:'6'});
   return _w;
 }
+async function pdfText(f){
+  if(!window.pdfjsLib){
+    await new Promise((res,rej)=>{const sc=document.createElement('script');
+      sc.src='vendor/pdf.min.js';sc.onload=res;sc.onerror=rej;document.head.appendChild(sc);});
+  }
+  try{pdfjsLib.GlobalWorkerOptions.workerSrc=new URL('vendor/pdf.worker.min.js',location.href).href;}catch(e){}
+  const buf=await f.arrayBuffer();
+  const doc=await pdfjsLib.getDocument({data:buf}).promise;
+  let out='';
+  for(let i=1;i<=Math.min(doc.numPages,4);i++){
+    const pg=await doc.getPage(i);
+    const tc=await pg.getTextContent();
+    out+=tc.items.map(it=>it.str).join(' ')+'\n';
+  }
+  return out;
+}
 async function ocrText(f){
   const w=await worker();
   const {data}=await w.recognize(f);
   return data.text||'';
 }
+function euNum(x){
+  x=String(x).trim();
+  if(/,\d{1,2}$/.test(x)) x=x.replace(/[.\s\u00A0]/g,'').replace(',','.');
+  else x=x.replace(/[,\s\u00A0]/g,'');
+  return parseFloat(x)||0;
+}
 function liteParse(t){
-  const p={amount:0,currency:'',reference:'',bank:'',confidence:35};
-  const cm=t.match(/\b(Kz|KZ|AKZ|MRU|UM|USD|USDT|EUR|CNY|AED)\b/i); if(cm)p.currency=cm[1].toUpperCase().replace('AKZ','Kz').replace('KZ','Kz').replace('UM','MRU');
-  const am=t.match(/(\d[\d\s.,]{4,})/); if(am)p.amount=parseFloat(am[1].replace(/[\s.]/g,'').replace(',','.'))||0;
-  const rm=t.match(/(?:ref|reference|operac|transac|movimento)[^\d]{0,12}(\d{5,})/i); if(rm)p.reference=rm[1];
-  const bm=t.match(/\b(BAI|BFA|BIC|BCI|ATLANTICO|ATL|TRON|Bankily|BIM)\b/i); if(bm)p.bank=bm[1].toUpperCase();
+  const p={amount:0,currency:'',reference:'',bank:'',date:'',confidence:40};
+  const cm=t.match(/\b(Kz|KZ|AKZ|MRU|UM|USD|USDT|EUR|CNY|AED|AOA)\b/i);
+  if(cm)p.currency=cm[1].toUpperCase().replace('AKZ','Kz').replace('AOA','Kz').replace('KZ','Kz').replace('UM','MRU');
+  /* المبلغ: بعد كلماته المفتاحية أولاً — لا نلتقط أرقام الحساب/العملية */
+  const am=t.match(/(?:amount|montante|valor|total|transfers\.amount|المبلغ)[^\d]{0,20}([\d][\d.,\s\u00A0]{2,})/i)
+        ||t.match(/(?:Kz|AKZ|KZ)\s*([\d][\d.,\s\u00A0]{4,})/i)
+        ||t.match(/([\d]{1,3}(?:[.,\s\u00A0]\d{3})+(?:,\d{2})?)/);
+  if(am)p.amount=euNum(am[1]);
+  const rm=t.match(/(?:ref|reference|operac|transac|movimento|number)[^\d]{0,15}(\d{5,})/i);
+  if(rm)p.reference=rm[1];
+  const bm=t.match(/\b(BAI|BFA|BIC|BCI|ATLANTICO|ATL|TRON|Bankily|BIM)\b/i);
+  if(bm)p.bank=bm[1].toUpperCase();
+  const dm=t.match(/(\d{2}[-\/]\d{2}[-\/]\d{4}|\d{4}-\d{2}-\d{2})/);
+  if(dm)p.date=dm[1];
   return p;
 }
 function asText(p,raw){
@@ -85,16 +119,19 @@ window.ArkanRead={
   async read(file,opts){
     opts=opts||{};
     const mime=file.type||'image/jpeg';
-    try{
-      const b64=await toB64(file);
-      const parsed=await gemini(b64,mime);
-      return {parsed,text:asText(parsed),engine:'gemini'};
-    }catch(e){
-      if(opts.geminiOnly)throw e;
-      const raw=await ocrText(file);
-      const parsed=liteParse(raw);
-      return {parsed,text:asText(parsed,raw.slice(0,1200)),engine:'ocr'};
+    const isPdf=/pdf/i.test(mime)||/\.pdf$/i.test(file.name||'');
+    /* Gemini أولاً — إلا إذا انقطعت الحصة في هذه الدفعة */
+    if(QUOTA_TRIP<2){
+      try{
+        const b64=await toB64(file);
+        const parsed=await gemini(b64,mime);
+        return {parsed,text:asText(parsed),engine:'gemini'};
+      }catch(e){ if(opts.geminiOnly)throw e; }
     }
+    /* المحلي: PDF → نص pdf.js | صورة → OCR */
+    const raw=isPdf?await pdfText(file):await ocrText(file);
+    const parsed=liteParse(raw);
+    return {parsed,text:asText(parsed,raw.slice(0,1500)),engine:isPdf?'pdf':'ocr'};
   },
   gemini, ocrText, worker
 };
