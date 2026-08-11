@@ -9,39 +9,39 @@
 <title>ARKAN Pay — Pagamentos Internacionais | تحويلات دولية</title>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@500;600;700;800&family=Space+Grotesk:wght@600;700&family=IBM+Plex+Mono:wght@500;700&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#F3F9FF;--card:#FCFEFF;--acc:#0056D6;--acc2:#00A2FF;--gold:#C88A0A;--txt:#102A43;--dim:#486581;--green:#00A860;--stroke:#D8E8F8}
+:root{--bg:#F3F9FF;--card:#FCFEFF;--acc:#003B7E;--acc2:#00509E;--gold:#D97F00;--txt:#102A43;--dim:#486581;--green:#00A860;--stroke:#D8E8F8}
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:linear-gradient(180deg,#F3F9FF 0%,#EAF4FF 35%,#E1F0FF 70%,#D8EBFF 100%);background-attachment:fixed;min-height:100vh;font-family:'Cairo','Tajawal',sans-serif;color:var(--txt)}
 .wrap{max-width:560px;margin:0 auto;padding:34px 20px 60px}
 .logo{display:flex;align-items:center;gap:14px;justify-content:center;margin-bottom:8px}
-.logo img{width:56px;height:56px;border-radius:15px;box-shadow:0 10px 26px rgba(0,86,214,.35)}
+.logo img{width:56px;height:56px;border-radius:0;box-shadow:0 10px 26px rgba(0,86,214,.35)}
 h1{text-align:center;font-size:24px;font-weight:800;letter-spacing:1px}
 h1 span{color:var(--acc2)}
 .sub{text-align:center;color:var(--dim);font-size:13px;letter-spacing:2px;margin:6px 0 6px;font-family:'IBM Plex Mono'}
 .sub-ar{text-align:center;color:var(--dim);font-size:14px;font-family:'Cairo';margin-bottom:26px}
 .badges{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:26px}
-.badge{padding:7px 14px;border-radius:20px;background:rgba(0,153,255,.12);border:1px solid rgba(0,153,255,.3);font-size:11.5px;color:var(--acc2);font-weight:600}
-.card{background:rgba(255,255,255,.045);border:1px solid var(--stroke);border-radius:24px;padding:24px 20px;backdrop-filter:blur(14px)}
+.badge{padding:7px 14px;border-radius:0;background:rgba(0,153,255,.12);border:1px solid rgba(0,153,255,.3);font-size:11.5px;color:var(--acc2);font-weight:600}
+.card{background:rgba(255,255,255,.045);border:1px solid var(--stroke);border-radius:0;padding:24px 20px;backdrop-filter:blur(14px)}
 .card h2{font-size:16px;margin-bottom:4px}
 .card .h2ar{font-family:'Cairo';color:var(--dim);font-size:13px;margin-bottom:18px}
 label{display:block;font-size:12px;color:var(--dim);margin:14px 0 6px;font-weight:600}
-input,select,textarea{width:100%;background:rgba(16,42,67,.10);border:1px solid var(--stroke);border-radius:14px;
+input,select,textarea{width:100%;background:rgba(16,42,67,.10);border:1px solid var(--stroke);border-radius:0;
   padding:14px;color:var(--txt);font-size:16px;font-family:'Cairo','Tajawal';outline:none}
 input:focus,select:focus,textarea:focus{border-color:var(--acc)}
 .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .ccy{display:flex;gap:8px;margin-top:6px}
-.ccy button{flex:1;padding:11px 6px;border-radius:16px;border:1px solid var(--stroke);background:#FFFFFF;
+.ccy button{flex:1;padding:11px 6px;border-radius:0;border:1px solid var(--stroke);background:#FFFFFF;
   color:var(--dim);font-weight:800;font-size:15px;cursor:pointer;font-family:'IBM Plex Mono';
   display:flex;flex-direction:column;align-items:center;gap:3px;line-height:1.2}
 .ccy button .rt{font-size:11px;font-weight:700;color:var(--gold);letter-spacing:.3px}
-.ccy button.on{background:linear-gradient(135deg,#0D47B5 0%,#2F8FE8 55%,#4FB2F8 100%);color:#fff;border-color:transparent;box-shadow:0 8px 20px rgba(13,71,181,.35)}
+.ccy button.on{background:linear-gradient(135deg,#00509E 0%,#00509E 55%,#00509E 100%);color:#fff;border-color:transparent;box-shadow:0 8px 20px rgba(13,71,181,.35)}
 .ccy button.on .rt{color:#FFF3D6}
-.est{display:none;margin-top:10px;padding:12px 14px;border-radius:13px;background:rgba(232,194,74,.08);
+.est{display:none;margin-top:10px;padding:12px 14px;border-radius:0;background:rgba(232,194,74,.08);
   border:1px solid rgba(232,194,74,.3);font-size:14px;font-weight:800;color:var(--gold);
   font-family:'IBM Plex Mono';text-align:center;letter-spacing:.2px}
 .est small{display:block;font-family:'Cairo';font-size:11px;color:var(--dim);font-weight:600;margin-top:3px;letter-spacing:0}
-.go{width:100%;margin-top:22px;padding:17px;border:none;border-radius:999px;font-size:16.5px;font-weight:800;
-  background:linear-gradient(135deg,#0D47B5 0%,#2F8FE8 55%,#4FB2F8 100%);color:#fff;cursor:pointer;font-family:'Cairo','Tajawal';
+.go{width:100%;margin-top:22px;padding:17px;border:none;border-radius:0;font-size:16.5px;font-weight:800;
+  background:linear-gradient(135deg,#00509E 0%,#00509E 55%,#00509E 100%);color:#fff;cursor:pointer;font-family:'Cairo','Tajawal';
   box-shadow:0 12px 30px rgba(13,71,181,.35);transition:filter .2s,transform .15s}
 .go:hover{filter:brightness(1.07)}
 .go:active{transform:scale(.98)}
@@ -49,14 +49,14 @@ input:focus,select:focus,textarea:focus{border-color:var(--acc)}
 .steps{margin-top:26px}
 .step{display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-bottom:1px solid rgba(255,255,255,.05)}
 .step:last-child{border:none}
-.step .n{width:28px;height:28px;flex-shrink:0;border-radius:9px;background:rgba(0,153,255,.15);color:var(--acc2);
+.step .n{width:28px;height:28px;flex-shrink:0;border-radius:0;background:rgba(0,153,255,.15);color:var(--acc2);
   display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;font-family:'IBM Plex Mono'}
 .step .t{font-size:13.5px;line-height:1.6}
 .step .t small{color:var(--dim);display:block;font-family:'Cairo'}
 footer{text-align:center;margin-top:30px;color:var(--dim);font-size:10.5px;letter-spacing:1.5px;font-family:'IBM Plex Mono'}
 
 body::after{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.04;
-  background-image:linear-gradient(#003B8F 1px,transparent 1px),linear-gradient(90deg,#003B8F 1px,transparent 1px);
+  background-image:linear-gradient(#002B5C 1px,transparent 1px),linear-gradient(90deg,#002B5C 1px,transparent 1px);
   background-size:44px 44px}
 body>*{position:relative;z-index:1}
 </style>
@@ -116,8 +116,8 @@ html.pt-enter body{animation:ptIn .38s cubic-bezier(.22,1,.36,1)}
   <a href="#individuals" id="tabInd" class="topTab on">تحويلات الأفراد</a>
   <a href="#companies" id="tabComp" class="topTab">تحويلات الشركات</a>
   <style>
-  .topTab{flex:1;max-width:220px;text-align:center;padding:13px;border-radius:999px;font-weight:800;font-size:14.5px;text-decoration:none;background:#fff;color:#003B8F;border:1.5px solid #D5E5F8;transition:all .2s}
-  .topTab.on{background:linear-gradient(135deg,#0D47B5 0%,#2F8FE8 55%,#4FB2F8 100%);color:#fff;border-color:transparent;box-shadow:0 10px 24px rgba(13,71,181,.35)}
+  .topTab{flex:1;max-width:220px;text-align:center;padding:13px;border-radius:0;font-weight:800;font-size:14.5px;text-decoration:none;background:#fff;color:#002B5C;border:1.5px solid #D5E5F8;transition:all .2s}
+  .topTab.on{background:linear-gradient(135deg,#00509E 0%,#00509E 55%,#00509E 100%);color:#fff;border-color:transparent;box-shadow:0 10px 24px rgba(13,71,181,.35)}
   </style>
   <script>
 
@@ -133,8 +133,8 @@ function applyRegisteredClient(){
   if(host&&!document.getElementById('ind-logout')){
     var grid=host.querySelector('div[style*="grid"]');
     var w=document.createElement('div');
-    w.style.cssText='display:flex;align-items:center;gap:10px;background:#EDF6FF;border:1px solid #BFD9F7;border-radius:14px;padding:11px 14px;margin-bottom:14px';
-    w.innerHTML='<div style="flex:1;font-size:13px;color:#071E4F"><b>'+(sess.name||'عميل أركان')+'</b><br><span style="color:#486581;font-size:11.5px">مسجّل · '+String(sess.phone)+' — لن تكتب بياناتك ثانية</span></div><button id="ind-logout" style="border:0;background:#fff;color:#486581;border-radius:8px;padding:6px 10px;font-size:11px;cursor:pointer">تبديل</button>';
+    w.style.cssText='display:flex;align-items:center;gap:10px;background:#EDF6FF;border:1px solid #BFD9F7;border-radius:0;padding:11px 14px;margin-bottom:14px';
+    w.innerHTML='<div style="flex:1;font-size:13px;color:#001B3D"><b>'+(sess.name||'عميل أركان')+'</b><br><span style="color:#486581;font-size:11.5px">مسجّل · '+String(sess.phone)+' — لن تكتب بياناتك ثانية</span></div><button id="ind-logout" style="border:0;background:#fff;color:#486581;border-radius:0;padding:6px 10px;font-size:11px;cursor:pointer">تبديل</button>';
     if(grid&&grid.parentNode)grid.parentNode.insertBefore(w,grid);
     var lo=document.getElementById('ind-logout');
     if(lo)lo.onclick=function(){ localStorage.removeItem('arkan_session'); location.reload(); };
@@ -183,7 +183,7 @@ function applyRegisteredClient(){
   <a href="./" style="display:flex;align-items:center;justify-content:center;gap:11px;margin-bottom:20px;text-decoration:none">
     <svg width="38" height="38" style="flex-shrink:0;filter:drop-shadow(0 6px 16px rgba(0,153,255,.35))" aria-label="ARKAN" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
 <defs><linearGradient id="akTile1" x1="6" y1="58" x2="58" y2="6" gradientUnits="userSpaceOnUse">
-<stop offset="0" stop-color="#0044BE"/><stop offset=".55" stop-color="#0058D9"/><stop offset="1" stop-color="#00A6F4"/>
+<stop offset="0" stop-color="#0044BE"/><stop offset=".55" stop-color="#003B7E"/><stop offset="1" stop-color="#00A6F4"/>
 </linearGradient></defs>
 <rect x="2" y="2" width="60" height="60" rx="15" fill="url(#akTile1)"/>
 <g transform="translate(32 33) scale(0.048) translate(-627 -623)"><g transform="translate(0.000000,1254.000000) scale(0.100000,-0.100000)"
@@ -211,7 +211,7 @@ fill="#FFFFFF" stroke="none">
 </g>
 <path d="M16.2 30.2 L27.8 37.4" stroke="url(#akTile1)" stroke-width="2.6"/>
 </svg>
-    <span style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:15px;letter-spacing:.02em;direction:ltr;color:#071E4F"><b>ARKAN</b> <span style="color:#0058D9">SETTLEMENTS</span></span>
+    <span style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:15px;letter-spacing:.02em;direction:ltr;color:#001B3D"><b>ARKAN</b> <span style="color:#003B7E">SETTLEMENTS</span></span>
   </a>
   
   <h1>تحويلات الشركات الدولية</h1>
@@ -228,8 +228,8 @@ fill="#FFFFFF" stroke="none">
     <h2>Solicitar cotação — Pagamento internacional</h2>
     <div class="h2ar">اطلب عرض سعر — الرد عبر واتساب فورًا</div>
 
-    <div id="invDrop" onclick="uploadInvoice()" style="border:2px dashed rgba(0,153,255,.45);border-radius:16px;padding:20px;text-align:center;cursor:pointer;margin-bottom:18px;background:rgba(0,153,255,.05);transition:.2s">
-      <div style="font-size:15px;font-weight:700;color:#0058D9" id="invDropTxt">Carregar fatura · ارفع الفاتورة (صورة / PDF)</div>
+    <div id="invDrop" onclick="uploadInvoice()" style="border:2px dashed rgba(0,153,255,.45);border-radius:0;padding:20px;text-align:center;cursor:pointer;margin-bottom:18px;background:rgba(0,153,255,.05);transition:.2s">
+      <div style="font-size:15px;font-weight:700;color:#003B7E" id="invDropTxt">Carregar fatura · ارفع الفاتورة (صورة / PDF)</div>
       <div style="font-size:12px;color:#7A93AD;margin-top:5px" id="invDropSub">Leitura automática do montante e da empresa · قراءة تلقائية للمبلغ واسم الشركة</div>
       <div id="invResult" style="margin-top:8px"></div>
     </div>
@@ -590,37 +590,37 @@ async function uploadInvoice(){
 
 <!-- ═══ تحويلات الأفراد ═══ -->
 <section id="individuals" style="max-width:640px;margin:26px auto 60px;padding:0 16px">
-  <div class="card" style="background:#fff;border:1px solid #D8E8F8;border-radius:20px;padding:22px;box-shadow:0 14px 36px -18px rgba(0,26,82,.22)">
+  <div class="card" style="background:#fff;border:1px solid #D8E8F8;border-radius:0;padding:22px;box-shadow:0 14px 36px -18px rgba(0,26,82,.22)">
     <div style="color:#d3403c;font-weight:800;font-size:12px;letter-spacing:.14em">INDIVIDUALS · أفراد</div>
-    <h2 style="color:#071E4F;font-size:22px;font-weight:800;margin:6px 0 4px">تحويل شخصي — أفراد</h2>
+    <h2 style="color:#001B3D;font-size:22px;font-weight:800;margin:6px 0 4px">تحويل شخصي — أفراد</h2>
     <p style="color:#486581;font-size:13.5px;margin-bottom:16px">موريتانيا ⇄ أنغولا ⇄ الخليج — الرد عبر واتساب فورًا</p>
     <div style="display:grid;gap:12px">
       <div><label style="display:block;font-size:12.5px;font-weight:700;color:#486581;margin-bottom:5px">الاسم الكامل</label>
-        <input id="ind-name" style="width:100%;border:1.5px solid #D5E5F8;border-radius:12px;padding:12px 13px;font-size:15px;color:#071E4F" placeholder="محمد ولد أحمد"></div>
+        <input id="ind-name" style="width:100%;border:1.5px solid #D5E5F8;border-radius:0;padding:12px 13px;font-size:15px;color:#001B3D" placeholder="محمد ولد أحمد"></div>
       <div><label style="display:block;font-size:12.5px;font-weight:700;color:#486581;margin-bottom:5px">رقم الواتساب</label>
-        <input id="ind-phone" inputmode="tel" style="width:100%;border:1.5px solid #D5E5F8;border-radius:12px;padding:12px 13px;font-size:15px;color:#071E4F" placeholder="36295050"></div>
+        <input id="ind-phone" inputmode="tel" style="width:100%;border:1.5px solid #D5E5F8;border-radius:0;padding:12px 13px;font-size:15px;color:#001B3D" placeholder="36295050"></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
         <div><label style="display:block;font-size:12.5px;font-weight:700;color:#486581;margin-bottom:5px">يرسل</label>
-          <select id="ind-from" style="width:100%;border:1.5px solid #D5E5F8;border-radius:12px;padding:12px;font-size:15px;color:#071E4F;background:#fff">
+          <select id="ind-from" style="width:100%;border:1.5px solid #D5E5F8;border-radius:0;padding:12px;font-size:15px;color:#001B3D;background:#fff">
             <option value="MRU">🇲🇷 MRU — أوقية</option><option value="AOA">🇦🇴 AOA — كوانزا</option><option value="USD">🇺🇸 USD — دولار</option><option value="EUR">🇪🇺 EUR — يورو</option><option value="USDT">USDT — تيثر</option><option value="AED">🇦🇪 AED — درهم</option><option value="CNY">🇨🇳 CNY — يوان</option></select></div>
         <div><label style="display:block;font-size:12.5px;font-weight:700;color:#486581;margin-bottom:5px">يستلم المستفيد</label>
-          <select id="ind-to" style="width:100%;border:1.5px solid #D5E5F8;border-radius:12px;padding:12px;font-size:15px;color:#071E4F;background:#fff">
+          <select id="ind-to" style="width:100%;border:1.5px solid #D5E5F8;border-radius:0;padding:12px;font-size:15px;color:#001B3D;background:#fff">
             <option value="AOA">🇦🇴 AOA — كوانزا</option><option value="MRU">🇲🇷 MRU — أوقية</option><option value="USD">🇺🇸 USD — دولار</option><option value="EUR">🇪🇺 EUR — يورو</option><option value="USDT">USDT — تيثر</option><option value="AED">🇦🇪 AED — درهم</option><option value="CNY">🇨🇳 CNY — يوان</option></select></div>
       </div>
-      <div><label style="display:block;font-size:12.5px;font-weight:700;color:#486581;margin-bottom:5px">المبلغ <span style="color:#00A2FF;font-size:11px">— تلقائيًا من الحاسبة</span></label>
-        <input id="ind-amt" inputmode="decimal" style="width:100%;border:1.5px solid #D5E5F8;border-radius:12px;padding:12px 13px;font-size:17px;font-family:ui-monospace;color:#071E4F" placeholder="مثال: 50,000"></div>
+      <div><label style="display:block;font-size:12.5px;font-weight:700;color:#486581;margin-bottom:5px">المبلغ <span style="color:#00509E;font-size:11px">— تلقائيًا من الحاسبة</span></label>
+        <input id="ind-amt" inputmode="decimal" style="width:100%;border:1.5px solid #D5E5F8;border-radius:0;padding:12px 13px;font-size:17px;font-family:ui-monospace;color:#001B3D" placeholder="مثال: 50,000"></div>
 
       <div style="height:1px;background:#E4EEF9;margin:4px 0"></div>
-      <div style="font-size:12.5px;font-weight:800;color:#003B8F">بيانات المستفيد — من يستلم المبلغ</div>
+      <div style="font-size:12.5px;font-weight:800;color:#002B5C">بيانات المستفيد — من يستلم المبلغ</div>
       <div><label style="display:block;font-size:12.5px;font-weight:700;color:#486581;margin-bottom:5px">اسم المستفيد الكامل</label>
-        <input id="ind-bname" style="width:100%;border:1.5px solid #D5E5F8;border-radius:12px;padding:12px 13px;font-size:15px;color:#071E4F" placeholder="الاسم كما في الحساب البنكي"></div>
+        <input id="ind-bname" style="width:100%;border:1.5px solid #D5E5F8;border-radius:0;padding:12px 13px;font-size:15px;color:#001B3D" placeholder="الاسم كما في الحساب البنكي"></div>
       <div style="display:grid;grid-template-columns:1.4fr 1fr;gap:10px">
         <div><label style="display:block;font-size:12.5px;font-weight:700;color:#486581;margin-bottom:5px">رقم الحساب / IBAN</label>
-          <input id="ind-iban" inputmode="numeric" style="width:100%;border:1.5px solid #D5E5F8;border-radius:12px;padding:12px 13px;font-size:15px;font-family:ui-monospace;color:#071E4F;direction:ltr;text-align:right" placeholder="0000 0000 0000"></div>
+          <input id="ind-iban" inputmode="numeric" style="width:100%;border:1.5px solid #D5E5F8;border-radius:0;padding:12px 13px;font-size:15px;font-family:ui-monospace;color:#001B3D;direction:ltr;text-align:right" placeholder="0000 0000 0000"></div>
         <div><label style="display:block;font-size:12.5px;font-weight:700;color:#486581;margin-bottom:5px">البنك</label>
-          <input id="ind-bank" style="width:100%;border:1.5px solid #D5E5F8;border-radius:12px;padding:12px 13px;font-size:15px;color:#071E4F" placeholder="BAI / BIM …"></div>
+          <input id="ind-bank" style="width:100%;border:1.5px solid #D5E5F8;border-radius:0;padding:12px 13px;font-size:15px;color:#001B3D" placeholder="BAI / BIM …"></div>
       </div>
-      <button id="ind-send" style="border:0;border-radius:14px;padding:14px;font-weight:800;font-size:15.5px;color:#fff;cursor:pointer;background:linear-gradient(120deg,#003B8F,#0056D6 55%,#00A2FF);box-shadow:0 12px 28px -12px rgba(0,39,118,.55)">إرسال الطلب عبر واتساب</button>
+      <button id="ind-send" style="border:0;border-radius:0;padding:14px;font-weight:800;font-size:15.5px;color:#fff;cursor:pointer;background:linear-gradient(120deg,#002B5C,#003B7E 55%,#00509E);box-shadow:0 12px 28px -12px rgba(0,39,118,.55)">إرسال الطلب عبر واتساب</button>
     </div>
   </div>
 </section>
@@ -650,7 +650,7 @@ async function uploadInvoice(){
     list.forEach(function(x,i){
       var c=document.createElement('button');
       c.type='button';
-      c.style.cssText='flex:0 0 auto;border:1.5px solid #D5E5F8;background:#F4F9FF;border-radius:20px;padding:7px 13px;font-size:12.5px;color:#071E4F;cursor:pointer;white-space:nowrap;font-weight:700';
+      c.style.cssText='flex:0 0 auto;border:1.5px solid #D5E5F8;background:#F4F9FF;border-radius:0;padding:7px 13px;font-size:12.5px;color:#001B3D;cursor:pointer;white-space:nowrap;font-weight:700';
       c.textContent=(x.bname||'مستفيد')+(x.bank?(' · '+x.bank):'');
       c.onclick=function(){fillBenef(x);
         [...host.children].forEach(function(el){if(el.tagName==='BUTTON')el.style.background='#F4F9FF';});
@@ -747,7 +747,7 @@ async function uploadInvoice(){
 #okWrap{display:none;position:fixed;inset:0;z-index:9999;align-items:center;justify-content:center;
   background:linear-gradient(180deg,#F3F9FF 0%,#EAF4FF 50%,#D8EBFF 100%);padding:24px}
 #okWrap.on{display:flex}
-.okSpin{width:170px;height:170px;border-radius:50%;border:10px solid #DCEBFC;border-top-color:#2F8FE8;border-inline-end-color:#4FB2F8;
+.okSpin{width:170px;height:170px;border-radius:50%;border:10px solid #DCEBFC;border-top-color:#00509E;border-inline-end-color:#00509E;
   animation:okSp .9s linear infinite;box-sizing:border-box}
 @keyframes okSp{to{transform:rotate(360deg)}}
 .okBox{text-align:center;max-width:380px;width:100%;animation:okIn .5s cubic-bezier(.2,.9,.3,1.15) both}
@@ -762,20 +762,20 @@ async function uploadInvoice(){
 @keyframes okT{to{stroke-dashoffset:0}}
 .okRing .bg{fill:url(#okg)}
 .okAmt{font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:clamp(34px,10vw,46px);
-  color:#071E4F;letter-spacing:-1px;direction:ltr;animation:okIn .5s .6s both}
-.okAmt small{font-size:.42em;color:#0056D6;font-weight:700;letter-spacing:1px}
-.okTitle{font-weight:800;font-size:18px;color:#071E4F;margin-top:10px;animation:okIn .5s .75s both}
+  color:#001B3D;letter-spacing:-1px;direction:ltr;animation:okIn .5s .6s both}
+.okAmt small{font-size:.42em;color:#003B7E;font-weight:700;letter-spacing:1px}
+.okTitle{font-weight:800;font-size:18px;color:#001B3D;margin-top:10px;animation:okIn .5s .75s both}
 .okSub{font-size:13.5px;color:#486581;margin-top:6px;line-height:1.8;animation:okIn .5s .85s both}
 .okRef{display:inline-block;margin-top:12px;font-family:'IBM Plex Mono';font-size:13px;font-weight:600;
-  color:#003B8F;background:#fff;border:1.5px solid #D5E5F8;border-radius:999px;padding:8px 18px;
+  color:#002B5C;background:#fff;border:1.5px solid #D5E5F8;border-radius:0;padding:8px 18px;
   direction:ltr;animation:okIn .5s .95s both}
 .okBtns{display:flex;flex-direction:column;gap:10px;margin-top:26px;max-width:340px;margin-inline:auto;animation:okIn .5s 1.05s both}
-.okBtns button{flex:1;border:0;cursor:pointer;border-radius:999px;padding:15px;font-weight:800;font-size:14.5px;
+.okBtns button{flex:1;border:0;cursor:pointer;border-radius:0;padding:15px;font-weight:800;font-size:14.5px;
   font-family:inherit;transition:transform .15s}
 .okBtns button:active{transform:scale(.96)}
-.okWa{background:linear-gradient(135deg,#0D47B5 0%,#2F8FE8 55%,#4FB2F8 100%);color:#fff;box-shadow:0 14px 30px rgba(13,71,181,.45);font-size:15.5px;padding:17px}
-.okClose{background:#fff;color:#003B8F;border:1.5px solid #D5E5F8!important}
-.okShare{background:#EDF6FF;color:#003B8F;border:1.5px solid #BFD9F7!important}
+.okWa{background:linear-gradient(135deg,#00509E 0%,#00509E 55%,#00509E 100%);color:#fff;box-shadow:0 14px 30px rgba(13,71,181,.45);font-size:15.5px;padding:17px}
+.okClose{background:#fff;color:#002B5C;border:1.5px solid #D5E5F8!important}
+.okShare{background:#EDF6FF;color:#002B5C;border:1.5px solid #BFD9F7!important}
 </style>
 <div id="okWrap">
   <div class="okBox">
@@ -796,7 +796,7 @@ async function uploadInvoice(){
 <script>
 var OK_CHECK_SVG=`<svg viewBox="0 0 170 170">
         <defs><linearGradient id="okg" x1="0" y1="170" x2="170" y2="0">
-          <stop offset="0" stop-color="#0D47B5"/><stop offset=".55" stop-color="#2F8FE8"/><stop offset="1" stop-color="#4FB2F8"/>
+          <stop offset="0" stop-color="#00509E"/><stop offset=".55" stop-color="#00509E"/><stop offset="1" stop-color="#00509E"/>
         </linearGradient></defs>
         <circle class="bg" cx="85" cy="85" r="64" opacity="0"><animate attributeName="opacity" from="0" to="1" begin="0.9s" dur="0.3s" fill="freeze"/></circle>
         <circle class="c" cx="85" cy="85" r="75"/>
@@ -855,7 +855,7 @@ async function buildReceiptCanvas(){
   const amtN=parseFloat(String(d.amount).replace(/[^\d.]/g,''))||0;
   /* خلفية كحلية */
   const bg=x.createLinearGradient(0,0,0,H);
-  bg.addColorStop(0,'#071D49');bg.addColorStop(.5,'#082col'.replace('col','468'));bg.addColorStop(1,'#0A3A9C');
+  bg.addColorStop(0,'#001B3D');bg.addColorStop(.5,'#082col'.replace('col','468'));bg.addColorStop(1,'#0A3A9C');
   x.fillStyle=bg;x.fillRect(0,0,W,H);
   const gl=x.createRadialGradient(W*.82,H*.06,0,W*.82,H*.06,W*.95);
   gl.addColorStop(0,'rgba(0,181,255,.28)');gl.addColorStop(1,'rgba(0,181,255,0)');
@@ -875,7 +875,7 @@ async function buildReceiptCanvas(){
   /* دائرة النجاح */
   const cx=W/2, cy=360, r=118;
   const rg=x.createLinearGradient(cx-r,cy+r,cx+r,cy-r);
-  rg.addColorStop(0,'#0D47B5');rg.addColorStop(.55,'#2F8FE8');rg.addColorStop(1,'#4FB2F8');
+  rg.addColorStop(0,'#00509E');rg.addColorStop(.55,'#00509E');rg.addColorStop(1,'#00509E');
   x.save();x.shadowColor='rgba(0,153,255,.55)';x.shadowBlur=55;
   x.beginPath();x.arc(cx,cy,r,0,Math.PI*2);x.fillStyle=rg;x.fill();x.restore();
   x.strokeStyle='#fff';x.lineWidth=20;x.lineCap='round';x.lineJoin='round';
@@ -1124,5 +1124,10 @@ document.addEventListener('DOMContentLoaded',function(){
 
 
 <script>document.addEventListener("DOMContentLoaded",function(){setTimeout(applyRegisteredClient,120);});</script>
+
+<style id="akBaiCss">
+/* ARKAN × BAI override — بلا زخارف عائمة */
+.orb,.orb-1,.orb-2,.grid-bg,#particles,.aurora,.noise{display:none!important}
+</style>
 </body>
 </html>
