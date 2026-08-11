@@ -547,15 +547,15 @@ section#contacts.on{background:#F8FCFF;border-radius:0}
 <!-- ================= NEW OP ================= -->
 <section id="new" class="on">
   <div class="card" style="padding:14px"><div id="akBioSlot"></div></div>
-  <div class="glass" id="gemBar" style="padding:14px 16px;margin-bottom:14px;border:1px solid rgba(200,138,10,.25)">
+  <div class="glass" id="gemBar" style="padding:14px 16px;margin-bottom:14px;border:1px solid #DDE2E9">
     <div style="display:flex;align-items:center;gap:10px;cursor:pointer" onclick="var b=document.getElementById('gemBody');b.style.display=b.style.display==='none'?'block':'none'">
-      <span style="font-size:18px">🤖</span>
       <b style="flex:1;font-size:14px">قراءة الإيصالات بالذكاء (Gemini)</b>
       <span id="gemStat" style="font-size:11px;color:var(--dim)"></span>
     </div>
     <div id="gemBody" style="display:none;margin-top:12px">
       <label style="display:block;font-size:12px;color:var(--dim);margin-bottom:6px">مفتاح Gemini API — يُحفظ على جهازك فقط</label>
-      <input type="password" id="gemKeyMain" placeholder="AIza..." style="width:100%;box-sizing:border-box;background:var(--bg2);border:1px solid var(--stroke);border-radius:0;padding:12px;color:var(--txt);direction:ltr;font-family:'IBM Plex Mono',monospace;font-size:14px">\n      <button class="btn btn-line btn-sm" style="width:100%;margin-top:8px;font-size:11.5px" onclick="ocrSelfTest()">فحص محركات القراءة (OCR + Gemini)</button>
+      <input type="password" id="gemKeyMain" placeholder="AIza..." style="width:100%;box-sizing:border-box;background:var(--bg2);border:1px solid var(--stroke);border-radius:0;padding:12px;color:var(--txt);direction:ltr;font-family:'IBM Plex Mono',monospace;font-size:14px">
+      <button class="btn btn-line btn-sm" style="width:100%;margin-top:8px;font-size:11.5px" onclick="ocrSelfTest()">فحص محركات القراءة (OCR + Gemini)</button>
       <small style="font-size:11px;color:var(--dim);display:block;margin-top:6px">احصل عليه مجاناً من aistudio.google.com/apikey — بعدها كل أزرار «قراءة الإيصال» ستستخدم Gemini تلقائياً (يدعم PDF والصور).</small>
     </div>
   </div>
@@ -3866,7 +3866,7 @@ async function imageText(dataUrl){
   return data.text||'';
 }
 /* ================= BUILD / AUTO-UPDATE ================= */
-const ARKAN_BUILD='1012';
+const ARKAN_BUILD='1013';
 function arkanVerLabel(){const e=$('verLbl');if(e)e.textContent=ARKAN_BUILD;}
 function arkanUpdateBanner(b){
   if(document.getElementById('updBar'))return;
@@ -5508,8 +5508,34 @@ function showBarcode(ref){
 <script src="arkan-sense.js?v=4" defer></script>
 
 <style id="akBaiCss">
-/* ARKAN × BAI override — بلا زخارف عائمة */
+/* ═══ ARKAN × BAI — توحيد كامل: خلفية مسطحة، بطاقات بيضاء، كتابة كحلية ═══ */
 .orb,.orb-1,.orb-2,.grid-bg,#particles,.aurora,.noise{display:none!important}
+:root{--bg:#F4F5F7!important;--bg2:#FFFFFF!important;
+  --glass:#FFFFFF!important;--glass2:#FFFFFF!important;
+  --stroke:#DDE2E9!important;--stroke-acc:#003B7E!important;
+  --txt:#1A2433!important;--dim:#4E5A6B!important}
+body{background:#F4F5F7!important;background-image:none!important}
+.glass,.card{background:#FFFFFF!important;border:1px solid #DDE2E9!important;
+  box-shadow:0 1px 3px rgba(0,27,61,.08)!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+/* بطاقات الأقسام الرئيسية */
+.type{background:#FFFFFF!important;border:1px solid #DDE2E9!important;
+  box-shadow:0 1px 3px rgba(0,27,61,.08)!important}
+.type.on{background:#FFFFFF!important;border:2px solid #003B7E!important;
+  box-shadow:0 4px 14px rgba(0,27,61,.16)!important}
+.type.on::after{content:"";position:absolute;top:0;right:0;left:0;height:3px;background:#F39200}
+.type{position:relative;overflow:hidden}
+.type .t1{color:#002B5C!important;font-weight:800!important}
+.type .t2{font-family:'IBM Plex Sans Arabic',sans-serif!important;color:#4E5A6B!important;
+  letter-spacing:0!important;font-size:11px!important}
+/* عناوين وأزرار */
+h1,h2,h3,h4,label b,.card h3{color:#002B5C!important}
+.btn-gold{background:#F39200!important;color:#FFFFFF!important;border:none!important;
+  box-shadow:0 2px 8px rgba(243,146,0,.3)!important}
+.btn-line{border:1px solid #003B7E!important;color:#003B7E!important;background:#FFFFFF!important}
+/* التنقل السفلي كحلي */
+nav{background:#001B3D!important;border-top:1px solid rgba(255,255,255,.08)!important}
+input,select,textarea{background:#FFFFFF!important;border:1px solid #DDE2E9!important;color:#1A2433!important}
+input:focus,select:focus{border-color:#003B7E!important;outline:none!important}
 </style>
 </body>
 </html>
