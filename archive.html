@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#003B7E">
+<meta name="theme-color" content="#03A4FE">
 <title>ARKAN Pay — Intelligence Archive</title>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="icon" href="arkan-icon-512.png">
@@ -28,12 +28,12 @@
 :root{
   --bg1:#F4F5F7;--bg2:#F4F5F7;--bg3:#F0F2F5;--bg4:#EDEFF3;
   --card:#FFFFFF;--cardline:#DDE2E9;
-  --acc:#003B7E;--acc2:#00509E;--deep:#002B5C;--navy:#001B3D;
+  --acc:#03A4FE;--acc2:#03A4FE;--deep:#0884C7;--navy:#2E3A48;
   --txt:#1A2433;--dim:#4E5A6B;--faint:#8B95A5;
-  --green:#1B8A3F;--red:#D32F2F;--warn:#F39200;--cyan:#0077B6;--orange:#F39200;
+  --green:#1B8A3F;--red:#D32F2F;--warn:#03A4FE;--cyan:#0077B6;--orange:#03A4FE;
   --sh:0 1px 3px rgba(0,27,61,.10);
   --shH:0 4px 14px rgba(0,27,61,.14);
-  --grad:linear-gradient(135deg,#003B7E,#00509E);
+  --grad:linear-gradient(135deg,#03A4FE,#03A4FE);
   --ff:'IBM Plex Sans Arabic',sans-serif;
   --mono:'IBM Plex Mono',monospace;
 }
@@ -43,7 +43,7 @@ body{font-family:var(--ff);color:var(--txt);min-height:100vh;
   padding-bottom:calc(96px + env(safe-area-inset-bottom));
   background:var(--bg1)}
 body::after{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;opacity:0;display:none;
-  background-image:linear-gradient(#002B5C 1px,transparent 1px),linear-gradient(90deg,#002B5C 1px,transparent 1px);
+  background-image:linear-gradient(#0884C7 1px,transparent 1px),linear-gradient(90deg,#0884C7 1px,transparent 1px);
   background-size:44px 44px}
 .wrap{max-width:1180px;margin:0 auto;padding:0 16px;position:relative;z-index:1}
 .mono{font-family:var(--mono)}
@@ -74,7 +74,7 @@ header{position:sticky;top:0;z-index:40;backdrop-filter:blur(18px);-webkit-backd
 .searchbar{padding:12px 16px 0;max-width:1180px;margin:0 auto;position:relative;z-index:2}
 .sfield{display:flex;align-items:center;gap:10px;background:#FFF;border:1.5px solid #D5E5F8;
   border-radius:0;padding:13px 16px;transition:border-color .18s,box-shadow .18s;box-shadow:var(--sh)}
-.sfield:focus-within{border-color:#00509E;box-shadow:0 0 0 4px rgba(0,153,255,.16)}
+.sfield:focus-within{border-color:#03A4FE;box-shadow:0 0 0 4px rgba(0,153,255,.16)}
 .sfield svg{width:19px;height:19px;color:var(--acc);flex:none}
 .sfield input{border:0;outline:0;flex:1;font:500 15px var(--ff);color:var(--txt);background:transparent;min-width:0}
 .sfield input::placeholder{color:var(--faint)}
@@ -89,7 +89,7 @@ header{position:sticky;top:0;z-index:40;backdrop-filter:blur(18px);-webkit-backd
 .vt{border:1px solid var(--cardline);background:#fff;color:var(--dim);border-radius:0;
   padding:9px 18px;font:700 13px var(--ff);cursor:pointer;transition:all .2s}
 .vt.on{background:var(--grad);color:#fff;border-color:transparent;box-shadow:0 8px 20px rgba(0,88,217,.3)}
-.vt:not(.on):hover{border-color:#00509E;color:var(--deep)}
+.vt:not(.on):hover{border-color:#03A4FE;color:var(--deep)}
 
 /* ── KPI dashboard ── */
 .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:14px 0}
@@ -110,7 +110,7 @@ header{position:sticky;top:0;z-index:40;backdrop-filter:blur(18px);-webkit-backd
 .uz.drag{transform:scale(1.012)}
 .uz .in{border-radius:0;background:var(--card);padding:26px 20px;text-align:center;
   border:1.5px dashed rgba(0,153,255,.35);transition:background .2s,border-color .2s}
-.uz.drag .in{background:#EFF8FF;border-color:#00509E}
+.uz.drag .in{background:#EFF8FF;border-color:#03A4FE}
 .uz .ic{width:62px;height:62px;margin:0 auto 12px;border-radius:0;display:grid;place-items:center;
   background:var(--grad);color:#fff;box-shadow:0 14px 30px rgba(0,88,217,.35);animation:float 3.2s ease-in-out infinite}
 @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
@@ -124,7 +124,7 @@ header{position:sticky;top:0;z-index:40;backdrop-filter:blur(18px);-webkit-backd
 .btn-p{background:var(--grad);color:#fff;box-shadow:0 10px 24px rgba(0,88,217,.35)}
 .btn-p:hover{filter:brightness(1.08);box-shadow:0 14px 30px rgba(0,162,255,.4)}
 .btn-s{background:#EDF6FF;color:var(--deep);border:1px solid #BFD9F7}
-.btn-s:hover{background:#E2F0FF;border-color:#00509E}
+.btn-s:hover{background:#E2F0FF;border-color:#03A4FE}
 .btn-d{background:#FDEBEA;color:var(--red);border:1px solid #F5C6C4}
 
 /* ── filter chips ── */
@@ -133,10 +133,10 @@ header{position:sticky;top:0;z-index:40;backdrop-filter:blur(18px);-webkit-backd
 .chip{flex:none;border:1px solid var(--cardline);background:#fff;color:var(--dim);border-radius:0;
   padding:8px 15px;font:600 12.5px var(--ff);cursor:pointer;transition:all .18s;white-space:nowrap}
 .chip.on{background:var(--deep);color:#fff;border-color:var(--deep)}
-.chip:not(.on):hover{border-color:#00509E;color:var(--deep)}
+.chip:not(.on):hover{border-color:#03A4FE;color:var(--deep)}
 
 /* ── insights ── */
-.insights{background:linear-gradient(135deg,#002B5C,#006BFF);border-radius:0;padding:18px 20px;color:#fff;
+.insights{background:linear-gradient(135deg,#0884C7,#006BFF);border-radius:0;padding:18px 20px;color:#fff;
   margin-bottom:16px;box-shadow:0 18px 44px rgba(0,59,143,.3);display:none}
 .insights.show{display:block;animation:rise .4s both}
 .insights h4{display:flex;align-items:center;gap:9px;font-size:14px;margin-bottom:10px}
@@ -236,7 +236,7 @@ header{position:sticky;top:0;z-index:40;backdrop-filter:blur(18px);-webkit-backd
 .chainflow{display:flex;align-items:stretch;gap:0;overflow-x:auto;padding-bottom:6px}
 .cstep{flex:none;width:150px;background:#F6FAFF;border:1px solid var(--cardline);border-radius:0;
   padding:12px;text-align:center;cursor:pointer;transition:transform .2s,border-color .2s}
-.cstep:hover{transform:translateY(-3px);border-color:#00509E}
+.cstep:hover{transform:translateY(-3px);border-color:#03A4FE}
 .cstep .cc{font:700 11px var(--ff);color:var(--acc);margin-bottom:5px}
 .cstep .ca{font-family:var(--mono);font-weight:600;font-size:14px;color:var(--navy);direction:ltr}
 .cstep .cd{font-size:10px;color:var(--faint);margin-top:4px}
@@ -291,7 +291,7 @@ header{position:sticky;top:0;z-index:40;backdrop-filter:blur(18px);-webkit-backd
 .doc .ck svg{width:14px;height:14px;color:#fff;opacity:0}
 body.selecting .doc .ck{display:grid}
 body.selecting .doc:hover{transform:none}
-.doc.picked{border-color:#00509E;box-shadow:0 0 0 3px rgba(0,153,255,.25), var(--sh)}
+.doc.picked{border-color:#03A4FE;box-shadow:0 0 0 3px rgba(0,153,255,.25), var(--sh)}
 .doc.picked .ck{background:var(--grad);border-color:transparent}
 .doc.picked .ck svg{opacity:1}
 #selbar{position:fixed;left:50%;transform:translateX(-50%) translateY(120%);bottom:calc(96px + env(safe-area-inset-bottom));
@@ -308,27 +308,27 @@ body.selecting #selbar{transform:translateX(-50%) translateY(0)}
 #selbar .cancel{background:transparent;color:#9FB7D9}
 
 /* ── التصحيح اليدوي ── */
-#editBox{display:none;background:#F0F7FF;border:1.5px dashed #00509E;border-radius:0;padding:14px;margin:12px 0}
+#editBox{display:none;background:#F0F7FF;border:1.5px dashed #03A4FE;border-radius:0;padding:14px;margin:12px 0}
 #editBox.on{display:block;animation:rise .3s both}
 #editBox .eg{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:10px}
 #editBox label{display:block;font-size:10.5px;font-weight:700;color:#486581;margin-bottom:4px}
 #editBox input,#editBox select{width:100%;border:1.5px solid #D5E5F8;border-radius:0;padding:10px 12px;
   font:600 14px var(--mono);color:#102A43;background:#fff;outline:none;direction:ltr;text-align:right}
-#editBox input:focus,#editBox select:focus{border-color:#00509E;box-shadow:0 0 0 3px rgba(0,153,255,.15)}
+#editBox input:focus,#editBox select:focus{border-color:#03A4FE;box-shadow:0 0 0 3px rgba(0,153,255,.15)}
 .bdg.user{background:#E1F5EA;color:#0A7A3D;border:1px solid #9FDDB8}
 
 /* ── فرز ── */
 .sortwrap{position:relative;flex:none}
 .sortsel{appearance:none;-webkit-appearance:none;border:1px solid var(--cardline);background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%230056D6' stroke-width='1.8' fill='none' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat left 12px center;
   color:var(--deep);border-radius:0;padding:8px 15px 8px 30px;font:700 12.5px var(--ff);cursor:pointer;white-space:nowrap}
-.sortsel:focus{outline:none;border-color:#00509E;box-shadow:0 0 0 3px rgba(0,153,255,.15)}
+.sortsel:focus{outline:none;border-color:#03A4FE;box-shadow:0 0 0 3px rgba(0,153,255,.15)}
 </style>
 <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=2026">
 </head>
 <body>
 <script>
 /* ═══ تحديث ذاتي: يضمن أحدث نسخة دائمًا رغم كل طبقات الكاش ═══ */
-const ARKAN_ARCHIVE_BUILD='2026-08-11.2';
+const ARKAN_ARCHIVE_BUILD='2026-08-11.3';
 (async()=>{
   try{
     const r=await fetch('version.json?t='+Date.now(),{cache:'no-store'});
@@ -399,7 +399,7 @@ fill="#FFFFFF" stroke="none">
   <button class="vt" data-v="match" onclick="setView('match')">مركز المطابقة</button>
   <button class="vt" data-v="stats" onclick="setView('stats')">الإحصاءات</button>
   <span style="flex:1"></span>
-  <button class="vt" id="upBtn" onclick="upgradeAll()" style="border-color:rgba(0,153,255,.5);color:#003B7E">ترقية القراءات</button>
+  <button class="vt" id="upBtn" onclick="upgradeAll()" style="border-color:rgba(0,153,255,.5);color:#03A4FE">ترقية القراءات</button>
   <button class="vt" onclick="openDayReport()" title="تقرير مؤرّخ (اليوم أو نطاق)">تقرير PDF</button>
   <button class="vt" onclick="exportArchive()" title="تصدير للتحليل في Claude Cowork">تصدير</button>
   <button class="vt" id="selBtn" onclick="toggleSelect()">تحديد</button>
@@ -476,7 +476,7 @@ fill="#FFFFFF" stroke="none">
 <!-- barcode -->
 <div id="bcModal" onclick="if(event.target===this)this.classList.remove('on')">
   <div class="bx">
-    <h4 style="color:#001B3D;font-size:14px;margin-bottom:4px">باركود المستند</h4>
+    <h4 style="color:#2E3A48;font-size:14px;margin-bottom:4px">باركود المستند</h4>
     <svg id="bcSvg"></svg>
     <div class="rf" id="bcRef"></div>
     <button class="btn btn-s" onclick="document.getElementById('bcModal').classList.remove('on')" style="width:100%">إغلاق</button>
@@ -955,7 +955,7 @@ function chipFilter(docs){
 /* ═══ Rendering ═══ */
 function confRing(v){
   v=Math.max(0,Math.min(100,v||0));
-  const col=v>=95?'#00C853':v>=90?'#00509E':v>=75?'#FFB300':'#E53935';
+  const col=v>=95?'#00C853':v>=90?'#03A4FE':v>=75?'#FFB300':'#E53935';
   const C=2*Math.PI*16, off=C*(1-v/100);
   return `<div class="conf"><svg width="40" height="40"><circle cx="20" cy="20" r="16" fill="none" stroke="#EDF3FA" stroke-width="4"/><circle cx="20" cy="20" r="16" fill="none" stroke="${col}" stroke-width="4" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${off}"/></svg><span class="t">${v}%</span></div>`;
 }
@@ -979,7 +979,7 @@ function docCard(d,i){
   else if(d.needsReview)badges.push('<span class="bdg rev">مراجعة</span>');
   else badges.push('<span class="bdg ok">موثّق</span>');
   if(d.chainId)badges.push('<span class="bdg chain"></span>');
-  if(d.rtype==='customer')badges.push('<span class="bdg" style="background:rgba(0,153,255,.14);color:#003B7E">زبون</span>');
+  if(d.rtype==='customer')badges.push('<span class="bdg" style="background:rgba(0,153,255,.14);color:#03A4FE">زبون</span>');
   if(d.rtype==='supplier')badges.push('<span class="bdg" style="background:rgba(130,80,255,.14);color:#6a3bd8">مورد</span>');
   if(d.rtype&&window.mStatusOf){const st=mStatusOf(d);const M=MSTYLE[st];if(M)badges.push(`<span class="bdg" style="background:${M.bg};color:${M.fg}">${M.ic} ${M.t}</span>`);}
   return `<div class="doc ${SELECTED.has(d.id)?'picked':''}" id="doc_${d.id}" style="animation-delay:${Math.min(i*35,350)}ms" data-id="${d.id}">
@@ -1068,9 +1068,9 @@ function openDayReport(){
     m.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(11,47,112,.35);display:flex;align-items:flex-end;justify-content:center';
     m.innerHTML=`<div style="background:#fff;width:100%;max-width:440px;border-radius:0;padding:22px 20px calc(22px + env(safe-area-inset-bottom));font-family:inherit" onclick="event.stopPropagation()">
       <div style="width:40px;height:4px;background:#dbe6f5;border-radius:0;margin:0 auto 16px"></div>
-      <b style="font-size:17px;color:#002B5C">تقرير مؤرّخ للإيصالات</b>
+      <b style="font-size:17px;color:#0884C7">تقرير مؤرّخ للإيصالات</b>
       <div style="display:flex;gap:8px;margin:14px 0">
-        <button id="drToday" class="vt" style="flex:1;background:linear-gradient(135deg,#19A9F5,#00509E);color:#fff;border:0;padding:12px;border-radius:0;font-weight:800">اليوم</button>
+        <button id="drToday" class="vt" style="flex:1;background:linear-gradient(135deg,#19A9F5,#03A4FE);color:#fff;border:0;padding:12px;border-radius:0;font-weight:800">اليوم</button>
         <button id="drYest" class="vt" style="flex:1;padding:12px;border-radius:0">أمس</button>
         <button id="drMonth" class="vt" style="flex:1;padding:12px;border-radius:0">هذا الشهر</button>
       </div>
@@ -1080,10 +1080,10 @@ function openDayReport(){
         <span style="color:#5b6b8c">→</span>
         <input type="date" id="drTo" style="flex:1;padding:11px;border:1px solid #cfe0f2;border-radius:0;font-family:inherit;font-size:14px">
       </div>
-      <div id="drCount" style="text-align:center;font-size:13px;color:#00509E;font-weight:700;margin-bottom:14px"></div>
+      <div id="drCount" style="text-align:center;font-size:13px;color:#03A4FE;font-weight:700;margin-bottom:14px"></div>
       <div style="display:flex;gap:8px">
-        <button id="drGo" style="flex:2;background:linear-gradient(135deg,#00509E,#002B5C);color:#fff;border:0;padding:15px;border-radius:0;font-weight:800;font-size:15px;font-family:inherit">تصدير PDF</button>
-        <button onclick="document.getElementById('dayRepModal').remove()" style="flex:1;background:#eef4fb;color:#002B5C;border:0;padding:15px;border-radius:0;font-weight:700;font-family:inherit">إلغاء</button>
+        <button id="drGo" style="flex:2;background:linear-gradient(135deg,#03A4FE,#0884C7);color:#fff;border:0;padding:15px;border-radius:0;font-weight:800;font-size:15px;font-family:inherit">تصدير PDF</button>
+        <button onclick="document.getElementById('dayRepModal').remove()" style="flex:1;background:#eef4fb;color:#0884C7;border:0;padding:15px;border-radius:0;font-weight:700;font-family:inherit">إلغاء</button>
       </div>
     </div>`;
     m.onclick=()=>m.remove();
@@ -1435,7 +1435,7 @@ async function removeDoc(id){
 }
 function showBarcode(ref){
   try{$('bcRef').textContent=ref;
-    if(window.JsBarcode)JsBarcode('#bcSvg',ref,{format:'CODE128',lineColor:'#001B3D',background:'#fff',width:2,height:70,displayValue:false,margin:6});
+    if(window.JsBarcode)JsBarcode('#bcSvg',ref,{format:'CODE128',lineColor:'#2E3A48',background:'#fff',width:2,height:70,displayValue:false,margin:6});
     $('bcModal').classList.add('on');
   }catch(e){toast0('باركود غير ممكن لهذا المرجع');}
 }
@@ -1496,8 +1496,8 @@ function renderStats(){
     }</div></div>
   </div>`;
   const e1=Object.entries(vol).sort((a,b)=>b[1]-a[1]).slice(0,5);
-  if(e1.length)bar($('c1').getContext('2d'),e1.map(x=>x[0]),e1.map(x=>x[1]),['#003B7E','#00D4E8','#00C853','#FF8A3D','#00509E']);
-  bar($('c2').getContext('2d'),Object.keys(days),Object.values(days),['#00509E']);
+  if(e1.length)bar($('c1').getContext('2d'),e1.map(x=>x[0]),e1.map(x=>x[1]),['#03A4FE','#00D4E8','#00C853','#FF8A3D','#03A4FE']);
+  bar($('c2').getContext('2d'),Object.keys(days),Object.values(days),['#03A4FE']);
 }
 
 /* ═══ Views ═══ */
@@ -1542,7 +1542,7 @@ document.getElementById('tl').addEventListener('click',e=>{
 .mc-alerts{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px}
 .mc-al{background:#fff;border:1px solid rgba(7,29,73,.08);border-radius:0;padding:12px 14px;box-shadow:0 4px 14px rgba(7,29,73,.05)}
 .mc-al .k{font-size:11px;color:#6b7d9e;margin-bottom:4px}
-.mc-al .v{font-size:22px;font-weight:700;color:#001B3D;font-family:'Inter','IBM Plex Mono',sans-serif;font-feature-settings:'tnum';letter-spacing:-.02em}
+.mc-al .v{font-size:22px;font-weight:700;color:#2E3A48;font-family:'Inter','IBM Plex Mono',sans-serif;font-feature-settings:'tnum';letter-spacing:-.02em}
 .mc-al.red .v{color:#d63333}.mc-al.org .v{color:#e08a00}.mc-al.grn .v{color:#0a9e5c}
 .mc-banner{background:linear-gradient(90deg,#fff3f3,#fff);border:1px solid rgba(214,51,51,.35);border-right:4px solid #d63333;border-radius:0;padding:10px 14px;margin-bottom:12px;font-size:12.5px;color:#8a1f1f;line-height:1.9}
 .mc-set{display:flex;gap:10px;flex-wrap:wrap;align-items:center;background:#fff;border:1px solid rgba(7,29,73,.08);border-radius:0;padding:10px 14px;margin-bottom:14px;font-size:12px;color:#3b4c6e}
@@ -1551,24 +1551,24 @@ document.getElementById('tl').addEventListener('click',e=>{
 @media(max-width:860px){.mc-grid{grid-template-columns:1fr}}
 .mc-pane{background:#fff;border:1px solid rgba(7,29,73,.08);border-radius:0;overflow:hidden;box-shadow:0 6px 20px rgba(7,29,73,.05)}
 .mc-pane>h3{margin:0;padding:12px 16px;font-size:14px;display:flex;align-items:center;gap:8px;color:#fff}
-.mc-pane.cst>h3{background:linear-gradient(90deg,#003B7E,#00B5FF)}
+.mc-pane.cst>h3{background:linear-gradient(90deg,#03A4FE,#00B5FF)}
 .mc-pane.sup>h3{background:linear-gradient(90deg,#5a2ecc,#8b5cf6)}
 .mc-pane>h3 small{font-weight:600;opacity:.85;margin-inline-start:auto;font-size:11px}
 .mc-list{max-height:560px;overflow:auto;padding:10px}
 .mc-card{display:flex;gap:10px;background:#f7faff;border:1px solid rgba(7,29,73,.07);border-radius:0;padding:10px;margin-bottom:8px;position:relative}
 .mc-card .th{width:52px;height:52px;border-radius:0;background-size:cover;background-position:center;background-color:#e8eefb;flex-shrink:0;cursor:pointer}
 .mc-card .in{flex:1;min-width:0}
-.mc-card .nm{font-size:12.5px;font-weight:700;color:#001B3D;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mc-card .nm{font-size:12.5px;font-weight:700;color:#2E3A48;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .mc-card .amt{font-size:16px;font-weight:700;color:#0f2a52;font-family:'Inter',sans-serif;font-feature-settings:'tnum';letter-spacing:-.01em;direction:ltr;text-align:right}
 .mc-card .mt{font-size:10.5px;color:#6b7d9e;display:flex;gap:8px;flex-wrap:wrap;margin-top:2px}
 .mc-st{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;border-radius:0;padding:2px 8px;margin-top:4px}
 .mc-acts{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px}
 .mc-acts button{border:1px solid rgba(7,29,73,.14);background:#fff;border-radius:0;padding:3px 8px;font-size:10.5px;cursor:pointer;font-family:inherit;color:#243b63}
-.mc-acts button.p{background:#003B7E;border-color:#003B7E;color:#fff}
+.mc-acts button.p{background:#03A4FE;border-color:#03A4FE;color:#fff}
 .mc-acts button.g{background:#0a9e5c;border-color:#0a9e5c;color:#fff}
 .mc-acts button.r{color:#d63333;border-color:rgba(214,51,51,.3)}
 .mc-link{position:absolute;top:8px;inset-inline-end:10px;font-size:10px;color:#6b7d9e}
-.mc-sums{display:flex;gap:10px;flex-wrap:wrap;background:#001B3D;color:#fff;border-radius:0;padding:12px 16px;margin:14px 0;font-size:12px}
+.mc-sums{display:flex;gap:10px;flex-wrap:wrap;background:#2E3A48;color:#fff;border-radius:0;padding:12px 16px;margin:14px 0;font-size:12px}
 .mc-sums b{font-family:'Inter',sans-serif;font-feature-settings:'tnum';font-size:15px;font-weight:700}
 .mc-sums .d{color:#FFD54F}
 .mc-miss{background:#fff;border:1px solid rgba(7,29,73,.08);border-radius:0;margin-top:14px;overflow:hidden}
@@ -1581,16 +1581,16 @@ document.getElementById('tl').addEventListener('click',e=>{
 .mc-modal{position:fixed;inset:0;background:rgba(7,29,73,.55);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;z-index:900;padding:16px}
 .mc-modal.on{display:flex}
 .mc-box{background:#fff;border-radius:0;width:min(560px,100%);max-height:82vh;display:flex;flex-direction:column;overflow:hidden}
-.mc-box h3{margin:0;padding:14px 18px;background:#001B3D;color:#fff;font-size:14px;display:flex;justify-content:space-between}
+.mc-box h3{margin:0;padding:14px 18px;background:#2E3A48;color:#fff;font-size:14px;display:flex;justify-content:space-between}
 .mc-box h3 span{cursor:pointer}
 .mc-box .bd{padding:14px;overflow:auto}
 .mc-pick{display:flex;gap:10px;border:1.5px solid rgba(7,29,73,.1);border-radius:0;padding:10px;margin-bottom:8px;cursor:pointer}
-.mc-pick.sel{border-color:#003B7E;background:#f0f7ff}
+.mc-pick.sel{border-color:#03A4FE;background:#f0f7ff}
 .mc-pick .sc{margin-inline-start:auto;font-weight:700;font-family:'Inter',sans-serif;font-feature-settings:'tnum';font-size:14px}
 .mc-pick .sc.hi{color:#0a9e5c}.mc-pick .sc.md{color:#e08a00}.mc-pick .sc.lo{color:#96a5c0}
 .mc-foot{padding:12px 14px;border-top:1px solid rgba(7,29,73,.08);display:flex;gap:8px;justify-content:flex-end}
 .mc-foot button{border-radius:0;padding:8px 16px;font-size:12.5px;font-family:inherit;cursor:pointer;border:1px solid rgba(7,29,73,.15);background:#fff}
-.mc-foot button.p{background:#003B7E;color:#fff;border-color:#003B7E}
+.mc-foot button.p{background:#03A4FE;color:#fff;border-color:#03A4FE}
 .uz-type{display:flex;gap:8px;align-items:center;justify-content:center;margin-top:10px;font-size:12px;color:#3b4c6e}
 .uz-type select{border:1px solid rgba(7,29,73,.18);border-radius:0;padding:6px 10px;font-size:12px;font-family:inherit;background:#fff}
 #v_match{font-variant-numeric:tabular-nums}
@@ -1752,8 +1752,8 @@ function mPickOpen(id){
     return `<div class="mc-pick" id="pk_${o.id}" onclick="mPickTog('${o.id}')">
       <div class="th" style="width:44px;height:44px;border-radius:0;background:#e8eefb url('${o.thumb||''}') center/cover"></div>
       <div style="min-width:0">
-        <div style="font-size:12px;font-weight:700;color:#001B3D">${esc(o.party||o.smartName||o.fileName)}</div>
-        <div style="font-size:11px;color:#003B7E;font-family:'IBM Plex Mono',monospace">${fmt(mAmt(o),0)} ${esc(mCur(o))} · ${esc(p.date||'')}</div>
+        <div style="font-size:12px;font-weight:700;color:#2E3A48">${esc(o.party||o.smartName||o.fileName)}</div>
+        <div style="font-size:11px;color:#03A4FE;font-family:'IBM Plex Mono',monospace">${fmt(mAmt(o),0)} ${esc(mCur(o))} · ${esc(p.date||'')}</div>
         <div style="font-size:10px;color:#96a5c0">${esc(r.why||'')}</div>
       </div>
       <div class="sc ${cls}">${r.score}</div>
@@ -1897,7 +1897,7 @@ function renderMatch(){
     <span style="flex:1"></span>
     ${untyped.slice(0,6).map(d=>`<span style="display:inline-flex;gap:4px;align-items:center;background:#fff;border:1px solid rgba(7,29,73,.1);border-radius:0;padding:4px 8px;font-size:11px">
       ${esc((d.smartName||d.fileName||'').slice(0,20))}
-      <button style="border:none;background:#003B7E;color:#fff;border-radius:0;padding:2px 7px;cursor:pointer;font-size:10px" onclick="setRtype('${d.id}','customer')">زبون</button>
+      <button style="border:none;background:#03A4FE;color:#fff;border-radius:0;padding:2px 7px;cursor:pointer;font-size:10px" onclick="setRtype('${d.id}','customer')">زبون</button>
       <button style="border:none;background:#8b5cf6;color:#fff;border-radius:0;padding:2px 7px;cursor:pointer;font-size:10px" onclick="setRtype('${d.id}','supplier')">مورد</button>
     </span>`).join('')}
   </div>`:''}
@@ -1915,7 +1915,7 @@ function renderMatch(){
         <td style="font-family:'IBM Plex Mono',monospace">${fmt(mAmt(c),0)}</td><td>${esc(mCur(c))}</td><td>—</td>
         <td class="age ${(Date.now()-c.uploadedAt)>AHRS()*36e5?'hot':''}">${ageStr(c.uploadedAt)}</td>
         <td>${c._sugg?'مطابقة ضعيفة ('+c._sugg.score+')':'بانتظار إيصال المورد'}</td>
-        <td><button style="border:1px solid #003B7E;background:#fff;color:#003B7E;border-radius:0;padding:3px 9px;font-size:10.5px;cursor:pointer;font-family:inherit" onclick="mSent('${c.id}')">تسجيل الإرسال</button></td>
+        <td><button style="border:1px solid #03A4FE;background:#fff;color:#03A4FE;border-radius:0;padding:3px 9px;font-size:10.5px;cursor:pointer;font-family:inherit" onclick="mSent('${c.id}')">تسجيل الإرسال</button></td>
       </tr>`).join('')}
       ${missS.map(s=>`<tr>
         <td>سند مورد دون دفعة زبون</td><td>${esc(s.party||s.smartName||'')}</td>
@@ -1957,21 +1957,21 @@ function mExport(scope){
   <title>تقرير مطابقة وتسوية إيصالات ARKAN Pay</title>
   <style>
     @page{size:A4;margin:14mm}
-    body{font-family:'Cairo','Segoe UI',sans-serif;color:#001B3D;font-size:11px;margin:0;padding:20px}
-    h1{font-size:18px;margin:0 0 4px;color:#003B7E}
-    .meta{font-size:10px;color:#556;line-height:1.9;border-bottom:2px solid #003B7E;padding-bottom:10px;margin-bottom:12px}
+    body{font-family:'Cairo','Segoe UI',sans-serif;color:#2E3A48;font-size:11px;margin:0;padding:20px}
+    h1{font-size:18px;margin:0 0 4px;color:#03A4FE}
+    .meta{font-size:10px;color:#556;line-height:1.9;border-bottom:2px solid #03A4FE;padding-bottom:10px;margin-bottom:12px}
     .sums{display:flex;gap:14px;flex-wrap:wrap;background:#f0f6ff;border-radius:0;padding:10px;margin-bottom:12px;font-size:10.5px}
     table{width:100%;border-collapse:collapse;font-size:9.5px;page-break-inside:auto}
     tr{page-break-inside:avoid}
-    th{background:#001B3D;color:#fff;padding:6px;font-size:9px}
+    th{background:#2E3A48;color:#fff;padding:6px;font-size:9px}
     td{border:1px solid #d5deee;padding:5px;text-align:center}
     .st-ok{color:#0a9e5c;font-weight:700}.st-bad{color:#d63333;font-weight:700}.st-w{color:#a97b00;font-weight:700}
     .foot{margin-top:16px;font-size:10px;display:flex;justify-content:space-between;border-top:1px solid #ccd;padding-top:10px}
     .sig{margin-top:26px;display:flex;gap:60px}
-    .sig div{border-top:1px solid #001B3D;padding-top:4px;width:160px;text-align:center;font-size:10px}
+    .sig div{border-top:1px solid #2E3A48;padding-top:4px;width:160px;text-align:center;font-size:10px}
     @media print{button{display:none}}
   </style></head><body>
-  <button onclick="print()" style="position:fixed;top:10px;left:10px;padding:8px 18px;background:#003B7E;color:#fff;border:none;border-radius:0;font-family:inherit;cursor:pointer">طباعة / PDF</button>
+  <button onclick="print()" style="position:fixed;top:10px;left:10px;padding:8px 18px;background:#03A4FE;color:#fff;border:none;border-radius:0;font-family:inherit;cursor:pointer">طباعة / PDF</button>
   <h1>تقرير مطابقة وتسوية إيصالات ARKAN Pay</h1>
   <div class="meta">
     رقم التقرير: <b>${rid}</b> · تاريخ الإنشاء: ${now} · النطاق: <b>${scope==='missing'?'الإيصالات الناقصة فقط':'جميع العمليات'}</b> · عدد العمليات: <b>${rows.length}</b>
@@ -2061,7 +2061,7 @@ function mCsv(){
 .gk-modal{position:fixed;inset:0;background:rgba(7,29,73,.6);backdrop-filter:blur(5px);display:none;align-items:center;justify-content:center;z-index:950;padding:16px}
 .gk-modal.on{display:flex}
 .gk-box{background:#fff;border-radius:0;width:min(480px,100%);overflow:hidden}
-.gk-box h3{margin:0;padding:14px 18px;background:linear-gradient(90deg,#003B7E,#00B5FF);color:#fff;font-size:14px;display:flex;justify-content:space-between}
+.gk-box h3{margin:0;padding:14px 18px;background:linear-gradient(90deg,#03A4FE,#00B5FF);color:#fff;font-size:14px;display:flex;justify-content:space-between}
 .gk-box .bd{padding:16px 18px;font-size:12.5px;color:#243b63;line-height:2}
 .gk-box input{width:100%;border:1.5px solid rgba(7,29,73,.18);border-radius:0;padding:10px 12px;font-size:13px;font-family:'IBM Plex Mono',monospace;direction:ltr;margin:8px 0}
 .gk-box .st{font-size:12px;font-weight:700;min-height:20px}
@@ -2247,7 +2247,7 @@ function mExcel(){
   sheets.push(_sheet('سجل المراجعة',['التاريخ والوقت','المستند','الإجراء'],logs.slice(0,2000)));
   const xml=`<?xml version="1.0"?><?mso-application progid="Excel.Sheet"?>
 <Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
-<Styles><Style ss:ID="hd"><Font ss:Bold="1" ss:Color="#FFFFFF"/><Interior ss:Color="#001B3D" ss:Pattern="Solid"/></Style></Styles>
+<Styles><Style ss:ID="hd"><Font ss:Bold="1" ss:Color="#FFFFFF"/><Interior ss:Color="#2E3A48" ss:Pattern="Solid"/></Style></Styles>
 ${sheets.join('')}</Workbook>`;
   const blob=new Blob(['\ufeff'+xml],{type:'application/vnd.ms-excel'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);
@@ -2310,7 +2310,7 @@ function mJson(){
    ═══════════════════════════════════════════════════════════════ */
 :root{
   --w-bg:#F5F7F6; --w-card:#FFFFFF; --w-txt:#0E0F0C; --w-sub:#60645F;
-  --w-brd:#E2E5E1; --w-pri:#003B7E; --w-dark:#002B5C; --w-ok:#168A52;
+  --w-brd:#E2E5E1; --w-pri:#03A4FE; --w-dark:#0884C7; --w-ok:#168A52;
   --w-warn:#B76A00; --w-dgr:#C93636; --w-neu:#EEF1EE; --w-lime:#9FE870;
   --w-r:0; --w-rb:0; --w-t:.18s;
 }
@@ -2619,7 +2619,7 @@ if(wrap){wrap.insertAdjacentHTML('afterbegin',`<div id="wSum">
   <div id="wSumRange" style="display:flex;align-items:center;gap:8px;margin:8px 0 4px;flex-wrap:wrap">
     <span style="font-size:12px;color:var(--w-sub)">التاريخ:</span>
     <input type="date" id="wSumDate" onchange="setSumDate(this.value)" style="padding:7px 10px;border:1px solid var(--w-brd);border-radius:0;font-family:inherit;font-size:13px;background:var(--w-card);color:var(--w-txt)">
-    <button id="wSumClear" onclick="setSumDate('')" style="display:none;padding:7px 12px;border:0;border-radius:0;background:#eaf2ff;color:#00509E;font-weight:700;font-size:12px;font-family:inherit">الكل ✕</button>
+    <button id="wSumClear" onclick="setSumDate('')" style="display:none;padding:7px 12px;border:0;border-radius:0;background:#eaf2ff;color:#03A4FE;font-weight:700;font-size:12px;font-family:inherit">الكل ✕</button>
   </div>
   <div class="subrow">
     <span id="wSumMWrap">هذا الشهر <b id="wSumM">0</b></span>
@@ -2672,7 +2672,7 @@ window.renderKPIs=function(){
   const unm=cs.filter(c=>window.mStatusOf&&['missing','weak','diff'].includes(mStatusOf(c)));
   const kk=$$('kpis');
   if(kk)kk.innerHTML=`<div class="w-sec">${ic('chart')} ملخص اليوم</div>
-    ${[['#003B7E','مستندات اليوم',today],['#B76A00','يحتاج مراجعة',review],
+    ${[['#03A4FE','مستندات اليوم',today],['#B76A00','يحتاج مراجعة',review],
        ['#168A52','معدل دقة OCR',avgC+'%'],['#C93636','غير مطابق',unm.length],
        ['#60645F','سلاسل التسوية',chains]].map(([c,l,v])=>
       `<div class="w-row"><span class="dot" style="background:${c}"></span><span class="t">${l}</span><span class="n">${v}</span></div>`).join('')}`;
@@ -2792,30 +2792,30 @@ window.exportPdfReport=function(){
     @page{size:A4;margin:12mm}
     *{box-sizing:border-box}
     body{font-family:'IBM Plex Sans Arabic','Segoe UI',sans-serif;color:#0E0F0C;font-size:11px;margin:0;padding:16px;background:#fff}
-    h1{font-size:19px;margin:0;color:#002B5C}
-    h1 span{color:#003B7E}
-    .meta{font-size:10px;color:#60645F;line-height:1.9;border-bottom:2px solid #003B7E;padding-bottom:8px;margin-bottom:10px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px}
+    h1{font-size:19px;margin:0;color:#0884C7}
+    h1 span{color:#03A4FE}
+    .meta{font-size:10px;color:#60645F;line-height:1.9;border-bottom:2px solid #03A4FE;padding-bottom:8px;margin-bottom:10px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px}
     .sums{display:flex;gap:14px;flex-wrap:wrap;background:#EEF1EE;border-radius:0;padding:8px 12px;margin-bottom:12px;font-size:11px}
     .sums b{font-variant-numeric:tabular-nums}
     table{width:100%;border-collapse:collapse;font-size:9px}
     tr{page-break-inside:avoid}
-    th{background:#002B5C;color:#fff;padding:5px 4px;font-size:8.5px;font-weight:600}
+    th{background:#0884C7;color:#fff;padding:5px 4px;font-size:8.5px;font-weight:600}
     td{border:1px solid #E2E5E1;padding:4px;text-align:center;font-variant-numeric:tabular-nums}
     td.r{text-align:right}
     .st-ok{color:#168A52;font-weight:700}.st-bad{color:#C93636;font-weight:700}.st-w{color:#B76A00;font-weight:700}
-    h2{font-size:14px;color:#002B5C;margin:18px 0 8px;page-break-after:avoid}
+    h2{font-size:14px;color:#0884C7;margin:18px 0 8px;page-break-after:avoid}
     .pcard{display:flex;gap:10px;border:1px solid #E2E5E1;border-radius:0;padding:8px;margin-bottom:8px;page-break-inside:avoid}
     .pcard img{width:72px;height:72px;object-fit:cover;border-radius:0;border:1px solid #E2E5E1;flex-shrink:0}
     .pgrid{flex:1;display:grid;grid-template-columns:repeat(3,1fr);gap:3px 10px}
     .pf{font-size:8.5px;color:#60645F;display:flex;gap:4px;min-width:0}
     .pf b{color:#0E0F0C;font-weight:600;word-break:break-all;font-variant-numeric:tabular-nums}
-    .pnm{grid-column:1/-1;font-size:10.5px;font-weight:700;color:#002B5C}
+    .pnm{grid-column:1/-1;font-size:10.5px;font-weight:700;color:#0884C7}
     .foot{margin-top:14px;font-size:9.5px;color:#60645F;display:flex;justify-content:space-between;border-top:1px solid #E2E5E1;padding-top:8px}
     .sig{margin-top:24px;display:flex;gap:60px}
     .sig div{border-top:1px solid #0E0F0C;padding-top:4px;width:150px;text-align:center;font-size:10px}
     @media print{#pbtn{display:none}}
   </style></head><body>
-  <button id="pbtn" onclick="print()" style="position:fixed;top:10px;left:10px;padding:9px 20px;background:#003B7E;color:#fff;border:0;border-radius:0;font-family:inherit;font-size:13px;cursor:pointer">طباعة / حفظ PDF</button>
+  <button id="pbtn" onclick="print()" style="position:fixed;top:10px;left:10px;padding:9px 20px;background:#03A4FE;color:#fff;border:0;border-radius:0;font-family:inherit;font-size:13px;cursor:pointer">طباعة / حفظ PDF</button>
   <h1>ARKAN <span>Financial Archive</span> — كشف الإيصالات</h1>
   <div class="meta">
     <span>رقم الكشف: <b>${rid}</b></span><span>تاريخ الإنشاء: ${now}</span>
@@ -3080,7 +3080,7 @@ window.renderClients=function(){
   const unassigned=sortDocs(CACHE.filter(d=>!clientKey(d)&&(d.parsed?.amount||d.parsed?.bank)));
   const rowDoc=d=>{const p=d.parsed||{};
     return `<div class="w-row" style="cursor:pointer" onclick="openDoc('${d.id}')">
-      <span class="dot" style="background:${d.rtype==='customer'?'#003B7E':d.rtype==='supplier'?'#002B5C':'#96a5c0'}"></span>
+      <span class="dot" style="background:${d.rtype==='customer'?'#03A4FE':d.rtype==='supplier'?'#0884C7':'#96a5c0'}"></span>
       <span class="t" style="min-width:0"><b style="font-weight:600">${esc(d.smartName||d.fileName||'')}</b>
         <small style="display:block;color:var(--w-sub);font-size:11px">${esc(p.bank||'')} · ${esc(p.date||new Date(d.uploadedAt).toLocaleDateString('en-GB'))}${d.rtype?' · '+(d.rtype==='customer'?'زبون':'مورد'):''}</small></span>
       <span class="n">${p.amount?fmt(p.amount,0)+' '+esc(p.currency||''):''}</span>
@@ -3092,7 +3092,7 @@ window.renderClients=function(){
     </div>
     ${cls.map(c=>`<div class="kpis" style="margin-bottom:12px">
       <div class="w-sec" style="cursor:pointer" onclick="CL_OPEN=CL_OPEN==='${esc(c.name)}'?null:'${esc(c.name)}';renderClients()">
-        <span style="width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#003B7E,#3E8BFF);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:14px;font-weight:700">${esc(c.name[0]||'?')}</span>
+        <span style="width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#03A4FE,#3E8BFF);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:14px;font-weight:700">${esc(c.name[0]||'?')}</span>
         <span style="flex:1">${esc(c.name)}
           <small style="display:block;color:var(--w-sub);font-size:11px;font-weight:500">${c.docs.length} معاملة · ${c.cust} دفعة · ${c.sup} سند${c.unsettled?' · <b style="color:#C93636">'+c.unsettled+' غير مسوّى</b>':''}</small></span>
         <span style="font-size:12px;color:var(--w-txt);font-weight:600;text-align:left;direction:ltr">${Object.entries(c.sums).map(([k,v])=>fmt(v,0)+' '+k).join('<br>')}</span>
@@ -3145,7 +3145,7 @@ window.renderClients=function(){
 .aknav{position:fixed;bottom:0;left:0;right:0;z-index:200;display:flex;align-items:stretch;background:rgba(255,255,255,.96);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-top:1px solid var(--cardline);padding-bottom:env(safe-area-inset-bottom);height:calc(60px + env(safe-area-inset-bottom))}
 .aknav .bi{flex:1;border:none;background:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-family:var(--ff);font-size:10px;font-weight:600;color:var(--faint);cursor:pointer;padding-top:6px}
 .aknav .bi svg{width:21px;height:21px}
-.aknav .bi.on{color:var(--deep)}
+.aknav .bi.on{color:#03A4FE}
 .aknav .plus{flex:0 0 76px;display:flex;align-items:center;justify-content:center}
 .aknav .plus button{width:52px;height:52px;margin-top:-20px;border:none;background:var(--grad);color:#fff;font-size:30px;font-weight:300;line-height:1;cursor:pointer;box-shadow:0 8px 20px rgba(0,43,92,.35);display:flex;align-items:center;justify-content:center}
 @media(min-width:1100px){.aknav{display:none}}
@@ -3153,12 +3153,12 @@ window.renderClients=function(){
 /* ── Sidebar (ديسكتوب) ── */
 .aksb{display:none}
 @media(min-width:1100px){
-  .aksb{display:flex;flex-direction:column;position:fixed;top:0;bottom:0;right:0;width:232px;z-index:45;background:var(--navy);color:#fff;padding:18px 0 14px}
+  .aksb{display:flex;flex-direction:column;position:fixed;top:0;bottom:0;right:0;width:232px;z-index:45;background:#03A4FE;color:#fff;padding:18px 0 14px}
   .aksb .lg{padding:0 18px 16px;font-weight:800;font-size:15px;letter-spacing:.02em;border-bottom:1px solid rgba(255,255,255,.08);margin-bottom:10px}
   .aksb .lg small{display:block;font-size:10px;font-weight:500;color:#8FA6C0;margin-top:2px}
-  .aksb button{display:flex;align-items:center;gap:10px;width:100%;border:none;background:none;color:#B9C6DA;font-family:var(--ff);font-size:13.5px;font-weight:600;padding:10px 18px;cursor:pointer;text-align:right;border-inline-start:3px solid transparent}
+  .aksb button{display:flex;align-items:center;gap:10px;width:100%;border:none;background:none;color:rgba(255,255,255,.85);font-family:var(--ff);font-size:13.5px;font-weight:600;padding:10px 18px;cursor:pointer;text-align:right;border-inline-start:3px solid transparent}
   .aksb button:hover{background:rgba(255,255,255,.05);color:#fff}
-  .aksb button.on{background:rgba(255,255,255,.08);color:#fff;border-inline-start-color:var(--warn)}
+  .aksb button.on{background:rgba(255,255,255,.18);color:#fff;border-inline-start-color:#FFFFFF}
   .aksb button svg{width:17px;height:17px;flex:none}
   .aksb .sep{margin:10px 18px;border-top:1px solid rgba(255,255,255,.08)}
   .aksb .grow{flex:1}
