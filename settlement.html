@@ -3430,6 +3430,22 @@ function uploadKB(){
     const seen=new Set();let dup=0;
     for(let i=kb.length-1;i>=0;i--){const t=kb[i].txn;
       if(t){if(seen.has(t)){kb.splice(i,1);dup++;}else seen.add(t);}}
+    /* استبعاد كشوف الحساب تلقائياً:
+       أ) بالاسم: كشف/extrato/statement  ب) بالمنطق: مبلغه = مجموع بقية الإيصالات */
+    let exN=0;
+    kb.forEach(b=>{if(!b.excluded&&/كشف|extrato|statement|releve|relevé/i.test(b.name||'')){b.excluded=true;exN++;}});
+    const inc=kb.filter(b=>!b.excluded&&b.amount!=null);
+    if(inc.length>2){
+      const tot=inc.reduce((s,b)=>s+b.amount,0);
+      inc.forEach(b=>{if(Math.abs(b.amount-(tot-b.amount))<=2){b.excluded=true;exN++;}});
+    }
+    if(exN)toast('استُبعد '+exN+' كشف حساب من الجمع تلقائياً');
+    /* اشتقاق المبلغ بالقديمة من مجموع المدفوع إن كان السعر مُدخلاً والخانة فارغة */
+    const rate=NV('m2aRate');
+    if(rate>0&&!NV('m2aOld')&&kbTotal()>0&&$('m2aOld')){
+      $('m2aOld').value=Math.round(kbTotal()*rate);
+      toast('المبلغ بالقديمة اشتُق من مجموع المدفوع × السعر');
+    }
     renderKB();calc();
     const ok=kb.filter(x=>x.amount!=null).length;
     if(ok===0&&picked.length>0){
@@ -3439,7 +3455,7 @@ function uploadKB(){
   };
   inp.click();
 }
-function kbTotal(){return kb.reduce((s,b)=>s+(b.amount||0),0);}
+function kbTotal(){return kb.reduce((s,b)=>s+(b.excluded?0:(b.amount||0)),0);}
 function editKB(i){
   const v=parseFloat(prompt('مبلغ الإيصال (Kz):',kb[i].amount||''));
   if(!v||v<=0)return;kb[i].amount=v;kb[i].err=null;renderKB();calc();
@@ -3450,11 +3466,13 @@ function renderKB(){
   const c=$('kbCount'),s=$('kbSum'),l=$('kbList');if(!c)return;
   c.textContent=kb.length;s.textContent=fmt(kbTotal(),0);
   l.innerHTML=kb.map((b,i)=>`
-    <div class="leg"><span style="font-size:10px">${b.name.slice(0,22)}${b.txn?' <span style="opacity:.55">#'+b.txn.slice(-6)+'</span>':''}${b.err?'<br><span style="color:var(--red);font-size:9px">'+b.err+'</span>':''}</span>
-      <span>${b.amount!=null?'<b class="lp" style="cursor:pointer" onclick="editKB('+i+')">'+fmt(b.amount,0)+'</b>':'<button class="btn btn-gold btn-sm" style="padding:2px 10px;font-size:10px" onclick="editKB('+i+')">أدخل المبلغ</button>'}
+    <div class="leg" style="${b.excluded?'opacity:.55':''}"><span style="font-size:10px">${b.name.slice(0,22)}${b.txn?' <span style="opacity:.55">#'+b.txn.slice(-6)+'</span>':''}${b.excluded?'<br><span class="badge b-wait" style="font-size:9px">كشف حساب — مستبعد من الجمع</span>':''}${b.err?'<br><span style="color:var(--red);font-size:9px">'+b.err+'</span>':''}</span>
+      <span>${b.amount!=null?'<b class="lp" style="cursor:pointer;${b.excluded?'text-decoration:line-through':''}" onclick="editKB('+i+')">'+fmt(b.amount,0)+'</b>':'<button class="btn btn-gold btn-sm" style="padding:2px 10px;font-size:10px" onclick="editKB('+i+')">أدخل المبلغ</button>'}
+      ${b.excluded?'<button class="btn btn-line btn-sm" style="padding:2px 8px;font-size:10px;margin-right:4px" onclick="toggleKB('+i+')">إدراج</button>':''}
       <button class="btn btn-line btn-sm" style="padding:2px 8px;font-size:10px;margin-right:6px" onclick="dropKB(${i})">✕</button></span>
     </div>`).join('');
 }
+function toggleKB(i){kb[i].excluded=!kb[i].excluded;renderKB();calc();}
 function calcM2A(){
   if(!$('m2aOld'))return;
   const old=NV('m2aOld'),rate=NV('m2aRate'),buy=NV('m2aBuy');
@@ -3943,7 +3961,7 @@ async function imageText(dataUrl){
   return data.text||'';
 }
 /* ================= BUILD / AUTO-UPDATE ================= */
-const ARKAN_BUILD='1039';
+const ARKAN_BUILD='1040';
 function arkanVerLabel(){const e=$('verLbl');if(e)e.textContent=ARKAN_BUILD;}
 function arkanUpdateBanner(b){
   if(document.getElementById('updBar'))return;
