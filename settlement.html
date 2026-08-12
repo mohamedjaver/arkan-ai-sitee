@@ -3441,10 +3441,10 @@ function uploadKB(){
     }
     if(exN)toast('استُبعد '+exN+' كشف حساب من الجمع تلقائياً');
     /* اشتقاق المبلغ بالقديمة من مجموع المدفوع إن كان السعر مُدخلاً والخانة فارغة */
-    const rate=NV('m2aRate');
-    if(rate>0&&!NV('m2aOld')&&kbTotal()>0&&$('m2aOld')){
-      $('m2aOld').value=Math.round(kbTotal()*rate);
-      toast('المبلغ بالقديمة اشتُق من مجموع المدفوع × السعر');
+    const rate=NV('m2aRate'),stB=kbStatement();
+    if(rate>0&&!NV('m2aOld')&&$('m2aOld')&&(stB>0||kbTotal()>0)){
+      $('m2aOld').value=Math.round((stB||kbTotal())*rate);
+      toast('المبلغ بالقديمة اشتُق من '+(stB?'كشف الحساب':'مجموع المدفوع')+' × السعر');
     }
     renderKB();calc();
     const ok=kb.filter(x=>x.amount!=null).length;
@@ -3456,6 +3456,7 @@ function uploadKB(){
   inp.click();
 }
 function kbTotal(){return kb.reduce((s,b)=>s+(b.excluded?0:(b.amount||0)),0);}
+function kbStatement(){const ex=kb.filter(b=>b.excluded&&b.amount!=null);return ex.length?Math.max(...ex.map(b=>b.amount)):0;}
 function editKB(i){
   const v=parseFloat(prompt('مبلغ الإيصال (Kz):',kb[i].amount||''));
   if(!v||v<=0)return;kb[i].amount=v;kb[i].err=null;renderKB();calc();
@@ -3476,7 +3477,8 @@ function toggleKB(i){kb[i].excluded=!kb[i].excluded;renderKB();calc();}
 function calcM2A(){
   if(!$('m2aOld'))return;
   const old=NV('m2aOld'),rate=NV('m2aRate'),buy=NV('m2aBuy');
-  const due=(old&&rate)?old/rate:0;
+  const stmt=kbStatement();
+  const due=(old&&rate)?old/rate:stmt;   /* أولوية: المبلغ÷السعر، وإلا كشف الحساب */
   /* الربح: (شراء − بيع) قديمة/Kz × المستحق Kz = ربح بالقديمة */
   let spread=0,profitOld=0,profitKz=0;
   if(buy&&rate&&due){spread=buy-rate;profitOld=due*spread;profitKz=rate?profitOld/rate:0;}
@@ -3488,7 +3490,7 @@ function calcM2A(){
       mp.style.color=spread>=0?'var(--green)':'var(--red)';
     }
   }
-  $('m2aDue').textContent=fmt(due,0)+' Kz';
+  $('m2aDue').innerHTML=fmt(due,0)+' Kz'+((!old||!rate)&&stmt?'<div style="font-size:10px;color:var(--dim);font-weight:600;margin-top:4px">من كشف الحساب المرفوع ✓</div>':'');
   const paid=kbTotal(),diff=paid-due;
   const kd=$('kbDiff');
   if(kd){
@@ -3961,7 +3963,7 @@ async function imageText(dataUrl){
   return data.text||'';
 }
 /* ================= BUILD / AUTO-UPDATE ================= */
-const ARKAN_BUILD='1041';
+const ARKAN_BUILD='1042';
 function arkanVerLabel(){const e=$('verLbl');if(e)e.textContent=ARKAN_BUILD;}
 function arkanUpdateBanner(b){
   if(document.getElementById('updBar'))return;
