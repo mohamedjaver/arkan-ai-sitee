@@ -3818,6 +3818,13 @@ let _ocrWorker=null,_ocrWurl=null;
 async function _headOK(u){try{const r=await fetch(u,{method:'HEAD',cache:'no-store'});return r.ok;}catch(e){return false;}}
 async function ocrWorker(){
   if(_ocrWorker)return _ocrWorker;
+  /* قفل أحادي: أول مستدعٍ يبني المحرك والبقية ينتظرون نفس الوعد — يمنع 6 إنشاءات متزامنة */
+  if(window.__ocrWorkerP)return window.__ocrWorkerP;
+  window.__ocrWorkerP=_ocrWorkerBuild().finally(()=>{window.__ocrWorkerP=null;});
+  return window.__ocrWorkerP;
+}
+async function _ocrWorkerBuild(){
+  if(_ocrWorker)return _ocrWorker;
   if(!window.Tesseract)throw new Error('مكتبة Tesseract لم تُحمَّل — أعد تحميل الصفحة');
   const V=new URL('vendor/',location.href).href;
   /* فحص مسبق: هل كل ملفات المحرك المحلي موجودة؟ */
@@ -3936,7 +3943,7 @@ async function imageText(dataUrl){
   return data.text||'';
 }
 /* ================= BUILD / AUTO-UPDATE ================= */
-const ARKAN_BUILD='1037';
+const ARKAN_BUILD='1038';
 function arkanVerLabel(){const e=$('verLbl');if(e)e.textContent=ARKAN_BUILD;}
 function arkanUpdateBanner(b){
   if(document.getElementById('updBar'))return;
@@ -5815,62 +5822,77 @@ function akInput(){
 </script>
 
 <script id="akBatchCore">
-/* ═══ المحرك الموحّد v3 — نفس خط بوابة المطابقة المُثبت (34/35) ═══
+/* ═══ المحرك الموحّد v3.1 — خط بوابة المطابقة + مهلات صارمة ═══
    akReadBatch(files,onTick) → [{name,txt,amount,ccy,acct,txn,date,ben,bank,src,err}]
-   1) لقطة بايتات فورية (علاج علة WebKit)
-   2) محلي متوازٍ ×6: pdfText/imageText + arkanParse (نص + بيانات مهيكلة)
-   3) Gemini مهيكل ×3 (ArkanRead.readAmount) لما لم يُقرأ مبلغه
-   4) موجة نصية أخيرة ×2 (arkanRead الكامل) لمن بقي بلا نص ولا مبلغ */
+   حماية: مهلة 10ث للقطة كل ملف · 45ث للقراءة المحلية للملف · المحرك لا يعلق أبدًا */
+function akTimeout(p,ms,msg){return Promise.race([p,new Promise((_,rj)=>setTimeout(()=>rj(new Error(msg||'مهلة')),ms))]);}
+function akProg(txt){
+  let el=document.getElementById('akProgBar');
+  if(txt===null){if(el)el.remove();return;}
+  if(!el){el=document.createElement('div');el.id='akProgBar';
+    el.style.cssText='position:fixed;left:12px;right:12px;bottom:84px;z-index:9998;background:#0B2447;color:#fff;padding:10px 14px;font-size:12.5px;font-weight:700;box-shadow:0 8px 26px rgba(0,0,0,.4);text-align:center';
+    document.body.appendChild(el);}
+  el.textContent=txt;
+}
 async function akReadBatch(files,onTick){
-  const snap=[];
+  /* 1) لقطة بايتات — مهلة 10ث لكل ملف */
+  const snap=[];let si=0;
   for(const f of files){
-    try{snap.push({name:f.name,type:f.type||'',buf:await f.arrayBuffer(),
+    si++;akProg('تثبيت الملفات '+si+'/'+files.length+'…');
+    try{snap.push({name:f.name,type:f.type||'',
+      buf:await akTimeout(f.arrayBuffer(),10000,'تعذّر فتح الملف (مهلة)'),
       isPdf:/pdf/i.test(f.type||'')||/\.pdf$/i.test(f.name||'')});}
-    catch(e){snap.push({name:f.name,err:'تعذّر فتح الملف'});}
+    catch(e){snap.push({name:f.name,err:(e&&e.message)||'تعذّر فتح الملف'});}
   }
   const res=snap.map(x=>({name:x.name,txt:'',amount:null,ccy:null,acct:null,txn:null,
     date:null,ben:null,bank:null,src:null,err:x.err||null}));
-  let idx=0,done=0;
-  const tick=()=>{onTick&&onTick(done,snap.length);};
+  let idx=0,done=0,okN=0;
+  const tick=()=>{akProg('قراءة '+done+'/'+snap.length+' · مقروء '+okN);onTick&&onTick(done,snap.length);};
+  tick();
+  /* 2) موجة محلية متوازية — PDF ×4 | الصور تمر عبر محرك OCR واحد (مقفول أحاديًا) */
+  async function readOne(x,r){
+    const file=new File([x.buf],x.name,{type:x.type||(x.isPdf?'application/pdf':'image/jpeg')});
+    const du=await new Promise((rs,rj)=>{const rd=new FileReader();
+      rd.onload=()=>rs(rd.result);rd.onerror=rj;rd.readAsDataURL(file);});
+    r.txt=(x.isPdf?await pdfText(du):await imageText(du))||'';
+    const p=arkanParse(r.txt,x.name);
+    Object.assign(r,{amount:p.amount??null,ccy:p.ccy||null,txn:p.txn||null,
+      acct:p.acct||null,date:p.date||null,ben:p.ben||null,bank:p.bank||null,
+      src:r.txt?'local':null});
+  }
   async function w(){
     while(idx<snap.length){
       const k=idx++; const x=snap[k], r=res[k];
       if(x.err){done++;tick();continue;}
-      try{
-        const file=new File([x.buf],x.name,{type:x.type||(x.isPdf?'application/pdf':'image/jpeg')});
-        const du=await new Promise((rs,rj)=>{const rd=new FileReader();
-          rd.onload=()=>rs(rd.result);rd.onerror=rj;rd.readAsDataURL(file);});
-        r.txt=(x.isPdf?await pdfText(du):await imageText(du))||'';
-        const p=arkanParse(r.txt,x.name);
-        Object.assign(r,{amount:p.amount??null,ccy:p.ccy||null,txn:p.txn||null,
-          acct:p.acct||null,date:p.date||null,ben:p.ben||null,bank:p.bank||null,
-          src:r.txt?'local':null});
-      }catch(e){r.err='محلي: '+String((e&&e.message)||e).slice(0,60);}
+      try{await akTimeout(readOne(x,r),45000,'مهلة القراءة المحلية');}
+      catch(e){r.err='محلي: '+String((e&&e.message)||e).slice(0,60);}
+      if(r.amount!=null)okN++;
       done++;tick();
     }
   }
-  await Promise.all(Array.from({length:Math.min(6,snap.length)},w));
-  /* 3) موجة Gemini المهيكلة — نفس مسار بوابة المطابقة */
+  await Promise.all(Array.from({length:Math.min(4,snap.length)},w));
+  /* 3) موجة Gemini المهيكلة ×3 — لما لم يُقرأ مبلغه */
   const need=res.map((r,k)=>({r,x:snap[k]})).filter(o=>!o.x.err&&o.r.amount==null);
   if(need.length&&window.ArkanRead&&(localStorage.getItem('gemKey')||'').trim()){
+    akProg('ذكاء اصطناعي لـ '+need.length+' ملفًا…');
     let gi=0;
     async function gw(){
       while(gi<need.length){
         const o=need[gi++];
         try{
           const file=new File([o.x.buf],o.x.name,{type:o.x.type||'application/pdf'});
-          const g=await ArkanRead.readAmount(file);
+          const g=await akTimeout(ArkanRead.readAmount(file),40000,'مهلة Gemini');
           if(g&&g.amount!=null){
             o.r.amount=g.amount;o.r.ccy=o.r.ccy||g.ccy||null;
             o.r.txn=o.r.txn||g.txn||null;o.r.bank=o.r.bank||g.bank||null;
-            o.r.date=o.r.date||g.date||null;o.r.src='gemini';o.r.err=null;}
+            o.r.date=o.r.date||g.date||null;o.r.src='gemini';o.r.err=null;okN++;}
         }catch(e){}
         tick();
       }
     }
     await Promise.all(Array.from({length:Math.min(3,need.length)},gw));
   }
-  /* 4) موجة نصية أخيرة — للبوابات التي تفسّر النص بنفسها */
+  /* 4) موجة نصية أخيرة ×2 — لمن بقي بلا نص ولا مبلغ */
   const tneed=res.map((r,k)=>({r,x:snap[k]})).filter(o=>!o.x.err&&o.r.amount==null&&(!o.r.txt||o.r.txt.replace(/\s/g,'').length<15));
   if(tneed.length){
     let ti=0;
@@ -5879,10 +5901,10 @@ async function akReadBatch(files,onTick){
         const o=tneed[ti++];
         try{
           const file=new File([o.x.buf],o.x.name,{type:o.x.type||'application/pdf'});
-          const _R=await arkanRead(file);
+          const _R=await akTimeout(arkanRead(file),50000,'مهلة المحرك الكامل');
           if(_R){
             if(_R.text&&!o.r.txt)o.r.txt=_R.text;
-            if(_R.amount!=null&&o.r.amount==null){o.r.amount=_R.amount;o.r.src='full';o.r.err=null;}
+            if(_R.amount!=null&&o.r.amount==null){o.r.amount=_R.amount;o.r.src='full';o.r.err=null;okN++;}
             o.r.ccy=o.r.ccy||_R.ccy||null;o.r.txn=o.r.txn||_R.txn||null;
             o.r.acct=o.r.acct||_R.acct||null;o.r.bank=o.r.bank||_R.bank||null;
             if(_R.err&&!o.r.txt&&o.r.amount==null)o.r.err=_R.err;
@@ -5893,9 +5915,11 @@ async function akReadBatch(files,onTick){
     }
     await Promise.all(Array.from({length:Math.min(2,tneed.length)},tw));
   }
+  akProg('اكتمل: '+okN+'/'+snap.length+' مقروء');
+  setTimeout(()=>akProg(null),6000);
   return res;
 }
-/* غلاف التوافق — نفس التوقيع القديم، النتيجة الآن تحمل النص + البيانات المهيكلة */
+/* غلاف التوافق — نفس التوقيع القديم */
 async function akBatchText(files,onTick){return akReadBatch(files,onTick);}
 /* عملة الكوانزا بكل صيغها */
 function akIsAOA(c){return !c||/^(AOA|AKZ|KZ|Kz)$/i.test(String(c));}
