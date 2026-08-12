@@ -3970,7 +3970,7 @@ async function imageText(dataUrl){
   return data.text||'';
 }
 /* ================= BUILD / AUTO-UPDATE ================= */
-const ARKAN_BUILD='1044';
+const ARKAN_BUILD='1045';
 function arkanVerLabel(){const e=$('verLbl');if(e)e.textContent=ARKAN_BUILD;}
 function arkanUpdateBanner(b){
   if(document.getElementById('updBar'))return;
@@ -5959,6 +5959,14 @@ const AK_API='https://arkan-ai-site-production.up.railway.app';
 const AK_ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ5eHpsYXp3cGJzdGlnY3F2aXpiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU5MTU5OTcsImV4cCI6MjEwMTQ5MTk5N30.fxMt_jH4z8t7uVnFLLHyNobu6zsgu_ZwVGLibuqWj38';
 let _akTok=null,_akPushT=null,_akState='off'; /* off|ok|err|sync */
 function _akJwtSub(t){try{return JSON.parse(atob(t.split('.')[1])).sub;}catch(e){return null;}}
+let _akLastErr='';
+async function _akTryToken(phone,pin){
+  const r=await fetch(AK_API+'/supabase-token',{method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({phone,pin})});
+  if(!r.ok){_akLastErr='HTTP '+r.status;return null;}
+  const j=await r.json();return j.token||null;
+}
 async function akSbToken(force){
   try{
     if(!force){
@@ -5971,15 +5979,27 @@ async function akSbToken(force){
       if(!phone)return null;
       localStorage.setItem('arkan-owner-phone',phone);
     }
-    const r=await fetch(AK_API+'/supabase-token',{method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({phone,pin:getPin()})});
-    if(!r.ok)return null;
-    const j=await r.json();if(!j.token)return null;
-    localStorage.setItem('arkan-sb-jwt',JSON.stringify({token:j.token,
-      exp:Math.floor(Date.now()/1000)+(j.expires_in||2592000)}));
-    _akTok=j.token;return j.token;
-  }catch(e){return null;}
+    /* الرمز السحابي = رمز الدردشة (chat) — مستقل عن رمز قفل هذه الصفحة */
+    let pin=(localStorage.getItem('arkan-cloud-pin')||'').trim()||getPin();
+    let tok=await _akTryToken(phone,pin);
+    if(!tok&&_akLastErr==='HTTP 401'){
+      const p2=(prompt('رمز الدخول السحابي — نفس رمز الدردشة (4 أرقام):','')||'').replace(/\D/g,'');
+      if(p2.length===4){
+        tok=await _akTryToken(phone,p2);
+        if(tok)localStorage.setItem('arkan-cloud-pin',p2);
+      }
+    }
+    if(!tok){
+      if(_akLastErr==='HTTP 401')_akLastErr='رمز الدخول غير صحيح';
+      else if(_akLastErr==='HTTP 400')_akLastErr='رقم الهاتف غير صالح';
+      else if(_akLastErr==='HTTP 429')_akLastErr='محاولات كثيرة — انتظر ساعة';
+      else if(_akLastErr==='HTTP 503')_akLastErr='الخادم غير مهيأ';
+      return null;
+    }
+    localStorage.setItem('arkan-sb-jwt',JSON.stringify({token:tok,
+      exp:Math.floor(Date.now()/1000)+2592000}));
+    _akTok=tok;return tok;
+  }catch(e){_akLastErr='الشبكة: '+((e&&e.message)||'').slice(0,40);return null;}
 }
 function akCloudChip(){
   let el=document.getElementById('akCloudChip');
@@ -6013,7 +6033,7 @@ function _akMerge(cloudData){
   return changed;
 }
 async function akPull(){
-  const t=await akSbToken();if(!t)return null;
+  const t=await akSbToken();if(!t){_akState='err';return null;}
   const r=await fetch(AK_SB+'/settle_state?select=data,updated_at&limit=1',
     {headers:{apikey:AK_ANON,Authorization:'Bearer '+t}});
   if(!r.ok)return null;
@@ -6029,6 +6049,11 @@ async function akPush(){
     _akState='sync';akCloudChip();
     const r=await fetch(AK_SB+'/settle_state',{method:'POST',headers:H,keepalive:true,
       body:JSON.stringify({owner_id:sub,data:payload,updated_at:new Date().toISOString()})});
+    if(!r.ok){
+      if(r.status===404)_akLastErr='جدول settle_state غير موجود — نفّذ SQL في Supabase';
+      else if(r.status===401||r.status===403)_akLastErr='صلاحيات Supabase (RLS) — أعد تنفيذ SQL';
+      else _akLastErr='Supabase HTTP '+r.status;
+    }
     /* نسخة يومية — احتفاظ 30 يوماً يُدار بأولوية المفتاح (owner_id,day) */
     const day=new Date().toISOString().slice(0,10);
     fetch(AK_SB+'/settle_backup',{method:'POST',headers:H,keepalive:true,
@@ -6046,7 +6071,7 @@ async function akSyncNow(manual){
     try{renderToday&&renderToday();}catch(e){}
     if(manual)toast('دُمجت بيانات سحابية أحدث ✓');}
   const ok=await akPush();
-  if(manual)toast(ok?'☁ السجل محفوظ سحابياً ✓':'تعذّرت المزامنة — تحقق من الرمز/الشبكة');
+  if(manual)toast(ok?'☁ السجل محفوظ سحابياً ✓':('تعذّرت المزامنة: '+(_akLastErr||'غير معروف')));
 }
 /* ربط persist بالدفع السحابي المؤجل */
 const __persistLocal=persist;
