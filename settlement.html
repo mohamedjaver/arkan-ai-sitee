@@ -127,7 +127,7 @@ header{padding:20px 18px 4px;position:relative;z-index:6}
 .folio::before{content:"";position:absolute;top:-40px;left:50%;transform:translateX(-50%);
   width:150%;height:340px;pointer-events:none;z-index:0;
   background:radial-gradient(58% 100% at 50% 0%, color-mix(in srgb, var(--aur) 55%, transparent) 0%, transparent 72%);
-  filter:blur(26px);opacity:.8;transition:opacity .5s;animation:aurBreath 5.2s ease-in-out infinite}
+  filter:blur(26px);opacity:.30;transition:opacity .5s;animation:none}
 @keyframes aurBreath{0%,100%{opacity:.55}50%{opacity:.95}}
 .folio>*{position:relative;z-index:1}
 .folio .donutC .t{color:#FFFFFF}
@@ -142,14 +142,11 @@ header{padding:20px 18px 4px;position:relative;z-index:6}
   font-family:'IBM Plex Mono',monospace;transition:.15s}
 .ccySel button.on{background:linear-gradient(135deg,var(--acc2),var(--accD));color:#fff;border-color:transparent}
 .donutWrap{display:flex;justify-content:center;position:relative}
-.donutWrap::before{content:"";position:absolute;top:50%;left:50%;width:300px;height:300px;
-  transform:translate(-50%,-50%);border-radius:50%;pointer-events:none;
-  background:conic-gradient(from 0deg, rgba(0,181,255,.0), rgba(0,181,255,.22), rgba(79,178,248,.0) 60%);
-  filter:blur(28px);animation:haloSpin 9s linear infinite}
+.donutWrap::before{content:none}
 @keyframes haloSpin{to{transform:translate(-50%,-50%) rotate(360deg)}}
-#donut{animation:donutBreath 4.5s ease-in-out infinite}
+#donut{animation:none}
 @keyframes donutBreath{0%,100%{transform:scale(1)}50%{transform:scale(1.015)}}
-.donutC .t{animation:numGlow 4.5s ease-in-out infinite}
+.donutC .t{animation:none}
 @keyframes numGlow{0%,100%{text-shadow:none}50%{text-shadow:0 0 24px rgba(0,153,255,.25)}}
 .donutC{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
 .donutC{padding:0 46px;text-align:center}
@@ -503,12 +500,12 @@ section#contacts.on{background:#F8FCFF;border-radius:0}
         <stop offset="0" stop-color="#A9CBFF"/><stop offset="1" stop-color="#6FA0FF"/>
       </linearGradient>
     </defs>
-      <circle cx="172" cy="172" r="150" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="8"/>
+      <circle cx="172" cy="172" r="150" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="11"/>
       <g transform="rotate(-90 172 172)">
-        <circle filter="url(#ringGlow)" id="arcU" cx="172" cy="172" r="150" fill="none" stroke="url(#gU)" stroke-width="8" stroke-linecap="round" stroke-dasharray="0 943" style="transition:.25s"/>
-        <circle filter="url(#ringGlow)" id="arcA" cx="172" cy="172" r="150" fill="none" stroke="url(#gA)" stroke-width="8" stroke-linecap="round" stroke-dasharray="0 943" style="transition:.25s"/>
-        <circle filter="url(#ringGlow)" id="arcM" cx="172" cy="172" r="150" fill="none" stroke="url(#gM)" stroke-width="8" stroke-linecap="round" stroke-dasharray="0 943" style="transition:.25s"/>
-        <circle filter="url(#ringGlow)" id="arcE" cx="172" cy="172" r="150" fill="none" stroke="url(#gE)" stroke-width="8" stroke-linecap="round" stroke-dasharray="0 943" style="transition:.25s"/>
+        <circle id="arcU" cx="172" cy="172" r="150" fill="none" stroke="url(#gU)" stroke-width="11" stroke-linecap="round" stroke-dasharray="0 943" style="transition:.25s"/>
+        <circle id="arcA" cx="172" cy="172" r="150" fill="none" stroke="url(#gA)" stroke-width="11" stroke-linecap="round" stroke-dasharray="0 943" style="transition:.25s"/>
+        <circle id="arcM" cx="172" cy="172" r="150" fill="none" stroke="url(#gM)" stroke-width="11" stroke-linecap="round" stroke-dasharray="0 943" style="transition:.25s"/>
+        <circle id="arcE" cx="172" cy="172" r="150" fill="none" stroke="url(#gE)" stroke-width="11" stroke-linecap="round" stroke-dasharray="0 943" style="transition:.25s"/>
         <circle id="hitU" cx="172" cy="172" r="150" fill="none" stroke="rgba(0,0,0,0)" stroke-width="38" stroke-dasharray="0 943" onclick="selectAsset('U')"/>
         <circle id="hitA" cx="172" cy="172" r="150" fill="none" stroke="rgba(0,0,0,0)" stroke-width="38" stroke-dasharray="0 943" onclick="selectAsset('A')"/>
         <circle id="hitM" cx="172" cy="172" r="150" fill="none" stroke="rgba(0,0,0,0)" stroke-width="38" stroke-dasharray="0 943" onclick="selectAsset('M')"/>
@@ -996,6 +993,7 @@ section#contacts.on{background:#F8FCFF;border-radius:0}
 
   <div class="card" style="margin-top:14px">
     <h3>الإعدادات</h3>
+    <button class="btn btn-line" style="width:100%;margin-bottom:10px;padding:11px;font-size:12.5px" onclick="akSyncNow(true)">☁ مزامنة السجل السحابي الآن</button>
     <label>واتساب شريك أنغولا (بالرمز الدولي، بدون +)</label>
     <input type="tel" id="partnerWa" placeholder="244xxxxxxxxx" inputmode="tel" onchange="saveCfg()">
     <label>رسالة واتساب تلقائية بعد كل عملية</label>
@@ -3970,7 +3968,7 @@ async function imageText(dataUrl){
   return data.text||'';
 }
 /* ================= BUILD / AUTO-UPDATE ================= */
-const ARKAN_BUILD='1046';
+const ARKAN_BUILD='1047';
 function arkanVerLabel(){const e=$('verLbl');if(e)e.textContent=ARKAN_BUILD;}
 function arkanUpdateBanner(b){
   if(document.getElementById('updBar'))return;
@@ -6019,14 +6017,9 @@ async function akSbToken(force){
   }catch(e){_akLastErr='الشبكة: '+((e&&e.message)||'').slice(0,40);return null;}
 }
 function akCloudChip(){
-  let el=document.getElementById('akCloudChip');
-  if(!el){el=document.createElement('div');el.id='akCloudChip';
-    el.style.cssText='position:fixed;top:14px;left:76px;z-index:9997;width:34px;height:34px;border-radius:50%;background:#fff;box-shadow:0 3px 12px rgba(0,0,0,.14);display:flex;align-items:center;justify-content:center;font-size:15px;cursor:pointer;user-select:none';
-    el.onclick=()=>akSyncNow(true);document.body.appendChild(el);}
-  el.textContent=_akState==='sync'?'⏳':'☁';
-  el.style.opacity=_akState==='off'?'.45':'1';
-  el.style.filter=_akState==='err'?'grayscale(1)':'none';
-  el.title=_akState==='ok'?'متزامن سحابياً ✓':(_akState==='err'?'تعذّرت المزامنة — اضغط للمحاولة':'اضغط للمزامنة');
+  /* الأيقونة مخفية بطلب المالك — المزامنة تعمل تلقائياً بصمت.
+     المزامنة اليدوية: akSyncNow(true) من أي زر إعدادات */
+  const el=document.getElementById('akCloudChip');if(el)el.remove();
 }
 function _akMerge(cloudData){
   /* دمج بالمرجع: الأحدث ts يفوز؛ لا حذف أبداً */
