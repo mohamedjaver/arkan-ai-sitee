@@ -402,13 +402,8 @@ function dl(href,name){ var a=document.createElement('a'); a.href=href; a.downlo
 
 /* ── دليل التثبيت (آيفون/أندرويد بدون TronLink) ── */
 function showInstallGuide(){ $('guideModal').classList.add('on'); }
-function openInTronLink(){
-  var url=location.href.split('#')[0];
-  var param=encodeURIComponent(JSON.stringify({url:url,action:'open',protocol:'tronlink',version:'1.0'}));
-  location.href='tronlinkoutside://pull.activity?param='+param;
-  setTimeout(function(){ /* لم يُفتح التطبيق */ 
-    toast('إن لم يُفتح TronLink: افتح التطبيق ← Discover ← الصق رابط الموقع',true);
-  },1600);
+function openInTronLink(){ /* يفتح Trust Wallet (أو المتجر إن لم يكن مثبتًا) */
+  window.open('https://link.trustwallet.com','_blank');
 }
 
 /* ── واجهة ── */
