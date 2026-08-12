@@ -343,8 +343,12 @@ body.ready #scList,body.ready #scChat{visibility:visible}
 <script>
 function bmsg(t){var e=document.getElementById('bootMsg');if(e)e.textContent=t;}
 function bfail(t){var s=document.getElementById('bootScreen');if(!s){s=document.createElement('div');s.id='bootScreen';s.style.cssText='position:fixed;inset:0;z-index:99999;background:#fff;display:flex;align-items:center;justify-content:center;padding:24px';document.body.appendChild(s);}s.style.background='#fff';s.innerHTML='<div style="text-align:center;padding:28px;font-family:system-ui;color:#003B8F"><div style="font-size:15px;font-weight:700;margin-bottom:6px">تعذّر التحميل</div><div style="font-size:12px;color:#8497b8;direction:ltr;margin-bottom:14px">'+String(t).slice(0,160)+'</div><button onclick="location.reload()" style="padding:11px 22px;border:0;border-radius:0;background:#0058D9;color:#fff;font-weight:800">إعادة المحاولة</button> <button onclick="localStorage.removeItem(\'arkan_session\');localStorage.removeItem(\'arkanClient\');location.href=\'account.html?next=chat-v2.html\'" style="padding:11px 22px;border:0;border-radius:0;background:#003B8F;color:#fff;font-weight:800;margin-top:8px">تسجيل الدخول</button></div>';}
-window.addEventListener('error',function(e){bfail((e&&e.message)||'خطأ');});
-window.addEventListener('unhandledrejection',function(e){bfail((e&&e.reason&&e.reason.message)||'خطأ في الاتصال');});
+window.addEventListener('error',function(e){
+  if(window.__booted){try{console.warn('runtime:',e&&e.message);}catch(_){}return;}
+  bfail((e&&e.message)||'خطأ');});
+window.addEventListener('unhandledrejection',function(e){
+  if(window.__booted){try{console.warn('promise:',e&&e.reason);}catch(_){}return;}
+  bfail((e&&e.reason&&e.reason.message)||'خطأ في الاتصال');});
 </script>
 
 <div id="offline">لا يوجد اتصال — سيُعاد الإرسال تلقائيًا</div>
@@ -698,7 +702,7 @@ async function boot(){
       sb=window.supabase.createClient(SB_URL,SB_KEY,{global:{headers:{Authorization:'Bearer '+j.token}},realtime:{params:{apikey:SB_KEY}}});
       try{sb.realtime.setAuth(j.token);}catch(e){}
       document.body.dataset.booted='1';document.body.classList.add('ready');
-      {var _b=document.getElementById('bootScreen');if(_b)_b.remove();}
+      {var _b=document.getElementById('bootScreen');if(_b)_b.remove();window.__booted=true;}
       /* استخدم بيانات المحادثة من رد الخادم مباشرة (يتجاوز RLS) */
       let c=j.conversation;
       if(!c){
@@ -758,7 +762,7 @@ async function boot(){
 
   document.body.dataset.booted='1';
   document.body.classList.add('ready');
-  {var _bs=document.getElementById('bootScreen');if(_bs)_bs.remove();}
+  {var _bs=document.getElementById('bootScreen');if(_bs)_bs.remove();window.__booted=true;}
 
   flushQueue(); /* رسائل معلّقة من جلسة سابقة */
   window.addEventListener('online',()=>{$('offline').classList.remove('on');flushQueue();});
@@ -1074,14 +1078,14 @@ async function toggleVoice(mid){
   if(AUD_MID===mid&&AUD){AUD.paused?AUD.play():AUD.pause();return;}
   stopAudio(); /* رسالة واحدة فقط في كل مرة */
   const url=await mediaUrl(el.dataset.path);if(!url)return toast("تعذر تحميل الصوت");
-  AUD=new Audio(url);AUD_MID=mid;
-  AUD.playbackRate=parseFloat(el.querySelector('.spd').textContent)||1;
-  if(POS[mid])AUD.currentTime=POS[mid];
-  AUD.addEventListener('timeupdate',()=>paintVoice(mid));
-  AUD.addEventListener('play',()=>setPlayIcon(mid,true));
-  AUD.addEventListener('pause',()=>{POS[mid]=AUD.currentTime;setPlayIcon(mid,false);});
-  AUD.addEventListener('ended',()=>{POS[mid]=0;setPlayIcon(mid,false);paintVoice(mid,0);autoNext(mid);});
-  AUD.play().catch(()=>toast('تعذر التشغيل'));
+  const a=new Audio(url);AUD=a;AUD_MID=mid;
+  a.playbackRate=parseFloat(el.querySelector('.spd').textContent)||1;
+  if(POS[mid])a.currentTime=POS[mid];
+  a.addEventListener('timeupdate',()=>{if(AUD===a)paintVoice(mid);});
+  a.addEventListener('play',()=>{if(AUD===a)setPlayIcon(mid,true);});
+  a.addEventListener('pause',()=>{POS[mid]=a.currentTime;if(AUD===a)setPlayIcon(mid,false);});
+  a.addEventListener('ended',()=>{POS[mid]=0;setPlayIcon(mid,false);paintVoice(mid,0);if(AUD===a)autoNext(mid);});
+  a.play().catch(()=>toast('تعذر التشغيل'));
 }
 function stopAudio(){if(AUD){try{AUD.pause();}catch(e){}}if(AUD_MID)setPlayIcon(AUD_MID,false);AUD=null;AUD_MID=null;}
 function setPlayIcon(mid,playing){
