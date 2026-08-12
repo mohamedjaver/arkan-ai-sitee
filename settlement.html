@@ -810,7 +810,7 @@ section#contacts.on{background:#F8FCFF;border-radius:0}
         <span style="font-size:12px;color:var(--dim)">④ إيصالات الكوانزا المدفوعة: <b id="kbCount" class="num" style="color:var(--txt)">0</b> · المجموع: <b id="kbSum" class="num" style="color:var(--gold2)">0</b></span>
         <span>
           <button class="btn btn-gold btn-sm" onclick="uploadKB()">رفع إيصالات الدفع</button>
-          <button class="btn btn-line btn-sm" onclick="clearKB()">تصفير</button>
+          <button class="btn btn-line btn-sm" onclick="clearKB()">تصفير</button><button class="btn btn-line" style="width:100%;margin-top:6px;padding:10px;font-size:12.5px" onclick="addKBManual()">＋ إضافة مبلغ يدويًا (إيصال لم يُقرأ)</button>
         </span>
       </div>
       <div id="kbList" style="margin-top:6px"></div>
@@ -3465,15 +3465,22 @@ function dropKB(i){kb.splice(i,1);renderKB();calc();}
 function clearKB(){kb=[];renderKB();calc();}
 function renderKB(){
   const c=$('kbCount'),s=$('kbSum'),l=$('kbList');if(!c)return;
-  c.textContent=kb.length;s.textContent=fmt(kbTotal(),0);
-  l.innerHTML=kb.map((b,i)=>`
-    <div class="leg" style="${b.excluded?'opacity:.55':''}"><span style="font-size:10px">${b.name.slice(0,22)}${b.txn?' <span style="opacity:.55">#'+b.txn.slice(-6)+'</span>':''}${b.excluded?'<br><span class="badge b-wait" style="font-size:9px">كشف حساب — مستبعد من الجمع</span>':''}${b.err?'<br><span style="color:var(--red);font-size:9px">'+b.err+'</span>':''}</span>
-      <span>${b.amount!=null?'<b class="lp" style="cursor:pointer;'+(b.excluded?'text-decoration:line-through':'')+'" onclick="editKB('+i+')">'+fmt(b.amount,0)+'</b>':'<button class="btn btn-gold btn-sm" style="padding:2px 10px;font-size:10px" onclick="editKB('+i+')">أدخل المبلغ</button>'}
-      ${b.excluded?'<button class="btn btn-line btn-sm" style="padding:2px 8px;font-size:10px;margin-right:4px" onclick="toggleKB('+i+')">إدراج</button>':''}
+  const vis=kb.filter(b=>!b.excluded);
+  c.textContent=vis.length;s.textContent=fmt(kbTotal(),0);
+  /* كشوف الحساب المستبعدة لا تُعرض هنا — قيمتها تظهر في خانة المستحق */
+  l.innerHTML=kb.map((b,i)=>b.excluded?'':`
+    <div class="leg"><span style="font-size:10px">${b.manual?'<span class="badge b-paid" style="font-size:9px">يدوي</span> ':''}${b.name.slice(0,22)}${b.txn?' <span style="opacity:.55">#'+b.txn.slice(-6)+'</span>':''}${b.err?'<br><span style="color:var(--red);font-size:9px">'+b.err+'</span>':''}</span>
+      <span>${b.amount!=null?'<b class="lp" style="cursor:pointer" onclick="editKB('+i+')">'+fmt(b.amount,0)+'</b>':'<button class="btn btn-gold btn-sm" style="padding:2px 10px;font-size:10px" onclick="editKB('+i+')">أدخل المبلغ</button>'}
       <button class="btn btn-line btn-sm" style="padding:2px 8px;font-size:10px;margin-right:6px" onclick="dropKB(${i})">✕</button></span>
     </div>`).join('');
 }
 function toggleKB(i){kb[i].excluded=!kb[i].excluded;renderKB();calc();}
+function addKBManual(){
+  const v=parseFloat(String(prompt('المبلغ بالكوانزا (Kz):','')||'').replace(/[^\d.]/g,''));
+  if(!v||v<=0){toast('أدخل مبلغاً صحيحاً');return;}
+  kb.push({name:'إدخال يدوي',amount:v,txn:null,ccy:'AOA',manual:true,err:null});
+  renderKB();calc();toast('أُضيف '+fmt(v,0)+' Kz ✓');
+}
 function calcM2A(){
   if(!$('m2aOld'))return;
   const old=NV('m2aOld'),rate=NV('m2aRate'),buy=NV('m2aBuy');
@@ -3963,7 +3970,7 @@ async function imageText(dataUrl){
   return data.text||'';
 }
 /* ================= BUILD / AUTO-UPDATE ================= */
-const ARKAN_BUILD='1043';
+const ARKAN_BUILD='1044';
 function arkanVerLabel(){const e=$('verLbl');if(e)e.textContent=ARKAN_BUILD;}
 function arkanUpdateBanner(b){
   if(document.getElementById('updBar'))return;
