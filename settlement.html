@@ -338,7 +338,8 @@ nav{position:fixed;bottom:0;left:0;right:0;z-index:90;
 #tickerBar:hover .tkTrack,#tickerBar.paused .tkTrack{animation-play-state:paused}
 @keyframes tkScroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
 .tkItem{display:inline-flex;align-items:center;gap:7px;font-family:'IBM Plex Mono';font-size:12px;cursor:pointer;flex-shrink:0}
-.tkItem .flag{font-size:14px}
+.tkItem .flag{display:inline-flex;align-items:center}
+.cflag{border-radius:50%;object-fit:cover;vertical-align:middle;box-shadow:0 1px 3px rgba(0,20,60,.18);flex:none}
 .tkItem .sym{font-weight:800;color:var(--txt);letter-spacing:.5px}
 .tkItem .px{font-weight:700;color:#E8E4FF}
 .tkItem .chg{font-weight:700;font-size:11px}
@@ -1376,7 +1377,7 @@ function renderTicker(){
     const cls=Math.abs(ch)<0.01?'fl':(ch>0?'up':'dn');
     const arw=Math.abs(ch)<0.01?'▬':(ch>0?'▲':'▼');
     return `<span class="tkItem" onclick="openTkDetail('${a.c}')">
-      <span class="flag">${a.flag}</span><span class="sym">${a.c}</span>
+      <span class="flag">${flagImg(a.c,20)}</span><span class="sym">${a.c}</span>
       <span class="px">${fmtPx(px)}</span>
       <span class="chg ${cls}">${arw} ${ch>0?'+':''}${ch.toFixed(2)}%</span>
     </span>`;
@@ -1408,7 +1409,7 @@ function openTkDetail(c){
   const op=inBase.length?inBase[0]:px;
   const trend=Math.abs(ch)<0.05?['','الاتجاه عرضي','var(--gold2)']:(ch>0?['','الاتجاه صاعد','var(--green)']:['','الاتجاه هابط','var(--red)']);
   const color=ch>0?'#3DDC97':(ch<0?'#FF6B6B':'#F4A50C');
-  $('mdlTitle').textContent=a.flag+' '+a.c+' / '+tkBase;
+  $('mdlTitle').innerHTML=flagImg(a.c,18)+' '+a.c+' / '+tkBase;
   $('mdlBody').innerHTML=`
     <div class="card">
       <div style="font-size:13px;color:var(--dim);margin-bottom:4px">${a.name}</div>
@@ -3968,7 +3969,7 @@ async function imageText(dataUrl){
   return data.text||'';
 }
 /* ================= BUILD / AUTO-UPDATE ================= */
-const ARKAN_BUILD='1048';
+const ARKAN_BUILD='1049';
 function arkanVerLabel(){const e=$('verLbl');if(e)e.textContent=ARKAN_BUILD;}
 function arkanUpdateBanner(b){
   if(document.getElementById('updBar'))return;
@@ -5314,7 +5315,12 @@ function dlStatusImg(name){
 }
 function flagFile(c){return {AOA:'ao',MRU:'mr',CNY:'cn',AED:'ae',MAD:'ma',USD:'us',EUR:'eu',USDT:'usdt',XOF:'cfa',CFA:'cfa'}[c]||'';}
 function flagOf(c){var f=flagFile(c);return f?('<span class="cflag" style="background-image:url(flags/'+f+'.png)"></span>'):'';}
-function flagEmoji(c){return {AOA:'',MRU:'',CNY:'',AED:'',MAD:'',USD:'',EUR:'',USDT:'',SAR:'',TRY:'',EGP:''}[c]||'';}
+const AK_FLAG_CC={AOA:'ao',MRU:'mr',CNY:'cn',AED:'ae',MAD:'ma',USD:'us',EUR:'european_union',SAR:'sa',TRY:'tr',EGP:'eg'};
+function flagImg(c,sz){sz=sz||22;
+  if(c==='USDT')return '<span class="cflag" style="width:'+sz+'px;height:'+sz+'px;background:#26A17B;color:#fff;display:inline-grid;place-items:center;font-size:'+Math.round(sz*.58)+'px;font-weight:800">₮</span>';
+  const cc=AK_FLAG_CC[c];if(!cc)return '';
+  return '<img class="cflag" style="width:'+sz+'px;height:'+sz+'px" src="https://cdn.jsdelivr.net/gh/hatscripts/circle-flags@2.7.0/flags/'+cc+'.svg" alt="'+c+'" loading="lazy" onerror="this.style.display=\'none\'">';}
+function flagEmoji(c){return flagImg(c,20);}
 
 
 /* نشر للرابط الثابت — يحدّث ملف JSON على GitHub، الرابط يبقى ثابتًا */
