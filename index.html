@@ -146,8 +146,8 @@ html[lang=ar] .hero h1{letter-spacing:0;line-height:1.25;font-size:clamp(34px,5.
 .xfield .lab{font-size:12px;font-weight:700;color:var(--txt-3)}
 .xfield input{border:0;background:transparent;outline:0;width:100%;
   font-family:var(--mono);font-weight:600;font-size:26px;color:var(--ink);direction:ltr;text-align:start}
-.xfield .cur{font-family:'Archivo',sans-serif;font-weight:800;font-size:16px;color:var(--primary);
-  background:#fff;border:1.5px solid var(--stroke);border-radius:0;padding:9px 14px;white-space:nowrap}
+.xfield .cur{font-family:'Archivo',sans-serif;font-weight:800;font-size:16px;color:#12213D;
+  background:#F0F3F8;border:1px solid rgba(10,86,184,.10);border-radius:999px;padding:8px 13px 8px 15px;white-space:nowrap}
 .xswap{display:grid;place-items:center;margin:-8px auto;position:relative;z-index:2;
   width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--primary-2));
   color:#fff;border:4px solid #fff;cursor:pointer;box-shadow:0 10px 24px -8px rgba(0,88,217,.55);
@@ -380,8 +380,11 @@ body::after{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;opac
 
 /* ── قائمة عملات بأعلام (Wise-style) ── */
 .xfield{position:relative}
-.curbtn{display:inline-flex;align-items:center;gap:8px;cursor:pointer}
-.curbtn .fl{font-size:20px;line-height:1}
+.curbtn{display:inline-flex;align-items:center;gap:8px;cursor:pointer;background:#F0F3F8;border-radius:999px;padding:7px 12px 7px 14px;border:1px solid rgba(10,86,184,.10);transition:background .15s}
+.curbtn:active{background:#E4EAF4}
+.curbtn .fl{display:inline-flex;line-height:1}
+.cflag{width:24px;height:24px;border-radius:50%;object-fit:cover;box-shadow:0 1px 3px rgba(0,20,60,.18);flex:none}
+.usdtC{background:#26A17B;color:#fff;display:inline-grid;place-items:center;font-size:14px;font-weight:800}
 .curbtn .ch{font-size:10px;color:var(--txt-3)}
 .usdtF{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;
   background:#26A17B;color:#fff;font:700 13px 'Archivo';line-height:1}
@@ -393,7 +396,8 @@ body::after{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;opac
 .curdd .ci{display:flex;align-items:center;gap:12px;padding:11px 13px;border-radius:0;cursor:pointer;transition:background .12s}
 .curdd .ci:hover{background:#EDF6FF}
 .curdd .ci.sel{background:#E2F0FF}
-.curdd .ci .fl{font-size:22px;width:26px;text-align:center}
+.curdd .ci .fl{display:inline-flex;width:28px;justify-content:center}
+.curdd .ci .cflag{width:26px;height:26px}
 .curdd .ci b{font-family:'Archivo',sans-serif;font-size:14.5px;color:#2E3A48}
 .curdd .ci small{display:block;font-size:11px;color:#7A93AD;font-weight:600}
 
@@ -496,7 +500,7 @@ fill="#FFFFFF" stroke="none">
             <div class="lab" data-i="x_send"></div>
             <input id="fromAmt" inputmode="decimal" value="1,000" aria-label="Amount">
           </div>
-          <button type="button" class="cur curbtn" onclick="toggleDD('from',event)"><span class="fl" id="fromFlag">🇺🇸</span><b id="fromCur">USD</b><span class="ch">▾</span></button>
+          <button type="button" class="cur curbtn" onclick="toggleDD('from',event)"><span class="fl" id="fromFlag"><img class="cflag" src="https://cdn.jsdelivr.net/gh/hatscripts/circle-flags@2.7.0/flags/us.svg" alt="USD"></span><b id="fromCur">USD</b><span class="ch">▾</span></button>
           <div class="curdd" id="dd_from"></div>
         </div>
         <button class="xswap" id="swapBtn" aria-label="Swap">
@@ -507,7 +511,7 @@ fill="#FFFFFF" stroke="none">
             <div class="lab" data-i="x_get"></div>
             <input id="toAmt" readonly value="">
           </div>
-          <button type="button" class="cur curbtn" onclick="toggleDD('to',event)"><span class="fl" id="toFlag">🇲🇷</span><b id="toCur">MRU</b><span class="ch">▾</span></button>
+          <button type="button" class="cur curbtn" onclick="toggleDD('to',event)"><span class="fl" id="toFlag"><img class="cflag" src="https://cdn.jsdelivr.net/gh/hatscripts/circle-flags@2.7.0/flags/mr.svg" alt="MRU"></span><b id="toCur">MRU</b><span class="ch">▾</span></button>
           <div class="curdd" id="dd_to"></div>
         </div>
         <div class="xmeta">
@@ -1021,15 +1025,20 @@ function renderCardPrice(){
 
 /* converter — عملات بأعلام مثل Wise */
 const CURRS=[
-  {c:'USD',f:'🇺🇸',n:'دولار أمريكي'},
-  {c:'EUR',f:'🇪🇺',n:'يورو'},
-  {c:'MRU',f:'🇲🇷',n:'أوقية موريتانية'},
-  {c:'AOA',f:'🇦🇴',n:'كوانزا أنغولية'},
-  {c:'USDT',f:'<span class="usdtF">₮</span>',n:'تيثر · كريبتو'},
-  {c:'CNY',f:'🇨🇳',n:'يوان صيني'},
-  {c:'AED',f:'🇦🇪',n:'درهم إماراتي'}
+  {c:'USD',cc:'us',n:'دولار أمريكي'},
+  {c:'EUR',cc:'european_union',n:'يورو'},
+  {c:'MRU',cc:'mr',n:'أوقية موريتانية'},
+  {c:'AOA',cc:'ao',n:'كوانزا أنغولية'},
+  {c:'USDT',cc:null,n:'تيثر · كريبتو'},
+  {c:'CNY',cc:'cn',n:'يوان صيني'},
+  {c:'AED',cc:'ae',n:'درهم إماراتي'}
 ];
-const flagOf=c=>{const x=CURRS.find(v=>v.c===c);return x?x.f:'🏳️';};
+const flagOf=c=>{
+  if(c==='USDT')return '<span class="cflag usdtC">₮</span>';
+  const x=CURRS.find(v=>v.c===c);
+  if(!x||!x.cc)return '';
+  return '<img class="cflag" src="https://cdn.jsdelivr.net/gh/hatscripts/circle-flags@2.7.0/flags/'+x.cc+'.svg" alt="'+c+'" loading="lazy">';
+};
 const f=document.getElementById('fromAmt'),tAmt=document.getElementById('toAmt'),
       fc=document.getElementById('fromCur'),tc=document.getElementById('toCur'),
       rt=document.getElementById('rateTxt');
@@ -1037,7 +1046,7 @@ function buildDD(side){
   const cur=(side==='from'?fc:tc).textContent;
   document.getElementById('dd_'+side).innerHTML=CURRS.map(v=>
     `<div class="ci ${v.c===cur?'sel':''}" onclick="pickCur('${side}','${v.c}',event)">
-       <span class="fl">${v.f}</span><span><b>${v.c}</b><small>${v.n}</small></span></div>`).join('');
+       <span class="fl">${flagOf(v.c)}</span><span><b>${v.c}</b><small>${v.n}</small></span></div>`).join('');
 }
 function toggleDD(side,e){
   e.stopPropagation();
