@@ -914,7 +914,7 @@ pt:{
    ARKAN OFFICIAL RATES — from rates.json (Mohamed edits that file only)
    All base values in old ouguiya (MRO). 1 MRU = 10 MRO.
    ============================================================ */
-let RATES={updated:"2026-08-02",usd_mro:422.5,eur_mro:485,aoa_mro:0.35,usd_cny:7.16,usd_aed:3.6725,card_price_mro:15000};
+let RATES={updated:"2026-08-02",usd_mro:422.5,eur_mro:485,aoa_mro:0.35,usd_cny:7.16,usd_aed:3.6725,usd_ngn:1368,usd_egp:50,card_price_mro:15000};
 /* ═══ الأسعار المتدرجة المنشورة من لوحة التسوية (جملة/متوسط/تجزئة) ═══ */
 let TIERS={}, TIER_TS=null;
 async function loadTiers(){
@@ -953,7 +953,7 @@ function R(){ // units per 1 USD
     MRU:RATES.usd_mro/10,
     AOA:RATES.usd_mro/RATES.aoa_mro,
     EUR:RATES.usd_mro/RATES.eur_mro,
-    CNY:RATES.usd_cny, AED:RATES.usd_aed};
+    CNY:RATES.usd_cny, AED:RATES.usd_aed, NGN:RATES.usd_ngn, EGP:RATES.usd_egp};
 }
 
 function renderMarket(){
@@ -984,6 +984,11 @@ function renderMarket(){
   if(has('AED')) rows.push(['AED','MRU', mruPer('AED'), `${fmt(mruPer('AED')*10,1)} MRO`]);
   else rows.push(['AED','MRU', r.MRU/r.AED, `${fmt(RATES.usd_mro/RATES.usd_aed,1)} MRO`]);
   if(has('USDT')) rows.push(['USDT','MRU', mruPer('USDT'), `${fmt(mruPer('USDT')*10,1)} MRO`]);
+  /* NGN / EGP */
+  if(has('NGN')) rows.push(['NGN','MRU', mruPer('NGN'), `1000 ₦ = ${fmt(1000*mruPer('NGN'),0)} MRU`]);
+  else rows.push(['NGN','MRU', r.MRU/r.NGN, `1000 ₦ = ${fmt(1000*(RATES.usd_mro/10)/RATES.usd_ngn,0)} MRU`]);
+  if(has('EGP')) rows.push(['EGP','MRU', mruPer('EGP'), `${fmt(mruPer('EGP')*10,2)} MRO`]);
+  else rows.push(['EGP','MRU', r.MRU/r.EGP, `${fmt(RATES.usd_mro/RATES.usd_egp,2)} MRO`]);
   const wsNote={ar:'جملة',fr:'Gros',en:'Whsl',pt:'Grosso'}[LANG]||'جملة';
   document.getElementById('mkt').innerHTML=
     `<div class="mrow hd"><span>${t.mk_pair}</span><span>${t.mk_rate}</span><span>${t.mk_old}</span></div>`+
@@ -1020,7 +1025,9 @@ const CURRS=[
   {c:'AOA',cc:'ao',n:'كوانزا أنغولية'},
   {c:'USDT',cc:null,n:'تيثر · كريبتو'},
   {c:'CNY',cc:'cn',n:'يوان صيني'},
-  {c:'AED',cc:'ae',n:'درهم إماراتي'}
+  {c:'AED',cc:'ae',n:'درهم إماراتي'},
+  {c:'NGN',cc:'ng',n:'نيرة نيجيرية'},
+  {c:'EGP',cc:'eg',n:'جنيه مصري'}
 ];
 const flagOf=c=>{
   if(c==='USDT')return '<span class="cflag usdtC">₮</span>';
