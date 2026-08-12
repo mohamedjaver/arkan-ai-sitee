@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#2E3A48">
+<meta name="theme-color" content="#0B2F70">
 <title>ARKAN Pay — الصرف والتسويات الدولية</title>
 <meta name="description" content="Currency exchange and cross-border settlement between Mauritania, Angola, China and the Gulf.">
 <link rel="icon" href="favicon.svg?v=n4" type="image/svg+xml">
@@ -23,7 +23,7 @@
    ARKAN DESIGN SYSTEM v2 — "Institutional Blue"
    ============================================================ */
 :root{
-  --ink:#2E3A48; --primary:#003B8F; --primary-2:#0058D9; --accent:#0058D9;
+  --ink:#0B2F70; --primary:#003B8F; --primary-2:#0058D9; --accent:#0058D9;
   --ice:#DCEEFF; --white:#FFFFFF;
   --success:#00C853; --warning:#F9A825; --danger:#E53935;
   --gold-1:#F3D583; --gold-2:#C9992E;
@@ -102,29 +102,28 @@ html[lang=ar] .sec-h2{letter-spacing:0}
 .nav .btn{padding:11px 20px;font-size:14px}
 .nav-toggle{display:none;width:44px;height:44px;border-radius:0;border:1.5px solid rgba(255,255,255,.3);
   background:transparent;color:#fff;cursor:pointer;font-size:20px}
-.mmenu{display:none;position:fixed;inset:76px 0 auto 0;z-index:59;background:#2E3A48;
+.mmenu{display:none;position:fixed;inset:76px 0 auto 0;z-index:59;background:#0B2F70;
   border-bottom:1px solid rgba(0,181,255,.25);padding:18px 24px 26px}
 .mmenu.open{display:block}
 .mmenu a{display:block;padding:14px 4px;font-weight:700;color:#EAF5FF;font-size:17px;border-bottom:1px solid rgba(255,255,255,.08)}
 
 /* ---------- hero ---------- */
-.hero{position:relative;background:
-  linear-gradient(180deg,#04143A 0%,#062165 58%,#003B8F 100%);
-  color:#fff;overflow:hidden;padding:74px 0 0}
+.hero{position:relative;background:linear-gradient(180deg,#F6FAFD 0%,#EAF2FE 100%);
+  color:#0B2F70;overflow:hidden;padding:74px 0 0}
 .hero .grid{display:grid;grid-template-columns:1.05fr .95fr;gap:48px;align-items:center;position:relative;z-index:2}
 .pill{display:inline-flex;align-items:center;gap:10px;font-size:13px;font-weight:700;
   color:#EAF5FF;border:1px solid rgba(0,181,255,.5);background:rgba(0,181,255,.12);
   border-radius:0;padding:9px 18px;backdrop-filter:blur(6px)}
 .pill .dot{width:8px;height:8px;border-radius:50%;background:var(--success);box-shadow:0 0 0 5px rgba(0,200,83,.18);animation:pulse 1.8s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
-.hero h1{font-size:clamp(38px,5.8vw,68px);font-weight:900;letter-spacing:-.02em;line-height:1.08;margin:24px 0 20px;max-width:16ch;color:#fff}
-html[lang=ar] .hero h1{letter-spacing:0;line-height:1.25;font-size:clamp(34px,5.4vw,60px)}
+.hero h1{color:#0B2F70;font-size:clamp(38px,5.8vw,68px);font-weight:900;letter-spacing:-.02em;line-height:1.08;margin:24px 0 20px;max-width:16ch;color:#fff}
+html[lang=ar] .hero h1{color:#0B2F70;letter-spacing:0;line-height:1.25;font-size:clamp(34px,5.4vw,60px)}
 .hero h1 em{font-style:normal;background:linear-gradient(92deg,#7FDBFF 0%,#00B5FF 55%,#5FB9FF 100%);
   -webkit-background-clip:text;background-clip:text;color:transparent}
 .hero .lede{color:rgba(234,245,255,.87);font-size:clamp(16px,2.1vw,19.5px);max-width:52ch;margin-bottom:32px}
 .hero .cta{display:flex;gap:14px;flex-wrap:wrap}
 .trust{display:flex;flex-wrap:wrap;gap:10px 22px;margin:34px 0 0;padding:0;list-style:none}
-.trust li{display:inline-flex;align-items:center;gap:8px;font-size:13.5px;font-weight:600;color:rgba(234,245,255,.8)}
+.trust li{display:inline-flex;align-items:center;gap:8px;font-size:13.5px;font-weight:600;color:#0A56B8}
 .trust svg{width:16px;height:16px;color:#0058D9;flex:none}
 
 /* converter */
@@ -256,7 +255,7 @@ section{padding:88px 0}
 .vcard{position:relative;aspect-ratio:1.586;border-radius:0;padding:28px;color:#fff;direction:ltr;text-align:left;
   background:
     radial-gradient(500px 260px at 85% -20%, rgba(0,181,255,.5), transparent 60%),
-    linear-gradient(135deg,#2E3A48 0%,#003B8F 55%,#0058D9 100%);
+    linear-gradient(135deg,#0B2F70 0%,#003B8F 55%,#0058D9 100%);
   box-shadow:var(--sh-navy);transform:rotateY(-9deg) rotateX(4deg);transition:transform .5s cubic-bezier(.2,.8,.2,1);
   display:flex;flex-direction:column}
 .card3d:hover .vcard{transform:rotateY(0) rotateX(0)}
@@ -270,7 +269,7 @@ section{padding:88px 0}
 .vcard .meta b{font-family:'Archivo',sans-serif;font-weight:700;letter-spacing:.08em;font-size:13.5px}
 .vcard .visa-w{font-family:'Archivo',sans-serif;font-weight:900;font-style:italic;font-size:26px}
 /* ── WALLET SECTION ── */
-.walletsec{background:linear-gradient(180deg,#2E3A48 0%,#0A2A66 100%);color:#EAF5FF;position:relative;overflow:hidden}
+.walletsec{background:#F6FAFD;color:#0B2F70;position:relative;overflow:hidden}
 .walletsec::before{content:none}
 .walletsec .grid{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:center;position:relative;z-index:1}
 .walletsec .eyebrow{color:#5CE0B8}
@@ -280,7 +279,7 @@ section{padding:88px 0}
 .walletsec .tick{background:rgba(38,161,123,.18);color:#5CE0B8}
 .wkard{position:relative;border-radius:0;padding:26px;direction:ltr;text-align:left;
   background:radial-gradient(420px 240px at 88% -10%, rgba(38,161,123,.4), transparent 60%),
-             linear-gradient(150deg,#04143A 0%,#0058D9 70%,#0058D9 100%);
+             linear-gradient(150deg,#0B2F70 0%,#0058D9 70%,#0058D9 100%);
   box-shadow:0 30px 70px -20px rgba(0,30,90,.7);transform:rotateY(-8deg) rotateX(3deg);
   transition:transform .5s cubic-bezier(.2,.8,.2,1);color:#fff}
 .card3d:hover .wkard{transform:rotateY(0) rotateX(0)}
@@ -329,7 +328,7 @@ section{padding:88px 0}
 .ai-card p{font-size:15px;color:var(--txt-2)}
 
 /* footer */
-footer{background:#2E3A48;color:#EAF5FF;padding:56px 0 42px;position:relative;overflow:hidden}
+footer{background:#0B2F70;color:#EAF5FF;padding:56px 0 42px;position:relative;overflow:hidden}
 footer::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;
   background:linear-gradient(90deg,var(--primary-2),var(--accent),var(--primary-2))}
 .f-grid{display:flex;flex-wrap:wrap;align-items:center;gap:20px 34px}
@@ -393,7 +392,7 @@ body::after{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;opac
 .curdd .ci.sel{background:#E2F0FF}
 .curdd .ci .fl{display:inline-flex;width:38px;justify-content:center}
 .curdd .ci .cflag{width:34px;height:34px}
-.curdd .ci b{font-family:'Archivo',sans-serif;font-size:14.5px;color:#2E3A48}
+.curdd .ci b{font-family:'Archivo',sans-serif;font-size:14.5px;color:#0B2F70}
 .curdd .ci small{display:block;font-size:11px;color:#7A93AD;font-weight:600}
 
 .tierbadge{display:none;margin-inline-start:8px;font:700 11px 'IBM Plex Sans Arabic',sans-serif;
@@ -1119,7 +1118,127 @@ mm.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>mm.classList.
 /* ============================================================
    3D globe payment network
    ============================================================ */
-/* شريط الحوالات التجريبي أُزيل — لا أرقام وهمية */
+(function(){
+  const cv=document.getElementById('globe');
+  const ctx=cv.getContext('2d');
+  const DPR=Math.min(window.devicePixelRatio||1,2);
+  const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const CITIES=[
+    ['Guangzhou',23.1,113.3],['Dubai',25.2,55.3],['Paris',48.8,2.35],
+    ['Nouakchott',18.1,-15.97],['Luanda',-8.84,13.23],['Dakar',14.7,-17.45],
+    ['Kinshasa',-4.32,15.31],['Casablanca',33.57,-7.59],['Istanbul',41.0,28.97],
+    ['São Paulo',-23.55,-46.63],['London',51.5,-0.12],['New York',40.71,-74.0]
+  ];
+  const CORRIDORS=[[3,0],[4,0],[3,1],[4,1],[5,2],[7,2],[3,10],[4,9],[6,1],[3,8],[4,11],[5,10],[3,4]];
+
+  let W,H,Rr,cx,cy;
+  function resize(){
+    const b=cv.getBoundingClientRect();
+    W=b.width;H=b.height;
+    cv.width=W*DPR;cv.height=H*DPR;
+    ctx.setTransform(DPR,0,0,DPR,0,0);
+    Rr=Math.min(W*0.34,H*0.62);
+    cx=W/2; cy=H*0.56;
+  }
+  resize(); addEventListener('resize',resize);
+
+  const TILT=-0.42;
+  function proj(lat,lon,rot){
+    const la=lat*Math.PI/180, lo=lon*Math.PI/180+rot;
+    let x=Math.cos(la)*Math.sin(lo), y=Math.sin(la), z=Math.cos(la)*Math.cos(lo);
+    const y2=y*Math.cos(TILT)-z*Math.sin(TILT);
+    const z2=y*Math.sin(TILT)+z*Math.cos(TILT);
+    return {x:cx+x*Rr, y:cy-y2*Rr, z:z2};
+  }
+  function slerpPt(a,b,t,rot){
+    const A=[a[1]*Math.PI/180,a[2]*Math.PI/180], B=[b[1]*Math.PI/180,b[2]*Math.PI/180];
+    const v1=[Math.cos(A[0])*Math.sin(A[1]),Math.sin(A[0]),Math.cos(A[0])*Math.cos(A[1])];
+    const v2=[Math.cos(B[0])*Math.sin(B[1]),Math.sin(B[0]),Math.cos(B[0])*Math.cos(B[1])];
+    const dot=Math.max(-1,Math.min(1,v1[0]*v2[0]+v1[1]*v2[1]+v1[2]*v2[2]));
+    const om=Math.acos(dot), so=Math.sin(om)||1e-6;
+    const k1=Math.sin((1-t)*om)/so, k2=Math.sin(t*om)/so;
+    let x=v1[0]*k1+v2[0]*k2, y=v1[1]*k1+v2[1]*k2, z=v1[2]*k1+v2[2]*k2;
+    const lift=1+Math.sin(t*Math.PI)*0.13;
+    x*=lift;y*=lift;z*=lift;
+    const lo=Math.atan2(x,z)+rot, la=Math.asin(Math.max(-1,Math.min(1,y/lift)));
+    const r=Math.hypot(x,y,z);
+    const X=Math.sin(lo)*Math.cos(la)*r, Y=Math.sin(la)*r, Z=Math.cos(lo)*Math.cos(la)*r;
+    const y2=Y*Math.cos(TILT)-Z*Math.sin(TILT), z2=Y*Math.sin(TILT)+Z*Math.cos(TILT);
+    return {x:cx+X*Rr, y:cy-y2*Rr, z:z2};
+  }
+
+  let rot=0.35, last=0;
+  const particles=CORRIDORS.map(c=>({c,t:Math.random(),sp:0.0016+Math.random()*0.0016}));
+
+  function frame(ts){
+    const dt=Math.min(ts-last,50); last=ts;
+    if(!reduced) rot+=dt*0.000045;
+    ctx.clearRect(0,0,W,H);
+
+    const g=ctx.createRadialGradient(cx,cy,Rr*0.2,cx,cy,Rr*1.25);
+    g.addColorStop(0,'rgba(0,88,217,.22)');g.addColorStop(.7,'rgba(0,181,255,.06)');g.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=g; ctx.beginPath(); ctx.arc(cx,cy,Rr*1.25,0,7); ctx.fill();
+
+    ctx.fillStyle='rgba(120,190,255,.34)';
+    for(let la=-60;la<=75;la+=15){
+      for(let lo=-180;lo<180;lo+=10){
+        const p=proj(la,lo,rot);
+        if(p.z>0.08){
+          ctx.globalAlpha=0.15+0.5*p.z;
+          ctx.beginPath();ctx.arc(p.x,p.y,1.15,0,7);ctx.fill();
+        }
+      }
+    }
+    ctx.globalAlpha=1;
+
+    ctx.strokeStyle='rgba(0,181,255,.35)';ctx.lineWidth=1.2;
+    ctx.beginPath();ctx.arc(cx,cy,Rr,0,7);ctx.stroke();
+
+    for(const cor of CORRIDORS){
+      const a=CITIES[cor[0]],b=CITIES[cor[1]];
+      ctx.beginPath();let vis=false;
+      for(let t=0;t<=1.0001;t+=0.04){
+        const p=slerpPt(a,b,t,rot);
+        if(p.z>0){ if(!vis){ctx.moveTo(p.x,p.y);vis=true;} else ctx.lineTo(p.x,p.y);} else vis=false;
+      }
+      ctx.strokeStyle='rgba(0,181,255,.30)';ctx.lineWidth=1.4;ctx.stroke();
+    }
+
+    for(const pt of particles){
+      if(!reduced) pt.t+=pt.sp*dt; if(pt.t>1)pt.t=0;
+      const a=CITIES[pt.c[0]],b=CITIES[pt.c[1]];
+      const p=slerpPt(a,b,pt.t,rot);
+      if(p.z>0){
+        const gg=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,7);
+        gg.addColorStop(0,'rgba(160,230,255,1)');gg.addColorStop(1,'rgba(0,181,255,0)');
+        ctx.fillStyle=gg;ctx.beginPath();ctx.arc(p.x,p.y,7,0,7);ctx.fill();
+        ctx.fillStyle='#EAF5FF';ctx.beginPath();ctx.arc(p.x,p.y,1.8,0,7);ctx.fill();
+      }
+    }
+
+    ctx.textBaseline='middle';ctx.textAlign='left';
+    for(const c of CITIES){
+      const p=proj(c[1],c[2],rot);
+      if(p.z>0.05){
+        const s=0.6+0.6*p.z;
+        const gg=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,9*s);
+        gg.addColorStop(0,'rgba(0,181,255,.9)');gg.addColorStop(1,'rgba(0,181,255,0)');
+        ctx.fillStyle=gg;ctx.beginPath();ctx.arc(p.x,p.y,9*s,0,7);ctx.fill();
+        ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(p.x,p.y,2.6*s,0,7);ctx.fill();
+        if(p.z>0.45){
+          ctx.font='600 11px "Public Sans",sans-serif';
+          ctx.fillStyle=`rgba(234,245,255,${0.35+0.55*p.z})`;
+          ctx.fillText(c[0],p.x+9,p.y);
+        }
+      }
+    }
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+
+    /* شريط الحوالات الوهمي محذوف — الكرة تعمل بلا أرقام مختلقة */
+})();
 
 /* تحميل الأسعار المتدرجة المنشورة سحابيًا */
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>{loadTiers();});
