@@ -551,7 +551,7 @@ async function login(phone, pin, silent){
       $('gEnter').disabled=false;$('gEnter').textContent='دخول';return;}
     if(lr.ok){
       const lj=await lr.json();
-      SESSION={phone:lj.phone};
+      SESSION={phone:lj.phone,name:lj.name||''};
       localStorage.setItem('arkan_session',JSON.stringify(SESSION));
       try{
         const tr=await fetch(SRV+'/supabase-token',{method:'POST',
