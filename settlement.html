@@ -3963,7 +3963,7 @@ async function imageText(dataUrl){
   return data.text||'';
 }
 /* ================= BUILD / AUTO-UPDATE ================= */
-const ARKAN_BUILD='1042';
+const ARKAN_BUILD='1043';
 function arkanVerLabel(){const e=$('verLbl');if(e)e.textContent=ARKAN_BUILD;}
 function arkanUpdateBanner(b){
   if(document.getElementById('updBar'))return;
@@ -5942,5 +5942,121 @@ async function akBatchText(files,onTick){
 }
 function akIsAOA(c){return !c||/^(AOA|AKZ|KZ|Kz)$/i.test(String(c));}
 </script>
+
+<script id="akCloudSync">
+/* ═══ السجل المالي الدائم — مزامنة Supabase ═══
+   محلي أولاً (يعمل بلا إنترنت) → دفع سحابي مؤجل 4ث بعد كل persist()
+   + نسخة يومية (30 يومًا) + دمج بالمرجع بين الأجهزة (الأحدث ts يفوز) */
+const AK_SB='https://vyxzlazwpbstigcqvizb.supabase.co/rest/v1';
+const AK_API='https://arkan-ai-site-production.up.railway.app';
+const AK_ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ5eHpsYXp3cGJzdGlnY3F2aXpiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU5MTU5OTcsImV4cCI6MjEwMTQ5MTk5N30.fxMt_jH4z8t7uVnFLLHyNobu6zsgu_ZwVGLibuqWj38';
+let _akTok=null,_akPushT=null,_akState='off'; /* off|ok|err|sync */
+function _akJwtSub(t){try{return JSON.parse(atob(t.split('.')[1])).sub;}catch(e){return null;}}
+async function akSbToken(force){
+  try{
+    if(!force){
+      const c=JSON.parse(localStorage.getItem('arkan-sb-jwt')||'null');
+      if(c&&c.exp-Date.now()/1000>172800){_akTok=c.token;return c.token;}
+    }
+    let phone=(localStorage.getItem('arkan-owner-phone')||'').trim();
+    if(!phone){
+      phone=(prompt('رقم هاتف المالك (دولي):','+22236295050')||'').trim();
+      if(!phone)return null;
+      localStorage.setItem('arkan-owner-phone',phone);
+    }
+    const r=await fetch(AK_API+'/supabase-token',{method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({phone,pin:getPin()})});
+    if(!r.ok)return null;
+    const j=await r.json();if(!j.token)return null;
+    localStorage.setItem('arkan-sb-jwt',JSON.stringify({token:j.token,
+      exp:Math.floor(Date.now()/1000)+(j.expires_in||2592000)}));
+    _akTok=j.token;return j.token;
+  }catch(e){return null;}
+}
+function akCloudChip(){
+  let el=document.getElementById('akCloudChip');
+  if(!el){el=document.createElement('div');el.id='akCloudChip';
+    el.style.cssText='position:fixed;top:14px;left:76px;z-index:9997;width:34px;height:34px;border-radius:50%;background:#fff;box-shadow:0 3px 12px rgba(0,0,0,.14);display:flex;align-items:center;justify-content:center;font-size:15px;cursor:pointer;user-select:none';
+    el.onclick=()=>akSyncNow(true);document.body.appendChild(el);}
+  el.textContent=_akState==='sync'?'⏳':'☁';
+  el.style.opacity=_akState==='off'?'.45':'1';
+  el.style.filter=_akState==='err'?'grayscale(1)':'none';
+  el.title=_akState==='ok'?'متزامن سحابياً ✓':(_akState==='err'?'تعذّرت المزامنة — اضغط للمحاولة':'اضغط للمزامنة');
+}
+function _akMerge(cloudData){
+  /* دمج بالمرجع: الأحدث ts يفوز؛ لا حذف أبداً */
+  if(!cloudData)return false;
+  const C=cloudData;let changed=false;
+  if(Array.isArray(C.txs)){
+    const map=new Map(txs.map(t=>[t.ref,t]));
+    for(const ct of C.txs){
+      const lt=map.get(ct.ref);
+      if(!lt){txs.push(ct);changed=true;}
+      else if((ct.ts||0)>(lt.ts||0)){Object.assign(lt,ct);changed=true;}
+    }
+  }
+  if(typeof C.seq==='number'&&C.seq>seq){seq=C.seq;changed=true;}
+  if(typeof C.seqC==='number'&&C.seqC>seqC){seqC=C.seqC;changed=true;}
+  if(C.chains&&Array.isArray(C.chains)&&Array.isArray(chains)){
+    const cm=new Map(chains.map(c=>[c.ref||c.id,c]));
+    for(const cc of C.chains){const k=cc.ref||cc.id;
+      if(k&&!cm.has(k)){chains.push(cc);changed=true;}}
+  }
+  return changed;
+}
+async function akPull(){
+  const t=await akSbToken();if(!t)return null;
+  const r=await fetch(AK_SB+'/settle_state?select=data,updated_at&limit=1',
+    {headers:{apikey:AK_ANON,Authorization:'Bearer '+t}});
+  if(!r.ok)return null;
+  const rows=await r.json();return rows[0]||null;
+}
+async function akPush(){
+  const t=await akSbToken();if(!t){_akState='err';akCloudChip();return false;}
+  const sub=_akJwtSub(t);if(!sub){_akState='err';akCloudChip();return false;}
+  const payload={txs,seq,chains,seqC};
+  const H={apikey:AK_ANON,Authorization:'Bearer '+t,'Content-Type':'application/json',
+    Prefer:'resolution=merge-duplicates'};
+  try{
+    _akState='sync';akCloudChip();
+    const r=await fetch(AK_SB+'/settle_state',{method:'POST',headers:H,keepalive:true,
+      body:JSON.stringify({owner_id:sub,data:payload,updated_at:new Date().toISOString()})});
+    /* نسخة يومية — احتفاظ 30 يوماً يُدار بأولوية المفتاح (owner_id,day) */
+    const day=new Date().toISOString().slice(0,10);
+    fetch(AK_SB+'/settle_backup',{method:'POST',headers:H,keepalive:true,
+      body:JSON.stringify({owner_id:sub,day,data:payload,updated_at:new Date().toISOString()})}).catch(()=>{});
+    _akState=r.ok?'ok':'err';akCloudChip();
+    if(r.ok)localStorage.setItem('arkan-cloud-ts',String(Date.now()));
+    return r.ok;
+  }catch(e){_akState='err';akCloudChip();return false;}
+}
+function akQueuePush(){clearTimeout(_akPushT);_akPushT=setTimeout(akPush,4000);}
+async function akSyncNow(manual){
+  if(manual)toast('جارٍ المزامنة السحابية…');
+  const c=await akPull();
+  if(c&&c.data&&_akMerge(c.data)){__persistLocal();
+    try{renderToday&&renderToday();}catch(e){}
+    if(manual)toast('دُمجت بيانات سحابية أحدث ✓');}
+  const ok=await akPush();
+  if(manual)toast(ok?'☁ السجل محفوظ سحابياً ✓':'تعذّرت المزامنة — تحقق من الرمز/الشبكة');
+}
+/* ربط persist بالدفع السحابي المؤجل */
+const __persistLocal=persist;
+persist=function(){__persistLocal();akQueuePush();};
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')akPush();});
+/* إقلاع: سحب + دمج + دفع (صامت) */
+setTimeout(async()=>{
+  akCloudChip();
+  try{
+    const c=await akPull();
+    if(c&&c.data&&_akMerge(c.data)){__persistLocal();try{renderToday&&renderToday();}catch(e){}
+      toast('☁ استُرجع السجل السحابي ✓');}
+    if(await akPush())_akState='ok';
+  }catch(e){_akState='err';}
+  akCloudChip();
+},3500);
+</script>
+
 </body>
 </html>
