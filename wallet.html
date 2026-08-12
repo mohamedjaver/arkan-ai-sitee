@@ -154,12 +154,12 @@ main{position:relative;z-index:1;padding:16px 14px 110px}
       <div class="tl-badge" style="background:none;box-shadow:none;padding:0;overflow:hidden"><img src="arkan-icon-192.png?v=n4" alt="ARKAN" style="width:74px;height:74px;border-radius:0;box-shadow:0 12px 32px rgba(25,169,245,.35)"></div>
       <h1>محفظتك، بمفاتيحك أنت</h1>
       <p>فعّل محفظتك لاستقبال الأموال وإرسالها ومتابعة رصيدك لحظيًا.<br>أركان لا يحتفظ بمفاتيحك الخاصة ولا يستطيع لمس أموالك — أنت المالك الوحيد.</p>
-      <button class="btn btn-primary" id="btnConnect">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M13 10V3L4 14h7v7l9-11h-7z" stroke="#fff" stroke-width="1.8" stroke-linejoin="round"/></svg>
-        تفعيل محفظتك الآن
+      <button class="btn btn-primary" id="btnConnect" style="background:#0500FF;box-shadow:0 14px 32px -8px rgba(5,0,255,.45)">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 3l7 3v5c0 4.5-3 8.5-7 10-4-1.5-7-5.5-7-10V6l7-3z" stroke="#fff" stroke-width="1.8" stroke-linejoin="round"/></svg>
+        ربط Trust Wallet
       </button>
       <button class="btn btn-ghost" id="btnManual" style="margin-top:10px">
-        متابعة بعنوان محفظتك — Trust Wallet وغيرها
+        محفظة أخرى — الصق عنوان TRC20
       </button>
       <div class="trust">
         <div><b>غير وصائية</b>المفتاح الخاص لا يغادر جهازك أبدًا</div>
@@ -216,16 +216,22 @@ main{position:relative;z-index:1;padding:16px 14px 110px}
   </div>
 </div>
 
-<!-- ═══ مودال دليل TronLink ═══ -->
+<!-- ═══ مودال ربط Trust Wallet ═══ -->
 <div class="modal" id="guideModal">
   <div class="sheet">
-    <div class="sheet-h"><h3>تفعيل التوقيع الآمن</h3><button class="x" data-close="guideModal">✕</button></div>
+    <div class="sheet-h"><h3>ربط Trust Wallet</h3><button class="x" data-close="guideModal">✕</button></div>
     <div class="guide-steps">
-      <div class="gstep"><i>1</i><span>حمّل تطبيق التوقيع <b>TronLink</b> من App Store أو Google Play وأنشئ محفظتك. <b>احفظ كلمات الاسترداد ورقيًا</b> — لا تشاركها مع أحد أبدًا، ولا حتى مع أركان.</span></div>
-      <div class="gstep"><i>2</i><span>افتح التطبيق ← تبويب <b>Discover</b> (المتصفح).</span></div>
-      <div class="gstep"><i>3</i><span>الصق رابط <b>arkanrates.com/wallet.html</b> واضغط ربط المحفظة.</span></div>
+      <div class="gstep"><i>1</i><span>حمّل <b>Trust Wallet</b> من App Store أو Google Play وأنشئ محفظتك. <b>احفظ كلمات الاسترداد ورقيًا</b> — لا تشاركها مع أحد أبدًا، ولا حتى مع أركان.</span></div>
+      <div class="gstep"><i>2</i><span>داخل التطبيق: ابحث عن <b>USDT</b> ← اختر شبكة <b>TRON (TRC20)</b> ← اضغط <b>Receive</b> ← <b>Copy</b> لنسخ عنوانك.</span></div>
+      <div class="gstep"><i>3</i><span>الصق العنوان هنا — يصبح الموقع مرآة حية لمحفظتك: رصيد حقيقي، سجل معاملات، استقبال بـ QR، وإرسال يُوقَّع داخل Trust Wallet.</span></div>
     </div>
-    <button class="btn btn-primary" id="btnTLOpen">فتح في تطبيق التوقيع</button>
+    <input id="twAddr" class="num" inputmode="text" autocomplete="off" spellcheck="false"
+      placeholder="TXxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+      style="width:100%;padding:14px;border:1.5px solid var(--line);border-radius:0;font-family:inherit;font-size:13.5px;letter-spacing:.4px;background:var(--card2);color:var(--txt);direction:ltr;text-align:left;margin-bottom:12px">
+    <button class="btn btn-primary" id="btnTWLink" style="background:#0500FF;box-shadow:0 12px 28px -8px rgba(5,0,255,.4)">ربط المحفظة</button>
+    <button class="btn btn-ghost" id="btnTLOpen" style="margin-top:10px">فتح Trust Wallet</button>
+    <p style="font-size:11px;color:var(--muted);text-align:center;margin-top:10px;line-height:1.7">
+      العنوان العام فقط — لا كلمات استرداد، لا مفاتيح خاصة. لا تشارك كلمات الاسترداد مع أي جهة.</p>
   </div>
 </div>
 
@@ -255,11 +261,11 @@ main{position:relative;z-index:1;padding:16px 14px 110px}
         <div style="display:flex;justify-content:space-between"><span style="color:var(--muted)">الشبكة</span><b>TRON · TRC20</b></div>
       </div>
       <div class="warn" style="margin-bottom:14px">⚠️<span>تحويلات البلوكتشين <b>غير قابلة للاسترجاع</b>. تأكد من العنوان قبل التوقيع.</span></div>
-      <button class="btn btn-primary" id="sendGo">تأكيد وتوقيع الإرسال</button>
-      <button class="btn" id="sendTW" style="margin-top:10px;background:#0500FF;color:#fff;box-shadow:0 12px 28px -8px rgba(5,0,255,.4)">
+      <button class="btn btn-primary" id="sendTW" style="background:#0500FF;box-shadow:0 12px 28px -8px rgba(5,0,255,.4)">
         التوقيع في Trust Wallet</button>
       <div style="font-size:11px;color:var(--muted);text-align:center;margin-top:8px">
-        يفتح تطبيق Trust Wallet بالمعاملة معبأة — التوقيع يتم داخل التطبيق فقط، الموقع لا يلمس مفاتيحك.</div>
+        يفتح Trust Wallet بالمعاملة معبأة — التوقيع داخل التطبيق فقط، الموقع لا يلمس مفاتيحك.</div>
+      <button class="btn btn-ghost" id="sendGo" style="margin-top:10px;display:none">توقيع بالمحفظة المضمّنة</button>
       <button class="btn btn-ghost" id="sendBack" style="margin-top:10px">تعديل</button>
     </div>
     <div id="sendBusy" style="display:none;text-align:center;padding:28px 10px">
@@ -324,6 +330,16 @@ body{background:radial-gradient(1100px 600px at 78% -10%, rgba(0,88,217,.55), tr
 </style>
 <script>
 (function(){
+  /* ربط Trust Wallet بالعنوان الملصق */
+  var lk=document.getElementById('btnTWLink');
+  if(lk) lk.addEventListener('click',function(){
+    var a=(document.getElementById('twAddr').value||'').trim();
+    if(!/^T[1-9A-HJ-NP-Za-km-z]{33}$/.test(a)){alert('عنوان TRC20 غير صالح — يبدأ بـ T ويتكون من 34 حرفًا');return;}
+    try{localStorage.setItem('arkan_wallet_addr',a);localStorage.setItem('arkan_wallet_net','mainnet');}catch(e){}
+    location.reload();
+  });
+  /* التوقيع المضمّن يظهر فقط إذا وُجدت محفظة مضمّنة (TronLink مثلًا) */
+  if(window.tronWeb||window.tronLink){var g=document.getElementById('sendGo');if(g)g.style.display='';}
   var b=document.getElementById('sendTW'); if(!b)return;
   b.addEventListener('click',function(){
     var to=(document.getElementById('sendTo')||{}).value||'';
