@@ -3970,7 +3970,7 @@ async function imageText(dataUrl){
   return data.text||'';
 }
 /* ================= BUILD / AUTO-UPDATE ================= */
-const ARKAN_BUILD='1045';
+const ARKAN_BUILD='1046';
 function arkanVerLabel(){const e=$('verLbl');if(e)e.textContent=ARKAN_BUILD;}
 function arkanUpdateBanner(b){
   if(document.getElementById('updBar'))return;
@@ -5969,10 +5969,27 @@ async function _akTryToken(phone,pin){
 }
 async function akSbToken(force){
   try{
+    /* أولوية 1: توكن Supabase الجاهز من الدردشة (نفس المتصفح) */
     if(!force){
+      const cj=JSON.parse(localStorage.getItem('arkan_sb_jwt')||'null');
+      if(cj&&cj.token&&(cj.exp||0)-Date.now()/1000>172800){_akTok=cj.token;return cj.token;}
       const c=JSON.parse(localStorage.getItem('arkan-sb-jwt')||'null');
       if(c&&c.exp-Date.now()/1000>172800){_akTok=c.token;return c.token;}
     }
+    /* أولوية 2: جلسة الدردشة الموقّعة (sessionToken) → توكن جديد بلا رمز */
+    try{
+      const cl=JSON.parse(localStorage.getItem('arkanClient')||'null');
+      if(cl&&cl.phone&&cl.st){
+        const r0=await fetch(AK_API+'/supabase-token',{method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({phone:cl.phone,sessionToken:cl.st})});
+        if(r0.ok){const j0=await r0.json();
+          if(j0.token){
+            localStorage.setItem('arkan-sb-jwt',JSON.stringify({token:j0.token,
+              exp:Math.floor(Date.now()/1000)+(j0.expires_in||2592000)}));
+            _akTok=j0.token;return j0.token;}}
+      }
+    }catch(e){}
     let phone=(localStorage.getItem('arkan-owner-phone')||'').trim();
     if(!phone){
       phone=(prompt('رقم هاتف المالك (دولي):','+22236295050')||'').trim();
