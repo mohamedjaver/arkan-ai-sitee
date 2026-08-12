@@ -17,6 +17,10 @@ var CFG={
       usdt:'TXYZopYRdj2D9XRtbG411XZZ3kM5VkAeBf', scan:'https://nile.tronscan.org/#' }
   },
   defaultNet:'mainnet',
+  bsc:{ rpc:'https://bsc-dataseed.bnbchain.org',
+        rpc2:'https://bsc-dataseed1.binance.org',
+        usdt:'0x55d398326f99059fF775485246999027B3197955', /* USDT BEP20 · 18 خانة */
+        scan:'https://bscscan.com' },
   storageKey:'arkan_wallet_addr',
   netKey:'arkan_wallet_net',
   txLimit:10
@@ -35,6 +39,21 @@ function toast(msg,err){
   clearTimeout(t._h); t._h=setTimeout(function(){t.className='wtoast';},2600);
 }
 function isTronAddress(a){ return /^T[1-9A-HJ-NP-Za-km-z]{33}$/.test(a||''); }
+function isBscAddress(a){ return /^0x[0-9a-fA-F]{40}$/.test(a||''); }
+function isWalletAddress(a){ return isTronAddress(a)||isBscAddress(a); }
+function chainOf(a){ return isBscAddress(a)?'bsc':'tron'; }
+function onBsc(){ return chainOf(S.addr)==='bsc'; }
+async function bscRpc(method,params){
+  var body=JSON.stringify({jsonrpc:'2.0',id:1,method:method,params:params});
+  var urls=[CFG.bsc.rpc,CFG.bsc.rpc2];
+  for(var i=0;i<urls.length;i++){
+    try{
+      var r=await fetch(urls[i],{method:'POST',headers:{'content-type':'application/json'},body:body});
+      var x=await r.json(); if(x&&x.result!=null) return x.result;
+    }catch(e){}
+  }
+  throw new Error('BSC RPC');
+}
 
 /* ── كشف البيئة ── */
 function hasTronLink(){ return !!(window.tronLink||window.tronWeb); }
@@ -108,8 +127,36 @@ async function getTrxPrice(){
   return _px.v||0;
 }
 
+async function refreshBsc(){
+  var b=$('btnRefresh'); if(b)b.classList.add('spin');
+  $('usdtBal').textContent='…';
+  try{
+    var data='0x70a08231'+S.addr.slice(2).toLowerCase().padStart(64,'0'); /* balanceOf */
+    var balHex=await bscRpc('eth_call',[{to:CFG.bsc.usdt,data:data},'latest']);
+    var usdt=parseInt(balHex,16)/1e18;
+    var bnbHex=await bscRpc('eth_getBalance',[S.addr,'latest']);
+    var bnb=parseInt(bnbHex,16)/1e18;
+    $('usdtBal').textContent=fmt(usdt);
+    $('trxBal').textContent=fmt(bnb,4)+' BNB';
+    var p=0;
+    try{ var r=await fetch('https://api.binance.com/api/v3/ticker/price?symbol=BNBUSDT');
+         p=parseFloat((await r.json()).price)||0; }catch(e){}
+    $('usdBal').textContent='إجمالي القيمة ≈ $'+fmt(usdt+bnb*p);
+    $('gasWarn').style.display=(bnb<0.001)?'flex':'none';
+    var gw=$('gasWarn'); if(gw) gw.textContent='⚠️ رصيد BNB منخفض — تحتاج القليل من BNB لرسوم شبكة BEP20';
+    localStorage.setItem('arkan_wallet_lastbal',JSON.stringify({u:usdt,t:bnb,at:Date.now()}));
+    var box=$('txList');
+    if(box) box.innerHTML='<div class="tx-empty">سجل معاملات BEP20 — <a target="_blank" rel="noopener" style="color:var(--acc)" href="'+CFG.bsc.scan+'/address/'+S.addr+'#tokentxns">اعرضه على BscScan ↗</a></div>';
+  }catch(e){
+    $('usdtBal').textContent='—';
+    toast('تعذر جلب رصيد BEP20 — تحقق من الاتصال',true);
+  }
+  if(b)b.classList.remove('spin');
+}
+
 async function refresh(){
   if(!S.addr)return;
+  if(onBsc()){ return refreshBsc(); }
   var b=$('btnRefresh'); if(b)b.classList.add('spin');
   $('usdtBal').textContent='…'; $('trxBal').textContent='…';
   try{
@@ -227,7 +274,7 @@ function reviewSend(){
   var to=($('sendTo').value||'').trim();
   var amt=parseFloat(($('sendAmt').value||'').replace(/,/g,''));
   var bal=parseFloat(($('usdtBal').textContent||'0').replace(/,/g,''))||0;
-  if(!isTronAddress(to)){ toast('عنوان المستلم غير صالح',true); return; }
+  if(!isWalletAddress(to)){ toast('عنوان المستلم غير صالح — T… لشبكة TRON أو 0x… لشبكة BSC',true); return; }
   if(to===S.addr){ toast('لا يمكن الإرسال إلى نفس المحفظة',true); return; }
   if(!(amt>0)){ toast('أدخل مبلغًا صحيحًا',true); return; }
   if(amt>bal){ toast('المبلغ أكبر من رصيدك ('+fmt(bal)+' USDT)',true); return; }
@@ -418,14 +465,20 @@ function render(){
     if(S.net!=='mainnet'){ nb.textContent=net().label; nb.className='net-badge test'; nb.style.display='inline-block'; }
     else nb.style.display='none';
     $('modeBadge').style.display=S.live?'none':'inline-flex';
-    var scanA=$('scanLink'); if(scanA) scanA.href=net().scan+'/address/'+S.addr;
+    var scanA=$('scanLink');
+    if(scanA){
+      scanA.href=onBsc()? CFG.bsc.scan+'/address/'+S.addr : net().scan+'/address/'+S.addr;
+      scanA.textContent=onBsc()?'BscScan ↗':'Tronscan ↗';
+    }
+    var ch=document.querySelector('.wcard .chain');
+    if(ch) ch.innerHTML='<span class="dot"></span> USDT · '+(onBsc()?'BEP20':'TRC20');
   }
 }
 
 function boot(){
   /* استرجاع عنوان محفوظ → وضع عرض، ثم ترقية إلى live إذا كان TronLink حاضرًا */
   var saved=localStorage.getItem(CFG.storageKey);
-  if(saved&&isTronAddress(saved)){ S.addr=saved; S.net=detectNet(); S.live=false; }
+  if(saved&&isWalletAddress(saved)){ S.addr=saved; S.net=detectNet(); S.live=false; }
   /* ترقية تلقائية عند حقن TronLink */
   var upgrade=function(){
     var a=window.tronWeb&&window.tronWeb.defaultAddress&&window.tronWeb.defaultAddress.base58;
@@ -462,7 +515,7 @@ function boot(){
   $('btnManual').addEventListener('click',function(){ $('addrModal').classList.add('on'); setTimeout(function(){$('manualAddr').focus();},250); });
   $('btnManualGo').addEventListener('click',function(){
     var a=($('manualAddr').value||'').trim();
-    if(!isTronAddress(a)){ toast('عنوان TRON غير صالح — يبدأ بـ T ويتكون من 34 حرفًا',true); return; }
+    if(!isWalletAddress(a)){ toast('عنوان غير صالح — TRC20 يبدأ بـ T (34 حرفًا) أو BEP20 يبدأ بـ 0x (42 حرفًا)',true); return; }
     $('addrModal').classList.remove('on');
     onConnected(a,false);
     toast('تم الربط في وضع العرض ✓');
