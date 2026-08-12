@@ -86,18 +86,7 @@ html.pt-enter body{animation:ptIn .38s cubic-bezier(.22,1,.36,1)}
       if(!standalone){
         document.body.style.transition='opacity .18s ease';
         document.body.style.opacity='0';
-        setTimeout(function akClientName(){
-  try{
-    var s=JSON.parse(localStorage.getItem('arkan_session')||'null');
-    if(s&&s.name&&s.name.trim())return s.name.trim();
-    var c=JSON.parse(localStorage.getItem('arkanClient')||'null');
-    if(c&&c.name&&c.name.trim())return c.name.trim();
-    var j=JSON.parse(localStorage.getItem('arkan_sb_jwt')||'null');
-    if(j&&j.name&&j.name.trim())return j.name.trim();
-  }catch(e){}
-  return '';
-}
-function(){location.href=href;},170);
+        setTimeout(function(){location.href=href;},170);
       }else{
         location.href=href;
       }
@@ -132,6 +121,18 @@ function(){location.href=href;},170);
   .topTab.on{background:linear-gradient(135deg,#0058D9 0%,#0058D9 55%,#0058D9 100%);color:#fff;border-color:transparent;box-shadow:0 10px 24px rgba(13,71,181,.35)}
   </style>
   <script>
+function akClientName(){
+  try{
+    var s=JSON.parse(localStorage.getItem('arkan_session')||'null');
+    if(s&&s.name&&s.name.trim())return s.name.trim();
+    var c=JSON.parse(localStorage.getItem('arkanClient')||'null');
+    if(c&&c.name&&c.name.trim())return c.name.trim();
+    var j=JSON.parse(localStorage.getItem('arkan_sb_jwt')||'null');
+    if(j&&j.name&&j.name.trim())return j.name.trim();
+  }catch(e){}
+  return '';
+}
+
 
 function applyRegisteredClient(){
   var sess=null; try{sess=JSON.parse(localStorage.getItem('arkan_session')||'null');}catch(e){}
