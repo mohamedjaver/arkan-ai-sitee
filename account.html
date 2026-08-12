@@ -254,7 +254,8 @@
       <div class="rows">
         <div class="row"><div class="ric"><svg fill="none" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"/></svg></div><div class="rtxt"><b>الرقم المرجعي</b><small>لمشاركته عند الطلب</small></div><div class="rval" id="acctRef">—</div></div>
         <div class="row"><div class="ric"><svg fill="none" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" d="M9 12l2 2 4-4m5.6 2A9 9 0 1 1 12 3a9 9 0 0 1 8.6 9z"/></svg></div><div class="rtxt"><b>حالة الحساب</b><small id="acctStatusSub">—</small></div><span id="acctStatus" class="status-on">نشط</span></div>
-        <div class="row"><div class="ric"><svg fill="none" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" d="M12 15v2m-6 4h12a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2zm10-10V7a4 4 0 0 0-8 0v4h8z"/></svg></div><div class="rtxt"><b>رمز الدخول</b><small>احفظه للدخول لاحقاً</small></div><div class="rval num" id="acctPin" style="letter-spacing:3px">••••</div></div>
+        <div class="row"><div class="ric"><svg fill="none" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" d="M12 15v2m-6 4h12a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2zm10-10V7a4 4 0 0 0-8 0v4h8z"/></svg></div><div class="rtxt"><b>رمز الدخول</b><small>احفظه للدخول لاحقاً</small></div><div class="rval num" id="acctPin" style="letter-spacing:3px">••••</div>
+          <button onclick="changePinUI()" style="margin-right:8px;padding:7px 12px;border:1px solid #0A56B8;border-radius:0;background:#fff;color:#0A56B8;font-weight:800;font-size:11px;cursor:pointer">تغيير</button></div>
         <button id="savePinWA" style="width:100%;margin-top:2px;display:flex;align-items:center;justify-content:center;gap:8px;padding:13px;border:none;border-radius:0;cursor:pointer;font-family:inherit;font-size:13.5px;font-weight:600;color:#fff;background:linear-gradient(135deg,#128C4B,#25D366);box-shadow:0 10px 24px -8px rgba(37,211,102,.4)">
           <svg width="17" height="17" viewBox="0 0 24 24" fill="#fff"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm5.3 14.1c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .2-3.3-.7-2.8-1.1-4.6-4-4.7-4.2-.1-.2-1.1-1.5-1.1-2.9s.7-2 1-2.3c.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.5.2.6.8 2 .8 2.1.1.1.1.3 0 .5-.3.6-.7.9-.5 1.2.7 1.2 1.6 2.1 2.8 2.7.3.2.5.1.7-.1l.9-1c.2-.3.4-.2.7-.1l2 1c.3.1.5.2.5.3.1.1.1.6-.1 1.1z"/></svg>
           احفظ رمزك في واتساب — لن تنساه أبدًا
@@ -285,7 +286,22 @@
       <input id="gPin" class="pin" type="tel" inputmode="numeric" maxlength="4" placeholder="••••">
       <button class="enter" id="gEnter">دخول</button>
       <div class="err" id="gErr"></div>
-      <p class="hint" style="margin-top:10px"><a href="#" id="gForgot" style="font-weight:700;color:#0058D9">نسيت رمزك؟ عيّنه بنفسك الآن</a></p>
+      <p class="hint" style="margin-top:10px">
+        <a href="#" id="gForgot" style="font-weight:700;color:#0058D9">نسيت رمزك؟</a>
+        &nbsp;·&nbsp;
+        <a href="#" id="gSignup" style="font-weight:800;color:#0A56B8">ليس لديك حساب؟ سجّل الآن</a>
+      </p>
+      <div id="signupBox" style="display:none;margin-top:14px;padding-top:14px;border-top:1px dashed rgba(10,86,184,.25)">
+        <p style="font-weight:800;margin:0 0 10px;color:#003B8F">إنشاء حساب جديد</p>
+        <label>الاسم الكامل</label>
+        <input id="suName" type="text" placeholder="الاسم">
+        <label>رقم واتساب</label>
+        <input id="suPhone" type="tel" inputmode="tel" placeholder="+222 XX XX XX XX">
+        <label>اختر رمزك الشخصي (4 أرقام)</label>
+        <input id="suPin" class="pin" type="tel" inputmode="numeric" maxlength="4" placeholder="••••">
+        <button class="enter" id="suGo">إنشاء الحساب والدخول</button>
+        <div class="err" id="suErr"></div>
+      </div>
       <div id="resetBox" style="display:none;margin-top:14px;padding-top:14px;border-top:1px dashed rgba(10,86,184,.25)">
         <p style="font-weight:800;margin:0 0 10px;color:#003B8F">استعادة الرمز عبر واتساب</p>
         <div id="rs1">
@@ -446,6 +462,34 @@ $('gEnter').onclick = () => {
 };
 $('gPin').addEventListener('keydown', e=>{ if(e.key==='Enter') $('gEnter').click(); });
 const SRV='https://arkan-ai-site-production.up.railway.app';
+/* ═══ إنشاء حساب جديد ═══ */
+document.addEventListener('DOMContentLoaded',()=>{
+  const gs=document.getElementById('gSignup');
+  if(gs)gs.onclick=(e)=>{e.preventDefault();
+    const b=document.getElementById('signupBox');
+    b.style.display=b.style.display==='none'?'block':'none';
+    const rb=document.getElementById('resetBox');if(rb)rb.style.display='none';};
+  const go=document.getElementById('suGo');
+  if(go)go.onclick=async()=>{
+    const nm=document.getElementById('suName').value.trim();
+    const ph=document.getElementById('suPhone').value.trim();
+    const pn=document.getElementById('suPin').value.replace(/\D/g,'');
+    const er=document.getElementById('suErr');er.textContent='';
+    if(nm.length<2){er.textContent='أدخل الاسم';return;}
+    if(pn.length!==4){er.textContent='الرمز 4 أرقام';return;}
+    go.disabled=true;go.textContent='جارٍ الإنشاء…';
+    try{
+      const r=await fetch(SRV+'/account/register',{method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({name:nm,phone:ph,pin:pn})});
+      const j=await r.json();
+      if(!r.ok){er.textContent=j.err||'تعذّر الإنشاء';go.disabled=false;go.textContent='إنشاء الحساب والدخول';return;}
+      document.getElementById('gPhone').value=j.phone;
+      document.getElementById('gPin').value=pn;
+      document.getElementById('gEnter').click();
+    }catch(e){er.textContent='تعذّر الاتصال — حاول ثانية';go.disabled=false;go.textContent='إنشاء الحساب والدخول';}
+  };
+});
 $('gForgot').onclick = e => { e.preventDefault();
   const b=$('resetBox'); b.style.display=(b.style.display==='none'||!b.style.display)?'block':'none'; };
 function rsErr(m){ const e=$('rsErr'); e.textContent=m; e.classList.add('on'); }
@@ -497,8 +541,36 @@ function gErr(m){ const e=$('gErr'); e.textContent=m; e.classList.add('on'); }
 
 async function login(phone, pin, silent){
   if(!silent){ $('gEnter').disabled=true; $('gEnter').textContent='...'; }
+  /* ═══ المسار الأساسي: الدخول عبر الخادم — أوثق من قراءة Firestore من المتصفح ═══ */
+  try{
+    const lr=await fetch(SRV+'/account/login',{method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({phone,pin:String(pin)})});
+    if(lr.status===401){if(!silent)gErr('رقم أو رمز غير صحيح');
+      localStorage.removeItem('arkan_session');
+      $('gEnter').disabled=false;$('gEnter').textContent='دخول';return;}
+    if(lr.ok){
+      const lj=await lr.json();
+      SESSION={phone:lj.phone};
+      localStorage.setItem('arkan_session',JSON.stringify(SESSION));
+      try{
+        const tr=await fetch(SRV+'/supabase-token',{method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({phone:lj.phone,pin:String(pin)})});
+        if(tr.ok){const tj=await tr.json();
+          localStorage.setItem('arkan_sb_jwt',JSON.stringify({token:tj.token,user_id:tj.user_id,
+            role:tj.arkan_role,phone:lj.phone,exp:Math.floor(Date.now()/1000)+(tj.expires_in||86400)}));}
+      }catch(e){}
+      USER={name:lj.name,ref:lj.ref,pin:lj.pin,phone:lj.phone,role:lj.role};
+      const nxt=new URLSearchParams(location.search).get('next');
+      if(nxt&&/^[a-z0-9_-]+\.html$/i.test(nxt)){location.href=nxt;
+        $('gEnter').disabled=false;$('gEnter').textContent='دخول';return;}
+      openApp(lj.phone);
+      $('gEnter').disabled=false;$('gEnter').textContent='دخول';return;
+    }
+  }catch(e){/* الخادم غير متاح → الاحتياط أدناه */}
   try {
-    // بحث مرن: جرّب صيغ الرقم المختلفة (يعالج حسابات قديمة بصيغ متعددة)
+    // احتياط: بحث مرن في Firestore مباشرة (يعالج حسابات قديمة بصيغ متعددة)
     const d=String(phone).replace(/\D/g,'');
     const local=d.replace(/^(222|244)/,'');
     const variants=[...new Set([d,'00'+d,local,'00244'+local,'244'+local,'00222'+local,'222'+local])];
@@ -537,6 +609,22 @@ async function login(phone, pin, silent){
   finally { $('gEnter').disabled=false; $('gEnter').textContent='دخول'; }
 }
 
+async function changePinUI(){
+  const oldP=(prompt('رمزك الحالي (4 أرقام):','')||'').replace(/\D/g,'');
+  if(oldP.length!==4)return;
+  const newP=(prompt('الرمز الجديد (4 أرقام):','')||'').replace(/\D/g,'');
+  if(newP.length!==4){alert('الرمز الجديد 4 أرقام');return;}
+  try{
+    const r=await fetch(SRV+'/change-pin',{method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({phone:SESSION.phone,oldPin:oldP,newPin:newP})});
+    const j=await r.json();
+    if(!r.ok){alert(j.err||'تعذّر التغيير');return;}
+    USER.pin=newP;
+    const e=document.getElementById('acctPin');if(e)e.textContent=newP;
+    alert('تم تغيير الرمز ✓ — احفظه جيداً');
+  }catch(e){alert('تعذّر الاتصال — حاول ثانية');}
+}
 function openApp(phone){
   $('gate').classList.remove('on');
   $('app').style.display='block';
