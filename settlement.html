@@ -647,7 +647,7 @@ section#contacts.on{background:#F8FCFF;border-radius:0}
     </div>
     <div class="btn-row" style="margin-top:12px">
       <button class="btn btn-gold" style="flex:1" onclick="genStatusImage()">صورة للحالة</button>
-      <button class="btn btn-gold" style="flex:1" onclick="publishStatic()">🚀 نشر مباشر للموقع</button>
+      <button class="btn btn-gold" style="flex:1" onclick="publishStatic()">نشر مباشر للموقع</button>
     </div>
     <button class="btn btn-line" style="width:100%;margin-top:8px" onclick="publishRates()">رابط سريع (يحمل الأسعار)</button>
     <div id="pubLink" style="margin-top:10px"></div>
@@ -807,7 +807,7 @@ section#contacts.on{background:#F8FCFF;border-radius:0}
         <span style="font-size:12px;color:var(--dim)">④ إيصالات الكوانزا المدفوعة: <b id="kbCount" class="num" style="color:var(--txt)">0</b> · المجموع: <b id="kbSum" class="num" style="color:var(--gold2)">0</b></span>
         <span>
           <button class="btn btn-gold btn-sm" onclick="uploadKB()">رفع إيصالات الدفع</button>
-          <button class="btn btn-line btn-sm" onclick="clearKB()">تصفير</button><button class="btn btn-line" style="width:100%;margin-top:6px;padding:10px;font-size:12.5px" onclick="addKBManual()">＋ إضافة مبلغ يدويًا (إيصال لم يُقرأ)</button>
+          <button class="btn btn-line btn-sm" onclick="clearKB()">تصفير</button><button class="btn btn-line" style="width:100%;margin-top:6px;padding:10px;font-size:12.5px" onclick="addKBManual()">+ إضافة مبلغ يدويًا (إيصال لم يُقرأ)</button>
         </span>
       </div>
       <div id="kbList" style="margin-top:6px"></div>
@@ -908,7 +908,7 @@ section#contacts.on{background:#F8FCFF;border-radius:0}
   </div>
 
   <div class="ticket" id="ticket" style="display:none">
-    <div class="timer num" id="timer" style="display:none">⏱ 30:00</div>
+    <div class="timer num" id="timer" style="display:none">30:00</div>
     <div class="ref num" id="refNo">ARK-0000-000</div>
     <div class="grid">
       <div class="kv"><div class="k" id="k1">—</div><div class="v num" id="v1">—</div></div>
@@ -993,7 +993,7 @@ section#contacts.on{background:#F8FCFF;border-radius:0}
 
   <div class="card" style="margin-top:14px">
     <h3>الإعدادات</h3>
-    <button class="btn btn-line" style="width:100%;margin-bottom:10px;padding:11px;font-size:12.5px" onclick="akSyncNow(true)">☁ مزامنة السجل السحابي الآن</button>
+    <button class="btn btn-line" style="width:100%;margin-bottom:10px;padding:11px;font-size:12.5px" onclick="akSyncNow(true)">مزامنة السجل السحابي الآن</button>
     <label>واتساب شريك أنغولا (بالرمز الدولي، بدون +)</label>
     <input type="tel" id="partnerWa" placeholder="244xxxxxxxxx" inputmode="tel" onchange="saveCfg()">
     <label>رسالة واتساب تلقائية بعد كل عملية</label>
@@ -1094,13 +1094,13 @@ section#contacts.on{background:#F8FCFF;border-radius:0}
 <!-- ================= CLIENT REQUESTS INBOX ================= -->
 <section id="inbox">
   <div class="card">
-    <h3>📥 طلبات العملاء — مباشر</h3>
+    <h3>طلبات العملاء — مباشر</h3>
     <div style="font-size:12.5px;color:var(--dim);line-height:1.9;margin-bottom:12px">
       كل طلب يرسله عميل من الموقع يظهر هنا فورًا. حوّله لعملية بضغطة، وأرفق إيصال واتساب لاحقًا.
     </div>
     <div id="inbAuth"></div>
     <div class="btn-row" style="margin-bottom:12px">
-      <button class="btn btn-gold btn-sm" onclick="loadInbox()">🔄 تحديث</button>
+      <button class="btn btn-gold btn-sm" onclick="loadInbox()">تحديث</button>
       <button class="btn btn-line btn-sm" onclick="inbFilter='pending';loadInbox()">قيد الانتظار</button>
       <button class="btn btn-line btn-sm" onclick="inbFilter='all';loadInbox()">الكل</button>
     </div>
@@ -1278,13 +1278,13 @@ let rateMem=JSON.parse(localStorage.getItem('arkan-rates')||'{}');
 
 /* ================= GLOBAL LIVE MARKET TICKER ================= */
 const TK_ASSETS=[
-  {c:'USD', flag:'🇺🇸', name:'دولار أمريكي'},
-  {c:'EUR', flag:'🇪🇺', name:'يورو'},
-  {c:'AED', flag:'🇦🇪', name:'درهم إماراتي'},
-  {c:'CNY', flag:'🇨🇳', name:'يوان صيني'},
-  {c:'MAD', flag:'🇲🇦', name:'درهم مغربي'},
-  {c:'AOA', flag:'🇦🇴', name:'كوانزا أنغولية'},
-  {c:'MRU', flag:'🇲🇷', name:'أوقية موريتانية'},
+  {c:'USD', flag:'', name:'دولار أمريكي'},
+  {c:'EUR', flag:'', name:'يورو'},
+  {c:'AED', flag:'', name:'درهم إماراتي'},
+  {c:'CNY', flag:'', name:'يوان صيني'},
+  {c:'MAD', flag:'', name:'درهم مغربي'},
+  {c:'AOA', flag:'', name:'كوانزا أنغولية'},
+  {c:'MRU', flag:'', name:'أوقية موريتانية'},
   {c:'USDT',flag:'', name:'تيثر'},
 ];
 let tkBase=localStorage.getItem('arkan-tkbase')||'MRU';
@@ -1566,7 +1566,7 @@ function load(){
     const lb=+(localStorage.getItem('arkan-lastbackup')||0);
     const hasData=(hist&&hist.length)||(txs&&txs.length);
     if(hasData&&Date.now()-lb>3*24*3600*1000)
-      toast('⚠️ صدّر نسخة احتياطية (الإعدادات) — آخر نسخة قبل أكثر من 3 أيام');
+      toast('صدّر نسخة احتياطية (الإعدادات) — آخر نسخة قبل أكثر من 3 أيام');
   },2500);
 }
 function persist(){localStorage.setItem('arkan-settle-v5',JSON.stringify({txs,seq,chains,seqC}));}
@@ -1615,8 +1615,8 @@ function rateDeviation(key,rate){
 function showDev(el,dev){
   el.className='alertline';
   if(dev===null)return;
-  if(Math.abs(dev)>=7){el.className='alertline danger';el.textContent=`⛔ السعر منحرف ${dev>0?'+':''}${dev.toFixed(1)}% عن متوسطك الأخير — تأكد قبل الحفظ`;}
-  else if(Math.abs(dev)>=3){el.className='alertline warn';el.textContent=`⚠️ السعر منحرف ${dev>0?'+':''}${dev.toFixed(1)}% عن متوسطك الأخير`;}
+  if(Math.abs(dev)>=7){el.className='alertline danger';el.textContent=`السعر منحرف ${dev>0?'+':''}${dev.toFixed(1)}% عن متوسطك الأخير — تأكد قبل الحفظ`;}
+  else if(Math.abs(dev)>=3){el.className='alertline warn';el.textContent=`السعر منحرف ${dev>0?'+':''}${dev.toFixed(1)}% عن متوسطك الأخير`;}
 }
 
 
@@ -1758,9 +1758,9 @@ function startTimer(){
   timerInt=setInterval(()=>{
     const s=Math.max(0,Math.floor((timerEnd-Date.now())/1000));
     const m=Math.floor(s/60),ss=s%60,el=$('timer');
-    el.textContent=`⏱ ${String(m).padStart(2,'0')}:${String(ss).padStart(2,'0')}`;
+    el.textContent=`${String(m).padStart(2,'0')}:${String(ss).padStart(2,'0')}`;
     el.classList.toggle('hot',s<300);
-    if(s===0){el.textContent='⛔ السعر انتهى';clearInterval(timerInt);}
+    if(s===0){el.textContent='السعر انتهى';clearInterval(timerInt);}
   },1000);
 }
 
@@ -1769,7 +1769,7 @@ function saveTx(){
   if(!cur){toast('أكمل البيانات أولًا');return;}
   const p=cur.type==='bridge'?cur.pUsdt:(cur.rSell?cur.profit:null);
   if(p!==null&&p<0){
-    const why=prompt('⛔ عملية بربح سالب. اكتب سبب القبول للحفظ:');
+    const why=prompt('عملية بربح سالب. اكتب سبب القبول للحفظ:');
     if(!why||!why.trim())return;
     cur.lossReason=why.trim();
   }
@@ -1958,7 +1958,7 @@ function invRows(t){
       ['سعر البيع',t.rate+' UM/Kz'],
       ['المستحق',fmt(t.dueAoa,0)+' Kz'],
       ['المدفوع',fmt(t.paidAoa,0)+' Kz'],
-      ...(Math.abs(t.diff)>=1?[[t.diff<0?'⚠️ مبلغ ناقص':'↑ مبلغ زائد',fmt(Math.abs(t.diff),0)+' Kz']]:[['الحالة','مطابق تمامًا ✓']]),
+      ...(Math.abs(t.diff)>=1?[[t.diff<0?'مبلغ ناقص':'↑ مبلغ زائد',fmt(Math.abs(t.diff),0)+' Kz']]:[['الحالة','مطابق تمامًا ✓']]),
     ];
   }
   const ccy=CCYI[trQ(t)];
@@ -1973,7 +1973,7 @@ function invRows(t){
       if(!t.rSell||!t.obTotals||!t.obTotals.trSell)return [];
       const expected=t.qty*t.rSell, got=t.obTotals.trSell.total, diff=got-expected;
       if(Math.abs(diff)<1)return [['السداد','مطابق ✓']];
-      return [[diff<0?'⚠️ مبلغ ناقص':'↑ مبلغ زائد',fmt(Math.abs(diff),0)+' '+ccy]];
+      return [[diff<0?'مبلغ ناقص':'↑ مبلغ زائد',fmt(Math.abs(diff),0)+' '+ccy]];
     })(),
     ['الحالة',t.rSell?'مكتملة ✓':'مفتوحة']
   ];
@@ -3968,7 +3968,7 @@ async function imageText(dataUrl){
   return data.text||'';
 }
 /* ================= BUILD / AUTO-UPDATE ================= */
-const ARKAN_BUILD='1047';
+const ARKAN_BUILD='1048';
 function arkanVerLabel(){const e=$('verLbl');if(e)e.textContent=ARKAN_BUILD;}
 function arkanUpdateBanner(b){
   if(document.getElementById('updBar'))return;
@@ -4136,7 +4136,7 @@ async function scanReceipts(ref){
       ${results.map((x,i)=>`
         <div class="mini" style="flex-wrap:wrap">
           <span class="r" style="font-size:11px">${x.name.slice(0,26)}</span>
-          <span class="p">${x.amount!=null?fmt(x.amount,2):(x.err?'⚠️ خطأ قراءة':'— لم يُكتشف')}
+          <span class="p">${x.amount!=null?fmt(x.amount,2):(x.err?'خطأ قراءة':'— لم يُكتشف')}
             <button class="btn btn-line btn-sm" style="margin-right:6px;padding:3px 8px" onclick="fixAmount('${ref}','${x.rid}')">تصحيح</button>
           </span>
         </div>
@@ -4670,7 +4670,7 @@ function renderDebts(){
     const dir=t.pay==='owed_us'
       ?`لنا <b class="green" style="font-family:'IBM Plex Mono'">${fmt(rem,0)} ${CCYI[d.c]}</b>${paid>0?` <span style="color:var(--dim);font-size:10px">(سُدد ${fmt(paid,0)})</span>`:''}`
       :`علينا <b class="red" style="font-family:'IBM Plex Mono'">${fmt(rem,0)} ${CCYI[d.c]}</b>${paid>0?` <span style="color:var(--dim);font-size:10px">(سُدد ${fmt(paid,0)})</span>`:''}`;
-    dl.innerHTML+=`<div class="leg"><span>${t.ref} · ${who}${t.due?` · ${late?'⛔ متأخر':'استحقاق'} ${t.due}`:''}</span><span>${dir}</span></div>`;
+    dl.innerHTML+=`<div class="leg"><span>${t.ref} · ${who}${t.due?` · ${late?'متأخر':'استحقاق'} ${t.due}`:''}</span><span>${dir}</span></div>`;
   });
   if(!open.length)dl.innerHTML='<div class="empty" style="padding:12px 0">لا ديون مفتوحة ✓</div>';
 }
@@ -4793,7 +4793,7 @@ async function adminSignIn(){
     if(!pw)return;
     await ARKAN.fb.signInWithEmailAndPassword(ARKAN.auth,em.trim(),pw);
     localStorage.setItem('arkan-owner-email',em.trim());
-    toast('✅ دخول الأدمن ناجح');
+    toast('دخول الأدمن ناجح');
     localStorage.setItem('arkan_admin_dev','1');
     if(window.ARKAN_MARK_ADMIN)ARKAN_MARK_ADMIN();
     inbAuthBox('');
@@ -4810,7 +4810,7 @@ async function loadInbox(){
     const u=ARKAN.auth&&ARKAN.auth.currentUser;
     if(!u){ 
       inbAuthBox('لعرض طلبات العملاء سجّل دخول الأدمن مرة واحدة على هذا الجهاز.',
-        '<button class="btn btn-gold btn-sm" style="margin-top:8px" onclick="adminSignIn()">🔑 دخول الأدمن</button>');
+        '<button class="btn btn-gold btn-sm" style="margin-top:8px" onclick="adminSignIn()">دخول الأدمن</button>');
       list.innerHTML='<div style="text-align:center;color:var(--dim);padding:18px;font-size:13px">بانتظار تسجيل الدخول</div>';
       return;
     }
@@ -4823,7 +4823,7 @@ async function loadInbox(){
     const m=(e.message==='CORE')?'ARKAN core لم يُحمّل':(e.message==='OFFLINE'?'لا اتصال بالسحابة':(e.code||e.message));
     list.innerHTML=`<div style="text-align:center;color:var(--dim);padding:18px;font-size:12.5px">تعذّر الجلب: ${m}</div>`;
     if(/permission/i.test(m))inbAuthBox('صلاحية مرفوضة — سجّل دخول الأدمن.',
-      '<button class="btn btn-gold btn-sm" style="margin-top:8px" onclick="adminSignIn()">🔑 دخول الأدمن</button>');
+      '<button class="btn btn-gold btn-sm" style="margin-top:8px" onclick="adminSignIn()">دخول الأدمن</button>');
   }
 }
 function renderInbox(){
@@ -4841,7 +4841,7 @@ function renderInbox(){
         <div style="flex:1;min-width:0">
           <div style="font-weight:800;font-size:14px;color:var(--acc2)">${esc2(x.company||'—')}</div>
           <div style="font-size:11.5px;color:var(--dim);margin-top:3px">
-            ${isInd?'👤 فردي':'🏢 شركة'} · ${esc2(x.purpose||'')} ${x.destination?'· إلى '+esc2(x.destination):''}
+            ${isInd?'فردي':'شركة'} · ${esc2(x.purpose||'')} ${x.destination?'· إلى '+esc2(x.destination):''}
           </div>
           <div style="font-family:'IBM Plex Mono';font-size:11px;color:var(--dim);margin-top:4px;direction:ltr;text-align:right">
             ${esc2(x.ref||'')} · ${t?t.toLocaleString('en-GB'):''}
@@ -4899,7 +4899,7 @@ async function inbDone(id){
       });
     }
     x.status='done';renderInbox();
-    toast('✅ أُكّدت — ظهرت في حساب العميل');
+    toast('أُكّدت — ظهرت في حساب العميل');
   }catch(e){toast('تعذّر التحديث: '+(e.code||e.message));}
 }
 /* تحويل الطلب إلى عملية: يعبّي نموذج العملية ويحفظ العميل */
@@ -4921,7 +4921,7 @@ function inbToOp(id){
     /* المبلغ */
     const am=$('amt')||$('opAmt')||$('amount');
     if(am){am.value=amt;am.dispatchEvent(new Event('input',{bubbles:true}));}
-    toast('📥 '+(x.ref||'')+' — أكمل السعر والربح ثم احفظ');
+    toast(''+(x.ref||'')+' — أكمل السعر والربح ثم احفظ');
     /* ربط الطلب بالعملية القادمة */
     window._inbLinked={ref:x.ref,id:x._id,company:x.company,contact:x.contact};
   },260);
@@ -4942,7 +4942,7 @@ function inbToOp(id){
             updateDoc(doc(ARKAN.db,'payment_requests',link.id),{status:'processing',opRef:last.ref});}catch(e){}
         }
         window._inbLinked=null;
-        toast('🔗 رُبطت العملية بطلب العميل');
+        toast('رُبطت العملية بطلب العميل');
       }
       return r;
     };
@@ -5314,7 +5314,7 @@ function dlStatusImg(name){
 }
 function flagFile(c){return {AOA:'ao',MRU:'mr',CNY:'cn',AED:'ae',MAD:'ma',USD:'us',EUR:'eu',USDT:'usdt',XOF:'cfa',CFA:'cfa'}[c]||'';}
 function flagOf(c){var f=flagFile(c);return f?('<span class="cflag" style="background-image:url(flags/'+f+'.png)"></span>'):'';}
-function flagEmoji(c){return {AOA:'🇦🇴',MRU:'🇲🇷',CNY:'🇨🇳',AED:'🇦🇪',MAD:'🇲🇦',USD:'🇺🇸',EUR:'🇪🇺',USDT:'',SAR:'🇸🇦',TRY:'🇹🇷',EGP:'🇪🇬'}[c]||'';}
+function flagEmoji(c){return {AOA:'',MRU:'',CNY:'',AED:'',MAD:'',USD:'',EUR:'',USDT:'',SAR:'',TRY:'',EGP:''}[c]||'';}
 
 
 /* نشر للرابط الثابت — يحدّث ملف JSON على GitHub، الرابط يبقى ثابتًا */
@@ -5342,19 +5342,19 @@ async function publishStatic(){
   const valid0=pubRows.filter(x=>x.ccy&&(x.w>0||x.m>0||x.r>0));
   if(!valid0.length){toast('سعّر عملة أولًا');return;}
   const wa0=($('pubWa')?$('pubWa').value:'22236295050').replace(/[^0-9]/g,'')||'22236295050';
-  toast('🚀 جارٍ النشر للموقع...');
+  toast('جارٍ النشر للموقع...');
   try{
     await publishFirestore(valid0,wa0);
     $('pubLink').innerHTML=`<div class="card" style="background:rgba(0,200,83,.10);margin-top:12px;border:1px solid rgba(0,200,83,.3)">
-      <div style="font-size:13.5px;color:#0A7A3D;font-weight:800;margin-bottom:6px">✅ نُشرت الأسعار — arkanrates.com يعرضها الآن</div>
+      <div style="font-size:13.5px;color:#0A7A3D;font-weight:800;margin-bottom:6px">نُشرت الأسعار — arkanrates.com يعرضها الآن</div>
       <div style="font-size:12px;color:var(--dim);line-height:1.8">العميل يرى تلقائيًا سعر الجملة إن كان مبلغه كبيرًا، والتجزئة إن كان صغيرًا. بلا روابط ولا رموز.</div>
     </div>`;
-    toast('✅ نُشرت — الموقع محدّث');
+    toast('نُشرت — الموقع محدّث');
     return;
   }catch(e){
     if(/permission|PERMISSION_DENIED|Missing or insufficient/i.test(e.message)){
       $('pubLink').innerHTML=`<div class="card" style="background:rgba(255,179,0,.10);margin-top:12px;border:1px solid rgba(255,179,0,.35)">
-        <div style="font-size:13px;color:#8A5F00;font-weight:800;margin-bottom:6px">⚠ فعّل النشر السحابي مرة واحدة</div>
+        <div style="font-size:13px;color:#8A5F00;font-weight:800;margin-bottom:6px">فعّل النشر السحابي مرة واحدة</div>
         <div style="font-size:12px;color:var(--dim);line-height:1.9">افتح Firebase Console ← Firestore ← Rules، والصق هذا ثم Publish:</div>
         <pre style="font-size:10.5px;direction:ltr;text-align:left;background:#0B1E42;color:#BFE4FF;padding:10px;border-radius:0;overflow:auto;margin-top:8px">rules_version = '2';
 service cloud.firestore {
@@ -5402,7 +5402,7 @@ async function publishViaGitHub(){
     if(r.ok){
       const staticUrl=location.origin+location.pathname.replace(/settlement\.html$/,'')+'rates.html';
       $('pubLink').innerHTML=`<div class="card" style="background:rgba(61,220,151,.1);margin-top:12px">
-        <div style="font-size:13px;color:var(--green);font-weight:800;margin-bottom:8px">✅ نُشرت — arkanrates.com يعرض أسعارك الجديدة فورًا (جملة/متوسط/تجزئة تلقائيًا حسب مبلغ العميل)</div>
+        <div style="font-size:13px;color:var(--green);font-weight:800;margin-bottom:8px">نُشرت — arkanrates.com يعرض أسعارك الجديدة فورًا (جملة/متوسط/تجزئة تلقائيًا حسب مبلغ العميل)</div>
         <div style="font-size:12px;color:var(--dim);margin-bottom:6px">هذا الرابط ثابت — ضعه في بايو واتساب مرة واحدة، ويعرض أحدث أسعار دائمًا:</div>
         <div style="font-size:12px;font-family:'IBM Plex Mono';word-break:break-all;color:var(--acc2);background:rgba(0,0,0,.3);padding:10px;border-radius:0">${staticUrl}</div>
         <div class="btn-row" style="margin-top:8px">
@@ -5410,7 +5410,7 @@ async function publishViaGitHub(){
           <button class="btn btn-line" onclick="window.open('${staticUrl}','_blank')">معاينة</button>
         </div>
       </div>`;
-      toast('✅ نُشرت الأسعار — الموقع يعرضها الآن');
+      toast('نُشرت الأسعار — الموقع يعرضها الآن');
     }else{
       const e=await r.json();
       toast('فشل: '+(e.message||'تحقق من الرمز'));
@@ -5429,7 +5429,7 @@ async function publishRates(){
   const longUrl=location.origin+location.pathname.replace(/settlement\.html$/,'')+'rates.html#'+enc;
   const el=$('pubLink');
   el.innerHTML=`<div class="card" style="background:rgba(0,181,255,.1);margin-top:12px">
-    <div style="font-size:12px;color:var(--dim)">⏳ جارٍ اختصار الرابط...</div></div>`;
+    <div style="font-size:12px;color:var(--dim)">جارٍ اختصار الرابط...</div></div>`;
   let shortUrl=null;
   try{
     const ctl=new AbortController();const to=setTimeout(()=>ctl.abort(),4000);
@@ -5440,9 +5440,9 @@ async function publishRates(){
   const url=shortUrl||longUrl;
   el.innerHTML=`
     <div class="card" style="background:rgba(0,181,255,.1);margin-top:12px">
-      <div style="font-size:12px;color:var(--dim);margin-bottom:6px">${shortUrl?'✅ رابط مختصر وآمن للإرسال:':'⚠️ تعذّر الاختصار — رابط كامل (استخدم الرابط الثابت إن أمكن):'}</div>
+      <div style="font-size:12px;color:var(--dim);margin-bottom:6px">${shortUrl?'رابط مختصر وآمن للإرسال:':'تعذّر الاختصار — رابط كامل (استخدم الرابط الثابت إن أمكن):'}</div>
       <div style="font-size:${shortUrl?'15px':'10px'};font-family:'IBM Plex Mono';word-break:break-all;color:var(--acc2);background:rgba(0,0,0,.3);padding:10px;border-radius:0">${url}</div>
-      <div style="font-size:11px;color:var(--dim);margin-top:6px">⚠️ رابط لعرض لحظي واحد فقط — لا يتحدث لاحقًا. للبايو استخدم الرابط الثابت.</div>
+      <div style="font-size:11px;color:var(--dim);margin-top:6px">رابط لعرض لحظي واحد فقط — لا يتحدث لاحقًا. للبايو استخدم الرابط الثابت.</div>
       <div class="btn-row" style="margin-top:8px">
         <button class="btn btn-gold" onclick="(navigator.clipboard&&navigator.clipboard.writeText('${url}'));toast('نُسخ ✓')">نسخ</button>
         <button class="btn btn-wa" onclick="window.open('https://wa.me/?text='+encodeURIComponent('أسعار ARKAN اليوم:\n${url}'),'_blank')">مشاركة</button>
@@ -5545,9 +5545,9 @@ window.arkanMountOCR = function(containerId, onResult){
   c.querySelector('#ocrBtnInp').onclick = ()=> fileInp.click();
   fileInp.onchange = async ()=>{
     const file = fileInp.files[0]; if(!file) return;
-    out.innerHTML = '<div class="glass" style="padding:14px;color:var(--dim)">⏳ جارٍ...</div>';
+    out.innerHTML = '<div class="glass" style="padding:14px;color:var(--dim)">جارٍ...</div>';
     try {
-      const { parsed, raw } = await ARKAN_GEMINI.readReceipt(file, msg=>{ out.innerHTML = '<div class="glass" style="padding:14px;color:var(--dim)">⏳ '+msg+'</div>'; });
+      const { parsed, raw } = await ARKAN_GEMINI.readReceipt(file, msg=>{ out.innerHTML = '<div class="glass" style="padding:14px;color:var(--dim)">'+msg+'</div>'; });
       if(!parsed){ out.innerHTML = '<div class="glass" style="padding:14px"><b>النص المستخرج:</b><br>'+raw+'</div>'; return; }
       const r=(k,v)=> (v!==null&&v!==undefined&&v!=='') ? '<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--stroke)"><span style="color:var(--dim)">'+k+'</span><b class="num">'+v+'</b></div>' : '';
       out.innerHTML = '<div class="glass" style="padding:18px">'
@@ -6081,7 +6081,7 @@ async function akSyncNow(manual){
     try{renderToday&&renderToday();}catch(e){}
     if(manual)toast('دُمجت بيانات سحابية أحدث ✓');}
   const ok=await akPush();
-  if(manual)toast(ok?'☁ السجل محفوظ سحابياً ✓':('تعذّرت المزامنة: '+(_akLastErr||'غير معروف')));
+  if(manual)toast(ok?'السجل محفوظ سحابياً ✓':('تعذّرت المزامنة: '+(_akLastErr||'غير معروف')));
 }
 /* ربط persist بالدفع السحابي المؤجل */
 const __persistLocal=persist;
@@ -6093,7 +6093,7 @@ setTimeout(async()=>{
   try{
     const c=await akPull();
     if(c&&c.data&&_akMerge(c.data)){__persistLocal();try{renderToday&&renderToday();}catch(e){}
-      toast('☁ استُرجع السجل السحابي ✓');}
+      toast('استُرجع السجل السحابي ✓');}
     if(await akPush())_akState='ok';
   }catch(e){_akState='err';}
   akCloudChip();
