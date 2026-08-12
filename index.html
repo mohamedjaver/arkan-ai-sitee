@@ -500,7 +500,7 @@ fill="#FFFFFF" stroke="none">
             <div class="lab" data-i="x_send"></div>
             <input id="fromAmt" inputmode="decimal" value="1,000" aria-label="Amount">
           </div>
-          <button type="button" class="cur curbtn" onclick="toggleDD('from',event)"><span class="fl" id="fromFlag"><img class="cflag" src="https://cdn.jsdelivr.net/gh/hatscripts/circle-flags@2.7.0/flags/us.svg" alt="USD"></span><b id="fromCur">USD</b><span class="ch">▾</span></button>
+          <button type="button" class="cur curbtn" onclick="toggleDD('from',event)"><span class="fl" id="fromFlag"><img class="cflag" src="https://cdn.jsdelivr.net/gh/hatscripts/circle-flags@gh-pages/flags/us.svg" alt="USD"></span><b id="fromCur">USD</b><span class="ch">▾</span></button>
           <div class="curdd" id="dd_from"></div>
         </div>
         <button class="xswap" id="swapBtn" aria-label="Swap">
@@ -511,7 +511,7 @@ fill="#FFFFFF" stroke="none">
             <div class="lab" data-i="x_get"></div>
             <input id="toAmt" readonly value="">
           </div>
-          <button type="button" class="cur curbtn" onclick="toggleDD('to',event)"><span class="fl" id="toFlag"><img class="cflag" src="https://cdn.jsdelivr.net/gh/hatscripts/circle-flags@2.7.0/flags/mr.svg" alt="MRU"></span><b id="toCur">MRU</b><span class="ch">▾</span></button>
+          <button type="button" class="cur curbtn" onclick="toggleDD('to',event)"><span class="fl" id="toFlag"><img class="cflag" src="https://cdn.jsdelivr.net/gh/hatscripts/circle-flags@gh-pages/flags/mr.svg" alt="MRU"></span><b id="toCur">MRU</b><span class="ch">▾</span></button>
           <div class="curdd" id="dd_to"></div>
         </div>
         <div class="xmeta">
@@ -1037,7 +1037,7 @@ const flagOf=c=>{
   if(c==='USDT')return '<span class="cflag usdtC">₮</span>';
   const x=CURRS.find(v=>v.c===c);
   if(!x||!x.cc)return '';
-  return '<img class="cflag" src="https://cdn.jsdelivr.net/gh/hatscripts/circle-flags@2.7.0/flags/'+x.cc+'.svg" alt="'+c+'" loading="lazy">';
+  return '<img class="cflag" src="https://cdn.jsdelivr.net/gh/hatscripts/circle-flags@gh-pages/flags/'+x.cc+'.svg" alt="'+c+'" loading="lazy">';
 };
 const f=document.getElementById('fromAmt'),tAmt=document.getElementById('toAmt'),
       fc=document.getElementById('fromCur'),tc=document.getElementById('toCur'),
