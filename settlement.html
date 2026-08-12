@@ -3330,30 +3330,36 @@ function mbAcct(){
 function setMbMain(a){mbMain=a;reconcileMB();renderPayRcpt2();syncM2AOld();toast('الحساب المرجعي: ...'+String(a).slice(-6));}
 function mbTotal(){return mb.filter(x=>!x.excluded&&x.amount).reduce((s,x)=>s+x.amount,0);}
 function uploadPayRcpt2(){
-  const inp=akInput();
-  inp.type='file';inp.accept='image/*,application/pdf';inp.multiple=true;
+  const inp=akPinnedInput('akMbInput');
   inp.onchange=async()=>{
-    const files=[...inp.files];if(!files.length)return;
-    if(mb.length+files.length>50){toast('الحد 50 إيصال');return;}
-    toast('جارٍ قراءة '+files.length+' إيصال...');
-    let ok=0;
-    let _res;try{_res=await akBatchText(files,(d,n)=>toast('قراءة '+d+'/'+n+'…'));}
-    catch(e){alert('عطل في محرك الدفعات: '+((e&&e.message)||e));return;}
-    for(const _r of _res){
-      try{
-        const txt=_r.txt;
-        if(_r.err&&!txt)throw new Error(_r.err);
-        if(!txt||txt.replace(/\s/g,'').length<15)throw new Error('لا يوجد نص مقروء في الملف');
-        const ex=mruReceiptExtract(txt);
-        /* احتياط المحرك الموحّد: إن فشل regex نأخذ المبلغ المهيكل من v3 */
-        if(!ex.amount&&_r.amount!=null){ex.amount=_r.amount;ex.acct=ex.acct||_r.acct;ex.txn=ex.txn||_r.txn;ex.app=ex.app&&ex.app!=='؟'?ex.app:(_r.bank||'بنك');}
-        if(!ex.amount)throw new Error('لم يُعثر على المبلغ');
-        mb.push({app:ex.app,amount:ex.amount,acct:ex.acct||null,txn:ex.txn||null});
-        ok++;
-      }catch(e){mb.push({app:'؟',amount:null,acct:null,txn:null,err:(e&&e.message)?e.message:'لم يُقرأ'});}
-    }
+    const picked=[...inp.files];if(!picked.length)return;
+    if(mb.length+picked.length>50){toast('الحد 50 إيصال');return;}
+    let myRecs=null;
+    try{
+      await akIngestBatch(picked,{label:'إيصالات الدفع',ccyDefault:'AOA',
+        onInit:(recs)=>{myRecs=recs;
+          recs.forEach(r=>{r._mb={app:'…',amount:null,acct:null,txn:null,err:null};mb.push(r._mb);});
+          renderPayRcpt2();},
+        onTick:()=>{if(!myRecs)return;
+          myRecs.forEach(r=>{const m=r._mb;if(!m)return;
+            m.amount=r.amount;m.acct=r.acct||m.acct;m.txn=r.txn||m.txn;
+            m.app=r.bank||(r.txt&&mruReceiptExtract(r.txt).app)||m.app;
+            m.err=!r._done?null:(r.amount==null?(r.err||'لم يُقرأ المبلغ — أدخله'):null);});
+          reconcileMB();renderPayRcpt2();}
+      });
+    }catch(e){alert('عطل في محرك الدفعات: '+((e&&e.message)||e));return;}
+    /* تمريرة أخيرة: regex البوابة يكمل ما فاته المحرك (app/acct من النص) */
+    if(myRecs)myRecs.forEach(r=>{const m=r._mb;if(!m||!r.txt)return;
+      try{const ex=mruReceiptExtract(r.txt);
+        if(ex.app&&(m.app==='…'||!m.app))m.app=ex.app;
+        if(!m.acct&&ex.acct)m.acct=ex.acct;
+        if(!m.txn&&ex.txn)m.txn=ex.txn;
+        if(m.amount==null&&ex.amount){m.amount=ex.amount;m.err=null;}
+      }catch(_){}});
     reconcileMB();renderPayRcpt2();syncM2AOld();
-    toast('قُرئ '+ok+'/'+files.length+' ✓');
+    const ok=mb.filter(x=>x.amount!=null).length;
+    toast('قُرئ '+ok+'/'+mb.length+' ✓');
+    inp.remove();
   };
   inp.click();
 }
@@ -3403,38 +3409,33 @@ function renderPayRcpt2(){
     </div>`;
 }
 function uploadKB(){
-  if(!window.pdfjsLib&&!window.Tesseract){toast('محرك القراءة غير متاح');return;}
-  const inp=akInput();
-  inp.type='file';inp.accept='application/pdf,image/*';inp.multiple=true;
+  const inp=akPinnedInput('akKbInput');
   inp.onchange=async()=>{
-    const files=[...inp.files];if(!files.length)return;
-    if(kb.length+files.length>100){toast('الحد 100 إيصال');return;}
-    toast('جارٍ قراءة '+files.length+' ملف...');
-    let ok=0,moved=0;const touched=new Set([fid]);
-    let _res;try{_res=await akBatchText(files,(d,n)=>toast('قراءة '+d+'/'+n+'…'));}
-    catch(e){alert('عطل في محرك الدفعات: '+((e&&e.message)||e));return;}
-    for(const _r of _res){
-      const f={name:_r.name};
-      try{
-        const txt=_r.txt;
-        if(_r.err&&!txt)throw new Error(_r.err);
-        if(!txt||txt.replace(/\s/g,'').length<20)throw new Error('لا يوجد نص مقروء');
-        const sm=smartRead(txt);
-        /* احتياط المحرك الموحّد v3 */
-        if(sm.amount==null&&_r.amount!=null){sm.amount=_r.amount;sm.txn=sm.txn||_r.txn;sm.ccy=sm.ccy||_r.ccy;}
-        if(sm.txn&&kb.some(x=>x.txn&&x.txn===sm.txn)){dup++;continue;}
-        kb.push({name:f.name,amount:sm.amount,txn:sm.txn||null,ccy:sm.ccy||null,
-                 err:sm.amount==null?'لم يُقرأ المبلغ':(!akIsAOA(sm.ccy)?'عملة '+sm.ccy+' — ليست كوانزا':null)});
-        if(sm.amount!=null)ok++;
-      }catch(e){kb.push({name:f.name,amount:null,txn:null,err:(e&&e.message)?e.message:'لم يُقرأ'});}
-    }
+    const picked=[...inp.files];if(!picked.length)return;
+    if(kb.length+picked.length>100){toast('الحد 100 إيصال');return;}
+    let myRecs=null;
+    try{
+      await akIngestBatch(picked,{label:'إيصالات الكوانزا',ccyDefault:'AOA',
+        onInit:(recs)=>{myRecs=recs;
+          recs.forEach(r=>{r._kb={name:r.name,amount:null,txn:null,ccy:null,err:null};kb.push(r._kb);});
+          renderKB();},
+        onTick:()=>{if(!myRecs)return;
+          myRecs.forEach(r=>{const b=r._kb;if(!b)return;
+            b.amount=r.amount;b.txn=r.txn||b.txn;b.ccy=r.ccy||b.ccy;
+            b.err=!r._done?null:(r.amount==null?(r.err||'لم يُقرأ المبلغ'):((!akIsAOA(r.ccy))?'عملة '+r.ccy+' — ليست كوانزا':null));});
+          renderKB();calc();}
+      });
+    }catch(e){alert('عطل في محرك الدفعات: '+((e&&e.message)||e));return;}
+    /* إزالة التكرار بمعرّف العملية بعد الاكتمال */
+    const seen=new Set();let dup=0;
+    for(let i=kb.length-1;i>=0;i--){const t=kb[i].txn;
+      if(t){if(seen.has(t)){kb.splice(i,1);dup++;}else seen.add(t);}}
     renderKB();calc();
-    if(ok===0 && files.length>0){
-      const firstErr = kb.length ? (kb[kb.length-1].err||'سبب غير معروف') : '';
-      alert('لم يُقرأ أي مبلغ.\nالسبب: '+firstErr+'\n\nتأكد أن مفتاح Gemini مفعّل (● أخضر أعلى تبويب عملية).\nافتح Console للتفاصيل.');
-    } else {
-      toast('قُرئ '+ok+'/'+files.length+(dup?' · مكرر '+dup:'')+' ✓');
-    }
+    const ok=kb.filter(x=>x.amount!=null).length;
+    if(ok===0&&picked.length>0){
+      alert('لم يُقرأ أي مبلغ.\nتأكد أن مفتاح Gemini مفعّل (● أخضر أعلى تبويب عملية).');
+    }else toast('قُرئ '+ok+'/'+kb.length+(dup?' · مكرر '+dup:'')+' ✓');
+    inp.remove();
   };
   inp.click();
 }
@@ -3554,28 +3555,27 @@ function renderPayRcpt(){
 /* ================= CLIENT RECEIPTS BATCH (scan-only, per operation) ================= */
 let batch=[]; /* {name,amount|null} — بلا بيانات ملفات إطلاقًا */
 function uploadBatch(){
-  if(!window.pdfjsLib){toast('مكتبة PDF لم تحمّل — تحقق من الإنترنت');return;}
-  const inp=akInput();
-  inp.type='file';inp.accept='application/pdf,image/*';inp.multiple=true;
+  const inp=akPinnedInput('akTrInput');
   inp.onchange=async()=>{
-    const files=[...inp.files];
-    if(!files.length)return;
-    if(batch.length+files.length>100){toast('الحد 100 إيصال للعملية');return;}
-    toast('جارٍ قراءة '+files.length+' ملف...');
-    let ok=0;
-    let _res;try{_res=await akReadBatch(files,(d,n)=>toast('قراءة '+d+'/'+n+'…'));}
-    catch(e){alert('عطل في محرك الدفعات: '+((e&&e.message)||e));return;}
-    for(const _r of _res){
-      try{
-        if(_r.err&&!_r.txt&&_r.amount==null)throw new Error(_r.err);
-        const sm=smartRead(_r.txt||'');
-        if(sm.amount==null&&_r.amount!=null){sm.amount=_r.amount;sm.ccy=sm.ccy||_r.ccy;}
-        batch.push({name:_r.name,amount:sm.amount,ccy:sm.ccy});
-        if(sm.amount!=null)ok++;
-      }catch(e){batch.push({name:_r.name,amount:null,err:(e&&e.message?String(e.message).slice(0,40):'فشل التحميل')});}
-    }
+    const picked=[...inp.files];if(!picked.length)return;
+    if(batch.length+picked.length>100){toast('الحد 100 إيصال للعملية');return;}
+    let myRecs=null;
+    try{
+      await akIngestBatch(picked,{label:'إيصالات العملية',ccyDefault:'AOA',
+        onInit:(recs)=>{myRecs=recs;
+          recs.forEach(r=>{r._bt={name:r.name,amount:null,ccy:null,err:null};batch.push(r._bt);});
+          renderBatch(false);},
+        onTick:()=>{if(!myRecs)return;
+          myRecs.forEach(r=>{const b=r._bt;if(!b)return;
+            b.amount=r.amount;b.ccy=r.ccy||b.ccy;
+            b.err=!r._done?null:(r.amount==null?(r.err||'لم يُقرأ'):null);});
+          renderBatch(true);}
+      });
+    }catch(e){alert('عطل في محرك الدفعات: '+((e&&e.message)||e));return;}
     renderBatch(true);
-    toast('قُرئ '+ok+'/'+files.length+' ✓ — المجموع حُدّث');
+    const ok=batch.filter(x=>x.amount!=null).length;
+    toast('قُرئ '+ok+'/'+batch.length+' ✓ — المجموع حُدّث');
+    inp.remove();
   };
   inp.click();
 }
@@ -3943,7 +3943,7 @@ async function imageText(dataUrl){
   return data.text||'';
 }
 /* ================= BUILD / AUTO-UPDATE ================= */
-const ARKAN_BUILD='1038';
+const ARKAN_BUILD='1039';
 function arkanVerLabel(){const e=$('verLbl');if(e)e.textContent=ARKAN_BUILD;}
 function arkanUpdateBanner(b){
   if(document.getElementById('updBar'))return;
@@ -5822,9 +5822,10 @@ function akInput(){
 </script>
 
 <script id="akBatchCore">
-/* ═══ المحرك الموحّد v3.1 — خط بوابة المطابقة + مهلات صارمة ═══
-   akReadBatch(files,onTick) → [{name,txt,amount,ccy,acct,txn,date,ben,bank,src,err}]
-   حماية: مهلة 10ث للقطة كل ملف · 45ث للقراءة المحلية للملف · المحرك لا يعلق أبدًا */
+/* ═══ محرك الاستيعاب الموحّد — نسخة حرفية من خط بوابة المطابقة (uploadRC v3) ═══
+   akIngestBatch(picked,{label,ccyDefault,onInit,onTick,onProgress})
+   → recs [{name,amount,ccy,acct,txn,date,ben,bank,ok,src,err,txt}]
+   نفس الترتيب: لقطة بايتات → صفوف فورية → محلي ×6 → Gemini ×3 — والصفوف تُحدَّث في مكانها */
 function akTimeout(p,ms,msg){return Promise.race([p,new Promise((_,rj)=>setTimeout(()=>rj(new Error(msg||'مهلة')),ms))]);}
 function akProg(txt){
   let el=document.getElementById('akProgBar');
@@ -5834,94 +5835,91 @@ function akProg(txt){
     document.body.appendChild(el);}
   el.textContent=txt;
 }
-async function akReadBatch(files,onTick){
-  /* 1) لقطة بايتات — مهلة 10ث لكل ملف */
-  const snap=[];let si=0;
-  for(const f of files){
-    si++;akProg('تثبيت الملفات '+si+'/'+files.length+'…');
-    try{snap.push({name:f.name,type:f.type||'',
-      buf:await akTimeout(f.arrayBuffer(),10000,'تعذّر فتح الملف (مهلة)'),
-      isPdf:/pdf/i.test(f.type||'')||/\.pdf$/i.test(f.name||'')});}
+/* مدخل ملفات مثبّت — النسخة الحرفية من uploadRC */
+function akPinnedInput(id){
+  let inp=document.getElementById(id);
+  if(inp)inp.remove();
+  inp=document.createElement('input');
+  inp.type='file';inp.accept='image/*,application/pdf';inp.multiple=true;
+  inp.id=id;inp.style.cssText='position:fixed;left:-9999px;top:0';
+  document.body.appendChild(inp);
+  return inp;
+}
+async function akIngestBatch(picked,o){
+  o=o||{};const lbl=o.label||'';
+  akProg('تثبيت '+picked.length+' ملفاً…');
+  /* 2) لقطة البايتات فوراً — الدفعة محفوظة مهما فعل Safari (حرفي من uploadRC) */
+  const snap=[];
+  for(const f of picked){
+    try{const buf=await akTimeout(f.arrayBuffer(),10000,'تعذّر فتح الملف');
+      snap.push({name:f.name,type:f.type||'',buf,
+        isPdf:/pdf/i.test(f.type||'')||/\.pdf$/i.test(f.name||'')});}
     catch(e){snap.push({name:f.name,err:(e&&e.message)||'تعذّر فتح الملف'});}
   }
-  const res=snap.map(x=>({name:x.name,txt:'',amount:null,ccy:null,acct:null,txn:null,
-    date:null,ben:null,bank:null,src:null,err:x.err||null}));
-  let idx=0,done=0,okN=0;
-  const tick=()=>{akProg('قراءة '+done+'/'+snap.length+' · مقروء '+okN);onTick&&onTick(done,snap.length);};
-  tick();
-  /* 2) موجة محلية متوازية — PDF ×4 | الصور تمر عبر محرك OCR واحد (مقفول أحاديًا) */
-  async function readOne(x,r){
+  const t0=performance.now();
+  const recs=snap.map(x=>({name:x.name,amount:null,ccy:(o.ccyDefault||'AOA'),
+    acct:null,txn:null,date:null,ben:null,bank:null,ok:true,src:null,err:x.err||null,txt:''}));
+  if(o.onInit)o.onInit(recs);   /* الصفوف تظهر فورًا في البوابة */
+  let done=0,okN=0;
+  const tick=()=>{akProg('قراءة '+lbl+' — '+done+'/'+snap.length+' · مقروء '+okN);
+    if(o.onTick)o.onTick(done,snap.length);};
+  /* قراءة محلية — حرفي من uploadRC.readLocal */
+  const readLocal=async(x)=>{
     const file=new File([x.buf],x.name,{type:x.type||(x.isPdf?'application/pdf':'image/jpeg')});
-    const du=await new Promise((rs,rj)=>{const rd=new FileReader();
-      rd.onload=()=>rs(rd.result);rd.onerror=rj;rd.readAsDataURL(file);});
-    r.txt=(x.isPdf?await pdfText(du):await imageText(du))||'';
-    const p=arkanParse(r.txt,x.name);
-    Object.assign(r,{amount:p.amount??null,ccy:p.ccy||null,txn:p.txn||null,
-      acct:p.acct||null,date:p.date||null,ben:p.ben||null,bank:p.bank||null,
-      src:r.txt?'local':null});
-  }
-  async function w(){
+    const dataUrl=await new Promise((res,rej)=>{const r=new FileReader();
+      r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(file);});
+    const txt=x.isPdf?await pdfText(dataUrl):await imageText(dataUrl);
+    const p=arkanParse(txt,x.name);p._txt=txt;return p;
+  };
+  /* 3) موجة محلية متوازية — حرفي: CONC=6 */
+  const CONC=6; let idx=0;
+  async function worker(){
     while(idx<snap.length){
-      const k=idx++; const x=snap[k], r=res[k];
-      if(x.err){done++;tick();continue;}
-      try{await akTimeout(readOne(x,r),45000,'مهلة القراءة المحلية');}
-      catch(e){r.err='محلي: '+String((e&&e.message)||e).slice(0,60);}
-      if(r.amount!=null)okN++;
-      done++;tick();
+      const k=idx++; const x=snap[k], sl=recs[k];
+      if(x.err){sl._done=true;done++;tick();continue;}
+      try{
+        const p=await akTimeout(readLocal(x),60000,'مهلة القراءة المحلية');
+        Object.assign(sl,{amount:p.amount??null,ccy:p.ccy||sl.ccy,txn:p.txn||null,
+          acct:p.acct||null,date:p.date||null,ben:p.ben||null,bank:p.bank||null,
+          ok:p.ok!==false,src:'local',txt:p._txt||''});
+        if(sl.amount!=null)okN++;
+      }catch(e){sl.err='محلي: '+String((e&&e.message)||e).slice(0,50);}
+      sl._done=true;done++;tick();
     }
   }
-  await Promise.all(Array.from({length:Math.min(4,snap.length)},w));
-  /* 3) موجة Gemini المهيكلة ×3 — لما لم يُقرأ مبلغه */
-  const need=res.map((r,k)=>({r,x:snap[k]})).filter(o=>!o.x.err&&o.r.amount==null);
+  await Promise.all(Array.from({length:Math.min(CONC,snap.length)},worker));
+  const ms=Math.round((performance.now()-t0)/Math.max(1,snap.length));
+  akProg('محلي: '+okN+'/'+snap.length+' مقروء · '+ms+'ms/ملف');
+  /* 4) موجة Gemini لما لم يُقرأ فقط — حرفي: ×3 عبر readAmount */
+  const need=recs.map((sl,k)=>({sl,x:snap[k]})).filter(q=>q.sl.amount==null&&!q.x.err);
   if(need.length&&window.ArkanRead&&(localStorage.getItem('gemKey')||'').trim()){
-    akProg('ذكاء اصطناعي لـ '+need.length+' ملفًا…');
+    akProg('ذكاء اصطناعي لـ '+need.length+' إيصالاً متبقياً…');
     let gi=0;
-    async function gw(){
+    async function gworker(){
       while(gi<need.length){
-        const o=need[gi++];
+        const q=need[gi++];
         try{
-          const file=new File([o.x.buf],o.x.name,{type:o.x.type||'application/pdf'});
-          const g=await akTimeout(ArkanRead.readAmount(file),40000,'مهلة Gemini');
-          if(g&&g.amount!=null){
-            o.r.amount=g.amount;o.r.ccy=o.r.ccy||g.ccy||null;
-            o.r.txn=o.r.txn||g.txn||null;o.r.bank=o.r.bank||g.bank||null;
-            o.r.date=o.r.date||g.date||null;o.r.src='gemini';o.r.err=null;okN++;}
+          const f=new File([q.x.buf],q.x.name,{type:q.x.type||'application/pdf'});
+          const r=await akTimeout(ArkanRead.readAmount(f),45000,'مهلة Gemini');
+          if(r.amount!=null){q.sl.amount=r.amount;q.sl.ccy=r.ccy||q.sl.ccy;
+            q.sl.txn=q.sl.txn||r.txn;q.sl.bank=q.sl.bank||r.bank;
+            q.sl.date=q.sl.date||r.date;q.sl.src='gemini';q.sl.err=null;okN++;}
         }catch(e){}
-        tick();
+        if(o.onTick)o.onTick(done,snap.length);
       }
     }
-    await Promise.all(Array.from({length:Math.min(3,need.length)},gw));
+    await Promise.all(Array.from({length:Math.min(3,need.length)},gworker));
   }
-  /* 4) موجة نصية أخيرة ×2 — لمن بقي بلا نص ولا مبلغ */
-  const tneed=res.map((r,k)=>({r,x:snap[k]})).filter(o=>!o.x.err&&o.r.amount==null&&(!o.r.txt||o.r.txt.replace(/\s/g,'').length<15));
-  if(tneed.length){
-    let ti=0;
-    async function tw(){
-      while(ti<tneed.length){
-        const o=tneed[ti++];
-        try{
-          const file=new File([o.x.buf],o.x.name,{type:o.x.type||'application/pdf'});
-          const _R=await akTimeout(arkanRead(file),50000,'مهلة المحرك الكامل');
-          if(_R){
-            if(_R.text&&!o.r.txt)o.r.txt=_R.text;
-            if(_R.amount!=null&&o.r.amount==null){o.r.amount=_R.amount;o.r.src='full';o.r.err=null;okN++;}
-            o.r.ccy=o.r.ccy||_R.ccy||null;o.r.txn=o.r.txn||_R.txn||null;
-            o.r.acct=o.r.acct||_R.acct||null;o.r.bank=o.r.bank||_R.bank||null;
-            if(_R.err&&!o.r.txt&&o.r.amount==null)o.r.err=_R.err;
-          }
-        }catch(e){if(!o.r.err)o.r.err=String((e&&e.message)||e).slice(0,60);}
-        tick();
-      }
-    }
-    await Promise.all(Array.from({length:Math.min(2,tneed.length)},tw));
-  }
-  akProg('اكتمل: '+okN+'/'+snap.length+' مقروء');
-  setTimeout(()=>akProg(null),6000);
-  return res;
+  const miss=recs.filter(sl=>sl.amount==null).length;
+  akProg('اكتمل: '+okN+'/'+snap.length+' مقروء'+(miss?' · '+miss+' أدخله يدوياً':''));
+  setTimeout(()=>akProg(null),8000);
+  return recs;
 }
-/* غلاف التوافق — نفس التوقيع القديم */
-async function akBatchText(files,onTick){return akReadBatch(files,onTick);}
-/* عملة الكوانزا بكل صيغها */
+/* أغلفة التوافق */
+async function akBatchText(files,onTick){
+  const recs=await akIngestBatch([...files],{onTick});
+  return recs.map(r=>({name:r.name,txt:r.txt,err:r.err,amount:r.amount,ccy:r.ccy,acct:r.acct,txn:r.txn,bank:r.bank}));
+}
 function akIsAOA(c){return !c||/^(AOA|AKZ|KZ|Kz)$/i.test(String(c));}
 </script>
 </body>
