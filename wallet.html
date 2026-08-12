@@ -256,6 +256,10 @@ main{position:relative;z-index:1;padding:16px 14px 110px}
       </div>
       <div class="warn" style="margin-bottom:14px">⚠️<span>تحويلات البلوكتشين <b>غير قابلة للاسترجاع</b>. تأكد من العنوان قبل التوقيع.</span></div>
       <button class="btn btn-primary" id="sendGo">تأكيد وتوقيع الإرسال</button>
+      <button class="btn" id="sendTW" style="margin-top:10px;background:#0500FF;color:#fff;box-shadow:0 12px 28px -8px rgba(5,0,255,.4)">
+        التوقيع في Trust Wallet</button>
+      <div style="font-size:11px;color:var(--muted);text-align:center;margin-top:8px">
+        يفتح تطبيق Trust Wallet بالمعاملة معبأة — التوقيع يتم داخل التطبيق فقط، الموقع لا يلمس مفاتيحك.</div>
       <button class="btn btn-ghost" id="sendBack" style="margin-top:10px">تعديل</button>
     </div>
     <div id="sendBusy" style="display:none;text-align:center;padding:28px 10px">
@@ -318,5 +322,17 @@ body{background:radial-gradient(1100px 600px at 78% -10%, rgba(0,88,217,.55), tr
  radial-gradient(900px 700px at -10% 110%, rgba(0,181,255,.22), transparent 55%),
  linear-gradient(180deg,#04143A 0%,#062165 58%,#003B8F 100%) fixed!important}
 </style>
+<script>
+(function(){
+  var b=document.getElementById('sendTW'); if(!b)return;
+  b.addEventListener('click',function(){
+    var to=(document.getElementById('sendTo')||{}).value||'';
+    var amt=parseFloat(((document.getElementById('sendAmt')||{}).value||'').replace(/[^\d.]/g,''))||0;
+    if(!/^T[1-9A-HJ-NP-Za-km-z]{33}$/.test(to)){alert('عنوان TRC20 غير صحيح');return;}
+    if(!(amt>0)){alert('أدخل المبلغ');return;}
+    location.href='https://link.trustwallet.com/send?asset=c195_tTR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t&address='+encodeURIComponent(to)+'&amount='+encodeURIComponent(amt);
+  });
+})();
+</script>
 </body>
 </html>
