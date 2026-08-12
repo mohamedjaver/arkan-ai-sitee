@@ -18,14 +18,17 @@ function ensureChip(){
   if(!chip){
     chip=document.createElement('a');
     chip.id='wChip'; chip.href='wallet.html';
-    chip.style.cssText='position:fixed;bottom:calc(env(safe-area-inset-bottom,0px) + 14px);left:50%;transform:translateX(-50%);z-index:60;'+
-      'display:inline-flex;align-items:center;gap:8px;text-decoration:none;'+
-      'background:rgba(7,20,52,.92);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);'+
-      'border:1px solid rgba(92,255,177,.35);border-radius:999px;padding:7px 13px;'+
-      'color:#EAF5FF;font-family:"IBM Plex Sans Arabic",system-ui,sans-serif;font-size:12px;font-weight:600;'+
-      'box-shadow:0 8px 24px rgba(0,20,60,.35)';
     document.body.appendChild(chip);
+  }else if(chip.parentNode!==document.body){
+    document.body.appendChild(chip); /* أخرجه من الهيدر كي لا يتداخل مع الشعار */
   }
+  /* التنسيق يُطبَّق دائمًا: مثبت تحت الشريط العلوي، في المنتصف */
+  chip.style.cssText='position:fixed;top:calc(env(safe-area-inset-top,0px) + 76px);left:50%;transform:translateX(-50%);z-index:59;'+
+    'display:inline-flex;align-items:center;gap:8px;text-decoration:none;white-space:nowrap;'+
+    'background:rgba(7,20,52,.92);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);'+
+    'border:1px solid rgba(92,255,177,.35);border-radius:999px;padding:7px 13px;'+
+    'color:#EAF5FF;font-family:"IBM Plex Sans Arabic",system-ui,sans-serif;font-size:12px;font-weight:600;'+
+    'box-shadow:0 8px 24px rgba(0,20,60,.35)';
   chip.hidden=false; chip.removeAttribute('hidden'); chip.style.display='inline-flex';
   chip.innerHTML='<span class="wdot" style="width:8px;height:8px;border-radius:50%;background:#5CFFB1;'+
     'box-shadow:0 0 8px #5CFFB1;animation:wblink 2s infinite"></span>'+
