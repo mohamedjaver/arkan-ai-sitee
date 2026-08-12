@@ -86,7 +86,18 @@ html.pt-enter body{animation:ptIn .38s cubic-bezier(.22,1,.36,1)}
       if(!standalone){
         document.body.style.transition='opacity .18s ease';
         document.body.style.opacity='0';
-        setTimeout(function(){location.href=href;},170);
+        setTimeout(function akClientName(){
+  try{
+    var s=JSON.parse(localStorage.getItem('arkan_session')||'null');
+    if(s&&s.name&&s.name.trim())return s.name.trim();
+    var c=JSON.parse(localStorage.getItem('arkanClient')||'null');
+    if(c&&c.name&&c.name.trim())return c.name.trim();
+    var j=JSON.parse(localStorage.getItem('arkan_sb_jwt')||'null');
+    if(j&&j.name&&j.name.trim())return j.name.trim();
+  }catch(e){}
+  return '';
+}
+function(){location.href=href;},170);
       }else{
         location.href=href;
       }
@@ -135,7 +146,7 @@ function applyRegisteredClient(){
     var grid=host.querySelector('div[style*="grid"]');
     var w=document.createElement('div');
     w.style.cssText='display:flex;align-items:center;gap:10px;background:#EDF6FF;border:1px solid #BFD9F7;border-radius:0;padding:11px 14px;margin-bottom:14px';
-    w.innerHTML='<div style="flex:1;font-size:13px;color:#2E3A48"><b>'+(sess.name||'عميل أركان')+'</b><br><span style="color:#486581;font-size:11.5px">مسجّل · '+String(sess.phone)+' — لن تكتب بياناتك ثانية</span></div><button id="ind-logout" style="border:0;background:#fff;color:#486581;border-radius:0;padding:6px 10px;font-size:11px;cursor:pointer">تبديل</button>';
+    w.innerHTML='<div style="flex:1;font-size:13px;color:#2E3A48"><b>'+(akClientName()||sess.name||'عميل أركان')+'</b><br><span style="color:#486581;font-size:11.5px">مسجّل · '+String(sess.phone)+' — لن تكتب بياناتك ثانية</span></div><button id="ind-logout" style="border:0;background:#fff;color:#486581;border-radius:0;padding:6px 10px;font-size:11px;cursor:pointer">تبديل</button>';
     if(grid&&grid.parentNode)grid.parentNode.insertBefore(w,grid);
     var lo=document.getElementById('ind-logout');
     if(lo)lo.onclick=function(){ localStorage.removeItem('arkan_session'); location.reload(); };
@@ -1165,9 +1176,9 @@ if(amt&&ind){
 }
 /* اسم المستفيد: اسم صاحب الحساب المسجّل — يبقى فقط رقم الحساب */
 try{
-  const sess=JSON.parse(localStorage.getItem('arkan_session')||'null');
   const bn=document.getElementById('ind-bname');
-  if(sess&&sess.name&&bn&&!bn.value){bn.value=sess.name;}
+  const nm=akClientName();
+  if(nm&&bn&&!bn.value){bn.value=nm;}
 }catch(e){}
 })();
 </script>
