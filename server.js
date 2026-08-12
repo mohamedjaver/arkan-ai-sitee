@@ -653,6 +653,56 @@ app.post('/change-pin', async (req, res) => {
   }
 });
 
+/* ── دخول الحساب عبر الخادم (يلغي اعتماد Firestore من متصفح العميل) ── */
+const loginHits = new Map();
+app.post('/account/login', async (req, res) => {
+  try {
+    if (!fbReady) return res.status(503).json({ ok: false, err: 'الخدمة غير متاحة مؤقتًا' });
+    const p = normPhone(req.body.phone);
+    if (!validPhone(p)) return res.status(400).json({ ok: false, err: 'رقم غير صالح' });
+    const hist = (loginHits.get(p) || []).filter(t => nowMs() - t < 3600000);
+    if (hist.length >= 12) return res.status(429).json({ ok: false, err: 'محاولات كثيرة — انتظر ساعة' });
+    hist.push(nowMs()); loginHits.set(p, hist);
+    const pin = String(req.body.pin || '').replace(/\D/g, '');
+    const snap = await findUserDoc(p);
+    if (!snap || String(snap.data().pin) !== pin)
+      return res.status(401).json({ ok: false, err: 'رقم أو رمز غير صحيح' });
+    const d = snap.data();
+    res.json({ ok: true, phone: p, name: d.name || '', ref: d.ref || '', pin: String(d.pin), role: d.role || 'customer' });
+  } catch (e) {
+    console.error('account/login:', e.message);
+    res.status(500).json({ ok: false, err: 'خطأ في الخادم' });
+  }
+});
+
+/* ── إنشاء حساب جديد ذاتيًا ── */
+const regHits = new Map();
+app.post('/account/register', async (req, res) => {
+  try {
+    if (!fbReady) return res.status(503).json({ ok: false, err: 'الخدمة غير متاحة مؤقتًا' });
+    const p = normPhone(req.body.phone);
+    if (!validPhone(p)) return res.status(400).json({ ok: false, err: 'رقم غير صالح — موريتانيا أو أنغولا فقط' });
+    const hist = (regHits.get(p) || []).filter(t => nowMs() - t < 3600000);
+    if (hist.length >= 5) return res.status(429).json({ ok: false, err: 'محاولات كثيرة — انتظر ساعة' });
+    hist.push(nowMs()); regHits.set(p, hist);
+    const pin = String(req.body.pin || '').replace(/\D/g, '');
+    if (pin.length !== 4) return res.status(400).json({ ok: false, err: 'الرمز 4 أرقام' });
+    const name = String(req.body.name || '').trim().slice(0, 60);
+    if (name.length < 2) return res.status(400).json({ ok: false, err: 'أدخل الاسم' });
+    const existing = await findUserDoc(p);
+    if (existing) return res.status(409).json({ ok: false, err: 'الحساب موجود — سجّل الدخول أو استخدم "نسيت رمزك"' });
+    const ref = 'ARK-' + crypto.randomInt(1000, 10000);
+    await admin.firestore().doc(`users/${p}`).set({
+      name, phone: p, pin, ref, role: 'customer',
+      createdAt: Date.now(), via: 'self-register'
+    });
+    res.json({ ok: true, phone: p, name, ref, pin });
+  } catch (e) {
+    console.error('account/register:', e.message);
+    res.status(500).json({ ok: false, err: 'خطأ في الخادم' });
+  }
+});
+
 /* ═══════════════════════════════════════════════════════════════
    ARKAN Chat API — طبقة وسيطة كاملة عبر الخادم (تلغي اعتماد RLS)
    كل العمليات تُوقّع بتوكن ARKAN خاص، والخادم ينفّذها بصلاحية service
