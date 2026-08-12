@@ -400,10 +400,10 @@ window.addEventListener('unhandledrejection',function(e){
   <div id="msgs"></div>
   <button id="newMsgs" onclick="jumpBottom()">رسائل جديدة ↓</button>
   <div id="quick" class="hide">
-    <button onclick="quickSend('أريد معرفة السعر')">💰 أريد معرفة السعر</button>
-    <button onclick="openXForm()">💱 أريد طلب بديلة</button>
-    <button onclick="openAttach()">🧾 أريد إرسال إيصال</button>
-    <button onclick="quickSend('أريد متابعة عملية')">🔄 متابعة عملية</button>
+    <button onclick="quickSend('أريد معرفة السعر')">أريد معرفة السعر</button>
+    <button onclick="openXForm()">أريد طلب بديلة</button>
+    <button onclick="openAttach()">أريد إرسال إيصال</button>
+    <button onclick="quickSend('أريد متابعة عملية')">متابعة عملية</button>
   </div>
 
   <div class="composer" id="composer">
@@ -479,7 +479,7 @@ window.addEventListener('unhandledrejection',function(e){
 <div class="sheet" id="shX">
   <div class="bg" onclick="closeSheet('shX')"></div>
   <div class="card"><div class="grab"></div>
-    <h3>💱 طلب بديلة</h3>
+    <h3>طلب بديلة</h3>
     <div class="f2">
       <div class="fld"><label>المبلغ</label><input id="xAmt" type="number" inputmode="decimal" placeholder="0.00"></div>
       <div class="fld"><label>عملة الدفع</label><select id="xPay"><option>MRU</option><option>AOA</option><option>USD</option><option>EUR</option><option>USDT</option><option>CNY</option><option>AED</option></select></div>
@@ -502,7 +502,7 @@ window.addEventListener('unhandledrejection',function(e){
 <div class="sheet" id="shQ">
   <div class="bg" onclick="closeSheet('shQ')"></div>
   <div class="card"><div class="grab"></div>
-    <h3>💰 تقديم عرض السعر</h3>
+    <h3>تقديم عرض السعر</h3>
     <div id="qInfo" style="font-size:13px;color:var(--mut);margin-bottom:12px;line-height:1.8"></div>
     <div class="f2">
       <div class="fld"><label>سعر الصرف</label><input id="qRate" type="number" inputmode="decimal" placeholder="0.00"></div>
@@ -520,13 +520,13 @@ window.addEventListener('unhandledrejection',function(e){
   <div class="bg" onclick="closeSheet('shDay')"></div>
   <div class="card"><div class="grab"></div>
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
-      <b style="font-size:16px">🧾 إيصالات اليوم</b><span id="dayDate" style="color:var(--mut);font-size:12px"></span>
+      <b style="font-size:16px">إيصالات اليوم</b><span id="dayDate" style="color:var(--mut);font-size:12px"></span>
     </div>
     <div id="dayList" style="max-height:44vh;overflow:auto;display:flex;flex-direction:column;gap:10px;padding:6px 0"></div>
     <div id="dayTot" style="font-weight:800;padding:8px 2px;border-top:1px dashed rgba(10,86,184,.2)"></div>
     <div style="display:flex;gap:8px;margin-top:4px">
-      <button class="gbtn" style="flex:1" onclick="dlDayAll()">⬇ تنزيل الكل</button>
-      <button class="gbtn" style="flex:1;background:var(--navy)" onclick="copyDaySummary()">📋 نسخ الملخص</button>
+      <button class="gbtn" style="flex:1" onclick="dlDayAll()">تنزيل الكل</button>
+      <button class="gbtn" style="flex:1;background:var(--navy)" onclick="copyDaySummary()">نسخ الملخص</button>
     </div>
   </div>
 </div>
@@ -664,7 +664,7 @@ async function dec(s){
   try{const b=Uint8Array.from(atob(s.slice(5)),c=>c.charCodeAt(0));
     const pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:b.slice(0,12)},KEY,b.slice(12));
     return new TextDecoder().decode(pt);
-  }catch(e){return '🔒 تعذر فك التشفير';}
+  }catch(e){return 'تعذر فك التشفير';}
 }
 
 /* ═══ 3) الإقلاع ═══ */
@@ -1018,7 +1018,7 @@ async function renderMsg(m){
 async function replyQuote(rid){
   const r=MSGS.find(x=>x.id===rid);if(!r)return '';
   const who=r.sender_id===MY_ID?'أنت':(MY_ROLE==='customer'?'ARKAN':'العميل');
-  const t=r.type==='text'?await dec(r.text):({audio:'🎤 رسالة صوتية',image:'📷 صورة',pdf:'📄 PDF',receipt:'🧾 إيصال'}[r.type]||'مرفق');
+  const t=r.type==='text'?await dec(r.text):({audio:'رسالة صوتية',image:'صورة',pdf:'PDF',receipt:'إيصال'}[r.type]||'مرفق');
   return `<div class="reply-q"><b>${who}</b><br>${esc(String(t).slice(0,70))}</div>`;
 }
 function fileHTML(m){
@@ -1064,7 +1064,7 @@ async function mediaUrl(path,exp){
   const m=msgByPath(path);
   if(!(m&&m.encryption_version===2&&m.enc_file_key))return signedUrl(path,exp); /* legacy v1 */
   if(DECURL[path])return DECURL[path];
-  if(!E2EE.convKey){toast('🔒 وسائط مشفرة — استرجع مفاتيحك من الإعدادات');return null;}
+  if(!E2EE.convKey){toast('وسائط مشفرة — استرجع مفاتيحك من الإعدادات');return null;}
   const su=await signedUrl(path,exp);if(!su)return null;
   try{
     const buf=await (await fetch(su)).arrayBuffer();
@@ -1282,7 +1282,7 @@ async function msgMenu(e,mid){
   const items=[['↩︎ رد','r',()=>startReply(m)]];
   if(m.type==='text')items.push(['⧉ نسخ النص','c',async()=>{
     try{await navigator.clipboard.writeText(await dec(m.text));toast('نُسخ');}catch(e){}}]);
-  if(m.media_path)items.push(['⬇ تنزيل','dl',()=>openFile(m.media_path,m.file_name||'file')]);
+  if(m.media_path)items.push(['تنزيل','dl',()=>openFile(m.media_path,m.file_name||'file')]);
   if(m.sender_id===MY_ID||MY_ROLE!=='customer')
     items.push(['حذف الرسالة','del',async()=>{
       await sb.from('messages_v2').delete().eq('id',mid);
@@ -1291,7 +1291,7 @@ async function msgMenu(e,mid){
 }
 async function startReply(m){
   REPLY=m;$('rqN').textContent=m.sender_id===MY_ID?'أنت':'';
-  $('rqT').textContent=m.type==='text'?await dec(m.text):({audio:'🎤 رسالة صوتية',image:'📷 صورة'}[m.type]||'مرفق');
+  $('rqT').textContent=m.type==='text'?await dec(m.text):({audio:'رسالة صوتية',image:'صورة'}[m.type]||'مرفق');
   $('replyBar').classList.add('on');$('txt').focus();
 }
 function cancelReply(){REPLY=null;$('replyBar').classList.remove('on');}
@@ -1314,7 +1314,7 @@ async function openDayLog(){
     const rec=S[m.id]||{},isImg=m.type==='image';
     return `<div style="display:flex;gap:10px;align-items:center;background:#F2F8FE;border-radius:0;padding:8px">
       ${isImg?`<img data-dpath="${esc(m.media_path)}" style="width:52px;height:52px;border-radius:0;object-fit:cover;background:#dde9f5">`
-             :`<div style="width:52px;height:52px;border-radius:0;display:grid;place-items:center;background:#dde9f5;font-size:22px">📄</div>`}
+             :`<div style="width:52px;height:52px;border-radius:0;display:grid;place-items:center;background:#dde9f5;font-size:22px"></div>`}
       <div style="flex:1;min-width:0">
         <div style="font-size:12px;color:var(--mut)">${hh}${m.sender_id===MY_ID?' · مُرسَل':' · مُستلَم'}</div>
         <div style="display:flex;gap:6px;margin-top:4px">
@@ -1666,7 +1666,7 @@ function xcardHTML(m){
   const canRespond=MY_ROLE==='customer'&&st==='quoted';
   const canAdvance=MY_ROLE!=='customer'&&XFLOW.includes(st)&&st!=='completed';
   return `<div class="xcard">
-    <div class="xh"><span class="xi">💱</span>طلب بديلة · <span style="direction:ltr">${esc(x.request_no||'')}</span></div>
+    <div class="xh"><span class="xi"></span>طلب بديلة · <span style="direction:ltr">${esc(x.request_no||'')}</span></div>
     <table>
       <tr><td>المبلغ</td><td>${Number(x.pay_amount).toLocaleString()} ${esc(x.pay_currency)}</td></tr>
       <tr><td>المطلوب</td><td>${esc(x.receive_currency)} · ${esc(x.country||'')}</td></tr>
@@ -1688,7 +1688,7 @@ function renderStatus(m){
   const x=m.meta||{};
   const extra=x.status==='quoted'&&x.final_amount
     ?` — المبلغ النهائي <b>${Number(x.final_amount).toLocaleString()}</b> (سعر ${x.quoted_rate}${x.fee?' + عمولة '+x.fee:''})`:'';
-  return `<div class="sys" id="m_${m.id}"><span>🔄 <b>${esc(x.request_no||'')}</b> · ${XSTATUS[x.status]||esc(x.status)}${extra}</span></div>`;
+  return `<div class="sys" id="m_${m.id}"><span><b>${esc(x.request_no||'')}</b> · ${XSTATUS[x.status]||esc(x.status)}${extra}</span></div>`;
 }
 
 /* كاش الطلبات الحية لعرض أزرار صحيحة داخل البطاقات */
@@ -1831,7 +1831,7 @@ if(typeof window.sendFile==='function'){
         const last=items[items.length-1]; if(!last)return;
         const S=dayStore(); if(S[last.id]&&S[last.id].ai)return;
         const rec=await akAnalyzeMsg(last);
-        if(rec.a)toast('🧾 قُرئ تلقائيًا: '+parseFloat(rec.a).toLocaleString('en-US')+' '+rec.c+(rec.bank?' · '+rec.bank:''));
+        if(rec.a)toast('قُرئ تلقائيًا: '+parseFloat(rec.a).toLocaleString('en-US')+' '+rec.c+(rec.bank?' · '+rec.bank:''));
       }catch(e){}
     },3500);
     return out;
