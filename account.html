@@ -305,7 +305,7 @@
       <div id="resetBox" style="display:none;margin-top:14px;padding-top:14px;border-top:1px dashed rgba(10,86,184,.25)">
         <p style="font-weight:800;margin:0 0 10px;color:#003B8F">استعادة الرمز عبر واتساب</p>
         <div id="rs1">
-          <button class="enter" id="rsSend" style="background:#0058D9">📲 أرسل رمز التحقق إلى واتسابي</button>
+          <button class="enter" id="rsSend" style="background:#0058D9">أرسل رمز التحقق إلى واتسابي</button>
         </div>
         <div id="rs2" style="display:none">
           <label>رمز التحقق (6 أرقام وصلك في واتساب)</label>
@@ -509,7 +509,7 @@ $('rsSend').onclick = async () => {
         location.href='https://wa.me/22236295050?text='+encodeURIComponent('🔐 نسيت رمز الدخول إلى حسابي في أركان\nرقمي: '+ph+'\nأرجو إعادة تعيين الرمز.'); };
     }
   }catch(e){ rsErr('تعذّر الاتصال — حاول ثانية'); }
-  finally{ $('rsSend').disabled=false; $('rsSend').textContent='📲 أرسل رمز التحقق إلى واتسابي'; }
+  finally{ $('rsSend').disabled=false; $('rsSend').textContent='أرسل رمز التحقق إلى واتسابي'; }
 };
 /* تمرير تلقائي للخانة عند التركيز + انتقال تلقائي من رمز التحقق إلى الرمز الجديد */
 ['rsOtp','rsPin'].forEach(id=>{
