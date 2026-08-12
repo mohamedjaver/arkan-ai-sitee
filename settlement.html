@@ -3969,7 +3969,7 @@ async function imageText(dataUrl){
   return data.text||'';
 }
 /* ================= BUILD / AUTO-UPDATE ================= */
-const ARKAN_BUILD='1049';
+const ARKAN_BUILD='1050';
 function arkanVerLabel(){const e=$('verLbl');if(e)e.textContent=ARKAN_BUILD;}
 function arkanUpdateBanner(b){
   if(document.getElementById('updBar'))return;
@@ -5319,7 +5319,7 @@ const AK_FLAG_CC={AOA:'ao',MRU:'mr',CNY:'cn',AED:'ae',MAD:'ma',USD:'us',EUR:'eur
 function flagImg(c,sz){sz=sz||22;
   if(c==='USDT')return '<span class="cflag" style="width:'+sz+'px;height:'+sz+'px;background:#26A17B;color:#fff;display:inline-grid;place-items:center;font-size:'+Math.round(sz*.58)+'px;font-weight:800">₮</span>';
   const cc=AK_FLAG_CC[c];if(!cc)return '';
-  return '<img class="cflag" style="width:'+sz+'px;height:'+sz+'px" src="https://cdn.jsdelivr.net/gh/hatscripts/circle-flags@2.7.0/flags/'+cc+'.svg" alt="'+c+'" loading="lazy" onerror="this.style.display=\'none\'">';}
+  return '<img class="cflag" style="width:'+sz+'px;height:'+sz+'px" src="https://cdn.jsdelivr.net/gh/hatscripts/circle-flags@gh-pages/flags/'+cc+'.svg" alt="'+c+'" loading="lazy" onerror="this.style.display=\'none\'">';}
 function flagEmoji(c){return flagImg(c,20);}
 
 
