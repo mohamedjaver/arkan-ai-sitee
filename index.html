@@ -39,6 +39,7 @@
 }
 html[lang=ar]{--disp:'IBM Plex Sans Arabic','Archivo',sans-serif;--body:'IBM Plex Sans Arabic','Public Sans',sans-serif}
 *{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 html,body{max-width:100%;overflow-x:clip}
 html{scroll-behavior:smooth}
 body{font-family:var(--body);color:var(--txt);line-height:1.65;background:linear-gradient(180deg,#F3F9FF 0%,#EAF4FF 35%,#E1F0FF 70%,#D8EBFF 100%) fixed;
@@ -948,12 +949,16 @@ function tierFor(ccy,fx){
 const fmt=(n,d=2)=>(+n||0).toLocaleString('en-US',{maximumFractionDigits:d});
 let LANG=localStorage.getItem('arkan_lang')||'ar';
 
-function R(){ // units per 1 USD
+function R(){ // units per 1 USD — مشتقة من أسعار أركان المنشورة (تشمل الهامش)
+  const t=c=>(TIERS[c]&&+TIERS[c].r>0)?+TIERS[c].r:null;   /* MRO لكل وحدة */
+  const usd=t('USDT')||RATES.usd_mro;                       /* MRO لكل دولار */
+  const per=(c,fb)=>t(c)?usd/t(c):fb;
   return {USD:1,USDT:1,
-    MRU:RATES.usd_mro/10,
-    AOA:RATES.usd_mro/RATES.aoa_mro,
-    EUR:RATES.usd_mro/RATES.eur_mro,
-    CNY:RATES.usd_cny, AED:RATES.usd_aed, NGN:RATES.usd_ngn, EGP:RATES.usd_egp};
+    MRU:usd/10,
+    AOA:per('AOA',RATES.usd_mro/RATES.aoa_mro),
+    EUR:per('EUR',RATES.usd_mro/RATES.eur_mro),
+    CNY:per('CNY',RATES.usd_cny), AED:per('AED',RATES.usd_aed),
+    NGN:per('NGN',RATES.usd_ngn), EGP:per('EGP',RATES.usd_egp)};
 }
 
 function renderMarket(){
