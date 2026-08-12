@@ -108,22 +108,23 @@ html[lang=ar] .sec-h2{letter-spacing:0}
 .mmenu a{display:block;padding:14px 4px;font-weight:700;color:#EAF5FF;font-size:17px;border-bottom:1px solid rgba(255,255,255,.08)}
 
 /* ---------- hero ---------- */
-.hero{position:relative;background:linear-gradient(180deg,#F6FAFD 0%,#EAF2FE 100%);
-  color:#0B2F70;overflow:hidden;padding:74px 0 0}
+.hero{position:relative;background:
+  linear-gradient(180deg,#0B2F70 0%,#062165 58%,#003B8F 100%);
+  color:#fff;overflow:hidden;padding:74px 0 0}
 .hero .grid{display:grid;grid-template-columns:1.05fr .95fr;gap:48px;align-items:center;position:relative;z-index:2}
 .pill{display:inline-flex;align-items:center;gap:10px;font-size:13px;font-weight:700;
   color:#EAF5FF;border:1px solid rgba(0,181,255,.5);background:rgba(0,181,255,.12);
   border-radius:0;padding:9px 18px;backdrop-filter:blur(6px)}
 .pill .dot{width:8px;height:8px;border-radius:50%;background:var(--success);box-shadow:0 0 0 5px rgba(0,200,83,.18);animation:pulse 1.8s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
-.hero h1{font-size:clamp(38px,5.8vw,68px);font-weight:900;letter-spacing:-.02em;line-height:1.08;margin:24px 0 20px;max-width:16ch;color:#0B2F70}
-html[lang=ar] .hero h1{color:#0B2F70;letter-spacing:0;line-height:1.25;font-size:clamp(34px,5.4vw,60px)}
+.hero h1{font-size:clamp(38px,5.8vw,68px);font-weight:900;letter-spacing:-.02em;line-height:1.08;margin:24px 0 20px;max-width:16ch;color:#fff}
+html[lang=ar] .hero h1{color:#fff;letter-spacing:0;line-height:1.25;font-size:clamp(34px,5.4vw,60px)}
 .hero h1 em{font-style:normal;background:linear-gradient(92deg,#7FDBFF 0%,#00B5FF 55%,#5FB9FF 100%);
   -webkit-background-clip:text;background-clip:text;color:transparent}
 .hero .lede{color:rgba(234,245,255,.87);font-size:clamp(16px,2.1vw,19.5px);max-width:52ch;margin-bottom:32px}
 .hero .cta{display:flex;gap:14px;flex-wrap:wrap}
 .trust{display:flex;flex-wrap:wrap;gap:10px 22px;margin:34px 0 0;padding:0;list-style:none}
-.trust li{display:inline-flex;align-items:center;gap:8px;font-size:13.5px;font-weight:600;color:#0A56B8}
+.trust li{display:inline-flex;align-items:center;gap:8px;font-size:13.5px;font-weight:600;color:rgba(234,245,255,.8)}
 .trust svg{width:16px;height:16px;color:#0058D9;flex:none}
 
 /* converter */
@@ -269,13 +270,13 @@ section{padding:88px 0}
 .vcard .meta b{font-family:'Archivo',sans-serif;font-weight:700;letter-spacing:.08em;font-size:13.5px}
 .vcard .visa-w{font-family:'Archivo',sans-serif;font-weight:900;font-style:italic;font-size:26px}
 /* ── WALLET SECTION ── */
-.walletsec{background:#F6FAFD;color:#0B2F70;position:relative;overflow:hidden}
+.walletsec{background:linear-gradient(180deg,#0B2F70 0%,#0A2A66 100%);color:#EAF5FF;position:relative;overflow:hidden}
 .walletsec::before{content:none}
 .walletsec .grid{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:center;position:relative;z-index:1}
 .walletsec .eyebrow{color:#5CE0B8}
-.walletsec .sec-h2{color:#0B2F70}
-.walletsec .sec-sub{color:#3B5B8C}
-.walletsec .vfeat li{color:#16305E}
+.walletsec .sec-h2{color:#fff}
+.walletsec .sec-sub{color:rgba(234,245,255,.75)}
+.walletsec .vfeat li{color:rgba(234,245,255,.9)}
 .walletsec .tick{background:rgba(38,161,123,.18);color:#5CE0B8}
 .wkard{position:relative;border-radius:0;padding:26px;direction:ltr;text-align:left;
   background:radial-gradient(420px 240px at 88% -10%, rgba(38,161,123,.4), transparent 60%),
@@ -298,11 +299,11 @@ section{padding:88px 0}
   border:1px solid rgba(255,255,255,.18);border-radius:0;padding:10px 14px;font-family:var(--mono);font-size:12.5px;letter-spacing:.05em}
 .race{margin-top:26px;display:grid;gap:14px}
 .race .rrow{display:grid;gap:7px}
-.race .rmeta{display:flex;justify-content:space-between;font-size:12.5px;color:#3B5B8C}
-.race .rmeta b{color:#0B2F70;font-weight:700}
-.race .rbar{height:9px;border-radius:0;background:rgba(10,86,184,.10);overflow:hidden}
+.race .rmeta{display:flex;justify-content:space-between;font-size:12.5px;color:rgba(234,245,255,.75)}
+.race .rmeta b{color:#fff;font-weight:600}
+.race .rbar{height:9px;border-radius:0;background:rgba(255,255,255,.08);overflow:hidden}
 .race .rfill{height:100%;border-radius:0}
-.race .bank .rfill{width:96%;background:rgba(10,86,184,.30)}
+.race .bank .rfill{width:96%;background:rgba(234,245,255,.28)}
 .race .ark .rfill{width:7%;background:linear-gradient(90deg,#26A17B,#5CFFB1);box-shadow:0 0 14px rgba(92,255,177,.55)}
 .race .ark .rmeta b{color:#5CE0B8}
 @media (max-width:900px){.walletsec .grid{grid-template-columns:1fr;gap:40px}}
@@ -401,15 +402,6 @@ body::after{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;opac
 
 .wsl{display:inline-block;margin-inline-start:6px;font:700 10px 'IBM Plex Sans Arabic',sans-serif;
   background:#EDF6FF;color:#0058D9;border:1px solid #BFD9F7;border-radius:0;padding:2px 8px;vertical-align:middle}
-</style>
-<style id="akLightFix">
-/* تباين النصوص على الخلفية الفاتحة الجديدة */
-.hero .sec-sub,.hero .lead,.hero p{color:#3B5B8C!important}
-.hero .pill{background:#E7F0FE!important;color:#0A56B8!important;border-color:rgba(10,86,184,.2)!important}
-.hero .pill *{color:#0A56B8!important}
-.hero .trust li{color:#0A56B8!important}
-.hero .btn-ghost,.hero .btn-line{color:#0A56B8!important;border-color:rgba(10,86,184,.35)!important;background:#fff!important}
-.walletsec .eyebrow{color:#168A52!important}
 </style>
 </head>
 <body>
