@@ -210,7 +210,7 @@ main{position:relative;z-index:1;padding:16px 14px 110px}
     <div class="sheet-h"><h3>استقبال USDT</h3><button class="x" data-close="rcvModal">✕</button></div>
     <div class="qr-holder" id="qrBox"></div>
     <div class="full-addr num" id="rcvAddr"></div>
-    <div class="warn">⚠️<span>أرسل فقط <b>USDT عبر شبكة TRON TRC20</b> إلى هذا العنوان. الإرسال عبر شبكة مختلفة (ERC20 / BEP20) قد يؤدي إلى فقدان الأموال نهائيًا.</span></div>
+    <div class="warn">⚠️<span id="rcvWarnTxt">أرسل <b>USDT</b> عبر <b>نفس شبكة العنوان فقط</b>: العنوان الذي يبدأ بـ T → شبكة TRON TRC20، والذي يبدأ بـ 0x → شبكة BNB Smart Chain BEP20. الإرسال عبر شبكة مختلفة يؤدي إلى فقدان الأموال نهائيًا.</span></div>
     <button class="btn btn-primary" id="btnCopy2">نسخ العنوان</button>
   </div>
 </div>
@@ -221,11 +221,11 @@ main{position:relative;z-index:1;padding:16px 14px 110px}
     <div class="sheet-h"><h3>ربط Trust Wallet</h3><button class="x" data-close="guideModal">✕</button></div>
     <div class="guide-steps">
       <div class="gstep"><i>1</i><span>حمّل <b>Trust Wallet</b> من App Store أو Google Play وأنشئ محفظتك. <b>احفظ كلمات الاسترداد ورقيًا</b> — لا تشاركها مع أحد أبدًا، ولا حتى مع أركان.</span></div>
-      <div class="gstep"><i>2</i><span>داخل التطبيق: ابحث عن <b>USDT</b> ← اختر شبكة <b>TRON (TRC20)</b> ← اضغط <b>Receive</b> ← <b>Copy</b> لنسخ عنوانك.</span></div>
+      <div class="gstep"><i>2</i><span>داخل التطبيق: ابحث عن <b>USDT</b> ← اختر الشبكة <b>TRON (TRC20)</b> أو <b>BNB Smart Chain (BEP20)</b> ← اضغط <b>Receive</b> ← <b>Copy</b> لنسخ عنوانك.</span></div>
       <div class="gstep"><i>3</i><span>الصق العنوان هنا — يصبح الموقع مرآة حية لمحفظتك: رصيد حقيقي، سجل معاملات، استقبال بـ QR، وإرسال يُوقَّع داخل Trust Wallet.</span></div>
     </div>
     <input id="twAddr" class="num" inputmode="text" autocomplete="off" spellcheck="false"
-      placeholder="TXxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+      placeholder="T… (TRC20) أو 0x… (BEP20)"
       style="width:100%;padding:14px;border:1.5px solid var(--line);border-radius:0;font-family:inherit;font-size:13.5px;letter-spacing:.4px;background:var(--card2);color:var(--txt);direction:ltr;text-align:left;margin-bottom:12px">
     <button class="btn btn-primary" id="btnTWLink" style="background:#0500FF;box-shadow:0 12px 28px -8px rgba(5,0,255,.4)">ربط المحفظة</button>
     <button class="btn btn-ghost" id="btnTLOpen" style="margin-top:10px">فتح Trust Wallet</button>
@@ -240,7 +240,7 @@ main{position:relative;z-index:1;padding:16px 14px 110px}
     <div class="sheet-h"><h3>إرسال USDT</h3><button class="x" data-close="sendModal">✕</button></div>
     <div id="sendForm">
       <label style="font-size:12.5px;color:var(--muted);display:block;margin-bottom:6px">عنوان المستلم (TRC20)</label>
-      <input id="sendTo" class="num" autocomplete="off" spellcheck="false" placeholder="TXxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+      <input id="sendTo" class="num" autocomplete="off" spellcheck="false" placeholder="T… (TRC20) أو 0x… (BEP20)"
         style="width:100%;padding:14px;border:1.5px solid var(--line);border-radius:0;font-family:inherit;font-size:13px;background:var(--card2);direction:ltr;text-align:left;margin-bottom:14px">
       <label style="font-size:12.5px;color:var(--muted);display:block;margin-bottom:6px">المبلغ USDT</label>
       <div style="position:relative;margin-bottom:10px">
@@ -303,7 +303,7 @@ main{position:relative;z-index:1;padding:16px 14px 110px}
       الصق عنوان <b>USDT (TRC20)</b> من أي محفظة أو منصة — Trust Wallet، Binance وغيرها…<br>
       وضع عرض فقط: رصيد حقيقي + استقبال بـ QR + سجل المعاملات. الإرسال يتطلب ربط محفظة موقّعة.</p>
     <input id="manualAddr" class="num" inputmode="text" autocomplete="off" spellcheck="false"
-      placeholder="TXxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+      placeholder="T… (TRC20) أو 0x… (BEP20)"
       style="width:100%;padding:14px;border:1.5px solid var(--line);border-radius:0;font-family:inherit;font-size:13.5px;letter-spacing:.4px;background:var(--card2);color:var(--txt);direction:ltr;text-align:left;margin-bottom:14px">
     <button class="btn btn-primary" id="btnManualGo">متابعة</button>
   </div>
@@ -333,7 +333,7 @@ body{background:radial-gradient(1100px 600px at 78% -10%, rgba(0,88,217,.55), tr
   var lk=document.getElementById('btnTWLink');
   if(lk) lk.addEventListener('click',function(){
     var a=(document.getElementById('twAddr').value||'').trim();
-    if(!/^T[1-9A-HJ-NP-Za-km-z]{33}$/.test(a)){alert('عنوان TRC20 غير صالح — يبدأ بـ T ويتكون من 34 حرفًا');return;}
+    if(!/^T[1-9A-HJ-NP-Za-km-z]{33}$/.test(a)&&!/^0x[0-9a-fA-F]{40}$/.test(a)){alert('عنوان غير صالح — TRC20 يبدأ بـ T (34 حرفًا) أو BEP20 يبدأ بـ 0x (42 حرفًا)');return;}
     try{localStorage.setItem('arkan_wallet_addr',a);localStorage.setItem('arkan_wallet_net','mainnet');}catch(e){}
     location.reload();
   });
@@ -341,11 +341,13 @@ body{background:radial-gradient(1100px 600px at 78% -10%, rgba(0,88,217,.55), tr
   if(window.tronWeb||window.tronLink){var g=document.getElementById('sendGo');if(g)g.style.display='';}
   var b=document.getElementById('sendTW'); if(!b)return;
   b.addEventListener('click',function(){
-    var to=(document.getElementById('sendTo')||{}).value||'';
+    var to=((document.getElementById('sendTo')||{}).value||'').trim();
     var amt=parseFloat(((document.getElementById('sendAmt')||{}).value||'').replace(/[^\d.]/g,''))||0;
-    if(!/^T[1-9A-HJ-NP-Za-km-z]{33}$/.test(to)){alert('عنوان TRC20 غير صحيح');return;}
+    var isT=/^T[1-9A-HJ-NP-Za-km-z]{33}$/.test(to), isB=/^0x[0-9a-fA-F]{40}$/.test(to);
+    if(!isT&&!isB){alert('عنوان غير صالح — T… لشبكة TRON أو 0x… لشبكة BSC');return;}
     if(!(amt>0)){alert('أدخل المبلغ');return;}
-    location.href='https://link.trustwallet.com/send?asset=c195_tTR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t&address='+encodeURIComponent(to)+'&amount='+encodeURIComponent(amt);
+    var asset=isT?'c195_tTR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t':'c20000714_t0x55d398326f99059fF775485246999027B3197955';
+    location.href='https://link.trustwallet.com/send?asset='+asset+'&address='+encodeURIComponent(to)+'&amount='+encodeURIComponent(amt);
   });
 })();
 </script>
