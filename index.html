@@ -477,6 +477,7 @@ fill="#FFFFFF" stroke="none">
   <a href="#visa" data-i="nav_visa"></a><a href="#markets" data-i="nav_markets"></a>
   <a href="#exchange" data-i="nav_exchange"></a><a href="#settle" data-i="nav_settle"></a><a href="ai.html">AI</a>
   <a href="account.html" data-i="nav_signin"></a>
+  <a href="#" id="akOutM" data-i="nav_signout" style="color:#FF8A80"></a>
 </div>
 
 <!-- ================= HERO ================= -->
@@ -747,7 +748,7 @@ fill="#FFFFFF" stroke="none">
 const I18N={
 ar:{
   nav_network:"الشبكة",nav_markets:"الأسعار",nav_exchange:"التحويل",nav_settle:"التسوية",nav_visa:"بطاقة فيزا",
-  nav_signin:"دخول",nav_start:"ابدأ الآن",
+  nav_signin:"دخول",nav_signout:"خروج",nav_start:"ابدأ الآن",
   pill:"ممرات إفريقيا × الصين × الخليج · مباشر",
   h1:"حوّل أموالك عبر إفريقيا <em>فورًا.</em>",
   lede:"الصرف والتسويات الدولية بين موريتانيا وأنغولا والصين والخليج — أسعار أركان الرسمية، ثقة مؤسسية، وتنفيذ في دقائق.",
@@ -791,7 +792,7 @@ ar:{
 },
 fr:{
   nav_network:"Réseau",nav_markets:"Taux",nav_exchange:"Change",nav_settle:"Règlement",nav_visa:"Carte Visa",
-  nav_signin:"Connexion",nav_start:"Commencer →",
+  nav_signin:"Connexion",nav_signout:"Déconnexion",nav_start:"Commencer →",
   pill:"Corridors Afrique × Chine × Golfe · En direct",
   h1:"Transférez votre argent en Afrique, <em>instantanément.</em>",
   lede:"Change et règlement transfrontalier entre la Mauritanie, l'Angola, la Chine et le Golfe — taux officiels ARKAN, confiance institutionnelle, exécution en quelques minutes.",
@@ -835,7 +836,7 @@ fr:{
 },
 en:{
   nav_network:"Network",nav_markets:"Rates",nav_exchange:"Exchange",nav_settle:"Settlement",nav_visa:"Visa Card",
-  nav_signin:"Sign in",nav_start:"Get started →",
+  nav_signin:"Sign in",nav_signout:"Sign out",nav_start:"Get started →",
   pill:"Africa × China × Gulf corridors · Live",
   h1:"Move money across Africa, <em>instantly.</em>",
   lede:"Currency exchange and cross-border settlement between Mauritania, Angola, China and the Gulf — official ARKAN Pay, institutional trust, executed in minutes.",
@@ -879,7 +880,7 @@ en:{
 },
 pt:{
   nav_network:"Rede",nav_markets:"Taxas",nav_exchange:"Câmbio",nav_settle:"Liquidação",nav_visa:"Cartão Visa",
-  nav_signin:"Entrar",nav_start:"Começar →",
+  nav_signin:"Entrar",nav_signout:"Sair",nav_start:"Começar →",
   pill:"Corredores África × China × Golfo · Ao vivo",
   h1:"Envie dinheiro pela África, <em>instantaneamente.</em>",
   lede:"Câmbio e liquidação internacional entre Mauritânia, Angola, China e o Golfo — taxas oficiais ARKAN, confiança institucional, executado em minutos.",
@@ -1141,6 +1142,11 @@ setLang(LANG);
 const mm=document.getElementById('mmenu');
 document.getElementById('navToggle').addEventListener('click',()=>mm.classList.toggle('open'));
 mm.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>mm.classList.remove('open')));
+/* خروج: مسح كل جلسات أركان ثم إعادة التحميل */
+window.arkanLogout=function(e){if(e)e.preventDefault();
+  ['arkan_session','arkan_sb_jwt','arkanClient','arkan_admin_dev','arkan_owner_auth'].forEach(k=>{try{localStorage.removeItem(k)}catch(_){}});
+  location.href='index.html';};
+const akOutM=document.getElementById('akOutM');if(akOutM)akOutM.onclick=window.arkanLogout;
 
 /* ============================================================
    3D globe payment network
