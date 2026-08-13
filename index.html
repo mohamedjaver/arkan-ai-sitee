@@ -87,6 +87,7 @@ html[lang=ar] .sec-h2{letter-spacing:0}
 
 /* ---------- nav ---------- */
 .nav{position:sticky;top:0;z-index:60;background:rgba(7,29,73,.86);backdrop-filter:blur(18px);
+  padding-top:env(safe-area-inset-top,0px);
   border-bottom:1px solid rgba(0,181,255,.16)}
 .nav .wrap{display:flex;align-items:center;gap:14px;height:76px}
 .brand{display:flex;align-items:center;gap:12px}
@@ -103,7 +104,7 @@ html[lang=ar] .sec-h2{letter-spacing:0}
 .nav .btn{padding:11px 20px;font-size:14px}
 .nav-toggle{display:none;width:44px;height:44px;border-radius:0;border:1.5px solid rgba(255,255,255,.3);
   background:transparent;color:#fff;cursor:pointer;font-size:20px}
-.mmenu{display:none;position:fixed;inset:76px 0 auto 0;z-index:59;background:#0B2F70;
+.mmenu{display:none;position:fixed;inset:calc(76px + env(safe-area-inset-top,0px)) 0 auto 0;z-index:59;background:#0B2F70;
   border-bottom:1px solid rgba(0,181,255,.25);padding:18px 24px 26px}
 .mmenu.open{display:block}
 .mmenu a{display:block;padding:14px 4px;font-weight:700;color:#EAF5FF;font-size:17px;border-bottom:1px solid rgba(255,255,255,.08)}
