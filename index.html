@@ -1085,8 +1085,11 @@ function passToRequest(){
     document.getElementById('goBtn').setAttribute('href',u);
   }catch(e){}
 }
-function fitAmt(el){const n=(el.value||'').length;
-  el.style.fontSize=(n<=9?34:n<=12?26:n<=15?21:17)+'px';}
+function fitAmt(el){
+  /* قياس فعلي: ابدأ من 34px وصغّر حتى يتسع المبلغ كاملًا في الحقل */
+  let s=34; el.style.fontSize=s+'px';
+  while(s>13 && el.scrollWidth>el.clientWidth){ s--; el.style.fontSize=s+'px'; }
+}
 function calc(){
   const r=R();
   const a=parseFloat(f.value.replace(/[^\d.]/g,''))||0;
