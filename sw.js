@@ -1,7 +1,7 @@
 /* ARKAN Rates — Service Worker v2.0
    إستراتيجية: الشبكة أولًا لصفحات HTML والبيانات (لا محتوى قديم أبدًا)
               الكاش أولًا للأصول الثابتة فقط (صور، أيقونات، شعار) */
-const V='arkan-v6.0'; /* bump: صفحات قديمة ألغيت — chat-v2 هي المعتمدة */
+const V='arkan-v6.1'; /* bump: صفحات قديمة ألغيت — chat-v2 هي المعتمدة */
 const STATIC=['./arkan-logo.svg','./arkan-icon-512.png','./arkan-touch-180.png','./site-manifest.json'];
 
 self.addEventListener('install',e=>{
@@ -68,15 +68,21 @@ self.addEventListener('fetch',e=>{
              || url.pathname.endsWith('.json');
 
   if(isDoc){
-    /* الشبكة أولًا: دائمًا أحدث نسخة */
-    e.respondWith(
-      fetch(r,{cache:'no-store'})
-        .then(res=>{
-          if(res&&res.ok){const c=res.clone();caches.open(V).then(x=>x.put(r,c));}
-          return res;
-        })
-        .catch(()=>caches.match(r).then(hit=>hit||caches.match('./offline.html')))
-    );
+    /* الشبكة أولًا بمهلة: 3 ثوانٍ ثم الكاش فورًا (يستمر التحديث بالخلفية)
+       يمنع الشاشة البيضاء على الشبكات الضعيفة */
+    e.respondWith((async()=>{
+      const cached=await caches.match(r);
+      const net=fetch(r,{cache:'no-store'}).then(res=>{
+        if(res&&res.ok){const c=res.clone();caches.open(V).then(x=>x.put(r,c));}
+        return res;
+      });
+      const timeout=new Promise(res=>setTimeout(()=>res(null),cached?3000:15000));
+      const first=await Promise.race([net.catch(()=>null),timeout]);
+      if(first)return first;
+      if(cached){net.catch(()=>{});return cached;}
+      const late=await net.catch(()=>null);
+      return late||caches.match('./offline.html');
+    })());
     return;
   }
 
