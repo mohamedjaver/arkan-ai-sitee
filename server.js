@@ -285,7 +285,8 @@ const validPhone = d => /^(222\d{8}|244\d{9})$/.test(d);
 
 /* إرسال واتساب — قالب أولًا، وإن تعذر (حساب تجريبي بلا قوالب) نص حر ضمن نافذة 24 ساعة */
 async function waSend(phone, code) {
-  const url = `https://graph.facebook.com/v21.0/${process.env.WA_PHONE_ID}/messages`;
+  const WA_PHONE = process.env.WA_PHONE_ID || '1236636449535090';
+  const url = `https://graph.facebook.com/v21.0/${WA_PHONE}/messages`;
   const H = { Authorization: `Bearer ${process.env.WA_TOKEN}`, 'Content-Type': 'application/json' };
   const tpl = process.env.WA_TEMPLATE || 'arkan_otp';
   const tplBody = {
