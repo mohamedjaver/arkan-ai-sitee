@@ -1085,11 +1085,21 @@ function passToRequest(){
     document.getElementById('goBtn').setAttribute('href',u);
   }catch(e){}
 }
+/* iOS Safari لا يكشف تجاوز النص في input (scrollWidth=clientWidth دائمًا)
+   الحل: قياس عرض النص فعليًا عبر Canvas بنفس خط الحقل */
+var _fitCtx=document.createElement('canvas').getContext('2d');
 function fitAmt(el){
-  /* قياس فعلي: ابدأ من 34px وصغّر حتى يتسع المبلغ كاملًا في الحقل */
-  let s=34; el.style.fontSize=s+'px';
-  while(s>13 && el.scrollWidth>el.clientWidth){ s--; el.style.fontSize=s+'px'; }
+  var v=el.value||'';
+  if(!v){el.style.fontSize='34px';return;}
+  var st=getComputedStyle(el);
+  var avail=el.clientWidth-(parseFloat(st.paddingLeft)||0)-(parseFloat(st.paddingRight)||0)-4;
+  if(avail<=0){el.style.fontSize='34px';return;}
+  _fitCtx.font=(st.fontWeight||'700')+' 34px '+st.fontFamily;
+  var w=_fitCtx.measureText(v).width;
+  el.style.fontSize=(w>avail?Math.max(13,Math.floor(34*avail/w)):34)+'px';
 }
+window.addEventListener('resize',function(){try{fitAmt(f);fitAmt(tAmt);}catch(_e){}});
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(function(){try{fitAmt(f);fitAmt(tAmt);}catch(_e){}});
 function calc(){
   const r=R();
   const a=parseFloat(f.value.replace(/[^\d.]/g,''))||0;
