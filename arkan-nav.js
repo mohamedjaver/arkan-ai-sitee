@@ -45,6 +45,7 @@
     archive:'M21 8v13H3V8M1 3h22v5H1zM10 12h4',
     shield:'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z',
     back:'M19 12H5M12 19l-7-7 7-7',
+    logout:'M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9',
     menu:'M3 12h18M3 6h18M3 18h18',
     close:'M18 6L6 18M6 6l12 12'
   };
@@ -117,6 +118,9 @@
       '<div class="aklinks">' +
         '<a href="#" id="akGoBack" style="border-bottom:1px solid rgba(11,47,112,.06)">' + svg('back',20) + '<span>رجوع للخلف</span></a>' +
         linksHTML + ownerHTML +
+        '<div class="aksep"></div>' +
+        '<a href="account.html">' + svg('user',20) + '<span>دخول</span></a>' +
+        '<a href="#" id="akLogout" style="color:#C62828">' + svg('logout',20) + '<span>خروج</span></a>' +
       '</div>' +
     '</div>';
   document.body.appendChild(drawer);
@@ -131,5 +135,12 @@
     drawer.classList.remove('on');
     if (history.length > 1) history.back();
     else location.href = 'index.html';
+  };
+  var lo = document.getElementById('akLogout');
+  if (lo) lo.onclick = function (e) {
+    e.preventDefault();
+    ['arkan_session','arkan_sb_jwt','arkanClient','arkan_admin_dev','arkan_owner_auth']
+      .forEach(function(k){ try{ localStorage.removeItem(k); }catch(_e){} });
+    location.href = 'index.html';
   };
 })();
