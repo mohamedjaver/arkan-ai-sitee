@@ -346,9 +346,9 @@ footer::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;
   background:linear-gradient(90deg,var(--primary-2),var(--accent),var(--primary-2))}
 .f-grid{display:flex;flex-wrap:wrap;align-items:center;gap:20px 34px}
 .f-links{display:flex;flex-wrap:wrap;gap:24px;font-size:14.5px;font-weight:600;color:rgba(234,245,255,.75)}
-.f-links a:hover{color:var(--accent)}
+.f-links a{color:rgba(234,245,255,.85)}.f-links a:hover{color:var(--accent)}
 .f-copy{width:100%;margin-top:26px;padding-top:22px;border-top:1px solid rgba(255,255,255,.1);
-  font-size:13px;color:rgba(234,245,255,.5)}
+  font-size:13px;color:rgba(234,245,255,.72)}
 
 /* responsive */
 @media (max-width:1024px){
@@ -671,36 +671,7 @@ body::after{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;opac
 <footer>
   <div class="wrap f-grid">
     <a class="brand" href="index.html">
-      <svg class="mark" width="38" height="38" aria-hidden="true" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-<defs><linearGradient id="akTile2" x1="6" y1="58" x2="58" y2="6" gradientUnits="userSpaceOnUse">
-<stop offset="0" stop-color="#0058D9"/><stop offset=".55" stop-color="#0058D9"/><stop offset="1" stop-color="#0058D9"/>
-</linearGradient></defs>
-<rect x="2" y="2" width="60" height="60" rx="15" fill="url(#akTile2)"/>
-<g transform="translate(32 33) scale(0.048) translate(-627 -623)"><g transform="translate(0.000000,1254.000000) scale(0.100000,-0.100000)"
-fill="#FFFFFF" stroke="none">
-<path d="M6110 10540 c-255 -25 -503 -132 -680 -296 -89 -83 -166 -191 -270
--380 -127 -230 -367 -662 -447 -804 -11 -19 -99 -177 -195 -350 -97 -173 -187
--335 -201 -360 -61 -111 -128 -231 -247 -445 -70 -126 -214 -385 -319 -575
--215 -386 -206 -358 -156 -481 58 -144 198 -300 356 -395 46 -28 266 -145 489
--259 223 -114 470 -241 548 -282 79 -41 145 -73 147 -71 5 4 111 196 140 251
-61 117 235 291 373 373 381 228 875 195 1218 -81 136 -108 207 -197 329 -411
-139 -243 449 -792 503 -889 30 -55 101 -181 157 -280 263 -464 468 -826 560
--990 515 -915 693 -1230 730 -1287 425 -651 1412 -590 1745 107 75 157 93 238
-94 420 2 327 25 274 -614 1415 -153 272 -292 522 -310 555 -18 33 -137 245
--263 470 -126 226 -262 469 -302 540 -40 72 -112 200 -160 285 -70 124 -750
-1347 -993 1785 -30 55 -85 154 -122 220 -195 349 -672 1210 -828 1495 -137
-249 -169 297 -272 401 -242 244 -604 358 -1010 319z M3140 6222 c-124 -223
--268 -482 -321 -576 -53 -94 -199 -355 -324 -581 -125 -225 -272 -489 -325
--585 -559 -1003 -547 -979 -585 -1120 -142 -518 143 -1057 641 -1213 217 -68
-386 -59 684 38 91 29 233 74 315 100 83 26 233 74 335 107 102 33 219 70 260
-83 41 13 309 98 595 189 757 242 1319 422 1485 473 276 86 432 186 570 365
-310 403 183 1035 -275 1361 -63 44 -252 144 -860 454 -1036 529 -1479 761
--1573 825 -151 103 -306 281 -362 418 -13 30 -26 58 -29 62 -3 3 -107 -177
--231 -400z"/>
-</g>
-</g>
-<path d="M16.2 30.2 L27.8 37.4" stroke="url(#akTile2)" stroke-width="2.6"/>
-</svg>
+      <img class="mark" src="favicon.svg?v=bdl5" alt="" style="width:38px;height:38px;border-radius:10px">
       <span class="wm"><b>BDL</b><span>EXCHANGE</span></span>
     </a>
     <div class="sp" style="flex:1"></div>
