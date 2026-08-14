@@ -877,7 +877,10 @@ const AK_SB_URL='https://vyxzlazwpbstigcqvizb.supabase.co';
 const AK_SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ5eHpsYXp3cGJzdGlnY3F2aXpiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU5MTU5OTcsImV4cCI6MjEwMTQ5MTk5N30.fxMt_jH4z8t7uVnFLLHyNobu6zsgu_ZwVGLibuqWj38';
 function akJwt(){ try{return JSON.parse(localStorage.getItem('arkan_sb_jwt')||'null');}catch(e){return null;} }
 function akAvShow(url){ const a=document.getElementById('avatar'); if(!a)return;
-  if(url){ a.style.backgroundImage="url('"+url+"')"; a.childNodes[0].textContent=''; }
+  if(url){
+    a.style.background="url('"+url+"') center/cover no-repeat";
+    a.childNodes[0].textContent='';
+  }
 }
 async function akAvatarInit(nm){
   const cached=localStorage.getItem('arkan_avatar'); if(cached) akAvShow(cached);
