@@ -11,25 +11,8 @@
 <script src="vendor/supabase.js"></script>
 <script src="arkan-e2ee.js"></script>
 <script>
-/* كسر الكاش القديم مرة واحدة: يلغي أي Service Worker قديم يقدّم نسخة بالية،
-   ثم يعيد التحميل نظيفًا. علامة في sessionStorage تمنع التكرار. */
-(function(){
-  try{
-    if(!sessionStorage.getItem('arkan_sw_cleared')){
-      sessionStorage.setItem('arkan_sw_cleared','1');
-      var didWork=false;
-      if('serviceWorker' in navigator){
-        navigator.serviceWorker.getRegistrations().then(function(rs){
-          rs.forEach(function(r){r.unregister();didWork=true;});
-          if(window.caches){caches.keys().then(function(ks){
-            return Promise.all(ks.map(function(c){didWork=true;return caches.delete(c);}));
-          }).then(function(){ if(didWork) location.reload(); });}
-          else if(didWork) location.reload();
-        }).catch(function(){});
-      }
-    }
-  }catch(e){}
-})();
+/* تسجيل Service Worker — لازم لإشعارات الدفع (كانت هنا كتلة إلغاء قديمة تقتل الاشتراكات) */
+if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').catch(function(){});}
 </script>
 <style>
 /* ═══ ARKAN Pay 2026 · نظام الألوان المعتمد ═══ */
@@ -1223,7 +1206,9 @@ async function insertMsg(row){
   const {data,error}=await sb.from('messages_v2').insert(payload).select().single();
   const i=MSGS.findIndex(m=>m.id===local.id);
   if(error||!data){MSGS[i]._pending=false;MSGS[i].delivery_status='failed';MSGS[i]._payload=payload;renderAll(false);return null;}
-  MSGS[i]=data;renderAll(false);return data;
+  MSGS[i]=data;renderAll(false);
+  arkNotifyPeer(row.conversation_id, row.type);
+  return data;
 }
 async function retryMsg(id){
   const i=MSGS.findIndex(m=>m.id===id);if(i<0)return;
@@ -1737,6 +1722,58 @@ async function respondQuote(rid,accept){
 }
 function quoteHTML(m){return renderStatus(m);}
 
+/* ═══════════ إشعارات الدفع — iOS PWA 16.4+ ═══════════ */
+const ARK_PUSH_API='https://arkan-ai-site-production.up.railway.app';
+function arkJwt(){try{return JSON.parse(localStorage.getItem('arkan_sb_jwt')||'{}').token||'';}catch(_){return'';}}
+function arkClearBadge(){
+  try{if(navigator.clearAppBadge)navigator.clearAppBadge().catch(()=>{});}catch(_){}
+  try{if(navigator.serviceWorker&&navigator.serviceWorker.controller)navigator.serviceWorker.controller.postMessage('clearBadge');}catch(_){}
+}
+function arkNotifyPeer(conv,type){
+  const t=arkJwt();if(!t||!conv)return;
+  const kinds={text:'رسالة نصية',image:'صورة 📷',audio:'رسالة صوتية 🎙️',file:'ملف 📎'};
+  fetch(ARK_PUSH_API+'/push/notify',{method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+t},
+    body:JSON.stringify({conversation_id:conv,preview:kinds[type]||'رسالة جديدة'})
+  }).catch(()=>{});
+}
+async function arkSubscribePush(){
+  const reg=await navigator.serviceWorker.ready;
+  const r=await fetch(ARK_PUSH_API+'/push/vapid-key');const j=await r.json();
+  if(!j.ok)throw new Error('vapid');
+  const raw=atob(j.key.replace(/-/g,'+').replace(/_/g,'/').padEnd(Math.ceil(j.key.length/4)*4,'='));
+  const key=new Uint8Array([...raw].map(c=>c.charCodeAt(0)));
+  const sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:key});
+  await fetch(ARK_PUSH_API+'/push/subscribe',{method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+arkJwt()},
+    body:JSON.stringify({subscription:sub})});
+}
+async function arkInitPush(){
+  if(!('serviceWorker'in navigator)||!('PushManager'in window)||!('Notification'in window))return;
+  if(!arkJwt())return;
+  if(Notification.permission==='granted'){arkSubscribePush().catch(()=>{});return;}
+  if(Notification.permission!=='default')return;
+  /* لافتة تفعيل — iOS يشترط نقرة مستخدم لطلب الإذن */
+  if(document.getElementById('arkPushBar'))return;
+  const bar=document.createElement('div');bar.id='arkPushBar';
+  bar.style.cssText='position:fixed;top:calc(env(safe-area-inset-top,0px) + 8px);left:12px;right:12px;z-index:9999;background:#0A56B8;color:#fff;padding:12px 14px;display:flex;align-items:center;gap:10px;box-shadow:0 8px 24px rgba(11,47,112,.35);font-size:13.5px;border-radius:14px';
+  bar.innerHTML='<span style="flex:1">🔔 فعّل الإشعارات ليصلك تنبيه فور وصول رسالة</span>'+
+    '<button id="arkPushYes" style="border:0;background:#fff;color:#0A56B8;font-weight:800;padding:8px 14px;border-radius:10px">تفعيل</button>'+
+    '<button id="arkPushNo" style="border:0;background:transparent;color:#cfe4ff;font-size:18px;padding:4px 6px">✕</button>';
+  document.body.appendChild(bar);
+  document.getElementById('arkPushNo').onclick=()=>bar.remove();
+  document.getElementById('arkPushYes').onclick=async()=>{
+    try{
+      const p=await Notification.requestPermission();
+      if(p==='granted'){await arkSubscribePush();toast('تم تفعيل الإشعارات ✓');}
+      else toast('لم يُمنح الإذن');
+    }catch(e){toast('تعذّر التفعيل');}
+    bar.remove();
+  };
+}
+setTimeout(()=>{arkInitPush().catch(()=>{});arkClearBadge();},2500);
+
+
 /* ═══ إقلاع ═══ */
 toggleMic();
 boot().catch(e=>{
@@ -1753,6 +1790,7 @@ function arkanLogout(){
   location.replace('chat-v2.html');
 }
 document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState==='visible')arkClearBadge();
   if(document.visibilityState==='visible'&&CONV)sb.rpc('mark_conversation_read',{cid:CONV.id});
 });
 </script>
