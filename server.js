@@ -799,6 +799,83 @@ app.post('/chat-api/owner-session', async (req, res) => {
 });
 
 /* رسائل محادثة */
+/* ═══════════════ Web Push — إشعارات رسائل الشات (iOS PWA 16.4+) ═══════════════
+   VAPID: من env أو يولَّد مرة واحدة ويُحفظ في Firestore config/vapid — صفر إعداد يدوي */
+let webpush = null; try { webpush = require('web-push'); } catch (e) { console.warn('web-push غير مثبت بعد'); }
+let VAPID = { pub: process.env.VAPID_PUBLIC_KEY || '', priv: process.env.VAPID_PRIVATE_KEY || '' };
+let vapidReady = false;
+(async () => {
+  if (!webpush) return;
+  try {
+    if ((!VAPID.pub || !VAPID.priv) && fbReady) {
+      const ref = admin.firestore().doc('config/vapid');
+      const snap = await ref.get();
+      if (snap.exists) VAPID = { pub: snap.data().pub, priv: snap.data().priv };
+      else { const k = webpush.generateVAPIDKeys(); VAPID = { pub: k.publicKey, priv: k.privateKey }; await ref.set(VAPID); }
+    }
+    if (VAPID.pub && VAPID.priv) {
+      webpush.setVapidDetails('mailto:Mohamedarbi0208@gmail.com', VAPID.pub, VAPID.priv);
+      vapidReady = true; console.log('✓ Web Push جاهز');
+    }
+  } catch (e) { console.warn('VAPID init:', e.message); }
+})();
+
+/* المفتاح العام للعميل */
+app.get('/push/vapid-key', (req, res) => {
+  if (!vapidReady) return res.status(503).json({ ok: false, err: 'push غير جاهز' });
+  res.json({ ok: true, key: VAPID.pub });
+});
+
+/* حفظ اشتراك الجهاز — Firestore push_subs/{uid} */
+app.post('/push/subscribe', async (req, res) => {
+  const s = authArkan(req); if (!s) return res.status(401).json({ error: 'unauthorized' });
+  if (!fbReady) return res.status(503).json({ error: 'fb غير جاهز' });
+  const sub = req.body && req.body.subscription;
+  if (!sub || !sub.endpoint) return res.status(400).json({ error: 'subscription مطلوب' });
+  try {
+    const ref = admin.firestore().doc('push_subs/' + String(s.uid).replace(/[^\w+-]/g, '_'));
+    const snap = await ref.get();
+    let subs = (snap.exists && Array.isArray(snap.data().subs)) ? snap.data().subs : [];
+    subs = subs.filter(x => x && x.endpoint !== sub.endpoint);
+    subs.push(sub); if (subs.length > 5) subs = subs.slice(-5);
+    await ref.set({ uid: s.uid, role: s.role || 'customer', conv: s.conv || null, subs, t: Date.now() });
+    res.json({ ok: true, devices: subs.length });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+/* إشعار الطرف الآخر بعد إرسال رسالة (يستدعيه العميل بعد نجاح الإدراج) */
+app.post('/push/notify', async (req, res) => {
+  const s = authArkan(req); if (!s) return res.status(401).json({ error: 'unauthorized' });
+  if (!vapidReady || !fbReady) return res.json({ ok: false, sent: 0 });
+  const conv = String((req.body && req.body.conversation_id) || '');
+  if (!conv) return res.status(400).json({ error: 'conversation_id مطلوب' });
+  if (s.role !== 'owner' && s.conv !== conv) return res.status(403).json({ error: 'forbidden' });
+  const preview = String((req.body && req.body.preview) || 'رسالة جديدة').slice(0, 60);
+  try {
+    const fs2 = admin.firestore();
+    const q = s.role === 'owner'
+      ? await fs2.collection('push_subs').where('conv', '==', conv).get()
+      : await fs2.collection('push_subs').where('role', '==', 'owner').get();
+    const payload = JSON.stringify({
+      title: s.role === 'owner' ? 'أركان — رد جديد' : 'أركان — رسالة عميل',
+      body: preview, url: './chat-v2.html', tag: 'arkan-' + conv, badge: 1
+    });
+    let sent = 0;
+    for (const doc of q.docs) {
+      const d = doc.data(); const keep = [];
+      for (const sub of (d.subs || [])) {
+        try { await webpush.sendNotification(sub, payload, { TTL: 3600 }); sent++; keep.push(sub); }
+        catch (err) {
+          const code = err && err.statusCode;
+          if (code !== 404 && code !== 410) keep.push(sub); /* أزل الاشتراكات الميتة فقط */
+        }
+      }
+      if (keep.length !== (d.subs || []).length) await doc.ref.set({ ...d, subs: keep });
+    }
+    res.json({ ok: true, sent });
+  } catch (e) { res.json({ ok: false, err: e.message, sent: 0 }); }
+});
+
 app.get('/chat-api/messages', async (req, res) => {
   const s = authArkan(req); if (!s) return res.status(401).json({ error: 'unauthorized' });
   const conv = String(req.query.conv || '');
