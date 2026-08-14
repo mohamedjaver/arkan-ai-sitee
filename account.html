@@ -141,7 +141,8 @@
   .nav-it.on svg{stroke:#0058D9} .nav-it.on span{color:#0058D9;font-weight:800}
   .nav-it.on::before{content:'';position:absolute;top:-11px;width:28px;height:3px;border-radius:0;background:linear-gradient(90deg,#0058D9,#0058D9)}
   .acct-head{display:flex;flex-direction:column;align-items:center;margin:14px 0 26px}
-  .avatar{width:84px;height:84px;border-radius:0;font-size:32px;font-weight:700;color:#fff;
+  .avatar .cam{position:absolute;left:-6px;bottom:-6px;width:30px;height:30px;border-radius:50%;background:#1256D0;display:flex;align-items:center;justify-content:center;border:2.5px solid #fff;box-shadow:0 2px 8px rgba(3,26,69,.35)}.avatar .cam svg{width:15px;height:15px;stroke:#fff}.avatar.up{opacity:.55;pointer-events:none}.avatar.up::after{content:"";position:absolute;inset:26px;border:3px solid #fff;border-top-color:transparent;border-radius:50%;animation:avSpin .8s linear infinite}@keyframes avSpin{to{transform:rotate(360deg)}}
+.avatar{width:84px;height:84px;border-radius:22px;font-size:32px;font-weight:700;color:#fff;position:relative;cursor:pointer;background-size:cover;background-position:center;overflow:visible;
     background:linear-gradient(135deg,var(--violet),#0058D9);display:grid;place-items:center;
     box-shadow:0 14px 36px rgba(0,153,255,.14);margin-bottom:14px}
   .acct-head b{font-size:20px}
@@ -250,7 +251,7 @@
     </section>
 
     <section class="screen" id="s-acct">
-      <div class="acct-head"><div class="avatar" id="avatar">م</div><b id="acctName">—</b><small class="num" id="acctPhone">—</small></div>
+      <div class="acct-head"><div class="avatar" id="avatar" title="تغيير الصورة الشخصية">م<span class="cam"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></span></div><input type="file" id="avFile" accept="image/*" style="display:none"><b id="acctName">—</b><small class="num" id="acctPhone">—</small></div>
       <div class="rows">
         <div class="row"><div class="ric"><svg fill="none" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"/></svg></div><div class="rtxt"><b>الرقم المرجعي</b><small>لمشاركته عند الطلب</small></div><div class="rval" id="acctRef">—</div></div>
         <div class="row"><div class="ric"><svg fill="none" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" d="M9 12l2 2 4-4m5.6 2A9 9 0 1 1 12 3a9 9 0 0 1 8.6 9z"/></svg></div><div class="rtxt"><b>حالة الحساب</b><small id="acctStatusSub">—</small></div><span id="acctStatus" class="status-on">نشط</span></div>
@@ -645,7 +646,7 @@ function openApp(phone){
   $('nav').style.display='grid';
   const nm = USER.name||'عميل لبدال';
   $('greet').textContent = 'مرحباً، '+nm;
-  $('avatar').textContent = nm.charAt(0);
+  $('avatar').textContent = nm.charAt(0); akAvatarInit(nm);
   $('acctName').textContent = nm;
   $('acctPhone').textContent = '+'+phone;
   $('refVal').textContent = USER.ref||'—';
@@ -870,6 +871,62 @@ function apply(){
 /* الجلسة قد تكتمل بعد الدخول الصامت — أعد المحاولة لثوانٍ */
 let n=0;const iv=setInterval(()=>{if(apply()||++n>40)clearInterval(iv);},300);
 })();
+
+/* ═══ الصورة الشخصية — تُعرض هنا وفي المحادثة ═══ */
+const AK_SB_URL='https://vyxzlazwpbstigcqvizb.supabase.co';
+const AK_SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ5eHpsYXp3cGJzdGlnY3F2aXpiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU5MTU5OTcsImV4cCI6MjEwMTQ5MTk5N30.fxMt_jH4z8t7uVnFLLHyNobu6zsgu_ZwVGLibuqWj38';
+function akJwt(){ try{return JSON.parse(localStorage.getItem('arkan_sb_jwt')||'null');}catch(e){return null;} }
+function akAvShow(url){ const a=document.getElementById('avatar'); if(!a)return;
+  if(url){ a.style.backgroundImage="url('"+url+"')"; a.childNodes[0].textContent=''; }
+}
+async function akAvatarInit(nm){
+  const cached=localStorage.getItem('arkan_avatar'); if(cached) akAvShow(cached);
+  const j=akJwt();
+  const a=document.getElementById('avatar'), f=document.getElementById('avFile');
+  if(a&&f){ a.onclick=()=>f.click(); f.onchange=()=>akAvUpload(f.files[0]); }
+  if(!j||!j.token||!j.user_id) return;
+  try{
+    const r=await fetch(AK_SB_URL+'/rest/v1/chat_users?id=eq.'+j.user_id+'&select=avatar_url',
+      {headers:{apikey:AK_SB_KEY,Authorization:'Bearer '+j.token}});
+    const d=await r.json();
+    const u=d&&d[0]&&d[0].avatar_url;
+    if(u){ localStorage.setItem('arkan_avatar',u); akAvShow(u); }
+  }catch(e){}
+}
+async function akAvUpload(file){
+  if(!file) return;
+  const j=akJwt();
+  if(!j||!j.token||!j.user_id){ alert('سجّل الدخول أولاً لحفظ الصورة'); return; }
+  const a=document.getElementById('avatar'); a.classList.add('up');
+  try{
+    const blob=await akAvCompress(file,512,.82);
+    const path='avatars/'+j.user_id+'.jpg';
+    let r=await fetch(AK_SB_URL+'/storage/v1/object/chat-media/'+path,
+      {method:'POST',headers:{apikey:AK_SB_KEY,Authorization:'Bearer '+j.token,'x-upsert':'true','Content-Type':'image/jpeg'},body:blob});
+    if(!r.ok) throw new Error('upload '+r.status);
+    r=await fetch(AK_SB_URL+'/storage/v1/object/sign/chat-media/'+path,
+      {method:'POST',headers:{apikey:AK_SB_KEY,Authorization:'Bearer '+j.token,'Content-Type':'application/json'},
+       body:JSON.stringify({expiresIn:31536000})});
+    const sg=await r.json();
+    if(!sg.signedURL) throw new Error('sign');
+    const url=AK_SB_URL+'/storage/v1'+sg.signedURL;
+    await fetch(AK_SB_URL+'/rest/v1/chat_users?id=eq.'+j.user_id,
+      {method:'PATCH',headers:{apikey:AK_SB_KEY,Authorization:'Bearer '+j.token,'Content-Type':'application/json',Prefer:'return=minimal'},
+       body:JSON.stringify({avatar_url:url})});
+    localStorage.setItem('arkan_avatar',url); akAvShow(url);
+  }catch(e){ alert('تعذر رفع الصورة — حاول مجددًا'); }
+  a.classList.remove('up');
+}
+function akAvCompress(file,max,q){
+  return new Promise((res,rej)=>{
+    const img=new Image();
+    img.onload=()=>{ const sc=Math.min(1,max/Math.max(img.width,img.height));
+      const cv=document.createElement('canvas'); cv.width=Math.round(img.width*sc); cv.height=Math.round(img.height*sc);
+      cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);
+      cv.toBlob(b=>b?res(b):rej(new Error('blob')),'image/jpeg',q); };
+    img.onerror=rej; img.src=URL.createObjectURL(file);
+  });
+}
 </script>
 </body>
 </html>
