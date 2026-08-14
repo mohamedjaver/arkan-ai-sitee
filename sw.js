@@ -1,7 +1,7 @@
 /* ARKAN Rates — Service Worker v2.0
    إستراتيجية: الشبكة أولًا لصفحات HTML والبيانات (لا محتوى قديم أبدًا)
               الكاش أولًا للأصول الثابتة فقط (صور، أيقونات، شعار) */
-const V='arkan-v6.1'; /* bump: صفحات قديمة ألغيت — chat-v2 هي المعتمدة */
+const V='arkan-v6.2'; /* bump: صفحات قديمة ألغيت — chat-v2 هي المعتمدة */
 const STATIC=['./arkan-logo.svg','./arkan-icon-512.png','./arkan-touch-180.png','./site-manifest.json'];
 
 self.addEventListener('install',e=>{
@@ -98,4 +98,31 @@ self.addEventListener('fetch',e=>{
 /* رسالة من الصفحة لفرض التحديث الفوري */
 self.addEventListener('message',e=>{
   if(e.data==='skipWaiting')self.skipWaiting();
+  if(e.data==='clearBadge'&&self.registration&&navigator.clearAppBadge)navigator.clearAppBadge().catch(()=>{});
+});
+
+/* ═══ Web Push: إشعار رسائل الشات + عداد الأيقونة (iOS PWA) ═══ */
+self.addEventListener('push',e=>{
+  let d={};try{d=e.data?e.data.json():{};}catch(_){d={body:e.data&&e.data.text()};}
+  e.waitUntil((async()=>{
+    try{if(navigator.setAppBadge&&d.badge)await navigator.setAppBadge(d.badge);}catch(_){}
+    await self.registration.showNotification(d.title||'أركان',{
+      body:d.body||'رسالة جديدة',
+      icon:'./arkan-icon-512.png',
+      badge:'./arkan-icon-512.png',
+      tag:d.tag||'arkan-chat',
+      data:{url:d.url||'./chat-v2.html'}
+    });
+  })());
+});
+
+self.addEventListener('notificationclick',e=>{
+  e.notification.close();
+  const url=(e.notification.data&&e.notification.data.url)||'./chat-v2.html';
+  e.waitUntil((async()=>{
+    try{if(navigator.clearAppBadge)await navigator.clearAppBadge();}catch(_){}
+    const ws=await clients.matchAll({type:'window',includeUncontrolled:true});
+    for(const w of ws){if(w.url.indexOf('chat')>-1&&'focus'in w)return w.focus();}
+    return clients.openWindow(url);
+  })());
 });
