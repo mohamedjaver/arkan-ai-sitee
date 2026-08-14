@@ -896,36 +896,47 @@ async function akAvatarInit(nm){
 async function akAvUpload(file){
   if(!file) return;
   const j=akJwt();
-  if(!j||!j.token||!j.user_id){ alert('سجّل الدخول أولاً لحفظ الصورة'); return; }
+  if(!j||!j.token){ alert('سجّل الدخول أولاً لحفظ الصورة'); return; }
+  const uid=j.user_id||j.uid||j.id;
+  if(!uid){ alert('تعذر تحديد معرف الحساب — أعد تسجيل الدخول'); return; }
   const a=document.getElementById('avatar'); a.classList.add('up');
+  let step='الضغط';
   try{
     const blob=await akAvCompress(file,512,.82);
-    const path='avatars/'+j.user_id+'.jpg';
+    step='الرفع';
+    const path='avatars/'+uid+'.jpg';
     let r=await fetch(AK_SB_URL+'/storage/v1/object/chat-media/'+path,
       {method:'POST',headers:{apikey:AK_SB_KEY,Authorization:'Bearer '+j.token,'x-upsert':'true','Content-Type':'image/jpeg'},body:blob});
-    if(!r.ok) throw new Error('upload '+r.status);
+    if(!r.ok){ let t=''; try{t=(await r.json()).message||'';}catch(e){} throw new Error(r.status+' '+t); }
+    step='التوقيع';
     r=await fetch(AK_SB_URL+'/storage/v1/object/sign/chat-media/'+path,
       {method:'POST',headers:{apikey:AK_SB_KEY,Authorization:'Bearer '+j.token,'Content-Type':'application/json'},
        body:JSON.stringify({expiresIn:31536000})});
     const sg=await r.json();
-    if(!sg.signedURL) throw new Error('sign');
+    if(!sg.signedURL) throw new Error(r.status+' '+(sg.message||''));
     const url=AK_SB_URL+'/storage/v1'+sg.signedURL;
-    await fetch(AK_SB_URL+'/rest/v1/chat_users?id=eq.'+j.user_id,
+    step='الحفظ';
+    r=await fetch(AK_SB_URL+'/rest/v1/chat_users?id=eq.'+uid,
       {method:'PATCH',headers:{apikey:AK_SB_KEY,Authorization:'Bearer '+j.token,'Content-Type':'application/json',Prefer:'return=minimal'},
        body:JSON.stringify({avatar_url:url})});
+    if(!r.ok){ let t=''; try{t=(await r.json()).message||'';}catch(e){} throw new Error(r.status+' '+t); }
     localStorage.setItem('arkan_avatar',url); akAvShow(url);
-  }catch(e){ alert('تعذر رفع الصورة — حاول مجددًا'); }
+  }catch(e){ alert('فشل عند خطوة «'+step+'»: '+(e.message||e)); }
   a.classList.remove('up');
 }
-function akAvCompress(file,max,q){
-  return new Promise((res,rej)=>{
-    const img=new Image();
-    img.onload=()=>{ const sc=Math.min(1,max/Math.max(img.width,img.height));
-      const cv=document.createElement('canvas'); cv.width=Math.round(img.width*sc); cv.height=Math.round(img.height*sc);
-      cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);
-      cv.toBlob(b=>b?res(b):rej(new Error('blob')),'image/jpeg',q); };
-    img.onerror=rej; img.src=URL.createObjectURL(file);
-  });
+async function akAvCompress(file,max,q){
+  let iw,ih,src;
+  try{ src=await createImageBitmap(file); iw=src.width; ih=src.height; }
+  catch(e){
+    src=await new Promise((res,rej)=>{ const im=new Image();
+      im.onload=()=>res(im); im.onerror=()=>rej(new Error('صيغة الصورة غير مدعومة'));
+      im.src=URL.createObjectURL(file); });
+    iw=src.naturalWidth; ih=src.naturalHeight;
+  }
+  const sc=Math.min(1,max/Math.max(iw,ih));
+  const cv=document.createElement('canvas'); cv.width=Math.round(iw*sc)||max; cv.height=Math.round(ih*sc)||max;
+  cv.getContext('2d').drawImage(src,0,0,cv.width,cv.height);
+  return await new Promise((res,rej)=>cv.toBlob(b=>b?res(b):rej(new Error('تعذر إنشاء الصورة')),'image/jpeg',q));
 }
 </script>
 </body>
