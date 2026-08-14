@@ -3,12 +3,12 @@
 <head>
 <script src="arkan-gate.js"></script>
   <link rel="icon" href="arkan-icon-512.png?v=n4">
-  <meta name="apple-mobile-web-app-title" content="ARKAN Pay">
+  <meta name="apple-mobile-web-app-title" content="BDL">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=n4">
   <link rel="manifest" href="site-manifest.json">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>ARKAN Pay · لوحة التحكم</title>
+<title>BDL · لوحة التحكم</title>
 <meta name="theme-color" content="#F7FAFD">
 <meta name="robots" content="noindex,nofollow">
 <rect width='100' height='100' rx='24' fill='%237c5cff'/><path d='M50 20 L74 78 H60 L50 52 L40 78 H26 Z' fill='%23fff'/></svg>">
@@ -179,7 +179,7 @@ body{font-family:'IBM Plex Sans Arabic',system-ui,sans-serif}
 <div class="wrap">
 <section id="ark-req-panel" class="ark-card" style="margin:14px 0;background:#F7FAFD!important;border:1px solid #D9E5F2!important;border-radius:0;padding:16px;box-shadow:0 10px 30px rgba(16,42,67,.08)">
   <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
-    <span class="ark-eyebrow" style="color:#0058D9;font-weight:800;letter-spacing:.15em">ARKAN</span>
+    <span class="ark-eyebrow" style="color:#0058D9;font-weight:800;letter-spacing:.15em">BDL</span>
     <h3 style="font-weight:800;font-size:17px;margin:0;color:#2E3A48">طلبات الدفع الواردة</h3>
     <span id="ark-req-count" style="margin-inline-start:auto;color:#9FC3E8;font-size:13px;font-weight:700"></span>
     <button id="ark-req-purge" style="border:1px solid rgba(229,57,53,.45);background:rgba(229,57,53,.16);color:#FF8A85;border-radius:0;padding:7px 13px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit">🗑 حذف الكل</button>
@@ -188,7 +188,7 @@ body{font-family:'IBM Plex Sans Arabic',system-ui,sans-serif}
 </section>
 
   <div class="top">
-    <img class="logo" src="arkan-logo.svg?v=n4" alt="أركان">
+    <img class="logo" src="arkan-logo.svg?v=n4" alt="لبدال">
     <div>
       <h1>ARKAN <span>ADMIN</span></h1>
       <div class="sub" id="adminEmail">…</div>
@@ -322,8 +322,8 @@ async function showAdminLogin(){
   g.id = 'adminGate';
   g.style.cssText = 'position:fixed;inset:0;z-index:200;display:grid;place-items:center;background:var(--bg);padding:24px';
   g.innerHTML = `<div style="width:100%;max-width:360px;background:var(--panel);border:1px solid var(--line);border-radius:0;padding:30px 24px">
-    <img src="arkan-logo.svg?v=n4" alt="أركان" style="width:56px;height:56px;margin:0 auto 16px;border-radius:0;object-fit:cover;display:block">
-    <h2 style="text-align:center;margin:0 0 4px;font-size:19px">لوحة أركان</h2>
+    <img src="arkan-logo.svg?v=n4" alt="لبدال" style="width:56px;height:56px;margin:0 auto 16px;border-radius:0;object-fit:cover;display:block">
+    <h2 style="text-align:center;margin:0 0 4px;font-size:19px">لوحة لبدال</h2>
     <p style="text-align:center;margin:0 0 22px;font-size:13px;color:var(--mute)">دخول الأدمن</p>
     <input id="agEmail" type="email" placeholder="البريد" style="width:100%;box-sizing:border-box;background:rgba(8,7,20,.7);border:1px solid var(--line);border-radius:0;padding:13px;color:var(--txt);font-size:15px;outline:0;margin-bottom:12px">
     <input id="agPass" type="password" placeholder="كلمة المرور" style="width:100%;box-sizing:border-box;background:rgba(8,7,20,.7);border:1px solid var(--line);border-radius:0;padding:13px;color:var(--txt);font-size:15px;outline:0;margin-bottom:16px">
@@ -656,7 +656,7 @@ import * as ARKAN from './arkan-core.js'; window.ARKAN = ARKAN;
 </style>
 
 <style id="akNightCss">
-/* ═══ خلفية أركان الكحلية الأصلية (تدرج الهيرو) — معممة ═══ */
+/* ═══ خلفية لبدال الكحلية الأصلية (تدرج الهيرو) — معممة ═══ */
 body{background:radial-gradient(1100px 600px at 78% -10%, rgba(0,88,217,.55), transparent 60%),
  radial-gradient(900px 700px at -10% 110%, rgba(0,181,255,.22), transparent 55%),
  linear-gradient(180deg,#04143A 0%,#062165 58%,#003B8F 100%) fixed!important}

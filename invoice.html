@@ -3,12 +3,12 @@
 <head><script id="akMerge">/* دمج: هذه الصفحة أُدمجت — الوصول القديم بـ ?legacy=1 */
 if(!/legacy=1/.test(location.search)){location.replace('archive.html');}</script>
   <link rel="icon" href="arkan-icon-512.png?v=n4">
-  <meta name="apple-mobile-web-app-title" content="ARKAN Pay">
+  <meta name="apple-mobile-web-app-title" content="BDL">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=n4">
   <link rel="manifest" href="site-manifest.json">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>ARKAN Pay — قارئ فواتير الموردين</title>
+<title>BDL — قارئ فواتير الموردين</title>
 <meta name="theme-color" content="#04060B">
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=IBM+Plex+Mono:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -73,7 +73,7 @@ a.back:hover{color:var(--gold)}
 <body>
 <div class="wrap">
 <header>
-  <div class="logo" style="background:none;box-shadow:0 8px 24px rgba(25,169,245,.25);overflow:hidden"><img src="arkan-icon-192.png?v=n4" alt="ARKAN" style="width:100%;height:100%;object-fit:cover;border-radius:0"></div>
+  <div class="logo" style="background:none;box-shadow:0 8px 24px rgba(25,169,245,.25);overflow:hidden"><img src="arkan-icon-192.png?v=n4" alt="BDL" style="width:100%;height:100%;object-fit:cover;border-radius:0"></div>
   <div><h1>قارئ فواتير الموردين</h1><p>OCR — استخراج تلقائي + تسعير فوري بالأوقية</p></div>
   <div class="badge" id="rateBadge">جاري جلب الأسعار…</div>
 </header>
@@ -341,7 +341,7 @@ function summary(){
     +'📈 السعر المطبق: '+state.applied.toFixed(2)+' MRU (سعر اليوم +'+state.margin+'%)\n'
     +'━━━━━━━━━━━━\n'
     +'💰 *الإجمالي: '+fmt(state.total)+' MRU*\n'
-    +'\narkanrates.com';
+    +'\nlbdal.com';
 }
 
 /* ---------- events ---------- */
@@ -373,7 +373,7 @@ loadRates();
 </style>
 
 <style id="akNightCss">
-/* ═══ خلفية أركان الكحلية الأصلية (تدرج الهيرو) — معممة ═══ */
+/* ═══ خلفية لبدال الكحلية الأصلية (تدرج الهيرو) — معممة ═══ */
 body{background:radial-gradient(1100px 600px at 78% -10%, rgba(0,88,217,.55), transparent 60%),
  radial-gradient(900px 700px at -10% 110%, rgba(0,181,255,.22), transparent 55%),
  linear-gradient(180deg,#04143A 0%,#062165 58%,#003B8F 100%) fixed!important}

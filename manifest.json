@@ -1,7 +1,7 @@
 {
-  "name": "ARKAN Pay",
-  "short_name": "ARKAN Pay",
-  "description": "Smart Cross-Border Payments",
+  "name": "BDL — لبدال",
+  "short_name": "BDL",
+  "description": "بدّل. حوّل. بسرعة — صرف وتحويلات عبر الحدود",
   "start_url": "./app.html",
   "scope": "./",
   "display": "standalone",

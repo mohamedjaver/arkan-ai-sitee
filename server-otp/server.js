@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
-   ARKAN OTP — رمز التحقق عبر واتساب (Meta Cloud API)
+   BDL OTP — رمز التحقق عبر واتساب (Meta Cloud API)
    المسار: العميل يطلب رمزًا → يصله على واتسابه → يتحقق →
    يستلم Firebase Custom Token → يدخل بجلسة حقيقية.
    Env المطلوبة في Railway:
@@ -7,7 +7,7 @@
      WA_PHONE_ID     Phone number ID من لوحة واتساب
      WA_TEMPLATE     اسم قالب المصادقة (افتراضي: arkan_otp)
      FB_SERVICE_JSON محتوى ملف Service Account كاملًا (JSON)
-     ALLOWED_ORIGIN  https://arkanrates.com
+     ALLOWED_ORIGIN  https://lbdal.com
    ═══════════════════════════════════════════════════════════════ */
 import express from 'express';
 import crypto from 'crypto';
@@ -19,10 +19,10 @@ const app = express();
 app.use(express.json({ limit: '32kb' }));
 
 /* ── CORS مقفول على الموقع ── */
-const ORIGIN = process.env.ALLOWED_ORIGIN || 'https://arkanrates.com';
+const ORIGIN = process.env.ALLOWED_ORIGIN || 'https://lbdal.com';
 app.use((req, res, next) => {
   const o = req.headers.origin || '';
-  if (o === ORIGIN || o === 'https://www.arkanrates.com') res.setHeader('Access-Control-Allow-Origin', o);
+  if (o === ORIGIN || o === 'https://www.lbdal.com') res.setHeader('Access-Control-Allow-Origin', o);
   res.setHeader('Access-Control-Allow-Methods', 'POST, GET, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') return res.sendStatus(204);
@@ -117,7 +117,7 @@ app.post('/otp/verify', async (req, res) => {
   }
 });
 
-/* ═══ ARKAN Chat v2 — إصدار Supabase JWT (يفعّل RLS الحقيقي) ═══
+/* ═══ BDL Chat v2 — إصدار Supabase JWT (يفعّل RLS الحقيقي) ═══
    Env جديد في Railway: SUPABASE_JWT_SECRET (من Supabase → Settings → API → JWT Secret) */
 const ARKAN_NS = '7c9e6679-7425-40de-944b-e07fc1f90ae7'; // لا تغيّره أبدًا بعد الإطلاق
 const OWNER_PHONES = ['22236295050'];
@@ -172,4 +172,4 @@ app.post('/supabase-token', async (req, res) => {
 
 app.get('/health', (req, res) => res.json({ ok: true, fb: fbReady, wa: !!process.env.WA_TOKEN, sb: !!process.env.SUPABASE_JWT_SECRET }));
 
-app.listen(process.env.PORT || 3000, () => console.log('ARKAN OTP يعمل ✓'));
+app.listen(process.env.PORT || 3000, () => console.log('BDL OTP يعمل ✓'));

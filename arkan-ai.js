@@ -1,7 +1,7 @@
 /* ═══════════════════════════════════════════════════════════
-   ARKAN AI — مساعد Gemini على كل صفحات الموقع
+   BDL AI — مساعد Gemini على كل صفحات الموقع
    • زر عائم يفتح دردشة ذكية (عربي/فرنسي/إنجليزي)
-   • يعرف سياق أركان: الأسعار الحية، الخدمات، بطاقة الفيزا
+   • يعرف سياق لبدال: الأسعار الحية، الخدمات، بطاقة الفيزا
    • مفتاح Gemini لا يُخزَّن في الكود: يُدخله الأدمن مرة واحدة
      ويُحفظ في localStorage على جهازه (أو يوزَّع لاحقاً عبر خادم)
    التحميل: <script src="arkan-ai.js" defer></script>
@@ -12,7 +12,7 @@
   const setKeyU = k => { localStorage.setItem('gemKey', k); localStorage.setItem(KEY_LS, k); };
   const rmKeyU  = () => { localStorage.removeItem('gemKey'); localStorage.removeItem(KEY_LS); };
   const MODELS = ['gemini-2.5-flash','gemini-2.0-flash','gemini-flash-latest'];
-  const SYS = 'أنت مساعد ARKAN Rates (arkanrates.com) — منصة صرف عملات وتسويات دولية بين موريتانيا وأنغولا والصين والخليج، مملوكة لشركة ARKAN INTERNATIONAL TRADING. خدماتنا: تحويل الأموال عبر الحدود (AOA, MRU, USDT, EUR, CNY, AED)، تسديد فواتير الموردين في الصين، بطاقة فيزا مسبقة الدفع بـ1500 أوقية جديدة (MRU) تُسلَّم في نواكشوط خلال 24-48 ساعة، أرشفة الإيصالات بالذكاء الاصطناعي، ومركز تسويات. واتساب: +222 36 29 50 50. أجب بلغة السائل (عربي/فرنسي/إنجليزي/برتغالي) باختصار ومهنية. إن سُئلت عن سعر حي استخدم الأسعار المرفقة في الرسالة إن وُجدت، وإلا وجّه للواتساب.';
+  const SYS = 'أنت مساعد BDL (lbdal.com) — منصة صرف عملات وتسويات دولية بين موريتانيا وأنغولا والصين والخليج، مملوكة لشركة ARKAN INTERNATIONAL TRADING. خدماتنا: تحويل الأموال عبر الحدود (AOA, MRU, USDT, EUR, CNY, AED)، تسديد فواتير الموردين في الصين، بطاقة فيزا مسبقة الدفع بـ1500 أوقية جديدة (MRU) تُسلَّم في نواكشوط خلال 24-48 ساعة، أرشفة الإيصالات بالذكاء الاصطناعي، ومركز تسويات. واتساب: +222 36 29 50 50. أجب بلغة السائل (عربي/فرنسي/إنجليزي/برتغالي) باختصار ومهنية. إن سُئلت عن سعر حي استخدم الأسعار المرفقة في الرسالة إن وُجدت، وإلا وجّه للواتساب.';
 
   function el(tag, css, html) { const e = document.createElement(tag); if (css) e.style.cssText = css; if (html != null) e.innerHTML = html; return e; }
 
@@ -60,7 +60,7 @@
     const fab = el('button',
       `position:fixed;inset-inline-end:16px;bottom:calc(env(safe-area-inset-bottom,0px) + 84px);z-index:99992;width:54px;height:54px;border-radius:50%;border:0;cursor:pointer;color:#fff;display:grid;place-items:center;background:${GRAD};box-shadow:0 14px 32px -10px rgba(0,88,217,.55);transition:transform .18s`,
       '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3Z"/><path d="M19 15l.9 2.6L22.5 18.5l-2.6.9L19 22l-.9-2.6-2.6-.9 2.6-.9L19 15Z"/></svg>');
-    fab.id = 'ark-ai-fab'; fab.title = 'ARKAN AI';
+    fab.id = 'ark-ai-fab'; fab.title = 'BDL AI';
     document.body.appendChild(fab);
 
     const panel = el('div',
@@ -92,7 +92,7 @@
       b.textContent = text; log.appendChild(b); log.scrollTop = log.scrollHeight; return b;
     }
     function hello() {
-      if (!log.childElementCount) bubble('ai', 'مرحباً! أنا مساعد أركان الذكي 👋\nاسألني عن أسعار الصرف، بطاقة الفيزا (1500 MRU)، التحويلات الدولية، أو أي خدمة.');
+      if (!log.childElementCount) bubble('ai', 'مرحباً! أنا مساعد لبدال الذكي 👋\nاسألني عن أسعار الصرف، بطاقة الفيزا (1500 MRU)، التحويلات الدولية، أو أي خدمة.');
     }
     async function send() {
       const q = input.value.trim(); if (!q) return;

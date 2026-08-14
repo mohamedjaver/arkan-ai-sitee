@@ -1,5 +1,5 @@
 /* ============================================================
-   ARKAN Pay — شريط التنقل العلوي الموحّد
+   BDL — شريط التنقل العلوي الموحّد
    يُستدعى في كل صفحة: <script src="arkan-nav.js" defer></script>
    يضيف: زر رجوع + قائمة ثلاث خطوط + تنقل بين الصفحات
    ============================================================ */
@@ -113,7 +113,7 @@
     '<div class="akov" id="akOv"></div>' +
     '<div class="akpanel">' +
       '<div class="akhead"><img src="arkan-icon-192.png" alt="">' +
-        '<div><b>ARKAN Pay</b><small>' + (isOwner ? 'وضع المالك' : 'الصرف والتسويات') + '</small></div>' +
+        '<div><b>BDL</b><small>' + (isOwner ? 'وضع المالك' : 'الصرف والتسويات') + '</small></div>' +
       '</div>' +
       '<div class="aklinks">' +
         '<a href="#" id="akGoBack" style="border-bottom:1px solid rgba(11,47,112,.06)">' + svg('back',20) + '<span>رجوع للخلف</span></a>' +

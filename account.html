@@ -2,12 +2,12 @@
 <html lang="ar" dir="rtl">
 <head>
   <link rel="icon" href="arkan-icon-512.png?v=n4">
-  <meta name="apple-mobile-web-app-title" content="ARKAN Pay">
+  <meta name="apple-mobile-web-app-title" content="BDL">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=n4">
   <link rel="manifest" href="site-manifest.json">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>ARKAN Pay — حسابي</title>
+<title>BDL — حسابي</title>
 <meta name="theme-color" content="#F7FAFD">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -199,7 +199,7 @@
   <main id="app" style="display:none">
     <section class="screen active" id="s-home">
       <div class="topbar">
-        <div class="brand"><img class="logo" src="arkan-logo.svg?v=n4" alt="أركان"><div><b>أركان<small id="greet">مرحباً</small></b></div></div>
+        <div class="brand"><img class="logo" src="arkan-logo.svg?v=n4" alt="لبدال"><div><b>لبدال<small id="greet">مرحباً</small></b></div></div>
         <div class="bell" id="bell"><svg fill="none" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" d="M15 17h5l-1.4-1.4A2 2 0 0 1 18 14.2V11a6 6 0 0 0-4-5.7V5a2 2 0 1 0-4 0v.3A6 6 0 0 0 6 11v3.2a2 2 0 0 1-.6 1.4L4 17h5m6 0v1a3 3 0 1 1-6 0v-1m6 0H9"/></svg></div>
       </div>
       <div class="hero">
@@ -207,7 +207,7 @@
         <div class="amount num"><span id="balAmt">0</span><span class="cur">MRU</span></div>
         <div class="sub num" id="balSub">≈ <b>0 USDT</b></div>
         <div class="ref-chip" id="refChip"><svg fill="none" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" d="M8 16H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v2m-6 12h8a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-8a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2z"/></svg>رقمك المرجعي&nbsp;<b id="refVal">—</b></div>
-        <div class="pending-b" id="pendBox">حسابك قيد التفعيل — سيؤكده فريق أركان قريباً.</div>
+        <div class="pending-b" id="pendBox">حسابك قيد التفعيل — سيؤكده فريق لبدال قريباً.</div>
       </div>
       <div class="actions">
         <div class="act gold" data-goto="s-send"><div class="ic"><svg fill="none" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M12 5l7 7-7 7"/></svg></div><span>تحويل</span></div>
@@ -291,8 +291,8 @@
   <div class="gate on" id="gate">
     <div class="ambient"></div>
     <div class="gate-card">
-      <img class="logo" src="arkan-logo.svg?v=n4" alt="أركان">
-      <h1>أركان — حسابي</h1>
+      <img class="logo" src="arkan-logo.svg?v=n4" alt="لبدال">
+      <h1>لبدال — حسابي</h1>
       <p class="tag">دخول برقم واتساب ورمزك الشخصي</p>
       <label>رقم واتساب</label>
       <input id="gPhone" type="tel" inputmode="tel" placeholder="+222 XX XX XX XX">
@@ -331,7 +331,7 @@
         <div class="err" id="rsErr"></div>
         <p class="hint" id="rsWa" style="display:none"><a href="#" id="rsWaLink" style="font-weight:700">تعذّر الإرسال — تواصل معنا عبر واتساب</a></p>
       </div>
-      <p class="hint">ليس لديك حساب؟ اطلب تحويلاً من <a href="https://arkanrates.com">الصفحة الرئيسية</a> ويصلك رمزك عبر واتساب.</p>
+      <p class="hint">ليس لديك حساب؟ اطلب تحويلاً من <a href="https://lbdal.com">الصفحة الرئيسية</a> ويصلك رمزك عبر واتساب.</p>
     </div>
   </div>
 
@@ -353,7 +353,7 @@ const firebaseConfig = {
 };
 const db = getFirestore(initializeApp(firebaseConfig));
 const WA = '22236295050';
-const RATES_URL = 'https://arkanrates.com/rates-data.json';
+const RATES_URL = 'https://lbdal.com/rates-data.json';
 
 const $ = id => document.getElementById(id);
 const fmt = (v,dp=2) => Number.isFinite(v) ? v.toLocaleString('en-US',{minimumFractionDigits:dp,maximumFractionDigits:dp}) : '—';
@@ -456,7 +456,7 @@ $('reqBtn').onclick = async () => {
   try{
     const { collection, addDoc, serverTimestamp } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js');
     await addDoc(collection(db,'payment_requests'),{
-      ref, company:(USER?.name||'عميل أركان'), amount:String(amt), currency:st.from+'→'+st.to,
+      ref, company:(USER?.name||'عميل لبدال'), amount:String(amt), currency:st.from+'→'+st.to,
       destination:st.to, purpose:'تحويل فردي', contact:String(phone),
       type:'individual', status:'pending', createdAt:serverTimestamp()
     });
@@ -520,7 +520,7 @@ $('rsSend').onclick = async () => {
       rsErr(j.err||'تعذّر الإرسال');
       $('rsWa').style.display='block';
       $('rsWaLink').onclick=ev=>{ ev.preventDefault();
-        location.href='https://wa.me/22236295050?text='+encodeURIComponent('🔐 نسيت رمز الدخول إلى حسابي في أركان\nرقمي: '+ph+'\nأرجو إعادة تعيين الرمز.'); };
+        location.href='https://wa.me/22236295050?text='+encodeURIComponent('🔐 نسيت رمز الدخول إلى حسابي في لبدال\nرقمي: '+ph+'\nأرجو إعادة تعيين الرمز.'); };
     }
   }catch(e){ rsErr('تعذّر الاتصال — حاول ثانية'); }
   finally{ $('rsSend').disabled=false; $('rsSend').textContent='أرسل رمز التحقق إلى واتسابي'; }
@@ -643,7 +643,7 @@ function openApp(phone){
   $('gate').classList.remove('on');
   $('app').style.display='block';
   $('nav').style.display='grid';
-  const nm = USER.name||'عميل أركان';
+  const nm = USER.name||'عميل لبدال';
   $('greet').textContent = 'مرحباً، '+nm;
   $('avatar').textContent = nm.charAt(0);
   $('acctName').textContent = nm;
@@ -653,10 +653,10 @@ function openApp(phone){
   $('acctPin').textContent = USER.pin||'••••';
   const wab=$('savePinWA');
   if(wab) wab.onclick=()=>{
-    const msg='🔐 رمز دخولي إلى حسابي في أركان\n'+
+    const msg='🔐 رمز دخولي إلى حسابي في لبدال\n'+
       'الرمز: '+(USER.pin||'')+'\n'+
       'الرقم المرجعي: '+(USER.ref||'')+'\n'+
-      '— أحتفظ بهذه الرسالة للدخول إلى arkanrates.com/account.html';
+      '— أحتفظ بهذه الرسالة للدخول إلى lbdal.com/account.html';
     window.open(`https://wa.me/${WA}?text=${encodeURIComponent(msg)}`,'_blank');
   };
   window.__bal = 0;
@@ -665,7 +665,7 @@ function openApp(phone){
   $('pendBox').classList.toggle('on', pending);
   $('acctStatus').className = pending?'status-wait':'status-on';
   $('acctStatus').textContent = pending?'قيد التفعيل':'نشط';
-  $('acctStatusSub').textContent = pending?'بانتظار تأكيد أركان':'التحقق مكتمل';
+  $('acctStatusSub').textContent = pending?'بانتظار تأكيد لبدال':'التحقق مكتمل';
   const q = query(collection(db,'transactions'), where('uid','==',phone));
   onSnapshot(q, renderTx, err=>{
     console.error('tx query error:', err);
@@ -776,7 +776,7 @@ async function silentOpen(phoneRaw){
 <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" style="width:24px;height:24px"><path d="M21 11.5a8.4 8.4 0 01-9 8.4 8.6 8.6 0 01-3.9-.9L3 20l1-4.9a8.4 8.4 0 1117-3.6z"/></svg></a>
 
 <style id="akNightCss">
-/* ═══ خلفية أركان الكحلية الأصلية (تدرج الهيرو) — معممة ═══ */
+/* ═══ خلفية لبدال الكحلية الأصلية (تدرج الهيرو) — معممة ═══ */
 body{background:radial-gradient(1100px 600px at 78% -10%, rgba(0,88,217,.55), transparent 60%),
  radial-gradient(900px 700px at -10% 110%, rgba(0,181,255,.22), transparent 55%),
  linear-gradient(180deg,#04143A 0%,#062165 58%,#003B8F 100%) fixed!important}

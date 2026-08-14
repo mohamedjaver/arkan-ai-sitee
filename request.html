@@ -7,7 +7,7 @@ if(!/legacy=1/.test(location.search)&&!/[?&]amt=/.test(location.search)){locatio
   <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=n4">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>ARKAN Pay — Pagamentos Internacionais | تحويلات دولية</title>
+<title>BDL — Pagamentos Internacionais | تحويلات دولية</title>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@500;600;700;800&family=Space+Grotesk:wght@600;700&family=IBM+Plex+Mono:wght@500;700&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#F3F9FF;--card:#FCFEFF;--acc:#0058D9;--acc2:#0058D9;--gold:#003B8F;--txt:#102A43;--dim:#486581;--green:#00A860;--stroke:#D8E8F8}
@@ -98,15 +98,15 @@ html.pt-enter body{animation:ptIn .38s cubic-bezier(.22,1,.36,1)}
 <link rel="manifest" href="site-manifest.json">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="ARKAN Pay">
+<meta name="apple-mobile-web-app-title" content="BDL">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.1.0/tesseract.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="config.js"></script>
 <meta property="og:type" content="website">
-<meta property="og:site_name" content="ARKAN Pay">
-<meta property="og:title" content="التحويلات الدولية — ARKAN Pay">
+<meta property="og:site_name" content="BDL">
+<meta property="og:title" content="التحويلات الدولية — BDL">
 <meta property="og:description" content="تسديد فواتير الموردين الدوليين بقراءة تلقائية للفاتورة ومرجع رسمي.">
-<meta property="og:image" content="https://arkanrates.com/arkan-icon-512.png?v=n4">
+<meta property="og:image" content="https://lbdal.com/arkan-icon-512.png?v=n4">
 <meta name="twitter:card" content="summary_large_image">
   <link rel="stylesheet" href="arkan-theme.css">
   <link rel="stylesheet" href="arkan-light.css">
@@ -147,7 +147,7 @@ function applyRegisteredClient(){
     var grid=host.querySelector('div[style*="grid"]');
     var w=document.createElement('div');
     w.style.cssText='display:flex;align-items:center;gap:10px;background:#EDF6FF;border:1px solid #BFD9F7;border-radius:0;padding:11px 14px;margin-bottom:14px';
-    w.innerHTML='<div style="flex:1;font-size:13px;color:#2E3A48"><b>'+(akClientName()||sess.name||'عميل أركان')+'</b><br><span style="color:#486581;font-size:11.5px">مسجّل · '+String(sess.phone)+' — لن تكتب بياناتك ثانية</span></div><button id="ind-logout" style="border:0;background:#fff;color:#486581;border-radius:0;padding:6px 10px;font-size:11px;cursor:pointer">تبديل</button>';
+    w.innerHTML='<div style="flex:1;font-size:13px;color:#2E3A48"><b>'+(akClientName()||sess.name||'عميل لبدال')+'</b><br><span style="color:#486581;font-size:11.5px">مسجّل · '+String(sess.phone)+' — لن تكتب بياناتك ثانية</span></div><button id="ind-logout" style="border:0;background:#fff;color:#486581;border-radius:0;padding:6px 10px;font-size:11px;cursor:pointer">تبديل</button>';
     if(grid&&grid.parentNode)grid.parentNode.insertBefore(w,grid);
     var lo=document.getElementById('ind-logout');
     if(lo)lo.onclick=function(){ localStorage.removeItem('arkan_session'); location.reload(); };
@@ -224,7 +224,7 @@ fill="#FFFFFF" stroke="none">
 </g>
 <path d="M16.2 30.2 L27.8 37.4" stroke="url(#akTile1)" stroke-width="2.6"/>
 </svg>
-    <span style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:15px;letter-spacing:.02em;direction:ltr;color:#2E3A48"><b>ARKAN</b> <span style="color:#0058D9">SETTLEMENTS</span></span>
+    <span style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:15px;letter-spacing:.02em;direction:ltr;color:#2E3A48"><b>BDL</b> <span style="color:#0058D9">SETTLEMENTS</span></span>
   </a>
   
   <h1>تحويلات الشركات الدولية</h1>
@@ -349,7 +349,7 @@ async function send(){
   var cc=liveCcy(ccy),a=parseFloat(amt.replace(/[^0-9.]/g,''))||0;
   if(cc&&a){var rt=tierRate(cc,a);estLine='\nEstimativa: ≈ '+Math.round(a*rt).toLocaleString('en-US')+' MRU (1 '+ccy+' = '+rt+')';}
   const msg=
-`ARKAN Pay — NOVO PEDIDO
+`BDL — NOVO PEDIDO
 ${ref}
 ———————————
 Empresa: ${comp}
@@ -688,7 +688,7 @@ async function uploadInvoice(){
     var name=(document.getElementById('ind-name').value||'').trim();
     var phone=(document.getElementById('ind-phone').value||'').replace(/[^0-9]/g,'');
     /* العميل المسجّل: خذ الاسم والهاتف من جلسته إن غابا من الحقول المخفية */
-    if(sess){ if(!name) name=(sess.name||'عميل أركان'); if(!phone) phone=String(sess.phone||'').replace(/[^0-9]/g,''); }
+    if(sess){ if(!name) name=(sess.name||'عميل لبدال'); if(!phone) phone=String(sess.phone||'').replace(/[^0-9]/g,''); }
     var from=document.getElementById('ind-from').value, to=document.getElementById('ind-to').value;
     var amt=(document.getElementById('ind-amt').value||'').trim();
     var bname=(document.getElementById('ind-bname').value||'').trim();
@@ -797,7 +797,7 @@ async function uploadInvoice(){
     </div>
     <div class="okAmt" id="okAmt">0</div>
     <div class="okTitle">تم استلام طلب التحويل</div>
-    <div class="okSub">فريق أركان سيؤكد معك عبر واتساب خلال دقائق<br>احتفظ برقم المرجع</div>
+    <div class="okSub">فريق لبدال سيؤكد معك عبر واتساب خلال دقائق<br>احتفظ برقم المرجع</div>
     <span class="okRef" id="okRef">—</span>
     <div class="okBtns" style="flex-direction:column;gap:9px">
       <button class="okWa" id="okChatBtn">💬 متابعة داخل محادثة ARKAN</button>
@@ -878,7 +878,7 @@ async function buildReceiptCanvas(){
   for(let g=0;g<H;g+=60){x.beginPath();x.moveTo(0,g);x.lineTo(W,g);x.stroke();}
   /* رأس */
   x.textAlign='left';
-  x.fillStyle='#FFFFFF';x.font='800 56px "Archivo",Cairo,sans-serif';x.fillText('ARKAN',60,110);
+  x.fillStyle='#FFFFFF';x.font='800 56px "Archivo",Cairo,sans-serif';x.fillText('BDL',60,110);
   x.fillStyle='rgba(150,200,255,.85)';x.font='600 24px "Archivo",sans-serif';x.fillText('RATES · International Settlement',60,148);
   x.textAlign='right';
   x.textAlign=RTL?'right':'left';x.fillStyle='#7FDBFF';x.font='700 26px "Archivo",sans-serif';
@@ -969,7 +969,7 @@ async function buildReceiptCanvas(){
   x.textAlign='center';x.fillStyle='rgba(191,227,255,.6)';x.font='600 24px Cairo,sans-serif';
   x.fillText(L.foot, W/2, fy+42);
   x.fillStyle='rgba(255,255,255,.45)';x.font='600 24px "IBM Plex Mono",monospace';
-  x.fillText('arkanrates.com  ·  +222 36 29 50 50', W/2, fy+82);
+  x.fillText('lbdal.com  ·  +222 36 29 50 50', W/2, fy+82);
   return cv;
 }
 async function buildReceiptCard(){
@@ -1012,7 +1012,7 @@ async function sendReceipt(waUrl){
     if(navigator.canShare&&navigator.canShare({files:[file]})){
       try{
         await navigator.share({files:[file],title:'إيصال تحويل ARKAN',
-          text:'طلب تحويل '+ref+' عبر ARKAN Pay'});
+          text:'طلب تحويل '+ref+' عبر BDL'});
         return;
       }catch(e){ if(e&&e.name==='AbortError')return; }
     }
@@ -1056,7 +1056,7 @@ function okToSuccess(ref,waUrl,amount,currency){
   var el=document.getElementById('okWrap');
   el.querySelector('.okRing').innerHTML=OK_CHECK_SVG;
   el.querySelector('.okTitle').textContent='تم استلام طلب التحويل';
-  el.querySelector('.okSub').innerHTML='سننقلك الآن إلى محادثتك المباشرة مع أركان<br>احتفظ برقم المرجع';
+  el.querySelector('.okSub').innerHTML='سننقلك الآن إلى محادثتك المباشرة مع لبدال<br>احتفظ برقم المرجع';
   var refEl=document.getElementById('okRef');refEl.textContent=ref||'—';refEl.style.display='inline-block';
   el.querySelector('.okBtns').style.display='flex';
   var cb=document.getElementById('okChatBtn');
@@ -1144,7 +1144,7 @@ document.addEventListener('DOMContentLoaded',function(){
 </style>
 
 <style id="akNightCss">
-/* ═══ خلفية أركان الكحلية الأصلية (تدرج الهيرو) — معممة ═══ */
+/* ═══ خلفية لبدال الكحلية الأصلية (تدرج الهيرو) — معممة ═══ */
 body{background:radial-gradient(1100px 600px at 78% -10%, rgba(0,88,217,.55), transparent 60%),
  radial-gradient(900px 700px at -10% 110%, rgba(0,181,255,.22), transparent 55%),
  linear-gradient(180deg,#04143A 0%,#062165 58%,#003B8F 100%) fixed!important}

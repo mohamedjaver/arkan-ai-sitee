@@ -3,11 +3,11 @@
 <head><script id="akMerge">/* دمج: هذه الصفحة أُدمجت — الوصول القديم بـ ?legacy=1 */
 if(!/legacy=1/.test(location.search)){location.replace('account.html');}</script>
   <link rel="icon" href="arkan-icon-512.png?v=n4">
-  <meta name="apple-mobile-web-app-title" content="ARKAN Pay">
+  <meta name="apple-mobile-web-app-title" content="BDL">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=n4">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>ARKAN Pay — صرف العملات وتسديد فواتير الموردين</title>
+<title>BDL — صرف العملات وتسديد فواتير الموردين</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <meta name="description" content="صرف العملات وتسديد فواتير الموردين — بمرجع رسمي وتنفيذ خلال دقائق. موريتانيا · أنغولا · الصين.">
@@ -15,23 +15,23 @@ if(!/legacy=1/.test(location.search)){location.replace('account.html');}</script
 <link rel="manifest" href="site-manifest.json">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<link rel="canonical" href="https://arkanrates.com/">
+<link rel="canonical" href="https://lbdal.com/">
 <meta property="og:type" content="website">
-<meta property="og:site_name" content="ARKAN Pay">
-<meta property="og:title" content="ARKAN Pay — صرف العملات وتسديد فواتير الموردين">
+<meta property="og:site_name" content="BDL">
+<meta property="og:title" content="BDL — صرف العملات وتسديد فواتير الموردين">
 <meta property="og:description" content="تحويلات دولية بأقل تكلفة، مع شفافية كاملة في كل معاملة.">
-<meta property="og:image" content="https://arkanrates.com/arkan-icon-512.png?v=n4">
-<meta property="og:url" content="https://arkanrates.com/">
+<meta property="og:image" content="https://lbdal.com/arkan-icon-512.png?v=n4">
+<meta property="og:url" content="https://lbdal.com/">
 <meta name="twitter:card" content="summary_large_image">
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"FinancialService","name":"ARKAN Pay",
-"description":"صرف العملات وتسديد فواتير الموردين الدوليين","url":"https://arkanrates.com/",
+{"@context":"https://schema.org","@type":"FinancialService","name":"BDL",
+"description":"صرف العملات وتسديد فواتير الموردين الدوليين","url":"https://lbdal.com/",
 "telephone":"+22236295050","areaServed":["MR","AO","CN"],
 "currenciesAccepted":"MRU, AOA, USD, EUR, CNY","availableLanguage":["ar","fr","pt"]}
 </script>
 <style>
 /* ============================================================
-   ARKAN Pay — Design System
+   BDL — Design System
    ============================================================ */
 :root{
     --bg:#F7FAFD; --card:#FFFFFF; --card2:#F8FBFF; --line:#D9E5F2;
@@ -294,6 +294,7 @@ footer{border-top:1px solid var(--stroke);margin-top:60px;padding:52px 0 40px;po
   <script src="arkan-gate.js"></script>
 </head>
 <body>
+<script src="bdl-splash.js"></script>
 
 <!-- ============ دخول ARKAN — رقم الهاتف + OTP (نمط NALA) ============ -->
 <style>
@@ -329,11 +330,11 @@ footer{border-top:1px solid var(--stroke);margin-top:60px;padding:52px 0 40px;po
 </style>
 <div id="arkGate">
   <div class="gate-card">
-    <img src="arkan-logo.svg?v=n4" alt="ARKAN">
+    <img src="arkan-logo.svg?v=n4" alt="BDL">
 
     <!-- الخطوة 1: الاسم + الرقم -->
     <div id="gStep1">
-      <h2>مرحبًا بك في ARKAN Pay</h2>
+      <h2>مرحبًا بك في BDL</h2>
       <p>سجّل مرة واحدة برقم هاتفك —<br>يصلك رمز تحقق، وبعدها لن تسجّل مرة أخرى</p>
       <div class="gate-fld"><label>الاسم الكامل</label>
         <input id="gName" type="text" placeholder="مثال: محمد ولد أحمد" autocomplete="name"></div>
@@ -405,7 +406,7 @@ function canonPhone(input, defaultCc){
 function err(id,msg){var e=document.getElementById(id);e.textContent=msg;e.style.display='block';}
 function arErr(e){
   var c=(e&&e.code)||'';
-  if(c.includes('unauthorized-domain'))return 'النطاق غير مفعّل: أضف arkanrates.com في Firebase → Authentication → Settings → Domaines autorisés';
+  if(c.includes('unauthorized-domain'))return 'النطاق غير مفعّل: أضف lbdal.com في Firebase → Authentication → Settings → Domaines autorisés';
   if(c.includes('invalid-phone'))return 'رقم الهاتف غير صحيح — تأكد من الرقم';
   if(c.includes('too-many-requests'))return 'محاولات كثيرة — انتظر دقائق ثم أعد المحاولة';
   if(c.includes('invalid-verification-code'))return 'الرمز غير صحيح — راجع الرسالة';
@@ -512,8 +513,8 @@ function startTimer(){
 <nav class="bar">
   <div class="bar-in">
     <a href="#top" class="logo">
-      <img class="sq" src="arkan-logo.svg?v=n4" alt="ARKAN">
-      <span class="nm">ARKAN</span>
+      <img class="sq" src="arkan-logo.svg?v=n4" alt="BDL">
+      <span class="nm">BDL</span>
     </a>
     <div class="links">
       <a href="#rates">الأسعار</a>
@@ -694,8 +695,8 @@ function startTimer(){
 <section class="sec layer" id="services"><div class="wrap">
   <div class="sec-head">
     <div class="kicker">ALL SERVICES</div>
-    <h2>خدمات ومنصّات أركان</h2>
-    <p>كل أدوات أركان في مكان واحد — الأسعار، الطلبات، الأرشيف، التسويات، والمزيد.</p>
+    <h2>خدمات ومنصّات لبدال</h2>
+    <p>كل أدوات لبدال في مكان واحد — الأسعار، الطلبات، الأرشيف، التسويات، والمزيد.</p>
   </div>
   <div id="arkan-services" class="ark-apps-grid"></div>
 </div></section>
@@ -704,7 +705,7 @@ function startTimer(){
 <footer><div class="wrap">
   <div class="f-grid">
     <div class="f-col">
-      <div class="logo" style="margin-bottom:14px"><img class="sq" src="arkan-logo.svg?v=n4" alt="ARKAN"><span class="nm">ARKAN</span></div>
+      <div class="logo" style="margin-bottom:14px"><img class="sq" src="arkan-logo.svg?v=n4" alt="BDL"><span class="nm">BDL</span></div>
       <p>منصة مؤسسية لصرف العملات الأجنبية وتسديد فواتير الموردين الدوليين بين موريتانيا وأنغولا والصين.</p>
     </div>
     <div class="f-col"><h5>المنصة</h5>
@@ -718,7 +719,7 @@ function startTimer(){
       <a href="settlement.html">لوحة التسوية</a>
     </div>
   </div>
-  <div class="f-bot">ARKAN Pay © 2026 — منصة التحويلات المالية الذكية<br><span style="font-size:.72rem;opacity:.5" class="ltr">v2.0 · 2026-07-22</span></div>
+  <div class="f-bot">BDL © 2026 — منصة التحويلات المالية الذكية<br><span style="font-size:.72rem;opacity:.5" class="ltr">v2.0 · 2026-07-22</span></div>
 </div></footer>
 
 <div id="toast"></div>
@@ -727,7 +728,7 @@ function startTimer(){
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script>
 /* ============================================================
-   ARKAN Pay — منطق التطبيق (Vanilla JS)
+   BDL — منطق التطبيق (Vanilla JS)
    ============================================================ */
 var WA='22236295050';
 
@@ -1010,7 +1011,7 @@ function sendRequest(){
   var m=document.getElementById('rMethod').value, note=val('rNote');
   var ref='ARK-'+Date.now().toString().slice(-6);
   var out=parseFloat(a)*rate(f,t);
-  var msg='ARKAN Pay — طلب تحويل\n'+ref+'\n\n'+
+  var msg='BDL — طلب تحويل\n'+ref+'\n\n'+
     'الاسم: '+n+'\nالهاتف: '+p+'\n'+
     'المبلغ: '+fmt(parseFloat(a))+' '+f+'\n'+
     'المستلم: '+fmt(out)+' '+t+'\n'+
@@ -1025,7 +1026,7 @@ function sendInvoice(){
   if(!c||!a||!w){toast('أكمل اسم الشركة والمبلغ وبياناتك');return;}
   var cc=fddVal('fddIvCcy'), d=val('ivDest');
   var ref='INV-'+Date.now().toString().slice(-6);
-  var msg='ARKAN Pay — تسديد فاتورة مورد\n'+ref+'\n\n'+
+  var msg='BDL — تسديد فاتورة مورد\n'+ref+'\n\n'+
     'المورد: '+c+'\nالمبلغ: '+a+' '+cc+
     (d?'\nبلد المورد: '+d:'')+'\nمقدم الطلب: '+w;
   save('arkan-invoices',{ref:ref,company:c,amount:a,ccy:cc,dest:d,who:w,ts:Date.now()});
@@ -1552,7 +1553,7 @@ window.arkanSubmit = async function(){
       profit: Math.round(comp.profit),
       type:'out', dp:2, status:'pending', createdAt: serverTimestamp()
     });
-    const msg = 'ARKAN Pay — طلب تحويل\nالاسم: '+name+'\nرمز دخولي: '+pin+'\nرقمي المرجعي: '+ref+'\n\nأرسل: '+fm(amount)+' '+from+'\nيستلم: '+(out?fm(out):'?')+' '+to;
+    const msg = 'BDL — طلب تحويل\nالاسم: '+name+'\nرمز دخولي: '+pin+'\nرقمي المرجعي: '+ref+'\n\nأرسل: '+fm(amount)+' '+from+'\nيستلم: '+(out?fm(out):'?')+' '+to;
     const waUrl = 'https://wa.me/22236295050?text=' + encodeURIComponent(msg);
     if (window.toast) toast('تم إنشاء الطلب — احفظ رمزك');
     showPinModal(pin, ref, waUrl);
@@ -1578,7 +1579,7 @@ window.arkanSubmit = async function(){
 </style>
 
 <style id="akNightCss">
-/* ═══ خلفية أركان الكحلية الأصلية (تدرج الهيرو) — معممة ═══ */
+/* ═══ خلفية لبدال الكحلية الأصلية (تدرج الهيرو) — معممة ═══ */
 body{background:radial-gradient(1100px 600px at 78% -10%, rgba(0,88,217,.55), transparent 60%),
  radial-gradient(900px 700px at -10% 110%, rgba(0,181,255,.22), transparent 55%),
  linear-gradient(180deg,#04143A 0%,#062165 58%,#003B8F 100%) fixed!important}

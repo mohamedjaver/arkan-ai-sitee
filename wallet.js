@@ -212,7 +212,7 @@ async function loadTxs(){
           var amt=Number(latestIn.value)/Math.pow(10,(latestIn.token_info&&latestIn.token_info.decimals)||6);
           toast('💰 وصلت حوالة +'+fmt(amt)+' USDT');
           if(window.Notification&&Notification.permission==='granted')
-            new Notification('محفظة أركان',{body:'وصلت حوالة +'+fmt(amt)+' USDT',icon:'arkan-icon-192.png'});
+            new Notification('محفظة لبدال',{body:'وصلت حوالة +'+fmt(amt)+' USDT',icon:'arkan-icon-192.png'});
         }
         localStorage.setItem(key,latestIn.transaction_id);
       }
@@ -345,8 +345,8 @@ async function makeReceipt(){
 
     /* الشعار */
     x.textAlign='left'; x.direction='ltr';
-    x.fillStyle='#fff'; x.font='800 56px Archivo, Arial'; x.fillText('ARKAN',70,120);
-    x.fillStyle='#7FE3C1'; x.fillText('RATES',292,120);
+    x.fillStyle='#fff'; x.font='800 56px Archivo, Arial'; x.fillText('BDL',70,120);
+    x.fillStyle='#7FE3C1'; x.fillText('EXCHANGE',215,120);
     x.textAlign='right'; x.direction='rtl'; x.fillStyle='rgba(255,255,255,.85)';
     x.font='400 27px "IBM Plex Sans Arabic"'; x.fillText('إيصال تحويل USDT', W-70,116);
 
@@ -411,7 +411,7 @@ async function makeReceipt(){
     /* تذييل */
     x.textAlign='center'; x.direction='rtl'; x.fillStyle='rgba(255,255,255,.85)';
     x.font='400 22px "IBM Plex Sans Arabic"';
-    x.fillText('arkanrates.com — إيصال مولّد آليًا من محفظة أركان اللامركزية', W/2, 1706);
+    x.fillText('lbdal.com — إيصال مولّد آليًا من محفظة لبدال اللامركزية', W/2, 1706);
     x.font='400 19px Arial'; x.direction='ltr'; x.fillStyle='rgba(255,255,255,.6)';
     x.fillText('ARKAN INTERNATIONAL TRADING · Non-Custodial Wallet · '+new Date().getFullYear(), W/2, 1738);
 
@@ -435,9 +435,9 @@ async function shareReceipt(){
   var r=await makeReceipt(); if(!r)return;
   var blob=r.pdf.output('blob');
   var file=new File([blob],r.name,{type:'application/pdf'});
-  var msg='إيصال تحويل أركان: -'+fmt(SEND.amt)+' USDT\nالتحقق: '+net().scan+'/transaction/'+SEND.tx;
+  var msg='إيصال تحويل لبدال: -'+fmt(SEND.amt)+' USDT\nالتحقق: '+net().scan+'/transaction/'+SEND.tx;
   if(navigator.canShare&&navigator.canShare({files:[file]})){
-    try{ await navigator.share({files:[file],title:'إيصال أركان',text:msg}); return; }
+    try{ await navigator.share({files:[file],title:'إيصال لبدال',text:msg}); return; }
     catch(e){ if(/Abort/i.test(e.name||''))return; }
   }
   /* بديل: نزّل الملف ثم افتح واتساب برسالة الرابط ليرفقه المستخدم */

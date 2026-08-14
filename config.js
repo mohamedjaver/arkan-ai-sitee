@@ -1,5 +1,5 @@
 /* ============================================================
-   ARKAN SETTLEMENTS — إعدادات التكاملات المجانية
+   BDL SETTLEMENTS — إعدادات التكاملات المجانية
    الصق مفاتيحك هنا. أي قيمة تُترك فارغة = الخدمة معطّلة بأمان
    ولن يتأثر الموقع إطلاقًا.
    ============================================================ */
@@ -7,7 +7,7 @@ window.ARKAN_CONFIG = {
 
   /* ---- WhatsApp / Telegram (يعمل الآن بلا مفاتيح) ---- */
   whatsapp: '22236295050',
-  telegram: 'https://t.me/ArkanAI_Access_Bot',
+  telegram: 'https://t.me/BDL AI_Access_Bot',
 
   /* ---- Google Analytics 4 ----
      analytics.google.com → إنشاء موقع → انسخ معرّف القياس G-XXXXXXX */

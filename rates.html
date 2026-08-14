@@ -7,7 +7,7 @@ if(!/legacy=1/.test(location.search)){location.replace('account.html');}</script
   <link rel="apple-touch-icon" href="apple-touch-icon.png?v=n4">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>ARKAN Pay — أسعار الصرف اليوم</title>
+<title>BDL — أسعار الصرف اليوم</title>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@500;600;700;800&family=Space+Grotesk:wght@600;700&family=IBM+Plex+Mono:wght@500;700&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#F6FAFD;--card:#FFFFFF;--acc:#0058D9;--acc2:#0058D9;--gold:#0058D9;--gold2:#0058D9;--txt:#06133A;--dim:#3C4C74;--green:#0F9D6B;--stroke:#D9E2F2}
@@ -82,23 +82,24 @@ html.pt-enter body{animation:ptIn .38s cubic-bezier(.22,1,.36,1)}
 <link rel="manifest" href="site-manifest.json">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="ARKAN Pay">
+<meta name="apple-mobile-web-app-title" content="BDL">
 <script src="config.js"></script>
 <meta property="og:type" content="website">
-<meta property="og:site_name" content="ARKAN Pay">
-<meta property="og:title" content="أسعار الصرف اليوم — ARKAN Pay">
+<meta property="og:site_name" content="BDL">
+<meta property="og:title" content="أسعار الصرف اليوم — BDL">
 <meta property="og:description" content="جدول أسعار الصرف اليومي بثلاث شرائح وحاسبة تحويل فورية.">
-<meta property="og:image" content="https://arkanrates.com/arkan-icon-512.png?v=n4">
+<meta property="og:image" content="https://lbdal.com/arkan-icon-512.png?v=n4">
 <meta name="twitter:card" content="summary_large_image">
   <link rel="stylesheet" href="arkan-theme.css">
   <link rel="stylesheet" href="arkan-light.css">
   <script src="arkan-gate.js"></script>
 </head>
 <body>
+<script src="bdl-splash.js"></script>
 <div class="wrap">
   <a href="./" style="display:flex;align-items:center;justify-content:center;gap:11px;margin-bottom:20px;text-decoration:none">
-    <img src="arkan-logo.svg?v=n4" alt="ARKAN" style="width:36px;height:36px;border-radius:0;box-shadow:0 6px 20px rgba(0,39,118,.45)">
-    <span style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:15px;letter-spacing:.02em;direction:ltr;color:#06133A"><b>ARKAN</b> <span style="color:#0058D9">SETTLEMENTS</span></span>
+    <img src="arkan-logo.svg?v=n4" alt="BDL" style="width:36px;height:36px;border-radius:0;box-shadow:0 6px 20px rgba(0,39,118,.45)">
+    <span style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:15px;letter-spacing:.02em;direction:ltr;color:#06133A"><b>BDL</b> <span style="color:#0058D9">SETTLEMENTS</span></span>
   </a>
   
   <h1>أسعار الصرف اليوم</h1>
@@ -321,7 +322,7 @@ document.addEventListener('arkan:lang',function(){
 </style>
 
 <style id="akNightCss">
-/* ═══ خلفية أركان الكحلية الأصلية (تدرج الهيرو) — معممة ═══ */
+/* ═══ خلفية لبدال الكحلية الأصلية (تدرج الهيرو) — معممة ═══ */
 body{background:radial-gradient(1100px 600px at 78% -10%, rgba(0,88,217,.55), transparent 60%),
  radial-gradient(900px 700px at -10% 110%, rgba(0,181,255,.22), transparent 55%),
  linear-gradient(180deg,#04143A 0%,#062165 58%,#003B8F 100%) fixed!important}

@@ -1,4 +1,4 @@
-/* ARKAN Rates — Service Worker v2.0
+/* BDL — Service Worker v2.0
    إستراتيجية: الشبكة أولًا لصفحات HTML والبيانات (لا محتوى قديم أبدًا)
               الكاش أولًا للأصول الثابتة فقط (صور، أيقونات، شعار) */
 const V='arkan-v6.2'; /* bump: صفحات قديمة ألغيت — chat-v2 هي المعتمدة */
@@ -23,7 +23,7 @@ self.addEventListener('activate',e=>{
 
 
 /* ===== Web Share Target: استقبال إيصالات الواتساب (POST محلي) ===== */
-const SHARE_CACHE='arkan-share-v2';
+const SHARE_CACHE='bdl-v1';
 
 async function arkHandleShare(req){
   try{
@@ -106,7 +106,7 @@ self.addEventListener('push',e=>{
   let d={};try{d=e.data?e.data.json():{};}catch(_){d={body:e.data&&e.data.text()};}
   e.waitUntil((async()=>{
     try{if(navigator.setAppBadge&&d.badge)await navigator.setAppBadge(d.badge);}catch(_){}
-    await self.registration.showNotification(d.title||'أركان',{
+    await self.registration.showNotification(d.title||'لبدال',{
       body:d.body||'رسالة جديدة',
       icon:'./arkan-icon-512.png',
       badge:'./arkan-icon-512.png',

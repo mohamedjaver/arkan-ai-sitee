@@ -1,7 +1,7 @@
 {
-  "name": "ARKAN Rates",
-  "short_name": "ARKAN",
-  "description": "الصرف والتسويات الدولية — موريتانيا · أنغولا · الصين",
+  "name": "BDL — لبدال",
+  "short_name": "BDL",
+  "description": "بدّل. حوّل. بسرعة — صرف وتحويلات عبر الحدود",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",

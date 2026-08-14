@@ -13,7 +13,7 @@ const ENV = {
   PORT:            process.env.PORT || 3000,
   WALLET:          process.env.WALLET_ADDRESS    || 'TXxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
   BOT_TOKEN:       process.env.TELEGRAM_BOT_TOKEN || '',          // من BotFather
-  BOT_USERNAME:    process.env.TELEGRAM_BOT_USERNAME || 'ArkanAI_Access_Bot', // بدون @
+  BOT_USERNAME:    process.env.TELEGRAM_BOT_USERNAME || 'BDL AI_Access_Bot', // بدون @
   ADMIN_ID:        process.env.TELEGRAM_ADMIN_ID  || '',          // معرّفك الرقمي (من @userinfobot)
   CHANNEL_ID:      process.env.MEMBERS_CHANNEL_ID || '',          // مثل -1001234567890 (البوت Admin فيها)
   TRONGRID_KEY:    process.env.TRONGRID_API_KEY   || '',          // اختياري — يرفع حد الطلبات
@@ -161,7 +161,7 @@ async function pollTelegram() {
           await sendMsg(chatId, `⌛ انتهت صلاحية الطلب <code>${order.id}</code>. أنشئ طلبًا جديدًا من المتجر.`);
         } else {
           await sendMsg(chatId,
-            `👋 أهلًا بك في <b>ARKAN AI</b>\n\n🧾 طلبك: <code>${order.id}</code>\n` +
+            `👋 أهلًا بك في <b>BDL AI</b>\n\n🧾 طلبك: <code>${order.id}</code>\n` +
             `📦 ${order.productName} · ${order.planLabel}\n💵 المطلوب: <code>${order.amount}</code> USDT (TRC20)\n\n` +
             `📍 المحفظة:\n<code>${ENV.WALLET}</code>\n\n` +
             `⚡ فور تأكيد الشبكة سيصلك رابط دخولك هنا تلقائيًا.`);
@@ -233,7 +233,7 @@ app.get('/api/orders/status', (req, res) => {
 });
 
 /* ═══════════════════════════════════════════════════════════════
-   ARKAN OTP + CHAT AUTH — مدمج في نفس الخدمة (لا حاجة لخدمة ثانية)
+   BDL OTP + CHAT AUTH — مدمج في نفس الخدمة (لا حاجة لخدمة ثانية)
    Env جديدة في Railway → Variables:
      SUPABASE_JWT_SECRET  من Supabase → Settings → API → JWT Secret
      FB_SERVICE_JSON      محتوى ملف Service Account كاملًا (JSON)
@@ -245,7 +245,7 @@ const { v5: uuidv5 } = require('uuid');
 const admin = require('firebase-admin');
 
 /* CORS للنطاق الرسمي فقط */
-const SITE_ORIGINS = ['https://arkanrates.com', 'https://www.arkanrates.com', 'https://mohamedjaver.github.io'];
+const SITE_ORIGINS = ['https://lbdal.com', 'https://www.lbdal.com', 'https://mohamedjaver.github.io'];
 app.use((req, res, next) => {
   const o = req.headers.origin || '';
   if (SITE_ORIGINS.includes(o)) res.setHeader('Access-Control-Allow-Origin', o);
@@ -303,7 +303,7 @@ async function waSend(phone, code) {
   /* خطة بديلة: رسالة نصية (تنجح فقط إن راسل العميلُ الرقمَ خلال آخر 24 ساعة) */
   const txtBody = {
     messaging_product: 'whatsapp', to: phone, type: 'text',
-    text: { body: `🔐 أركان — رمز التحقق الخاص بك: ${code}\nصالح لمدة 5 دقائق. لا تشاركه مع أي أحد.` }
+    text: { body: `🔐 لبدال — رمز التحقق الخاص بك: ${code}\nصالح لمدة 5 دقائق. لا تشاركه مع أي أحد.` }
   };
   r = await fetch(url, { method: 'POST', headers: H, body: JSON.stringify(txtBody) });
   j = await r.json();
@@ -369,7 +369,7 @@ app.post('/otp/reset-pin', async (req, res) => {
     const snap = await findUserDoc(phone);
     if (snap) await snap.ref.update({ pin: newPin, pinChangedAt: Date.now(), via: 'otp-reset' });
     else await admin.firestore().doc(`users/${phone}`).set({
-      name: 'عميل أركان', phone, pin: newPin, role: 'customer',
+      name: 'عميل لبدال', phone, pin: newPin, role: 'customer',
       createdAt: Date.now(), via: 'otp-reset' });
     res.json({ ok: true });
   } catch (e) {
@@ -409,7 +409,7 @@ app.get('/admin/create-otp-template', async (req, res) => {
   }
 });
 
-/* ── Supabase JWT — بوابة ARKAN Chat v2 (RLS حقيقي) ── */
+/* ── Supabase JWT — بوابة BDL Chat v2 (RLS حقيقي) ── */
 const ARKAN_NS = '7c9e6679-7425-40de-944b-e07fc1f90ae7'; // لا تغيّره أبدًا
 /* أمني/حاسم: قيمة نظيفة واحدة للسر — تُزيل أي مسافة/سطر زائد من متغير Railway
    (كان اللصق يترك فراغًا يفسد التوقيع فترفضه Supabase) */
@@ -615,7 +615,7 @@ app.get('/admin/set-pin', async (req, res) => {
       return res.json({ ok: true, msg: 'تم تحديث رمز العميل', phone: p, action: 'updated' });
     }
     await admin.firestore().doc(`users/${p}`).set({
-      name: name || 'عميل أركان', phone: p, pin, role: 'customer',
+      name: name || 'عميل لبدال', phone: p, pin, role: 'customer',
       createdAt: Date.now(), via: 'admin-set-pin'
     });
     res.json({ ok: true, msg: 'تم إنشاء حساب العميل', phone: p, action: 'created' });
@@ -705,7 +705,7 @@ app.post('/account/register', async (req, res) => {
 });
 
 /* ═══════════════════════════════════════════════════════════════
-   ARKAN Chat API — طبقة وسيطة كاملة عبر الخادم (تلغي اعتماد RLS)
+   BDL Chat API — طبقة وسيطة كاملة عبر الخادم (تلغي اعتماد RLS)
    كل العمليات تُوقّع بتوكن ARKAN خاص، والخادم ينفّذها بصلاحية service
    ═══════════════════════════════════════════════════════════════ */
 const SB_REST = (process.env.SUPABASE_URL || 'https://vyxzlazwpbstigcqvizb.supabase.co') + '/rest/v1';
@@ -791,7 +791,7 @@ app.post('/chat-api/owner-session', async (req, res) => {
     if (!snap || String(snap.data().pin) !== pin) return res.status(401).json({ error: 'auth' });
     const uid = phoneToUuid(p);
     // تأكد من وجود صف المالك
-    await sbPost('chat_users', { id: uid, phone: p, full_name: 'ARKAN', role: 'owner' }, 'resolution=merge-duplicates');
+    await sbPost('chat_users', { id: uid, phone: p, full_name: 'BDL', role: 'owner' }, 'resolution=merge-duplicates');
     const ts = Math.floor(Date.now() / 1000);
     const token = arkanSign({ uid, role: 'owner', iat: ts, exp: ts + 86400 });
     res.json({ token, user_id: uid, role: 'owner' });
@@ -857,7 +857,7 @@ app.post('/push/notify', async (req, res) => {
       ? await fs2.collection('push_subs').where('conv', '==', conv).get()
       : await fs2.collection('push_subs').where('role', '==', 'owner').get();
     const payload = JSON.stringify({
-      title: s.role === 'owner' ? 'أركان — رد جديد' : 'أركان — رسالة عميل',
+      title: s.role === 'owner' ? 'لبدال — رد جديد' : 'لبدال — رسالة عميل',
       body: preview, url: './chat-v2.html', tag: 'arkan-' + conv, badge: 1
     });
     let sent = 0;

@@ -113,8 +113,8 @@
     var cred = await navigator.credentials.create({
       publicKey: {
         challenge: ch,
-        rp: { name: 'ARKAN Rates', id: location.hostname },
-        user: { id: uid, name: 'arkan-user', displayName: 'ARKAN' },
+        rp: { name: 'BDL', id: location.hostname },
+        user: { id: uid, name: 'arkan-user', displayName: 'BDL' },
         pubKeyCredParams: [{ type: 'public-key', alg: -7 }, { type: 'public-key', alg: -257 }],
         authenticatorSelection: { authenticatorAttachment: 'platform', userVerification: 'required', residentKey: 'preferred' },
         timeout: 60000, attestation: 'none'

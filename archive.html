@@ -4,10 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0058D9">
-<title>ARKAN Pay — Intelligence Archive</title>
+<title>BDL — Intelligence Archive</title>
 <link rel="icon" href="favicon.svg?v=n4" type="image/svg+xml">
 <link rel="icon" href="arkan-icon-512.png?v=n4">
-<meta name="apple-mobile-web-app-title" content="ARKAN Pay">
+<meta name="apple-mobile-web-app-title" content="BDL">
 <link rel="manifest" href="manifest.json">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Archivo:wdth,wght@125,700..900&family=Inter:wght@500;600;700;800&display=swap" rel="stylesheet">
 <script src="vendor/pdf.min.js"></script>
@@ -1183,7 +1183,7 @@ function exportArchive(){
     setTimeout(()=>URL.revokeObjectURL(x.href),4000);};
   dl(csv,'ARKAN_ARCHIVE_'+stamp+'.csv','text/csv;charset=utf-8');
   /* JSON كامل للذكاء الاصطناعي */
-  const meta={exported:new Date().toISOString(),source:'ARKAN Pay — Intelligence Archive',docs:rows.length,
+  const meta={exported:new Date().toISOString(),source:'BDL — Intelligence Archive',docs:rows.length,
     note:'ملف تحليلي لـ Claude Cowork — كل مستند بحقوله وتنبيهاته وسلسلته'};
   setTimeout(()=>dl(JSON.stringify({meta,receipts:rows},null,1),'ARKAN_ARCHIVE_'+stamp+'.json','application/json'),600);
   toast0('صُدّر '+rows.length+' مستند (CSV + JSON) — أسقطهما في مجلد Cowork');
@@ -1392,7 +1392,7 @@ function downloadDoc(id){const d=CACHE.find(x=>x.id===id);if(!d?.blob)return;
 /* ═══ تصدير صورة عالية الجودة (HD) — PDF يُصيَّر بدقة 4x حتى 3 صفحات مدموجة ═══ */
 async function downloadHD(id){
   const d=CACHE.find(x=>x.id===id); if(!d?.blob){toast0('لا يوجد ملف أصلي');return;}
-  const base=(d.smartName||d.fileName||'ARKAN').replace(/[\\/:*?"<>|·]+/g,'_').slice(0,60);
+  const base=(d.smartName||d.fileName||'BDL').replace(/[\\/:*?"<>|·]+/g,'_').slice(0,60);
   try{
     if(d.isPdf){
       toast0('تصيير PDF بجودة عالية…');
@@ -1954,7 +1954,7 @@ function mExport(scope){
   const sums={};rows.forEach(r=>{const k=mCur(r.c)||'?';(sums[k]=sums[k]||{c:0,s:0}).c+=r.own;(sums[k]).s+=r.oth;});
   const w=window.open('','_blank');
   w.document.write(`<!doctype html><html dir="rtl" lang="ar"><head><meta charset="utf-8">
-  <title>تقرير مطابقة وتسوية إيصالات ARKAN Pay</title>
+  <title>تقرير مطابقة وتسوية إيصالات BDL</title>
   <style>
     @page{size:A4;margin:14mm}
     body{font-family:'Cairo','Segoe UI',sans-serif;color:#2E3A48;font-size:11px;margin:0;padding:20px}
@@ -1972,7 +1972,7 @@ function mExport(scope){
     @media print{button{display:none}}
   </style></head><body>
   <button onclick="print()" style="position:fixed;top:10px;left:10px;padding:8px 18px;background:#0058D9;color:#fff;border:none;border-radius:0;font-family:inherit;cursor:pointer">طباعة / PDF</button>
-  <h1>تقرير مطابقة وتسوية إيصالات ARKAN Pay</h1>
+  <h1>تقرير مطابقة وتسوية إيصالات BDL</h1>
   <div class="meta">
     رقم التقرير: <b>${rid}</b> · تاريخ الإنشاء: ${now} · النطاق: <b>${scope==='missing'?'الإيصالات الناقصة فقط':'جميع العمليات'}</b> · عدد العمليات: <b>${rows.length}</b>
   </div>
@@ -1991,7 +1991,7 @@ function mExport(scope){
         <td class="${cls}">${ST[r.st]||r.st}</td><td style="direction:ltr">${esc(p.reference||'')}</td></tr>`;
     }).join('')}
   </table>
-  <div class="foot"><span>إجمالي العمليات: ${rows.length}</span><span>arkanrates.com · ARKAN Pay — Intelligence Archive</span></div>
+  <div class="foot"><span>إجمالي العمليات: ${rows.length}</span><span>lbdal.com · BDL — Intelligence Archive</span></div>
   <div class="sig"><div>توقيع المسؤول</div><div>الاعتماد</div></div>
   <script>setTimeout(()=>print(),600)<\/script></body></html>`);
   w.document.close();
@@ -2305,7 +2305,7 @@ function mJson(){
 
 <style id="wiseSkin">
 /* ═══════════════════════════════════════════════════════════════
-   ARKAN Pay Archive — Wise-grade banking skin
+   BDL Archive — Wise-grade banking skin
    خط واحد: IBM Plex Sans Arabic (خط الموقع الرئيسي) · أوزان 400–700
    ═══════════════════════════════════════════════════════════════ */
 :root{
@@ -2707,12 +2707,12 @@ document.body.insertAdjacentHTML('beforeend',`<nav id="wNav">
 </nav>
 <div class="w-sheet" id="wAccSheet" onclick="if(event.target===this)this.classList.remove('on')">
   <div class="in"><div class="grab"></div><h3>الحساب</h3>
-    <a class="w-it" href="chat-v2.html" style="text-decoration:none">${ic('chat')} محادثات العملاء <small>ARKAN Chat</small></a>
+    <a class="w-it" href="chat-v2.html" style="text-decoration:none">${ic('chat')} محادثات العملاء <small>BDL Chat</small></a>
     <button class="w-it" onclick="promptKey()">${ic('zap')} Gemini AI <small id="wAccGem">—</small></button>
     <button class="w-it" onclick="wBio()">${ic('shield')} Face ID والأمان <small>عرض</small></button>
     <button class="w-it" onclick="upgradeAll()">${ic('set')} ترقية القراءات القديمة</button>
     <button class="w-it" onclick="document.getElementById('fc').click()">${ic('cam')} التقاط بالكاميرا</button>
-    <button class="w-it" onclick="var f=document.getElementById('ark-fab');if(f)f.click();document.getElementById('wAccSheet').classList.remove('on')">${ic('grid')} خدمات أركان</button>
+    <button class="w-it" onclick="var f=document.getElementById('ark-fab');if(f)f.click();document.getElementById('wAccSheet').classList.remove('on')">${ic('grid')} خدمات لبدال</button>
     <div id="wBioHost"></div>
   </div></div>
 <div class="w-sheet" id="wAlSheet" onclick="if(event.target===this)this.classList.remove('on')">
@@ -2787,7 +2787,7 @@ window.exportPdfReport=function(){
   const w=window.open('','_blank');
   if(!w){toast0('اسمح بالنوافذ المنبثقة ثم أعد المحاولة');return;}
   w.document.write(`<!doctype html><html dir="rtl" lang="ar"><head><meta charset="utf-8">
-  <title>كشف الإيصالات — ARKAN Pay Archive</title>
+  <title>كشف الإيصالات — BDL Archive</title>
   <style>
     @page{size:A4;margin:12mm}
     *{box-sizing:border-box}
@@ -2819,7 +2819,7 @@ window.exportPdfReport=function(){
   <h1>ARKAN <span>Financial Archive</span> — كشف الإيصالات</h1>
   <div class="meta">
     <span>رقم الكشف: <b>${rid}</b></span><span>تاريخ الإنشاء: ${now}</span>
-    <span>عدد الإيصالات: <b>${docs.length}</b></span><span>arkanrates.com</span>
+    <span>عدد الإيصالات: <b>${docs.length}</b></span><span>lbdal.com</span>
   </div>
   <div class="sums">${Object.entries(sums).map(([k,v])=>`<span>${k}: <b>${fmt(v,0)}</b></span>`).join('')||'—'}</div>
   <table>
@@ -2863,7 +2863,7 @@ window.exportPdfReport=function(){
 
 <script>
 /* ═══════════════════════════════════════════════════════════════
-   مزامنة إيصالات ARKAN Chat → الأرشيف (عبر Supabase REST مباشرة)
+   مزامنة إيصالات BDL Chat → الأرشيف (عبر Supabase REST مباشرة)
    العميل يرسل = دفعة زبون · المالك يرسل = سند مورد
    ═══════════════════════════════════════════════════════════════ */
 (function(){
@@ -2906,7 +2906,7 @@ window.syncChatReceipts=async function(manual){
           reference:p.reference||'',date:p.date||'',sender:p.sender||'',beneficiary:p.beneficiary||''},
         rtype,party,
         smartName:(p.bank||'RCPT')+'_'+(p.amount||'')+'_'+(p.currency||''),
-        audit:[{ts:Date.now(),action:'مزامنة من ARKAN Chat — '+(rtype==='customer'?'دفعة من ':'سند إلى ')+party+' · بصمة '+String(m.hash||'').slice(0,12)}]};
+        audit:[{ts:Date.now(),action:'مزامنة من BDL Chat — '+(rtype==='customer'?'دفعة من ':'سند إلى ')+party+' · بصمة '+String(m.hash||'').slice(0,12)}]};
       try{await putDoc(rec);CACHE.unshift(rec);added++;}catch(e){}
     }
     if(added){
@@ -3455,7 +3455,7 @@ if(/embed=1/.test(location.search)||window!==window.top){
 </script>
 
 <style id="akNightCss">
-/* ═══ خلفية أركان الكحلية الأصلية (تدرج الهيرو) — معممة ═══ */
+/* ═══ خلفية لبدال الكحلية الأصلية (تدرج الهيرو) — معممة ═══ */
 body{background:radial-gradient(1100px 600px at 78% -10%, rgba(0,88,217,.55), transparent 60%),
  radial-gradient(900px 700px at -10% 110%, rgba(0,181,255,.22), transparent 55%),
  linear-gradient(180deg,#04143A 0%,#062165 58%,#003B8F 100%) fixed!important}

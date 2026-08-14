@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover,interactive-widget=resizes-content">
 <meta name="theme-color" content="#F6FAFD">
-<title>ARKAN Chat</title>
+<title>BDL Chat</title>
 <link rel="icon" href="favicon.svg?v=n4">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -15,7 +15,7 @@
 if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').catch(function(){});}
 </script>
 <style>
-/* ═══ ARKAN Pay 2026 · نظام الألوان المعتمد ═══ */
+/* ═══ BDL 2026 · نظام الألوان المعتمد ═══ */
 :root{
   --sky:#0058D9; --blue:#0058D9; --navy:#003B8F; --paper:#F6FAFD;
   --ink:#0B1B33; --mut:#5B6B85; --line:rgba(11,47,112,.08);
@@ -368,7 +368,7 @@ window.addEventListener('unhandledrejection',function(e){
     </button>
     <div class="av" id="hAv">A</div>
     <div class="who">
-      <div class="n" id="hName">ARKAN</div>
+      <div class="n" id="hName">BDL</div>
       <div class="s" id="hSub"><span class="on"></span><span id="hSubT">متصل</span></div>
     </div>
     <span class="reqchip hide" id="hReq"></span>
@@ -528,11 +528,11 @@ window.addEventListener('unhandledrejection',function(e){
 
 <script>
 /* ═══════════════════════════════════════════════════════════════
-   ARKAN Chat v2 — محادثات دائمة مرتبطة بالحساب · RLS · صوت WhatsApp-grade
+   BDL Chat v2 — محادثات دائمة مرتبطة بالحساب · RLS · صوت WhatsApp-grade
    ═══════════════════════════════════════════════════════════════ */
 const SB_URL='https://vyxzlazwpbstigcqvizb.supabase.co';
 const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ5eHpsYXp3cGJzdGlnY3F2aXpiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU5MTU5OTcsImV4cCI6MjEwMTQ5MTk5N30.fxMt_jH4z8t7uVnFLLHyNobu6zsgu_ZwVGLibuqWj38';
-const AUTH_URL = 'https://arkan-ai-site-production.up.railway.app/supabase-token'; // خادم ARKAN OTP على Railway
+const AUTH_URL = 'https://arkan-ai-site-production.up.railway.app/supabase-token'; // خادم BDL OTP على Railway
 const MAX_FILE = 25*1024*1024, MAX_REC_SEC = 300;
 
 const $=id=>document.getElementById(id);
@@ -900,7 +900,7 @@ async function openConv(c,isNew){
     if(u)PROFILES[otherId]=u;
   }
   const other=PROFILES[otherId]||{};
-  const nm=MY_ROLE==='customer'?'ARKAN':(other.full_name||other.phone||'عميل');
+  const nm=MY_ROLE==='customer'?'BDL':(other.full_name||other.phone||'عميل');
   $('hName').textContent=nm;
   const av=$('hAv');
   if(other.avatar_url){av.style.backgroundImage=`url('${other.avatar_url}')`;av.textContent='';}
@@ -1000,7 +1000,7 @@ async function renderMsg(m){
 }
 async function replyQuote(rid){
   const r=MSGS.find(x=>x.id===rid);if(!r)return '';
-  const who=r.sender_id===MY_ID?'أنت':(MY_ROLE==='customer'?'ARKAN':'العميل');
+  const who=r.sender_id===MY_ID?'أنت':(MY_ROLE==='customer'?'BDL':'العميل');
   const t=r.type==='text'?await dec(r.text):({audio:'رسالة صوتية',image:'صورة',pdf:'PDF',receipt:'إيصال'}[r.type]||'مرفق');
   return `<div class="reply-q"><b>${who}</b><br>${esc(String(t).slice(0,70))}</div>`;
 }
@@ -1338,7 +1338,7 @@ async function copyDaySummary(){
   let lines=['🧾 إيصالات اليوم — '+$('hName').textContent,'📅 '+d,''],n=0;
   items.forEach(m=>{n++;const t=new Date(m.created_at),hh=String(t.getHours()).padStart(2,'0')+':'+String(t.getMinutes()).padStart(2,'0');
     const r=S[m.id];lines.push(n+') '+hh+' — '+(r&&r.a?parseFloat(r.a).toLocaleString('en-US')+' '+(r.c||'Kz'):'(بدون مبلغ)'));});
-  lines.push('',$('dayTot').textContent,'ARKAN · arkanrates.com');
+  lines.push('',$('dayTot').textContent,'ARKAN · lbdal.com');
   const txt=lines.join('\n');
   try{await navigator.clipboard.writeText(txt);toast('نُسخ الملخص ✓');}catch(e){prompt('انسخ:',txt);}
 }
@@ -1802,7 +1802,7 @@ document.addEventListener('visibilitychange',()=>{
 
 <script src="arkan-read.js?v=4"></script>
 <script id="akAiReceipts">
-/* ═══ ARKAN AI Receipts — تحليل تلقائي لكل إيصال يُرسل في المحادثة ═══ */
+/* ═══ BDL AI Receipts — تحليل تلقائي لكل إيصال يُرسل في المحادثة ═══ */
 (function(){
 'use strict';
 const GKEY=()=> (localStorage.getItem('gemKey')||'').trim();
@@ -1891,7 +1891,7 @@ if(typeof window.sendFile==='function'){
 
 
 <style id="akNightCss">
-/* ═══ خلفية أركان الكحلية الأصلية (تدرج الهيرو) — معممة ═══ */
+/* ═══ خلفية لبدال الكحلية الأصلية (تدرج الهيرو) — معممة ═══ */
 body{background:radial-gradient(1100px 600px at 78% -10%, rgba(0,88,217,.55), transparent 60%),
  radial-gradient(900px 700px at -10% 110%, rgba(0,181,255,.22), transparent 55%),
  linear-gradient(180deg,#04143A 0%,#062165 58%,#003B8F 100%) fixed!important}

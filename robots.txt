@@ -11,4 +11,4 @@ Disallow: /archive.html
 Disallow: /admin.html
 Disallow: /rates-admin.html
 Disallow: /ping.html
-Sitemap: https://arkanrates.com/sitemap.xml
+Sitemap: https://lbdal.com/sitemap.xml
