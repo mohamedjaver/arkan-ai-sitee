@@ -23,7 +23,7 @@ self.addEventListener('activate',e=>{
 
 
 /* ===== Web Share Target: استقبال إيصالات الواتساب (POST محلي) ===== */
-const SHARE_CACHE='bdl-v2';
+const SHARE_CACHE='bdl-v3';
 
 async function arkHandleShare(req){
   try{

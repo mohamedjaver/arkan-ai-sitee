@@ -914,7 +914,7 @@ async function akAvUpload(file){
        body:JSON.stringify({expiresIn:31536000})});
     const sg=await r.json();
     if(!sg.signedURL) throw new Error(r.status+' '+(sg.message||''));
-    const url=AK_SB_URL+'/storage/v1'+sg.signedURL;
+    const url=AK_SB_URL+'/storage/v1'+sg.signedURL+'&cb='+Date.now();
     step='الحفظ';
     r=await fetch(AK_SB_URL+'/rest/v1/chat_users?id=eq.'+uid,
       {method:'PATCH',headers:{apikey:AK_SB_KEY,Authorization:'Bearer '+j.token,'Content-Type':'application/json',Prefer:'return=minimal'},
