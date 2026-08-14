@@ -29,23 +29,17 @@
   var svg='<svg viewBox="0 16 240 160" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:100%;overflow:visible">'+
   '<defs><radialGradient id="bdlGG" cx="38%" cy="30%" r="85%"><stop offset="0%" stop-color="#1462BE"/><stop offset="55%" stop-color="#0B3F92"/><stop offset="100%" stop-color="#072C6B"/></radialGradient>'+
   '<pattern id="bdlDT" width="4.6" height="4.6" patternUnits="userSpaceOnUse"><circle cx="2.3" cy="2.3" r="1.2" fill="#A9DBFF"/></pattern>'+
-  '<clipPath id="bdlGC"><circle cx="120" cy="112" r="36"/></clipPath></defs>'+
+  '<clipPath id="bdlGC"><circle cx="120" cy="100" r="30"/></clipPath></defs>'+
   '<path class="bu" d="M66 44 L66 93 A54 54 0 0 0 174 93 L174 44 L157 44 L157 93 A37 37 0 0 1 83 93 L83 44 Z" fill="#F5F7FA"/>'+
   '<g><path class="bt bt1" d="M101 44 h12 v20 a6 6 0 0 1 -12 0 Z" fill="#F5F7FA"/>'+
   '<path class="bt bt2" d="M127 44 h12 v20 a6 6 0 0 1 -12 0 Z" fill="#F5F7FA"/></g>'+
-  '<ellipse cx="120" cy="143" rx="30" ry="6" fill="#04173D" opacity=".35"/>'+
-  '<g class="bg1"><circle cx="120" cy="112" r="36" fill="url(#bdlGG)"/>'+
-  '<g clip-path="url(#bdlGC)"><g fill="url(#bdlDT)">'+
-  '<path d="M88 96 C93 86 106 81 116 84 C123 86 124 93 118 97 C112 101 107 101 104 107 C101 113 96 116 91 113 C85 110 84 102 88 96 Z"/>'+
-  '<path d="M100 120 C106 116 113 118 115 125 C117 132 114 141 109 146 C105 150 100 148 98 142 C96 135 96 124 100 120 Z"/>'+
-  '<path d="M129 84 C135 80 143 80 147 84 C150 87 148 91 143 92 C137 93 132 90 129 84 Z"/>'+
-  '<path d="M127 98 C134 92 145 93 151 100 C156 107 155 118 150 125 C146 131 139 134 135 130 C129 125 126 118 125 111 C124 106 124 101 127 98 Z"/>'+
-  '<path d="M150 88 C156 84 163 86 165 92 C167 97 163 102 157 100 C151 98 147 91 150 88 Z"/>'+
-  '<path d="M144 134 C149 131 155 133 156 138 C157 142 152 146 147 144 C142 142 141 137 144 134 Z"/></g>'+
+  '<ellipse cx="120" cy="127" rx="23" ry="4" fill="#04173D" opacity=".3"/>'+
+  '<g class="bg1"><circle cx="120" cy="100" r="30" fill="url(#bdlGG)"/>'+
+  '<g clip-path="url(#bdlGC)"><g fill="url(#bdlDT)"><path d="M94 87 C98 79 109 75 117 77 C123 79 124 84 119 88 C114 91 110 91 108 96 C105 101 101 103 97 101 C92 98 91 92 94 87 Z"/><path d="M104 107 C109 103 115 105 116 111 C118 117 115 124 111 128 C108 131 104 130 102 125 C100 119 100 110 104 107 Z"/><path d="M128 77 C132 74 139 74 142 77 C144 80 143 83 139 84 C134 84 130 82 128 77 Z"/><path d="M126 88 C132 84 141 85 146 91 C150 96 149 106 145 111 C142 116 136 118 133 115 C128 111 125 105 124 99 C124 95 124 91 126 88 Z"/><path d="M145 80 C150 77 156 79 157 84 C159 88 155 92 151 90 C146 88 143 83 145 80 Z"/><path d="M140 118 C144 115 149 117 150 121 C151 125 147 128 143 126 C139 124 138 120 140 118 Z"/></g>'+
   '<g stroke="#6FBEFF" stroke-width=".6" opacity=".22" fill="none">'+
-  '<ellipse cx="120" cy="112" rx="36" ry="13"/><ellipse cx="120" cy="112" rx="36" ry="26"/>'+
-  '<ellipse cx="120" cy="112" rx="13" ry="36"/><ellipse cx="120" cy="112" rx="26" ry="36"/></g></g>'+
-  '<circle cx="120" cy="112" r="36" fill="none" stroke="#04173D" stroke-opacity=".3" stroke-width="2"/></g></svg>';
+  '<ellipse cx="120" cy="100" rx="30" ry="11"/><ellipse cx="120" cy="100" rx="30" ry="22"/>'+
+  '<ellipse cx="120" cy="100" rx="11" ry="30"/><ellipse cx="120" cy="100" rx="22" ry="30"/></g></g>'+
+  '<circle cx="120" cy="100" r="30" fill="none" stroke="#04173D" stroke-opacity=".3" stroke-width="1.8"/></g></svg>';
   function mount(){
     var st=document.createElement('style');st.textContent=css;document.head.appendChild(st);
     var d=document.createElement('div');d.id='bdlSplash';
