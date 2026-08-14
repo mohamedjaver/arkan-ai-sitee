@@ -1352,7 +1352,7 @@ async function changeMyAvatar(){
   inp.onchange=async ()=>{const f=inp.files[0];if(!f)return;
     try{toast('جارٍ رفع صورتك…');
       const small=await compressImage(f,512,.85);
-      const path='avatars/'+MY_ID+'.jpg';
+      const path=MY_ID+'/avatar.jpg';
       const {error:eu}=await sb.storage.from('chat-media').upload(path,small,{upsert:true,contentType:'image/jpeg'});
       if(eu)throw eu;
       const {data,error}=await sb.storage.from('chat-media').createSignedUrl(path,31536000);

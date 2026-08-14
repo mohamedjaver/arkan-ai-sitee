@@ -904,7 +904,7 @@ async function akAvUpload(file){
   try{
     const blob=await akAvCompress(file,512,.82);
     step='الرفع';
-    const path='avatars/'+uid+'.jpg';
+    const path=uid+'/avatar.jpg';
     let r=await fetch(AK_SB_URL+'/storage/v1/object/chat-media/'+path,
       {method:'POST',headers:{apikey:AK_SB_KEY,Authorization:'Bearer '+j.token,'x-upsert':'true','Content-Type':'image/jpeg'},body:blob});
     if(!r.ok){ let t=''; try{t=(await r.json()).message||'';}catch(e){} throw new Error(r.status+' '+t); }
