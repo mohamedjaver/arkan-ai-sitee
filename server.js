@@ -964,9 +964,21 @@ app.get('/health', (req, res) => res.json({
 /* ═══ إدارة المالك: تغيير رمز زبون ═══ */
 app.post('/admin/set-pin', async (req, res) => {
   try {
-    const s = authArkan(req);
-    if (!s) return res.status(401).json({ ok: false, err: 'unauthorized' });
-    if (s.role !== 'owner') return res.status(403).json({ ok: false, err: 'not owner' });
+    /* يقبل توكن ARKAN الداخلي أو توكن Supabase JWT (نفس الجلسة المستخدمة في التطبيق) */
+    let s = authArkan(req);
+    let ownerOk = !!s && s.role === 'owner';
+    if (!ownerOk) {
+      try {
+        const h = req.headers.authorization || '';
+        const tok = h.startsWith('Bearer ') ? h.slice(7) : '';
+        const p2 = jwt.verify(tok, process.env.SUPABASE_JWT_SECRET);
+        ownerOk = p2 && p2.arkan_role === 'owner';
+        if (!p2) return res.status(401).json({ ok: false, err: 'unauthorized' });
+      } catch (e) {
+        return res.status(401).json({ ok: false, err: 'unauthorized' });
+      }
+    }
+    if (!ownerOk) return res.status(403).json({ ok: false, err: 'not owner' });
     const phone = String(req.body.phone || '').replace(/\D/g, '');
     const newPin = String(req.body.newPin || '').replace(/\D/g, '');
     if (phone.length < 6) return res.status(400).json({ ok: false, err: 'رقم غير صالح' });
