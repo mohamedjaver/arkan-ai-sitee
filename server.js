@@ -960,6 +960,40 @@ app.get('/health', (req, res) => res.json({
   sb: !!process.env.SUPABASE_JWT_SECRET
 }));
 
+
+/* ═══ إدارة المالك: تغيير رمز زبون ═══ */
+app.post('/admin/set-pin', async (req, res) => {
+  try {
+    const s = authArkan(req);
+    if (!s) return res.status(401).json({ ok: false, err: 'unauthorized' });
+    if (s.role !== 'owner') return res.status(403).json({ ok: false, err: 'not owner' });
+    const phone = String(req.body.phone || '').replace(/\D/g, '');
+    const newPin = String(req.body.newPin || '').replace(/\D/g, '');
+    if (phone.length < 6) return res.status(400).json({ ok: false, err: 'رقم غير صالح' });
+    if (newPin.length !== 4) return res.status(400).json({ ok: false, err: 'الرمز 4 أرقام' });
+    // بحث مرن: الرقم كما هو، أو بآخر 8 أرقام
+    let q = await fs.collection('users').where('phone', '==', phone).limit(1).get();
+    if (q.empty && phone.length > 8) {
+      q = await fs.collection('users').where('phone', '==', phone.slice(-8)).limit(1).get();
+    }
+    if (q.empty) {
+      // بحث شامل بآخر 8 أرقام ضمن الحقول المخزنة بصيغ مختلفة
+      const all = await fs.collection('users').limit(500).get();
+      const tail = phone.slice(-8);
+      const hit = all.docs.find(d => String(d.data().phone || '').replace(/\D/g, '').endsWith(tail));
+      if (!hit) return res.status(404).json({ ok: false, err: 'الزبون غير موجود' });
+      await hit.ref.update({ pin: newPin, pinChangedAt: Date.now(), via: 'owner-reset' });
+      return res.json({ ok: true, phone: hit.data().phone, name: hit.data().name || '' });
+    }
+    const doc = q.docs[0];
+    await doc.ref.update({ pin: newPin, pinChangedAt: Date.now(), via: 'owner-reset' });
+    res.json({ ok: true, phone: doc.data().phone, name: doc.data().name || '' });
+  } catch (e) {
+    console.error('admin/set-pin:', e.message);
+    res.status(500).json({ ok: false, err: 'server' });
+  }
+});
+
 app.listen(ENV.PORT, () => {
   console.log(`▲ ARKAN STORE on :${ENV.PORT}`);
   console.log(`  Wallet: ${ENV.WALLET}`);

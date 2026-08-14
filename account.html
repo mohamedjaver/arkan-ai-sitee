@@ -262,6 +262,14 @@
         <div class="row"><div class="ric"><svg fill="none" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" d="M9 12l2 2 4-4m5.6 2A9 9 0 1 1 12 3a9 9 0 0 1 8.6 9z"/></svg></div><div class="rtxt"><b>حالة الحساب</b><small id="acctStatusSub">—</small></div><span id="acctStatus" class="status-on">نشط</span></div>
         <div class="row"><div class="ric"><svg fill="none" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" d="M12 15v2m-6 4h12a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2zm10-10V7a4 4 0 0 0-8 0v4h8z"/></svg></div><div class="rtxt"><b>رمز الدخول</b><small>احفظه للدخول لاحقاً</small></div><div class="rval num" id="acctPin" style="letter-spacing:3px">••••</div>
           <button onclick="changePinUI()" style="margin-right:8px;padding:7px 12px;border:1px solid #0A56B8;border-radius:0;background:#fff;color:#0A56B8;font-weight:800;font-size:11px;cursor:pointer">تغيير</button></div>
+        <!-- إدارة المالك: تغيير رمز زبون -->
+        <div id="ownerPinRow" style="display:none;margin-top:12px;padding:14px;border:1px solid #D6E4F7;background:#F7FAFF">
+          <b style="display:block;font-size:14px;color:#0B2447;margin-bottom:10px">🔑 تغيير رمز زبون</b>
+          <input id="opPhone" inputmode="numeric" placeholder="رقم هاتف الزبون" style="width:100%;padding:11px;border:1px solid #C7D8EE;border-radius:0;font-size:15px;direction:ltr;text-align:left;margin-bottom:8px">
+          <input id="opPin" inputmode="numeric" maxlength="4" placeholder="الرمز الجديد (4 أرقام)" style="width:100%;padding:11px;border:1px solid #C7D8EE;border-radius:0;font-size:15px;direction:ltr;text-align:left;letter-spacing:4px;margin-bottom:8px">
+          <button onclick="ownerSetPin()" id="opBtn" style="width:100%;padding:12px;border:0;background:#0A56B8;color:#fff;font-weight:800;font-size:14px;cursor:pointer">حفظ الرمز الجديد</button>
+          <div id="opMsg" style="margin-top:8px;font-size:13px;min-height:18px"></div>
+        </div>
         <button id="savePinWA" style="width:100%;margin-top:2px;display:flex;align-items:center;justify-content:center;gap:8px;padding:13px;border:none;border-radius:0;cursor:pointer;font-family:inherit;font-size:13.5px;font-weight:600;color:#fff;background:linear-gradient(135deg,#128C4B,#25D366);box-shadow:0 10px 24px -8px rgba(37,211,102,.4)">
           <svg width="17" height="17" viewBox="0 0 24 24" fill="#fff"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm5.3 14.1c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .2-3.3-.7-2.8-1.1-4.6-4-4.7-4.2-.1-.2-1.1-1.5-1.1-2.9s.7-2 1-2.3c.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.5.2.6.8 2 .8 2.1.1.1.1.3 0 .5-.3.6-.7.9-.5 1.2.7 1.2 1.6 2.1 2.8 2.7.3.2.5.1.7-.1l.9-1c.2-.3.4-.2.7-.1l2 1c.3.1.5.2.5.3.1.1.1.6-.1 1.1z"/></svg>
           احفظ رمزك في واتساب — لن تنساه أبدًا
@@ -947,6 +955,34 @@ async function akAvCompress(file,max,q){
   cx.fillStyle='#FFFFFF'; cx.fillRect(0,0,cv.width,cv.height);
   cx.drawImage(src,0,0,cv.width,cv.height);
   return await new Promise((res,rej)=>cv.toBlob(b=>b?res(b):rej(new Error('تعذر إنشاء الصورة')),'image/jpeg',q));
+}
+
+/* ═══ إدارة المالك: تغيير رمز زبون ═══ */
+(function(){
+  try{
+    const j=JSON.parse(localStorage.getItem('arkan_sb_jwt')||'null');
+    if(j&&j.role==='owner'){ const r=document.getElementById('ownerPinRow'); if(r) r.style.display='block'; }
+  }catch(e){}
+})();
+async function ownerSetPin(){
+  const j=JSON.parse(localStorage.getItem('arkan_sb_jwt')||'null');
+  const msg=document.getElementById('opMsg'), btn=document.getElementById('opBtn');
+  const phone=document.getElementById('opPhone').value.replace(/\D/g,'');
+  const pin=document.getElementById('opPin').value.replace(/\D/g,'');
+  msg.style.color='#B00020'; msg.textContent='';
+  if(!j||!j.token){ msg.textContent='سجّل الدخول كمالك أولاً'; return; }
+  if(phone.length<6){ msg.textContent='أدخل رقم الزبون'; return; }
+  if(pin.length!==4){ msg.textContent='الرمز 4 أرقام'; return; }
+  btn.disabled=true; btn.textContent='جارٍ الحفظ…';
+  try{
+    const r=await fetch('https://arkan-ai-site-production.up.railway.app/admin/set-pin',
+      {method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+j.token},
+       body:JSON.stringify({phone,newPin:pin})});
+    const d=await r.json();
+    if(d.ok){ msg.style.color='#0B7A3B'; msg.textContent='✅ تم — '+(d.name||'')+' ('+d.phone+') رمزه الجديد: '+pin; document.getElementById('opPin').value=''; }
+    else{ msg.textContent='✗ '+(d.err||('خطأ '+r.status)); }
+  }catch(e){ msg.textContent='تعذر الاتصال بالخادم'; }
+  btn.disabled=false; btn.textContent='حفظ الرمز الجديد';
 }
 </script>
 </body>
