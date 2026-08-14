@@ -2,7 +2,7 @@
    إستراتيجية: الشبكة أولًا لصفحات HTML والبيانات (لا محتوى قديم أبدًا)
               الكاش أولًا للأصول الثابتة فقط (صور، أيقونات، شعار) */
 const V='arkan-v6.2'; /* bump: صفحات قديمة ألغيت — chat-v2 هي المعتمدة */
-const STATIC=['./arkan-logo.svg','./arkan-icon-512.png','./arkan-touch-180.png','./site-manifest.json'];
+const STATIC=['./favicon.svg','./arkan-icon-512.png','./arkan-touch-180.png','./site-manifest.json'];
 
 self.addEventListener('install',e=>{
   e.waitUntil(
@@ -23,7 +23,7 @@ self.addEventListener('activate',e=>{
 
 
 /* ===== Web Share Target: استقبال إيصالات الواتساب (POST محلي) ===== */
-const SHARE_CACHE='bdl-v1';
+const SHARE_CACHE='bdl-v2';
 
 async function arkHandleShare(req){
   try{
