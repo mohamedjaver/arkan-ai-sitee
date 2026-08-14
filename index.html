@@ -507,12 +507,12 @@ body::after{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;opac
     <div class="netcard">
       <div class="nethead">
         <div>
-          <div class="k">ARKAN NETWORK</div>
+          <div class="k">BDL NETWORK</div>
           <h3 data-i="net_h"></h3>
         </div>
         <span class="live"><span class="d"></span><span data-i="net_live"></span></span>
       </div>
-      <canvas id="globe" aria-label="ARKAN payment corridors"></canvas>
+      <canvas id="globe" aria-label="BDL payment corridors"></canvas>
       <div id="txFeed" class="txfeed" aria-hidden="true"></div>
 
     </div>
@@ -1212,7 +1212,7 @@ const akOutM=document.getElementById('akOutM');if(akOutM)akOutM.onclick=window.a
     }
     ctx.globalAlpha=1;
 
-    ctx.strokeStyle='rgba(0,181,255,.35)';ctx.lineWidth=1.2;
+    ctx.strokeStyle='rgba(80,205,255,.75)';ctx.lineWidth=2;ctx.shadowColor='rgba(0,181,255,.8)';ctx.shadowBlur=6;
     ctx.beginPath();ctx.arc(cx,cy,Rr,0,7);ctx.stroke();
 
     for(const cor of CORRIDORS){
@@ -1222,7 +1222,7 @@ const akOutM=document.getElementById('akOutM');if(akOutM)akOutM.onclick=window.a
         const p=slerpPt(a,b,t,rot);
         if(p.z>0){ if(!vis){ctx.moveTo(p.x,p.y);vis=true;} else ctx.lineTo(p.x,p.y);} else vis=false;
       }
-      ctx.strokeStyle='rgba(0,181,255,.45)';ctx.lineWidth=1.6;ctx.stroke();
+      ctx.strokeStyle='rgba(120,220,255,.9)';ctx.lineWidth=2.4;ctx.shadowColor='rgba(0,181,255,.9)';ctx.shadowBlur=8;ctx.stroke();ctx.shadowBlur=0;
     }
 
     for(const pt of particles){
