@@ -57,7 +57,7 @@ html[lang]:not([lang=ar]) h1, html[lang]:not([lang=ar]) h2, html[lang]:not([lang
   text-transform:uppercase;color:var(--primary-2);display:inline-flex;align-items:center;gap:10px}
 html[lang=ar] .eyebrow{letter-spacing:0;font-size:14px}
 .eyebrow::before{content:"";width:26px;height:2px;background:var(--accent);border-radius:0}
-.sec-h2{font-size:clamp(28px,4.4vw,44px);font-weight:800;letter-spacing:-.02em;
+.sec-h2{font-size:clamp(28px,4.4vw,44px);font-weight:800;letter-spacing:-.02em;overflow-wrap:break-word;
   line-height:1.15;color:var(--ink);margin:14px 0 12px}
 html[lang=ar] .sec-h2{letter-spacing:0}
 .sec-sub{font-size:clamp(15.5px,2vw,18px);color:var(--txt-2);max-width:60ch}
@@ -120,7 +120,10 @@ html[lang=ar] .sec-h2{letter-spacing:0}
   border-radius:0;padding:9px 18px;backdrop-filter:blur(6px)}
 .pill .dot{width:8px;height:8px;border-radius:50%;background:var(--success);box-shadow:0 0 0 5px rgba(0,200,83,.18);animation:pulse 1.8s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
-.hero h1{font-size:clamp(38px,5.8vw,68px);font-weight:900;letter-spacing:-.02em;line-height:1.08;margin:24px 0 20px;max-width:16ch;color:#fff}
+.hero h1{font-size:clamp(30px,6vw,68px);font-weight:900;letter-spacing:-.02em;line-height:1.1;margin:24px 0 20px;max-width:16ch;color:#fff;overflow-wrap:break-word;hyphens:auto}
+html[lang=pt] .hero h1,html[lang=fr] .hero h1{font-size:clamp(27px,5.2vw,56px);letter-spacing:-.01em;max-width:15ch}
+html[lang=pt] .hero .lede,html[lang=fr] .hero .lede{font-size:clamp(15px,2vw,18px)}
+html[lang=pt] .sec-h2,html[lang=fr] .sec-h2{font-size:clamp(24px,4vw,40px);overflow-wrap:break-word}
 html[lang=ar] .hero h1{color:#fff;letter-spacing:0;line-height:1.25;font-size:clamp(34px,5.4vw,60px)}
 .hero h1 em{font-style:normal;background:linear-gradient(92deg,#7FDBFF 0%,#00B5FF 55%,#5FB9FF 100%);
   -webkit-background-clip:text;background-clip:text;color:transparent}
@@ -371,6 +374,13 @@ footer::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;
   .lang button{padding:6px 9px;font-size:11.5px}
   section{padding:64px 0}
   .hero{padding-top:48px}
+  .hero h1{font-size:clamp(27px,7.4vw,36px);line-height:1.15}
+  html[lang=pt] .hero h1,html[lang=fr] .hero h1{font-size:clamp(24px,6.6vw,32px)}
+  html[lang=ar] .hero h1{font-size:clamp(26px,7vw,34px)}
+  .hero .lede{font-size:15px}
+  .cta .btn{flex:1 1 100%;padding:14px 18px;font-size:15px}
+  .sec-h2{font-size:clamp(23px,6.4vw,30px)}
+  html[lang=pt] .sec-h2,html[lang=fr] .sec-h2{font-size:clamp(21px,5.8vw,27px)}
   .mrow{padding:18px 20px}
   .balances{grid-template-columns:1fr}
   .steps{grid-template-columns:1fr}
