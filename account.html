@@ -988,6 +988,7 @@ async function ownerSetPin(){
 }
 </script>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
 <div id="mrbSheet" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(4,20,50,.55);backdrop-filter:blur(4px)">
   <div style="position:absolute;left:0;right:0;bottom:0;background:#fff;border-radius:18px 18px 0 0;padding:20px 18px 30px;max-height:86vh;overflow:auto">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
@@ -1077,21 +1078,32 @@ function mrbMake(){
 }
 function mrbRR(x,a,b,w,h,r){x.beginPath();x.moveTo(a+r,b);x.arcTo(a+w,b,a+w,b+h,r);x.arcTo(a+w,b+h,a,b+h,r);x.arcTo(a,b+h,a,b,r);x.arcTo(a,b,a+w,b,r);x.closePath();}
 function mrbFmt(n){return Number(n||0).toLocaleString('en-US');}
-async function mrbShare(){
-  const cv=document.getElementById('mrbCv');
-  cv.toBlob(async b=>{
-    const f=new File([b],'BDL-transfer.png',{type:'image/png'});
-    if(navigator.canShare&&navigator.canShare({files:[f]})){ try{await navigator.share({files:[f],title:'وصل تحويل BDL'});}catch(e){} }
-    else{ const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='BDL-transfer.png';a.click(); }
-  },'image/png');
+async function mrbMakePdf(){
+  try{
+    const cv=document.getElementById('mrbCv');
+    const img=cv.toDataURL('image/jpeg',.92);
+    const name='BDL-transfer-'+Date.now().toString(36);
+    const JS=window.jspdf&&window.jspdf.jsPDF;
+    if(!JS){ const a=document.createElement('a');a.href=img;a.download=name+'.jpg';a.click(); return null; }
+    const pdf=new JS({unit:'pt',format:'a4'});
+    const pw=pdf.internal.pageSize.getWidth(), ph=pdf.internal.pageSize.getHeight();
+    const ih=pw*(1350/1080), iy=(ph-ih)/2;
+    pdf.setFillColor(8,34,83); pdf.rect(0,0,pw,ph,'F');
+    pdf.addImage(img,'JPEG',0,iy,pw,ih);
+    return {pdf,name:name+'.pdf'};
+  }catch(e){ alert('تعذر إنشاء الوصل: '+(e.message||e)); return null; }
 }
-function mrbPdf(){
-  const cv=document.getElementById('mrbCv');
-  const img=cv.toDataURL('image/jpeg',.92);
-  const sc=document.createElement('script'); sc.src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
-  sc.onload=()=>{ const {jsPDF}=window.jspdf; const p=new jsPDF({unit:'pt',format:[540,675]});
-    p.addImage(img,'JPEG',0,0,540,675); p.save('BDL-transfer.pdf'); };
-  document.head.appendChild(sc);
+async function mrbShare(){
+  const r=await mrbMakePdf(); if(!r)return;
+  const blob=r.pdf.output('blob');
+  const file=new File([blob],r.name,{type:'application/pdf'});
+  if(navigator.canShare&&navigator.canShare({files:[file]})){
+    try{ await navigator.share({files:[file],title:'وصل تحويل BDL'}); }catch(e){}
+  }else{ r.pdf.save(r.name); }
+}
+async function mrbPdf(){
+  const r=await mrbMakePdf(); if(!r)return;
+  r.pdf.save(r.name);
 }
 </script>
 </body>
