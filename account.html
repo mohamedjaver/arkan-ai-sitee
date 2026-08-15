@@ -989,12 +989,17 @@ async function ownerSetPin(){
 </script>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+<script src="arkan-read.js" defer></script>
 <div id="mrbSheet" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(4,20,50,.55);backdrop-filter:blur(4px)">
   <div style="position:absolute;left:0;right:0;bottom:0;background:#fff;border-radius:18px 18px 0 0;padding:20px 18px 30px;max-height:86vh;overflow:auto">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
       <b style="font-size:17px">وصل تحويل <span id="mrbBankName"></span></b>
       <button onclick="mrbClose()" style="border:0;background:#EEF3FB;width:32px;height:32px;border-radius:50%;font-size:16px;cursor:pointer">✕</button>
     </div>
+    <button onclick="document.getElementById('mrbFile').click()" id="mrbUpBtn" style="width:100%;padding:13px;border:2px dashed #7FA8DC;background:#F2F8FF;color:#0A56B8;font-weight:800;font-size:14px;border-radius:12px;cursor:pointer">📷 رفع إيصال بنكيلي — قراءة تلقائية</button>
+    <input type="file" id="mrbFile" accept="image/*,.pdf" style="display:none" onchange="mrbReadReceipt(this.files[0])">
+    <img id="mrbThumb" style="display:none;width:70px;height:70px;object-fit:cover;border-radius:10px;margin-top:8px;border:2px solid #C7D8EE">
+    <div id="mrbReadMsg" style="font-size:12.5px;margin-top:6px;min-height:16px;color:#5A7396"></div>
     <label class="mrbL">اسم المستلم</label><input id="mrbName" class="mrbI" placeholder="محمد ولد ...">
     <label class="mrbL">رقم المستلم / الحساب</label><input id="mrbTo" class="mrbI" inputmode="numeric" placeholder="36xxxxxx">
     <label class="mrbL">المبلغ (MRU جديدة)</label><input id="mrbAmt" class="mrbI" inputmode="decimal" placeholder="70000">
@@ -1049,9 +1054,11 @@ function mrbMake(){
   const amt=Number(document.getElementById('mrbAmt').value.replace(/[^\d.]/g,''))||0;
   const ref=document.getElementById('mrbRef').value.trim();
   const cv=document.getElementById('mrbCv'), x=cv.getContext('2d');
-  const g=x.createLinearGradient(0,0,0,1350); g.addColorStop(0,'#0D3A8C'); g.addColorStop(1,'#082253');
-  x.fillStyle=g; x.fillRect(0,0,1080,1350);
-  x.fillStyle='#F7FAFF'; mrbRR(x,60,260,960,880,28); x.fill();
+  const hasImg=!!MRB_IMG;
+  const H=hasImg?1720:1350; cv.width=1080; cv.height=H;
+  const g=x.createLinearGradient(0,0,0,H); g.addColorStop(0,'#0D3A8C'); g.addColorStop(1,'#082253');
+  x.fillStyle=g; x.fillRect(0,0,1080,H);
+  x.fillStyle='#F7FAFF'; mrbRR(x,60,240,960,H-350,28); x.fill();
   x.fillStyle='#FFFFFF'; x.font='800 92px Inter,Arial'; x.textAlign='left';
   x.fillText('BDL',80,150);
   x.font='600 34px Inter,Arial'; x.fillStyle='#8FB8E8'; x.fillText('EXCHANGE · lbdal.com',80,200);
@@ -1062,19 +1069,54 @@ function mrbMake(){
   const rows=[['القناة',MRB_CUR.n+' — '+MRB_CUR.ar],['المستلم',name],['رقم المستلم',to],
               ['المبلغ',mrbFmt(amt)+' MRU'],['بالقديمة',mrbFmt(amt*10)+' UM']];
   if(ref)rows.push(['رقم العملية',ref]);
-  x.textAlign='right'; let y=360;
+  x.textAlign='right'; let y=330;
   rows.forEach(r=>{
-    x.font='500 34px "IBM Plex Sans Arabic",Arial'; x.fillStyle='#5A7396'; x.fillText(r[0],960,y);
-    x.font='700 44px Inter,"IBM Plex Sans Arabic",Arial'; x.fillStyle='#0B2447'; x.fillText(String(r[1]),960,y+58);
-    x.strokeStyle='#E3ECF8'; x.beginPath(); x.moveTo(110,y+92); x.lineTo(960,y+92); x.stroke();
-    y+=130;
+    x.font='500 32px "IBM Plex Sans Arabic",Arial'; x.fillStyle='#5A7396'; x.fillText(r[0],960,y);
+    x.font='700 42px Inter,"IBM Plex Sans Arabic",Arial'; x.fillStyle='#0B2447'; x.fillText(String(r[1]),960,y+54);
+    x.strokeStyle='#E3ECF8'; x.beginPath(); x.moveTo(110,y+84); x.lineTo(960,y+84); x.stroke();
+    y+=112;
   });
-  x.fillStyle='#1FA855'; mrbRR(x,110,y-10,300,74,37); x.fill();
-  x.fillStyle='#fff'; x.font='700 36px "IBM Plex Sans Arabic",Arial'; x.textAlign='center';
-  x.fillText('✓ تم التحويل',260,y+40);
+  /* شارة الحالة */
+  x.fillStyle='#1FA855'; mrbRR(x,110,y-6,290,68,34); x.fill();
+  x.fillStyle='#fff'; x.font='700 34px "IBM Plex Sans Arabic",Arial'; x.textAlign='center';
+  x.fillText('✓ تم التحويل',255,y+40);
+  y+=100;
+  /* صورة إيصال بنكيلي الأصلي داخل إطار */
+  if(hasImg){
+    x.textAlign='right'; x.font='600 30px "IBM Plex Sans Arabic",Arial'; x.fillStyle='#5A7396';
+    x.fillText('الإيصال الأصلي — '+MRB_CUR.n, 960, y+8); y+=28;
+    const bw=850, bh=H-350-(y-240)-40, bx=(1080-bw)/2, by=y;
+    x.fillStyle='#EAF1FB'; mrbRR(x,bx,by,bw,bh,20); x.fill();
+    x.save(); mrbRR(x,bx+8,by+8,bw-16,bh-16,14); x.clip();
+    const sc=Math.min((bw-16)/MRB_IMG_W,(bh-16)/MRB_IMG_H);
+    const iw=MRB_IMG_W*sc, ih=MRB_IMG_H*sc;
+    x.drawImage(MRB_IMG, bx+(bw-iw)/2, by+(bh-ih)/2, iw, ih);
+    x.restore();
+    x.strokeStyle='#C7D8EE'; x.lineWidth=2; mrbRR(x,bx,by,bw,bh,20); x.stroke();
+  }
   x.textAlign='center'; x.fillStyle='#8FB8E8'; x.font='500 28px Inter,Arial';
-  x.fillText('ARKAN INTERNATIONAL TRADING · WhatsApp 36295050',540,1290);
+  x.fillText('ARKAN INTERNATIONAL TRADING · WhatsApp 36295050',540,H-42);
   document.getElementById('mrbOut').style.display='block';
+}
+
+let MRB_IMG=null, MRB_IMG_W=0, MRB_IMG_H=0;
+async function mrbReadReceipt(file){
+  if(!file)return;
+  const msg=document.getElementById('mrbReadMsg'), btn=document.getElementById('mrbUpBtn');
+  // معاينة + تحميل الصورة للدمج في الوصل
+  const url=URL.createObjectURL(file);
+  const th=document.getElementById('mrbThumb'); th.src=url; th.style.display='block';
+  const im=new Image(); im.onload=()=>{MRB_IMG=im;MRB_IMG_W=im.width;MRB_IMG_H=im.height;}; im.src=url;
+  btn.textContent='⏳ جارٍ قراءة الإيصال…'; btn.disabled=true; msg.textContent='';
+  try{
+    const p=await (window.ArkanRead?ArkanRead.readAmount(file):null);
+    if(p&&p.amount){ document.getElementById('mrbAmt').value=p.amount; }
+    if(p&&p.txn){ document.getElementById('mrbRef').value=p.txn; }
+    msg.style.color='#0B7A3B';
+    msg.textContent=p&&p.amount?('✓ قُرئ: '+Number(p.amount).toLocaleString()+' '+(p.ccy||'MRU')+(p.txn?' · عملية '+p.txn:'')):'لم تُقرأ تلقائيًا — أكمل الخانات يدويًا';
+    if(!(p&&p.amount)){msg.style.color='#B00020';}
+  }catch(e){ msg.style.color='#B00020'; msg.textContent='تعذرت القراءة — أكمل يدويًا'; }
+  btn.textContent='📷 رفع إيصال بنكيلي — قراءة تلقائية'; btn.disabled=false;
 }
 function mrbRR(x,a,b,w,h,r){x.beginPath();x.moveTo(a+r,b);x.arcTo(a+w,b,a+w,b+h,r);x.arcTo(a+w,b+h,a,b+h,r);x.arcTo(a,b+h,a,b,r);x.arcTo(a,b,a+w,b,r);x.closePath();}
 function mrbFmt(n){return Number(n||0).toLocaleString('en-US');}
@@ -1087,7 +1129,8 @@ async function mrbMakePdf(){
     if(!JS){ const a=document.createElement('a');a.href=img;a.download=name+'.jpg';a.click(); return null; }
     const pdf=new JS({unit:'pt',format:'a4'});
     const pw=pdf.internal.pageSize.getWidth(), ph=pdf.internal.pageSize.getHeight();
-    const ih=pw*(1350/1080), iy=(ph-ih)/2;
+    const cvE=document.getElementById('mrbCv');
+    const ih=Math.min(ph, pw*(cvE.height/cvE.width)), iy=(ph-ih)/2;
     pdf.setFillColor(8,34,83); pdf.rect(0,0,pw,ph,'F');
     pdf.addImage(img,'JPEG',0,iy,pw,ih);
     return {pdf,name:name+'.pdf'};
