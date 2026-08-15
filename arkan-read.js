@@ -127,7 +127,7 @@ async function miniGemini(b64,mime){
   const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key='+encodeURIComponent(key),
     {method:'POST',headers:{'Content-Type':'application/json'},
      body:JSON.stringify({contents:[{parts:[{text:P},{inline_data:{mime_type:mime,data:b64}}]}],
-       generationConfig:{temperature:0,maxOutputTokens:100,responseMimeType:'application/json'}})});
+       generationConfig:{temperature:0,maxOutputTokens:240,responseMimeType:'application/json'}})});
   const j=await r.json().catch(()=>({}));
   if(!r.ok){const m=(j.error&&j.error.message)||('HTTP '+r.status);
     if(r.status===429||/quota|exhausted/i.test(m))QUOTA_TRIP++;
@@ -149,12 +149,15 @@ window.ArkanRead={
         p=await miniGemini(await toB64(file),mime); eng='gemini';
       }catch(e){}
     }
-    if(!p||!p.amount){
-      const raw=isPdf?await pdfText(file):await ocrText(file);
-      const lp=liteParse(raw);
-      p=p&&p.amount?p:lp; eng=eng||(isPdf?'pdf':'ocr');
-      if(!p.reference&&lp.reference)p.reference=lp.reference;
-      if(!p.bank&&lp.bank)p.bank=lp.bank;
+    if(!p||!p.amount||!p.reference||!p.receiver){
+      try{
+        const raw=isPdf?await pdfText(file):await ocrText(file);
+        const lp=liteParse(raw);
+        if(!p||!p.amount){ p=p&&p.amount?p:lp; eng=eng||(isPdf?'pdf':'ocr'); }
+        if(!p.reference&&lp.reference)p.reference=lp.reference;
+        if(!p.receiver&&lp.receiver)p.receiver=lp.receiver;
+        if(!p.bank&&lp.bank)p.bank=lp.bank;
+      }catch(e){}
     }
     const cy=String(p.currency||'').replace('AKZ','Kz').replace('AOA','Kz').replace('KZ','Kz').replace('UM','MRU');
     return {amount:(+p.amount||null),ccy:cy||null,txn:p.reference||null,
