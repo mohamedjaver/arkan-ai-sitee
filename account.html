@@ -1141,23 +1141,20 @@ function mrbMake(){
   const SC=2, W=1080;
   let rows;
   if(MRB_IMG){
-    rows=[['المستلم',name]];
-    if(to&&to!=='—')rows.push(['رقم المستلم',to]);
-    rows.push(['القناة',mrbChan()],['المبلغ',mrbFmt(amt)+' MRU'],['بالقديمة',mrbFmt(amt*10)+' UM']);
-    if(ref)rows.push(['رقم العملية',ref]);
+    /* التفاصيل ظاهرة في الإيصال الأصلي — نضيف المبلغين فقط */
+    rows=[['المبلغ',mrbFmt(amt)+' MRU'],['بالقديمة',mrbFmt(amt*10)+' UM']];
   }else{
     rows=[['القناة',mrbChan()],['المستلم',name],['رقم المستلم',to],
           ['المبلغ',mrbFmt(amt)+' MRU'],['بالقديمة',mrbFmt(amt*10)+' UM']];
     if(ref)rows.push(['رقم العملية',ref]);
   }
   /* حساب الارتفاع */
-  let cimg=null, bw=760, bh=0, bFade=false;
+  let cimg=null, bw=760, bh=0;
   if(MRB_IMG){
     MRB_CROP = MRB_CROP || mrbCropCard(MRB_IMG);
     cimg = MRB_CROP || MRB_IMG;
     bh = Math.round(bw*cimg.height/cimg.width);
-    /* البيانات كلها في وصل BDL — نعرض من الأصلي رأسه فقط (شعار + نجاح + مبلغ) */
-    if(bh>560){ bh=560; bFade=true; }
+    if(bh>1150){ bh=1150; bw=Math.round(bh*cimg.width/cimg.height); }
   }
   const rowsY0=560, rowsH=rows.length*116;
   const H = MRB_IMG ? (rowsY0+rowsH+70+bh+160) : (rowsY0+rowsH+180);
@@ -1214,13 +1211,7 @@ function mrbMake(){
     x.save(); x.shadowColor='rgba(3,26,69,.18)'; x.shadowBlur=24; x.shadowOffsetY=8;
     x.fillStyle='#FFFFFF'; mrbRR(x,bx-10,by-10,bw+20,bh+20,22); x.fill(); x.restore();
     x.save(); mrbRR(x,bx,by,bw,bh,16); x.clip();
-    const sH=Math.round(cimg.width*bh/bw);
-    x.drawImage(cimg, 0,0, cimg.width, sH, bx, by, bw, bh);
-    if(bFade){
-      const fg=x.createLinearGradient(0,by+bh-110,0,by+bh);
-      fg.addColorStop(0,'rgba(247,250,255,0)'); fg.addColorStop(1,'#F7FAFF');
-      x.fillStyle=fg; x.fillRect(bx,by+bh-110,bw,110);
-    }
+    x.drawImage(cimg, bx, by, bw, bh);
     x.restore();
     x.strokeStyle='#D7E4F5'; x.lineWidth=2; mrbRR(x,bx-10,by-10,bw+20,bh+20,22); x.stroke();
   }
