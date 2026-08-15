@@ -107,7 +107,7 @@ html.pt-enter body{animation:ptIn .38s cubic-bezier(.22,1,.36,1)}
 
   <div id="app"></div>
 
-  <footer class="en">© ARKAN · EXCHANGE DESK</footer>
+  <footer class="en">© BDL · EXCHANGE DESK</footer>
 </div>
 
 <script>
@@ -259,7 +259,7 @@ function send(){
   }
   const who=$('who').value.trim();
   const ref='REQ-'+Date.now().toString().slice(-6);
-  const msg=`ARKAN — طلب تحويل\n${ref}\n━━━━━━━━━━\n${who?'الاسم: '+who+'\n':''}المدفوع: ${fmt(amtFgn,0)} ${cSym} (${cc})\nالسعر: ${rate} (${tierLbl})\n━━━━━━━━━━\nالمستلَم: ${fmt(amtMRU,0)} أوقية (MRU)\n━━━━━━━━━━\nأؤكد رغبتي في التحويل.`;
+  const msg=`BDL — طلب تحويل\n${ref}\n━━━━━━━━━━\n${who?'الاسم: '+who+'\n':''}المدفوع: ${fmt(amtFgn,0)} ${cSym} (${cc})\nالسعر: ${rate} (${tierLbl})\n━━━━━━━━━━\nالمستلَم: ${fmt(amtMRU,0)} أوقية (MRU)\n━━━━━━━━━━\nأؤكد رغبتي في التحويل.`;
   window.open('https://wa.me/'+DATA.wa+'?text='+encodeURIComponent(msg),'_blank');
 }
 function _oldSend_unused(){
@@ -275,9 +275,9 @@ function _oldSend_unused(){
   const who=$('who').value.trim();
   const ref='REQ-'+Date.now().toString().slice(-6);
   const L=window.arkanLang?arkanLang():'ar';
-  const T={ar:{h:'ARKAN — طلب تحويل',n:'الاسم',a:'المبلغ',r:'السعر',d:'المطلوب استلامه',c:'أؤكد رغبتي في التحويل.',u:'أوقية'},
-           fr:{h:'ARKAN — Demande de transfert',n:'Nom',a:'Montant',r:'Taux',d:'À recevoir',c:'Je confirme ma demande de transfert.',u:'Ouguiya'},
-           pt:{h:'ARKAN — Pedido de transferência',n:'Nome',a:'Montante',r:'Taxa',d:'A receber',c:'Confirmo o meu pedido de transferência.',u:'Ouguiya'}}[L]||{};
+  const T={ar:{h:'BDL — طلب تحويل',n:'الاسم',a:'المبلغ',r:'السعر',d:'المطلوب استلامه',c:'أؤكد رغبتي في التحويل.',u:'أوقية'},
+           fr:{h:'BDL — Demande de transfert',n:'Nom',a:'Montant',r:'Taux',d:'À recevoir',c:'Je confirme ma demande de transfert.',u:'Ouguiya'},
+           pt:{h:'BDL — Pedido de transferência',n:'Nome',a:'Montante',r:'Taxa',d:'A receber',c:'Confirmo o meu pedido de transferência.',u:'Ouguiya'}}[L]||{};
   const msg=
 `${T.h}
 ${ref}

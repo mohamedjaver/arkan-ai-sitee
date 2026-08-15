@@ -296,7 +296,7 @@ footer{border-top:1px solid var(--stroke);margin-top:60px;padding:52px 0 40px;po
 <body>
 <script src="bdl-splash.js"></script>
 
-<!-- ============ دخول ARKAN — رقم الهاتف + OTP (نمط NALA) ============ -->
+<!-- ============ دخول BDL — رقم الهاتف + OTP (نمط NALA) ============ -->
 <style>
 #arkGate{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;
   padding:20px;background:linear-gradient(160deg,#F7FAFD 0%,#EAF3FE 100%);transition:opacity .5s,visibility .5s}
@@ -530,7 +530,7 @@ function startTimer(){
     <a href="#convert" onclick="toggleDrawer()">التحويل</a>
     <a href="#invoices" onclick="toggleDrawer()">المؤسسات</a>
     <a href="#request" onclick="toggleDrawer()">طلب تحويل</a>
-    <a href="chat-v2.html">المحادثة مع ARKAN</a>
+    <a href="chat-v2.html">المحادثة مع BDL</a>
     <a href="account.html">حسابي</a>
     <a href="settlement.html">لوحة التسوية</a>
   </div>
@@ -640,8 +640,8 @@ function startTimer(){
 <!-- ============ FEATURES ============ -->
 <section class="sec layer" id="why"><div class="wrap">
   <div class="sec-head">
-    <div class="kicker">WHY ARKAN</div>
-    <h2>لماذا ARKAN</h2>
+    <div class="kicker">WHY BDL</div>
+    <h2>لماذا BDL</h2>
   </div>
   <div class="feats">
     <div class="feat"><div class="n num">01</div><h3>سرعة فورية</h3><p>تحويلات تتم في ثوانٍ مع تحديث لحظي للأسعار.</p></div>
@@ -727,7 +727,7 @@ function startTimer(){
   </div>
 </div></section>
 
-<!-- ============ ARKAN SERVICES ============ -->
+<!-- ============ BDL SERVICES ============ -->
 <section class="sec layer" id="services"><div class="wrap">
   <div class="sec-head">
     <div class="kicker">ALL SERVICES</div>
@@ -1594,7 +1594,7 @@ window.arkanSubmit = async function(){
     if (window.toast) toast('تم إنشاء الطلب — احفظ رمزك');
     showPinModal(pin, ref, waUrl);
   } catch(e){
-    console.error('ARKAN reg error:', e);
+    console.error('BDL reg error:', e);
     alert('تعذّر الاتصال بقاعدة البيانات.\nالسبب: ' + (e.code||e.message||e) + '\n\nتأكد أن قواعد Firestore منشورة.');
   }
 };

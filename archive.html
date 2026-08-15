@@ -383,7 +383,7 @@ fill="#FFFFFF" stroke="none">
 </g>
 <path d="M16.2 30.2 L27.8 37.4" stroke="url(#akTile1)" stroke-width="2.6"/>
 </svg>
-    <div class="tt"><b>ARKAN <span>INTELLIGENCE</span></b><small>ARCHIVE · AI OCR 2.0</small></div>
+    <div class="tt"><b>BDL <span>INTELLIGENCE</span></b><small>ARCHIVE · AI OCR 2.0</small></div>
     <div class="sp"></div>
     <button class="gchip" id="gchip" onclick="promptKey()"><span class="d"></span><span id="gtxt">Gemini غير مفعّل</span></button>
   </div>
@@ -567,7 +567,7 @@ ${GEM_SCHEMA}
 - قيّم جودة الصورة في quality (مقصوصة؟ ضبابية؟ أثر تعديل؟ زوايا ناقصة؟).
 - confidence: ثقتك 0-100 في دقة المبلغ والمرجع.
 - field_confidence: ثقتك 0-100 في كل حقل على حدة (المبلغ، العملة، التاريخ، المرجع، البنك، المرسل، المستفيد). إن لم يوجد الحقل في المستند ضع 0.
-- receipt_side: صنّف الإيصال من منظور شركة ARKAN (أسماؤها: ARKAN، أركان، Mohamed Javer، Mohamed El Arbi): إذا كان المال واردًا إلى ARKAN من عميل → "customer". إذا كان المال صادرًا من ARKAN إلى طرف آخر (مورد/مستفيد خارجي) → "supplier". إذا لم تستطع الجزم → "unknown".`;
+- receipt_side: صنّف الإيصال من منظور شركة ARKAN (أسماؤها: ARKAN، أركان، Mohamed Javer، Mohamed El Arbi): إذا كان المال واردًا إلى BDL من عميل → "customer". إذا كان المال صادرًا من BDL إلى طرف آخر (مورد/مستفيد خارجي) → "supplier". إذا لم تستطع الجزم → "unknown".`;
   const body={contents:[{parts:[{text:prompt},{inline_data:{mime_type:mime||'image/jpeg',data:b64}}]}],
     generationConfig:{temperature:0,responseMimeType:'application/json'}};
   let j=null,ok=false,last='';
@@ -2263,7 +2263,7 @@ ${sheets.join('')}</Workbook>`;
 /* ═══ 6) تصدير JSON للمطابقة ═══ */
 function mJson(){
   const rows=mRows('all');
-  const out={report:'ARKAN Matching Export',generated:new Date().toISOString(),
+  const out={report:'BDL Matching Export',generated:new Date().toISOString(),
     tolerance_pc:MTOL(),alert_hours:AHRS(),
     operations:rows.map(r=>{const p=r.c.parsed||{};return{
       customer:{id:r.c.id,party:r.c.party||'',amount:r.own,currency:mCur(r.c),date:p.date||'',reference:p.reference||'',bank:p.bank||''},
@@ -2821,7 +2821,7 @@ window.exportPdfReport=function(){
     @media print{#pbtn{display:none}}
   </style></head><body>
   <button id="pbtn" onclick="print()" style="position:fixed;top:10px;left:10px;padding:9px 20px;background:#0058D9;color:#fff;border:0;border-radius:0;font-family:inherit;font-size:13px;cursor:pointer">طباعة / حفظ PDF</button>
-  <h1>ARKAN <span>Financial Archive</span> — كشف الإيصالات</h1>
+  <h1>BDL <span>Financial Archive</span> — كشف الإيصالات</h1>
   <div class="meta">
     <span>رقم الكشف: <b>${rid}</b></span><span>تاريخ الإنشاء: ${now}</span>
     <span>عدد الإيصالات: <b>${docs.length}</b></span><span>lbdal.com</span>
@@ -3270,7 +3270,7 @@ window.renderClients=function(){
 
 <!-- Desktop Sidebar -->
 <aside class="aksb" id="aksb">
-  <div class="lg">ARKAN Archive<small>Financial Document Manager</small></div>
+  <div class="lg">BDL Archive<small>Financial Document Manager</small></div>
   <button class="on" data-nv="arch" onclick="setView('arch')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/></svg>الأرشيف</button>
   <button data-nv="review" onclick="setView('review')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/></svg>يحتاج مراجعة</button>
   <button data-nv="chains" onclick="setView('chains')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007.5.5l3-3a5 5 0 00-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 00-7.5-.5l-3 3a5 5 0 007 7l1.7-1.7"/></svg>سلاسل التسوية</button>

@@ -69,7 +69,7 @@
       <div style="display:flex;align-items:center;gap:10px;padding:13px 16px;background:${NAVY};color:#fff">
         <div style="width:30px;height:30px;border-radius:9px;background:${GRAD};display:grid;place-items:center">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3Z"/></svg></div>
-        <b style="font-size:14.5px">مساعد ARKAN الذكي</b>
+        <b style="font-size:14.5px">مساعد BDL الذكي</b>
         <span style="margin-inline-start:auto;display:flex;gap:8px">
           <button id="ark-ai-set" title="مفتاح API" style="background:none;border:0;color:#cfe0ff;cursor:pointer;font-size:15px">⚙</button>
           <button id="ark-ai-x" style="background:none;border:0;color:#fff;cursor:pointer;font-size:17px">✕</button>

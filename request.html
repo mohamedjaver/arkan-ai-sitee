@@ -194,7 +194,7 @@ function applyRegisteredClient(){
 
 <div class="wrap" id="compWrap" style="display:none">
   <a href="./" style="display:flex;align-items:center;justify-content:center;gap:11px;margin-bottom:20px;text-decoration:none">
-    <svg width="38" height="38" style="flex-shrink:0;filter:drop-shadow(0 6px 16px rgba(0,153,255,.35))" aria-label="ARKAN" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <svg width="38" height="38" style="flex-shrink:0;filter:drop-shadow(0 6px 16px rgba(0,153,255,.35))" aria-label="BDL" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
 <defs><linearGradient id="akTile1" x1="6" y1="58" x2="58" y2="6" gradientUnits="userSpaceOnUse">
 <stop offset="0" stop-color="#0058D9"/><stop offset=".55" stop-color="#0058D9"/><stop offset="1" stop-color="#0058D9"/>
 </linearGradient></defs>
@@ -294,7 +294,7 @@ fill="#FFFFFF" stroke="none">
     <div class="step"><div class="n">4</div><div class="t">Pagamos o fornecedor e enviamos o comprovativo oficial<small>ندفع للمورد ونرسل إيصال التحويل الرسمي</small></div></div>
   </div>
 
-  <footer class="en">© ARKAN · +222 36 29 50 50</footer>
+  <footer class="en">© BDL · lbdal.com</footer>
 </div>
 
 <script>
@@ -800,7 +800,7 @@ async function uploadInvoice(){
     <div class="okSub">فريق لبدال سيؤكد معك عبر واتساب خلال دقائق<br>احتفظ برقم المرجع</div>
     <span class="okRef" id="okRef">—</span>
     <div class="okBtns" style="flex-direction:column;gap:9px">
-      <button class="okWa" id="okChatBtn">💬 متابعة داخل محادثة ARKAN</button>
+      <button class="okWa" id="okChatBtn">💬 متابعة داخل محادثة BDL</button>
       <button class="okClose" id="okSendBtn" style="border-color:rgba(37,211,102,.5)">إرسال عبر واتساب (خيار ثانٍ)</button>
       <button class="okClose" id="okCloseBtn" onclick="window._chatT&&clearTimeout(window._chatT);document.getElementById('okWrap').classList.remove('on')">إغلاق</button>
     </div>
@@ -1011,7 +1011,7 @@ async function sendReceipt(waUrl){
     /* 1) مشاركة كمستند PDF — يصل واتساب بجودة كاملة بدون ضغط */
     if(navigator.canShare&&navigator.canShare({files:[file]})){
       try{
-        await navigator.share({files:[file],title:'إيصال تحويل ARKAN',
+        await navigator.share({files:[file],title:'إيصال تحويل BDL',
           text:'طلب تحويل '+ref+' عبر BDL'});
         return;
       }catch(e){ if(e&&e.name==='AbortError')return; }
@@ -1068,7 +1068,7 @@ function okToSuccess(ref,waUrl,amount,currency){
   if(navigator.vibrate)navigator.vibrate([12,40,12]);
 }
 
-/* ═══ إرسال الطلب إلى محادثة ARKAN v2 ═══
+/* ═══ إرسال الطلب إلى محادثة BDL v2 ═══
    نحفظ تفاصيل الطلب محليًا، وchat-v2 ينشئه داخل المحادثة الموثقة (RLS) */
 async function sendToChat(ref){
   var d=window._pdfData||{};

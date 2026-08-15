@@ -58,7 +58,7 @@ function setBal(v){
   var amt=document.querySelector('.wkard .wamt');
   if(amt) amt.innerHTML=Number(v).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+'<small>USDT</small>';
   var lbl=document.querySelector('.wkard .wlbl');
-  if(lbl) lbl.textContent='ARKAN WALLET · محفظتك';
+  if(lbl) lbl.textContent='BDL WALLET · محفظتك';
   var ad=document.querySelector('.wkard .waddr');
   if(ad) ad.textContent='⧉  '+addr.slice(0,6)+'····'+addr.slice(-6);
 }

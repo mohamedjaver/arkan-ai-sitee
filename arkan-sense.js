@@ -186,7 +186,7 @@
     if (document.getElementById('akLock')) return document.getElementById('akLock');
     var d = document.createElement('div'); d.id = 'akLock';
     d.innerHTML = '<div class="bx"><div class="fid">' + FACE_SVG + '</div>' +
-      '<h3>ARKAN مقفل</h3><p>افتح بـ Face ID للمتابعة</p>' +
+      '<h3>BDL مقفل</h3><p>افتح بـ Face ID للمتابعة</p>' +
       '<button class="go" id="akUnlock">فتح بـ Face ID</button>' +
       '<button class="skip" id="akSkip">تخطٍّ هذه المرة</button></div>';
     document.body.appendChild(d);

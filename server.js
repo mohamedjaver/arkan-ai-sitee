@@ -72,7 +72,7 @@ async function createInvite(orderId) {
   if (!ENV.CHANNEL_ID) return null;
   const inv = await tg('createChatInviteLink', {
     chat_id: ENV.CHANNEL_ID,
-    name: `ARKAN ${orderId}`,
+    name: `BDL ${orderId}`,
     member_limit: 1,
   });
   return inv ? inv.invite_link : null;
@@ -88,7 +88,7 @@ async function fulfillOrder(order, txid) {
 
   if (order.tgChatId) {
     await sendMsg(order.tgChatId,
-      `✅ <b>تم تأكيد دفعتك بنجاح!</b>\nمرحبًا بك في عائلة ARKAN 🖤\n\n` +
+      `✅ <b>تم تأكيد دفعتك بنجاح!</b>\nمرحبًا بك في عائلة BDL 🖤\n\n` +
       `🧾 الطلب: <code>${order.id}</code>\n📦 ${order.productName} · ${order.planLabel}\n\n` +
       (order.invite ? `🔑 رابط دخولك الخاص (صالح لمرة واحدة):\n${order.invite}\n\n` : '') +
       `الآن أرسل <b>اسم حسابك في TradingView</b> ليتم تفعيل المؤشر على حسابك.`);
@@ -1007,7 +1007,7 @@ app.post('/admin/set-pin', async (req, res) => {
 });
 
 app.listen(ENV.PORT, () => {
-  console.log(`▲ ARKAN STORE on :${ENV.PORT}`);
+  console.log(`▲ BDL STORE on :${ENV.PORT}`);
   console.log(`  Wallet: ${ENV.WALLET}`);
   console.log(`  Bot: @${ENV.BOT_USERNAME} ${ENV.BOT_TOKEN ? '✓' : '✗ (TELEGRAM_BOT_TOKEN missing)'}`);
   console.log(`  Channel: ${ENV.CHANNEL_ID || '✗ (MEMBERS_CHANNEL_ID missing)'}`);

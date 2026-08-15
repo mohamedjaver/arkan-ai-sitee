@@ -1,4 +1,4 @@
-/* ARKAN i18n v2 — FULL trilingual AR/FR/PT */
+/* BDL i18n v2 — FULL trilingual AR/FR/PT */
 (function(){
 var DICT={
 /* NAV */
@@ -23,7 +23,7 @@ var DICT={
 "عرض تأسيسي محدود — خصم حتى":{fr:"Offre fondateurs limitée — jusqu'à",pt:"Oferta fundadores limitada — até"},
 "على خطة المؤسسين":{fr:"sur le plan fondateurs",pt:"no plano fundadores"},
 /* EXCHANGE SECTION */
-"لبدال للصرافة والتسوية الدولية":{fr:"ARKAN Change & Règlement International",pt:"ARKAN Câmbio & Liquidação Internacional"},
+"لبدال للصرافة والتسوية الدولية":{fr:"BDL Change & Règlement International",pt:"BDL Câmbio & Liquidação Internacional"},
 "أسعار يومية محدّثة بين الأوقية والكوانزا واليوان والدولار واليورو — جملة وتجزئة، وطلب تحويل مباشر عبر واتساب.":{
  fr:"Taux quotidiens actualisés entre Ouguiya, Kwanza, Yuan, Dollar et Euro — gros et détail, demande de transfert directe via WhatsApp.",
  pt:"Taxas diárias atualizadas entre Ouguiya, Kwanza, Yuan, Dólar e Euro — grosso e retalho, pedido de transferência direto via WhatsApp."},
@@ -128,7 +128,7 @@ var DICT={
 "لكل عملة حدّها — فوقه سعر الجملة، دونه التجزئة":{fr:"Chaque devise a son seuil — au-dessus : gros, en dessous : détail",pt:"Cada moeda tem o seu limite — acima: grosso, abaixo: retalho"},
 "اسمك (اختياري)":{fr:"Votre nom (optionnel)",pt:"O seu nome (opcional)"},
 "لا توجد أسعار.":{fr:"Aucun taux disponible.",pt:"Sem taxas disponíveis."},
-"اطلب الرابط المحدّث من ARKAN.":{fr:"Demandez le lien actualisé à ARKAN.",pt:"Peça o link atualizado à ARKAN."},
+"اطلب الرابط المحدّث من BDL.":{fr:"Demandez le lien actualisé à BDL.",pt:"Peça o link atualizado à BDL."},
 "تعذّر تحميل الأسعار — إعادة المحاولة…":{fr:"Échec du chargement — nouvelle tentative…",pt:"Falha ao carregar — a tentar novamente…"},
 /* REQUEST PAGE */
 "تحويلات الشركات الدولية":{fr:"Transferts internationaux d'entreprise",pt:"Transferências empresariais internacionais"},
@@ -158,7 +158,7 @@ var DICT={
 "ارفع فاتورتك — قراءة تلقائية ←":{fr:"Chargez votre facture — lecture auto ←",pt:"Carregue a fatura — leitura automática ←"},
 "جدول بثلاث شرائح":{fr:"Tableau à trois paliers",pt:"Tabela de três níveis"},
 "عملة مدعومة":{fr:"devises supportées",pt:"moedas suportadas"},
-"ARKAN INTERNATIONAL — الصرافة وأنظمة التداول المؤسسية":{fr:"ARKAN INTERNATIONAL — Change & Systèmes de Trading Institutionnels",pt:"ARKAN INTERNATIONAL — Câmbio & Sistemas de Trading Institucionais"},
+"BDL INTERNATIONAL — الصرافة وأنظمة التداول المؤسسية":{fr:"BDL INTERNATIONAL — Change & Systèmes de Trading Institutionnels",pt:"BDL INTERNATIONAL — Câmbio & Sistemas de Trading Institucionais"},
 "كل مؤشر مبني على Pine Script v6، مُحسّن بصريًا ليُقرأ في ثانية — ويُفعّل على حسابك في TradingView خلال دقائق.":{fr:"Chaque indicateur est construit en Pine Script v6, optimisé pour une lecture instantanée — activé sur votre TradingView en minutes.",pt:"Cada indicador é construído em Pine Script v6, otimizado para leitura instantânea — ativado no seu TradingView em minutos."},
 "جميع مؤشرات ARKAN AI Trading Systems أدوات تحليلية وتعليمية فقط، ولا تُعد نصيحة استثمارية. التداول ينطوي على مخاطر عالية.":{fr:"Tous les indicateurs BDL AI sont des outils analytiques et éducatifs uniquement, et ne constituent pas un conseil en investissement. Le trading comporte des risques élevés.",pt:"Todos os indicadores BDL AI são ferramentas analíticas e educativas apenas, não constituindo aconselhamento de investimento. O trading envolve riscos elevados."},
 "/ شهريًا":{fr:"/ mois",pt:"/ mês"},
@@ -212,9 +212,9 @@ var DICT={
 "المطلوب استلامه":{fr:"À recevoir",pt:"A receber"},
 "أدخل المبلغ":{fr:"Saisissez le montant",pt:"Insira o montante"},
 "أؤكد رغبتي في التحويل.":{fr:"Je confirme ma demande de transfert.",pt:"Confirmo o meu pedido de transferência."},
-"ARKAN — طلب تحويل":{fr:"ARKAN — Demande de transfert",pt:"ARKAN — Pedido de transferência"},
-"ARKAN — أسعار الصرف اليوم":{fr:"ARKAN — Taux de change du jour",pt:"ARKAN — Taxas de câmbio de hoje"},
-"ARKAN — Pagamentos Internacionais | تحويلات دولية":{fr:"ARKAN — Paiements Internationaux",pt:"ARKAN — Pagamentos Internacionais"},
+"BDL — طلب تحويل":{fr:"BDL — Demande de transfert",pt:"BDL — Pedido de transferência"},
+"BDL — أسعار الصرف اليوم":{fr:"BDL — Taux de change du jour",pt:"BDL — Taxas de câmbio de hoje"},
+"BDL — Pagamentos Internacionais | تحويلات دولية":{fr:"BDL — Paiements Internationaux",pt:"BDL — Pagamentos Internacionais"},
 "إغلاق":{fr:"Fermer",pt:"Fechar"},
 "تم نسخ العنوان":{fr:"Adresse copiée",pt:"Endereço copiado"},
 "تم نسخ المبلغ":{fr:"Montant copié",pt:"Montante copiado"},
@@ -364,8 +364,8 @@ var DICT={
 "المبلغ:":{fr:"Montant :",pt:"Montante:"},
 "إلى:":{fr:"Vers :",pt:"Para:"},
 "إلى":{fr:"vers",pt:"para"},
-"مرحبًا ARKAN، أريد الاستفسار عن تحويل":{fr:"Bonjour ARKAN, je souhaite des informations sur un transfert de",pt:"Olá ARKAN, gostaria de informações sobre uma transferência de"},
-"مرحبًا ARKAN، أريد الاشتراك في خطة":{fr:"Bonjour ARKAN, je souhaite souscrire au plan",pt:"Olá ARKAN, gostaria de subscrever o plano"},
+"مرحبًا BDL، أريد الاستفسار عن تحويل":{fr:"Bonjour BDL, je souhaite des informations sur un transfert de",pt:"Olá BDL, gostaria de informações sobre uma transferência de"},
+"مرحبًا BDL، أريد الاشتراك في خطة":{fr:"Bonjour BDL, je souhaite souscrire au plan",pt:"Olá BDL, gostaria de subscrever o plano"},
 "دفع آمن":{fr:"Paiement sécurisé",pt:"Pagamento seguro"},
 "تفعيل فوري":{fr:"Activation immédiate",pt:"Ativação imediata"},
 "دعم Telegram":{fr:"Support Telegram",pt:"Suporte Telegram"},
@@ -419,7 +419,7 @@ var DICT={
 "أسعار الشراء والبيع محدّثة يوميًا مقابل الأوقية الموريتانية.":{fr:"Cours acheteur et vendeur actualisés quotidiennement contre l'Ouguiya.",pt:"Preços de compra e venda atualizados diariamente contra o Ouguiya."},
 "سعر الشراء":{fr:"Cours acheteur",pt:"Preço de compra"},
 "سعر البيع":{fr:"Cours vendeur",pt:"Preço de venda"},
-"لماذا ARKAN":{fr:"Pourquoi ARKAN",pt:"Porquê a ARKAN"},
+"لماذا BDL":{fr:"Pourquoi BDL",pt:"Porquê a BDL"},
 "سرعة فورية":{fr:"Rapidité instantanée",pt:"Rapidez instantânea"},
 "تحويلات تتم في ثوانٍ مع تحديث لحظي للأسعار.":{fr:"Des transferts en quelques secondes avec des taux actualisés en temps réel.",pt:"Transferências em segundos com taxas atualizadas em tempo real."},
 "أمان مؤسسي":{fr:"Sécurité institutionnelle",pt:"Segurança institucional"},
@@ -448,13 +448,13 @@ var DICT={
 "فرنك غرب أفريقي":{fr:"Franc CFA (UEMOA)",pt:"Franco CFA (UEMOA)"},
 
 /* ACCOUNT PAGE (account.html) */
-"ARKAN — حسابي":{fr:"ARKAN — Mon compte",pt:"ARKAN — Minha conta"},
-"لبدال — حسابي":{fr:"ARKAN — Mon compte",pt:"ARKAN — Minha conta"},
+"BDL — حسابي":{fr:"BDL — Mon compte",pt:"BDL — Minha conta"},
+"لبدال — حسابي":{fr:"BDL — Mon compte",pt:"BDL — Minha conta"},
 "حسابي":{fr:"Mon compte",pt:"Minha conta"},
 "مرحباً":{fr:"Bienvenue",pt:"Bem-vindo"},
-"إجمالي ما حوّلته عبرنا":{fr:"Total transféré via ARKAN",pt:"Total transferido via ARKAN"},
+"إجمالي ما حوّلته عبرنا":{fr:"Total transféré via BDL",pt:"Total transferido via BDL"},
 "رقمك المرجعي":{fr:"Votre référence",pt:"Sua referência"},
-"حسابك قيد التفعيل — سيؤكده فريق لبدال قريباً.":{fr:"Votre compte est en cours d'activation — l'équipe ARKAN le confirmera bientôt.",pt:"A sua conta está em ativação — a equipa ARKAN irá confirmá-la em breve."},
+"حسابك قيد التفعيل — سيؤكده فريق لبدال قريباً.":{fr:"Votre compte est en cours d'activation — l'équipe BDL le confirmera bientôt.",pt:"A sua conta está em ativação — a equipa BDL irá confirmá-la em breve."},
 "تحويل":{fr:"Transfert",pt:"Transferir"},
 "إيداع":{fr:"Dépôt",pt:"Depósito"},
 "السجل":{fr:"Historique",pt:"Histórico"},
@@ -512,7 +512,7 @@ var DICT={
 "البنك":{fr:"Banque",pt:"Banco"},
 "إرسال الطلب عبر واتساب":{fr:"Envoyer la demande via WhatsApp",pt:"Enviar o pedido via WhatsApp"},
 "تم استلام طلب التحويل":{fr:"Demande de transfert reçue",pt:"Pedido de transferência recebido"},
-"فريق لبدال سيؤكد معك عبر واتساب خلال دقائق":{fr:"L'équipe ARKAN confirmera avec vous sur WhatsApp en quelques minutes",pt:"A equipa ARKAN irá confirmar consigo no WhatsApp em minutos"},
+"فريق لبدال سيؤكد معك عبر واتساب خلال دقائق":{fr:"L'équipe BDL confirmera avec vous sur WhatsApp en quelques minutes",pt:"A equipa BDL irá confirmar consigo no WhatsApp em minutos"},
 "احتفظ برقم المرجع":{fr:"Conservez le numéro de référence",pt:"Guarde o número de referência"},
 "إرسال الإيصال عبر واتساب":{fr:"Envoyer le reçu via WhatsApp",pt:"Enviar o recibo via WhatsApp"},
 "محمد ولد أحمد":{fr:"Ex. : Mohamed Ould Ahmed",pt:"Ex.: Mohamed Ould Ahmed"},
@@ -520,8 +520,8 @@ var DICT={
 "الاسم كما في الحساب البنكي":{fr:"Nom tel qu'indiqué sur le compte bancaire",pt:"Nome como consta na conta bancária"},
 "تحوّل":{fr:"Convertissez",pt:"Converta"},
 "✎ تعديل المبلغ أو العملة":{fr:"✎ Modifier le montant ou la devise",pt:"✎ Alterar o valor ou a moeda"},
-"خدمات ومنصّات لبدال":{fr:"Services & plateformes ARKAN",pt:"Serviços e plataformas ARKAN"},
-"كل أدوات لبدال في مكان واحد — الأسعار، الطلبات، الأرشيف، التسويات، والمزيد.":{fr:"Tous les outils ARKAN au même endroit — taux, demandes, archives, règlements et plus.",pt:"Todas as ferramentas ARKAN num só lugar — cotações, pedidos, arquivo, liquidações e mais."},
+"خدمات ومنصّات لبدال":{fr:"Services & plateformes BDL",pt:"Serviços e plataformas BDL"},
+"كل أدوات لبدال في مكان واحد — الأسعار، الطلبات، الأرشيف، التسويات، والمزيد.":{fr:"Tous les outils BDL au même endroit — taux, demandes, archives, règlements et plus.",pt:"Todas as ferramentas BDL num só lugar — cotações, pedidos, arquivo, liquidações e mais."},
 };
 
 var LANGS=['ar','fr','pt'];

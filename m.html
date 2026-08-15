@@ -363,7 +363,7 @@ window.addEventListener('unhandledrejection',function(e){bfail((e&&e.reason&&e.r
       <button class="hbtn" onclick="location.href='settings.html'" aria-label="الإعدادات">
         <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="3.4"/><path d="M5 20c1.4-3.3 4-5 7-5s5.6 1.7 7 5"/></svg>
       </button>
-      <h1>ARKAN <span>Chat</span></h1>
+      <h1>BDL <span>Chat</span></h1>
       <button class="hbtn" onclick="arkanLogout()" aria-label="تسجيل الخروج" title="تسجيل الخروج">
         <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>
       </button>
@@ -753,7 +753,7 @@ async function boot(){
   window.addEventListener('offline',()=>$('offline').classList.add('on'));
 
   if(MY_ROLE==='customer'){
-    /* العميل: يدخل مباشرة إلى محادثته الدائمة مع ARKAN */
+    /* العميل: يدخل مباشرة إلى محادثته الدائمة مع BDL */
     $('scList').style.display='none';
     let convId=row&&row.conversation_id;
     if(!convId){
