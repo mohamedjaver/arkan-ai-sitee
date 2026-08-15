@@ -331,8 +331,8 @@ async function trackConfirm(txid){
 async function makeReceipt(){
   try{
     await (document.fonts&&document.fonts.ready||Promise.resolve());
-    var W=1240,H=1754, cv=document.createElement('canvas'); cv.width=W; cv.height=H;
-    var x=cv.getContext('2d');
+    var W=1240,H=1754, SC=2, cv=document.createElement('canvas'); cv.width=W*SC; cv.height=H*SC;
+    var x=cv.getContext('2d'); x.scale(SC,SC);
     function rr(c,px,py,pw,ph,r){ c.beginPath(); c.moveTo(px+r,py); c.arcTo(px+pw,py,px+pw,py+ph,r);
       c.arcTo(px+pw,py+ph,px,py+ph,r); c.arcTo(px,py+ph,px,py,r); c.arcTo(px,py,px+pw,py,r); c.closePath(); }
 
@@ -415,8 +415,8 @@ async function makeReceipt(){
     x.font='400 19px Arial'; x.direction='ltr'; x.fillStyle='rgba(255,255,255,.6)';
     x.fillText('ARKAN INTERNATIONAL TRADING · Non-Custodial Wallet · '+new Date().getFullYear(), W/2, 1738);
 
-    var img=cv.toDataURL('image/jpeg',.92);
-    var name='ARKAN-receipt-'+SEND.tx.slice(0,8);
+    var img=cv.toDataURL('image/jpeg',.95);
+    var name='BDL-receipt-'+SEND.tx.slice(0,8);
     var JS=window.jspdf&&window.jspdf.jsPDF;
     if(!JS){ dl(img,name+'.jpg'); return null; }
     var pdf=new JS({unit:'pt',format:'a4'});
