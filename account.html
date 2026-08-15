@@ -1048,7 +1048,7 @@ async function ownerSetPin(){
 const MRB_BANKS=[
  {k:'bankily', n:'Bankily',  ar:'بنكيلي',  keys:['BANKILY','بنكيلي','بانكيلي']},
  {k:'masrvi',  n:'Masrvi',   ar:'مصرفي',   keys:['MASRVI','MASRIVI','BMCI','مصرفي']},
- {k:'sedad',   n:'Sedad',    ar:'السداد',  keys:['SEDAD','SADAD','GBM','السداد','سداد']},
+ {k:'sedad',   n:'Sedad',    ar:'السداد',  keys:['SEDAD','SADAD','BML','GBM','السداد','سداد']},
  {k:'bim',     n:'BIM Bank', ar:'بيم',     keys:['BIM','بيم']},
  {k:'amanty',  n:'Amanty',   ar:'أمانتي',  keys:['AMANTY','أمانتي']},
  {k:'other',   n:'',         ar:'',        keys:[]}
@@ -1141,8 +1141,10 @@ function mrbMake(){
   const SC=2, W=1080;
   let rows;
   if(MRB_IMG){
-    rows=[['المستلم',name],['القناة',mrbChan()],
-          ['المبلغ بالقديمة',mrbFmt(amt*10)+' UM']];
+    rows=[['المستلم',name]];
+    if(to&&to!=='—')rows.push(['رقم المستلم',to]);
+    rows.push(['القناة',mrbChan()],['المبلغ',mrbFmt(amt)+' MRU'],['بالقديمة',mrbFmt(amt*10)+' UM']);
+    if(ref)rows.push(['رقم العملية',ref]);
   }else{
     rows=[['القناة',mrbChan()],['المستلم',name],['رقم المستلم',to],
           ['المبلغ',mrbFmt(amt)+' MRU'],['بالقديمة',mrbFmt(amt*10)+' UM']];
@@ -1153,7 +1155,8 @@ function mrbMake(){
   if(MRB_IMG){
     MRB_CROP = MRB_CROP || mrbCropCard(MRB_IMG);
     cimg = MRB_CROP || MRB_IMG;
-    bh = Math.min(720, Math.round(bw*cimg.height/cimg.width));
+    bh = Math.round(bw*cimg.height/cimg.width);
+    if(bh>920){ bh=920; bw=Math.round(bh*cimg.width/cimg.height); }
   }
   const rowsY0=560, rowsH=rows.length*116;
   const H = MRB_IMG ? (rowsY0+rowsH+70+bh+160) : (rowsY0+rowsH+180);
@@ -1233,7 +1236,8 @@ async function mrbReadReceipt(file){
     if(p&&p.amount){ document.getElementById('mrbAmt').value=p.amount; }
     if(p&&p.txn){ document.getElementById('mrbRef').value=p.txn; }
     if(p&&p.receiver){ document.getElementById('mrbTo').value=p.receiver; }
-    MRB_CUR=mrbBankOf(p&&p.bank);
+    if(p&&p.name){ document.getElementById('mrbName').value=p.name; }
+    MRB_CUR=mrbBankOf((p&&p.bank||'')+' '+(p&&p.name||''));
     document.getElementById('mrbBankName').textContent=MRB_CUR.n||'';
     msg.style.color='#0B7A3B';
     msg.textContent=p&&p.amount?('✓ قُرئ: '+(MRB_CUR.n?MRB_CUR.n+' · ':'')+Number(p.amount).toLocaleString()+' '+(p.ccy||'MRU')+(p.txn?' · عملية '+p.txn:'')+(p.receiver?' · حساب '+p.receiver:'')):'لم تُقرأ تلقائيًا — أكمل الخانات يدويًا';
