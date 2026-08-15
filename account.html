@@ -1048,6 +1048,65 @@ function mrbOpen(i){
   }, 900);
 }
 function mrbClose(){document.getElementById('mrbSheet').style.display='none';}
+
+/* قصّ بطاقة النجاح تلقائيًا: أكبر كتلة بيضاء متصلة + امتداد الشريط السماوي أسفلها */
+function mrbCropCard(img){
+  try{
+    const DW=Math.min(360, img.width);
+    const scale=DW/img.width, DH=Math.round(img.height*scale);
+    const c=document.createElement('canvas'); c.width=DW; c.height=DH;
+    const g=c.getContext('2d'); g.drawImage(img,0,0,DW,DH);
+    const d=g.getImageData(0,0,DW,DH).data;
+    const white=(i)=>d[i]>228&&d[i+1]>228&&d[i+2]>228;
+    // بداية التعبئة: أول بكسل أبيض قرب المركز
+    let sx=-1, sy=-1;
+    outer:
+    for(let r=0;r<Math.min(DW,DH)/2;r+=4){
+      for(const [dx,dy] of [[0,0],[r,0],[-r,0],[0,r],[0,-r],[r,r],[-r,-r],[r,-r],[-r,r]]){
+        const px=(DW>>1)+dx, py=(DH>>1)+dy;
+        if(px<0||py<0||px>=DW||py>=DH)continue;
+        if(white((py*DW+px)*4)){sx=px;sy=py;break outer;}
+      }
+    }
+    if(sx<0)return null;
+    // BFS
+    const seen=new Uint8Array(DW*DH); const q=[sy*DW+sx]; seen[q[0]]=1;
+    let minX=sx,maxX=sx,minY=sy,maxY=sy,count=0;
+    while(q.length){
+      const p=q.pop(); count++;
+      const px=p%DW, py=(p/DW)|0;
+      if(px<minX)minX=px; if(px>maxX)maxX=px;
+      if(py<minY)minY=py; if(py>maxY)maxY=py;
+      for(const n of [p-1,p+1,p-DW,p+DW]){
+        if(n<0||n>=DW*DH||seen[n])continue;
+        const nx=n%DW; if(Math.abs(nx-px)>1)continue;
+        if(white(n*4)){seen[n]=1;q.push(n);}
+      }
+    }
+    if(count < DW*DH*0.06) return null; // كتلة صغيرة جدًا — ليست البطاقة
+    // امتداد الشريط السماوي (Done!) أسفل البطاقة
+    let ext=maxY;
+    for(let ry=maxY+1; ry<Math.min(DH,maxY+Math.round(DH*0.12)); ry++){
+      let bright=0, n=0;
+      for(let rx=minX; rx<=maxX; rx+=3){
+        const i=(ry*DW+rx)*4; const lum=(d[i]+d[i+1]+d[i+2])/3;
+        if(lum>120)bright++; n++;
+      }
+      if(bright/n>0.6)ext=ry; else break;
+    }
+    maxY=ext;
+    // إعادة للقياس الأصلي + هامش صغير
+    const pad=Math.round(4/scale);
+    const ox=Math.max(0,Math.round(minX/scale)-pad);
+    const oy=Math.max(0,Math.round(minY/scale)-pad);
+    const ow=Math.min(img.width-ox, Math.round((maxX-minX)/scale)+pad*2);
+    const oh=Math.min(img.height-oy, Math.round((maxY-minY)/scale)+pad*2);
+    const out=document.createElement('canvas'); out.width=ow; out.height=oh;
+    out.getContext('2d').drawImage(img, ox,oy,ow,oh, 0,0,ow,oh);
+    return out;
+  }catch(e){ return null; }
+}
+
 function mrbMake(){
   const name=document.getElementById('mrbName').value.trim()||'—';
   const to=document.getElementById('mrbTo').value.trim()||'—';
@@ -1078,15 +1137,53 @@ function mrbMake(){
   x.fillStyle='#1FA855'; mrbRR(x,110,y,290,70,35); x.fill();
   x.fillStyle='#fff'; x.font='700 34px "IBM Plex Sans Arabic",Arial'; x.textAlign='center';
   x.fillText('✓ تم التحويل',255,y+47);
+  let H=1350;
   if(MRB_IMG){
+    MRB_CROP = mrbCropCard(MRB_IMG);
+    const cimg = MRB_CROP || MRB_IMG;
+    const cw = cimg.width, chh = cimg.height;
+    const bw=760, bh=Math.min(720, Math.round(bw*chh/cw));
+    H = y+150+bh+140;
+    /* إعادة رسم بالارتفاع الجديد */
+    cv.height=H;
+    const g2=x.createLinearGradient(0,0,0,H); g2.addColorStop(0,'#0D3A8C'); g2.addColorStop(1,'#082253');
+    x.fillStyle=g2; x.fillRect(0,0,1080,H);
+    x.fillStyle='#F7FAFF'; mrbRR(x,60,240,960,H-350,28); x.fill();
+    x.fillStyle='#FFFFFF'; x.font='800 92px Inter,Arial'; x.textAlign='left';
+    x.fillText('BDL',80,150);
+    x.font='600 34px Inter,Arial'; x.fillStyle='#8FB8E8'; x.fillText('EXCHANGE · lbdal.com',80,200);
+    x.textAlign='right'; x.font='700 40px "IBM Plex Sans Arabic",Arial'; x.fillStyle='#FFFFFF';
+    x.fillText('وصل تحويل', 1000,150);
+    x.font='500 30px Inter,Arial'; x.fillStyle='#8FB8E8';
+    x.fillText(d.toLocaleDateString('fr-FR')+' '+d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}),1000,200);
+    x.textAlign='right'; y=340;
+    rows.forEach(r=>{
+      x.font='500 33px "IBM Plex Sans Arabic",Arial'; x.fillStyle='#5A7396'; x.fillText(r[0],960,y);
+      x.font='700 43px Inter,"IBM Plex Sans Arabic",Arial'; x.fillStyle='#0B2447'; x.fillText(String(r[1]),960,y+56);
+      x.strokeStyle='#E3ECF8'; x.beginPath(); x.moveTo(110,y+88); x.lineTo(960,y+88); x.stroke();
+      y+=116;
+    });
+    x.fillStyle='#1FA855'; mrbRR(x,110,y,290,70,35); x.fill();
+    x.fillStyle='#fff'; x.font='700 34px "IBM Plex Sans Arabic",Arial'; x.textAlign='center';
+    x.fillText('✓ تم التحويل',255,y+47);
+    /* البطاقة المقصوصة داخل إطار */
     x.textAlign='right'; x.font='600 29px "IBM Plex Sans Arabic",Arial'; x.fillStyle='#5A7396';
-    x.fillText('📎 الإيصال الأصلي ('+MRB_CUR.n+') مرفق بدقة كاملة — الصفحة 2', 960, y+130);
+    x.fillText('الإيصال الأصلي — '+MRB_CUR.n, 960, y+120);
+    const bx=(1080-bw)/2, by=y+150;
+    x.save();
+    x.shadowColor='rgba(3,26,69,.18)'; x.shadowBlur=24; x.shadowOffsetY=8;
+    x.fillStyle='#FFFFFF'; mrbRR(x,bx-10,by-10,bw+20,bh+20,22); x.fill();
+    x.restore();
+    x.save(); mrbRR(x,bx,by,bw,bh,16); x.clip();
+    x.drawImage(cimg, bx, by, bw, bh);
+    x.restore();
+    x.strokeStyle='#D7E4F5'; x.lineWidth=2; mrbRR(x,bx-10,by-10,bw+20,bh+20,22); x.stroke();
   }
   x.textAlign='center'; x.fillStyle='#8FB8E8'; x.font='500 28px Inter,Arial';
-  x.fillText('ARKAN INTERNATIONAL TRADING · WhatsApp 36295050',540,1308);
+  x.fillText('ARKAN INTERNATIONAL TRADING · WhatsApp 36295050',540,H-42);
   document.getElementById('mrbOut').style.display='block';
 }
-let MRB_IMG=null, MRB_IMG_W=0, MRB_IMG_H=0;
+let MRB_IMG=null, MRB_IMG_W=0, MRB_IMG_H=0, MRB_CROP=null;
 async function mrbReadReceipt(file){
   if(!file)return;
   const msg=document.getElementById('mrbReadMsg'), btn=document.getElementById('mrbUpBtn');
