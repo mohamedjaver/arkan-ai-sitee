@@ -222,8 +222,19 @@
         <div class="act" data-goto="s-rates"><div class="ic"><svg fill="none" stroke="#486581" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 17l6-6 4 4 8-8m0 0h-5m5 0v5"/></svg></div><span>الأسعار</span></div>
         <div class="act" data-goto="s-acct"><div class="ic"><svg fill="none" stroke="#486581" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/></svg></div><span>السجل</span></div>
       </div>
-      <div class="sec"><h2>بنوك موريتانيا</h2><span style="font-size:12px;color:#8AA3C4">حوّل ثم ولّد وصل BDL</span></div>
-      <div id="mrbRow" style="display:flex;gap:12px;overflow-x:auto;padding:2px 2px 12px;-webkit-overflow-scrolling:touch;scrollbar-width:none"></div>
+      <div class="sec"><h2>وصل التحويل</h2><span style="font-size:12px;color:#8AA3C4">ارفع إيصال أي بنك — قراءة تلقائية</span></div>
+      <div class="mrbUni" onclick="mrbPick()">
+        <div class="mrbUniTop"><b>BDL · وصل موحّد</b><span class="chip"></span></div>
+        <div class="mrbUniMid">
+          <div class="mrbUniIco"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7V5a2 2 0 0 1 2-2h2"/><path d="M16 3h2a2 2 0 0 1 2 2v2"/><path d="M20 17v2a2 2 0 0 1-2 2h-2"/><path d="M8 21H6a2 2 0 0 1-2-2v-2"/><line x1="4" y1="12" x2="20" y2="12"/></svg></div>
+          <div>
+            <div style="font-size:15.5px;font-weight:800">ارفع وصل أي بنك</div>
+            <div style="font-size:11.5px;opacity:.85;margin-top:3px">صورة أو PDF · يُقرأ المبلغ والبنك ورقم العملية تلقائيًا</div>
+          </div>
+        </div>
+        <div class="mrbUniBanks"><span>Bankily</span><span>Masrvi</span><span>Sedad</span><span>BIM</span><span>+ أي بنك</span></div>
+        <button class="mrbUniManual" onclick="mrbManual(event)">إدخال يدوي</button>
+      </div>
       <div class="sec"><h2>أسعار اليوم</h2><a data-goto="s-rates">عرض الكل</a></div>
       <div class="rates" id="homeRates"><div class="sk"></div><div class="sk"></div></div>
       <div class="sec" style="margin-top:30px"><h2>آخر المعاملات</h2><a data-goto="s-acct">الكل</a></div>
@@ -997,7 +1008,7 @@ async function ownerSetPin(){
       <b style="font-size:17px">وصل تحويل <span id="mrbBankName"></span> <small style="color:#B8C9E2;font-weight:500;font-size:10px">v16</small></b>
       <button onclick="mrbClose()" style="border:0;background:#EEF3FB;width:32px;height:32px;border-radius:50%;font-size:16px;cursor:pointer">✕</button>
     </div>
-    <button onclick="document.getElementById('mrbFile').click()" id="mrbUpBtn" style="width:100%;padding:13px;border:2px dashed #7FA8DC;background:#F2F8FF;color:#0A56B8;font-weight:800;font-size:14px;border-radius:12px;cursor:pointer">📷 رفع إيصال بنكيلي — قراءة تلقائية</button>
+    <button onclick="document.getElementById('mrbFile').click()" id="mrbUpBtn" style="width:100%;padding:13px;border:2px dashed #7FA8DC;background:#F2F8FF;color:#0A56B8;font-weight:800;font-size:14px;border-radius:12px;cursor:pointer">📷 رفع إيصال أي بنك — قراءة تلقائية</button>
     <input type="file" id="mrbFile" accept="image/*,.pdf" style="display:none" onchange="mrbReadReceipt(this.files[0])">
     <img id="mrbThumb" style="display:none;width:70px;height:70px;object-fit:cover;border-radius:10px;margin-top:8px;border:2px solid #C7D8EE">
     <div id="mrbReadMsg" style="font-size:12.5px;margin-top:6px;min-height:16px;color:#5A7396"></div>
@@ -1018,35 +1029,48 @@ async function ownerSetPin(){
 <style>
 .mrbL{display:block;font-size:12.5px;color:#5A7396;margin:10px 0 5px}
 .mrbI{width:100%;padding:12px;border:1px solid #C7D8EE;border-radius:10px;font-size:15px;direction:ltr;text-align:left}
-.mrbCard{min-width:166px;height:102px;border-radius:16px;padding:14px 16px;color:#fff;display:flex;flex-direction:column;justify-content:space-between;cursor:pointer;box-shadow:0 10px 24px rgba(3,26,69,.22);flex:0 0 auto;position:relative;overflow:hidden}
-.mrbCard::after{content:"";position:absolute;top:-30px;left:-30px;width:110px;height:110px;border-radius:50%;background:rgba(255,255,255,.12)}
-.mrbCard b{font-size:17px;letter-spacing:.3px}
-.mrbCard small{font-size:11px;opacity:.85}
-.mrbCard .chip{width:28px;height:20px;border-radius:5px;background:linear-gradient(135deg,#FFE9A8,#D9B44A)}
+.mrbUni{position:relative;overflow:hidden;border-radius:20px;padding:18px 18px 16px;color:#fff;cursor:pointer;margin-bottom:6px;
+  background:linear-gradient(135deg,#19A9F5 0%,#0A56B8 55%,#0B2F70 100%);
+  box-shadow:0 14px 34px rgba(10,86,184,.35);transition:transform .18s ease}
+.mrbUni:active{transform:scale(.985)}
+.mrbUni::after{content:"";position:absolute;top:-46px;left:-46px;width:170px;height:170px;border-radius:50%;background:rgba(255,255,255,.10)}
+.mrbUni::before{content:"";position:absolute;bottom:-60px;right:-40px;width:200px;height:200px;border-radius:50%;background:rgba(255,255,255,.06)}
+.mrbUniTop{display:flex;justify-content:space-between;align-items:flex-start;position:relative;z-index:1}
+.mrbUniTop b{font-size:16px;letter-spacing:.3px}
+.mrbUni .chip{width:30px;height:21px;border-radius:5px;background:linear-gradient(135deg,#FFE9A8,#D9B44A)}
+.mrbUniMid{display:flex;align-items:center;gap:13px;margin:16px 0 14px;position:relative;z-index:1}
+.mrbUniIco{width:50px;height:50px;border-radius:14px;background:rgba(255,255,255,.16);display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+.mrbUniBanks{display:flex;gap:7px;flex-wrap:wrap;position:relative;z-index:1;padding-left:96px}
+.mrbUniBanks span{font-size:10.5px;font-weight:700;padding:4px 10px;border-radius:99px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.22)}
+.mrbUniManual{position:absolute;bottom:14px;left:16px;z-index:2;border:0;background:rgba(255,255,255,.92);color:#0A56B8;font-weight:800;font-size:11.5px;padding:7px 14px;border-radius:99px;cursor:pointer}
 </style>
 <script>
 const MRB_BANKS=[
- {k:'bankily', n:'Bankily',  ar:'بنكيلي', g:'linear-gradient(135deg,#0E7C86,#063E44)', scheme:'bankily://'},
- {k:'masrvi',  n:'Masrvi',   ar:'مصرفي',  g:'linear-gradient(135deg,#1B8A4B,#0B4426)', scheme:'masrvi://'},
- {k:'sedad',   n:'Sedad',    ar:'السداد', g:'linear-gradient(135deg,#4553D8,#1A2470)', scheme:'sedad://'},
- {k:'bim',     n:'BIM Bank', ar:'بيم',    g:'linear-gradient(135deg,#C4392E,#5E120C)', scheme:'bimbank://'}
+ {k:'bankily', n:'Bankily',  ar:'بنكيلي',  keys:['BANKILY','بنكيلي','بانكيلي']},
+ {k:'masrvi',  n:'Masrvi',   ar:'مصرفي',   keys:['MASRVI','MASRIVI','BMCI','مصرفي']},
+ {k:'sedad',   n:'Sedad',    ar:'السداد',  keys:['SEDAD','SADAD','GBM','السداد','سداد']},
+ {k:'bim',     n:'BIM Bank', ar:'بيم',     keys:['BIM','بيم']},
+ {k:'amanty',  n:'Amanty',   ar:'أمانتي',  keys:['AMANTY','أمانتي']},
+ {k:'other',   n:'',         ar:'',        keys:[]}
 ];
-let MRB_CUR=MRB_BANKS[0];
-(function(){
-  const row=document.getElementById('mrbRow'); if(!row)return;
-  row.innerHTML=MRB_BANKS.map((b,i)=>`
-   <div class="mrbCard" style="background:${b.g}" onclick="mrbOpen(${i})">
-     <div style="display:flex;justify-content:space-between;align-items:flex-start"><b>${b.n}</b><span class="chip"></span></div>
-     <div><small>${b.ar} · اضغط للتحويل</small></div>
-   </div>`).join('');
-})();
-function mrbOpen(i){
-  MRB_CUR=MRB_BANKS[i];
-  location.href=MRB_CUR.scheme;
-  setTimeout(()=>{
-    document.getElementById('mrbBankName').textContent=MRB_CUR.n;
-    document.getElementById('mrbSheet').style.display='block';
-  }, 900);
+let MRB_CUR=MRB_BANKS[MRB_BANKS.length-1];
+function mrbBankOf(s){
+  const up=String(s||'').toUpperCase();
+  return MRB_BANKS.find(b=>b.keys.some(k=>up.includes(k)||String(s||'').includes(k)))
+      || MRB_BANKS[MRB_BANKS.length-1];
+}
+function mrbChan(){ return MRB_CUR.n ? (MRB_CUR.n+' — '+MRB_CUR.ar) : 'تحويل بنكي'; }
+function mrbPick(){
+  MRB_CUR=MRB_BANKS[MRB_BANKS.length-1];
+  document.getElementById('mrbBankName').textContent='';
+  document.getElementById('mrbSheet').style.display='block';
+  document.getElementById('mrbFile').click();
+}
+function mrbManual(ev){
+  if(ev){ev.stopPropagation();ev.preventDefault();}
+  MRB_CUR=MRB_BANKS[MRB_BANKS.length-1];
+  document.getElementById('mrbBankName').textContent='';
+  document.getElementById('mrbSheet').style.display='block';
 }
 function mrbClose(){document.getElementById('mrbSheet').style.display='none';}
 
@@ -1117,10 +1141,10 @@ function mrbMake(){
   const SC=2, W=1080;
   let rows;
   if(MRB_IMG){
-    rows=[['المستلم',name],['القناة',MRB_CUR.n+' — '+MRB_CUR.ar],
+    rows=[['المستلم',name],['القناة',mrbChan()],
           ['المبلغ بالقديمة',mrbFmt(amt*10)+' UM']];
   }else{
-    rows=[['القناة',MRB_CUR.n+' — '+MRB_CUR.ar],['المستلم',name],['رقم المستلم',to],
+    rows=[['القناة',mrbChan()],['المستلم',name],['رقم المستلم',to],
           ['المبلغ',mrbFmt(amt)+' MRU'],['بالقديمة',mrbFmt(amt*10)+' UM']];
     if(ref)rows.push(['رقم العملية',ref]);
   }
@@ -1167,7 +1191,7 @@ function mrbMake(){
   x.textAlign='center'; x.fillStyle='#0B7A3B'; x.font='700 42px "IBM Plex Sans Arabic",Arial';
   x.fillText('تم التحويل بنجاح', W/2, 452);
   x.fillStyle='#5A7396'; x.font='500 28px "IBM Plex Sans Arabic",Arial';
-  x.fillText('عملية موثقة عبر '+MRB_CUR.n, W/2, 496);
+  x.fillText('عملية موثقة عبر '+(MRB_CUR.n||'البنك'), W/2, 496);
 
   /* الصفوف */
   x.textAlign='right'; let y=rowsY0+40;
@@ -1181,7 +1205,7 @@ function mrbMake(){
   /* بطاقة بنكيلي المقصوصة */
   if(MRB_IMG&&cimg){
     x.textAlign='right'; x.font='600 29px "IBM Plex Sans Arabic",Arial'; x.fillStyle='#5A7396';
-    x.fillText('الإيصال الأصلي — '+MRB_CUR.n, 960, y+20);
+    x.fillText('الإيصال الأصلي'+(MRB_CUR.n?' — '+MRB_CUR.n:''), 960, y+20);
     const bx=(W-bw)/2, by=y+50;
     x.save(); x.shadowColor='rgba(3,26,69,.18)'; x.shadowBlur=24; x.shadowOffsetY=8;
     x.fillStyle='#FFFFFF'; mrbRR(x,bx-10,by-10,bw+20,bh+20,22); x.fill(); x.restore();
@@ -1209,11 +1233,13 @@ async function mrbReadReceipt(file){
     if(p&&p.amount){ document.getElementById('mrbAmt').value=p.amount; }
     if(p&&p.txn){ document.getElementById('mrbRef').value=p.txn; }
     if(p&&p.receiver){ document.getElementById('mrbTo').value=p.receiver; }
+    MRB_CUR=mrbBankOf(p&&p.bank);
+    document.getElementById('mrbBankName').textContent=MRB_CUR.n||'';
     msg.style.color='#0B7A3B';
-    msg.textContent=p&&p.amount?('✓ قُرئ: '+Number(p.amount).toLocaleString()+' '+(p.ccy||'MRU')+(p.txn?' · عملية '+p.txn:'')+(p.receiver?' · حساب '+p.receiver:'')):'لم تُقرأ تلقائيًا — أكمل الخانات يدويًا';
+    msg.textContent=p&&p.amount?('✓ قُرئ: '+(MRB_CUR.n?MRB_CUR.n+' · ':'')+Number(p.amount).toLocaleString()+' '+(p.ccy||'MRU')+(p.txn?' · عملية '+p.txn:'')+(p.receiver?' · حساب '+p.receiver:'')):'لم تُقرأ تلقائيًا — أكمل الخانات يدويًا';
     if(!(p&&p.amount)){msg.style.color='#B00020';}
   }catch(e){ msg.style.color='#B00020'; msg.textContent='تعذرت القراءة — أكمل يدويًا'; }
-  btn.textContent='📷 رفع إيصال بنكيلي — قراءة تلقائية'; btn.disabled=false;
+  btn.textContent='📷 رفع إيصال أي بنك — قراءة تلقائية'; btn.disabled=false;
 }
 function mrbRR(x,a,b,w,h,r){x.beginPath();x.moveTo(a+r,b);x.arcTo(a+w,b,a+w,b+h,r);x.arcTo(a+w,b+h,a,b+h,r);x.arcTo(a,b+h,a,b,r);x.arcTo(a,b,a+w,b,r);x.closePath();}
 function mrbFmt(n){return Number(n||0).toLocaleString('en-US');}
