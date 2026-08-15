@@ -1113,10 +1113,33 @@ function mrbMake(){
   const amt=Number(document.getElementById('mrbAmt').value.replace(/[^\d.]/g,''))||0;
   const ref=document.getElementById('mrbRef').value.trim();
   const cv=document.getElementById('mrbCv'), x=cv.getContext('2d');
-  cv.width=1080; cv.height=1350;
-  const g=x.createLinearGradient(0,0,0,1350); g.addColorStop(0,'#0D3A8C'); g.addColorStop(1,'#082253');
-  x.fillStyle=g; x.fillRect(0,0,1080,1350);
-  x.fillStyle='#F7FAFF'; mrbRR(x,60,240,960,1000,28); x.fill();
+  const SC=2, W=1080;
+  let rows;
+  if(MRB_IMG){
+    rows=[['المستلم',name],['القناة',MRB_CUR.n+' — '+MRB_CUR.ar],
+          ['المبلغ بالقديمة',mrbFmt(amt*10)+' UM']];
+  }else{
+    rows=[['القناة',MRB_CUR.n+' — '+MRB_CUR.ar],['المستلم',name],['رقم المستلم',to],
+          ['المبلغ',mrbFmt(amt)+' MRU'],['بالقديمة',mrbFmt(amt*10)+' UM']];
+    if(ref)rows.push(['رقم العملية',ref]);
+  }
+  /* حساب الارتفاع */
+  let cimg=null, bw=760, bh=0;
+  if(MRB_IMG){
+    MRB_CROP = MRB_CROP || mrbCropCard(MRB_IMG);
+    cimg = MRB_CROP || MRB_IMG;
+    bh = Math.min(720, Math.round(bw*cimg.height/cimg.width));
+  }
+  const rowsY0=560, rowsH=rows.length*116;
+  const H = MRB_IMG ? (rowsY0+rowsH+70+bh+160) : (rowsY0+rowsH+180);
+  cv.width=W*SC; cv.height=H*SC; x.scale(SC,SC);
+
+  /* الخلفية */
+  const g=x.createLinearGradient(0,0,0,H); g.addColorStop(0,'#0D3A8C'); g.addColorStop(1,'#082253');
+  x.fillStyle=g; x.fillRect(0,0,W,H);
+  x.fillStyle='rgba(255,255,255,.04)'; x.beginPath(); x.arc(W-60,90,240,0,7); x.fill();
+
+  /* الترويسة */
   x.fillStyle='#FFFFFF'; x.font='800 92px Inter,Arial'; x.textAlign='left';
   x.fillText('BDL',80,150);
   x.font='600 34px Inter,Arial'; x.fillStyle='#8FB8E8'; x.fillText('EXCHANGE · lbdal.com',80,200);
@@ -1124,90 +1147,52 @@ function mrbMake(){
   x.fillText('وصل تحويل', 1000,150);
   x.font='500 30px Inter,Arial'; x.fillStyle='#8FB8E8';
   const d=new Date(); x.fillText(d.toLocaleDateString('fr-FR')+' '+d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}),1000,200);
-  let rows;
-  if(MRB_IMG){
-    rows=[['المستلم',name+(to!=='—'?'':'')],['القناة',MRB_CUR.n+' — '+MRB_CUR.ar],
-          ['المبلغ بالقديمة',mrbFmt(amt*10)+' UM']];
-  }else{
-    rows=[['القناة',MRB_CUR.n+' — '+MRB_CUR.ar],['المستلم',name],['رقم المستلم',to],
-          ['المبلغ',mrbFmt(amt)+' MRU'],['بالقديمة',mrbFmt(amt*10)+' UM']];
-    if(ref)rows.push(['رقم العملية',ref]);
-  }
-  x.textAlign='right'; let y=340;
+
+  /* البطاقة البيضاء */
+  x.save(); x.shadowColor='rgba(2,15,45,.4)'; x.shadowBlur=36; x.shadowOffsetY=12;
+  x.fillStyle='#F7FAFF'; mrbRR(x,60,300,960,H-410,28); x.fill(); x.restore();
+
+  /* دائرة النجاح البنكية الكبيرة — متداخلة مع قمة البطاقة */
+  const ccx=W/2, ccy=300, R=86;
+  x.fillStyle='rgba(255,255,255,.14)'; x.beginPath(); x.arc(ccx,ccy,R+34,0,7); x.fill();
+  x.fillStyle='#F7FAFF'; x.beginPath(); x.arc(ccx,ccy,R+16,0,7); x.fill();
+  const cg=x.createLinearGradient(ccx-R,ccy-R,ccx+R,ccy+R);
+  cg.addColorStop(0,'#1FA855'); cg.addColorStop(1,'#37D178');
+  x.fillStyle=cg; x.beginPath(); x.arc(ccx,ccy,R,0,7); x.fill();
+  x.strokeStyle='#fff'; x.lineWidth=16; x.lineCap='round'; x.lineJoin='round';
+  x.beginPath(); x.moveTo(ccx-38,ccy+4); x.lineTo(ccx-9,ccy+34); x.lineTo(ccx+42,ccy-28); x.stroke();
+
+  /* نص الحالة تحت الدائرة */
+  x.textAlign='center'; x.fillStyle='#0B7A3B'; x.font='700 42px "IBM Plex Sans Arabic",Arial';
+  x.fillText('تم التحويل بنجاح', W/2, 452);
+  x.fillStyle='#5A7396'; x.font='500 28px "IBM Plex Sans Arabic",Arial';
+  x.fillText('عملية موثقة عبر '+MRB_CUR.n, W/2, 496);
+
+  /* الصفوف */
+  x.textAlign='right'; let y=rowsY0+40;
   rows.forEach(r=>{
     x.font='500 33px "IBM Plex Sans Arabic",Arial'; x.fillStyle='#5A7396'; x.fillText(r[0],960,y);
     x.font='700 43px Inter,"IBM Plex Sans Arabic",Arial'; x.fillStyle='#0B2447'; x.fillText(String(r[1]),960,y+56);
     x.strokeStyle='#E3ECF8'; x.beginPath(); x.moveTo(110,y+88); x.lineTo(960,y+88); x.stroke();
     y+=116;
   });
-  x.fillStyle='#1FA855'; mrbRR(x,110,y,290,70,35); x.fill();
-  x.fillStyle='#fff'; x.font='700 34px "IBM Plex Sans Arabic",Arial'; x.textAlign='center';
-  x.fillText('✓ تم التحويل',255,y+47);
-  let H=1350;
-  if(MRB_IMG){
-    MRB_CROP = mrbCropCard(MRB_IMG);
-    const cimg = MRB_CROP || MRB_IMG;
-    const cw = cimg.width, chh = cimg.height;
-    const bw=760, bh=Math.min(720, Math.round(bw*chh/cw));
-    H = y+150+bh+140;
-    /* إعادة رسم بالارتفاع الجديد */
-    cv.height=H;
-    const g2=x.createLinearGradient(0,0,0,H); g2.addColorStop(0,'#0D3A8C'); g2.addColorStop(1,'#082253');
-    x.fillStyle=g2; x.fillRect(0,0,1080,H);
-    x.fillStyle='#F7FAFF'; mrbRR(x,60,240,960,H-350,28); x.fill();
-    x.fillStyle='#FFFFFF'; x.font='800 92px Inter,Arial'; x.textAlign='left';
-    x.fillText('BDL',80,150);
-    x.font='600 34px Inter,Arial'; x.fillStyle='#8FB8E8'; x.fillText('EXCHANGE · lbdal.com',80,200);
-    x.textAlign='right'; x.font='700 40px "IBM Plex Sans Arabic",Arial'; x.fillStyle='#FFFFFF';
-    x.fillText('وصل تحويل', 1000,150);
-    x.font='500 30px Inter,Arial'; x.fillStyle='#8FB8E8';
-    x.fillText(d.toLocaleDateString('fr-FR')+' '+d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}),1000,200);
-    x.textAlign='right'; y=340;
-    rows.forEach(r=>{
-      x.font='500 33px "IBM Plex Sans Arabic",Arial'; x.fillStyle='#5A7396'; x.fillText(r[0],960,y);
-      x.font='700 43px Inter,"IBM Plex Sans Arabic",Arial'; x.fillStyle='#0B2447'; x.fillText(String(r[1]),960,y+56);
-      x.strokeStyle='#E3ECF8'; x.beginPath(); x.moveTo(110,y+88); x.lineTo(960,y+88); x.stroke();
-      y+=116;
-    });
-    x.fillStyle='#1FA855'; mrbRR(x,110,y,290,70,35); x.fill();
-    x.fillStyle='#fff'; x.font='700 34px "IBM Plex Sans Arabic",Arial'; x.textAlign='center';
-    x.fillText('✓ تم التحويل',255,y+47);
-    /* البطاقة المقصوصة داخل إطار */
+
+  /* بطاقة بنكيلي المقصوصة */
+  if(MRB_IMG&&cimg){
     x.textAlign='right'; x.font='600 29px "IBM Plex Sans Arabic",Arial'; x.fillStyle='#5A7396';
-    x.fillText('الإيصال الأصلي — '+MRB_CUR.n, 960, y+120);
-    const bx=(1080-bw)/2, by=y+150;
-    x.save();
-    x.shadowColor='rgba(3,26,69,.18)'; x.shadowBlur=24; x.shadowOffsetY=8;
-    x.fillStyle='#FFFFFF'; mrbRR(x,bx-10,by-10,bw+20,bh+20,22); x.fill();
-    x.restore();
+    x.fillText('الإيصال الأصلي — '+MRB_CUR.n, 960, y+20);
+    const bx=(W-bw)/2, by=y+50;
+    x.save(); x.shadowColor='rgba(3,26,69,.18)'; x.shadowBlur=24; x.shadowOffsetY=8;
+    x.fillStyle='#FFFFFF'; mrbRR(x,bx-10,by-10,bw+20,bh+20,22); x.fill(); x.restore();
     x.save(); mrbRR(x,bx,by,bw,bh,16); x.clip();
     x.drawImage(cimg, bx, by, bw, bh);
     x.restore();
     x.strokeStyle='#D7E4F5'; x.lineWidth=2; mrbRR(x,bx-10,by-10,bw+20,bh+20,22); x.stroke();
   }
+
   x.textAlign='center'; x.fillStyle='#8FB8E8'; x.font='500 28px Inter,Arial';
-  x.fillText('ARKAN INTERNATIONAL TRADING · lbdal.com',540,H-42);
+  x.fillText('ARKAN INTERNATIONAL TRADING · lbdal.com',W/2,H-42);
   document.getElementById('mrbOut').style.display='block';
-}
-let MRB_IMG=null, MRB_IMG_W=0, MRB_IMG_H=0, MRB_CROP=null;
-async function mrbReadReceipt(file){
-  if(!file)return;
-  const msg=document.getElementById('mrbReadMsg'), btn=document.getElementById('mrbUpBtn');
-  // معاينة + تحميل الصورة للدمج في الوصل
-  const url=URL.createObjectURL(file);
-  const th=document.getElementById('mrbThumb'); th.src=url; th.style.display='block';
-  const im=new Image(); im.onload=()=>{MRB_IMG=im;MRB_IMG_W=im.width;MRB_IMG_H=im.height;}; im.src=url;
-  btn.textContent='⏳ جارٍ قراءة الإيصال…'; btn.disabled=true; msg.textContent='';
-  try{
-    const p=await (window.ArkanRead?ArkanRead.readAmount(file):null);
-    if(p&&p.amount){ document.getElementById('mrbAmt').value=p.amount; }
-    if(p&&p.txn){ document.getElementById('mrbRef').value=p.txn; }
-    if(p&&p.receiver){ document.getElementById('mrbTo').value=p.receiver; }
-    msg.style.color='#0B7A3B';
-    msg.textContent=p&&p.amount?('✓ قُرئ: '+Number(p.amount).toLocaleString()+' '+(p.ccy||'MRU')+(p.txn?' · عملية '+p.txn:'')+(p.receiver?' · حساب '+p.receiver:'')):'لم تُقرأ تلقائيًا — أكمل الخانات يدويًا';
-    if(!(p&&p.amount)){msg.style.color='#B00020';}
-  }catch(e){ msg.style.color='#B00020'; msg.textContent='تعذرت القراءة — أكمل يدويًا'; }
-  btn.textContent='📷 رفع إيصال بنكيلي — قراءة تلقائية'; btn.disabled=false;
 }
 function mrbRR(x,a,b,w,h,r){x.beginPath();x.moveTo(a+r,b);x.arcTo(a+w,b,a+w,b+h,r);x.arcTo(a+w,b+h,a,b+h,r);x.arcTo(a,b+h,a,b,r);x.arcTo(a,b,a+w,b,r);x.closePath();}
 function mrbFmt(n){return Number(n||0).toLocaleString('en-US');}
