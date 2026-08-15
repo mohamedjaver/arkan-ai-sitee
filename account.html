@@ -1112,8 +1112,9 @@ async function mrbReadReceipt(file){
     const p=await (window.ArkanRead?ArkanRead.readAmount(file):null);
     if(p&&p.amount){ document.getElementById('mrbAmt').value=p.amount; }
     if(p&&p.txn){ document.getElementById('mrbRef').value=p.txn; }
+    if(p&&p.receiver){ document.getElementById('mrbTo').value=p.receiver; }
     msg.style.color='#0B7A3B';
-    msg.textContent=p&&p.amount?('✓ قُرئ: '+Number(p.amount).toLocaleString()+' '+(p.ccy||'MRU')+(p.txn?' · عملية '+p.txn:'')):'لم تُقرأ تلقائيًا — أكمل الخانات يدويًا';
+    msg.textContent=p&&p.amount?('✓ قُرئ: '+Number(p.amount).toLocaleString()+' '+(p.ccy||'MRU')+(p.txn?' · عملية '+p.txn:'')+(p.receiver?' · حساب '+p.receiver:'')):'لم تُقرأ تلقائيًا — أكمل الخانات يدويًا';
     if(!(p&&p.amount)){msg.style.color='#B00020';}
   }catch(e){ msg.style.color='#B00020'; msg.textContent='تعذرت القراءة — أكمل يدويًا'; }
   btn.textContent='📷 رفع إيصال بنكيلي — قراءة تلقائية'; btn.disabled=false;

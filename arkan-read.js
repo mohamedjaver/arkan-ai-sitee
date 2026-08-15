@@ -103,8 +103,12 @@ function liteParse(t){
         ||t.match(/(?:Kz|AKZ|KZ)\s*([\d][\d.,\s\u00A0]{4,})/i)
         ||t.match(/([\d]{1,3}(?:[.,\s\u00A0]\d{3})+(?:,\d{2})?)/);
   if(am)p.amount=euNum(am[1]);
-  const rm=t.match(/(?:ref|reference|operac|transac|movimento|number)[^\d]{0,15}(\d{5,})/i);
+  const rm=t.match(/Txn\s*ID\s*:?\s*([0-9]{8,})/i)
+        ||t.match(/(?:ref|reference|operac|transac|movimento|number)[^\d]{0,15}(\d{5,})/i);
   if(rm)p.reference=rm[1];
+  const rv=t.match(/Receiver\s*:?\s*([0-9]{8,})/i)
+        ||t.match(/(?:المستلم|المستفيد|Beneficiaire|Beneficiary|To)\s*:?\s*([0-9]{8,})/i);
+  if(rv)p.receiver=rv[1];
   const bm=t.match(/\b(BAI|BFA|BIC|BCI|ATLANTICO|ATL|TRON|Bankily|BIM)\b/i);
   if(bm)p.bank=bm[1].toUpperCase();
   const dm=t.match(/(\d{2}[-\/]\d{2}[-\/]\d{4}|\d{4}-\d{2}-\d{2})/);
@@ -119,7 +123,7 @@ function asText(p,raw){
 }
 async function miniGemini(b64,mime){
   const key=KEY(); if(!key)throw new Error('NOKEY');
-  const P='اقرأ هذا الإيصال البنكي وأعد JSON فقط بلا أي نص آخر: {"amount":0,"currency":"","reference":"","bank":"","date":""}\n- amount: رقم المبلغ فقط بلا فواصل (Montante/المبلغ/Valor/Total). ليس رقم العملية ولا الحساب ولا Movimento.\n- الفواصل الأوروبية: 3.500.000,00 تعني 3500000\n- currency: Kz أو MRU أو USD أو USDT أو EUR أو CNY أو AED (AKZ/AOA→Kz، UM→MRU)';
+  const P='اقرأ هذا الإيصال البنكي وأعد JSON فقط بلا أي نص آخر: {"amount":0,"currency":"","reference":"","receiver":"","bank":"","date":""}\n- amount: رقم المبلغ فقط بلا فواصل (Montante/المبلغ/Valor/Total). ليس رقم العملية ولا الحساب ولا Movimento.\n- reference: رقم العملية (Txn ID/Reference/Movimento) كاملًا.\n- receiver: رقم حساب أو هاتف المستلم (Receiver/المستلم) كاملًا.\n- الفواصل الأوروبية: 3.500.000,00 تعني 3500000\n- currency: Kz أو MRU أو USD أو USDT أو EUR أو CNY أو AED (AKZ/AOA→Kz، UM→MRU)';
   const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key='+encodeURIComponent(key),
     {method:'POST',headers:{'Content-Type':'application/json'},
      body:JSON.stringify({contents:[{parts:[{text:P},{inline_data:{mime_type:mime,data:b64}}]}],
@@ -154,6 +158,7 @@ window.ArkanRead={
     }
     const cy=String(p.currency||'').replace('AKZ','Kz').replace('AOA','Kz').replace('KZ','Kz').replace('UM','MRU');
     return {amount:(+p.amount||null),ccy:cy||null,txn:p.reference||null,
+            receiver:p.receiver||null,
             bank:p.bank||null,date:p.date||null,eng};
   },
   /* read(File|Blob) → {parsed, text, engine} — Gemini أولاً ثم OCR المحلي */
