@@ -1223,19 +1223,6 @@ async function mrbMakePdf(){
     const ih=Math.min(ph, pw*(cv.height/cv.width)), iy=(ph-ih)/2;
     pdf.setFillColor(8,34,83); pdf.rect(0,0,pw,ph,'F');
     pdf.addImage(img,'JPEG',0,iy,pw,ih);
-    /* صفحة 2: الإيصال الأصلي بدقته الكاملة */
-    if(MRB_IMG){
-      const MAXW=1400, sc=Math.min(1,MAXW/MRB_IMG_W);
-      const c2=document.createElement('canvas'); c2.width=Math.round(MRB_IMG_W*sc); c2.height=Math.round(MRB_IMG_H*sc);
-      const x2=c2.getContext('2d'); x2.fillStyle='#FFFFFF'; x2.fillRect(0,0,c2.width,c2.height);
-      x2.drawImage(MRB_IMG,0,0,c2.width,c2.height);
-      const img2=c2.toDataURL('image/jpeg',.95);
-      pdf.addPage();
-      pdf.setFillColor(255,255,255); pdf.rect(0,0,pw,ph,'F');
-      const r2=Math.min(pw/c2.width, ph/c2.height);
-      const w2=c2.width*r2, h2=c2.height*r2;
-      pdf.addImage(img2,'JPEG',(pw-w2)/2,(ph-h2)/2,w2,h2);
-    }
     return {pdf,name:name+'.pdf'};
   }catch(e){ alert('تعذر إنشاء الوصل: '+(e.message||e)); return null; }
 }
