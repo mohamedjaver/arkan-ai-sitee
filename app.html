@@ -553,6 +553,42 @@ function startTimer(){
   </div>
 </div></header>
 
+
+<!-- ============ بنوك موريتانيا — كروت التحويل ============ -->
+<section class="sec layer" id="mrBanks">
+  <div class="card" style="max-width:720px">
+    <h2 style="margin:0 0 4px;font-size:20px">تحويل عبر بنوك موريتانيا</h2>
+    <p style="margin:0 0 14px;font-size:13.5px;color:#5A7396">اضغط البنك لفتح تطبيقه، حوّل، ثم ولّد وصل BDL وأرسله</p>
+    <div id="mrbRow" style="display:flex;gap:12px;overflow-x:auto;padding:4px 2px 10px;-webkit-overflow-scrolling:touch;scrollbar-width:none">
+    </div>
+  </div>
+</section>
+<!-- نافذة توليد وصل BDL -->
+<div id="mrbSheet" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(4,20,50,.55);backdrop-filter:blur(4px)">
+  <div style="position:absolute;left:0;right:0;bottom:0;background:#fff;border-radius:18px 18px 0 0;padding:20px 18px 28px;max-height:86vh;overflow:auto">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <b style="font-size:17px">وصل تحويل <span id="mrbBankName"></span></b>
+      <button onclick="mrbClose()" style="border:0;background:#EEF3FB;width:32px;height:32px;border-radius:50%;font-size:16px;cursor:pointer">✕</button>
+    </div>
+    <label class="mrbL">اسم المستلم</label>
+    <input id="mrbName" class="mrbI" placeholder="محمد ولد ...">
+    <label class="mrbL">رقم المستلم / الحساب</label>
+    <input id="mrbTo" class="mrbI" inputmode="numeric" placeholder="36xxxxxx">
+    <label class="mrbL">المبلغ (MRU جديدة)</label>
+    <input id="mrbAmt" class="mrbI" inputmode="decimal" placeholder="70000">
+    <label class="mrbL">رقم العملية Txn ID (اختياري)</label>
+    <input id="mrbRef" class="mrbI" inputmode="numeric" placeholder="09260814...">
+    <button onclick="mrbMake()" style="width:100%;margin-top:14px;padding:14px;border:0;background:linear-gradient(135deg,#19A9F5,#0A56B8);color:#fff;font-weight:800;font-size:15px;border-radius:12px;cursor:pointer">توليد الوصل</button>
+    <div id="mrbOut" style="margin-top:14px;display:none">
+      <canvas id="mrbCv" width="1080" height="1350" style="width:100%;border-radius:12px;box-shadow:0 8px 30px rgba(3,26,69,.18)"></canvas>
+      <div style="display:flex;gap:10px;margin-top:12px">
+        <button onclick="mrbShare()" style="flex:1;padding:13px;border:0;background:#1FA855;color:#fff;font-weight:800;border-radius:12px;cursor:pointer">مشاركة واتساب</button>
+        <button onclick="mrbPdf()" style="flex:1;padding:13px;border:1px solid #0A56B8;background:#fff;color:#0A56B8;font-weight:800;border-radius:12px;cursor:pointer">تحميل PDF</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ============ CONVERTER ============ -->
 <section class="sec layer" id="convert"><div class="wrap">
   <div class="sec-head">
@@ -1584,5 +1620,102 @@ body{background:radial-gradient(1100px 600px at 78% -10%, rgba(0,88,217,.55), tr
  radial-gradient(900px 700px at -10% 110%, rgba(0,181,255,.22), transparent 55%),
  linear-gradient(180deg,#04143A 0%,#062165 58%,#003B8F 100%) fixed!important}
 </style>
+
+<style>
+.mrbL{display:block;font-size:12.5px;color:#5A7396;margin:10px 0 5px}
+.mrbI{width:100%;padding:12px;border:1px solid #C7D8EE;border-radius:10px;font-size:15px;direction:ltr;text-align:left}
+.mrbCard{min-width:168px;height:104px;border-radius:16px;padding:14px 16px;color:#fff;display:flex;flex-direction:column;justify-content:space-between;cursor:pointer;box-shadow:0 10px 24px rgba(3,26,69,.22);flex:0 0 auto;position:relative;overflow:hidden}
+.mrbCard::after{content:"";position:absolute;top:-30px;left:-30px;width:110px;height:110px;border-radius:50%;background:rgba(255,255,255,.12)}
+.mrbCard b{font-size:17px;letter-spacing:.3px}
+.mrbCard small{font-size:11px;opacity:.85}
+.mrbCard .chip{width:28px;height:20px;border-radius:5px;background:linear-gradient(135deg,#FFE9A8,#D9B44A)}
+</style>
+<script>
+const MRB_BANKS=[
+ {k:'bankily', n:'Bankily',  ar:'بنكيلي', g:'linear-gradient(135deg,#0E7C86,#063E44)', scheme:'bankily://'},
+ {k:'masrvi',  n:'Masrvi',   ar:'مصرفي',  g:'linear-gradient(135deg,#1B8A4B,#0B4426)', scheme:'masrvi://'},
+ {k:'sedad',   n:'Sedad',    ar:'السداد', g:'linear-gradient(135deg,#4553D8,#1A2470)', scheme:'sedad://'},
+ {k:'bim',     n:'BIM Bank', ar:'بيم',    g:'linear-gradient(135deg,#C4392E,#5E120C)', scheme:'bimbank://'}
+];
+let MRB_CUR=MRB_BANKS[0];
+(function(){
+  const row=document.getElementById('mrbRow'); if(!row)return;
+  row.innerHTML=MRB_BANKS.map((b,i)=>`
+   <div class="mrbCard" style="background:${b.g}" onclick="mrbOpen(${i})">
+     <div style="display:flex;justify-content:space-between;align-items:flex-start"><b>${b.n}</b><span class="chip"></span></div>
+     <div><small>${b.ar} · اضغط للتحويل</small></div>
+   </div>`).join('');
+})();
+function mrbOpen(i){
+  MRB_CUR=MRB_BANKS[i];
+  // محاولة فتح التطبيق
+  const t=Date.now();
+  location.href=MRB_CUR.scheme;
+  setTimeout(()=>{
+    // فتحنا الشيت دائمًا عند العودة لتوليد الوصل
+    document.getElementById('mrbBankName').textContent=MRB_CUR.n;
+    document.getElementById('mrbSheet').style.display='block';
+  }, 900);
+}
+function mrbClose(){document.getElementById('mrbSheet').style.display='none';}
+function mrbMake(){
+  const name=document.getElementById('mrbName').value.trim()||'—';
+  const to=document.getElementById('mrbTo').value.trim()||'—';
+  const amt=Number(document.getElementById('mrbAmt').value.replace(/[^\d.]/g,''))||0;
+  const ref=document.getElementById('mrbRef').value.trim();
+  const cv=document.getElementById('mrbCv'), x=cv.getContext('2d');
+  // خلفية
+  const g=x.createLinearGradient(0,0,0,1350); g.addColorStop(0,'#0D3A8C'); g.addColorStop(1,'#082253');
+  x.fillStyle=g; x.fillRect(0,0,1080,1350);
+  // بطاقة بيضاء
+  x.fillStyle='#F7FAFF'; rr(x,60,260,960,880,28); x.fill();
+  // ترويسة BDL
+  x.fillStyle='#FFFFFF'; x.font='800 92px Inter,Arial'; x.textAlign='left';
+  x.fillText('BDL',80,150);
+  x.font='600 34px Inter,Arial'; x.fillStyle='#8FB8E8'; x.fillText('EXCHANGE · lbdal.com',80,200);
+  x.textAlign='right'; x.font='700 40px "IBM Plex Sans Arabic",Arial'; x.fillStyle='#FFFFFF';
+  x.fillText('وصل تحويل', 1000,150);
+  x.font='500 30px Inter,Arial'; x.fillStyle='#8FB8E8';
+  const d=new Date(); x.fillText(d.toLocaleDateString('fr-FR')+' '+d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}),1000,200);
+  // صفوف البيانات
+  const rows=[['القناة',MRB_CUR.n+' — '+MRB_CUR.ar],['المستلم',name],['رقم المستلم',to],
+              ['المبلغ',fmtN(amt)+' MRU'],['بالقديمة',fmtN(amt*10)+' UM']];
+  if(ref)rows.push(['رقم العملية',ref]);
+  x.textAlign='right'; let y=360;
+  rows.forEach(r=>{
+    x.font='500 34px "IBM Plex Sans Arabic",Arial'; x.fillStyle='#5A7396'; x.fillText(r[0],960,y);
+    x.font='700 44px Inter,"IBM Plex Sans Arabic",Arial'; x.fillStyle='#0B2447'; x.fillText(String(r[1]),960,y+58);
+    x.strokeStyle='#E3ECF8'; x.beginPath(); x.moveTo(110,y+92); x.lineTo(960,y+92); x.stroke();
+    y+=130;
+  });
+  // حالة
+  x.fillStyle='#1FA855'; rr(x,110,y-10,300,74,37); x.fill();
+  x.fillStyle='#fff'; x.font='700 36px "IBM Plex Sans Arabic",Arial'; x.textAlign='center';
+  x.fillText('✓ تم التحويل',260,y+40);
+  // تذييل
+  x.textAlign='center'; x.fillStyle='#8FB8E8'; x.font='500 28px Inter,Arial';
+  x.fillText('ARKAN INTERNATIONAL TRADING · WhatsApp 36295050',540,1290);
+  document.getElementById('mrbOut').style.display='block';
+  function rrDummy(){}
+}
+function rr(x,a,b,w,h,r){x.beginPath();x.moveTo(a+r,b);x.arcTo(a+w,b,a+w,b+h,r);x.arcTo(a+w,b+h,a,b+h,r);x.arcTo(a,b+h,a,b,r);x.arcTo(a,b,a+w,b,r);x.closePath();}
+function fmtN(n){return Number(n||0).toLocaleString('en-US');}
+async function mrbShare(){
+  const cv=document.getElementById('mrbCv');
+  cv.toBlob(async b=>{
+    const f=new File([b],'BDL-transfer.png',{type:'image/png'});
+    if(navigator.canShare&&navigator.canShare({files:[f]})){ try{await navigator.share({files:[f],title:'وصل تحويل BDL'});}catch(e){} }
+    else{ const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='BDL-transfer.png';a.click(); }
+  },'image/png');
+}
+function mrbPdf(){
+  const cv=document.getElementById('mrbCv');
+  const img=cv.toDataURL('image/jpeg',.92);
+  const sc=document.createElement('script'); sc.src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+  sc.onload=()=>{ const {jsPDF}=window.jspdf; const p=new jsPDF({unit:'pt',format:[540,675]});
+    p.addImage(img,'JPEG',0,0,540,675); p.save('BDL-transfer.pdf'); };
+  document.head.appendChild(sc);
+}
+</script>
 </body>
 </html>
