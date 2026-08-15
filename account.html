@@ -1054,11 +1054,10 @@ function mrbMake(){
   const amt=Number(document.getElementById('mrbAmt').value.replace(/[^\d.]/g,''))||0;
   const ref=document.getElementById('mrbRef').value.trim();
   const cv=document.getElementById('mrbCv'), x=cv.getContext('2d');
-  const hasImg=!!MRB_IMG;
-  const H=hasImg?1720:1350; cv.width=1080; cv.height=H;
-  const g=x.createLinearGradient(0,0,0,H); g.addColorStop(0,'#0D3A8C'); g.addColorStop(1,'#082253');
-  x.fillStyle=g; x.fillRect(0,0,1080,H);
-  x.fillStyle='#F7FAFF'; mrbRR(x,60,240,960,H-350,28); x.fill();
+  cv.width=1080; cv.height=1350;
+  const g=x.createLinearGradient(0,0,0,1350); g.addColorStop(0,'#0D3A8C'); g.addColorStop(1,'#082253');
+  x.fillStyle=g; x.fillRect(0,0,1080,1350);
+  x.fillStyle='#F7FAFF'; mrbRR(x,60,240,960,1000,28); x.fill();
   x.fillStyle='#FFFFFF'; x.font='800 92px Inter,Arial'; x.textAlign='left';
   x.fillText('BDL',80,150);
   x.font='600 34px Inter,Arial'; x.fillStyle='#8FB8E8'; x.fillText('EXCHANGE · lbdal.com',80,200);
@@ -1069,36 +1068,24 @@ function mrbMake(){
   const rows=[['القناة',MRB_CUR.n+' — '+MRB_CUR.ar],['المستلم',name],['رقم المستلم',to],
               ['المبلغ',mrbFmt(amt)+' MRU'],['بالقديمة',mrbFmt(amt*10)+' UM']];
   if(ref)rows.push(['رقم العملية',ref]);
-  x.textAlign='right'; let y=330;
+  x.textAlign='right'; let y=340;
   rows.forEach(r=>{
-    x.font='500 32px "IBM Plex Sans Arabic",Arial'; x.fillStyle='#5A7396'; x.fillText(r[0],960,y);
-    x.font='700 42px Inter,"IBM Plex Sans Arabic",Arial'; x.fillStyle='#0B2447'; x.fillText(String(r[1]),960,y+54);
-    x.strokeStyle='#E3ECF8'; x.beginPath(); x.moveTo(110,y+84); x.lineTo(960,y+84); x.stroke();
-    y+=112;
+    x.font='500 33px "IBM Plex Sans Arabic",Arial'; x.fillStyle='#5A7396'; x.fillText(r[0],960,y);
+    x.font='700 43px Inter,"IBM Plex Sans Arabic",Arial'; x.fillStyle='#0B2447'; x.fillText(String(r[1]),960,y+56);
+    x.strokeStyle='#E3ECF8'; x.beginPath(); x.moveTo(110,y+88); x.lineTo(960,y+88); x.stroke();
+    y+=116;
   });
-  /* شارة الحالة */
-  x.fillStyle='#1FA855'; mrbRR(x,110,y-6,290,68,34); x.fill();
+  x.fillStyle='#1FA855'; mrbRR(x,110,y,290,70,35); x.fill();
   x.fillStyle='#fff'; x.font='700 34px "IBM Plex Sans Arabic",Arial'; x.textAlign='center';
-  x.fillText('✓ تم التحويل',255,y+40);
-  y+=100;
-  /* صورة إيصال بنكيلي الأصلي داخل إطار */
-  if(hasImg){
-    x.textAlign='right'; x.font='600 30px "IBM Plex Sans Arabic",Arial'; x.fillStyle='#5A7396';
-    x.fillText('الإيصال الأصلي — '+MRB_CUR.n, 960, y+8); y+=28;
-    const bw=850, bh=H-350-(y-240)-40, bx=(1080-bw)/2, by=y;
-    x.fillStyle='#EAF1FB'; mrbRR(x,bx,by,bw,bh,20); x.fill();
-    x.save(); mrbRR(x,bx+8,by+8,bw-16,bh-16,14); x.clip();
-    const sc=Math.min((bw-16)/MRB_IMG_W,(bh-16)/MRB_IMG_H);
-    const iw=MRB_IMG_W*sc, ih=MRB_IMG_H*sc;
-    x.drawImage(MRB_IMG, bx+(bw-iw)/2, by+(bh-ih)/2, iw, ih);
-    x.restore();
-    x.strokeStyle='#C7D8EE'; x.lineWidth=2; mrbRR(x,bx,by,bw,bh,20); x.stroke();
+  x.fillText('✓ تم التحويل',255,y+47);
+  if(MRB_IMG){
+    x.textAlign='right'; x.font='600 29px "IBM Plex Sans Arabic",Arial'; x.fillStyle='#5A7396';
+    x.fillText('📎 الإيصال الأصلي ('+MRB_CUR.n+') مرفق بدقة كاملة — الصفحة 2', 960, y+130);
   }
   x.textAlign='center'; x.fillStyle='#8FB8E8'; x.font='500 28px Inter,Arial';
-  x.fillText('ARKAN INTERNATIONAL TRADING · WhatsApp 36295050',540,H-42);
+  x.fillText('ARKAN INTERNATIONAL TRADING · WhatsApp 36295050',540,1308);
   document.getElementById('mrbOut').style.display='block';
 }
-
 let MRB_IMG=null, MRB_IMG_W=0, MRB_IMG_H=0;
 async function mrbReadReceipt(file){
   if(!file)return;
@@ -1130,10 +1117,22 @@ async function mrbMakePdf(){
     if(!JS){ const a=document.createElement('a');a.href=img;a.download=name+'.jpg';a.click(); return null; }
     const pdf=new JS({unit:'pt',format:'a4'});
     const pw=pdf.internal.pageSize.getWidth(), ph=pdf.internal.pageSize.getHeight();
-    const cvE=document.getElementById('mrbCv');
-    const ih=Math.min(ph, pw*(cvE.height/cvE.width)), iy=(ph-ih)/2;
+    const ih=Math.min(ph, pw*(cv.height/cv.width)), iy=(ph-ih)/2;
     pdf.setFillColor(8,34,83); pdf.rect(0,0,pw,ph,'F');
     pdf.addImage(img,'JPEG',0,iy,pw,ih);
+    /* صفحة 2: الإيصال الأصلي بدقته الكاملة */
+    if(MRB_IMG){
+      const MAXW=1400, sc=Math.min(1,MAXW/MRB_IMG_W);
+      const c2=document.createElement('canvas'); c2.width=Math.round(MRB_IMG_W*sc); c2.height=Math.round(MRB_IMG_H*sc);
+      const x2=c2.getContext('2d'); x2.fillStyle='#FFFFFF'; x2.fillRect(0,0,c2.width,c2.height);
+      x2.drawImage(MRB_IMG,0,0,c2.width,c2.height);
+      const img2=c2.toDataURL('image/jpeg',.95);
+      pdf.addPage();
+      pdf.setFillColor(255,255,255); pdf.rect(0,0,pw,ph,'F');
+      const r2=Math.min(pw/c2.width, ph/c2.height);
+      const w2=c2.width*r2, h2=c2.height*r2;
+      pdf.addImage(img2,'JPEG',(pw-w2)/2,(ph-h2)/2,w2,h2);
+    }
     return {pdf,name:name+'.pdf'};
   }catch(e){ alert('تعذر إنشاء الوصل: '+(e.message||e)); return null; }
 }
