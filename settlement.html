@@ -461,7 +461,7 @@ section#contacts.on{background:#F8FCFF;border-radius:0}
 <div class="orb orb-1"></div><div class="orb orb-2"></div>
 <div id="lock">
   <div class="hex"></div>
-  <h2>ARKAN <span>SETTLEMENT</span></h2>
+  <h2>BDL <span>SETTLEMENT</span></h2>
   <div id="pinStage">
     <input type="password" id="pin" inputmode="numeric" maxlength="6" placeholder="••••">
     <button id="faceBtn" class="btn btn-line" style="display:none;width:210px;margin-top:12px" onclick="faceUnlock(false)">الدخول ببصمة الوجه</button>
@@ -1188,7 +1188,7 @@ async function enrollAtLock(){
     const cred=await navigator.credentials.create({publicKey:{
       challenge:crypto.getRandomValues(new Uint8Array(32)),
       rp:{name:'BDL'},
-      user:{id:new TextEncoder().encode(ident.slice(0,32)),name:ident,displayName:'ARKAN — '+ident},
+      user:{id:new TextEncoder().encode(ident.slice(0,32)),name:ident,displayName:'BDL — '+ident},
       pubKeyCredParams:[{type:'public-key',alg:-7},{type:'public-key',alg:-257}],
       authenticatorSelection:{authenticatorAttachment:'platform',userVerification:'required'},
       timeout:60000,attestation:'none'
@@ -1216,7 +1216,7 @@ async function enableFaceID(){
     const cred=await navigator.credentials.create({publicKey:{
       challenge:crypto.getRandomValues(new Uint8Array(32)),
       rp:{name:'BDL'},
-      user:{id:new TextEncoder().encode(ident.slice(0,32)),name:ident,displayName:'ARKAN — '+ident},
+      user:{id:new TextEncoder().encode(ident.slice(0,32)),name:ident,displayName:'BDL — '+ident},
       pubKeyCredParams:[{type:'public-key',alg:-7},{type:'public-key',alg:-257}],
       authenticatorSelection:{authenticatorAttachment:'platform',userVerification:'required'},
       timeout:60000,attestation:'none'
@@ -1710,7 +1710,7 @@ USDT NET: ${fmt(uC)} $
 ${T} PAYOUT: ${fmt(payout,0)}
 ⚠️ سعر ثابت 30 دقيقة`;
   $('waClient').textContent=
-`✅ ARKAN — إشعار تحويل
+`✅ BDL — إشعار تحويل
 المرجع: ${ref}
 المستلم: ${cur.name}
 ${T==='MRU'?'Bankily: '+cur.phone+String.fromCharCode(10):''}المبلغ: ${fmt(payout,0)} ${CCYI[T]}
@@ -2093,7 +2093,7 @@ let _lastInv=null; /* {ref,blob,name,dataUrl,cWa} */
 async function sendInvoice(ref){ /* توليد + معاينة */
   const r=await genInvoice(ref);if(!r)return;
   const {doc,t,img}=r;
-  const name=`ARKAN_${t.ref}.pdf`;
+  const name=`BDL_${t.ref}.pdf`;
   const blob=doc.output('blob');
   _lastInv={ref:t.ref,blob,name,cWa:t.cWa||''};
   $('mdlTitle').textContent='فاتورة '+t.ref;
@@ -2136,7 +2136,7 @@ function autoWaMsg(t){
 }
 function clientWaMsg(t){
   if(t.type!=='bridge')return null;
-  return `✅ ARKAN — إشعار تحويل\nالمرجع: ${t.ref}\nالمستلم: ${t.name}\nالمبلغ: ${fmt(t.type==='m2a'?t.paidAoa:(t.payout!=null?t.payout:t.mru),0)} ${CCYI[t.toC||'MRU']}`;
+  return `✅ BDL — إشعار تحويل\nالمرجع: ${t.ref}\nالمستلم: ${t.name}\nالمبلغ: ${fmt(t.type==='m2a'?t.paidAoa:(t.payout!=null?t.payout:t.mru),0)} ${CCYI[t.toC||'MRU']}`;
 }
 function fireAutoWa(t){
   if(autoWa==='off')return;
@@ -2358,7 +2358,7 @@ function writeSmart(targetId,amount,sm){
   setTimeout(()=>{el.style.background='';},700);
 }
 /* ================= UNIVERSAL SMART RECEIPT READER ================= */
-/* ================= ARKAN UNIVERSAL RECEIPT ENGINE v1 =================
+/* ================= BDL UNIVERSAL RECEIPT ENGINE v1 =================
    محرك واحد لكل الخانات: يقرأ PDF وصور، كل البنوك، كل العملات.
    المخرج الموحّد: {ok,amount,ccy,txn,acct,date,bank,app,src,name,err,text}
 ====================================================================== */
@@ -5816,7 +5816,7 @@ function akStatementPDF(){
       +'<div class="tot">المجموع: '+Object.entries(tot).map(([c,v])=>'<b>'+F(v)+' '+c+'</b>').join(' · ')
       +(miss?' <span class="m">('+miss+' بلا مبلغ)</span>':'')+'</div>';
   };
-  const html='<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="utf-8"><title>كشف حساب — ARKAN</title><style>'
+  const html='<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="utf-8"><title>كشف حساب — BDL</title><style>'
    +'body{font-family:"IBM Plex Sans Arabic",Tahoma,sans-serif;margin:26px;color:#0B2447}'
    +'.hd{display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid #0058D9;padding-bottom:12px;margin-bottom:16px}'
    +'.hd b{font-size:22px;color:#003B8F}.hd small{color:#4E5A6B}'
@@ -5830,7 +5830,7 @@ function akStatementPDF(){
    +'tr:nth-child(even) td{background:#F6F9FE}'
    +'@media print{.np{display:none}}</style></head><body>'
    +'<button class="np" onclick="window.print()" style="position:fixed;top:10px;left:10px;padding:9px 20px;background:#003B8F;color:#fff;border:0;font-family:inherit;font-size:13px;cursor:pointer">طباعة / حفظ PDF</button>'
-   +'<div class="hd"><span><b>ARKAN — كشف حساب الإيصالات</b><br><small>ARKAN INTERNATIONAL TRADING · WhatsApp 36295050</small></span><span><small>التاريخ: '+today+'</small></span></div>'
+   +'<div class="hd"><span><b>BDL — كشف حساب الإيصالات</b><br><small>ARKAN INTERNATIONAL TRADING · WhatsApp 36295050</small></span><span><small>التاريخ: '+today+'</small></span></div>'
    +sec('cli','إيصالات العميل')+sec('sup','إيصالات المورد')
    +'</body></html>';
   const w=window.open('','_blank');
