@@ -1124,9 +1124,15 @@ function mrbMake(){
   x.fillText('وصل تحويل', 1000,150);
   x.font='500 30px Inter,Arial'; x.fillStyle='#8FB8E8';
   const d=new Date(); x.fillText(d.toLocaleDateString('fr-FR')+' '+d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}),1000,200);
-  const rows=[['القناة',MRB_CUR.n+' — '+MRB_CUR.ar],['المستلم',name],['رقم المستلم',to],
-              ['المبلغ',mrbFmt(amt)+' MRU'],['بالقديمة',mrbFmt(amt*10)+' UM']];
-  if(ref)rows.push(['رقم العملية',ref]);
+  let rows;
+  if(MRB_IMG){
+    rows=[['المستلم',name+(to!=='—'?'':'')],['القناة',MRB_CUR.n+' — '+MRB_CUR.ar],
+          ['المبلغ بالقديمة',mrbFmt(amt*10)+' UM']];
+  }else{
+    rows=[['القناة',MRB_CUR.n+' — '+MRB_CUR.ar],['المستلم',name],['رقم المستلم',to],
+          ['المبلغ',mrbFmt(amt)+' MRU'],['بالقديمة',mrbFmt(amt*10)+' UM']];
+    if(ref)rows.push(['رقم العملية',ref]);
+  }
   x.textAlign='right'; let y=340;
   rows.forEach(r=>{
     x.font='500 33px "IBM Plex Sans Arabic",Arial'; x.fillStyle='#5A7396'; x.fillText(r[0],960,y);
