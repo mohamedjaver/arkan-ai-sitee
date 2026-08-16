@@ -915,7 +915,7 @@ function tierFor(ccy,fx){
   const t=TIERS[ccy]; if(!t)return null;
   const thr=+t.thr||0, thrM=+t.thrM||0;
   if(thr&&fx>=thr)   return {rate:+t.w, tier:'w', label:{ar:'سعر الجملة',fr:'Prix de gros',en:'Wholesale',pt:'Preço grossista'}};
-  if(thrM&&fx>=thrM) return {rate:+t.m||+t.r, tier:'m', label:{ar:'سعر متوسط',fr:'Prix moyen',en:'Mid-tier',pt:'Preço médio'}};
+  if(thrM&&fx>=thrM) return {rate:+t.m||+t.r, tier:'m', label:{ar:'سعر الأعمال',fr:'Prix Business',en:'Business',pt:'Preço Business'}};
   return {rate:+t.r, tier:'r', label:{ar:'سعر التجزئة',fr:'Prix de détail',en:'Retail',pt:'Preço a retalho'}};
 }
 const fmt=(n,d=2)=>(+n||0).toLocaleString('en-US',{maximumFractionDigits:d});

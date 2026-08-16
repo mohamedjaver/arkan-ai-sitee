@@ -431,7 +431,7 @@ function renderRates(){
 }
 
 const st = { from:'USDT', to:'MRU' };
-const TIER_AR = {w:'جملة',m:'وسيط',r:'تجزئة'};
+const TIER_AR = {w:'جملة',m:'أعمال',r:'تجزئة'};
 function tierLevel(cc,amt){ const r=RATES[cc]; if(!r)return'r'; if(r.thr&&amt>=r.thr)return'w'; if(r.thrM&&amt>=r.thrM)return'm'; return'r'; }
 function parseAmt(){ return parseFloat(($('fromAmt').value||'').replace(/[^\d.]/g,''))||0; }
 function calc(){

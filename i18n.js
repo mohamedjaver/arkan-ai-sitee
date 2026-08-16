@@ -115,7 +115,7 @@ var DICT={
 "أسعار اليوم (مقابل الأوقية)":{fr:"Taux du jour (contre l'Ouguiya)",pt:"Taxas de hoje (contra o Ouguiya)"},
 "العملة":{fr:"Devise",pt:"Moeda"},
 "جملة":{fr:"Gros",pt:"Grosso"},
-"متوسط":{fr:"Moyen",pt:"Médio"},
+"الأعمال":{fr:"Business",pt:"Business",en:"Business"},
 "تجزئة":{fr:"Détail",pt:"Retalho"},
 "احسب تحويلك":{fr:"Calculez votre transfert",pt:"Calcule a sua transferência"},
 "العملة التي تريد تحويلها":{fr:"Devise à convertir",pt:"Moeda a converter"},

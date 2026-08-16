@@ -75,7 +75,7 @@ export async function loadRates() {
   } catch (e) { console.warn('loadRates failed', e); return RATES; }
 }
 export function arkTier(cc, amt) { const r = RATES[cc]; if (!r) return 'r'; if (r.thr && amt >= r.thr) return 'w'; if (r.thrM && amt >= r.thrM) return 'm'; return 'r'; }
-export const TIER_AR = { w: 'جملة', m: 'وسيط', r: 'تجزئة' };
+export const TIER_AR = { w: 'جملة', m: 'أعمال', r: 'تجزئة' };
 export function arkCompute(from, to, amount) {
   const src = (from !== 'MRU') ? from : to; const R = RATES[src];
   if (!R) return { tier: 'r', sellRate: 0, buyRate: 0, received: 0, profit: 0 };

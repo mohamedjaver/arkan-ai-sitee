@@ -145,7 +145,7 @@ function render(){
     <div class="card">
       <h2>أسعار اليوم (مقابل الأوقية)</h2>
       <div class="rateGrid" style="grid-template-columns:1fr auto auto auto">
-        <div class="h">العملة</div><div class="h" style="text-align:center">جملة</div><div class="h" style="text-align:center">متوسط</div><div class="h" style="text-align:center">تجزئة</div>
+        <div class="h">العملة</div><div class="h" style="text-align:center">جملة</div><div class="h" style="text-align:center">الأعمال</div><div class="h" style="text-align:center">تجزئة</div>
         ${rows}
       </div>
       <div class="note">لكل عملة حدّها — فوقه سعر الجملة، دونه التجزئة</div>
@@ -162,7 +162,7 @@ function render(){
       <input id="amt" inputmode="decimal" placeholder="1000000" oninput="calc()">
       <div class="tier">
         <div class="tierbox" id="tW"><div class="t">جملة</div><div class="v" id="tWv">—</div></div>
-        <div class="tierbox" id="tM"><div class="t">متوسط</div><div class="v" id="tMv">—</div></div>
+        <div class="tierbox" id="tM"><div class="t">الأعمال</div><div class="v" id="tMv">—</div></div>
         <div class="tierbox" id="tR"><div class="t">تجزئة</div><div class="v" id="tRv">—</div></div>
       </div>
       <div class="res">
@@ -214,7 +214,7 @@ function calc(){
     /* عادي: أدفع عملة → أستلم أوقية */
     let tier,rate,tierLbl;
     if(raw>=thr){tier='w';rate=row.w;tierLbl=window.arkanT?arkanT('جملة'):'جملة';}
-    else if(row.m&&raw>=thrM){tier='m';rate=row.m;tierLbl=window.arkanT?arkanT('متوسط'):'متوسط';}
+    else if(row.m&&raw>=thrM){tier='m';rate=row.m;tierLbl=window.arkanT?arkanT('الأعمال'):'الأعمال';}
     else{tier='r';rate=row.r;tierLbl=window.arkanT?arkanT('تجزئة'):'تجزئة';}
     const out=raw*rate;
     $('tW').classList.toggle('on',tier==='w');$('tM').classList.toggle('on',tier==='m');$('tR').classList.toggle('on',tier==='r');
@@ -228,10 +228,10 @@ function calc(){
     const qR=raw/rR, qM=rM?raw/rM:null, qW=raw/rW;
     let rate,bestOut,tierLbl;
     if(qW>=thr){rate=rW;bestOut=qW;tierLbl='جملة';}
-    else if(rM&&qM&&qM>=thrM){rate=rM;bestOut=qM;tierLbl='متوسط';}
+    else if(rM&&qM&&qM>=thrM){rate=rM;bestOut=qM;tierLbl='الأعمال';}
     else{rate=rR;bestOut=qR;tierLbl='تجزئة';}
     $('tW').classList.toggle('on',tierLbl==='جملة');
-    $('tM').classList.toggle('on',tierLbl==='متوسط');
+    $('tM').classList.toggle('on',tierLbl==='الأعمال');
     $('tR').classList.toggle('on',tierLbl==='تجزئة');
     $('out').textContent=fmt(bestOut,0);
     $('usedRate').textContent=`${fmt(raw,0)} UM ÷ ${rate} = ${fmt(bestOut,0)} ${cSym} (${tierLbl})`;
@@ -250,14 +250,14 @@ function send(){
   let rate,tierLbl,amtFgn,amtMRU;
   if(_mode==='fwd'){
     if(raw>=thr){rate=row.w;tierLbl='جملة';}
-    else if(row.m&&raw>=thrM){rate=row.m;tierLbl='متوسط';}
+    else if(row.m&&raw>=thrM){rate=row.m;tierLbl='الأعمال';}
     else{rate=row.r;tierLbl='تجزئة';}
     amtFgn=raw; amtMRU=raw*rate;
   } else {
     const rR=row.r,rM=row.m,rW=row.w;
     const qR=raw/rR,qM=rM?raw/rM:null,qW=raw/rW;
     if(qW>=thr){rate=rW;tierLbl='جملة';amtFgn=qW;}
-    else if(rM&&qM&&qM>=thrM){rate=rM;tierLbl='متوسط';amtFgn=qM;}
+    else if(rM&&qM&&qM>=thrM){rate=rM;tierLbl='الأعمال';amtFgn=qM;}
     else{rate=rR;tierLbl='تجزئة';amtFgn=qR;}
     amtMRU=raw;
   }
@@ -273,7 +273,7 @@ function _oldSend_unused(){
   const thr=row.thr||0, thrM=row.thrM||0;
   let rate,tierLbl;
   if(amt>=thr){rate=row.w;tierLbl=window.arkanT?arkanT('جملة'):'جملة';}
-  else if(row.m&&amt>=thrM){rate=row.m;tierLbl=window.arkanT?arkanT('متوسط'):'متوسط';}
+  else if(row.m&&amt>=thrM){rate=row.m;tierLbl=window.arkanT?arkanT('الأعمال'):'الأعمال';}
   else{rate=row.r;tierLbl=window.arkanT?arkanT('تجزئة'):'تجزئة';}
   const out=amt*rate;
   const who=$('who').value.trim();

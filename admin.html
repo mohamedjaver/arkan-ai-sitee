@@ -397,7 +397,7 @@ function render(){
       <div class="tx-top">
         <div class="tx-main">
           <div class="who">${t.clientName||t.clientEmail||'عميل'} <span class="badge ${st[0]}">${st[1]}</span></div>
-          <div class="pair mono">${t.from} → ${t.to} · ${dt} · ${(t.clientRef||t.id.slice(-6)).toUpperCase()}${t.tier?' · '+({w:'جملة',m:'وسيط',r:'تجزئة'}[t.tier]||''):''}</div>
+          <div class="pair mono">${t.from} → ${t.to} · ${dt} · ${(t.clientRef||t.id.slice(-6)).toUpperCase()}${t.tier?' · '+({w:'جملة',m:'أعمال',r:'تجزئة'}[t.tier]||''):''}</div>
         </div>
         <div class="tx-amt">
           <div class="n mono">${fmt(+t.amount,2)} ${t.from}</div>
