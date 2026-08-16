@@ -1051,7 +1051,7 @@ async function arRun(){
       }
       if(!bankMRO) continue;
       const dp=bankMRO<5?4:2, rnd=v=>+v.toFixed(dp);
-      const nr=rnd(bankMRO*(1+c/100)), nm=rnd(bankMRO*(1+Math.max(0,c-0.3)/100)), nw=rnd(bankMRO*(1+Math.max(0,c-0.6)/100));
+      const nw=rnd(bankMRO*(1+c/100)), nm=rnd(bankMRO*(1+(c+1.5)/100)), nr=rnd(bankMRO*(1+(c+3)/100)); /* جملة=العمولة، وسيط=+1.5، تجزئة=+3 */
       if(row.r!==nr||row.m!==nm||row.w!==nw||row.src!==src){ changed=true; }
       row.r=nr; row.m=nm; row.w=nw; row.src=src;
     }

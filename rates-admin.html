@@ -347,7 +347,7 @@ function render(){
         if(base>0){
           const dp=base<5?4:2;
           const calc=p=>+(base*(1+p/100)).toFixed(dp);
-          row.r=calc(c); row.m=calc(Math.max(0,c-0.3)); row.w=calc(Math.max(0,c-0.6));
+          row.w=calc(c); row.m=calc(c+1.5); row.r=calc(c+3);   /* جملة=العمولة، وسيط=+1.5، تجزئة=+3 */
           const card=e.target.closest('.rate');
           if(card){
             const set=(kk,v)=>{const el=card.querySelector(`input[data-k="${kk}"]`); if(el)el.value=v;};
