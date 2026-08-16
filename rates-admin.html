@@ -311,6 +311,14 @@ function render(){
         </div>
         <button class="del" data-i="${i}" aria-label="حذف"><i class="fa-solid fa-trash"></i></button>
       </div>
+      <div class="bankrow" style="display:grid;grid-template-columns:1.3fr .9fr .8fr;gap:8px;margin-bottom:8px">
+        <div><label style="display:block;font-size:10.5px;margin-bottom:5px;color:#7dd3fc">سعر البنك المرجعي</label>
+          <input class="mono" inputmode="decimal" data-i="${i}" data-k="bank" value="${row.bank ?? ''}" placeholder="1123.95" style="width:100%;background:rgba(8,7,20,.7);border:1px solid rgba(125,211,252,.35);padding:11px 8px;color:#e2e8f0;font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:700;text-align:center;outline:0"></div>
+        <div><label style="display:block;font-size:10.5px;margin-bottom:5px;color:#7dd3fc">المصدر</label>
+          <input data-i="${i}" data-k="src" value="${row.src ?? ''}" placeholder="Keve" style="width:100%;background:rgba(8,7,20,.7);border:1px solid var(--line);padding:11px 8px;color:#e2e8f0;font-size:13px;text-align:center;outline:0"></div>
+        <div><label style="display:block;font-size:10.5px;margin-bottom:5px;color:#4ade80">عمولة %</label>
+          <input class="mono" inputmode="decimal" data-i="${i}" data-k="comm" value="${row.comm ?? ''}" placeholder="5" style="width:100%;background:rgba(8,7,20,.7);border:1px solid rgba(74,222,128,.35);padding:11px 8px;color:#4ade80;font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:700;text-align:center;outline:0"></div>
+      </div>
       <div class="tiers">
         <div class="tier w"><label>جملة (w)</label><input class="mono" inputmode="decimal" data-i="${i}" data-k="w" value="${row.w ?? ''}"></div>
         <div class="tier m"><label>وسيط (m)</label><input class="mono" inputmode="decimal" data-i="${i}" data-k="m" value="${row.m ?? ''}"></div>
@@ -330,7 +338,22 @@ function render(){
   box.querySelectorAll('input[data-k]').forEach(inp => {
     inp.addEventListener('input', e => {
       const i = +e.target.dataset.i, k = e.target.dataset.k;
+      if(k==='src'){ model.r[i].src = e.target.value.trim(); return; }
       model.r[i][k] = num(e.target.value);
+      /* سعر البنك + العمولة ← حساب الطبقات الثلاث تلقائيًا */
+      if(k==='bank'||k==='comm'){
+        const row=model.r[i], b=+row.bank||0, c=+row.comm||0;
+        if(b>0&&c>0){
+          const dp=b<5?4:(b<100?2:2);
+          const calc=p=>+(b*(1+p/100)).toFixed(dp);
+          row.r=calc(c); row.m=calc(Math.max(0,c-0.3)); row.w=calc(Math.max(0,c-0.6));
+          const card=e.target.closest('.rate');
+          if(card){
+            const set=(kk,v)=>{const el=card.querySelector(`input[data-k="${kk}"]`); if(el)el.value=v;};
+            set('r',row.r); set('m',row.m); set('w',row.w);
+          }
+        }
+      }
       updateProfitPrev(i);
     });
   });
