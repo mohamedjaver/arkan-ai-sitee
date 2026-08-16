@@ -22,23 +22,18 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 <style>
 :root{
-  --bg:#070A14; --bg2:#12102a; --bg3:#0E1322;
-  --panel:rgba(23,20,50,.62); --line:rgba(255,255,255,.08);
-  --violet:#7c5cff; --violet-2:#a78bfa; --cyan:#22d3ee; --cyan-2:#67e8f9;
-  --gold:#0058D9; --gold-2:#d4a94a; --txt:#eef0ff; --mute:#9aa0c0; --dim:#6b7096;
-  --up:#34d399; --down:#f87171;
-  color-scheme:dark;
+  --bg:#F2F6FB; --bg2:#E9F0F9; --bg3:#FFFFFF;
+  --panel:#FFFFFF; --line:#D9E4F2;
+  --violet:#0A56B8; --violet-2:#19A9F5; --cyan:#0A56B8; --cyan-2:#0A56B8;
+  --gold:#0A56B8; --gold-2:#19A9F5; --txt:#0B2447; --mute:#5A7396; --dim:#8AA3C4;
+  --up:#0B7A3B; --down:#C62828;
+  color-scheme:light;
 }
 *{ box-sizing:border-box; }
 html{ -webkit-text-size-adjust:100%; }
 body{
-  margin:0; background:var(--bg); color:var(--txt);
+  margin:0; background:linear-gradient(180deg,#F5F9FE,#EAF1FA); color:var(--txt);
   font-family:'IBM Plex Sans Arabic',system-ui,sans-serif; min-height:100dvh;
-  background:
-    radial-gradient(60vw 50vw at 82% -8%, rgba(124,92,255,.28), transparent 62%),
-    radial-gradient(50vw 44vw at 6% 10%, rgba(34,211,238,.16), transparent 64%),
-    linear-gradient(180deg,#070A14,#12102a 60%,#0E1322);
-  background-attachment:fixed;
 }
 .mono{ font-family:'JetBrains Mono',monospace; font-variant-numeric:tabular-nums; direction:ltr; unicode-bidi:plaintext; }
 .wrap{ max-width:680px; margin:0 auto; padding:20px 16px 120px; }
@@ -71,7 +66,7 @@ body{
 /* token */
 .tok-row{ display:flex; gap:8px; }
 .tok-row input{
-  flex:1; min-width:0; background:rgba(8,7,20,.7); border:1px solid var(--line); border-radius:0;
+  flex:1; min-width:0; background:#FFFFFF; border:1px solid var(--line); border-radius:0;
   padding:14px; color:var(--txt); font-family:'JetBrains Mono',monospace; font-size:13px; outline:0; transition:.25s;
 }
 .tok-row input:focus{ border-color:rgba(124,92,255,.5); }
@@ -90,11 +85,11 @@ body{
 .bulletin{ display:flex; gap:10px; align-items:center; margin-bottom:14px; }
 .bulletin label{ font-size:12px; color:var(--mute); flex:0 0 auto; }
 .bulletin input{
-  background:rgba(8,7,20,.7); border:1px solid var(--line); border-radius:0;
+  background:#FFFFFF; border:1px solid var(--line); border-radius:0;
   padding:9px 12px; color:var(--txt); font-family:'JetBrains Mono',monospace; font-size:13px; outline:0; width:130px;
 }
 .rate{
-  border:1px solid var(--line); border-radius:0; background:rgba(8,7,20,.42);
+  border:1px solid var(--line); border-radius:0; background:#FBFDFF;
   padding:13px; margin-bottom:11px;
 }
 .rate-hd{ display:flex; align-items:center; gap:10px; margin-bottom:11px; }
@@ -110,7 +105,7 @@ body{
 .tier label{ display:block; font-size:10.5px; margin-bottom:5px; letter-spacing:.02em; }
 .tier.w label{ color:var(--gold); } .tier.m label{ color:var(--cyan-2); } .tier.r label{ color:var(--mute); }
 .tier input{
-  width:100%; background:rgba(8,7,20,.7); border:1px solid var(--line); border-radius:0;
+  width:100%; background:#FFFFFF; border:1px solid var(--line); border-radius:0;
   padding:11px 8px; color:var(--txt); font-family:'JetBrains Mono',monospace; font-size:15px; font-weight:700;
   text-align:center; outline:0; transition:.25s;
 }
@@ -312,12 +307,12 @@ function render(){
         <button class="del" data-i="${i}" aria-label="حذف"><i class="fa-solid fa-trash"></i></button>
       </div>
       <div class="bankrow" style="display:grid;grid-template-columns:1.3fr .9fr .8fr;gap:8px;margin-bottom:8px">
-        <div><label style="display:block;font-size:10.5px;margin-bottom:5px;color:#7dd3fc">سعر البنك المرجعي</label>
-          <input class="mono" inputmode="decimal" data-i="${i}" data-k="bank" value="${row.bank ?? ''}" placeholder="1123.95" style="width:100%;background:rgba(8,7,20,.7);border:1px solid rgba(125,211,252,.35);padding:11px 8px;color:#e2e8f0;font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:700;text-align:center;outline:0"></div>
-        <div><label style="display:block;font-size:10.5px;margin-bottom:5px;color:#7dd3fc">المصدر</label>
-          <input data-i="${i}" data-k="src" value="${row.src ?? ''}" placeholder="Keve" style="width:100%;background:rgba(8,7,20,.7);border:1px solid var(--line);padding:11px 8px;color:#e2e8f0;font-size:13px;text-align:center;outline:0"></div>
-        <div style="position:relative"><label style="display:block;font-size:10.5px;margin-bottom:5px;color:#4ade80">عمولة % <label style="float:left;color:#4ade80;cursor:pointer"><input type="checkbox" data-i="${i}" data-k="auto" ${row.auto?'checked':''} style="accent-color:#4ade80;vertical-align:middle"> تلقائي</label></label>
-          <input class="mono" inputmode="decimal" data-i="${i}" data-k="comm" value="${row.comm ?? ''}" placeholder="5" style="width:100%;background:rgba(8,7,20,.7);border:1px solid rgba(74,222,128,.35);padding:11px 8px;color:#4ade80;font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:700;text-align:center;outline:0"></div>
+        <div><label style="display:block;font-size:10.5px;margin-bottom:5px;color:#0A56B8">سعر البنك المرجعي</label>
+          <input class="mono" inputmode="decimal" data-i="${i}" data-k="bank" value="${row.bank ?? ''}" placeholder="1123.95" style="width:100%;background:#FFFFFF;border:1px solid #9CC4EE;padding:11px 8px;color:#0B2447;font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:700;text-align:center;outline:0"></div>
+        <div><label style="display:block;font-size:10.5px;margin-bottom:5px;color:#0A56B8">المصدر</label>
+          <input data-i="${i}" data-k="src" value="${row.src ?? ''}" placeholder="Keve" style="width:100%;background:#FFFFFF;border:1px solid var(--line);padding:11px 8px;color:#0B2447;font-size:13px;text-align:center;outline:0"></div>
+        <div style="position:relative"><label style="display:block;font-size:10.5px;margin-bottom:5px;color:#0B7A3B">عمولة % <label style="float:left;color:#0B7A3B;cursor:pointer"><input type="checkbox" data-i="${i}" data-k="auto" ${row.auto?'checked':''} style="accent-color:#0B7A3B;vertical-align:middle"> تلقائي</label></label>
+          <input class="mono" inputmode="decimal" data-i="${i}" data-k="comm" value="${row.comm ?? ''}" placeholder="5" style="width:100%;background:#FFFFFF;border:1px solid #9FD4B4;padding:11px 8px;color:#0B7A3B;font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:700;text-align:center;outline:0"></div>
       </div>
       <div class="tiers">
         <div class="tier w"><label>جملة (w)</label><input class="mono" inputmode="decimal" data-i="${i}" data-k="w" value="${row.w ?? ''}"></div>
