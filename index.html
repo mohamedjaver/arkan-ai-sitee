@@ -264,6 +264,8 @@ section{padding:88px 0}
 .bal .amt{font-family:'Archivo',sans-serif;font-variation-settings:'wdth' 118;font-weight:900;
   font-size:clamp(24px,2.6vw,32px);color:var(--ink);letter-spacing:-.01em;margin:14px 0 6px;direction:ltr}
 [dir=rtl] .bal .amt{text-align:right}
+.bal .bsub{font-size:11.5px;color:#5A7396;margin-top:6px;font-weight:600}
+[dir=rtl] .bal .bsub{text-align:right}
 
 /* visa */
 .visa{background:#EEF7FF}
@@ -644,10 +646,10 @@ body::after{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;opac
       <p class="sec-sub" data-i="db_sub"></p>
     </div>
     <div class="balances">
-      <div class="bal"><div class="cur"><span class="cc">AOA</span><span data-i="c_aoa"></span></div></div>
-      <div class="bal"><div class="cur"><span class="cc">MRU</span><span data-i="c_mru"></span></div></div>
-      <div class="bal"><div class="cur"><span class="cc">USDT</span>Tether</div></div>
-      <div class="bal"><div class="cur"><span class="cc">EUR</span>Euro</div></div>
+      <div class="bal"><div class="cur"><span class="cc">AOA</span><span data-i="c_aoa"></span></div><div class="amt" id="dAOA">—</div><div class="bsub" id="dAOAs"></div></div>
+      <div class="bal"><div class="cur"><span class="cc">MRU</span><span data-i="c_mru"></span></div><div class="amt" id="dMRU">—</div><div class="bsub" id="dMRUs"></div></div>
+      <div class="bal"><div class="cur"><span class="cc">USDT</span>Tether</div><div class="amt" id="dUSDT">—</div><div class="bsub" id="dUSDTs"></div></div>
+      <div class="bal"><div class="cur"><span class="cc">EUR</span>Euro</div><div class="amt" id="dEUR">—</div><div class="bsub" id="dEURs"></div></div>
     </div>
   </div>
 </section>
@@ -906,7 +908,7 @@ async function loadTiers(){
     (d.r||[]).forEach(x=>{ if(x.ccy) TIERS[x.ccy]=x; });
     TIER_TS=d.date||d.d||null;
     const u=document.getElementById('updDate'); if(u&&TIER_TS)u.textContent=TIER_TS;
-    calc(); renderMarket();
+    calc(); renderMarket(); renderDash();
   }catch(e){}
 }
 /* يختار الشريحة حسب حجم مبلغ العميل بالعملة الأجنبية */
@@ -932,6 +934,20 @@ function R(){ // units per 1 USD — مشتقة من أسعار لبدال ال�
     NGN:per('NGN',RATES.usd_ngn), EGP:per('EGP',RATES.usd_egp)};
 }
 
+function renderDash(){
+  const B=c=>TIERS[c]&&+TIERS[c].bank>0?+TIERS[c].bank:null;
+  const usd=B('USDT')||B('USD');
+  const L={ar:{ref:'مرجع البنك المركزي',bna:'مرجع بنك أنغولا',peg:'مثبّت بالدولار الأمريكي',perU:'لكل دولار'},
+    fr:{ref:'Référence banque centrale',bna:'Référence banque d\'Angola',peg:'Indexé au dollar US',perU:'par dollar'},
+    en:{ref:'Central-bank reference',bna:'Bank of Angola reference',peg:'Pegged to the US dollar',perU:'per dollar'},
+    pt:{ref:'Referência do banco central',bna:'Referência do banco de Angola',peg:'Indexado ao dólar',perU:'por dólar'}}[LANG]||{};
+  const set=(id,v,sub)=>{const a=document.getElementById(id),b=document.getElementById(id+'s');
+    if(a&&v!=null)a.textContent=v; if(b&&sub)b.textContent=sub;};
+  if(B('AOA')) set('dAOA', fmt(B('AOA'),2)+' Kz', L.perU+' · '+L.bna);
+  if(usd)      set('dMRU', fmt(usd,2)+' MRU', L.perU+' · '+L.ref);
+  set('dUSDT','1 : 1 USD', L.peg);
+  if(B('EUR')&&usd) set('dEUR', fmt(B('EUR'),2)+' MRU', '1 EUR · '+L.ref);
+}
 function renderMarket(){
   const t=I18N[LANG];
   const B=c=>TIERS[c]&&+TIERS[c].bank>0?+TIERS[c].bank:null;
@@ -1081,7 +1097,7 @@ function setLang(l){
   document.querySelectorAll('#langSeg button').forEach(b=>b.classList.toggle('on',b.dataset.l===l));
   document.getElementById('waBtn').href='https://wa.me/22236295050?text='+encodeURIComponent(t.wa);
   document.title=(l==='ar')?'BDL — الصرف والتسويات الدولية':'BDL — Move Money Across Africa Instantly';
-  renderMarket(); renderCardPrice(); calc();
+  renderMarket(); renderDash(); renderCardPrice(); calc();
 }
 document.querySelectorAll('#langSeg button').forEach(b=>b.addEventListener('click',()=>setLang(b.dataset.l)));
 
