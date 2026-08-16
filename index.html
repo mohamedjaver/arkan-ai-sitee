@@ -882,25 +882,30 @@ pt:{
    BDL OFFICIAL RATES — from rates.json (Mohamed edits that file only)
    All base values in old ouguiya (MRO). 1 MRU = 10 MRO.
    ============================================================ */
-let RATES={updated:"2026-08-02",usd_mro:422.5,eur_mro:485,aoa_mro:0.35,usd_cny:7.16,usd_aed:3.6725,usd_ngn:1368,usd_egp:50,card_price_mro:15000};
+let RATES={updated:"2026-08-16",usd_mro:424.32,eur_mro:490.14,aoa_mro:0.3562,usd_cny:6.7504,usd_aed:3.6725,usd_ngn:1368,usd_egp:50,card_price_mro:15000};
 /* ═══ الأسعار المتدرجة المنشورة من لوحة التسوية (جملة/متوسط/تجزئة) ═══ */
 let TIERS={}, TIER_TS=null;
 async function loadTiers(){
   let d=null;
-  /* 1) السحابة (منشور بلا رمز) */
+  /* 1) الملف المنشور من محرك الأسعار — المصدر الأول دائمًا */
   try{
-    const FS='https://firestore.googleapis.com/v1/projects/arkan-rates-prod/databases/(default)/documents/public/rates?key=AIzaSyCtL-OySTK9FeyD0h-31BiupYFtGBxbJ_U';
-    const c=await fetch(FS+'&t='+Date.now(),{cache:'no-store'});
-    if(c.ok){ const j=await c.json();
-      const raw=j.fields&&j.fields.json&&j.fields.json.stringValue;
-      if(raw) d=JSON.parse(raw); }
+    const r=await fetch('rates-data.json?t='+Date.now(),{cache:'no-store'});
+    if(r.ok) d=await r.json();
   }catch(e){}
-  /* 2) الملف الثابت احتياطًا */
+  /* 2) السحابة احتياطًا فقط إن تعذر الملف */
   try{
-    if(!d){ const r=await fetch('rates-data.json?t='+Date.now(),{cache:'no-store'});
-      if(!r.ok)return; d=await r.json(); }
+    if(!d){
+      const FS='https://firestore.googleapis.com/v1/projects/arkan-rates-prod/databases/(default)/documents/public/rates?key=AIzaSyCtL-OySTK9FeyD0h-31BiupYFtGBxbJ_U';
+      const c=await fetch(FS+'&t='+Date.now(),{cache:'no-store'});
+      if(c.ok){ const j=await c.json();
+        const raw=j.fields&&j.fields.json&&j.fields.json.stringValue;
+        if(raw) d=JSON.parse(raw); }
+    }
+  }catch(e){}
+  try{
+    if(!d) return;
     (d.r||[]).forEach(x=>{ if(x.ccy) TIERS[x.ccy]=x; });
-    TIER_TS=d.date||null;
+    TIER_TS=d.date||d.d||null;
     const u=document.getElementById('updDate'); if(u&&TIER_TS)u.textContent=TIER_TS;
     calc(); renderMarket();
   }catch(e){}

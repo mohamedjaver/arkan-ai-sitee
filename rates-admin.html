@@ -307,8 +307,8 @@ function render(){
         <button class="del" data-i="${i}" aria-label="حذف"><i class="fa-solid fa-trash"></i></button>
       </div>
       <div class="bankrow" style="display:grid;grid-template-columns:1.3fr .9fr .8fr;gap:8px;margin-bottom:8px">
-        <div><label style="display:block;font-size:10.5px;margin-bottom:5px;color:#0A56B8">سعر البنك المرجعي</label>
-          <input class="mono" inputmode="decimal" data-i="${i}" data-k="bank" value="${row.bank ?? ''}" placeholder="1123.95" style="width:100%;background:#FFFFFF;border:1px solid #9CC4EE;padding:11px 8px;color:#0B2447;font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:700;text-align:center;outline:0"></div>
+        <div><label style="display:block;font-size:10.5px;margin-bottom:5px;color:#0A56B8">مرجع البنك الرسمي (BCM بالجديدة / أنغولا Kz لكل $)</label>
+          <input class="mono" inputmode="decimal" data-i="${i}" data-k="bank" value="${row.bank ?? ''}" placeholder="40.03" style="width:100%;background:#FFFFFF;border:1px solid #9CC4EE;padding:11px 8px;color:#0B2447;font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:700;text-align:center;outline:0"></div>
         <div><label style="display:block;font-size:10.5px;margin-bottom:5px;color:#0A56B8">المصدر</label>
           <input data-i="${i}" data-k="src" value="${row.src ?? ''}" placeholder="Keve" style="width:100%;background:#FFFFFF;border:1px solid var(--line);padding:11px 8px;color:#0B2447;font-size:13px;text-align:center;outline:0"></div>
         <div style="position:relative"><label style="display:block;font-size:10.5px;margin-bottom:5px;color:#0B7A3B">عمولة % <label style="float:left;color:#0B7A3B;cursor:pointer"><input type="checkbox" data-i="${i}" data-k="auto" ${row.auto?'checked':''} style="accent-color:#0B7A3B;vertical-align:middle"> تلقائي</label></label>
@@ -338,10 +338,15 @@ function render(){
       model.r[i][k] = num(e.target.value);
       /* سعر البنك + العمولة ← حساب الطبقات الثلاث تلقائيًا */
       if(k==='bank'||k==='comm'){
-        const row=model.r[i], b=+row.bank||0, c=+row.comm||0;
-        if(b>0&&c>0){
-          const dp=b<5?4:(b<100?2:2);
-          const calc=p=>+(b*(1+p/100)).toFixed(dp);
+        const row=model.r[i], bk=+row.bank||0, c=+row.comm||0;
+        let base=0;
+        if(row.ccy==='AOA'){
+          const u=model.r.find(x=>x.ccy==='USDT'||x.ccy==='USD');
+          if(bk>0&&u&&+u.bank>0) base=(+u.bank*10)/bk;   /* قديمة لكل كوانزا */
+        } else if(bk>0) base=bk*10;                       /* مرجع BCM بالجديدة ×10 */
+        if(base>0){
+          const dp=base<5?4:2;
+          const calc=p=>+(base*(1+p/100)).toFixed(dp);
           row.r=calc(c); row.m=calc(Math.max(0,c-0.3)); row.w=calc(Math.max(0,c-0.6));
           const card=e.target.closest('.rate');
           if(card){

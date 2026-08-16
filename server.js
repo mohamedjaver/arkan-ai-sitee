@@ -1035,18 +1035,25 @@ async function arRun(){
     const cur=await (await fetch(AR_RAW+'?t='+Date.now())).json();
     const mkt=await arMarketUSD();
     let changed=false;
+    const anchorRow=(cur.r||[]).find(x=>x.ccy==='USDT'||x.ccy==='USD');
+    const anchorMRO=((+((anchorRow||{}).bank)||0)>0? +anchorRow.bank : ((mkt&&mkt.MRU)||0))*10;
     for(const row of (cur.r||[])){
-      if(!row.auto || row.lock) continue;       /* التلقائي اختياري لكل عملة + قفل طارئ */
-      const c=+row.comm||0; if(c<=0) continue;
-      let bank=arCross(mkt,row.ccy); if(!bank) continue;
-      bank = bank * (row.mult!=null?+row.mult:10); /* القديمة MRO افتراضيًا (×10) */
-      const dp = bank<5?4:2;
-      const rnd=v=>+v.toFixed(dp);
-      const nb=rnd(bank);
-      const nr=rnd(bank*(1+c/100)), nm=rnd(bank*(1+Math.max(0,c-0.3)/100)), nw=rnd(bank*(1+Math.max(0,c-0.6)/100));
-      if(row.bank!==nb||row.r!==nr){ changed=true; }
-      row.bank=nb; row.src=row.src&&row.src!=='Market'?row.src:'Market';
-      row.src='Market'; row.r=nr; row.m=nm; row.w=nw;
+      if(!row.auto || row.lock) continue;        /* التلقائي اختياري + قفل طارئ */
+      const c=+row.comm||0;
+      let bankMRO=0, src='';
+      if(row.ccy==='AOA'){                        /* مرجع بنك أنغولا: AOA لكل دولار */
+        if((+row.bank||0)>0 && anchorMRO){ bankMRO=anchorMRO/+row.bank; src='BNA'; }
+      } else if((+row.bank||0)>0){                /* مرجع BCM بالجديدة لكل وحدة */
+        bankMRO=+row.bank*10; src='BCM';
+      } else {                                    /* احتياط: السوق الحي */
+        const x=arCross(mkt,row.ccy);
+        if(x){ bankMRO=x*(row.mult!=null?+row.mult:10); src='Market'; }
+      }
+      if(!bankMRO) continue;
+      const dp=bankMRO<5?4:2, rnd=v=>+v.toFixed(dp);
+      const nr=rnd(bankMRO*(1+c/100)), nm=rnd(bankMRO*(1+Math.max(0,c-0.3)/100)), nw=rnd(bankMRO*(1+Math.max(0,c-0.6)/100));
+      if(row.r!==nr||row.m!==nm||row.w!==nw||row.src!==src){ changed=true; }
+      row.r=nr; row.m=nm; row.w=nw; row.src=src;
     }
     if(!changed){ console.log('AUTO-RATES: لا تغيير'); return; }
     cur.d=new Date().toLocaleDateString('fr-FR');
