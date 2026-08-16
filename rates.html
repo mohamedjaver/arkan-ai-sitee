@@ -220,6 +220,15 @@ function calc(){
     if($('resCur'))$('resCur').innerHTML=`<span style="opacity:.5;font-size:12px">${cSym} ← </span>${window.arkanT?arkanT('MRU · أوقية'):'MRU · أوقية'}`;
   } else {
     /* عكسي: أريد X أوقية → أحتاج كم عملة؟ */
+    if(cc==='AOA'&&+row.out){  /* بيع كوانزا: سعر موحّد */
+      const q=raw/ +row.out;
+      $('out').textContent=fmt(q,0);
+      $('usedRate').textContent='';
+      const _tL=window.arkanT?arkanT('تحتاج من'):'تحتاج من';
+      if($('resLbl'))$('resLbl').textContent=_tL+' '+cName;
+      if($('resCur'))$('resCur').innerHTML=`<span style="opacity:.5;font-size:12px">${window.arkanT?arkanT('MRU · أوقية'):'MRU ←'} </span>${cSym} · ${cName}`;
+      return;
+    }
     const rR=row.r, rM=row.m||null, rW=row.w;
     const qR=raw/rR, qM=rM?raw/rM:null, qW=raw/rW;
     let rate,bestOut,tierLbl;

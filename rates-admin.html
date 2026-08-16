@@ -325,6 +325,7 @@ function render(){
       </div>
       <div class="buy-row">
         <div class="buy-fld"><label>سعر الشراء (buy)</label><input class="mono buy-in" inputmode="decimal" data-i="${i}" data-k="buy" value="${row.buy ?? ''}"></div>
+        ${row.ccy==='AOA'?`<div class="buy-fld"><label>بيع الكوانزا — MRU→AOA (out)</label><input class="mono buy-in" inputmode="decimal" data-i="${i}" data-k="out" value="${row.out ?? ''}"></div>`:''}
         <div class="profit-prev" id="pp-${i}">الربح/وحدة: —</div>
       </div>`;
     box.appendChild(d);

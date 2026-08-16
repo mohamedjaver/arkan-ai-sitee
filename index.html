@@ -1066,6 +1066,17 @@ function calc(){
     const ti=tierFor(F,a);
     if(ti){ rate=ti.rate/10; tierNote=ti.label[LANG]||ti.label.ar; }
   }
+  /* ═ دفتر الكوانزا ثنائي الاتجاه: بيع كوانزا بسعر out موحّد، شراؤها بالشرائح ═ */
+  const AO=TIERS.AOA||{}, aoOut=+AO.out||0;
+  if(T==='AOA'&&aoOut){
+    if(F==='MRU'){ rate=1/(aoOut/10); tierNote=''; }
+    else if(TIERS[F]){ const ti=tierFor(F,a); const fr=(ti?ti.rate:+TIERS[F].r||0)/10;
+      if(fr){ rate=fr/(aoOut/10); if(ti)tierNote=ti.label[LANG]||ti.label.ar; } }
+  }else if(F==='AOA'&&AO.r){
+    const ti=tierFor('AOA',a); const ar=(ti?ti.rate:+AO.r)/10;
+    if(T==='MRU'){ rate=ar; if(ti)tierNote=ti.label[LANG]||ti.label.ar; }
+    else if(TIERS[T]&&+TIERS[T].r){ rate=ar/((+TIERS[T].r)/10); if(ti)tierNote=ti.label[LANG]||ti.label.ar; }
+  }
   tAmt.value=fmt(a*rate);
   fitAmt(f);fitAmt(tAmt);
   const _OFF=c=>{const b=x=>TIERS[x]&&+TIERS[x].bank>0?+TIERS[x].bank:null;const u=b('USDT')||b('USD');
