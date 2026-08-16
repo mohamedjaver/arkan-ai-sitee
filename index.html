@@ -1107,8 +1107,15 @@ setLang(LANG);
 
 /* mobile menu */
 const mm=document.getElementById('mmenu');
-document.getElementById('navToggle').addEventListener('click',()=>mm.classList.toggle('open'));
+const navTg=document.getElementById('navToggle');
+navTg.addEventListener('click',e=>{e.stopPropagation();mm.classList.toggle('open');});
 mm.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>mm.classList.remove('open')));
+/* الإغلاق بلمس أي مكان خارج القائمة — سلوك التطبيقات البنكية */
+document.addEventListener('pointerdown',e=>{
+  if(mm.classList.contains('open') && !mm.contains(e.target) && e.target!==navTg)
+    mm.classList.remove('open');
+},{passive:true});
+addEventListener('scroll',()=>{if(mm.classList.contains('open'))mm.classList.remove('open');},{passive:true});
 /* خروج: مسح كل جلسات لبدال ثم إعادة التحميل */
 window.arkanLogout=function(e){if(e)e.preventDefault();
   ['arkan_session','arkan_sb_jwt','arkanClient','arkan_admin_dev','arkan_owner_auth'].forEach(k=>{try{localStorage.removeItem(k)}catch(_){}});
