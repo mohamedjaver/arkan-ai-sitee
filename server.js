@@ -1036,9 +1036,10 @@ async function arRun(){
     const mkt=await arMarketUSD();
     let changed=false;
     for(const row of (cur.r||[])){
-      if(row.lock) continue;                    /* قفل يدوي — لا تمسّ */
-      const c=+row.comm||0; if(c<=0) continue;  /* بلا عمولة مضبوطة — يدوي */
-      const bank=arCross(mkt,row.ccy); if(!bank) continue;
+      if(!row.auto || row.lock) continue;       /* التلقائي اختياري لكل عملة + قفل طارئ */
+      const c=+row.comm||0; if(c<=0) continue;
+      let bank=arCross(mkt,row.ccy); if(!bank) continue;
+      bank = bank * (row.mult!=null?+row.mult:10); /* القديمة MRO افتراضيًا (×10) */
       const dp = bank<5?4:2;
       const rnd=v=>+v.toFixed(dp);
       const nb=rnd(bank);
