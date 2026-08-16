@@ -136,8 +136,7 @@ function render(){
     app.innerHTML='<div class="card"><div class="empty">لا توجد أسعار.<br>اطلب الرابط المحدّث من BDL.</div></div>';
     return;
   }
-  const rows=DATA.r.map(x=>{
-    const rows=DATA.r.filter(x=>+(x.bank)>0).map(x=>{
+  const rows=DATA.r.filter(x=>+(x.bank)>0).map(x=>{
       const isA=x.ccy==='AOA';
       const pair=isA?'USD → AOA':`${x.ccy==='USDT'?'USD':x.ccy} → MRU`;
       const val=isA?`${x.bank} Kz`:`${x.bank} MRU`;
