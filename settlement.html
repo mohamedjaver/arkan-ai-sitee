@@ -4892,6 +4892,17 @@ async function inbDone(id){
     if(cc.includes('→')){const p=cc.split('→');from=p[0].trim();to=(p[1]||'').trim();}
     else {from=cc.trim();to=x.destination||'';}
     const amtNum=parseFloat(String(x.amount||'').replace(/[^\d.]/g,''))||0;
+    /* ═ المصب النهائي: أرشفة العملية الكاملة في archive_docs ═ */
+    try{
+      fetch(AK_SB+'/archive_docs?on_conflict=id',{method:'POST',
+        headers:{apikey:AK_ANON,Authorization:'Bearer '+AK_ANON,'Content-Type':'application/json',Prefer:'resolution=merge-duplicates'},
+        body:JSON.stringify({id:'op_'+(x.ref||id),
+          data:{kind:'operation',ref:x.ref||id,from:from,to:to,amount:amtNum,
+            recv:x.recv||null,recvCcy:x.recvCcy||to||null,rateNum:x.rateNum||null,tier:x.tier||null,
+            client:x.company||'',phone:x.contact||'',benefName:x.benefName||'',benefIban:x.benefIban||'',benefBank:x.benefBank||'',
+            type:x.type||'',status:'done',doneAt:Date.now(),srcId:id},
+          updated_at:new Date().toISOString()})}).catch(()=>{});
+    }catch(e){}
     const phone=String(x.contact||'').replace(/[^0-9]/g,'');
     if(phone.length>=7){
       await addDoc(collection(ARKAN.db,'transactions'),{

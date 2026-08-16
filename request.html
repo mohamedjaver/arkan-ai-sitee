@@ -712,7 +712,7 @@ async function uploadInvoice(){
     showProcessing(amt, from);
     try{ if(window.ARKAN){ await ARKAN.ready; if(ARKAN.firebaseOK){
       var fb=ARKAN.fb;
-      await fb.addDoc(fb.collection(ARKAN.db,'payment_requests'),
+      window._reqDoc=await fb.addDoc(fb.collection(ARKAN.db,'payment_requests'),
         {ref:ref,company:name,amount:amt,currency:from+'→'+to,destination:to,purpose:'تحويل فردي',
          contact:phone,type:'individual',status:'pending',
          benefName:bname,benefIban:iban,benefBank:bank,createdAt:fb.serverTimestamp()});
@@ -750,8 +750,20 @@ async function uploadInvoice(){
         msg+='%0Aيستلم تقريبًا: ≈ '+recvStr+' '+to;
       }
     }catch(e){}
+    /* ═ أرشفة داخلية: الشريحة + السعر + مبلغ الاستلام في سجل العملية (لا يظهر للعميل) ═ */
+    var _tier='';
+    try{
+      var _pc=(from!=='MRU')?from:to;                    /* العملة المسعّرة */
+      var _row=liveCcy(_pc);
+      var _fa=(from!=='MRU')?na:(rateNum>0?na*rateNum:0); /* كميتها الأجنبية */
+      if(_row&&_fa>0){ _tier=(_fa>=(_row.thr||0))?'w':(_row.thrM&&_fa>=_row.thrM)?'m':'r'; }
+      if(window._reqDoc&&ARKAN&&ARKAN.fb&&ARKAN.fb.updateDoc&&ARKAN.fb.doc){
+        ARKAN.fb.updateDoc(ARKAN.fb.doc(ARKAN.db,'payment_requests',window._reqDoc.id),
+          {rateNum:rateNum||null,tier:_tier||null,recv:recvStr||null,recvCcy:to||null}).catch(function(){});
+      }
+    }catch(e){}
     window._pdfData={ref:ref,date:new Date().toLocaleString('en-GB'),sender:name,senderPhone:phone,
-      amount:amt,from:from,to:to,bname:bname,iban:iban,bank:bank,rate:rateStr,rateNum:rateNum,recv:recvStr};
+      amount:amt,from:from,to:to,bname:bname,iban:iban,bank:bank,rate:rateStr,rateNum:rateNum,recv:recvStr,tier:_tier};
     okToSuccess(ref, 'https://wa.me/22236295050?text='+msg, amt, from);
   });
 })();

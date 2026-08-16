@@ -602,6 +602,22 @@ import * as ARKAN from './arkan-core.js'; window.ARKAN = ARKAN;
         if (ARKAN.toast) ARKAN.toast('حُذف الطلب');
       } else {
         await updateDoc(doc(ARKAN.db,'payment_requests',id), { status: act, decidedAt: serverTimestamp() });
+        if(act==='done'){
+          try{
+            const _x=(window._reqCache&&window._reqCache[id])||{};
+            const _cc=String(_x.currency||''); let _f='',_t2='';
+            if(_cc.includes('→')){const p=_cc.split('→');_f=p[0].trim();_t2=(p[1]||'').trim();}
+            fetch('https://vyxzlazwpbstigcqvizb.supabase.co/rest/v1/archive_docs?on_conflict=id',{method:'POST',
+              headers:{apikey:'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ5eHpsYXp3cGJzdGlnY3F2aXpiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU5MTU5OTcsImV4cCI6MjEwMTQ5MTk5N30.fxMt_jH4z8t7uVnFLLHyNobu6zsgu_ZwVGLibuqWj38',Authorization:'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ5eHpsYXp3cGJzdGlnY3F2aXpiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU5MTU5OTcsImV4cCI6MjEwMTQ5MTk5N30.fxMt_jH4z8t7uVnFLLHyNobu6zsgu_ZwVGLibuqWj38','Content-Type':'application/json',Prefer:'resolution=merge-duplicates'},
+              body:JSON.stringify({id:'op_'+(_x.ref||id),
+                data:{kind:'operation',ref:_x.ref||id,from:_f,to:_t2,
+                  amount:parseFloat(String(_x.amount||'').replace(/[^\d.]/g,''))||0,
+                  recv:_x.recv||null,recvCcy:_x.recvCcy||_t2||null,rateNum:_x.rateNum||null,tier:_x.tier||null,
+                  client:_x.company||'',phone:_x.contact||'',benefName:_x.benefName||'',benefIban:_x.benefIban||'',
+                  type:_x.type||'',status:'done',doneAt:Date.now(),srcId:id},
+                updated_at:new Date().toISOString()})}).catch(()=>{});
+          }catch(e){}
+        }
         if (ARKAN.toast) ARKAN.toast('تم القبول ✓');
       }
     }
@@ -612,7 +628,9 @@ import * as ARKAN from './arkan-core.js'; window.ARKAN = ARKAN;
   function subscribe(){
     if (started) return; started = true;
     const seen = new Set(); let first = true;
+    window._reqCache={};
     onSnapshot(query(collection(ARKAN.db,'payment_requests'), orderBy('createdAt','desc')), snap => {
+      snap.docs.forEach(d=>{window._reqCache[d.id]=d.data();});
       if (cnt) cnt.textContent = snap.size + ' طلب';
       let isNew = false;
       snap.docs.forEach(d => { if (!seen.has(d.id)) { if (!first) isNew = true; seen.add(d.id); } });
