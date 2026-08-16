@@ -926,7 +926,7 @@ function calc(){
   var r=rate(f,t), out=a*r;
   document.getElementById('outIn').value=fmt(out);
   document.getElementById('outBig').textContent=fmt(out)+' '+t;
-  document.getElementById('rateTxt').textContent='سعر الصرف المطبق: 1 '+f+' = '+fmt(r,6)+' '+t;
+  document.getElementById('rateTxt').textContent='';
 }
 function swapC(){
   var a=fddVal('fddFrom'), b=fddVal('fddTo');

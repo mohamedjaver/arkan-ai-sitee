@@ -743,7 +743,7 @@ async function uploadInvoice(){
       if(rateNum>0){
         var rd=rateNum>=10?rateNum.toFixed(2):rateNum>=1?rateNum.toFixed(3):rateNum.toFixed(4);
         rd=rd.replace(/\.?0+$/,'');
-        rateStr='1 '+from+' = '+rd+' '+to;
+        rateStr='';
       }
       if(rateNum>0&&na>0){ var rv=na*rateNum;
         recvStr=(rv>=100?Math.round(rv):Math.round(rv*100)/100).toLocaleString('en-US');
