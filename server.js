@@ -1006,6 +1006,71 @@ app.post('/admin/set-pin', async (req, res) => {
   }
 });
 
+
+/* ═══════════ BDL AUTO-RATES ENGINE ═══════════
+   يجلب أسعار السوق (open.er-api.com) كل 6 ساعات،
+   يطبّق عمولة كل عملة من rates-data.json،
+   وينشر النشرة تلقائيًا عبر GitHub Contents API.
+   أي عملة عليها lock:true لا تُمس — تدخّل المالك اليدوي. */
+const AR_REPO='mohamedjaver/arkan-ai-sitee', AR_FILE='rates-data.json';
+const AR_RAW=`https://raw.githubusercontent.com/${AR_REPO}/main/${AR_FILE}`;
+const AR_API=`https://api.github.com/repos/${AR_REPO}/contents/${AR_FILE}`;
+
+async function arMarketUSD(){
+  const r=await fetch('https://open.er-api.com/v6/latest/USD');
+  const j=await r.json();
+  if(j.result!=='success') throw new Error('market api');
+  return j.rates; /* { MRU: x, AOA: y, EUR: z, ... } لكل 1 USD */
+}
+function arCross(rates, ccy){
+  /* سعر 1 وحدة من العملة بالأوقية الجديدة */
+  const mru=rates.MRU; if(!mru) return null;
+  if(ccy==='USD'||ccy==='USDT') return mru;
+  const per=rates[ccy]; if(!per) return null;
+  return mru/per;
+}
+async function arRun(){
+  try{
+    if(!process.env.GH_TOKEN){ console.log('AUTO-RATES: GH_TOKEN غير مضبوط — تخطٍ'); return; }
+    const cur=await (await fetch(AR_RAW+'?t='+Date.now())).json();
+    const mkt=await arMarketUSD();
+    let changed=false;
+    for(const row of (cur.r||[])){
+      if(row.lock) continue;                    /* قفل يدوي — لا تمسّ */
+      const c=+row.comm||0; if(c<=0) continue;  /* بلا عمولة مضبوطة — يدوي */
+      const bank=arCross(mkt,row.ccy); if(!bank) continue;
+      const dp = bank<5?4:2;
+      const rnd=v=>+v.toFixed(dp);
+      const nb=rnd(bank);
+      const nr=rnd(bank*(1+c/100)), nm=rnd(bank*(1+Math.max(0,c-0.3)/100)), nw=rnd(bank*(1+Math.max(0,c-0.6)/100));
+      if(row.bank!==nb||row.r!==nr){ changed=true; }
+      row.bank=nb; row.src=row.src&&row.src!=='Market'?row.src:'Market';
+      row.src='Market'; row.r=nr; row.m=nm; row.w=nw;
+    }
+    if(!changed){ console.log('AUTO-RATES: لا تغيير'); return; }
+    cur.d=new Date().toLocaleDateString('fr-FR');
+    cur.autoTs=Date.now();
+    /* نشر عبر Contents API */
+    const gh={Authorization:'Bearer '+process.env.GH_TOKEN,'Accept':'application/vnd.github+json'};
+    const meta=await (await fetch(AR_API,{headers:gh})).json();
+    const body={message:'auto-rates: market refresh '+cur.d,
+      content:Buffer.from(JSON.stringify(cur,null,1)).toString('base64'), sha:meta.sha, branch:'main'};
+    const pr=await fetch(AR_API,{method:'PUT',headers:{...gh,'Content-Type':'application/json'},body:JSON.stringify(body)});
+    console.log('AUTO-RATES:', pr.ok?'نُشرت نشرة جديدة':'فشل النشر '+pr.status);
+  }catch(e){ console.error('AUTO-RATES err:', e.message); }
+}
+setInterval(arRun, 6*60*60*1000);
+setTimeout(arRun, 20*1000);
+/* تشغيل يدوي فوري من المالك */
+app.post('/admin/refresh-rates', async (req,res)=>{
+  try{
+    const h=req.headers.authorization||''; const tok=h.startsWith('Bearer ')?h.slice(7):'';
+    const p=jwt.verify(tok, process.env.SUPABASE_JWT_SECRET);
+    if(!p||p.arkan_role!=='owner') return res.status(403).json({ok:false});
+    await arRun(); res.json({ok:true});
+  }catch(e){ res.status(401).json({ok:false}); }
+});
+
 app.listen(ENV.PORT, () => {
   console.log(`▲ BDL STORE on :${ENV.PORT}`);
   console.log(`  Wallet: ${ENV.WALLET}`);
