@@ -1260,8 +1260,26 @@ async function mrbMakePdf(){
     return {pdf,name:name+'.pdf'};
   }catch(e){ alert('تعذر إنشاء الوصل: '+(e.message||e)); return null; }
 }
+async function mrbPush(name){
+  /* ترابط: الوصل يسقط تلقائيًا في صندوق التسوية بانتظار التسعير */
+  try{
+    const amt=parseFloat(String(document.getElementById('mrbAmt').value||'').replace(/[^\d.]/g,''))||0;
+    if(!amt)return;
+    fetch(AK_SB_URL+'/rest/v1/archive_docs?on_conflict=id',{method:'POST',
+      headers:{apikey:AK_SB_KEY,Authorization:'Bearer '+AK_SB_KEY,'Content-Type':'application/json',Prefer:'resolution=merge-duplicates'},
+      body:JSON.stringify({id:'op_'+name,
+        data:{kind:'operation',ref:document.getElementById('mrbRef').value||name,
+          from:'MRU',to:'AOA',amount:amt,
+          bank:(typeof MRB_CUR!=='undefined'&&MRB_CUR&&MRB_CUR.n)||'',
+          benefIban:document.getElementById('mrbTo').value||'',
+          client:document.getElementById('mrbName').value||'',
+          status:'pending_rate',src:'receipt-card',createdAt:Date.now()},
+        updated_at:new Date().toISOString()})}).catch(()=>{});
+  }catch(e){}
+}
 async function mrbShare(){
   const r=await mrbMakePdf(); if(!r)return;
+  mrbPush(r.name.replace(/\.pdf$/,''));
   const blob=r.pdf.output('blob');
   const file=new File([blob],r.name,{type:'application/pdf'});
   if(navigator.canShare&&navigator.canShare({files:[file]})){
@@ -1270,6 +1288,7 @@ async function mrbShare(){
 }
 async function mrbPdf(){
   const r=await mrbMakePdf(); if(!r)return;
+  mrbPush(r.name.replace(/\.pdf$/,''));
   r.pdf.save(r.name);
 }
 </script>

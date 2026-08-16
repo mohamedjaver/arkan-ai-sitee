@@ -546,6 +546,13 @@ section#contacts.on{background:#F8FCFF;border-radius:0}
 <!-- ================= NEW OP ================= -->
 <section id="new" class="on">
   <div class="card" style="padding:14px"><div id="akBioSlot"></div></div>
+  <div class="card" id="fOps" style="padding:14px">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+      <b style="font-size:15px">📥 عمليات المالك — بانتظار التسعير</b>
+      <button onclick="opsLoad()" style="background:#EAF2FD;color:#0A56B8;border:1px solid #CBDCF2;border-radius:10px;padding:6px 14px;font-weight:700">تحديث</button>
+    </div>
+    <div id="opsList" style="margin-top:10px;color:#6C7A93;font-size:13px">…</div>
+  </div>
   <div class="glass" id="gemBar" style="padding:14px 16px;margin-bottom:14px;border:1px solid #DDE2E9">
     <div style="display:flex;align-items:center;gap:10px;cursor:pointer" onclick="var b=document.getElementById('gemBody');b.style.display=b.style.display==='none'?'block':'none'">
       <b style="flex:1;font-size:14px">قراءة الإيصالات بالذكاء (Gemini)</b>
@@ -6118,5 +6125,63 @@ setTimeout(async()=>{
 },3500);
 </script>
 
+<script>
+/* ═══ الصندوق الموحد: عمليات المالك المعلّقة — سعر الأوقية → كوانزا ═══ */
+const OPS_SB='https://vyxzlazwpbstigcqvizb.supabase.co/rest/v1';
+const OPS_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ5eHpsYXp3cGJzdGlnY3F2aXpiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU5MTU5OTcsImV4cCI6MjEwMTQ5MTk5N30.fxMt_jH4z8t7uVnFLLHyNobu6zsgu_ZwVGLibuqWj38';
+let OPS=[],OPS_DEFR=0.36;
+async function opsLoad(){
+  const el=document.getElementById('opsList'); if(!el)return;
+  try{
+    const r=await fetch(OPS_SB+'/archive_docs?select=id,data,updated_at&data->>status=eq.pending_rate&order=updated_at.desc&limit=50',
+      {headers:{apikey:OPS_KEY,Authorization:'Bearer '+OPS_KEY}});
+    OPS=await r.json(); if(!Array.isArray(OPS))OPS=[];
+  }catch(e){ el.innerHTML='تعذر الجلب — أعد المحاولة'; return; }
+  try{const j=await fetch('rates-data.json?t='+Date.now()).then(x=>x.json());
+    const ao=(j.r||[]).find(x=>x.ccy==='AOA'); if(ao&&+ao.out)OPS_DEFR=+ao.out;}catch(e){}
+  if(!OPS.length){el.innerHTML='لا عمليات معلّقة — كل وصل تولّده من حسابك يظهر هنا تلقائيًا.';return;}
+  el.innerHTML=OPS.map(o=>{const d=o.data||{};const kz=d.amount?((d.amount*10)/OPS_DEFR):0;
+    const when=d.createdAt?new Date(d.createdAt).toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'';
+    return `<div style="border:1px solid #E3ECF7;border-radius:14px;padding:12px;margin-bottom:10px;background:#F8FBFF">
+      <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px">
+        <b style="color:#0B2447">${(d.bank?d.bank+' · ':'')+Number(d.amount||0).toLocaleString()} MRU</b>
+        <span style="color:#6C7A93;font-size:12px">${[d.ref,d.client,when].filter(Boolean).join(' · ')}</span></div>
+      <div style="display:flex;gap:8px;margin-top:10px;align-items:center;flex-wrap:wrap">
+        <label style="font-size:12px;color:#31456B">سعر الأوقية
+          <input inputmode="decimal" value="${OPS_DEFR}" id="r_${o.id}"
+            style="width:80px;padding:8px;border:1px solid #CBDCF2;border-radius:10px;font-family:monospace"
+            oninput="opsCalc('${o.id}',${+d.amount||0})"></label>
+        <b id="k_${o.id}" style="color:#0A56B8;font-size:15px">${Number(kz.toFixed(2)).toLocaleString()} Kz</b>
+        <span style="display:flex;gap:6px;margin-inline-start:auto">
+          <button onclick="opsDrop('${o.id}')" style="background:#FBEDEF;color:#B00020;border:0;border-radius:10px;padding:9px 12px">حذف</button>
+          <button onclick="opsDone('${o.id}',${+d.amount||0})" style="background:#0A56B8;color:#fff;border:0;border-radius:10px;padding:9px 16px;font-weight:700">✓ إتمام</button>
+        </span>
+      </div></div>`;}).join('');
+}
+window.opsCalc=function(id,amt){const r=parseFloat(document.getElementById('r_'+id).value)||0;
+  document.getElementById('k_'+id).textContent=r?(Number(((amt*10)/r).toFixed(2)).toLocaleString()+' Kz'):'—';};
+window.opsDone=async function(id,amt){
+  const r=parseFloat(document.getElementById('r_'+id).value)||0;
+  if(!r||r<0.2||r>0.6){alert('أدخل سعر أوقية منطقيًا (مثال 0.36)');return;}
+  const o=OPS.find(x=>x.id===id); const d=(o&&o.data)||{};
+  const kz=+(((amt*10)/r).toFixed(2));
+  try{
+    await fetch(OPS_SB+'/archive_docs?id=eq.'+encodeURIComponent(id),{method:'PATCH',
+      headers:{apikey:OPS_KEY,Authorization:'Bearer '+OPS_KEY,'Content-Type':'application/json'},
+      body:JSON.stringify({data:Object.assign(d,{status:'done',rateNum:r,recv:kz,recvCcy:'AOA',doneAt:Date.now()}),
+        updated_at:new Date().toISOString()})});
+  }catch(e){alert('تعذر الحفظ');return;}
+  opsLoad();
+};
+window.opsDrop=async function(id){
+  if(!confirm('حذف هذه العملية؟'))return;
+  try{await fetch(OPS_SB+'/archive_docs?id=eq.'+encodeURIComponent(id),{method:'DELETE',
+    headers:{apikey:OPS_KEY,Authorization:'Bearer '+OPS_KEY}});}catch(e){}
+  opsLoad();
+};
+window.opsLoad=opsLoad;
+if(document.readyState!=='loading')opsLoad();else document.addEventListener('DOMContentLoaded',opsLoad);
+setInterval(opsLoad,90000);
+</script>
 </body>
 </html>
