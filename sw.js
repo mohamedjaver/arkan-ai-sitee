@@ -1,7 +1,7 @@
 /* BDL — Service Worker v2.0
    إستراتيجية: الشبكة أولًا لصفحات HTML والبيانات (لا محتوى قديم أبدًا)
               الكاش أولًا للأصول الثابتة فقط (صور، أيقونات، شعار) */
-const V='arkan-v6.2'; /* bump: صفحات قديمة ألغيت — chat-v2 هي المعتمدة */
+const V='arkan-v7'; /* bump: تنقل فوري — كاش أولًا + تحديث خلفي */
 const STATIC=['./favicon.svg','./arkan-icon-512.png','./arkan-touch-180.png','./site-manifest.json'];
 
 self.addEventListener('install',e=>{
@@ -67,21 +67,29 @@ self.addEventListener('fetch',e=>{
              || url.pathname.endsWith('.js')
              || url.pathname.endsWith('.json');
 
+  /* بيانات الأسعار: طزاجة إجبارية — شبكة أولًا بمهلة قصيرة */
+  if(url.pathname.endsWith('rates-data.json')){
+    e.respondWith((async()=>{
+      const net=fetch(r,{cache:'no-store'}).then(res=>{
+        if(res&&res.ok){const c=res.clone();caches.open(V).then(x=>x.put(r,c));}
+        return res;});
+      const cached=await caches.match(r);
+      const first=await Promise.race([net.catch(()=>null),new Promise(res=>setTimeout(()=>res(null),2000))]);
+      return first||cached||net;
+    })());
+    return;
+  }
   if(isDoc){
-    /* الشبكة أولًا بمهلة: 3 ثوانٍ ثم الكاش فورًا (يستمر التحديث بالخلفية)
-       يمنع الشاشة البيضاء على الشبكات الضعيفة */
+    /* البنوك: الكاش فورًا (≈0ms) + تحديث صامت بالخلفية للزيارة القادمة */
     e.respondWith((async()=>{
       const cached=await caches.match(r);
       const net=fetch(r,{cache:'no-store'}).then(res=>{
         if(res&&res.ok){const c=res.clone();caches.open(V).then(x=>x.put(r,c));}
         return res;
-      });
-      const timeout=new Promise(res=>setTimeout(()=>res(null),cached?3000:15000));
-      const first=await Promise.race([net.catch(()=>null),timeout]);
-      if(first)return first;
-      if(cached){net.catch(()=>{});return cached;}
-      const late=await net.catch(()=>null);
-      return late||caches.match('./offline.html');
+      }).catch(()=>null);
+      if(cached){ e.waitUntil(net); return cached; }
+      const res=await net;
+      return res||new Response('<!doctype html><meta charset=utf-8><title>BDL</title><body style="font-family:system-ui;display:grid;place-items:center;height:100vh"><div>لا اتصال — أعد المحاولة</div>',{headers:{'Content-Type':'text/html; charset=utf-8'}});
     })());
     return;
   }

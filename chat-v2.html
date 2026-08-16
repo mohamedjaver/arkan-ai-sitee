@@ -320,6 +320,8 @@ body.ready #scList,body.ready #scChat{visibility:visible}
 .spin{width:16px;height:16px;border:2px solid rgba(255,255,255,.35);border-top-color:#fff;border-radius:50%;
   animation:sp .7s linear infinite}
 @keyframes sp{to{transform:rotate(360deg)}}
+.mrow{content-visibility:auto;contain-intrinsic-size:auto 72px}
+#msgs{overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
 </style>
 </head>
 <body>
@@ -949,9 +951,24 @@ function closeChat(){
 
 async function loadMsgs(){
   const {data}=await sb.from('messages_v2').select('*').eq('conversation_id',CONV.id)
-    .order('created_at').limit(500);
-  MSGS=data||[];
+    .order('created_at',{ascending:false}).limit(120);
+  MSGS=(data||[]).reverse();
   await renderAll(true);
+}
+async function appendMsg(m,prev){
+  const box=$('msgs');let html='';
+  const d=new Date(m.created_at);
+  if(!prev||new Date(prev.created_at).toDateString()!==d.toDateString())
+    html+=`<div class="day"><span>${dayLabel(d)}</span></div>`;
+  html+=await renderMsg(m);
+  box.insertAdjacentHTML('beforeend',html);
+  hydrateMedia();
+}
+async function patchMsg(m){
+  const el=document.getElementById('m_'+m.id);
+  if(!el)return renderAll(false);
+  const t=document.createElement('div');t.innerHTML=await renderMsg(m);
+  if(t.firstElementChild){el.replaceWith(t.firstElementChild);hydrateMedia();}
 }
 async function renderAll(jump){
   const box=$('msgs');const stick=jump||nearBottom();
@@ -1140,19 +1157,19 @@ function subscribeConv(){
     .on('postgres_changes',{event:'INSERT',schema:'public',table:'messages_v2',
       filter:'conversation_id=eq.'+CONV.id},async p=>{
       const m=p.new;
-      const i=MSGS.findIndex(x=>x.id===m.id);
-      if(i>=0)MSGS[i]=m;else MSGS.push(m);
       if(m.sender_id!==MY_ID&&document.visibilityState==='visible'&&nearBottom())
         sb.rpc('mark_conversation_read',{cid:CONV.id});
       const stick=nearBottom();
-      await renderAll(false);
+      const i=MSGS.findIndex(x=>x.id===m.id);
+      if(i>=0){MSGS[i]=m;await patchMsg(m);}
+      else{const prev=MSGS[MSGS.length-1];MSGS.push(m);await appendMsg(m,prev);}
       if(!stick&&m.sender_id!==MY_ID)$('newMsgs').classList.add('on');
       else jumpBottom();
     })
     .on('postgres_changes',{event:'UPDATE',schema:'public',table:'messages_v2',
       filter:'conversation_id=eq.'+CONV.id},p=>{
       const i=MSGS.findIndex(x=>x.id===p.new.id);
-      if(i>=0){MSGS[i]=p.new;renderAll(false);}
+      if(i>=0){MSGS[i]=p.new;patchMsg(p.new);}
     })
     .on('postgres_changes',{event:'*',schema:'public',table:'exchange_requests_v2',
       filter:'conversation_id=eq.'+CONV.id},()=>refreshXHeader())
@@ -1199,7 +1216,7 @@ async function flushQueue(){
 async function insertMsg(row){
   const local={...row,id:row.id||uuid(),created_at:new Date().toISOString(),
     delivery_status:'sent',_pending:true};
-  MSGS.push(local);await renderAll(false);jumpBottom();
+  const _prev=MSGS[MSGS.length-1];MSGS.push(local);await appendMsg(local,_prev);jumpBottom();
   const payload={id:local.id,client_msg_id:local.id, /* unique في القاعدة — يمنع التكرار عند إعادة الإرسال */
     conversation_id:row.conversation_id,sender_id:MY_ID,type:row.type,
     text:row.text||null,media_path:row.media_path||null,mime_type:row.mime_type||null,
@@ -1209,10 +1226,10 @@ async function insertMsg(row){
     enc_file_key:row.enc_file_key||null,enc_file_iv:row.enc_file_iv||null};
   if(!navigator.onLine){queuePush(payload);
     const i=MSGS.findIndex(m=>m.id===local.id);MSGS[i]._pending=false;MSGS[i].delivery_status='failed';
-    renderAll(false);return null;}
+    patchMsg(MSGS[i]);return null;}
   const {data,error}=await sb.from('messages_v2').insert(payload).select().single();
   const i=MSGS.findIndex(m=>m.id===local.id);
-  if(error||!data){MSGS[i]._pending=false;MSGS[i].delivery_status='failed';MSGS[i]._payload=payload;renderAll(false);return null;}
+  if(error||!data){MSGS[i]._pending=false;MSGS[i].delivery_status='failed';MSGS[i]._payload=payload;patchMsg(MSGS[i]);return null;}
   MSGS[i]=data;renderAll(false);
   arkNotifyPeer(row.conversation_id, row.type);
   return data;

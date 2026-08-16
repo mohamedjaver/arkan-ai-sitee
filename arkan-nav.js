@@ -144,3 +144,17 @@
     location.href = 'index.html';
   };
 })();
+
+/* ═══ BDL smooth nav: انتقال ناعم بين الصفحات + تسخين مسبق ═══ */
+try{
+  const st=document.createElement('style');
+  st.textContent='@view-transition{navigation:auto}'
+    +'::view-transition-old(root){animation:bdlvOut .14s ease both}'
+    +'::view-transition-new(root){animation:bdlvIn .18s ease both}'
+    +'@keyframes bdlvOut{to{opacity:0}}@keyframes bdlvIn{from{opacity:0}}';
+  document.head.appendChild(st);
+  addEventListener('load',()=>setTimeout(()=>{
+    ['index.html','account.html','rates.html','request.html','chat-v2.html','app.html']
+      .forEach(h=>{try{const l=document.createElement('link');l.rel='prefetch';l.href=h;document.head.appendChild(l);}catch(e){}});
+  },1200));
+}catch(e){}
