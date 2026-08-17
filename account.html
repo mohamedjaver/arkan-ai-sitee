@@ -171,43 +171,10 @@
   .gatebg video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
   .gatebg i{position:absolute;inset:0;background:linear-gradient(172deg,rgba(11,47,112,.60) 0%,rgba(10,86,184,.28) 50%,rgba(11,47,112,.76) 100%)}
   @media (prefers-reduced-motion:reduce){.gatebg video{display:none}}
-  /* ═══ أسلوب BAI: الحقول فوق الفيديو مباشرة ═══ */
-  .gate{padding:0}
-  .gate .ambient{display:none}
-  .gate-card{max-width:none;width:100%;min-height:100dvh;background:transparent;border:0;box-shadow:none;
-    -webkit-backdrop-filter:none;backdrop-filter:none;border-radius:0;margin:0;
-    padding:22px 22px calc(28px + env(safe-area-inset-bottom));display:flex;flex-direction:column}
-  .gate-card .logo{width:54px;height:54px;border-radius:13px;margin:8px 0 2px;align-self:flex-start;
-    box-shadow:0 8px 22px rgba(0,0,0,.35)}
-  .gate-card h1{color:#fff;font-size:25px;text-align:right;margin:16px 0 4px;text-shadow:0 1px 8px rgba(0,20,60,.4)}
-  .gate-card .tag{color:#DCEBFF;background:none;text-align:right;padding:0;margin:0 0 22px;font-size:14px}
-  .gate-card label{color:#F2F8FF;font-size:14.5px;font-weight:700;margin:15px 0 8px;display:block;text-align:right;
-    text-shadow:0 1px 6px rgba(0,20,60,.5)}
-  .gate-card input{width:100%;background:rgba(255,255,255,.09);border:1.6px solid rgba(255,255,255,.78);
-    border-radius:12px;color:#fff;font-size:17px;padding:16px 14px;caret-color:#fff;
-    -webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
-  .gate-card input::placeholder{color:rgba(255,255,255,.55)}
-  .gate-card input:focus{outline:none;border-color:#fff;background:rgba(255,255,255,.16)}
-  .gate-card .enter{margin-top:22px;background:linear-gradient(135deg,#19A9F5,#0A56B8);color:#fff;border:0;
-    border-radius:12px;font-size:17.5px;font-weight:800;padding:17px;width:100%;
-    box-shadow:0 12px 28px rgba(8,50,110,.45)}
-  .gate-card .hint{color:#E6F1FF;text-shadow:0 1px 6px rgba(0,20,60,.5)}
-  .gate-card .hint a{color:#fff!important;text-decoration:underline}
-  .gate-card .err{color:#FFD9DD}
-  .gate-promo{display:flex;align-items:center;gap:12px;margin-top:22px;padding:16px;
-    background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.3);border-radius:14px;
-    -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);color:#fff;cursor:pointer}
-  .gate-promo b{display:block;font-size:15px;margin-bottom:3px}
-  .gate-promo span.tx{font-size:12.5px;color:#DCEBFF;line-height:1.6}
-  .gate-promo .arr{margin-inline-start:auto;font-size:20px;flex:none}
-  .gate-foot{display:flex;gap:10px;margin-top:auto;padding-top:26px}
-  .gate-foot a{flex:1;text-align:center;padding:12px 6px;border:1.4px solid rgba(255,255,255,.65);
-    border-radius:12px;color:#fff;text-decoration:none;font-size:13.5px;font-weight:700;
-    background:rgba(255,255,255,.06);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
+
   .gate.on{display:flex;flex-direction:column;align-items:center}
-  .gate-card{position:relative;z-index:1;width:100%;max-width:380px;background:rgba(255,255,255,.93);
-    -webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,.6);
-    border-radius:0;padding:32px 24px;margin:auto 0;margin-bottom:120px;box-shadow:0 24px 60px rgba(4,18,48,.45)}
+  .gate-card{position:relative;z-index:1;width:100%;max-width:380px;
+    border-radius:0;padding:32px 24px;margin:auto 0;margin-bottom:120px}
   .gate .logo{width:60px;height:60px;margin:0 auto 18px;border-radius:10px;object-fit:cover;display:block}
   .gate h1{text-align:center;font-size:22px;font-weight:700;margin-bottom:4px}
   .gate .tag{text-align:center;font-size:13px;color:var(--muted);margin-bottom:26px}
@@ -236,6 +203,51 @@
   <script src="arkan-gate.js"></script>
 <link rel="prefetch" href="chat-v2.html">
 <link rel="prefetch" href="request.html">
+<style id="gateBAI">
+/* ═══ بوابة BDL بأسلوب BAI — شفافية كاملة، زوايا حادة، الزر وحده معتم ═══ */
+.gate{padding:0!important;background:#0B2F70!important}
+.gate .ambient{display:none!important}
+.gate .gate-card{max-width:none!important;width:100%!important;min-height:100dvh!important;
+  background:transparent!important;border:0!important;box-shadow:none!important;
+  -webkit-backdrop-filter:none!important;backdrop-filter:none!important;border-radius:0!important;
+  margin:0!important;padding:22px 22px calc(26px + env(safe-area-inset-bottom))!important;
+  display:flex!important;flex-direction:column!important}
+.gate .gate-card .logo{width:52px;height:52px;border-radius:12px;margin:8px 0 0;align-self:flex-start;
+  box-shadow:0 8px 22px rgba(0,0,0,.4)}
+.gate .gate-card h1{color:#fff!important;font-size:25px;text-align:right;margin:18px 0 4px;
+  text-shadow:0 1px 10px rgba(0,15,45,.55)}
+.gate .gate-card .tag{color:#DCEBFF!important;background:none!important;text-align:right;
+  padding:0!important;margin:0 0 24px!important;font-size:14px}
+.gate .gate-card label{color:#F4F9FF!important;font-size:14.5px;font-weight:700;margin:16px 0 8px;
+  display:block;text-align:right;text-shadow:0 1px 8px rgba(0,15,45,.6)}
+.gate .gate-card input{width:100%!important;background:rgba(255,255,255,.07)!important;
+  border:1.5px solid rgba(255,255,255,.8)!important;border-radius:0!important;
+  color:#fff!important;font-size:17px!important;padding:16px 14px!important;caret-color:#fff;
+  -webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px);box-shadow:none!important}
+.gate .gate-card input::placeholder{color:rgba(255,255,255,.55)!important}
+.gate .gate-card input:focus{outline:none!important;border-color:#fff!important;
+  background:rgba(255,255,255,.14)!important}
+.gate .gate-card .enter{margin-top:24px!important;
+  background:linear-gradient(135deg,#19A9F5,#0A56B8)!important;color:#fff!important;
+  border:0!important;border-radius:0!important;font-size:17.5px!important;font-weight:800!important;
+  padding:17px!important;width:100%!important;box-shadow:0 14px 32px rgba(6,40,95,.5)!important}
+.gate .gate-card .hint{color:#EAF3FF!important;text-shadow:0 1px 8px rgba(0,15,45,.55)}
+.gate .gate-card .hint a{color:#fff!important;text-decoration:underline}
+.gate .gate-card .err{color:#FFD9DD!important}
+.gate .gate-promo{display:flex;align-items:center;gap:12px;margin-top:24px;padding:16px;
+  background:rgba(255,255,255,.12)!important;border:1px solid rgba(255,255,255,.32)!important;
+  border-radius:0!important;-webkit-backdrop-filter:blur(9px);backdrop-filter:blur(9px);
+  color:#fff!important;cursor:pointer}
+.gate .gate-promo b{display:block;font-size:15px;margin-bottom:3px;color:#fff}
+.gate .gate-promo span.tx{font-size:12.5px;color:#DCEBFF;line-height:1.6}
+.gate .gate-promo .arr{margin-inline-start:auto;font-size:20px;flex:none}
+.gate .gate-foot{display:flex;gap:10px;margin-top:auto;padding-top:26px}
+.gate .gate-foot a{flex:1;text-align:center;padding:12px 6px;
+  border:1.4px solid rgba(255,255,255,.68)!important;border-radius:0!important;
+  color:#fff!important;text-decoration:none!important;font-size:13.5px;font-weight:700;
+  background:rgba(255,255,255,.05)!important;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
+.gate #signupBox p,.gate #resetBox p{color:#fff!important}
+</style>
 </head>
 <body>
 <div class="stage">
