@@ -115,10 +115,6 @@ html[lang=ar] .sec-h2{letter-spacing:0}
 .hero{position:relative;background:
   linear-gradient(180deg,#0B2F70 0%,#062165 58%,#003B8F 100%);
   color:#fff;overflow:hidden;padding:74px 0 0}
-.herobg{position:absolute;inset:0;z-index:0}
-.herobg video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-.herobg i{position:absolute;inset:0;background:linear-gradient(180deg,rgba(11,47,112,.86) 0%,rgba(6,33,101,.72) 55%,rgba(0,59,143,.88) 100%)}
-@media (prefers-reduced-motion:reduce){.herobg video{display:none}.herobg{background:url(bdl-bg.jpg) center/cover}}
 .hero .grid{display:grid;grid-template-columns:1.05fr .95fr;gap:48px;align-items:center;position:relative;z-index:2}
 .pill{display:inline-flex;align-items:center;gap:10px;font-size:13px;font-weight:700;
   color:#EAF5FF;border:1px solid rgba(0,181,255,.5);background:rgba(0,181,255,.12);
@@ -472,7 +468,6 @@ body::after{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;opac
 
 <!-- ================= HERO ================= -->
 <header class="hero">
-<div class="herobg" aria-hidden="true"><video autoplay muted loop playsinline preload="metadata" poster="bdl-bg.jpg"><source src="bdl-bg.mp4" type="video/mp4"></video><i></i></div>
   <div class="wrap">
     <div class="grid">
       <div>
