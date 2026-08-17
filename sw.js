@@ -1,7 +1,7 @@
 /* BDL — Service Worker v2.0
    إستراتيجية: الشبكة أولًا لصفحات HTML والبيانات (لا محتوى قديم أبدًا)
               الكاش أولًا للأصول الثابتة فقط (صور، أيقونات، شعار) */
-const V='arkan-v11'; /* bump: خلفية الفيديو + صفحة التثبيت + دفتر AOA */
+const V='arkan-v12'; /* bump: خلفية الفيديو + صفحة التثبيت + دفتر AOA */
 const STATIC=['./favicon.svg','./arkan-icon-512.png','./arkan-touch-180.png','./site-manifest.json'];
 
 self.addEventListener('install',e=>{
@@ -18,6 +18,9 @@ self.addEventListener('activate',e=>{
     caches.keys()
       .then(ks=>Promise.all(ks.filter(k=>k!==V).map(k=>caches.delete(k))))
       .then(()=>self.clients.claim())
+      /* إجبار الصفحات المفتوحة على التحديث فور تفعيل إصدار جديد */
+      .then(()=>self.clients.matchAll({type:'window'}))
+      .then(cs=>{cs.forEach(c=>{try{if('navigate' in c)c.navigate(c.url).catch(()=>{});}catch(e){}});})
   );
 });
 
