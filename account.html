@@ -239,7 +239,10 @@
   border-radius:0!important;-webkit-backdrop-filter:blur(9px);backdrop-filter:blur(9px);
   color:#fff!important;cursor:pointer}
 .gate .gate-promo b{display:block;font-size:15px;margin-bottom:3px;color:#fff}
-.gate .gate-promo span.tx{font-size:12.5px;color:#DCEBFF;line-height:1.6}
+.gate .gate-promo span.tx{font-size:12.5px;color:#DCEBFF;line-height:1.6;
+  background:none!important;border:0!important;border-radius:0!important;padding:0!important;
+  box-shadow:none!important;display:block}
+.gate .gate-promo *{background:none;border-radius:0}
 .gate .gate-promo .arr{margin-inline-start:auto;font-size:20px;flex:none}
 .gate .gate-foot{display:flex;gap:10px;margin-top:auto;padding-top:26px}
 .gate .gate-foot a{flex:1;text-align:center;padding:12px 6px;
@@ -374,24 +377,22 @@
       <h1>لبدال — حسابي</h1>
       <p class="tag">دخول برقم واتساب ورمزك الشخصي</p>
       <label>رقم واتساب</label>
-      <input id="gPhone" type="tel" inputmode="tel" placeholder="+222 XX XX XX XX">
+      <input id="gPhone" type="tel" inputmode="tel">
       <label>الرمز الشخصي</label>
-      <input id="gPin" class="pin" type="tel" inputmode="numeric" maxlength="4" placeholder="••••">
+      <input id="gPin" class="pin" type="tel" inputmode="numeric" maxlength="4">
       <button class="enter" id="gEnter">دخول</button>
       <div class="err" id="gErr"></div>
       <p class="hint" style="margin-top:10px">
         <a href="#" id="gForgot" style="font-weight:700">نسيت رمزك؟</a>
-        &nbsp;·&nbsp;
-        <a href="#" id="gSignup" style="font-weight:800">ليس لديك حساب؟ سجّل الآن</a>
       </p>
       <div id="signupBox" style="display:none;margin-top:14px;padding-top:14px;border-top:1px dashed rgba(255,255,255,.35)">
         <p style="font-weight:800;margin:0 0 10px;color:#fff">إنشاء حساب جديد</p>
         <label>الاسم الكامل</label>
         <input id="suName" type="text" placeholder="الاسم">
         <label>رقم واتساب</label>
-        <input id="suPhone" type="tel" inputmode="tel" placeholder="+222 XX XX XX XX">
+        <input id="suPhone" type="tel" inputmode="tel">
         <label>اختر رمزك الشخصي (4 أرقام)</label>
-        <input id="suPin" class="pin" type="tel" inputmode="numeric" maxlength="4" placeholder="••••">
+        <input id="suPin" class="pin" type="tel" inputmode="numeric" maxlength="4">
         <button class="enter" id="suGo">إنشاء الحساب والدخول</button>
         <div class="err" id="suErr"></div>
       </div>
@@ -402,16 +403,16 @@
         </div>
         <div id="rs2" style="display:none">
           <label>رمز التحقق (6 أرقام وصلك في واتساب)</label>
-          <input id="rsOtp" class="pin" type="tel" inputmode="numeric" maxlength="6" placeholder="••••••" style="letter-spacing:.35em">
+          <input id="rsOtp" class="pin" type="tel" inputmode="numeric" maxlength="6" style="letter-spacing:.35em">
           <label>رمزك الشخصي الجديد (4 أرقام)</label>
-          <input id="rsPin" class="pin" type="tel" inputmode="numeric" maxlength="4" placeholder="••••">
+          <input id="rsPin" class="pin" type="tel" inputmode="numeric" maxlength="4">
           <button class="enter" id="rsGo">تعيين الرمز والدخول</button>
         </div>
         <div class="err" id="rsErr"></div>
         <p class="hint" id="rsWa" style="display:none"><a href="#" id="rsWaLink" style="font-weight:700">تعذّر الإرسال — تواصل معنا عبر واتساب</a></p>
       </div>
-      <div class="gate-promo" onclick="location.href='https://lbdal.com'">
-        <div><b>ليس لديك حساب؟</b><span class="tx">اطلب تحويلاً من الصفحة الرئيسية ويصلك رمزك الشخصي عبر واتساب.</span></div>
+      <div class="gate-promo" id="gSignup" role="button">
+        <div><b>ليس لديك حساب؟ سجّل الآن</b><span class="tx">أنشئ حسابك في دقيقة — يصلك رمزك الشخصي عبر واتساب.</span></div>
         <span class="arr">←</span>
       </div>
       <div class="gate-foot">

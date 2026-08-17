@@ -355,7 +355,7 @@ footer{border-top:1px solid var(--stroke);margin-top:60px;padding:52px 0 40px;po
       <h2>أدخل رمز التحقق</h2>
       <p>أرسلنا رمزًا من 6 أرقام إلى<br><b class="ltr" id="gSentTo" style="color:#0058D9"></b></p>
       <div class="gate-fld">
-        <input id="gOtp" class="otp-in" type="text" inputmode="numeric" maxlength="6" placeholder="••••••"
+        <input id="gOtp" class="otp-in" type="text" inputmode="numeric" maxlength="6"
           oninput="if(this.value.length===6)arkVerifyOtp()"></div>
       <button class="gate-btn" id="gVBtn" onclick="arkVerifyOtp()">تأكيد ودخول</button>
       <button class="gate-link" id="gResend" onclick="arkResend()" disabled>إعادة الإرسال بعد <span id="gTimer">45</span> ث</button>
@@ -706,7 +706,7 @@ function startTimer(){
   <div class="card" style="max-width:720px">
     <div class="grid-2">
       <div class="field"><label for="rName">الاسم الكامل</label><input id="rName" placeholder="محمد الأمين"></div>
-      <div class="field"><label for="rPhone">رقم الهاتف / واتساب</label><input id="rPhone" inputmode="tel" placeholder="+222 36 29 50 50"></div>
+      <div class="field"><label for="rPhone">رقم الهاتف / واتساب</label><input id="rPhone" inputmode="tel"></div>
     </div>
     <div class="grid-2">
       <div class="field" id="rFromWrap" style="display:none"><label for="rFrom">من عملة</label><div class="fdd" id="fddRFrom"></div></div>
