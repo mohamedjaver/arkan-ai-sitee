@@ -728,6 +728,13 @@ async function changePinUI(){
   }catch(e){alert('تعذّر الاتصال — حاول ثانية');}
 }
 function openApp(phone){
+  /* بوابة الموقع: العودة للوجهة المقصودة بعد الدخول */
+  try{
+    var nx=new URLSearchParams(location.search).get('next');
+    if(nx && !/^https?:/i.test(nx) && !/^\/\//.test(nx) && nx.indexOf('account')!==0){
+      location.replace(nx); return;
+    }
+  }catch(e){}
   $('gate').classList.remove('on');
   $('app').style.display='block';
   $('nav').style.display='grid';
