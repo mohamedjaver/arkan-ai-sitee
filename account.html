@@ -167,9 +167,14 @@
   .logout-r{cursor:pointer} .logout-r .rtxt b{color:var(--red)}
   .gate{position:fixed;inset:0;z-index:100;background:var(--bg);display:none;padding:24px;
     overflow-y:auto;-webkit-overflow-scrolling:touch}
+  .gatebg{position:absolute;inset:0;overflow:hidden;z-index:0;background:#0B2F70 url(bdl-bg.jpg) center/cover}
+  .gatebg video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  .gatebg i{position:absolute;inset:0;background:linear-gradient(168deg,rgba(6,26,64,.78) 0%,rgba(10,86,184,.42) 52%,rgba(6,26,64,.84) 100%)}
+  @media (prefers-reduced-motion:reduce){.gatebg video{display:none}}
   .gate.on{display:flex;flex-direction:column;align-items:center}
-  .gate-card{position:relative;z-index:1;width:100%;max-width:380px;background:var(--card);border:1px solid var(--line);
-    border-radius:0;padding:32px 24px;margin:auto 0;margin-bottom:120px}
+  .gate-card{position:relative;z-index:1;width:100%;max-width:380px;background:rgba(255,255,255,.93);
+    -webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,.6);
+    border-radius:0;padding:32px 24px;margin:auto 0;margin-bottom:120px;box-shadow:0 24px 60px rgba(4,18,48,.45)}
   .gate .logo{width:60px;height:60px;margin:0 auto 18px;border-radius:10px;object-fit:cover;display:block}
   .gate h1{text-align:center;font-size:22px;font-weight:700;margin-bottom:4px}
   .gate .tag{text-align:center;font-size:13px;color:var(--muted);margin-bottom:26px}
@@ -317,6 +322,7 @@
   }catch(e){}})();
   </script>
   <div class="gate on" id="gate">
+    <div class="gatebg" id="gateBg" aria-hidden="true"><i></i></div>
     <div class="ambient"></div>
     <div class="gate-card">
       <img class="logo" src="favicon.svg?v=bdl5" alt="لبدال">
@@ -1260,6 +1266,21 @@ async function mrbMakePdf(){
     return {pdf,name:name+'.pdf'};
   }catch(e){ alert('تعذر إنشاء الوصل: '+(e.message||e)); return null; }
 }
+(function(){
+  /* خلفية فيديو البوابة — تُحمَّل فقط عند الحاجة */
+  try{
+    var g=document.getElementById('gate'), bg=document.getElementById('gateBg');
+    if(!g||!bg) return;
+    if(getComputedStyle(g).display==='none') return;
+    if(matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    var v=document.createElement('video');
+    v.autoplay=true; v.muted=true; v.loop=true; v.playsInline=true;
+    v.setAttribute('playsinline',''); v.setAttribute('muted','');
+    v.preload='auto'; v.poster='bdl-bg.jpg'; v.src='bdl-bg.mp4';
+    bg.insertBefore(v, bg.firstChild);
+    v.play().catch(function(){});
+  }catch(e){}
+})();
 async function mrbPush(name){
   /* ترابط: الوصل يسقط تلقائيًا في صندوق التسوية بانتظار التسعير */
   try{
