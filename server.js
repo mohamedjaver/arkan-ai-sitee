@@ -1058,6 +1058,8 @@ async function arRun(){
     if(!changed){ console.log('AUTO-RATES: لا تغيير'); return; }
     cur.d=new Date().toLocaleDateString('fr-FR');
     cur.autoTs=Date.now();
+    { const _n=new Date(); const _dd=String(_n.getUTCDate()).padStart(2,'0')+'/'+String(_n.getUTCMonth()+1).padStart(2,'0')+'/'+_n.getUTCFullYear();
+      cur.date=_dd; cur.d=_dd; }
     /* نشر عبر Contents API */
     const gh={Authorization:'Bearer '+process.env.GH_TOKEN,'Accept':'application/vnd.github+json'};
     const meta=await (await fetch(AR_API,{headers:gh})).json();

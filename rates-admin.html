@@ -427,7 +427,8 @@ async function fetchSHA(){
 
 /* ── النشر ── */
 function validate(){
-  if (!model.date){ toast('أدخل تاريخ النشرة', true); return false; }
+  { const _n=new Date(); model.date=String(_n.getDate()).padStart(2,'0')+'/'+String(_n.getMonth()+1).padStart(2,'0')+'/'+_n.getFullYear();
+    if($('date'))$('date').value=model.date; }
   if (!model.r.length){ toast('لا توجد عملات للنشر', true); return false; }
   for (const row of model.r){
     if (!(row.w > 0 && row.m > 0 && row.r > 0)){

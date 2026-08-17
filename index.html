@@ -906,7 +906,7 @@ async function loadTiers(){
   try{
     if(!d) return;
     (d.r||[]).forEach(x=>{ if(x.ccy) TIERS[x.ccy]=x; });
-    TIER_TS=d.date||d.d||null;
+    TIER_TS=(d.autoTs?new Date(d.autoTs).toLocaleDateString('fr-FR'):null)||d.date||d.d||null;
     const u=document.getElementById('updDate'); if(u&&TIER_TS)u.textContent=TIER_TS;
     calc(); renderMarket(); renderDash();
   }catch(e){}
