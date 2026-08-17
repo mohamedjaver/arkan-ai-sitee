@@ -169,8 +169,41 @@
     overflow-y:auto;-webkit-overflow-scrolling:touch}
   .gatebg{position:absolute;inset:0;overflow:hidden;z-index:0;background:#0B2F70 url(bdl-bg.jpg) center/cover}
   .gatebg video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-  .gatebg i{position:absolute;inset:0;background:linear-gradient(168deg,rgba(6,26,64,.78) 0%,rgba(10,86,184,.42) 52%,rgba(6,26,64,.84) 100%)}
+  .gatebg i{position:absolute;inset:0;background:linear-gradient(172deg,rgba(6,26,64,.62) 0%,rgba(10,86,184,.30) 50%,rgba(5,20,52,.78) 100%)}
   @media (prefers-reduced-motion:reduce){.gatebg video{display:none}}
+  /* ═══ أسلوب BAI: الحقول فوق الفيديو مباشرة ═══ */
+  .gate{padding:0}
+  .gate .ambient{display:none}
+  .gate-card{max-width:none;width:100%;min-height:100dvh;background:transparent;border:0;box-shadow:none;
+    -webkit-backdrop-filter:none;backdrop-filter:none;border-radius:0;margin:0;
+    padding:22px 22px calc(28px + env(safe-area-inset-bottom));display:flex;flex-direction:column}
+  .gate-card .logo{width:54px;height:54px;border-radius:13px;margin:8px 0 2px;align-self:flex-start;
+    box-shadow:0 8px 22px rgba(0,0,0,.35)}
+  .gate-card h1{color:#fff;font-size:25px;text-align:right;margin:16px 0 4px;text-shadow:0 1px 8px rgba(0,20,60,.4)}
+  .gate-card .tag{color:#DCEBFF;background:none;text-align:right;padding:0;margin:0 0 22px;font-size:14px}
+  .gate-card label{color:#F2F8FF;font-size:14.5px;font-weight:700;margin:15px 0 8px;display:block;text-align:right;
+    text-shadow:0 1px 6px rgba(0,20,60,.5)}
+  .gate-card input{width:100%;background:rgba(255,255,255,.09);border:1.6px solid rgba(255,255,255,.78);
+    border-radius:12px;color:#fff;font-size:17px;padding:16px 14px;caret-color:#fff;
+    -webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
+  .gate-card input::placeholder{color:rgba(255,255,255,.55)}
+  .gate-card input:focus{outline:none;border-color:#fff;background:rgba(255,255,255,.16)}
+  .gate-card .enter{margin-top:22px;background:linear-gradient(135deg,#4FB0F0,#1F7BC9);color:#fff;border:0;
+    border-radius:12px;font-size:17.5px;font-weight:800;padding:17px;width:100%;
+    box-shadow:0 12px 28px rgba(8,50,110,.45)}
+  .gate-card .hint{color:#E6F1FF;text-shadow:0 1px 6px rgba(0,20,60,.5)}
+  .gate-card .hint a{color:#fff!important;text-decoration:underline}
+  .gate-card .err{color:#FFD9DD}
+  .gate-promo{display:flex;align-items:center;gap:12px;margin-top:22px;padding:16px;
+    background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.3);border-radius:14px;
+    -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);color:#fff;cursor:pointer}
+  .gate-promo b{display:block;font-size:15px;margin-bottom:3px}
+  .gate-promo span.tx{font-size:12.5px;color:#DCEBFF;line-height:1.6}
+  .gate-promo .arr{margin-inline-start:auto;font-size:20px;flex:none}
+  .gate-foot{display:flex;gap:10px;margin-top:auto;padding-top:26px}
+  .gate-foot a{flex:1;text-align:center;padding:12px 6px;border:1.4px solid rgba(255,255,255,.65);
+    border-radius:12px;color:#fff;text-decoration:none;font-size:13.5px;font-weight:700;
+    background:rgba(255,255,255,.06);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
   .gate.on{display:flex;flex-direction:column;align-items:center}
   .gate-card{position:relative;z-index:1;width:100%;max-width:380px;background:rgba(255,255,255,.93);
     -webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,.6);
@@ -335,12 +368,12 @@
       <button class="enter" id="gEnter">دخول</button>
       <div class="err" id="gErr"></div>
       <p class="hint" style="margin-top:10px">
-        <a href="#" id="gForgot" style="font-weight:700;color:#0058D9">نسيت رمزك؟</a>
+        <a href="#" id="gForgot" style="font-weight:700">نسيت رمزك؟</a>
         &nbsp;·&nbsp;
-        <a href="#" id="gSignup" style="font-weight:800;color:#0A56B8">ليس لديك حساب؟ سجّل الآن</a>
+        <a href="#" id="gSignup" style="font-weight:800">ليس لديك حساب؟ سجّل الآن</a>
       </p>
-      <div id="signupBox" style="display:none;margin-top:14px;padding-top:14px;border-top:1px dashed rgba(10,86,184,.25)">
-        <p style="font-weight:800;margin:0 0 10px;color:#003B8F">إنشاء حساب جديد</p>
+      <div id="signupBox" style="display:none;margin-top:14px;padding-top:14px;border-top:1px dashed rgba(255,255,255,.35)">
+        <p style="font-weight:800;margin:0 0 10px;color:#fff">إنشاء حساب جديد</p>
         <label>الاسم الكامل</label>
         <input id="suName" type="text" placeholder="الاسم">
         <label>رقم واتساب</label>
@@ -350,8 +383,8 @@
         <button class="enter" id="suGo">إنشاء الحساب والدخول</button>
         <div class="err" id="suErr"></div>
       </div>
-      <div id="resetBox" style="display:none;margin-top:14px;padding-top:14px;border-top:1px dashed rgba(10,86,184,.25)">
-        <p style="font-weight:800;margin:0 0 10px;color:#003B8F">استعادة الرمز عبر واتساب</p>
+      <div id="resetBox" style="display:none;margin-top:14px;padding-top:14px;border-top:1px dashed rgba(255,255,255,.35)">
+        <p style="font-weight:800;margin:0 0 10px;color:#fff">استعادة الرمز عبر واتساب</p>
         <div id="rs1">
           <button class="enter" id="rsSend" style="background:#0058D9">أرسل رمز التحقق إلى واتسابي</button>
         </div>
@@ -365,7 +398,15 @@
         <div class="err" id="rsErr"></div>
         <p class="hint" id="rsWa" style="display:none"><a href="#" id="rsWaLink" style="font-weight:700">تعذّر الإرسال — تواصل معنا عبر واتساب</a></p>
       </div>
-      <p class="hint">ليس لديك حساب؟ اطلب تحويلاً من <a href="https://lbdal.com">الصفحة الرئيسية</a> ويصلك رمزك عبر واتساب.</p>
+      <div class="gate-promo" onclick="location.href='https://lbdal.com'">
+        <div><b>ليس لديك حساب؟</b><span class="tx">اطلب تحويلاً من الصفحة الرئيسية ويصلك رمزك الشخصي عبر واتساب.</span></div>
+        <span class="arr">←</span>
+      </div>
+      <div class="gate-foot">
+        <a href="https://wa.me/22236295050">تواصل</a>
+        <a href="rates.html">الأسعار</a>
+        <a href="install.html">التطبيق</a>
+      </div>
     </div>
   </div>
 
