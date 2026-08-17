@@ -1339,7 +1339,14 @@ async function mrbMakePdf(){
     v.setAttribute('playsinline',''); v.setAttribute('muted','');
     v.preload='auto'; v.poster='bdl-bg.jpg'; v.src='bdl-bg.mp4';
     bg.insertBefore(v, bg.firstChild);
-    v.play().catch(function(){});
+    /* تشغيل مضمون حتى في وضع توفير الطاقة: iOS يسمح بعد أي إيماءة */
+    var go=function(){ try{ if(v.paused) v.play().catch(function(){}); }catch(e){} };
+    go();
+    ['pointerdown','touchstart','click','keydown','scroll'].forEach(function(ev){
+      addEventListener(ev, go, {passive:true});
+    });
+    document.addEventListener('visibilitychange', function(){ if(!document.hidden) go(); });
+    var n=0, iv=setInterval(function(){ if(!v.paused||n++>40){ if(!v.paused) clearInterval(iv); return; } go(); }, 1200);
   }catch(e){}
 })();
 async function mrbPush(name){
