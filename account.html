@@ -167,13 +167,8 @@
   .logout-r{cursor:pointer} .logout-r .rtxt b{color:var(--red)}
   .gate{position:fixed;inset:0;z-index:100;background:var(--bg);display:none;padding:24px;
     overflow-y:auto;-webkit-overflow-scrolling:touch}
-  .gatebg{position:absolute;inset:0;overflow:hidden;z-index:0;background:#0B2F70 url(bdl-bg.jpg) center/cover}
-  .gatebg video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-  .gatebg i{position:absolute;inset:0;background:linear-gradient(172deg,rgba(11,47,112,.60) 0%,rgba(10,86,184,.28) 50%,rgba(11,47,112,.76) 100%)}
-  @media (prefers-reduced-motion:reduce){.gatebg video{display:none}}
-
   .gate.on{display:flex;flex-direction:column;align-items:center}
-  .gate-card{position:relative;z-index:1;width:100%;max-width:380px;
+  .gate-card{position:relative;z-index:1;width:100%;max-width:380px;background:var(--card);border:1px solid var(--line);
     border-radius:0;padding:32px 24px;margin:auto 0;margin-bottom:120px}
   .gate .logo{width:60px;height:60px;margin:0 auto 18px;border-radius:10px;object-fit:cover;display:block}
   .gate h1{text-align:center;font-size:22px;font-weight:700;margin-bottom:4px}
@@ -203,54 +198,6 @@
   <script src="arkan-gate.js"></script>
 <link rel="prefetch" href="chat-v2.html">
 <link rel="prefetch" href="request.html">
-<style id="gateBAI">
-/* ═══ بوابة BDL بأسلوب BAI — شفافية كاملة، زوايا حادة، الزر وحده معتم ═══ */
-.gate{padding:0!important;background:#0B2F70!important}
-.gate .ambient{display:none!important}
-.gate .gate-card{max-width:none!important;width:100%!important;min-height:100dvh!important;
-  background:transparent!important;border:0!important;box-shadow:none!important;
-  -webkit-backdrop-filter:none!important;backdrop-filter:none!important;border-radius:0!important;
-  margin:0!important;padding:22px 22px calc(26px + env(safe-area-inset-bottom))!important;
-  display:flex!important;flex-direction:column!important}
-.gate .gate-card .logo{width:52px;height:52px;border-radius:12px;margin:8px 0 0;align-self:flex-start;
-  box-shadow:0 8px 22px rgba(0,0,0,.4)}
-.gate .gate-card h1{color:#fff!important;font-size:25px;text-align:right;margin:18px 0 4px;
-  text-shadow:0 1px 10px rgba(0,15,45,.55)}
-.gate .gate-card .tag{color:#DCEBFF!important;background:none!important;text-align:right;
-  padding:0!important;margin:0 0 24px!important;font-size:14px}
-.gate .gate-card label{color:#F4F9FF!important;font-size:14.5px;font-weight:700;margin:16px 0 8px;
-  display:block;text-align:right;text-shadow:0 1px 8px rgba(0,15,45,.6)}
-.gate .gate-card input{width:100%!important;background:rgba(255,255,255,.07)!important;
-  border:1.5px solid rgba(255,255,255,.8)!important;border-radius:0!important;
-  color:#fff!important;font-size:17px!important;padding:16px 14px!important;caret-color:#fff;
-  -webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px);box-shadow:none!important}
-.gate .gate-card input::placeholder{color:rgba(255,255,255,.55)!important}
-.gate .gate-card input:focus{outline:none!important;border-color:#fff!important;
-  background:rgba(255,255,255,.14)!important}
-.gate .gate-card .enter{margin-top:24px!important;
-  background:linear-gradient(135deg,#19A9F5,#0A56B8)!important;color:#fff!important;
-  border:0!important;border-radius:0!important;font-size:17.5px!important;font-weight:800!important;
-  padding:17px!important;width:100%!important;box-shadow:0 14px 32px rgba(6,40,95,.5)!important}
-.gate .gate-card .hint{color:#EAF3FF!important;text-shadow:0 1px 8px rgba(0,15,45,.55)}
-.gate .gate-card .hint a{color:#fff!important;text-decoration:underline}
-.gate .gate-card .err{color:#FFD9DD!important}
-.gate .gate-promo{display:flex;align-items:center;gap:12px;margin-top:24px;padding:16px;
-  background:rgba(255,255,255,.12)!important;border:1px solid rgba(255,255,255,.32)!important;
-  border-radius:0!important;-webkit-backdrop-filter:blur(9px);backdrop-filter:blur(9px);
-  color:#fff!important;cursor:pointer}
-.gate .gate-promo b{display:block;font-size:15px;margin-bottom:3px;color:#fff}
-.gate .gate-promo span.tx{font-size:12.5px;color:#DCEBFF;line-height:1.6;
-  background:none!important;border:0!important;border-radius:0!important;padding:0!important;
-  box-shadow:none!important;display:block}
-.gate .gate-promo *{background:none;border-radius:0}
-.gate .gate-promo .arr{margin-inline-start:auto;font-size:20px;flex:none}
-.gate .gate-foot{display:flex;gap:10px;margin-top:auto;padding-top:26px}
-.gate .gate-foot a{flex:1;text-align:center;padding:12px 6px;
-  border:1.4px solid rgba(255,255,255,.68)!important;border-radius:0!important;
-  color:#fff!important;text-decoration:none!important;font-size:13.5px;font-weight:700;
-  background:rgba(255,255,255,.05)!important;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
-.gate #signupBox p,.gate #resetBox p{color:#fff!important}
-</style>
 </head>
 <body>
 <div class="stage">
@@ -370,57 +317,49 @@
   }catch(e){}})();
   </script>
   <div class="gate on" id="gate">
-    <div class="gatebg" id="gateBg" aria-hidden="true"><i></i></div>
     <div class="ambient"></div>
     <div class="gate-card">
       <img class="logo" src="favicon.svg?v=bdl5" alt="لبدال">
       <h1>لبدال — حسابي</h1>
       <p class="tag">دخول برقم واتساب ورمزك الشخصي</p>
       <label>رقم واتساب</label>
-      <input id="gPhone" type="tel" inputmode="tel">
+      <input id="gPhone" type="tel" inputmode="tel" placeholder="+222 XX XX XX XX">
       <label>الرمز الشخصي</label>
-      <input id="gPin" class="pin" type="tel" inputmode="numeric" maxlength="4">
+      <input id="gPin" class="pin" type="tel" inputmode="numeric" maxlength="4" placeholder="••••">
       <button class="enter" id="gEnter">دخول</button>
       <div class="err" id="gErr"></div>
       <p class="hint" style="margin-top:10px">
-        <a href="#" id="gForgot" style="font-weight:700">نسيت رمزك؟</a>
+        <a href="#" id="gForgot" style="font-weight:700;color:#0058D9">نسيت رمزك؟</a>
+        &nbsp;·&nbsp;
+        <a href="#" id="gSignup" style="font-weight:800;color:#0A56B8">ليس لديك حساب؟ سجّل الآن</a>
       </p>
-      <div id="signupBox" style="display:none;margin-top:14px;padding-top:14px;border-top:1px dashed rgba(255,255,255,.35)">
-        <p style="font-weight:800;margin:0 0 10px;color:#fff">إنشاء حساب جديد</p>
+      <div id="signupBox" style="display:none;margin-top:14px;padding-top:14px;border-top:1px dashed rgba(10,86,184,.25)">
+        <p style="font-weight:800;margin:0 0 10px;color:#003B8F">إنشاء حساب جديد</p>
         <label>الاسم الكامل</label>
         <input id="suName" type="text" placeholder="الاسم">
         <label>رقم واتساب</label>
-        <input id="suPhone" type="tel" inputmode="tel">
+        <input id="suPhone" type="tel" inputmode="tel" placeholder="+222 XX XX XX XX">
         <label>اختر رمزك الشخصي (4 أرقام)</label>
-        <input id="suPin" class="pin" type="tel" inputmode="numeric" maxlength="4">
+        <input id="suPin" class="pin" type="tel" inputmode="numeric" maxlength="4" placeholder="••••">
         <button class="enter" id="suGo">إنشاء الحساب والدخول</button>
         <div class="err" id="suErr"></div>
       </div>
-      <div id="resetBox" style="display:none;margin-top:14px;padding-top:14px;border-top:1px dashed rgba(255,255,255,.35)">
-        <p style="font-weight:800;margin:0 0 10px;color:#fff">استعادة الرمز عبر واتساب</p>
+      <div id="resetBox" style="display:none;margin-top:14px;padding-top:14px;border-top:1px dashed rgba(10,86,184,.25)">
+        <p style="font-weight:800;margin:0 0 10px;color:#003B8F">استعادة الرمز عبر واتساب</p>
         <div id="rs1">
           <button class="enter" id="rsSend" style="background:#0058D9">أرسل رمز التحقق إلى واتسابي</button>
         </div>
         <div id="rs2" style="display:none">
           <label>رمز التحقق (6 أرقام وصلك في واتساب)</label>
-          <input id="rsOtp" class="pin" type="tel" inputmode="numeric" maxlength="6" style="letter-spacing:.35em">
+          <input id="rsOtp" class="pin" type="tel" inputmode="numeric" maxlength="6" placeholder="••••••" style="letter-spacing:.35em">
           <label>رمزك الشخصي الجديد (4 أرقام)</label>
-          <input id="rsPin" class="pin" type="tel" inputmode="numeric" maxlength="4">
+          <input id="rsPin" class="pin" type="tel" inputmode="numeric" maxlength="4" placeholder="••••">
           <button class="enter" id="rsGo">تعيين الرمز والدخول</button>
         </div>
         <div class="err" id="rsErr"></div>
         <p class="hint" id="rsWa" style="display:none"><a href="#" id="rsWaLink" style="font-weight:700">تعذّر الإرسال — تواصل معنا عبر واتساب</a></p>
       </div>
-      <div class="gate-promo" id="gSignup" role="button">
-        <div><b>ليس لديك حساب؟ سجّل الآن</b><span class="tx">أنشئ حسابك في دقيقة — يصلك رمزك الشخصي عبر واتساب.</span></div>
-        <span class="arr">←</span>
-      </div>
-      <div style="position:absolute;bottom:6px;inset-inline-start:10px;font-size:9px;color:rgba(255,255,255,.4);letter-spacing:.5px;z-index:2" id="bdlVer">v28</div>
-      <div class="gate-foot">
-        <a href="https://wa.me/22236295050">تواصل</a>
-        <a href="rates.html">الأسعار</a>
-        <a href="install.html">التطبيق</a>
-      </div>
+      <p class="hint">ليس لديك حساب؟ اطلب تحويلاً من <a href="https://lbdal.com">الصفحة الرئيسية</a> ويصلك رمزك عبر واتساب.</p>
     </div>
   </div>
 
@@ -492,7 +431,7 @@ function renderRates(){
 }
 
 const st = { from:'USDT', to:'MRU' };
-const TIER_AR = {w:'جملة',m:'أعمال',r:'تجزئة'};
+const TIER_AR = {w:'جملة',m:'وسيط',r:'تجزئة'};
 function tierLevel(cc,amt){ const r=RATES[cc]; if(!r)return'r'; if(r.thr&&amt>=r.thr)return'w'; if(r.thrM&&amt>=r.thrM)return'm'; return'r'; }
 function parseAmt(){ return parseFloat(($('fromAmt').value||'').replace(/[^\d.]/g,''))||0; }
 function calc(){
@@ -729,13 +668,6 @@ async function changePinUI(){
   }catch(e){alert('تعذّر الاتصال — حاول ثانية');}
 }
 function openApp(phone){
-  /* بوابة الموقع: العودة للوجهة المقصودة بعد الدخول */
-  try{
-    var nx=new URLSearchParams(location.search).get('next');
-    if(nx && !/^https?:/i.test(nx) && !/^\/\//.test(nx) && nx.indexOf('account')!==0){
-      location.replace(nx); return;
-    }
-  }catch(e){}
   $('gate').classList.remove('on');
   $('app').style.display='block';
   $('nav').style.display='grid';
@@ -1320,56 +1252,15 @@ async function mrbMakePdf(){
     const name='BDL-transfer-'+Date.now().toString(36);
     const JS=window.jspdf&&window.jspdf.jsPDF;
     if(!JS){ const a=document.createElement('a');a.href=img;a.download=name+'.jpg';a.click(); return null; }
-    const pdf=new JS({unit:'pt',format:'a4'});
-    const pw=pdf.internal.pageSize.getWidth(), ph=pdf.internal.pageSize.getHeight();
-    const ih=Math.min(ph, pw*(cv.height/cv.width)), iy=(ph-ih)/2;
-    pdf.setFillColor(8,34,83); pdf.rect(0,0,pw,ph,'F');
-    pdf.addImage(img,'JPEG',0,iy,pw,ih);
+    /* صفحة بمقاس الوصل نفسه — لا قص ولا تشويه */
+    const pw=595, ph=Math.round(pw*cv.height/cv.width);
+    const pdf=new JS({unit:'pt',format:[pw,ph],orientation:ph>=pw?'portrait':'landscape'});
+    pdf.addImage(img,'JPEG',0,0,pw,ph);
     return {pdf,name:name+'.pdf'};
   }catch(e){ alert('تعذر إنشاء الوصل: '+(e.message||e)); return null; }
 }
-(function(){
-  /* خلفية فيديو البوابة — تُحمَّل فقط عند الحاجة */
-  try{
-    var g=document.getElementById('gate'), bg=document.getElementById('gateBg');
-    if(!g||!bg) return;
-    if(getComputedStyle(g).display==='none') return;
-    if(matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    var v=document.createElement('video');
-    v.autoplay=true; v.muted=true; v.loop=true; v.playsInline=true;
-    v.setAttribute('playsinline',''); v.setAttribute('muted','');
-    v.preload='auto'; v.poster='bdl-bg.jpg'; v.src='bdl-bg.mp4';
-    bg.insertBefore(v, bg.firstChild);
-    /* تشغيل مضمون حتى في وضع توفير الطاقة: iOS يسمح بعد أي إيماءة */
-    var go=function(){ try{ if(v.paused) v.play().catch(function(){}); }catch(e){} };
-    go();
-    ['pointerdown','touchstart','click','keydown','scroll'].forEach(function(ev){
-      addEventListener(ev, go, {passive:true});
-    });
-    document.addEventListener('visibilitychange', function(){ if(!document.hidden) go(); });
-    var n=0, iv=setInterval(function(){ if(!v.paused||n++>40){ if(!v.paused) clearInterval(iv); return; } go(); }, 1200);
-  }catch(e){}
-})();
-async function mrbPush(name){
-  /* ترابط: الوصل يسقط تلقائيًا في صندوق التسوية بانتظار التسعير */
-  try{
-    const amt=parseFloat(String(document.getElementById('mrbAmt').value||'').replace(/[^\d.]/g,''))||0;
-    if(!amt)return;
-    fetch(AK_SB_URL+'/rest/v1/archive_docs?on_conflict=id',{method:'POST',
-      headers:{apikey:AK_SB_KEY,Authorization:'Bearer '+AK_SB_KEY,'Content-Type':'application/json',Prefer:'resolution=merge-duplicates'},
-      body:JSON.stringify({id:'op_'+name,
-        data:{kind:'operation',ref:document.getElementById('mrbRef').value||name,
-          from:'MRU',to:'AOA',amount:amt,
-          bank:(typeof MRB_CUR!=='undefined'&&MRB_CUR&&MRB_CUR.n)||'',
-          benefIban:document.getElementById('mrbTo').value||'',
-          client:document.getElementById('mrbName').value||'',
-          status:'pending_rate',src:'receipt-card',createdAt:Date.now()},
-        updated_at:new Date().toISOString()})}).catch(()=>{});
-  }catch(e){}
-}
 async function mrbShare(){
   const r=await mrbMakePdf(); if(!r)return;
-  mrbPush(r.name.replace(/\.pdf$/,''));
   const blob=r.pdf.output('blob');
   const file=new File([blob],r.name,{type:'application/pdf'});
   if(navigator.canShare&&navigator.canShare({files:[file]})){
@@ -1378,7 +1269,6 @@ async function mrbShare(){
 }
 async function mrbPdf(){
   const r=await mrbMakePdf(); if(!r)return;
-  mrbPush(r.name.replace(/\.pdf$/,''));
   r.pdf.save(r.name);
 }
 </script>
