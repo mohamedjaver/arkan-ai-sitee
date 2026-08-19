@@ -447,10 +447,8 @@ section#contacts.on{background:#F8FCFF;border-radius:0}
 .card table tr:nth-child(even) td{background:#F8FBFF}
 .card table tr:hover td{background:#EAF5FF}
 
-/* ═ اختصار الواجهة: إخفاء الخدمات غير الأساسية ═ */
-.type[data-ty="trade"],
-.type[data-ty="svc"],
-.type[data-ty="pub"]{display:none!important}
+/* ═ اختصار الشريط السفلي: الجهات تُسجَّل تلقائيًا مع كل عملية ═ */
+.nv[data-t="contacts"]{display:none!important}
 </style>
   <link rel="stylesheet" href="arkan-theme.css">
   <link rel="stylesheet" href="arkan-light.css">
@@ -1153,6 +1151,9 @@ section#contacts.on{background:#F8FCFF;border-radius:0}
   <div class="nv" data-t="settle">
     <svg viewBox="0 0 24 24"><path d="M12 3v18M7 8l5-5 5 5M5 21h14"/></svg><div>التسوية</div>
   </div>
+  <div class="nv" id="navProfit">
+    <svg viewBox="0 0 24 24"><path d="M3 3v18h18M8 16V9M13 16V5M18 16v-4"/></svg><div>الأرباح</div>
+  </div>
   <div class="nv" data-t="contacts">
     <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="10" cy="7" r="4"/><path d="M21 21v-2a4 4 0 0 0-3-3.87"/></svg><div>الجهات</div>
   </div>
@@ -1161,7 +1162,7 @@ section#contacts.on{background:#F8FCFF;border-radius:0}
     <span id="inbBadge" style="display:none;position:absolute;top:2px;inset-inline-end:8px;background:#E53935;color:#fff;border-radius:0;min-width:16px;height:16px;font:700 9px sans-serif;line-height:16px;text-align:center;padding:0 3px"></span>
   </div>
   <div class="nv" data-t="history">
-    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg><div>الذاكرة</div>
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg><div>الأرشيف</div>
   </div>
 </nav>
 
@@ -1810,6 +1811,7 @@ function saveTx(){
     _payRcpt=null;renderPayRcpt();
   }
   txs.push(cur);seq++;cur=null;
+  try{bdsyContact(savedTx);}catch(e){}
   clearBatch();
   if(savedTx.type==='m2a'){kb=[];renderKB();mb=[];mbMain=null;_payRcpt2=null;renderPayRcpt2();const mo=$('m2aOld');if(mo)mo.value='';const mby=$('m2aBuy');if(mby)mby.value='';}
   fireAutoWa(savedTx);
@@ -6222,6 +6224,66 @@ window.opsDrop=async function(id){
 window.opsLoad=opsLoad;
 if(document.readyState!=='loading')opsLoad();else document.addEventListener('DOMContentLoaded',opsLoad);
 setInterval(opsLoad,90000);
+</script>
+<script>
+
+/* ═ تسجيل جهة الاتصال تلقائيًا في حسابي (القاعدة المركزية) مع كل عملية ═ */
+var BDSY={tok:null};
+async function bdsyTok(){
+  if(BDSY.tok)return BDSY.tok;
+  try{
+    var ph=(localStorage.getItem('arkan-owner-phone')||'').replace(/[^0-9]/g,'');
+    var pin=localStorage.getItem('arkan-pin')||(typeof DEFAULT_PIN!=='undefined'?DEFAULT_PIN:'');
+    if(!ph||!pin)return null;
+    var r=await fetch(AK_API+'/supabase-token',{method:'POST',
+      headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:ph,pin:pin})});
+    if(!r.ok)return null;
+    var j=await r.json();BDSY.tok=j.token||null;return BDSY.tok;
+  }catch(e){return null;}
+}
+async function bdsyContact(t){
+  try{
+    var tok=await bdsyTok();if(!tok)return;
+    var name=(t.contactName||t.name||'').trim();
+    if(!name||name==='—')return;
+    var h={apikey:AK_ANON,Authorization:'Bearer '+tok,'Content-Type':'application/json'};
+    var cid=null;
+    var rc=await fetch(AK_SB+'/bdl_customers?select=id&name=ilike.'+encodeURIComponent(name)+'&limit=1',{headers:h});
+    var jc=rc.ok?await rc.json():[];
+    if(jc[0])cid=jc[0].id;
+    if(!cid){
+      var rn=await fetch(AK_SB+'/bdl_customers',{method:'POST',
+        headers:Object.assign({Prefer:'return=representation'},h),
+        body:JSON.stringify({name:name,phone:t.cWa||t.phone||null})});
+      if(!rn.ok)return;
+      cid=(await rn.json())[0].id;
+    }
+    var acc=String(t.payAcct||t.benefIban||'').trim();
+    if(acc&&acc.replace(/[^0-9A-Za-z]/g,'').length>=4){
+      var ra=await fetch(AK_SB+'/bdl_accounts?select=id&number=eq.'+encodeURIComponent(acc)+'&limit=1',{headers:h});
+      var ja=ra.ok?await ra.json():[];
+      if(!ja[0]){
+        await fetch(AK_SB+'/bdl_accounts',{method:'POST',headers:h,
+          body:JSON.stringify({customer_id:cid,number:acc,kind:'bank'})});
+      }
+    }
+  }catch(e){}
+}
+
+/* «الأرباح» في الشريط = فتح التقارير مباشرة */
+(function(){
+  var b=document.getElementById('navProfit');
+  if(!b)return;
+  b.addEventListener('click',function(){
+    var nv=document.querySelector('.nv[data-t="new"]');
+    if(nv)nv.click();
+    setTimeout(function(){
+      var t=document.querySelector('.type[data-ty="rep"]');
+      if(t)t.click();
+      window.scrollTo({top:0,behavior:'smooth'});
+    },60);
+  });
+})();
 </script>
 </body>
 </html>
