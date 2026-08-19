@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0B2F70">
+<title>BDL · إشعار تنفيذ عملية</title>
+<link rel="icon" href="favicon.svg?v=bdl5">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --cyan:#19A9F5; --blue:#0A56B8; --navy:#0B2F70; --deep:#082253;
+  --ink:#0C1526; --muted:#66788F; --line:#DCE4EF; --wash:#F4F7FB;
+  --ok:#0E9F6E;
+  --grad:linear-gradient(135deg,#19A9F5 0%,#0A56B8 52%,#0B2F70 100%);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#E9EFF6;color:var(--ink);padding:14px 10px 92px;
+  font-family:"IBM Plex Sans Arabic","Inter",system-ui,-apple-system,sans-serif;
+  -webkit-text-size-adjust:100%;display:flex;justify-content:center}
+.num{font-family:"Inter",sans-serif;font-variant-numeric:tabular-nums;direction:ltr;unicode-bidi:isolate}
+.en{font-family:"Inter",sans-serif}
+
+.sheet{width:100%;max-width:800px;background:#fff;box-shadow:0 20px 54px rgba(11,47,112,.16)}
+
+/* ===== HEADER ===== */
+.hd{background:var(--grad);color:#fff;padding:22px 26px 18px;position:relative;overflow:hidden}
+.hd::after{content:"";position:absolute;top:-160px;left:-90px;width:400px;height:400px;border-radius:50%;
+  border:1px solid rgba(255,255,255,.12);
+  box-shadow:0 0 0 24px rgba(255,255,255,.055),0 0 0 50px rgba(255,255,255,.04),0 0 0 80px rgba(255,255,255,.028)}
+.hd>*{position:relative;z-index:1}
+.hd-top{display:flex;align-items:center;justify-content:space-between;gap:14px}
+.brand{display:flex;align-items:center;gap:11px}
+.brand img{width:48px;height:48px;border-radius:13px;display:block;box-shadow:0 5px 16px rgba(0,0,0,.28)}
+.brand .wm{font-family:"Inter",sans-serif;font-weight:800;font-size:25px;letter-spacing:.13em;line-height:1}
+.brand .tg{font-family:"Inter",sans-serif;font-size:7.6px;font-weight:500;letter-spacing:.27em;
+  color:rgba(255,255,255,.75);margin-top:5px}
+.hd-top .rt{text-align:left}
+.hd-top .rt .a{font-size:12.5px;font-weight:600}
+.hd-top .rt .b{font-family:"Inter",sans-serif;font-size:8.6px;letter-spacing:.2em;color:rgba(255,255,255,.7);margin-top:4px}
+
+/* ===== STATUS STRIP ===== */
+.strip{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;
+  background:#0A2A63;color:#fff;padding:9px 26px}
+.pill{display:inline-flex;align-items:center;gap:7px;background:rgba(14,159,110,.18);
+  border:1px solid rgba(14,159,110,.5);color:#5EE7B5;border-radius:999px;padding:4px 13px;font-size:11.5px;font-weight:600}
+.pill::before{content:"";width:6px;height:6px;border-radius:50%;background:#22D18C;box-shadow:0 0 0 3px rgba(34,209,140,.25)}
+.strip .ts{font-family:"Inter",sans-serif;font-size:11px;letter-spacing:.05em;color:rgba(255,255,255,.82)}
+
+/* ===== META GRID ===== */
+.meta{display:grid;grid-template-columns:repeat(3,1fr);border-bottom:1px solid var(--line)}
+.meta div{padding:12px 16px;border-left:1px solid var(--line)}
+.meta div:last-child{border-left:0}
+.meta .k{font-size:9.5px;color:var(--muted);letter-spacing:.06em;margin-bottom:4px}
+.meta .v{font-size:14px;font-weight:700;color:var(--navy);letter-spacing:.04em}
+
+/* ===== BODY ===== */
+.bd{padding:20px 26px 6px;position:relative}
+.wmk{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none;z-index:0;opacity:.045}
+.wmk img{width:300px;height:300px;transform:rotate(-14deg)}
+.bd>*{position:relative;z-index:1}
+
+.sec{margin-top:18px}
+.sec:first-child{margin-top:0}
+.sec-h{display:flex;align-items:center;gap:9px;margin-bottom:9px}
+.sec-h b{font-size:10.5px;font-weight:700;letter-spacing:.09em;color:var(--blue);white-space:nowrap}
+.sec-h i{flex:1;height:1px;background:var(--line)}
+
+.two{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--line)}
+.two .cell{padding:13px 15px}
+.two .cell+.cell{border-right:1px solid var(--line)}
+.two .r{font-size:9.5px;color:var(--muted);letter-spacing:.05em}
+.two .n{font-size:15px;font-weight:700;margin-top:4px}
+.two .s{font-size:11.5px;color:var(--muted);margin-top:3px;letter-spacing:.03em}
+.two .cell.hi{background:var(--wash);border-top:2px solid var(--cyan)}
+
+table{width:100%;border-collapse:collapse;border:1px solid var(--line)}
+tr+tr{border-top:1px solid var(--line)}
+th{width:40%;text-align:right;font-size:11px;font-weight:500;color:var(--muted);
+  padding:10px 14px 10px 8px;background:var(--wash);border-left:1px solid var(--line)}
+td{padding:10px 12px;font-size:13.5px;font-weight:600;text-align:right}
+td.mono{font-size:12px;font-weight:500;color:#33455F;letter-spacing:.05em}
+.rate{color:var(--blue)}
+
+/* ===== CALC ===== */
+.calc{border:1px solid var(--line);border-right:3px solid var(--cyan);background:var(--wash);
+  padding:12px 15px;display:flex;align-items:center;justify-content:center;gap:9px;flex-wrap:wrap;
+  font-family:"Inter",sans-serif;font-size:13px;font-weight:600;color:var(--navy);direction:ltr}
+.calc s{text-decoration:none;color:var(--muted);font-weight:500}
+.calc em{font-style:normal;color:var(--blue)}
+
+/* ===== TOTALS ===== */
+.tot{margin-top:18px;border:1px solid var(--line)}
+.tr{display:flex;justify-content:space-between;align-items:center;padding:12px 16px}
+.tr+.tr{border-top:1px solid var(--line)}
+.tr .k{font-size:11.5px;color:var(--muted)}
+.tr .v{font-size:15px;font-weight:600}
+.tr.main{background:var(--grad);color:#fff;border-top:0}
+.tr.main .k{color:rgba(255,255,255,.88);font-size:12px;font-weight:500}
+.tr.main .v{font-size:25px;font-weight:700;letter-spacing:.01em}
+.tr.main .v small{font-size:11.5px;font-weight:600;opacity:.82;margin-left:6px}
+
+.legal{margin-top:16px;padding:11px 14px;border:1px dashed var(--line);background:#FCFDFE;
+  font-size:10.5px;color:var(--muted);line-height:1.75}
+.legal b{color:var(--navy);font-weight:600}
+
+/* ===== FOOTER ===== */
+.ft{margin-top:18px;border-top:2px solid var(--navy);background:var(--wash);padding:14px 26px 16px;text-align:center}
+.ft .co{font-family:"Inter",sans-serif;font-size:9.5px;font-weight:700;letter-spacing:.13em;color:var(--navy)}
+.ft .ln{font-family:"Inter",sans-serif;font-size:10.5px;color:#3E5170;margin-top:6px;letter-spacing:.04em}
+.ft .ct{font-family:"Inter",sans-serif;font-size:9px;color:var(--muted);margin-top:4px;letter-spacing:.09em}
+.mp{margin-top:9px;font-family:"Inter",sans-serif;font-size:5px;letter-spacing:.2em;color:#9DADC2;
+  white-space:nowrap;overflow:hidden}
+.bar{height:5px;background:var(--grad)}
+
+/* ===== ACTIONS ===== */
+.act{position:fixed;bottom:0;inset-inline:0;padding:11px 12px calc(11px + env(safe-area-inset-bottom));
+  background:rgba(255,255,255,.9);backdrop-filter:blur(14px);border-top:1px solid var(--line);
+  display:flex;gap:9px;justify-content:center;z-index:9}
+.btn{flex:1;max-width:250px;border:0;border-radius:13px;padding:13px;font-family:inherit;font-size:14px;
+  font-weight:600;color:#fff;background:var(--grad);box-shadow:0 7px 18px rgba(10,86,184,.3)}
+.btn.g{background:#fff;color:var(--navy);border:1px solid var(--line);box-shadow:none}
+.btn:active{transform:translateY(1px)}
+.btn:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+
+@page{size:A4;margin:7mm}
+@media print{
+  body{background:#fff;padding:0;display:block}
+  .sheet{max-width:none;box-shadow:none}
+  .act{display:none!important}
+  .hd,.strip,.tr.main,.bar,.two .cell.hi,th,.ft,.calc,.pill{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+@media (max-width:540px){
+  .hd{padding:18px 16px 15px}.strip{padding:8px 16px}.bd{padding:16px 16px 4px}.ft{padding:12px 16px 14px}
+  .brand .wm{font-size:21px}.brand img{width:42px;height:42px}
+  .meta{grid-template-columns:1fr 1fr}.meta div:nth-child(2){border-left:0}
+  .meta div:nth-child(3){grid-column:1/-1;border-top:1px solid var(--line)}
+  .two{grid-template-columns:1fr}.two .cell+.cell{border-right:0;border-top:1px solid var(--line)}
+  th{width:44%;font-size:10px;padding:9px 9px 9px 6px}td{font-size:12.5px;padding:9px 8px}
+  .tr.main .v{font-size:21px}.mp{font-size:4.2px}.calc{font-size:11.5px}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="sheet">
+
+  <header class="hd">
+    <div class="hd-top">
+      <div class="brand">
+        <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj4KICA8ZGVmcz4KICAgIDxyYWRpYWxHcmFkaWVudCBpZD0iYmciIGN4PSI1MCUiIGN5PSIzNSUiIHI9Ijk1JSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiMwRDNBOEMiLz48c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiMwODIyNTMiLz4KICAgIDwvcmFkaWFsR3JhZGllbnQ+CiAgICA8cmFkaWFsR3JhZGllbnQgaWQ9ImdHIiBjeD0iMzglIiBjeT0iMzAlIiByPSI4NSUiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAlIiBzdG9wLWNvbG9yPSIjMTY2N0M2Ii8+PHN0b3Agb2Zmc2V0PSI1MiUiIHN0b3AtY29sb3I9IiMwQzQxOTYiLz48c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiMwNjI0NTgiLz4KICAgIDwvcmFkaWFsR3JhZGllbnQ+CiAgICA8cGF0dGVybiBpZD0iZFQiIHdpZHRoPSIxMSIgaGVpZ2h0PSIxMSIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PGNpcmNsZSBjeD0iNS41IiBjeT0iNS41IiByPSIyLjkiIGZpbGw9IiNBOURCRkYiLz48L3BhdHRlcm4+CiAgICA8Y2xpcFBhdGggaWQ9ImdDIj48Y2lyY2xlIGN4PSI1NzEuNSIgY3k9IjQ1MS41IiByPSIxMjEuNSIvPjwvY2xpcFBhdGg+CiAgPC9kZWZzPgogIDxyZWN0IHdpZHRoPSI1MTIiIGhlaWdodD0iNTEyIiByeD0iMTE1IiBmaWxsPSJ1cmwoI2JnKSIvPgogIDxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKC0yNTIuMSwtMTYzLjUpIHNjYWxlKDAuOTMpIj4KICAgIDxwYXRoIGQ9Ik0zNDggMjc4IEg1NzEuNSBBMTczLjUgMTczLjUgMCAwIDEgNTcxLjUgNjI1IEgzNDggVjU3MyBINTcxLjUgQTEyMS41IDEyMS41IDAgMCAwIDU3MS41IDMzMCBIMzQ4IFoiIGZpbGw9IiNGNUY3RkEiLz4KICAgIDxwYXRoIGQ9Ik0zNDggMzcwIEg0MzMgYTIyIDIyIDAgMCAxIDAgNDQgSDM0OCBaIiBmaWxsPSIjRjVGN0ZBIi8+CiAgICA8cGF0aCBkPSJNMzQ4IDQ4MCBINDEwIGEyMiAyMiAwIDAgMSAwIDQ0IEgzNDggWiIgZmlsbD0iI0Y1RjdGQSIvPgogICAgPGNpcmNsZSBjeD0iNTcxLjUiIGN5PSI0NTEuNSIgcj0iMTMyIiBmaWxsPSIjMEMyQTVFIi8+CiAgICA8Y2lyY2xlIGN4PSI1NzEuNSIgY3k9IjQ1MS41IiByPSIxMjEuNSIgZmlsbD0idXJsKCNnRykiLz4KICAgIDxnIGNsaXAtcGF0aD0idXJsKCNnQykiPgogICAgICA8ZyBmaWxsPSJ1cmwoI2RUKSI+CiAgICAgICAgPHBhdGggZD0iTTQ2OCAzOTIgQzQ4NCAzNjAgNTI4IDM0NCA1NjIgMzUyIEM1ODUgMzU4IDU4OSAzODAgNTY5IDM5MyBDNTUwIDQwNSA1MzUgNDA1IDUyNSA0MjQgQzUxNSA0NDMgNDk5IDQ1MiA0ODMgNDQ0IEM0NjQgNDM0IDQ1OCA0MTMgNDY4IDM5MiBaIi8+CiAgICAgICAgPHBhdGggZD0iTTUwOCA0NzAgQzUyNyA0NTggNTUwIDQ2NCA1NTYgNDg2IEM1NjIgNTA4IDU1MyA1MzggNTM3IDU1NSBDNTI0IDU2OCA1MDggNTYyIDUwMiA1NDMgQzQ5NiA1MjAgNDk1IDQ4MyA1MDggNDcwIFoiLz4KICAgICAgICA8cGF0aCBkPSJNNTk4IDM1NiBDNjE3IDM0MyA2NDQgMzQyIDY1NyAzNTUgQzY2NyAzNjYgNjYxIDM3OSA2NDUgMzgyIEM2MjYgMzg2IDYwOCAzNzcgNTk4IDM1NiBaIi8+CiAgICAgICAgPHBhdGggZD0iTTU5NCA0MDAgQzYxNiAzODEgNjUxIDM4NCA2NzAgNDA3IEM2ODcgNDI5IDY4NCA0NjQgNjY3IDQ4NiBDNjU0IDUwNSA2MzIgNTE1IDYxOSA1MDIgQzYwMSA0ODUgNTkyIDQ2MyA1ODkgNDQwIEM1ODcgNDI0IDU4NiA0MDkgNTk0IDQwMCBaIi8+CiAgICAgICAgPHBhdGggZD0iTTY2NiAzNjYgQzY4NSAzNTMgNzA4IDM1OSA3MTUgMzc4IEM3MjAgMzk0IDcwOCA0MTAgNjkwIDQwNCBDNjcyIDM5OCA2NTYgMzc2IDY2NiAzNjYgWiIvPgogICAgICAgIDxwYXRoIGQ9Ik02NDggNTE2IEM2NjQgNTA2IDY4NCA1MTIgNjg3IDUyOCBDNjkwIDU0MiA2NzQgNTU1IDY1NyA1NDkgQzY0MiA1NDMgNjM4IDUyNCA2NDggNTE2IFoiLz4KICAgICAgPC9nPgogICAgICA8ZyBzdHJva2U9IiM2RkJFRkYiIHN0cm9rZS13aWR0aD0iMS44IiBvcGFjaXR5PSIuMjUiIGZpbGw9Im5vbmUiPgogICAgICAgIDxlbGxpcHNlIGN4PSI1NzEuNSIgY3k9IjQ1MS41IiByeD0iMTIxLjUiIHJ5PSI0NCIvPjxlbGxpcHNlIGN4PSI1NzEuNSIgY3k9IjQ1MS41IiByeD0iMTIxLjUiIHJ5PSI4OCIvPgogICAgICAgIDxlbGxpcHNlIGN4PSI1NzEuNSIgY3k9IjQ1MS41IiByeD0iNDQiIHJ5PSIxMjEuNSIvPjxlbGxpcHNlIGN4PSI1NzEuNSIgY3k9IjQ1MS41IiByeD0iODgiIHJ5PSIxMjEuNSIvPgogICAgICA8L2c+CiAgICA8L2c+CiAgICA8Y2lyY2xlIGN4PSI1NzEuNSIgY3k9IjQ1MS41IiByPSIxMjEuNSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDQxNzNEIiBzdHJva2Utb3BhY2l0eT0iLjMiIHN0cm9rZS13aWR0aD0iNSIvPgogICAgPGVsbGlwc2UgY3g9IjUzMiIgY3k9IjQwMiIgcng9IjQ2IiByeT0iMjgiIGZpbGw9IiNGRkZGRkYiIG9wYWNpdHk9Ii4wNyIvPgogIDwvZz4KPC9zdmc+Cg==" alt="BDL">
+        <div>
+          <div class="wm">BDL</div>
+          <div class="tg">EXCHANGE · TRANSFER · SETTLEMENT</div>
+        </div>
+      </div>
+      <div class="rt">
+        <div class="a">إشعار تنفيذ عملية</div>
+        <div class="b">TRANSACTION ADVICE</div>
+      </div>
+    </div>
+  </header>
+
+  <div class="strip">
+    <span class="pill" data-f="status">منفّذة · مطابقة تامة</span>
+    <span class="ts" data-f="datetime">18/08/2026 · 22:11 GMT</span>
+  </div>
+
+  <div class="meta">
+    <div><div class="k">المرجع / REF</div><div class="v num" data-f="ref">ARK-0818-001</div></div>
+    <div><div class="k">نوع العملية</div><div class="v en" data-f="pair">MRU → AOA</div></div>
+    <div><div class="k">القناة</div><div class="v en" data-f="channel">LBDAL.COM</div></div>
+  </div>
+
+  <main class="bd">
+    <div class="wmk"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj4KICA8ZGVmcz4KICAgIDxyYWRpYWxHcmFkaWVudCBpZD0iYmciIGN4PSI1MCUiIGN5PSIzNSUiIHI9Ijk1JSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiMwRDNBOEMiLz48c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiMwODIyNTMiLz4KICAgIDwvcmFkaWFsR3JhZGllbnQ+CiAgICA8cmFkaWFsR3JhZGllbnQgaWQ9ImdHIiBjeD0iMzglIiBjeT0iMzAlIiByPSI4NSUiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAlIiBzdG9wLWNvbG9yPSIjMTY2N0M2Ii8+PHN0b3Agb2Zmc2V0PSI1MiUiIHN0b3AtY29sb3I9IiMwQzQxOTYiLz48c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiMwNjI0NTgiLz4KICAgIDwvcmFkaWFsR3JhZGllbnQ+CiAgICA8cGF0dGVybiBpZD0iZFQiIHdpZHRoPSIxMSIgaGVpZ2h0PSIxMSIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PGNpcmNsZSBjeD0iNS41IiBjeT0iNS41IiByPSIyLjkiIGZpbGw9IiNBOURCRkYiLz48L3BhdHRlcm4+CiAgICA8Y2xpcFBhdGggaWQ9ImdDIj48Y2lyY2xlIGN4PSI1NzEuNSIgY3k9IjQ1MS41IiByPSIxMjEuNSIvPjwvY2xpcFBhdGg+CiAgPC9kZWZzPgogIDxyZWN0IHdpZHRoPSI1MTIiIGhlaWdodD0iNTEyIiByeD0iMTE1IiBmaWxsPSJ1cmwoI2JnKSIvPgogIDxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKC0yNTIuMSwtMTYzLjUpIHNjYWxlKDAuOTMpIj4KICAgIDxwYXRoIGQ9Ik0zNDggMjc4IEg1NzEuNSBBMTczLjUgMTczLjUgMCAwIDEgNTcxLjUgNjI1IEgzNDggVjU3MyBINTcxLjUgQTEyMS41IDEyMS41IDAgMCAwIDU3MS41IDMzMCBIMzQ4IFoiIGZpbGw9IiNGNUY3RkEiLz4KICAgIDxwYXRoIGQ9Ik0zNDggMzcwIEg0MzMgYTIyIDIyIDAgMCAxIDAgNDQgSDM0OCBaIiBmaWxsPSIjRjVGN0ZBIi8+CiAgICA8cGF0aCBkPSJNMzQ4IDQ4MCBINDEwIGEyMiAyMiAwIDAgMSAwIDQ0IEgzNDggWiIgZmlsbD0iI0Y1RjdGQSIvPgogICAgPGNpcmNsZSBjeD0iNTcxLjUiIGN5PSI0NTEuNSIgcj0iMTMyIiBmaWxsPSIjMEMyQTVFIi8+CiAgICA8Y2lyY2xlIGN4PSI1NzEuNSIgY3k9IjQ1MS41IiByPSIxMjEuNSIgZmlsbD0idXJsKCNnRykiLz4KICAgIDxnIGNsaXAtcGF0aD0idXJsKCNnQykiPgogICAgICA8ZyBmaWxsPSJ1cmwoI2RUKSI+CiAgICAgICAgPHBhdGggZD0iTTQ2OCAzOTIgQzQ4NCAzNjAgNTI4IDM0NCA1NjIgMzUyIEM1ODUgMzU4IDU4OSAzODAgNTY5IDM5MyBDNTUwIDQwNSA1MzUgNDA1IDUyNSA0MjQgQzUxNSA0NDMgNDk5IDQ1MiA0ODMgNDQ0IEM0NjQgNDM0IDQ1OCA0MTMgNDY4IDM5MiBaIi8+CiAgICAgICAgPHBhdGggZD0iTTUwOCA0NzAgQzUyNyA0NTggNTUwIDQ2NCA1NTYgNDg2IEM1NjIgNTA4IDU1MyA1MzggNTM3IDU1NSBDNTI0IDU2OCA1MDggNTYyIDUwMiA1NDMgQzQ5NiA1MjAgNDk1IDQ4MyA1MDggNDcwIFoiLz4KICAgICAgICA8cGF0aCBkPSJNNTk4IDM1NiBDNjE3IDM0MyA2NDQgMzQyIDY1NyAzNTUgQzY2NyAzNjYgNjYxIDM3OSA2NDUgMzgyIEM2MjYgMzg2IDYwOCAzNzcgNTk4IDM1NiBaIi8+CiAgICAgICAgPHBhdGggZD0iTTU5NCA0MDAgQzYxNiAzODEgNjUxIDM4NCA2NzAgNDA3IEM2ODcgNDI5IDY4NCA0NjQgNjY3IDQ4NiBDNjU0IDUwNSA2MzIgNTE1IDYxOSA1MDIgQzYwMSA0ODUgNTkyIDQ2MyA1ODkgNDQwIEM1ODcgNDI0IDU4NiA0MDkgNTk0IDQwMCBaIi8+CiAgICAgICAgPHBhdGggZD0iTTY2NiAzNjYgQzY4NSAzNTMgNzA4IDM1OSA3MTUgMzc4IEM3MjAgMzk0IDcwOCA0MTAgNjkwIDQwNCBDNjcyIDM5OCA2NTYgMzc2IDY2NiAzNjYgWiIvPgogICAgICAgIDxwYXRoIGQ9Ik02NDggNTE2IEM2NjQgNTA2IDY4NCA1MTIgNjg3IDUyOCBDNjkwIDU0MiA2NzQgNTU1IDY1NyA1NDkgQzY0MiA1NDMgNjM4IDUyNCA2NDggNTE2IFoiLz4KICAgICAgPC9nPgogICAgICA8ZyBzdHJva2U9IiM2RkJFRkYiIHN0cm9rZS13aWR0aD0iMS44IiBvcGFjaXR5PSIuMjUiIGZpbGw9Im5vbmUiPgogICAgICAgIDxlbGxpcHNlIGN4PSI1NzEuNSIgY3k9IjQ1MS41IiByeD0iMTIxLjUiIHJ5PSI0NCIvPjxlbGxpcHNlIGN4PSI1NzEuNSIgY3k9IjQ1MS41IiByeD0iMTIxLjUiIHJ5PSI4OCIvPgogICAgICAgIDxlbGxpcHNlIGN4PSI1NzEuNSIgY3k9IjQ1MS41IiByeD0iNDQiIHJ5PSIxMjEuNSIvPjxlbGxpcHNlIGN4PSI1NzEuNSIgY3k9IjQ1MS41IiByeD0iODgiIHJ5PSIxMjEuNSIvPgogICAgICA8L2c+CiAgICA8L2c+CiAgICA8Y2lyY2xlIGN4PSI1NzEuNSIgY3k9IjQ1MS41IiByPSIxMjEuNSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDQxNzNEIiBzdHJva2Utb3BhY2l0eT0iLjMiIHN0cm9rZS13aWR0aD0iNSIvPgogICAgPGVsbGlwc2UgY3g9IjUzMiIgY3k9IjQwMiIgcng9IjQ2IiByeT0iMjgiIGZpbGw9IiNGRkZGRkYiIG9wYWNpdHk9Ii4wNyIvPgogIDwvZz4KPC9zdmc+Cg==" alt=""></div>
+
+    <section class="sec">
+      <div class="sec-h"><b>الأطراف</b><i></i></div>
+      <div class="two">
+        <div class="cell">
+          <div class="r">العميل / CLIENT</div>
+          <div class="n" data-f="client">Mohamed vall</div>
+          <div class="s num" data-f="phone">+244 913 151 391</div>
+        </div>
+        <div class="cell hi">
+          <div class="r">حساب الاستلام / BENEFICIARY ACCOUNT</div>
+          <div class="n num" style="font-size:13px;letter-spacing:.06em" data-f="account">0001 8000 0321 0094 8290 133</div>
+          <div class="s">أنغولا · كوانزا (AOA)</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="sec">
+      <div class="sec-h"><b>تفاصيل العملية</b><i></i></div>
+      <table>
+        <tr><th>وصف العملية</th><td>بيع أوقية موريتانية مقابل كوانزا</td></tr>
+        <tr><th>المبلغ المستلم (أوقية جديدة)</th><td><span class="num" data-f="mru">500,000</span> MRU</td></tr>
+        <tr><th>المعادل (أوقية قديمة)</th><td><span class="num" data-f="um">5,000,000</span> UM</td></tr>
+        <tr><th>سعر الصرف المعتمد</th><td class="rate"><span class="num" data-f="rate">0.358</span> UM / Kz</td></tr>
+        <tr><th>مرجع الحوالة</th><td class="mono"><span class="num" data-f="txrefs">1426081811430637080</span></td></tr>
+        <tr><th>المبلغ المستحق</th><td><span class="num" data-f="due">13,966,480</span> Kz</td></tr>
+        <tr><th>المبلغ المحوّل فعليًا</th><td><span class="num" data-f="paid">13,966,480</span> Kz</td></tr>
+        <tr><th>فرق التسوية</th><td style="color:var(--ok)"><span class="num" data-f="diff">0.00</span> Kz</td></tr>
+      </table>
+    </section>
+
+    <section class="sec">
+      <div class="sec-h"><b>احتساب الصرف</b><i></i></div>
+      <div class="calc">
+        <span class="num" data-f="c-um">5,000,000</span><s>UM</s>
+        <s>÷</s><em class="num" data-f="c-rate">0.358</em>
+        <s>=</s><span class="num" data-f="c-out">13,966,480</span><s>Kz</s>
+      </div>
+    </section>
+
+    <div class="tot">
+      <div class="tr"><span class="k">القيمة المستلمة</span>
+        <span class="v"><span class="num" data-f="recv">5,000,000</span> UM</span></div>
+      <div class="tr main"><span class="k">إجمالي المبلغ المدفوع</span>
+        <span class="v"><span class="num" data-f="total">13,966,480</span><small>AOA</small></span></div>
+    </div>
+
+    <div class="legal">
+      <b>وثيقة إلكترونية صادرة عن نظام BDL</b> — لا تحتاج توقيعًا أو ختمًا. تُعد هذه الوثيقة إثباتًا لتنفيذ العملية
+      بالمرجع المذكور أعلاه. لأي استفسار أو اعتراض، يُرجى التواصل خلال 7 أيام من تاريخ الإصدار مع ذكر رقم المرجع.
+      <br><span class="en">Merci de votre confiance — شكرًا لتعاملكم مع لبدال</span>
+    </div>
+  </main>
+
+  <footer class="ft">
+    <div class="co">BDL — ARKAN INTERNATIONAL TRADING</div>
+    <div class="ln">lbdal.com · WhatsApp +222 36 29 50 50</div>
+    <div class="ct">NOUAKCHOTT (MR) · LUANDA (AO) · CHINA SOURCING OFFICE</div>
+    <div class="mp" data-f="micro">BDL·SECURE·SETTLEMENT·ARK-0818-001·BDL·SECURE·SETTLEMENT·ARK-0818-001·BDL·SECURE·SETTLEMENT·ARK-0818-001·BDL·SECURE·SETTLEMENT·ARK-0818-001·BDL·SECURE·SETTLEMENT·ARK-0818-001·BDL·SECURE·SETTLEMENT·ARK-0818-001</div>
+  </footer>
+  <div class="bar"></div>
+</div>
+
+<div class="act">
+  <button class="btn" onclick="window.print()">حفظ PDF / طباعة</button>
+  <button class="btn g" onclick="bdlShare()">مشاركة</button>
+</div>
+
+<script>
+/* BDL.fill({ref,client,phone,account,mru,um,rate,txrefs,due,paid,total,recv,status,datetime,pair,channel}) */
+var BDL={
+  fill:function(d){
+    d=d||{};
+    if(d.um){d['c-um']=d.um;d.recv=d.recv||d.um;}
+    if(d.rate)d['c-rate']=d.rate;
+    if(d.paid){d['c-out']=d.paid;d.total=d.total||d.paid;}
+    Object.keys(d).forEach(function(k){
+      document.querySelectorAll('[data-f="'+k+'"]').forEach(function(el){el.textContent=d[k];});
+    });
+    if(d.ref){
+      document.title='BDL · إشعار تنفيذ '+d.ref;
+      var m=document.querySelector('[data-f="micro"]');
+      if(m)m.textContent=new Array(7).join('BDL·SECURE·SETTLEMENT·'+d.ref+'·');
+    }
+  },
+  fromQuery:function(){
+    var q=new URLSearchParams(location.search),o={};
+    q.forEach(function(v,k){o[k]=v;});
+    if(Object.keys(o).length)BDL.fill(o);
+  }
+};
+function bdlShare(){
+  if(navigator.share){navigator.share({title:document.title,url:location.href}).catch(function(){});}
+  else{window.print();}
+}
+BDL.fromQuery();
+</script>
+</body>
+</html>
