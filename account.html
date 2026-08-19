@@ -12,7 +12,8 @@
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=bdl5">
   <link rel="manifest" href="site-manifest.json">
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<style>html,body{overflow-x:hidden!important;max-width:100vw}input,select,textarea{font-size:16px!important}</style>
 <title>BDL — حسابي</title>
 <meta name="theme-color" content="#F7FAFD">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1308,10 +1309,95 @@ function mrbMake(){
   document.getElementById('mrbOut').style.display='block';
 }
 
+
+/* ═ BDL Central: جهات الاتصال + دفع التحويلات لنظام التسوية الجديد ═ */
+var BDLC={tok:null,list:null};
+async function bdlcAuth(){
+  if(BDLC.tok)return BDLC.tok;
+  try{
+    var ph=(localStorage.getItem('arkan-owner-phone')||'').replace(/[^0-9]/g,'');
+    var pin=localStorage.getItem('arkan-pin')||(typeof DEFAULT_PIN!=='undefined'?DEFAULT_PIN:'');
+    if(!ph||!pin)return null;
+    var r=await fetch('https://arkan-ai-site-production.up.railway.app/supabase-token',{method:'POST',
+      headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:ph,pin:pin})});
+    if(!r.ok)return null;
+    var j=await r.json();BDLC.tok=j.token||null;return BDLC.tok;
+  }catch(e){return null;}
+}
+function bdlcH(tok,extra){var h={apikey:MRB_ANON,Authorization:'Bearer '+tok,'Content-Type':'application/json'};
+  if(extra)Object.keys(extra).forEach(function(k){h[k]=extra[k];});return h;}
+async function bdlcContacts(){
+  var tok=await bdlcAuth();if(!tok)return;
+  try{
+    var r=await fetch(MRB_SB+'/bdl_customers?select=name,bdl_accounts(number,kind)&order=updated_at.desc&limit=300',
+      {headers:bdlcH(tok)});
+    BDLC.list=r.ok?await r.json():[];
+  }catch(e){BDLC.list=[];}
+  if(!BDLC.list.length)return;
+  var dlN=document.getElementById('bdlNames');
+  if(!dlN){dlN=document.createElement('datalist');dlN.id='bdlNames';document.body.appendChild(dlN);}
+  var dlA=document.getElementById('bdlAccts');
+  if(!dlA){dlA=document.createElement('datalist');dlA.id='bdlAccts';document.body.appendChild(dlA);}
+  function q(v){return String(v==null?'':v).replace(/"/g,'&quot;').replace(/</g,'');}
+  dlN.innerHTML=BDLC.list.map(function(c){return '<option value="'+q(c.name)+'">';}).join('');
+  var accs=[];
+  BDLC.list.forEach(function(c){(c.bdl_accounts||[]).forEach(function(a){
+    accs.push('<option value="'+q(a.number)+'">'+q(c.name)+'</option>');});});
+  dlA.innerHTML=accs.join('');
+  var nEl=document.getElementById('mrbName'),tEl=document.getElementById('mrbTo');
+  if(nEl){nEl.setAttribute('list','bdlNames');
+    nEl.addEventListener('change',function(){
+      var c=(BDLC.list||[]).find(function(x){return x.name===nEl.value;});
+      if(c&&(c.bdl_accounts||[])[0]&&tEl&&!tEl.value)tEl.value=c.bdl_accounts[0].number;});}
+  if(tEl){tEl.setAttribute('list','bdlAccts');
+    tEl.addEventListener('change',function(){
+      var hit=null;
+      (BDLC.list||[]).forEach(function(c){(c.bdl_accounts||[]).forEach(function(a){
+        if(a.number===tEl.value)hit=c;});});
+      if(hit&&nEl&&!nEl.value)nEl.value=hit.name;});}
+}
+async function bdlcPush(ref,name,to,amt){
+  var tok=await bdlcAuth();if(!tok)return;
+  try{
+    var chk=await fetch(MRB_SB+'/bdl_transactions?select=id&ref=eq.'+encodeURIComponent(ref)+'&limit=1',{headers:bdlcH(tok)});
+    if(chk.ok&&(await chk.json())[0])return;
+    var cid=null,aid=null;
+    var acc=String(to||'').trim();
+    if(acc.replace(/[^0-9A-Za-z]/g,'').length>=4){
+      var ra=await fetch(MRB_SB+'/bdl_accounts?select=id,customer_id&number=eq.'+encodeURIComponent(acc)+'&limit=1',{headers:bdlcH(tok)});
+      var ja=ra.ok?await ra.json():[];
+      if(ja[0]){aid=ja[0].id;cid=ja[0].customer_id;}
+    }
+    if(!cid&&name&&name!=='—'){
+      var rc=await fetch(MRB_SB+'/bdl_customers?select=id&name=ilike.'+encodeURIComponent(name)+'&limit=1',{headers:bdlcH(tok)});
+      var jc=rc.ok?await rc.json():[];
+      if(jc[0])cid=jc[0].id;
+    }
+    if(!cid){
+      var rn=await fetch(MRB_SB+'/bdl_customers',{method:'POST',headers:bdlcH(tok,{Prefer:'return=representation'}),
+        body:JSON.stringify({name:(name&&name!=='—')?name:'عميل'})});
+      if(!rn.ok)return;cid=(await rn.json())[0].id;
+    }
+    if(!aid&&acc.replace(/[^0-9A-Za-z]/g,'').length>=4){
+      var kind='other';try{kind=String(mrbChan()||'other').toLowerCase();}catch(e){}
+      var r2=await fetch(MRB_SB+'/bdl_accounts',{method:'POST',headers:bdlcH(tok,{Prefer:'return=representation'}),
+        body:JSON.stringify({customer_id:cid,number:acc,kind:kind})});
+      if(r2.ok)aid=(await r2.json())[0].id;
+    }
+    await fetch(MRB_SB+'/bdl_transactions',{method:'POST',headers:bdlcH(tok),
+      body:JSON.stringify({ref:ref,customer_id:cid,account_id:aid,amount:Number(amt)||0,ccy:'MRU',
+        status:'open',meta:{srcId:'rc_'+ref,src:'account'}})});
+    bdlcContacts();
+  }catch(e){}
+}
+if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',function(){bdlcContacts();});}
+else{bdlcContacts();}
+
 /* يكتب سجلًا خفيفًا في archive_docs حتى يعمل مسح QR فورًا */
 const MRB_SB='https://vyxzlazwpbstigcqvizb.supabase.co/rest/v1';
 const MRB_ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ5eHpsYXp3cGJzdGlnY3F2aXpiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU5MTU5OTcsImV4cCI6MjEwMTQ5MTk5N30.fxMt_jH4z8t7uVnFLLHyNobu6zsgu_ZwVGLibuqWj38';
 function mrbArchive(ref,name,to,amt){
+  try{bdlcPush(ref,name,to,amt);}catch(e){}
   try{
     fetch(MRB_SB+'/archive_docs?on_conflict=id',{method:'POST',
       headers:{apikey:MRB_ANON,Authorization:'Bearer '+MRB_ANON,'Content-Type':'application/json',
