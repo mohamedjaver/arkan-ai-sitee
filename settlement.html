@@ -5781,6 +5781,8 @@ const pinStage=document.getElementById('pinStage');
 const faceBtn=document.getElementById('faceBtn');
 /* أرقام المالك المسموح بها (آخر 8 أرقام) — قابلة للإضافة من الإعدادات لاحقاً */
 const OWNER_PHONES=(localStorage.getItem('arkan-owner-phones')||'36295050').split(',').map(x=>x.replace(/\D/g,'').slice(-8));
+try{if(!localStorage.getItem('arkan-owner-last')){var _ss=JSON.parse(localStorage.getItem('arkan_session')||'null');
+  if(_ss&&_ss.phone)localStorage.setItem('arkan-owner-last',String(_ss.phone));}}catch(e){}
 const norm=v=>String(v||'').replace(/\D/g,'').slice(-8);
 
 if(pinStage)pinStage.style.display='none';
@@ -5799,6 +5801,13 @@ if(faceBtn){faceBtn.style.display='';faceBtn.style.width='100%';faceBtn.style.ma
 
 const P=document.getElementById('ogPhone'),C=document.getElementById('ogCode'),MSG=document.getElementById('lockMsg');
 P.value=localStorage.getItem('arkan-owner-last')||'';
+/* دخول تلقائي للمالك: رقمه محفوظ ومصرّح → لا كود */
+(function(){
+  var ph=norm(P.value);
+  if(ph&&ph.length>=8&&OWNER_PHONES.includes(ph)){
+    try{lock.style.display='none';}catch(e){}
+  }
+})();
 function fail(t){MSG.textContent=t;MSG.className='err';C.value='';setTimeout(()=>{MSG.textContent='';MSG.className='';},1800);}
 function tryGo(){
   const ph=norm(P.value);
