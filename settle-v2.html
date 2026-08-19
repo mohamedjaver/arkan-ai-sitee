@@ -317,7 +317,67 @@ async function login(){
 })();
 
 /* ═══════════ التحميل ═══════════ */
-async function boot(){await Promise.all([loadGroups(),0]);}
+async function boot(){
+  loadGroups();
+  if(!sessionStorage.getItem('bdl-imp')){
+    sessionStorage.setItem('bdl-imp','1');
+    importLegacy().then(function(n){if(n)loadGroups();});
+  }
+}
+/* يسحب تحويلات account.html وعمليات السجل القديم إلى النظام المركزي */
+async function importLegacy(){
+  var added=0;
+  async function fx(u,opt){ /* توكن المالك، وإن رُفض جرّب anon (جداول السجل القديم) */
+    var r=await fetch(u,opt?Object.assign({},opt,{headers:H(opt.headers)}):{headers:H()});
+    if(r.status===401||r.status===403){
+      var h={apikey:ANON,Authorization:'Bearer '+ANON,'Content-Type':'application/json'};
+      if(opt&&opt.headers)Object.keys(opt.headers).forEach(function(k){h[k]=opt.headers[k];});
+      r=await fetch(u,opt?Object.assign({},opt,{headers:h}):{headers:h});
+    }
+    return r;
+  }
+  try{
+    var r=await fx(SB+'/archive_docs?select=id,data&order=updated_at.desc&limit=80');
+    if(!r.ok)return 0;
+    var rows=await r.json();
+    for(var i=0;i<rows.length;i++){
+      var d=rows[i].data||{};
+      if(!d.ref)continue;
+      if(['transfer','operation'].indexOf(d.kind)<0)continue;
+      var chk=await fetch(SB+'/bdl_transactions?select=id&ref=eq.'+encodeURIComponent(d.ref)+'&limit=1',{headers:H()});
+      if(chk.ok&&(await chk.json())[0])continue;
+      var name=(d.client&&d.client!=='—')?d.client:'عميل';
+      var cid=null,aid=null;
+      var rc=await fetch(SB+'/bdl_customers?select=id&name=ilike.'+encodeURIComponent(name)+'&limit=1',{headers:H()});
+      var jc=rc.ok?await rc.json():[];
+      if(jc[0])cid=jc[0].id;
+      if(!cid){
+        var rn=await fetch(SB+'/bdl_customers',{method:'POST',headers:H({Prefer:'return=representation'}),
+          body:JSON.stringify({name:name,phone:d.phone||null})});
+        if(!rn.ok)continue;
+        cid=(await rn.json())[0].id;
+      }
+      var acc=String(d.benefIban||'').trim();
+      if(acc){
+        var ra=await fetch(SB+'/bdl_accounts?select=id&number=eq.'+encodeURIComponent(acc)+'&limit=1',{headers:H()});
+        var ja=ra.ok?await ra.json():[];
+        if(ja[0])aid=ja[0].id;
+        else{
+          var r2=await fetch(SB+'/bdl_accounts',{method:'POST',headers:H({Prefer:'return=representation'}),
+            body:JSON.stringify({customer_id:cid,number:acc,kind:String(d.channel||'other').toLowerCase()||'other',bank:d.benefBank||null})});
+          if(r2.ok)aid=(await r2.json())[0].id;
+        }
+      }
+      var rt=await fetch(SB+'/bdl_transactions',{method:'POST',headers:H(),
+        body:JSON.stringify({ref:d.ref,customer_id:cid,account_id:aid,
+          amount:Number(d.amount)||0,ccy:d.from||d.recvCcy||'MRU',settle_ccy:d.to||null,
+          rate:d.rateNum||null,status:'open',meta:{srcId:rows[i].id,src:'legacy'}})});
+      if(rt.ok)added++;
+    }
+  }catch(e){}
+  if(added)toast('استُوردت '+added+' عملية من السجل القديم');
+  return added;
+}
 async function loadGroups(){
   try{
     var r=await fetch(SB+'/bdl_open_groups?select=*&order=last_at.desc',{headers:H()});
