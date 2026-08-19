@@ -6288,5 +6288,18 @@ async function bdsyContact(t){
   });
 })();
 </script>
+<script>
+/* «التسوية» في الشريط = محرك التسوية المركزية (settle-v2) بتصميم BDL */
+(function(){
+  var el=document.querySelector('.nv[data-t="settle"]');
+  if(!el)return;
+  var clone=el.cloneNode(true);        /* إزالة معالج التبويب القديم */
+  el.parentNode.replaceChild(clone,el);
+  clone.addEventListener('click',function(e){
+    e.stopPropagation();
+    location.href='settle-v2.html';
+  });
+})();
+</script>
 </body>
 </html>
