@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<script>/*bdl-guard*/(function(){try{var s=JSON.parse(localStorage.getItem('arkan_session')||'null');if(s&&(s.phone||s.uid))return;}catch(e){}var h=(location.pathname.split('/').pop()||'index.html')+location.search;location.replace('account.html?next='+encodeURIComponent(h));})();</script>
 <script>if(location.protocol==="http:"&&location.hostname.indexOf("lbdal")>-1)location.replace(location.href.replace("http:","https:"));</script>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -12,7 +11,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
 <meta name="theme-color" content="#0058D9">
 <title>BDL · الأرشيف</title>
-<style>html,body{overflow-x:hidden!important;max-width:100vw}input,select,textarea{font-size:16px!important}</style>
+<style>html,body{overflow-x:hidden!important;max-width:100vw}input,select,textarea{font-size:16px!important}
+/* ═ اختصار الأرشيف: إخفاء الأدوات الثانوية، نصوص واضحة ═ */
+.vt[data-v="chains"],.vt[data-v="match"],.vt[data-v="stats"],
+#upBtn,#selBtn,
+.vt[onclick*="exportArchive"]{display:none!important}
+/* التبويبات: نص كحلي واضح بدل الغارق */
+.vtabs .vt{color:#B8C6DD!important;font-weight:700!important}
+.vtabs .vt.on{color:#FFFFFF!important;border-bottom-color:#19A9F5!important;font-weight:800!important}
+/* رقائق الفلترة السريعة: حواف واضحة */
+.qc{color:#5A6B82!important}
+</style>
 <link rel="icon" href="favicon.svg?v=bdl5" type="image/svg+xml">
 <link rel="icon" href="arkan-icon-512.png?v=bdl5">
 <meta name="apple-mobile-web-app-title" content="BDL">
@@ -2576,8 +2585,7 @@ if(hd){hd.insertAdjacentHTML('beforeend',
 /* ── التبويبات الخمسة ── */
 const TABS=[
  ['overview','نظرة عامة','home'],['recs','الإيصالات','receipt'],
- ['clients','الزبائن','user'],
- ['match','المطابقة','link'],['chains','التسويات','zap'],['reports','التقارير','chart']];
+ ['reports','التقارير','chart']];
 const vt=document.querySelector('.vtabs');
 if(vt){vt.innerHTML=TABS.map(([k,l,i])=>
   `<button class="vt" data-t="${k}" onclick="setTab('${k}')">${ic(i)} ${l}</button>`).join('');}
