@@ -446,6 +446,11 @@ section#contacts.on{background:#F8FCFF;border-radius:0}
 /* ═══ tables: alternating + hover (scoped to app cards, not PDF stage) ═══ */
 .card table tr:nth-child(even) td{background:#F8FBFF}
 .card table tr:hover td{background:#EAF5FF}
+
+/* ═ اختصار الواجهة: إخفاء الخدمات غير الأساسية ═ */
+.type[data-ty="trade"],
+.type[data-ty="svc"],
+.type[data-ty="pub"]{display:none!important}
 </style>
   <link rel="stylesheet" href="arkan-theme.css">
   <link rel="stylesheet" href="arkan-light.css">
@@ -458,7 +463,7 @@ section#contacts.on{background:#F8FCFF;border-radius:0}
 <script src="bdl-qr.js?v=1"></script>
 </head>
 <body>
-
+<a href="settle-v2.html" style="display:block;margin:8px 12px 0;padding:8px 12px;text-align:center;font-size:12px;color:#0A56B8;text-decoration:none;border:1px dashed #C9D8EC;border-radius:10px;background:#F4F8FE">تجربة نظام التسوية المركزية الجديد ←</a>
 <div class="grid-bg"></div>
 <canvas id="particles" aria-hidden="true"></canvas>
 <div class="orb orb-1"></div><div class="orb orb-2"></div>
