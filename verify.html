@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0B2F70">
+<meta name="robots" content="noindex">
+<title>BDL · التحقق من وثيقة</title>
+<link rel="icon" href="favicon.svg?v=bdl5">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--cyan:#19A9F5;--blue:#0A56B8;--navy:#0B2F70;--ink:#0C1526;--muted:#66788F;
+  --line:#DCE4EF;--wash:#F4F7FB;--ok:#0E9F6E;--bad:#D64545;
+  --grad:linear-gradient(135deg,#19A9F5 0%,#0A56B8 52%,#0B2F70 100%)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#E9EFF6;color:var(--ink);min-height:100vh;
+  font-family:"IBM Plex Sans Arabic","Inter",system-ui,-apple-system,sans-serif;
+  padding:14px 10px 40px;display:flex;justify-content:center}
+.num,.en{font-family:"Inter",sans-serif;font-variant-numeric:tabular-nums}
+.num{direction:ltr;unicode-bidi:isolate}
+.wrap{width:100%;max-width:560px}
+.card{background:#fff;box-shadow:0 18px 46px rgba(11,47,112,.14)}
+
+.hd{background:var(--grad);color:#fff;padding:20px 22px;position:relative;overflow:hidden}
+.hd::after{content:"";position:absolute;top:-150px;left:-80px;width:360px;height:360px;border-radius:50%;
+  border:1px solid rgba(255,255,255,.12);box-shadow:0 0 0 24px rgba(255,255,255,.05),0 0 0 50px rgba(255,255,255,.035)}
+.hd>*{position:relative;z-index:1}
+.hd .row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.brand{display:flex;align-items:center;gap:10px}
+.brand img{width:42px;height:42px;border-radius:12px;display:block;box-shadow:0 5px 14px rgba(0,0,0,.28)}
+.brand .wm{font-family:"Inter",sans-serif;font-weight:800;font-size:22px;letter-spacing:.13em;line-height:1}
+.brand .tg{font-family:"Inter",sans-serif;font-size:6.6px;font-weight:500;letter-spacing:.16em;
+  color:rgba(255,255,255,.75);margin-top:5px;white-space:nowrap}
+.hd .t{text-align:left;font-size:12px;font-weight:600}
+.hd .t small{display:block;font-family:"Inter",sans-serif;font-size:7.6px;letter-spacing:.18em;
+  color:rgba(255,255,255,.72);margin-top:4px}
+
+.search{padding:16px 20px;border-bottom:1px solid var(--line);background:var(--wash)}
+.search label{font-size:11px;color:var(--muted);display:block;margin-bottom:7px}
+.frm{display:flex;gap:8px}
+input{flex:1;min-width:0;border:1px solid var(--line);background:#fff;padding:12px 13px;border-radius:0;
+  font-family:"Inter",sans-serif;font-size:15px;letter-spacing:.05em;color:var(--ink);direction:ltr;text-align:left}
+input:focus{outline:2px solid var(--cyan);outline-offset:-1px;border-color:var(--cyan)}
+button{border:0;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer}
+.go{background:var(--grad);color:#fff;padding:12px 20px;border-radius:0}
+.go:active{transform:translateY(1px)}
+.scan{margin-top:9px;width:100%;background:#fff;border:1px solid var(--line);color:var(--navy);padding:10px;font-size:12.5px}
+
+.state{padding:26px 20px;text-align:center}
+.spin{width:26px;height:26px;border:3px solid var(--line);border-top-color:var(--blue);border-radius:50%;
+  margin:0 auto 12px;animation:sp .8s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.state p{font-size:13px;color:var(--muted)}
+
+.res{display:none}
+.banner{padding:18px 20px;display:flex;align-items:center;gap:13px}
+.banner.ok{background:linear-gradient(135deg,#0E9F6E,#0A7A55);color:#fff}
+.banner.bad{background:linear-gradient(135deg,#D64545,#9E2B2B);color:#fff}
+.banner .ic{width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.2);
+  border:1px solid rgba(255,255,255,.4);display:grid;place-items:center;font-size:22px;flex:0 0 auto}
+.banner b{display:block;font-size:15.5px}
+.banner span{font-size:11.5px;opacity:.9}
+
+table{width:100%;border-collapse:collapse}
+tr+tr{border-top:1px solid var(--line)}
+th{width:42%;text-align:right;font-size:11px;font-weight:500;color:var(--muted);
+  padding:11px 16px 11px 8px;background:var(--wash);border-left:1px solid var(--line)}
+td{padding:11px 14px;font-size:13.5px;font-weight:600;text-align:right;word-break:break-word}
+.amt{background:var(--grad);color:#fff;padding:14px 18px;display:flex;justify-content:space-between;align-items:center}
+.amt .k{font-size:12px;color:rgba(255,255,255,.86)}
+.amt .v{font-size:23px;font-weight:700}
+.amt .v small{font-size:11px;opacity:.82;margin-left:5px}
+
+.note{padding:13px 18px;font-size:10.5px;color:var(--muted);line-height:1.75;border-top:1px solid var(--line)}
+.note b{color:var(--navy)}
+.ft{text-align:center;padding:14px 10px 0;font-family:"Inter",sans-serif;font-size:9.5px;
+  color:#7C8CA3;letter-spacing:.1em}
+video{width:100%;display:block;background:#000}
+#cam{display:none;border-top:1px solid var(--line)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+    <header class="hd">
+      <div class="row">
+        <div class="brand">
+          <img src="favicon.svg?v=bdl5" alt="BDL">
+          <div><div class="wm">BDL</div><div class="tg">EXCHANGE · TRANSFER · SETTLEMENT</div></div>
+        </div>
+        <div class="t">التحقق من وثيقة<small>DOCUMENT VERIFICATION</small></div>
+      </div>
+    </header>
+
+    <div class="search">
+      <label for="ref">أدخل رقم المرجع المطبوع على الوثيقة</label>
+      <div class="frm">
+        <input id="ref" placeholder="ARK-0818-001" autocomplete="off" autocapitalize="characters" spellcheck="false">
+        <button class="go" id="go">تحقّق</button>
+      </div>
+      <button class="scan" id="scanBtn">مسح رمز QR بالكاميرا</button>
+    </div>
+
+    <div id="cam"><video id="vid" playsinline muted></video></div>
+
+    <div class="state" id="idle"><p>امسح الرمز الموجود على الوثيقة، أو أدخل رقم المرجع يدويًا.</p></div>
+    <div class="state" id="load" style="display:none"><div class="spin"></div><p>جارٍ التحقق من الأرشيف…</p></div>
+    <div class="res" id="res"></div>
+  </div>
+  <div class="ft">BDL — ARKAN INTERNATIONAL TRADING · lbdal.com</div>
+</div>
+
+<script src="bdl-qr.js"></script>
+<script>
+var SB='https://vyxzlazwpbstigcqvizb.supabase.co/rest/v1';
+var ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ5eHpsYXp3cGJzdGlnY3F2aXpiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU5MTU5OTcsImV4cCI6MjEwMTQ5MTk5N30.fxMt_jH4z8t7uVnFLLHyNobu6zsgu_ZwVGLibuqWj38';
+var H={apikey:ANON,Authorization:'Bearer '+ANON};
+
+var $=function(s){return document.querySelector(s);};
+function show(id){['idle','load','res'].forEach(function(k){$('#'+k).style.display=(k===id?(k==='res'?'block':'block'):'none');});}
+
+/* إخفاء البيانات الشخصية — صفحة التحقق عامة، تثبت الصحة دون كشف العميل */
+function maskName(v){v=String(v||'').trim();if(!v)return '—';
+  var p=v.split(/\s+/);return p.length===1?p[0].slice(0,2)+'•••':p[0]+' '+p[1].charAt(0)+'•••';}
+function maskNum(v,keep){v=String(v||'').replace(/\s/g,'');if(!v)return '—';
+  keep=keep||4;return v.length<=keep?v:'•••• '+v.slice(-keep);}
+function fmt(n){n=Number(n);if(!isFinite(n))return '—';return n.toLocaleString('en-US',{maximumFractionDigits:2});}
+function when(t){try{var d=new Date(t);return d.toLocaleDateString('en-GB')+' · '+d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});}catch(e){return '—';}}
+
+function row(k,v){return '<tr><th>'+k+'</th><td>'+v+'</td></tr>';}
+
+function render(ref,rec){
+  var el=$('#res');
+  if(!rec){
+    el.innerHTML='<div class="banner bad"><div class="ic">✕</div><div>'+
+      '<b>لا توجد وثيقة بهذا المرجع</b><span>تحقّق من الرقم، أو تواصل معنا عبر واتساب</span></div></div>'+
+      '<table>'+row('المرجع المطلوب','<span class="num">'+ref+'</span>')+'</table>'+
+      '<div class="note">قد يكون المرجع غير صحيح، أو الوثيقة لم تُؤرشف بعد. للاستفسار: '+
+      '<b class="en" style="direction:ltr;display:inline-block">+222 36 29 50 50</b></div>';
+    show('res');return;
+  }
+  var d=rec.data||{};
+  var amt=d.recv!=null?d.recv:d.amount;
+  var ccy=d.recvCcy||d.to||'';
+  var rows='';
+  rows+=row('المرجع','<span class="num">'+(d.ref||ref)+'</span>');
+  rows+=row('نوع العملية',(d.from&&d.to)?('<span class="en">'+d.from+' → '+d.to+'</span>'):(d.kind||'عملية'));
+  if(d.amount!=null)rows+=row('المبلغ المستلم','<span class="num">'+fmt(d.amount)+'</span> '+(d.from||''));
+  if(d.rateNum)rows+=row('سعر الصرف','<span class="num">'+d.rateNum+'</span>');
+  rows+=row('العميل',maskName(d.client));
+  if(d.phone)rows+=row('الهاتف','<span class="num">'+maskNum(d.phone,3)+'</span>');
+  if(d.benefIban)rows+=row('حساب الاستلام','<span class="num">'+maskNum(d.benefIban,4)+'</span>');
+  rows+=row('حالة العملية','<span style="color:var(--ok)">'+((d.status==='done')?'منفّذة ✓':(d.status||'—'))+'</span>');
+  rows+=row('تاريخ الأرشفة','<span class="num">'+when(d.doneAt||rec.updated_at)+'</span>');
+
+  el.innerHTML='<div class="banner ok"><div class="ic">✓</div><div>'+
+    '<b>وثيقة صحيحة وموثّقة</b><span>مطابقة لسجل الأرشيف لدى BDL</span></div></div>'+
+    (amt!=null?('<div class="amt"><span class="k">المبلغ المدفوع</span>'+
+      '<span class="v"><span class="num">'+fmt(amt)+'</span><small>'+ccy+'</small></span></div>'):'')+
+    '<table>'+rows+'</table>'+
+    '<div class="note"><b>ملاحظة:</b> تُعرض بيانات العميل مخفية جزئيًا لحماية الخصوصية. '+
+    'هذه الصفحة تثبت أن الوثيقة صادرة فعلًا عن نظام BDL وأن مبلغها ومرجعها مطابقان للأرشيف.</div>';
+  show('res');
+}
+
+async function verify(ref){
+  ref=String(ref||'').trim().toUpperCase();
+  if(!ref)return;
+  $('#ref').value=ref;
+  try{history.replaceState(null,'','?ref='+encodeURIComponent(ref));}catch(e){}
+  show('load');
+  try{
+    var q=SB+'/archive_docs?select=id,data,updated_at&data->>ref=eq.'+encodeURIComponent(ref)+'&limit=1';
+    var r=await fetch(q,{headers:H});
+    var j=r.ok?await r.json():[];
+    if(!j.length){ /* احتياط: البحث بالمعرّف op_REF */
+      var r2=await fetch(SB+'/archive_docs?select=id,data,updated_at&id=eq.'+encodeURIComponent('op_'+ref)+'&limit=1',{headers:H});
+      j=r2.ok?await r2.json():[];
+    }
+    render(ref,j[0]||null);
+  }catch(e){
+    $('#res').innerHTML='<div class="banner bad"><div class="ic">!</div><div><b>تعذّر الاتصال</b>'+
+      '<span>تحقّق من الإنترنت وأعد المحاولة</span></div></div>';
+    show('res');
+  }
+}
+
+$('#go').addEventListener('click',function(){verify($('#ref').value);});
+$('#ref').addEventListener('keydown',function(e){if(e.key==='Enter')verify(this.value);});
+
+/* ماسح QR داخل الصفحة — يعمل حيث يتوفر BarcodeDetector، وإلا يوجّه لكاميرا الجهاز */
+$('#scanBtn').addEventListener('click',async function(){
+  if(!('BarcodeDetector' in window)){
+    alert('افتح كاميرا هاتفك ووجّهها إلى الرمز — ستفتح صفحة التحقق تلقائيًا.');
+    return;
+  }
+  try{
+    var s=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
+    var v=$('#vid');v.srcObject=s;await v.play();
+    $('#cam').style.display='block';
+    var det=new window.BarcodeDetector({formats:['qr_code']});
+    var t=setInterval(async function(){
+      try{
+        var codes=await det.detect(v);
+        if(codes&&codes.length){
+          clearInterval(t);s.getTracks().forEach(function(x){x.stop();});
+          $('#cam').style.display='none';
+          var val=codes[0].rawValue||'';
+          var m=val.match(/[?&]ref=([^&]+)/);
+          verify(m?decodeURIComponent(m[1]):val);
+        }
+      }catch(e){}
+    },350);
+  }catch(e){alert('تعذّر فتح الكاميرا — أدخل رقم المرجع يدويًا.');}
+});
+
+(function(){
+  var r=new URLSearchParams(location.search).get('ref');
+  if(r)verify(r); else show('idle');
+})();
+</script>
+</body>
+</html>
