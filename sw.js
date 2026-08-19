@@ -1,7 +1,7 @@
 /* BDL — Service Worker v2.0
    إستراتيجية: الشبكة أولًا لصفحات HTML والبيانات (لا محتوى قديم أبدًا)
               الكاش أولًا للأصول الثابتة فقط (صور، أيقونات، شعار) */
-const V='arkan-v30'; /* bump: بصمة QR + صفحة التحقق verify.html */
+const V='arkan-v31'; /* bump: قالب الفاتورة بهوية BDL البنكية */
 const STATIC=['./favicon.svg','./arkan-icon-512.png','./arkan-touch-180.png','./site-manifest.json'];
 
 self.addEventListener('install',e=>{
