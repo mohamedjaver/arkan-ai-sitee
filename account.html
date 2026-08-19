@@ -251,6 +251,7 @@
   background:rgba(255,255,255,.05)!important;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
 .gate #signupBox p,.gate #resetBox p{color:#fff!important}
 </style>
+<script src="bdl-qr.js?v=1"></script>
 </head>
 <body>
 <div class="stage">
@@ -1284,9 +1285,43 @@ function mrbMake(){
     x.strokeStyle='#D7E4F5'; x.lineWidth=2; mrbRR(x,bx-10,by-10,bw+20,bh+20,22); x.stroke();
   }
 
+  /* ═ بصمة التحقق QR — مربوطة بأرشيف BDL ═ */
+  try{
+    if(window.BDLQR){
+      let vref=ref;
+      if(!vref){ vref=BDLQR.newRef('BDL'); const el=document.getElementById('mrbRef'); if(el)el.value=vref; }
+      const QS=150, qx=80, qy=H-QS-96;
+      x.save(); x.fillStyle='#FFFFFF'; mrbRR(x,qx-10,qy-10,QS+20,QS+20,14); x.fill(); x.restore();
+      BDLQR.draw(x, vref, qx, qy, QS);
+      x.textAlign='left'; x.fillStyle='#8FB8E8'; x.font='500 26px "IBM Plex Sans Arabic",Arial';
+      x.fillText('تحقّق من صحة الوصل', qx+QS+26, qy+56);
+      x.fillStyle='#C9DDF5'; x.font='500 24px Inter,Arial';
+      x.fillText('lbdal.com/verify', qx+QS+26, qy+94);
+      x.fillStyle='#FFFFFF'; x.font='700 30px Inter,Arial';
+      x.fillText(vref, qx+QS+26, qy+136);
+      mrbArchive(vref, name, to, amt);
+    }
+  }catch(e){}
+
   x.textAlign='center'; x.fillStyle='#8FB8E8'; x.font='500 28px Inter,Arial';
   x.fillText('BDL · www.lbdal.com',W/2,H-42);
   document.getElementById('mrbOut').style.display='block';
+}
+
+/* يكتب سجلًا خفيفًا في archive_docs حتى يعمل مسح QR فورًا */
+const MRB_SB='https://vyxzlazwpbstigcqvizb.supabase.co/rest/v1';
+const MRB_ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ5eHpsYXp3cGJzdGlnY3F2aXpiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU5MTU5OTcsImV4cCI6MjEwMTQ5MTk5N30.fxMt_jH4z8t7uVnFLLHyNobu6zsgu_ZwVGLibuqWj38';
+function mrbArchive(ref,name,to,amt){
+  try{
+    fetch(MRB_SB+'/archive_docs?on_conflict=id',{method:'POST',
+      headers:{apikey:MRB_ANON,Authorization:'Bearer '+MRB_ANON,'Content-Type':'application/json',
+               Prefer:'resolution=merge-duplicates'},
+      body:JSON.stringify({id:'rc_'+ref,
+        data:{kind:'transfer',ref:ref,from:'MRU',to:'MRU',amount:Number(amt)||0,
+              recv:Number(amt)||0,recvCcy:'MRU',client:name||'',benefIban:to||'',
+              channel:(typeof mrbChan==='function'?mrbChan():''),status:'done',doneAt:Date.now(),src:'account'},
+        updated_at:new Date().toISOString()})}).catch(function(){});
+  }catch(e){}
 }
 
 let MRB_IMG=null, MRB_IMG_W=0, MRB_IMG_H=0, MRB_CROP=null;
