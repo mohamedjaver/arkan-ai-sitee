@@ -10,6 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="bdl-qr.js?v=1" defer></script>
+<script src="arkan-read.js?v=2" defer></script>
 <style>
 :root{--cyan:#19A9F5;--blue:#0A56B8;--navy:#0B2F70;--ink:#0C1526;--muted:#66788F;
   --line:#DCE4EF;--wash:#F4F7FB;--ok:#0E9F6E;--bad:#D64545;--warn:#B7791F;
@@ -124,6 +125,21 @@ input,select{font-family:inherit;color:var(--ink)}
 .calc-line{background:var(--wash);border:1px solid var(--line);border-right:3px solid var(--cyan);
   padding:10px 13px;font-family:"Inter",sans-serif;font-size:13px;font-weight:600;color:var(--navy);
   direction:ltr;text-align:center;margin-bottom:11px}
+.ssum{border:1px solid var(--line);margin-bottom:11px}
+.ssum .row{display:flex;justify-content:space-between;align-items:center;padding:9px 13px;font-size:12.5px;color:var(--muted)}
+.ssum .row+.row{border-top:1px solid var(--line)}
+.ssum .row b{font-size:14px;color:var(--ink);font-weight:700}
+.ssum .row.hi{background:var(--wash)}
+.ssum .row.hi b{color:var(--blue);font-size:15px}
+.match{display:flex;align-items:center;gap:13px;border:1px solid var(--line);padding:10px 13px;margin-bottom:11px}
+.match svg{width:52px;height:52px;transform:rotate(-90deg);flex:0 0 auto}
+.match circle{fill:none;stroke-width:5}
+.match .bg{stroke:#E3EAF4}
+.match .fg{stroke:var(--blue);stroke-linecap:round;stroke-dasharray:119.4;stroke-dashoffset:119.4;transition:stroke-dashoffset .4s,stroke .3s}
+.match .mtxt b{display:block;font-size:16px;font-family:"Inter",sans-serif}
+.match .mtxt span{font-size:11.5px;color:var(--muted)}
+.match.ok .fg{stroke:var(--ok)}.match.ok .mtxt b{color:var(--ok)}
+.match.over .fg{stroke:var(--warn)}.match.over .mtxt b{color:var(--warn)}
 .rcpt{display:flex;align-items:center;gap:10px;border:1px solid var(--line);padding:9px 11px;margin-top:7px;background:var(--wash)}
 .rcpt .ic{width:34px;height:34px;background:#fff;border:1px solid var(--line);display:grid;place-items:center;font-size:15px}
 .rcpt .fi{flex:1;min-width:0;font-size:12px}
@@ -248,7 +264,16 @@ input,select{font-family:inherit;color:var(--ink)}
 <div class="ovl" id="ovl-settle">
   <div class="sheet">
     <h3>إتمام التسوية<button onclick="closeOvl('settle')">إغلاق ✕</button></h3>
-    <div class="calc-line" id="sSum">—</div>
+    <div class="ssum">
+      <div class="row"><span>العمليات المحددة</span><b class="num" id="ssN">—</b></div>
+      <div class="row"><span>المستلم من العملاء</span><b class="num" id="ssIn">—</b></div>
+      <div class="row hi"><span>المستحق (كوانزا)</span><b class="num" id="ssDue">—</b></div>
+      <div class="row"><span>المدفوع من الإيصالات</span><b class="num" id="ssPaid">0</b></div>
+    </div>
+    <div class="match" id="ssMatch">
+      <svg viewBox="0 0 44 44"><circle class="bg" cx="22" cy="22" r="19"/><circle class="fg" id="ssRing" cx="22" cy="22" r="19"/></svg>
+      <div class="mtxt"><b id="ssPct">0%</b><span id="ssDiff">بانتظار الإيصالات</span></div>
+    </div>
     <div class="fld">
       <label>إيصالات التسوية (صورة / PDF — يُقرأ تلقائيًا)</label>
       <input type="file" id="sFiles" multiple accept="image/*,.pdf" onchange="addReceipts(this.files)">
@@ -580,23 +605,24 @@ async function saveNew(){
 async function sha256(buf){var h=await crypto.subtle.digest('SHA-256',buf);
   return Array.from(new Uint8Array(h)).map(function(b){return b.toString(16).padStart(2,'0');}).join('');}
 function gemKey(){try{return localStorage.getItem('gemKey')||'';}catch(e){return '';}}
+function promptGemKey(){
+  var k=prompt('مفتاح Gemini API (يُحفظ على جهازك فقط)\naistudio.google.com/apikey',gemKey());
+  if(k!=null){try{localStorage.setItem('gemKey',k.trim());}catch(e){}toast(k.trim()?'حُفظ المفتاح ✓':'أُزيل المفتاح');}
+}
 async function readReceipt(file){
-  var out={amount:null,ccy:null,bank:null,account:null,ref:null};
-  var key=gemKey();if(!key)return out;
+  var out={amount:null,ccy:null,bank:null,account:null,ref:null,date:null};
   try{
-    var b64=await new Promise(function(res,rej){var r=new FileReader();
-      r.onload=function(){res(String(r.result).split(',')[1]);};r.onerror=rej;r.readAsDataURL(file);});
-    var body={contents:[{parts:[{inline_data:{mime_type:file.type||'image/jpeg',data:b64}},
-      {text:'اقرأ هذا الإيصال البنكي وأعد JSON فقط بلا أي نص آخر: {"amount":رقم,"ccy":"العملة","bank":"البنك","account":"رقم الحساب","ref":"رقم العملية","date":"YYYY-MM-DD"}'}]}]};
-    var r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key='+key,
-      {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
-    if(!r.ok)return out;
-    var j=await r.json();
-    var t=(((j.candidates||[])[0]||{}).content||{}).parts;t=t&&t[0]&&t[0].text||'';
-    t=t.replace(/```json|```/g,'').trim();
-    var p=JSON.parse(t);
-    out.amount=Number(p.amount)||null;out.ccy=p.ccy||null;out.bank=p.bank||null;
-    out.account=p.account||null;out.ref=p.ref||null;out.date=p.date||null;
+    if(window.ArkanRead){ /* نفس محرك النظام القديم: Gemini ثم OCR محلي */
+      var r=await ArkanRead.read(file);
+      var p=r.parsed||{};
+      out.amount=Number(p.amount)||null;
+      out.ccy=(p.currency||p.ccy||null);
+      out.bank=p.bank||p.institution||null;
+      out.account=p.iban||p.account||null;
+      out.ref=p.transaction_id||p.reference||p.txn||null;
+      out.date=p.date||null;
+      out.engine=r.engine;
+    }
   }catch(e){}
   return out;
 }
@@ -609,7 +635,7 @@ async function addReceipts(files){
       var j=r.ok?await r.json():[];dup=!!j[0];}catch(e){}
     var rec={file:f,fp:fp,dup:dup,ok:!dup,parsed:null,id:null};
     RCPTS.push(rec);renderRcpts();
-    readReceipt(f).then(function(rec){return function(p){rec.parsed=p;renderRcpts();};}(rec));
+    readReceipt(f).then(function(rec){return function(p){rec.parsed=p;renderRcpts();updMatch();};}(rec));
   }
   $('#sFiles').value='';
 }
@@ -619,20 +645,42 @@ function renderRcpts(){
     return '<div class="rcpt'+(r.dup&&!r.ok?' dup':'')+'">'+
       '<div class="ic">🧾</div><div class="fi"><div>'+esc(r.file.name)+'</div>'+
       '<small>'+(r.dup?(r.ok?'مكرر — أُكّد استخدامه':'⚠ هذا الإيصال استُخدم من قبل'):
-        (p?(p.amount?fmt(p.amount)+' '+(p.ccy||'')+(p.ref?' · '+p.ref:''):'لم يُقرأ — سيُرفق كما هو'):'جارٍ القراءة…'))+'</small></div>'+
-      (r.dup&&!r.ok?'<button class="del" style="color:var(--warn);font-size:11px;font-weight:700" onclick="RCPTS['+i+'].ok=true;renderRcpts()">تأكيد</button>':'')+
-      '<button class="del" onclick="RCPTS.splice('+i+',1);renderRcpts()">✕</button></div>';
+        (p?(p.amount?fmt(p.amount)+' '+(p.ccy||'')+(p.ref?' · '+p.ref:''):(gemKey()?'لم يُقرأ — سيُرفق كما هو':'<button style="color:var(--blue);font-weight:700;font-size:11px" onclick="promptGemKey()">فعّل القراءة التلقائية — أدخل مفتاح Gemini</button>')):'جارٍ القراءة…'))+'</small></div>'+
+      (r.dup&&!r.ok?'<button class="del" style="color:var(--warn);font-size:11px;font-weight:700" onclick="RCPTS['+i+'].ok=true;renderRcpts();updMatch()">تأكيد</button>':'')+
+      '<button class="del" onclick="RCPTS.splice('+i+',1);renderRcpts();updMatch()">✕</button></div>';
   }).join('');
 }
+var SS={due:0,dueCcy:'',paid:0};
 function openSettle(){
   var s=selected();if(!s.length)return;
   RCPTS=[];renderRcpts();$('#sNote').value='';
   var by={},bys={};
   s.forEach(function(t){by[t.ccy]=(by[t.ccy]||0)+Number(t.amount);
     if(t.settle_amount)bys[t.settle_ccy||'']=(bys[t.settle_ccy||'']||0)+Number(t.settle_amount);});
-  $('#sSum').textContent=s.length+' tx  ·  '+Object.keys(by).map(function(c){return fmt(by[c])+' '+c;}).join(' + ')+
-    (Object.keys(bys).length?'  →  '+Object.keys(bys).map(function(c){return fmt(bys[c],2)+' '+c;}).join(' + '):'');
+  var dueCcy=Object.keys(bys)[0]||'';
+  SS.due=bys[dueCcy]||0;SS.dueCcy=dueCcy;SS.paid=0;
+  $('#ssN').textContent=s.length;
+  $('#ssIn').textContent=Object.keys(by).map(function(c){return fmt(by[c])+' '+c;}).join(' + ');
+  $('#ssDue').textContent=SS.due?fmt(SS.due,2)+' '+dueCcy:'— أدخل السعر في العمليات';
+  updMatch();
   $('#ovl-settle').classList.add('on');
+}
+function updMatch(){
+  SS.paid=0;
+  RCPTS.forEach(function(r){var p=r.parsed;
+    if(p&&p.amount&&(!r.dup||r.ok))SS.paid+=Number(p.amount)||0;});
+  $('#ssPaid').textContent=fmt(SS.paid,2)+(SS.dueCcy?' '+SS.dueCcy:'');
+  var el=$('#ssMatch'),ring=$('#ssRing');
+  if(!SS.due){$('#ssPct').textContent='—';$('#ssDiff').textContent='لا مستحق محسوب';
+    ring.style.strokeDashoffset=119.4;el.className='match';return;}
+  var pct=Math.min(SS.paid/SS.due,1.15);
+  ring.style.strokeDashoffset=String(119.4*(1-Math.min(pct,1)));
+  $('#ssPct').textContent=Math.round(SS.paid/SS.due*100)+'%';
+  var diff=SS.paid-SS.due;
+  if(Math.abs(diff)<1&&SS.paid>0){el.className='match ok';$('#ssDiff').textContent='مطابق تمامًا ✓';}
+  else if(diff>0){el.className='match over';$('#ssDiff').textContent='مبلغ زائد: '+fmt(diff,2)+' '+SS.dueCcy;}
+  else if(SS.paid>0){el.className='match';$('#ssDiff').textContent='ناقص: '+fmt(-diff,2)+' '+SS.dueCcy;}
+  else{el.className='match';$('#ssDiff').textContent='بانتظار الإيصالات';}
 }
 async function commitSettle(){
   var s=selected();if(!s.length)return;
