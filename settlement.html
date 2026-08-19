@@ -455,6 +455,7 @@ section#contacts.on{background:#F8FCFF;border-radius:0}
   window.ARKAN = ARKAN;
   window.dispatchEvent(new Event('arkan-core-ready'));
 </script>
+<script src="bdl-qr.js?v=1"></script>
 </head>
 <body>
 <div class="grid-bg"></div>
@@ -2061,8 +2062,13 @@ async function genInvoice(ref){
       </div>
     </div>
 
-    <!-- شكر -->
+    <!-- بصمة التحقق QR -->
     <div style="padding:18px 34px 0">
+      ${(function(){try{return window.BDLQR?BDLQR.block(t.ref,{size:84}):'';}catch(e){return '';}})()}
+    </div>
+
+    <!-- شكر -->
+    <div style="padding:14px 34px 0">
       <div style="font-size:13px;color:#003B8F;font-weight:700">✦ شكرًا لتعاملكم مع لبدال — Merci de votre confiance</div>
     </div>
 
