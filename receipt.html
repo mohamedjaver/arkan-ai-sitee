@@ -6,6 +6,7 @@
 <meta name="theme-color" content="#0B2F70">
 <title>BDL · إشعار تنفيذ عملية</title>
 <link rel="icon" href="favicon.svg?v=bdl5">
+<script src="bdl-qr.js?v=1" defer></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -102,7 +103,15 @@ td.mono{font-size:12px;font-weight:500;color:#33455F;letter-spacing:.05em}
 .tr.main .v{font-size:25px;font-weight:700;letter-spacing:.01em}
 .tr.main .v small{font-size:11.5px;font-weight:600;opacity:.82;margin-left:6px}
 
-.legal{margin-top:16px;padding:11px 14px;border:1px dashed var(--line);background:#FCFDFE;
+.vfy{margin-top:16px;display:flex;align-items:stretch;gap:0;border:1px solid var(--line)}
+.vfy .q{flex:0 0 auto;padding:11px;border-left:1px solid var(--line);background:#fff;display:grid;place-items:center}
+.vfy .q img{display:block;width:92px;height:92px;image-rendering:pixelated}
+.vfy .x{flex:1;padding:11px 14px;background:#FCFDFE;display:flex;flex-direction:column;justify-content:center}
+.vfy .x .t{font-size:11.5px;font-weight:700;color:var(--navy)}
+.vfy .x .s{font-size:10px;color:var(--muted);margin-top:3px;line-height:1.7}
+.vfy .x .r{font-family:"Inter",sans-serif;font-size:12.5px;font-weight:700;color:var(--blue);
+  direction:ltr;letter-spacing:.06em;margin-top:5px}
+.legal{margin-top:12px;padding:11px 14px;border:1px dashed var(--line);background:#FCFDFE;
   font-size:10.5px;color:var(--muted);line-height:1.75}
 .legal b{color:var(--navy);font-weight:600}
 
@@ -226,6 +235,15 @@ td.mono{font-size:12px;font-weight:500;color:#33455F;letter-spacing:.05em}
         <span class="v"><span class="num" data-f="total">13,966,480</span><small>AOA</small></span></div>
     </div>
 
+    <div class="vfy">
+      <div class="q"><img id="qrImg" data-bdl-qr="ARK-0818-001" data-bdl-qr-size="92" alt="QR"></div>
+      <div class="x">
+        <div class="t">تحقّق من صحة هذه الوثيقة</div>
+        <div class="s">امسح الرمز بكاميرا هاتفك — تُفتح صفحة التحقق وتُطابَق العملية مع أرشيف BDL مباشرة.</div>
+        <div class="r" data-f="ref">ARK-0818-001</div>
+      </div>
+    </div>
+
     <div class="legal">
       <b>وثيقة إلكترونية صادرة عن نظام BDL</b> — لا تحتاج توقيعًا أو ختمًا. تُعد هذه الوثيقة إثباتًا لتنفيذ العملية
       بالمرجع المذكور أعلاه. لأي استفسار أو اعتراض، يُرجى التواصل خلال 7 أيام من تاريخ الإصدار مع ذكر رقم المرجع.
@@ -262,6 +280,8 @@ var BDL={
       document.title='BDL · إشعار تنفيذ '+d.ref;
       var m=document.querySelector('[data-f="micro"]');
       if(m)m.textContent=new Array(7).join('BDL·SECURE·SETTLEMENT·'+d.ref+'·');
+      var q=document.getElementById('qrImg');
+      if(q&&window.BDLQR){q.src=BDLQR.png(d.ref,184);q.setAttribute('data-bdl-qr',d.ref);}
     }
   },
   fromQuery:function(){
@@ -274,7 +294,8 @@ function bdlShare(){
   if(navigator.share){navigator.share({title:document.title,url:location.href}).catch(function(){});}
   else{window.print();}
 }
-BDL.fromQuery();
+if(document.readyState==='loading'){window.addEventListener('DOMContentLoaded',BDL.fromQuery);}
+else{BDL.fromQuery();}
 </script>
 </body>
 </html>
