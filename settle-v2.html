@@ -346,6 +346,8 @@ async function login(){
       syncUI('ok','متزامن');boot();return;}}catch(e){}
   try{
     var ph=(localStorage.getItem('arkan-owner-phone')||'').replace(/[^0-9]/g,'');
+    if(!ph){try{var ss=JSON.parse(localStorage.getItem('arkan_session')||'null');
+      if(ss&&ss.phone)ph=String(ss.phone).replace(/[^0-9]/g,'');}catch(e){}}
     var pin=localStorage.getItem('arkan-pin')||'';
     if(ph&&pin){
       var m=document.getElementById('lMsg');if(m)m.textContent='جارٍ الدخول التلقائي…';
