@@ -348,7 +348,7 @@
     </section>
 
     <section class="screen" id="s-clients">
-      <div class="topbar"><div class="brand"><div><b style="font-size:19px">بوابة العملاء<small>كل من سجّل أو دخل الموقع</small></b></div></div></div>
+      <div class="topbar"><div class="brand"><div><b style="font-size:19px">بوابة العملاء<small>كل من سجّل أو دخل الموقع · v1063</small></b></div></div></div>
       <div style="display:flex;gap:8px;margin-bottom:14px">
         <button onclick="acLoadClients()" style="flex:1;height:44px;border:1px solid #D6E4F7;border-radius:12px;background:#fff;color:#0A56B8;font-weight:800;font-size:13px;font-family:inherit;cursor:pointer">تحديث</button>
         <button onclick="location.href='settle-v2.html#clients'" style="flex:1;height:44px;border:0;border-radius:12px;background:#0A56B8;color:#fff;font-weight:800;font-size:13px;font-family:inherit;cursor:pointer">الكونسول الكامل ←</button>
@@ -955,18 +955,32 @@ function renderMyTx(items){
 }
 
 /* ═ بوابة العملاء للمالك — تعمل بجلسته الحالية (هاتفه + رمزه) ═ */
+function acCreds(){
+  let ph=(SESSION&&SESSION.phone)||'';
+  let pin=(USER&&USER.pin)||'';
+  if(!ph){try{ph=(JSON.parse(localStorage.getItem('arkan_session')||'null')||{}).phone||'';}catch(e){}}
+  if(!pin){pin=localStorage.getItem('arkan-pin')||'';}
+  return {phone:String(ph).replace(/[^0-9]/g,''),pin:String(pin)};
+}
+function acErr(box,r,e){
+  let m;
+  if(r&&r.status===403)m='HTTP 403 — الخادم لا يتعرف على هذه الجلسة كمالك (الهاتف/الرمز)';
+  else if(r&&r.status===404)m='HTTP 404 — نسخة الخادم قديمة، Railway لم يكتمل بعد';
+  else if(r&&r.status)m='HTTP '+r.status+' — خطأ خادم';
+  else m='خطأ شبكة أو CORS — تحقق من الاتصال';
+  box.innerHTML='<div class="empty">'+m+'<br><button onclick="acLoadClients()" style="margin-top:10px;padding:9px 18px;border:1px solid #0A56B8;border-radius:10px;background:#fff;color:#0A56B8;font-weight:800;font-size:12.5px;font-family:inherit">إعادة المحاولة</button></div>';
+}
 async function acLoadClients(){
   acLoadRequests();
   const box=document.getElementById('acClients');if(!box)return;
   box.innerHTML='<div class="sk"></div><div class="sk"></div>';
-  const ph=(SESSION&&SESSION.phone)||'';
-  const pin=(USER&&USER.pin)||'';
-  if(!ph||!pin){box.innerHTML='<div class="empty">أعد تسجيل الدخول لعرض البوابة</div>';return;}
+  const c=acCreds();
+  if(!c.phone||!c.pin){box.innerHTML='<div class="empty">أعد تسجيل الدخول لعرض البوابة</div>';return;}
+  let r=null;
   try{
-    const r=await fetch(API_BASE+'/admin/list-users',{method:'POST',
-      headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:ph,pin:pin})});
-    if(r.status===404){box.innerHTML='<div class="empty">الخادم قيد التحديث — أعد المحاولة بعد دقيقة</div>';return;}
-    if(!r.ok)throw new Error('HTTP '+r.status);
+    r=await fetch(API_BASE+'/admin/list-users',{method:'POST',
+      headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:c.phone,pin:c.pin})});
+    if(!r.ok){acErr(box,r);return;}
     const j=await r.json();
     const us=(j.users||[]).filter(u=>u.role!=='owner');
     if(!us.length){box.innerHTML='<div class="empty">لا مسجلين بعد — كل من ينشئ حسابًا يظهر هنا</div>';return;}
@@ -979,7 +993,7 @@ async function acLoadClients(){
           ?'<span class="pill done">معتمد</span>'
           :'<button onclick=\"acApprove(\''+u.phone+'\',this)\" style=\"border:0;border-radius:9px;background:#0A56B8;color:#fff;font-weight:800;font-size:12px;padding:9px 14px;font-family:inherit;cursor:pointer\">اعتماد</button>'}</div></div>`;
     }).join('');
-  }catch(e){box.innerHTML='<div class="empty">تعذّر التحميل — تحقق من الاتصال ثم «تحديث»</div>';}
+  }catch(e){acErr(box,r,e);}
 }
 async function acLoadRequests(){
   const box=document.getElementById('acRequests');if(!box)return;
@@ -987,7 +1001,7 @@ async function acLoadRequests(){
   try{
     const r=await fetch(API_BASE+'/admin/list-requests',{method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({phone:SESSION.phone,pin:USER.pin})});
+      body:JSON.stringify(acCreds())});
     if(!r.ok)throw new Error('HTTP '+r.status);
     const j=await r.json();
     const items=j.items||[];
@@ -1010,7 +1024,7 @@ async function acApprove(target,btn){
     btn.disabled=true;btn.textContent='…';
     const r=await fetch(API_BASE+'/admin/approve-user',{method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({phone:SESSION.phone,pin:USER.pin,target:target})});
+      body:JSON.stringify(Object.assign(acCreds(),{target:target}))});
     if(!r.ok)throw new Error();
     toast('اعتُمد ✓');acLoadClients();
   }catch(e){btn.disabled=false;btn.textContent='اعتماد';toast('تعذّر الاعتماد');}
