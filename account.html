@@ -353,6 +353,9 @@
         <button onclick="acLoadClients()" style="flex:1;height:44px;border:1px solid #D6E4F7;border-radius:12px;background:#fff;color:#0A56B8;font-weight:800;font-size:13px;font-family:inherit;cursor:pointer">تحديث</button>
         <button onclick="location.href='settle-v2.html#clients'" style="flex:1;height:44px;border:0;border-radius:12px;background:#0A56B8;color:#fff;font-weight:800;font-size:13px;font-family:inherit;cursor:pointer">الكونسول الكامل ←</button>
       </div>
+      <div class="sec"><h2>طلبات التحويل</h2><span id="acReqCnt" style="font-size:12px;color:#8AA3C4"></span></div>
+      <div class="rates" id="acRequests"><div class="sk"></div></div>
+      <div class="sec" style="margin-top:22px"><h2>المسجلون</h2></div>
       <div class="rates" id="acClients"><div class="sk"></div><div class="sk"></div></div>
     </section>
 
@@ -953,6 +956,7 @@ function renderMyTx(items){
 
 /* ═ بوابة العملاء للمالك — تعمل بجلسته الحالية (هاتفه + رمزه) ═ */
 async function acLoadClients(){
+  acLoadRequests();
   const box=document.getElementById('acClients');if(!box)return;
   box.innerHTML='<div class="sk"></div><div class="sk"></div>';
   const ph=(SESSION&&SESSION.phone)||'';
@@ -976,6 +980,30 @@ async function acLoadClients(){
           :'<button onclick=\"acApprove(\''+u.phone+'\',this)\" style=\"border:0;border-radius:9px;background:#0A56B8;color:#fff;font-weight:800;font-size:12px;padding:9px 14px;font-family:inherit;cursor:pointer\">اعتماد</button>'}</div></div>`;
     }).join('');
   }catch(e){box.innerHTML='<div class="empty">تعذّر التحميل — تحقق من الاتصال ثم «تحديث»</div>';}
+}
+async function acLoadRequests(){
+  const box=document.getElementById('acRequests');if(!box)return;
+  box.innerHTML='<div class="sk"></div>';
+  try{
+    const r=await fetch(API_BASE+'/admin/list-requests',{method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({phone:SESSION.phone,pin:USER.pin})});
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    const j=await r.json();
+    const items=j.items||[];
+    const pend=items.filter(t=>t.status==='pending').length;
+    const cnt=document.getElementById('acReqCnt');
+    if(cnt)cnt.textContent=pend?pend+' قيد الانتظار':'لا معلق';
+    if(!items.length){box.innerHTML='<div class="empty">لا طلبات بعد</div>';return;}
+    box.innerHTML=items.slice(0,12).map(t=>{
+      const d=t.at?new Date(t.at).toLocaleString('en-GB',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'—';
+      const st=t.status==='pending'?['wait','قيد الانتظار']:t.status==='done'?['done','نُفِّذ']:t.status==='processing'?['wait','قيد التنفيذ']:['cancel',t.status];
+      return `<div class="tx"><div class="ticon out"><svg fill="none" stroke="#0058D9" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14m-7-7l7 7-7 7"/></svg></div>
+        <div class="tinfo"><b>${(t.currency||'').replace('→',' → ')} · ${fmt(t.amount||0)}</b>
+        <small class="num">${d} · ${String(t.ref||'').toUpperCase()} · ${t.name||''}${t.benefName?' ← '+t.benefName:''}</small></div>
+        <div class="tval"><span class="pill ${st[0]}">${st[1]}</span></div></div>`;
+    }).join('');
+  }catch(e){box.innerHTML='<div class="empty">تعذّر جلب الطلبات — «تحديث»</div>';}
 }
 async function acApprove(target,btn){
   try{
