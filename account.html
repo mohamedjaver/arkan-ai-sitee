@@ -1483,7 +1483,7 @@ async function ownerSetPin(){
 <div id="mrbSheet" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(4,20,50,.55);backdrop-filter:blur(4px)">
   <div style="position:absolute;left:0;right:0;bottom:0;background:#fff;border-radius:18px 18px 0 0;padding:20px 18px 30px;max-height:86vh;overflow:auto">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-      <b style="font-size:17px">وصل تحويل <span id="mrbBankName"></span> <small style="color:#B8C9E2;font-weight:500;font-size:10px">v19</small></b>
+      <b style="font-size:17px">وصل تحويل <span id="mrbBankName"></span> <small style="color:#B8C9E2;font-weight:500;font-size:10px">v20</small></b>
       <button onclick="mrbClose()" style="border:0;background:#EEF3FB;width:32px;height:32px;border-radius:50%;font-size:16px;cursor:pointer">✕</button>
     </div>
     <button onclick="document.getElementById('mrbFile').click()" id="mrbUpBtn" style="width:100%;padding:13px;border:2px dashed #7FA8DC;background:#F2F8FF;color:#0A56B8;font-weight:800;font-size:14px;border-radius:12px;cursor:pointer">📷 رفع إيصال التحويل — قراءة تلقائية</button>
@@ -1625,15 +1625,23 @@ function mrbMake(){
   const ref=document.getElementById('mrbRef').value.trim();
   const cv=document.getElementById('mrbCv'), x=cv.getContext('2d');
   const SC=2, W=1080;
-  /* وصل مصمم موحّد — بيانات نظيفة دائمًا؛ لقطة البنك تبقى في معرضك لا داخل الوصل */
+  /* وصل موحّد: بيانات نظيفة + الإيصال البنكي الأصلي محسَّنًا كمرفق توثيق */
   const mrbPh=(document.getElementById('mrbPhone')||{}).value||'';
   let rows=[['المستلم',name+(mrbPh?'  ·  '+mrbPh:'')],
             ['رقم المستلم / الحساب',to],
             ['القناة',mrbChan()],
             ['المبلغ',mrbFmt(amt)+' MRU']];
   if(ref)rows.push(['رقم العملية',ref]);
+  /* قصّ بطاقة البنك وتحجيمها */
+  let cimg=null, bw=780, bh=0;
+  if(MRB_IMG){
+    MRB_CROP = MRB_CROP || mrbCropCard(MRB_IMG);
+    cimg = MRB_CROP || MRB_IMG;
+    bh = Math.round(bw*cimg.height/cimg.width);
+    if(bh>1050){ bh=1050; bw=Math.round(bh*cimg.width/cimg.height); }
+  }
   const rowsY0=560, rowsH=rows.length*116;
-  const H = rowsY0+rowsH+240;
+  const H = rowsY0+rowsH + (cimg? (bh+190) : 0) + 240;
   cv.width=W*SC; cv.height=H*SC; x.scale(SC,SC);
 
   /* الخلفية */
@@ -1681,6 +1689,33 @@ function mrbMake(){
     x.strokeStyle='#E3ECF8'; x.beginPath(); x.moveTo(110,y+88); x.lineTo(960,y+88); x.stroke();
     y+=116;
   });
+
+  /* ═ مرفق التوثيق: الإيصال البنكي الأصلي — جودة محسّنة وإطار BDL ═ */
+  if(cimg){
+    y+=8;
+    x.textAlign='right'; x.font='700 30px "IBM Plex Sans Arabic",Arial'; x.fillStyle='#0B2447';
+    x.fillText('الإيصال البنكي الأصلي'+((typeof MRB_CUR!=='undefined'&&MRB_CUR&&MRB_CUR.n)?' — '+MRB_CUR.n:''), 960, y+18);
+    /* شارة أصلي */
+    x.fillStyle='#E8F6EC'; mrbRR(x,110,y-8,132,44,22); x.fill();
+    x.strokeStyle='#BFE6CB'; x.lineWidth=2; mrbRR(x,110,y-8,132,44,22); x.stroke();
+    x.textAlign='center'; x.fillStyle='#0B7A3B'; x.font='800 24px "IBM Plex Sans Arabic",Arial';
+    x.fillText('✓ أصلي', 176, y+22);
+    const bx=(W-bw)/2, by=y+52;
+    /* الإطار: ظل ناعم + بطاقة بيضاء + حد */
+    x.save(); x.shadowColor='rgba(2,15,45,.28)'; x.shadowBlur=34; x.shadowOffsetY=12;
+    x.fillStyle='#FFFFFF'; mrbRR(x,bx-14,by-14,bw+28,bh+28,24); x.fill(); x.restore();
+    /* الرسم المحسّن: تنعيم عالٍ + رفع تباين وإضاءة خفيف */
+    x.save(); mrbRR(x,bx,by,bw,bh,16); x.clip();
+    x.imageSmoothingEnabled=true;
+    try{ x.imageSmoothingQuality='high'; }catch(e){}
+    let hadFilter=false;
+    try{ x.filter='contrast(1.08) brightness(1.04) saturate(1.05)'; hadFilter=true; }catch(e){}
+    x.drawImage(cimg, bx, by, bw, bh);
+    if(hadFilter){ try{ x.filter='none'; }catch(e){} }
+    x.restore();
+    x.strokeStyle='#D7E4F5'; x.lineWidth=2.5; mrbRR(x,bx-14,by-14,bw+28,bh+28,24); x.stroke();
+    y = by + bh + 40;
+  }
 
 
   /* ═ بصمة التحقق QR — مربوطة بأرشيف BDL ═ */
