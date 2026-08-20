@@ -6201,11 +6201,20 @@ async function opsLoad(){
   try{const j=await fetch('rates-data.json?t='+Date.now()).then(x=>x.json());
     const ao=(j.r||[]).find(x=>x.ccy==='AOA'); if(ao&&+ao.out)OPS_DEFR=+ao.out;}catch(e){}
   if(!OPS.length){el.innerHTML='لا عمليات معلّقة — كل وصل تولّده من حسابك يظهر هنا تلقائيًا.';return;}
-  el.innerHTML=OPS.map(o=>{const d=o.data||{};const kz=d.amount?((d.amount*10)/OPS_DEFR):0;
+  /* كشف المكرر: نفس المرجع أكثر من مرة — الأحدث يبقى والبقية للتنظيف */
+  const seen={},dupIds=[];
+  OPS.forEach(o=>{const rf=String((o.data||{}).ref||'').toUpperCase();if(!rf)return;
+    if(seen[rf])dupIds.push(o.id);else seen[rf]=o.id;});
+  const dupBar=dupIds.length?`<div style="display:flex;justify-content:space-between;align-items:center;background:#FFF4E5;border:1px solid #F0C36D;border-radius:12px;padding:9px 12px;margin-bottom:10px">
+    <span style="color:#8A5A00;font-size:12.5px">⚠️ ${dupIds.length} عملية مكررة (نفس المرجع)</span>
+    <button onclick="opsCleanDup()" style="background:#B00020;color:#fff;border:0;border-radius:9px;padding:7px 12px;font-size:12px;font-weight:700">تنظيف المكرر</button></div>`:'';
+  window._opsDup=dupIds;
+  el.innerHTML=dupBar+OPS.map(o=>{const d=o.data||{};const kz=d.amount?((d.amount*10)/OPS_DEFR):0;
+    const isDup=dupIds.indexOf(o.id)>=0;
     const when=d.createdAt?new Date(d.createdAt).toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'';
     return `<div style="border:1px solid #E3ECF7;border-radius:14px;padding:12px;margin-bottom:10px;background:#F8FBFF">
       <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px">
-        <b style="color:#0B2447">${(d.bank?d.bank+' · ':'')+Number(d.amount||0).toLocaleString()} MRU</b>
+        <b style="color:#0B2447">${(d.bank?d.bank+' · ':'')+Number(d.amount||0).toLocaleString()} MRU${isDup?' <span style=\"color:#B00020;font-size:11px\">⚠️ مكرر</span>':''}</b>
         <span style="color:#6C7A93;font-size:12px">${[d.ref,d.client,when].filter(Boolean).join(' · ')}</span></div>
       <div style="display:flex;gap:8px;margin-top:10px;align-items:center;flex-wrap:wrap">
         <label style="font-size:12px;color:#31456B">سعر الأوقية
@@ -6232,6 +6241,29 @@ window.opsDone=async function(id,amt){
       body:JSON.stringify({data:Object.assign(d,{status:'done',rateNum:r,recv:kz,recvCcy:'AOA',doneAt:Date.now()}),
         updated_at:new Date().toISOString()})});
   }catch(e){alert('تعذر الحفظ');return;}
+  opsSyncTx(d.ref,r,kz); /* ربط قناة التسوية المركزية */
+  opsLoad();
+};
+/* حقن السعر والكوانزا في محرك التسوية (bdl_transactions) فورًا — يعمل بتوكن المالك */
+window.opsSyncTx=async function(ref,r,kz){
+  if(!ref)return;
+  try{
+    var tok=await bdsyTok();if(!tok)return;
+    var h={apikey:AK_ANON,Authorization:'Bearer '+tok,'Content-Type':'application/json'};
+    var q=await fetch(AK_SB+'/bdl_transactions?select=id&ref=ilike.'+encodeURIComponent(ref)+'&status=in.(open,settling)&limit=1',{headers:h});
+    var j=q.ok?await q.json():[];
+    if(!j[0])return; /* ستلتقطها settle-v2 تلقائيًا عبر syncPriced */
+    await fetch(AK_SB+'/bdl_transactions?id=eq.'+j[0].id,{method:'PATCH',headers:h,
+      body:JSON.stringify({rate:r/10,settle_amount:kz,settle_ccy:'AOA'})});
+  }catch(e){}
+};
+window.opsCleanDup=async function(){
+  const ids=window._opsDup||[];if(!ids.length)return;
+  if(!confirm('حذف '+ids.length+' عملية مكررة؟ (الأحدث لكل مرجع يبقى)'))return;
+  for(const id of ids){
+    try{await fetch(OPS_SB+'/archive_docs?id=eq.'+encodeURIComponent(id),{method:'DELETE',
+      headers:{apikey:OPS_KEY,Authorization:'Bearer '+OPS_KEY}});}catch(e){}
+  }
   opsLoad();
 };
 window.opsDrop=async function(id){
