@@ -609,8 +609,8 @@ async function mrbPickContact(){
       return;
     }catch(e){return;/* إلغاء */}
   }
-  /* iOS: نفتح القائمة فورًا — وخيار «من هاتفك» في رأسها يقود لمفتاح AutoFill 👤 */
-  mrbBdlList(true);
+  /* iOS: Safari يمنع منتقي الجهات — قائمة عملاء BDL هي المصدر المباشر */
+  mrbBdlList(false);
 }
 function mrbPhoneAutofill(){
   document.getElementById('mrbSug').style.display='none';
@@ -620,7 +620,7 @@ function mrbPhoneAutofill(){
 }
 async function mrbBdlList(withPhoneRow){
   const box=document.getElementById('mrbSug');
-  if(box.style.display==='block'&&!withPhoneRow){box.style.display='none';return;}
+  if(box.style.display==='block'){box.style.display='none';return;}
   box.style.display='block';
   const phoneRow=withPhoneRow
     ?'<div onclick="mrbPhoneAutofill()" style="display:flex;align-items:center;gap:10px;padding:13px 14px;border-bottom:2px solid #E3ECF7;cursor:pointer;background:#F2F8FF">'+
@@ -1433,23 +1433,22 @@ async function ownerSetPin(){
 <div id="mrbSheet" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(4,20,50,.55);backdrop-filter:blur(4px)">
   <div style="position:absolute;left:0;right:0;bottom:0;background:#fff;border-radius:18px 18px 0 0;padding:20px 18px 30px;max-height:86vh;overflow:auto">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-      <b style="font-size:17px">وصل تحويل <span id="mrbBankName"></span> <small style="color:#B8C9E2;font-weight:500;font-size:10px">v17</small></b>
+      <b style="font-size:17px">وصل تحويل <span id="mrbBankName"></span> <small style="color:#B8C9E2;font-weight:500;font-size:10px">v18</small></b>
       <button onclick="mrbClose()" style="border:0;background:#EEF3FB;width:32px;height:32px;border-radius:50%;font-size:16px;cursor:pointer">✕</button>
     </div>
     <button onclick="document.getElementById('mrbFile').click()" id="mrbUpBtn" style="width:100%;padding:13px;border:2px dashed #7FA8DC;background:#F2F8FF;color:#0A56B8;font-weight:800;font-size:14px;border-radius:12px;cursor:pointer">📷 رفع إيصال التحويل — قراءة تلقائية</button>
     <input type="file" id="mrbFile" accept="image/*,.pdf" style="display:none" onchange="mrbReadReceipt(this.files[0])">
     <img id="mrbThumb" style="display:none;width:70px;height:70px;object-fit:cover;border-radius:10px;margin-top:8px;border:2px solid #C7D8EE">
     <div id="mrbReadMsg" style="font-size:12.5px;margin-top:6px;min-height:16px;color:#5A7396"></div>
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-top:2px">
-      <label class="mrbL" style="margin:0">اسم المستلم</label>
-      <button type="button" id="mrbPickBtn" onclick="mrbPickContact()" style="display:inline-flex;align-items:center;gap:6px;border:1px solid #0A56B8;border-radius:10px;background:#F2F8FF;color:#0A56B8;font-weight:800;font-size:11.5px;padding:7px 12px;font-family:inherit;cursor:pointer">
+    <label class="mrbL">اسم المستلم</label>
+    <div style="position:relative">
+      <input id="mrbName" class="mrbI" placeholder="محمد ولد ..." autocomplete="name" name="recipient-name" style="padding-inline-end:14px;padding-inline-start:118px">
+      <button type="button" id="mrbPickBtn" onclick="mrbPickContact()" style="position:absolute;inset-inline-start:7px;top:50%;transform:translateY(-50%);display:inline-flex;align-items:center;gap:6px;border:0;border-radius:9px;background:linear-gradient(135deg,#19A9F5,#0A56B8);color:#fff;font-weight:800;font-size:11.5px;padding:9px 12px;font-family:inherit;cursor:pointer;box-shadow:0 4px 12px rgba(10,86,184,.25)">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0zM12 14a7 7 0 0 0-7 7h14a7 7 0 0 0-7-7z"/></svg>
         اختيار جهة</button>
     </div>
-    <input id="mrbName" class="mrbI" placeholder="محمد ولد ..." autocomplete="name" name="recipient-name">
     <div id="mrbSug" style="display:none;border:1px solid #D6E4F7;border-radius:12px;background:#fff;max-height:220px;overflow-y:auto;margin-top:6px;box-shadow:0 10px 30px rgba(16,42,67,.12)"></div>
     <label class="mrbL">هاتف المستلم</label><input id="mrbPhone" class="mrbI" type="tel" inputmode="tel" dir="ltr" placeholder="36xxxxxx / 244xxxxxxxxx" autocomplete="tel" name="recipient-tel">
-    <div style="text-align:left;margin-top:4px"><button type="button" onclick="mrbBdlList()" style="border:0;background:none;color:#0A56B8;font-weight:700;font-size:11.5px;font-family:inherit;cursor:pointer;text-decoration:underline">أو اختر من عملاء BDL المسجلين</button></div>
     <label class="mrbL">رقم المستلم / الحساب</label><input id="mrbTo" class="mrbI" inputmode="numeric" placeholder="36xxxxxx">
     <label class="mrbL">المبلغ (MRU جديدة)</label><input id="mrbAmt" class="mrbI" inputmode="decimal" placeholder="70000">
     <label class="mrbL">رقم العملية Txn ID (اختياري)</label><input id="mrbRef" class="mrbI" inputmode="numeric" placeholder="09260814...">
