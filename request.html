@@ -3,7 +3,10 @@
 <head>
 <script>/*bdl-guard*/(function(){try{var s=JSON.parse(localStorage.getItem('arkan_session')||'null');if(s&&(s.phone||s.uid))return;}catch(e){}var h=(location.pathname.split('/').pop()||'index.html')+location.search;location.replace('account.html?next='+encodeURIComponent(h));})();</script>
 <script>if(location.protocol==="http:"&&location.hostname.indexOf("lbdal")>-1)location.replace(location.href.replace("http:","https:"));</script><script id="akMerge">/* دمج: هذه الصفحة أُدمجت — الوصول القديم بـ ?legacy=1 */
-if(!/legacy=1/.test(location.search)&&!/[?&]amt=/.test(location.search)){location.replace('account.html#transfer');}</script>
+if(!/legacy=1/.test(location.search)){
+  var m=location.search.match(/[?&]amt=([\d.]+)/);
+  location.replace('account.html'+(m?'?amt='+m[1]:'')+'#send');
+}</script>
   <meta name="theme-color" content="#070A14">
   <link rel="icon" href="arkan-icon-512.png?v=bdl5">
   <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=bdl5">
