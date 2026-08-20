@@ -838,10 +838,19 @@ function ssUnpriced(){
 function ssRatePrev(){
   var r=parseFloat($('#ssRs').value)||0;
   var u=ssUnpriced();
-  if(r>0&&u.length){
+  if(r>=0.15&&r<=0.9&&u.length){
     var tot=u.reduce(function(s,t){return s+Number(t.amount)*10/r;},0);
-    $('#ssRPrev').textContent='← كوانزا '+u.length+' عملية: '+fmt(tot,2)+' AOA';
-  }else $('#ssRPrev').textContent='';
+    /* المستحق يتحدّث فورًا — والعداد والباقي معه */
+    SS.liveRate=r;
+    SS.due=(SS.baseDue||0)+tot;SS.dueCcy='AOA';
+    $('#ssDue').textContent=fmt(SS.due,2)+' AOA';
+    $('#ssRPrev').textContent='✓ يُحفظ السعر تلقائيًا عند تأكيد التسوية';
+    updMatch();
+  }else{
+    SS.liveRate=0;SS.due=SS.baseDue||0;SS.dueCcy=SS.due?'AOA':'';
+    $('#ssDue').textContent=SS.due?fmt(SS.due,2)+' AOA':'— أدخل السعر أدناه';
+    $('#ssRPrev').textContent='';updMatch();
+  }
 }
 async function ssRateApply(){
   var r=parseFloat($('#ssRs').value)||0;
@@ -857,8 +866,21 @@ async function ssRateApply(){
       if(p.ok)Object.assign(t,body);
     }
     toast('سُعّرت '+u.length+' عملية ✓');
-    openSettle(); /* إعادة حساب المستحق فورًا */
+    SS.baseDue=SS.due; /* صار محفوظًا — بلا إعادة فتح، الإيصالات باقية */
+    $('#ssRateBox').style.display='none';
   }catch(e){toast('تعذّر التسعير');}
+}
+/* حفظ السعر تلقائيًا ضمن تأكيد التسوية إن لم يُطبَّق يدويًا */
+async function ssPersistLiveRate(){
+  if(!SS.liveRate)return;
+  var r=SS.liveRate,rb=parseFloat($('#ssRb').value)||0,u=ssUnpriced();
+  for(var i=0;i<u.length;i++){var t=u[i];
+    var body={rate:r/10,settle_amount:Math.round(Number(t.amount)*10/r*100)/100,settle_ccy:'AOA'};
+    if(rb>0)body.meta=Object.assign({},t.meta||{},{rate_cost:rb});
+    try{var p=await fetch(SB+'/bdl_transactions?id=eq.'+t.id,{method:'PATCH',headers:H(),body:JSON.stringify(body)});
+      if(p.ok)Object.assign(t,body);}catch(e){}
+  }
+  SS.liveRate=0;
 }
 function openSettle(){
   var s=selected();if(!s.length)return;
@@ -872,6 +894,7 @@ function openSettle(){
     if(sa)bys[scy]=(bys[scy]||0)+sa;else noRate++;});
   var dueCcy=Object.keys(bys)[0]||'';
   SS.due=bys[dueCcy]||0;SS.dueCcy=dueCcy;SS.paid=0;
+  SS.baseDue=SS.due;SS.liveRate=0;
   $('#ssN').textContent=s.length;
   $('#ssIn').textContent=Object.keys(by).map(function(c){return fmt(by[c])+' '+c;}).join(' + ');
   $('#ssDue').textContent=SS.due
@@ -901,6 +924,7 @@ function updMatch(){
   else{el.className='match';$('#ssDiff').textContent='بانتظار الإيصالات';}
 }
 async function commitSettle(){
+  await ssPersistLiveRate(); /* السعر الحي يُحفظ أولًا */
   var s=selected();if(!s.length)return;
   if(RCPTS.some(function(r){return r.dup;})){toast('⛔ إيصال مستخدم من قبل — احذفه للمتابعة');return;}
   $('#doSettle').disabled=true;
