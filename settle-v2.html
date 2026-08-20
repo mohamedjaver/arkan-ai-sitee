@@ -1474,6 +1474,33 @@ async function loadArchive(){
   renderArchive();
 }
 /* ═ حذف تسوية — إعادة فتح ذرّية عبر bdl_unsettle ═ */
+/* ═ حذف عملية نهائيًا: فك التسوية إن وُجدت ← محو الصف ← تصحيح الأرباح تلقائيًا ═ */
+async function delTx(txId,stId,ref){
+  var msg='حذف العملية «'+ref+'» نهائيًا؟\n\n• تُمحى من السجل والأرشيف والأرباح\n• لا تراجع بعد الحذف';
+  if(stId){
+    /* هل تسويتها تشمل عمليات أخرى ستُعاد فتحها؟ */
+    try{
+      var q=await fetch(SB+'/bdl_transactions?select=id&settlement_id=eq.'+stId,{headers:H()});
+      var n=q.ok?(await q.json()).length:1;
+      if(n>1)msg+='\n\n⚠️ تسويتها تشمل '+n+' عمليات — البقية ستعود «مفتوحة» وهذه وحدها تُحذف';
+      else msg+='\n• تسويتها وربحها يُحذفان معها';
+    }catch(e){}
+  }
+  if(!confirm(msg))return;
+  if(!confirm('تأكيد أخير: حذف «'+ref+'» لا رجعة فيه؟'))return;
+  try{
+    if(stId){
+      var r1=await fetch(SB+'/rpc/bdl_unsettle',{method:'POST',headers:H(),
+        body:JSON.stringify({p_st:stId})});
+      if(!r1.ok&&r1.status!==404){var e1=await r1.text();throw new Error(e1.slice(0,80));}
+    }
+    var r2=await fetch(SB+'/bdl_transactions?id=eq.'+txId,{method:'DELETE',headers:H()});
+    if(!r2.ok)throw new Error('DELETE '+r2.status);
+    toast('حُذفت «'+ref+'» نهائيًا ✓');
+    ARCH=null;TXCACHE={};PROF=null;OPSPROF=null;
+    loadArchive();loadGroups();
+  }catch(e){toast('تعذّر الحذف: '+e.message);}
+}
 async function unsettle(stId,ref){
   if(!confirm('حذف التسوية التي تشمل «'+ref+'»؟\n\n• كل عمليات هذه التسوية تعود «مفتوحة»\n• الإيصالات تتحرر لإعادة الاستخدام\n• الربح المرتبط يُحذف من التقارير\n\nثم تعيد تسويتها بشكل صحيح.'))return;
   try{
@@ -1536,6 +1563,7 @@ function renderArchive(){
       ((t.status==='settled'||t.status==='done')&&t.settlement_id
         ?'<button onclick="unsettle(\''+t.settlement_id+'\',\''+esc(t.ref)+'\')" style="display:block;margin-top:6px;border:1px solid #F5B5B0;border-radius:8px;background:#FFF5F5;color:#B00020;font-weight:800;font-size:10.5px;padding:5px 9px;font-family:inherit;cursor:pointer">↩ حذف التسوية</button>'
         :'')+
+      '<button onclick="delTx(\''+(t.tx_id||t.id)+'\',\''+(t.settlement_id||'')+'\',\''+esc(t.ref)+'\')" style="display:block;margin-top:5px;border:0;border-radius:8px;background:#B00020;color:#fff;font-weight:800;font-size:10.5px;padding:5px 9px;font-family:inherit;cursor:pointer">🗑 حذف العملية</button>'+
       '</div></div>');
   });
   if(buf.length)out.push(dayHead(day)+buf.join(''));
