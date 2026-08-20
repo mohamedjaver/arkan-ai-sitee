@@ -837,6 +837,22 @@ app.post('/account/my-requests', async (req, res) => {
   } catch (e) { console.error('my-requests:', e.message); res.status(500).json({ ok: false, err: 'server' }); }
 });
 
+app.post('/admin/list-requests', async (req, res) => {
+  try {
+    if (!fbReady) return res.status(503).json({ ok: false, err: 'service' });
+    if (!(await verifyOwner(req))) return res.status(403).json({ ok: false, err: 'not owner' });
+    const q = await admin.firestore().collection('payment_requests')
+      .orderBy('createdAt', 'desc').limit(60).get();
+    const items = [];
+    q.forEach(d => { const v = d.data() || {};
+      items.push({ id: d.id, ref: v.ref || d.id.slice(-6), name: v.company || '', phone: v.contact || '',
+        amount: Number(v.amount) || 0, currency: v.currency || '', benefName: v.benefName || '',
+        benefKind: v.benefKind || '', benefAcc: v.benefAcc || '', status: v.status || 'pending',
+        at: v.createdAt && v.createdAt.toMillis ? v.createdAt.toMillis() : 0 }); });
+    res.json({ ok: true, items });
+  } catch (e) { console.error('list-requests:', e.message); res.status(500).json({ ok: false, err: 'server' }); }
+});
+
 app.post('/admin/list-users', async (req, res) => {
   try {
     if (!fbReady) return res.status(503).json({ ok: false, err: 'service' });
