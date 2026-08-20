@@ -171,6 +171,7 @@ input,select{font-family:inherit;color:var(--ink)}
 .login p{font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.8}
 @media(min-width:760px){.list,.fbar{max-width:760px;margin-inline:auto}.bbar{max-width:760px;inset-inline:calc(50% - 380px)}}
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
 </head>
 <body>
 
@@ -210,6 +211,7 @@ input,select{font-family:inherit;color:var(--ink)}
     <div class="row">
       <div class="srch">🔍<input id="opq" placeholder="زبون، مرجع، مورد…" oninput="renderOps()"></div>
       <button class="selall" onclick="opNewSheet()">+ عملية</button>
+      <button class="selall" style="background:var(--navy);color:#fff;border-color:var(--navy)" onclick="dayCloseSheet()">📊 إقفال اليوم</button>
     </div>
     <div class="chips" id="opChips">
       <button class="chip on" data-st="ALL" onclick="setOpSt('ALL')">الكل</button>
@@ -233,6 +235,15 @@ input,select{font-family:inherit;color:var(--ink)}
   <div class="clabel" style="margin-top:10px">المورد الأنغولي (اختياري)</div>
   <input id="opSup" class="cin" placeholder="Helenio Pay…" style="width:100%;box-sizing:border-box">
   <button class="cta" style="width:100%;margin-top:16px" onclick="opCreate()">إنشاء</button>
+</div></div>
+
+<!-- المطابقة والإقفال اليومي -->
+<div class="ovl" id="ovl-dclose"><div class="sheet">
+  <h3>مطابقة اليوم<button onclick="closeOvl('dclose')">إغلاق ✕</button></h3>
+  <div id="dcDate" class="num" style="font-size:12.5px;color:var(--muted);margin-bottom:12px"></div>
+  <div id="dcGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:8px"></div>
+  <div id="dcNote" style="display:none;margin-top:12px;background:#FFF4E5;border:1px solid #F0C36D;border-radius:12px;padding:11px 13px;color:#8A5A00;font-size:12.5px;font-weight:700"></div>
+  <button class="cta" style="width:100%;margin-top:16px" id="dcBtn" onclick="dayCloseDo()">تأكيد الإقفال وإصدار التقرير PDF</button>
 </div></div>
 
 <!-- إلحاق إيصال -->
@@ -1021,6 +1032,130 @@ window.opCopyLink=async function(tok){
   try{await navigator.clipboard.writeText(opConfirmUrl(tok));toast('نُسخ الرابط ✓');}
   catch(e){window.open(opConfirmUrl(tok),'_blank');}
 };
+
+/* ═══════════ المطابقة اليومية والإقفال (المرحلة 3) ═══════════ */
+var DC=null;
+function todayISO(){var d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+async function dayCalc(){
+  /* إيصالات اليوم */
+  var t0=todayISO()+'T00:00:00';
+  var rr=await fetch(SB+'/bdl_op_receipts?select=amount_aoa&created_at=gte.'+encodeURIComponent(t0)+'&limit=1000',{headers:H()});
+  var recs=rr.ok?await rr.json():[];
+  var received=recs.reduce(function(s,r){return s+Number(r.amount_aoa);},0);
+  /* حالة العمليات الآن */
+  if(!OPS_DATA)await loadOps();
+  var d=OPS_DATA||[],open_=0,gap=0,covered=0,sent=0,conf=0,closedToday=0;
+  d.forEach(function(o){
+    if(o.status==='open'){open_++;gap+=Math.max(0,Number(o.target_aoa)-Number(o.covered_aoa));}
+    if(o.status==='covered')covered++;
+    if(o.status==='sent')sent++;
+    if(o.status==='confirmed')conf++;
+  });
+  return {day:todayISO(),received_aoa:received,receipts_n:recs.length,
+    ops_open:open_,gap_open:gap,ops_covered:covered,ops_sent:sent,
+    ops_confirmed:conf,ops_closed_today:closedToday};
+}
+async function dayCloseSheet(){
+  openOvl('dclose');
+  $('#dcDate').textContent='اليوم: '+todayISO();
+  $('#dcGrid').innerHTML='<div class="sk" style="grid-column:1/-1;height:120px;border-radius:12px;background:#EEF3FA"></div>';
+  $('#dcNote').style.display='none';$('#dcBtn').disabled=false;
+  DC=await dayCalc();
+  function c(t,v,col){return '<div style="background:var(--bg,#F6FAFD);border:1px solid #E3ECF7;border-radius:12px;padding:12px;text-align:center">'+
+    '<div class="num" style="font-size:18px;font-weight:800;color:'+(col||'var(--navy)')+'">'+v+'</div>'+
+    '<div style="font-size:11px;color:var(--muted);margin-top:3px">'+t+'</div></div>';}
+  $('#dcGrid').innerHTML=
+    c('مستلَم اليوم (AOA)',fmt(DC.received_aoa,0),'#0B7A3B')+
+    c('عدد إيصالات اليوم',DC.receipts_n,null)+
+    c('عمليات ناقصة',DC.ops_open,DC.ops_open?'#B00020':null)+
+    c('فجوة مفتوحة (AOA)',fmt(DC.gap_open,0),DC.gap_open?'#B00020':null)+
+    c('مكتملة — للمورد',DC.ops_covered,'#0A56B8')+
+    c('عند المورد / أكّد',DC.ops_sent+' / '+DC.ops_confirmed,null);
+  /* هل أُقفل اليوم مسبقًا؟ */
+  var q=await fetch(SB+'/bdl_day_close?select=id&day=eq.'+DC.day+'&limit=1',{headers:H()});
+  var j=q.ok?await q.json():[];
+  if(j[0]){$('#dcNote').style.display='block';
+    $('#dcNote').textContent='ℹ️ اليوم مُقفل مسبقًا — الزر سيعيد إصدار التقرير فقط';
+    DC._already=true;$('#dcBtn').textContent='إعادة إصدار تقرير اليوم PDF';}
+  else $('#dcBtn').textContent='تأكيد الإقفال وإصدار التقرير PDF';
+}
+async function dayCloseDo(){
+  if(!DC)return;
+  $('#dcBtn').disabled=true;
+  if(!DC._already){
+    try{
+      var r=await fetch(SB+'/bdl_day_close',{method:'POST',headers:H(),body:JSON.stringify({
+        day:DC.day,received_aoa:DC.received_aoa,receipts_n:DC.receipts_n,
+        ops_open:DC.ops_open,gap_open:DC.gap_open,ops_covered:DC.ops_covered,
+        ops_sent:DC.ops_sent,ops_confirmed:DC.ops_confirmed,ops_closed_today:DC.ops_closed_today})});
+      if(r.status===409){$('#dcNote').style.display='block';
+        $('#dcNote').textContent='ℹ️ سبق إقفال اليوم — أُصدر التقرير فقط';}
+      else if(!r.ok)throw new Error(r.status);
+      else toast('أُقفل يوم '+DC.day+' ✓');
+    }catch(e){toast('تعذّر الإقفال: '+e.message);$('#dcBtn').disabled=false;return;}
+  }
+  try{await dayPdf(DC);}catch(e){toast('التقرير: '+e.message);}
+  $('#dcBtn').disabled=false;
+}
+/* تقرير عربي مثالي: نرسمه canvas ثم نغلّفه PDF — يتجاوز مشكلة خطوط jsPDF العربية */
+async function dayPdf(D){
+  var W=1080,rowsOps=(OPS_DATA||[]).filter(function(o){return o.status!=='closed';}).slice(0,14);
+  var H_=760+rowsOps.length*56+120;
+  var c=document.createElement('canvas');c.width=W;c.height=H_;
+  var x=c.getContext('2d');
+  var F="'IBM Plex Sans Arabic','Inter',system-ui,sans-serif";
+  if(!x.roundRect){x.roundRect=function(a,b,w,h,r){r=Math.min(r,w/2,h/2);
+    this.moveTo(a+r,b);this.arcTo(a+w,b,a+w,b+h,r);this.arcTo(a+w,b+h,a,b+h,r);
+    this.arcTo(a,b+h,a,b,r);this.arcTo(a,b,a+w,b,r);this.closePath();};}
+  x.fillStyle='#F6FAFD';x.fillRect(0,0,W,H_);
+  var g=x.createLinearGradient(0,0,W,250);
+  g.addColorStop(0,'#0B2F70');g.addColorStop(.55,'#0A56B8');g.addColorStop(1,'#19A9F5');
+  x.fillStyle=g;x.fillRect(0,0,W,250);
+  x.textAlign='right';x.fillStyle='#fff';
+  x.font='800 46px '+F;x.fillText('تقرير الإقفال اليومي — BDL',W-60,105);
+  x.font='600 30px '+F;x.fillStyle='rgba(255,255,255,.9)';x.fillText(D.day,W-60,160);
+  /* KPI */
+  var kpis=[['مستلَم اليوم',fmt(D.received_aoa,0)+' AOA','#0B7A3B'],
+            ['إيصالات اليوم',String(D.receipts_n),'#0B2447'],
+            ['فجوة مفتوحة',fmt(D.gap_open,0)+' AOA',D.gap_open?'#B00020':'#0B7A3B'],
+            ['ناقصة / مكتملة',D.ops_open+' / '+D.ops_covered,'#0A56B8'],
+            ['عند المورد / أكّد',D.ops_sent+' / '+D.ops_confirmed,'#0A56B8']];
+  var kw=(W-120-40)/3,y0=300;
+  kpis.forEach(function(k,i){
+    var col=i%3,row=Math.floor(i/3);
+    var kx=60+col*(kw+20),ky=y0+row*130;
+    x.fillStyle='#fff';x.beginPath();x.roundRect(kx,ky,kw,110,18);x.fill();
+    x.strokeStyle='#E3ECF7';x.lineWidth=2;x.stroke();
+    x.textAlign='center';x.fillStyle=k[2];x.font='800 34px '+F;
+    x.fillText(k[1],kx+kw/2,ky+52);
+    x.fillStyle='#5C7699';x.font='600 22px '+F;
+    x.fillText(k[0],kx+kw/2,ky+88);
+  });
+  /* جدول العمليات المفتوحة */
+  var ty=y0+300;
+  x.textAlign='right';x.fillStyle='#0B2447';x.font='800 30px '+F;
+  x.fillText('العمليات غير المقفلة ('+rowsOps.length+')',W-60,ty);ty+=28;
+  var STL={open:'ناقصة',covered:'مكتملة',sent:'عند المورد',confirmed:'أكّد ✓'};
+  rowsOps.forEach(function(o){
+    x.fillStyle='#fff';x.beginPath();x.roundRect(60,ty,W-120,48,12);x.fill();
+    x.strokeStyle='#E3ECF7';x.stroke();
+    x.textAlign='right';x.fillStyle='#0B2447';x.font='700 24px '+F;
+    x.fillText(o.client_name+'  ·  '+o.ref,W-84,ty+32);
+    x.textAlign='left';x.fillStyle='#5C7699';x.font='600 22px '+F;
+    x.fillText(fmt(o.covered_aoa,0)+' / '+fmt(o.target_aoa,0)+'  ·  '+(STL[o.status]||o.status),84,ty+32);
+    ty+=56;
+  });
+  x.textAlign='center';x.fillStyle='#8AA3C4';x.font='500 22px '+F;
+  x.fillText('lbdal.com · أُصدر '+new Date().toLocaleString('en-GB'),W/2,H_-40);
+  /* التغليف PDF */
+  var img=c.toDataURL('image/jpeg',.92);
+  var JS=(window.jspdf&&window.jspdf.jsPDF)||window.jsPDF;
+  if(!JS)throw new Error('jsPDF لم يُحمَّل — تحقق من الاتصال');
+  var pdf=new JS({unit:'px',format:[W/2,H_/2]});
+  pdf.addImage(img,'JPEG',0,0,W/2,H_/2);
+  pdf.save('BDL-close-'+D.day+'.pdf');
+  toast('صدر التقرير BDL-close-'+D.day+'.pdf ✓');
+}
 
 /* ═══════════ بوابة العملاء — المسجلون في الموقع + دمج الأسماء المكررة ═══════════ */
 var CLIENTS=null,DUPS=null,BDLC=null;
