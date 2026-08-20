@@ -586,6 +586,7 @@ nav{z-index:5000!important}
     <div class="type" data-ty="rcpt"><div class="ico"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#0058D9" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4v16l2-1 2 1 2-1 2 1 2-1 2 1 2-1V4l-2 1-2-1-2 1-2-1-2 1-2-1zM8 9h8M8 13h8"/></svg></div><div class="t1">الإيصالات</div><div class="t2">كل العملات</div></div>
     <div class="type" data-ty="svc"><div class="ico"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#0058D9" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h9l5 5v15H6zM15 2v5h5M9 13h6M9 17h6"/></svg></div><div class="t1">فاتورة مورد</div><div class="t2">دفع دولي</div></div>
     <div class="type" data-ty="pub"><div class="ico"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#0058D9" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 010 18M12 3a15 15 0 000 18"/></svg></div><div class="t1">بوابة العملاء</div><div class="t2">نشر الأسعار</div></div>
+    <div class="type wide" onclick="location.href='settle-v2.html'" style="cursor:pointer;background:linear-gradient(135deg,#0B2F70,#0A56B8)"><div class="ico" style="background:rgba(255,255,255,.15)"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg></div><div><div class="t1" style="color:#fff">منظومة العمليات BDL</div><div class="t2" style="color:rgba(255,255,255,.8)">التغطية · تأكيد المورد · إقفال اليوم · الأرباح</div></div></div>
     <div class="type wide" data-ty="rep"><div class="ico"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#0058D9" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18M8 16V9M13 16V5M18 16v-4"/></svg></div><div><div class="t1">التقارير</div><div class="t2">PDF · ربحية كل عملة · اليوم</div></div></div>
   </div>
 
@@ -4065,7 +4066,7 @@ async function arkanCheckUpdate(manual){
     if(manual)toast('أنت على أحدث نسخة ('+ARKAN_BUILD+') ✓');
   }catch(e){if(manual)toast('تعذّر فحص التحديث');}
 }
-setTimeout(()=>{arkanVerLabel();arkanCheckUpdate(false);},2500);
+setTimeout(()=>{arkanVerLabel();},2500); /* الشريط مُعطَّل: SW شبكة-أولًا = تحديث ذاتي دائم */
 
 function isPdfFile(dataUrl,type,name){
   if(/pdf/i.test(type||''))return true;
