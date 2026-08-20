@@ -347,6 +347,15 @@
       <button class="cta" id="reqBtn">متابعة التحويل</button>
     </section>
 
+    <section class="screen" id="s-clients">
+      <div class="topbar"><div class="brand"><div><b style="font-size:19px">بوابة العملاء<small>كل من سجّل أو دخل الموقع</small></b></div></div></div>
+      <div style="display:flex;gap:8px;margin-bottom:14px">
+        <button onclick="acLoadClients()" style="flex:1;height:44px;border:1px solid #D6E4F7;border-radius:12px;background:#fff;color:#0A56B8;font-weight:800;font-size:13px;font-family:inherit;cursor:pointer">تحديث</button>
+        <button onclick="location.href='settle-v2.html#clients'" style="flex:1;height:44px;border:0;border-radius:12px;background:#0A56B8;color:#fff;font-weight:800;font-size:13px;font-family:inherit;cursor:pointer">الكونسول الكامل ←</button>
+      </div>
+      <div class="rates" id="acClients"><div class="sk"></div><div class="sk"></div></div>
+    </section>
+
     <section class="screen" id="s-acct">
       <div class="acct-head"><div class="avatar" id="avatar" title="تغيير الصورة الشخصية">م<span class="cam"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></span></div><input type="file" id="avFile" accept="image/*" style="display:none"><b id="acctName">—</b><small class="num" id="acctPhone">—</small></div>
       <div class="rows">
@@ -942,6 +951,42 @@ function renderMyTx(items){
   $('fullTx').innerHTML=items.map(myTxRow).join('');
 }
 
+/* ═ بوابة العملاء للمالك — تعمل بجلسته الحالية (هاتفه + رمزه) ═ */
+async function acLoadClients(){
+  const box=document.getElementById('acClients');if(!box)return;
+  box.innerHTML='<div class="sk"></div><div class="sk"></div>';
+  const ph=(SESSION&&SESSION.phone)||'';
+  const pin=(USER&&USER.pin)||'';
+  if(!ph||!pin){box.innerHTML='<div class="empty">أعد تسجيل الدخول لعرض البوابة</div>';return;}
+  try{
+    const r=await fetch(API_BASE+'/admin/list-users',{method:'POST',
+      headers:{'Content-Type':'application/json'},body:JSON.stringify({phone:ph,pin:pin})});
+    if(r.status===404){box.innerHTML='<div class="empty">الخادم قيد التحديث — أعد المحاولة بعد دقيقة</div>';return;}
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    const j=await r.json();
+    const us=(j.users||[]).filter(u=>u.role!=='owner');
+    if(!us.length){box.innerHTML='<div class="empty">لا مسجلين بعد — كل من ينشئ حسابًا يظهر هنا</div>';return;}
+    box.innerHTML=us.map(u=>{
+      const cr=u.createdAt?new Date(u.createdAt).toLocaleDateString('en-GB'):'';
+      const ll=u.lastLoginAt?new Date(u.lastLoginAt).toLocaleString('en-GB',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'';
+      return `<div class="tx"><div class="ticon out" style="background:#EAF2FF"><svg fill="none" stroke="#0A56B8" stroke-width="1.8" viewBox="0 0 24 24" width="20" height="20"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0zM12 14a7 7 0 0 0-7 7h14a7 7 0 0 0-7-7z"/></svg></div>
+        <div class="tinfo"><b>${u.name||'—'}</b><small class="num">${u.phone}${u.ref?' · '+u.ref:''}${cr?' · سُجّل '+cr:''}${ll?' · <span style=\"color:#0A56B8\">آخر دخول '+ll+'</span>':''}</small></div>
+        <div class="tval">${u.approved
+          ?'<span class="pill done">معتمد</span>'
+          :'<button onclick=\"acApprove(\''+u.phone+'\',this)\" style=\"border:0;border-radius:9px;background:#0A56B8;color:#fff;font-weight:800;font-size:12px;padding:9px 14px;font-family:inherit;cursor:pointer\">اعتماد</button>'}</div></div>`;
+    }).join('');
+  }catch(e){box.innerHTML='<div class="empty">تعذّر التحميل — تحقق من الاتصال ثم «تحديث»</div>';}
+}
+async function acApprove(target,btn){
+  try{
+    btn.disabled=true;btn.textContent='…';
+    const r=await fetch(API_BASE+'/admin/approve-user',{method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({phone:SESSION.phone,pin:USER.pin,target:target})});
+    if(!r.ok)throw new Error();
+    toast('اعتُمد ✓');acLoadClients();
+  }catch(e){btn.disabled=false;btn.textContent='اعتماد';toast('تعذّر الاعتماد');}
+}
 let balHidden=false;
 function paintBalance(){
   const b = window.__bal||0;
@@ -1132,9 +1177,9 @@ function apply(){
   const nav=document.getElementById('nav');
   if(nav&&!document.getElementById('navClients')){
     const it=document.createElement('div');
-    it.className='nav-it';it.id='navClients';
+    it.className='nav-it';it.id='navClients';it.dataset.s='s-clients';
     it.innerHTML='<svg fill="none" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a4 4 0 0 0-3-3.87M9 20H4v-2a4 4 0 0 1 3-3.87m6-8.13a4 4 0 1 1-8 0 4 4 0 0 1 8 0zm6 3a3 3 0 1 0-3-3"/></svg><span>العملاء</span>';
-    it.onclick=()=>location.href='settle-v2.html#clients';
+    it.onclick=()=>{go('s-clients');acLoadClients();};
     nav.insertBefore(it,nav.lastElementChild); /* قبل «حسابي» */
   }
   const acct=document.getElementById('s-acct');
