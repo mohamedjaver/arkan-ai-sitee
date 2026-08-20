@@ -328,7 +328,12 @@
       </div>
       <div class="bncard">
         <div class="bnhead"><svg fill="none" stroke-width="1.8" viewBox="0 0 24 24" width="19" height="19" stroke="#0A56B8"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0zM12 14a7 7 0 0 0-7 7h14a7 7 0 0 0-7-7z"/></svg>بيانات المستفيد — من يستلم المبلغ</div>
-        <label class="bnlbl" for="bnName">اسم المستفيد الكامل</label>
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <label class="bnlbl" for="bnName">اسم المستفيد الكامل</label>
+          <button type="button" id="bnPickBtn" onclick="bnPickContact()" style="display:none;align-items:center;gap:6px;border:1px solid #0A56B8;border-radius:10px;background:#F2F8FF;color:#0A56B8;font-weight:800;font-size:11.5px;padding:7px 12px;font-family:inherit;cursor:pointer;margin-bottom:6px">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0zM12 14a7 7 0 0 0-7 7h14a7 7 0 0 0-7-7z"/></svg>
+            من جهات الاتصال</button>
+        </div>
         <input id="bnName" class="bnin" placeholder="الاسم كما في الحساب البنكي" autocomplete="name">
         <div class="bngrid">
           <div><label class="bnlbl" for="bnKind">القناة</label>
@@ -590,6 +595,28 @@ $('toPick').onclick   = e => { e.stopPropagation(); const o=$('tMenu').classList
 document.addEventListener('click', closeMenus);
 let swapDeg=0;
 $('swapBtn').onclick = () => { [st.from,st.to]=[st.to,st.from]; swapDeg+=180; $('swapBtn').firstElementChild.style.transform=`rotate(${swapDeg}deg)`; paintPickers(); calc(); };
+/* ═ اختيار المستفيد من جهات اتصال الهاتف (Contact Picker API) ═
+   مدعوم في Chrome/Android — يُخفى الزر تلقائيًا حيث لا يتوفر (Safari/iOS حاليًا) */
+(function(){
+  const b=document.getElementById('bnPickBtn');
+  if(b&&('contacts' in navigator)&&('select' in navigator.contacts)){b.style.display='inline-flex';}
+})();
+async function bnPickContact(){
+  try{
+    const sel=await navigator.contacts.select(['name','tel'],{multiple:false});
+    const c=sel&&sel[0];if(!c)return;
+    const nm=(c.name&&c.name[0])||'';
+    let tel=(c.tel&&c.tel[0])||'';
+    tel=String(tel).replace(/[^0-9+]/g,'').replace(/^\+/,'').replace(/^00/,'');
+    if(nm)document.getElementById('bnName').value=nm;
+    if(tel){document.getElementById('bnAcc').value=tel;
+      /* تخمين القناة من مفتاح الدولة */
+      const k=document.getElementById('bnKind');
+      if(k){if(/^244/.test(tel))k.value='bank_ao';else if(/^222/.test(tel)||tel.length===8)k.value='bankily';}
+    }
+    toast('اختير '+(nm||tel)+' ✓');
+  }catch(e){/* إلغاء المستخدم — صمت */}
+}
 /* ═ وصل BDL البصري: 1080×1400 — الشعار، التدرج الرسمي، كل بيانات الطلب ═ */
 const BDL_LOGO=new Image();BDL_LOGO.src='arkan-icon-512.png';
 async function bdlReceiptCard(d){
