@@ -202,7 +202,7 @@
   .gate .err.on{display:block}
   .gate .hint{margin-top:20px;text-align:center;font-size:12px;color:var(--muted);line-height:1.8}
   .gate .hint a{color:var(--gold);text-decoration:none}
-  .toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%);z-index:120;max-width:390px;width:calc(100% - 40px);
+  .toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%);z-index:99999;max-width:390px;width:calc(100% - 40px);
     display:none;align-items:center;gap:10px;padding:14px 16px;border-radius:0;
     background:var(--card2);border:1px solid rgba(0,181,255,.06);font-size:14px}
   .toast.on{display:flex}
@@ -609,28 +609,37 @@ async function mrbPickContact(){
       return;
     }catch(e){return;/* إلغاء */}
   }
-  /* iOS: بوابة Safari الوحيدة لجهات الهاتف هي مفتاح AutoFill 👤 فوق لوحة المفاتيح */
+  /* iOS: نفتح القائمة فورًا — وخيار «من هاتفك» في رأسها يقود لمفتاح AutoFill 👤 */
+  mrbBdlList(true);
+}
+function mrbPhoneAutofill(){
+  document.getElementById('mrbSug').style.display='none';
   const ph=document.getElementById('mrbPhone');
   ph.focus();
-  toast('اضغط أيقونة 👤 فوق لوحة المفاتيح ← «جهة اتصال أخرى…» لاختيار الرقم من هاتفك');
+  toast('اضغط أيقونة 👤 فوق لوحة المفاتيح ← «جهة اتصال أخرى…»');
 }
-async function mrbBdlList(){
+async function mrbBdlList(withPhoneRow){
   const box=document.getElementById('mrbSug');
-  if(box.style.display==='block'){box.style.display='none';return;}
+  if(box.style.display==='block'&&!withPhoneRow){box.style.display='none';return;}
   box.style.display='block';
-  box.innerHTML='<div style="padding:14px;color:#8AA3C4;font-size:13px;text-align:center">جارٍ الجلب…</div>';
+  const phoneRow=withPhoneRow
+    ?'<div onclick="mrbPhoneAutofill()" style="display:flex;align-items:center;gap:10px;padding:13px 14px;border-bottom:2px solid #E3ECF7;cursor:pointer;background:#F2F8FF">'+
+     '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0A56B8" stroke-width="2" stroke-linecap="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>'+
+     '<b style="font-size:13.5px;color:#0A56B8">من جهات هاتفك — عبر مفتاح 👤 فوق الكيبورد</b></div>'
+    :'';
+  box.innerHTML=phoneRow+'<div style="padding:14px;color:#8AA3C4;font-size:13px;text-align:center">جارٍ الجلب…</div>';
   try{
     const r=await fetch(API_BASE+'/admin/list-users',{method:'POST',
       headers:{'Content-Type':'application/json'},body:JSON.stringify(acCreds())});
     if(!r.ok)throw new Error(r.status);
     const us=((await r.json()).users||[]).filter(u=>u.role!=='owner');
-    if(!us.length){box.innerHTML='<div style="padding:14px;color:#8AA3C4;font-size:13px;text-align:center">لا عملاء مسجلون بعد</div>';return;}
-    box.innerHTML=us.map(u=>
+    if(!us.length){box.innerHTML=phoneRow+'<div style="padding:14px;color:#8AA3C4;font-size:13px;text-align:center">لا عملاء مسجلون بعد</div>';return;}
+    box.innerHTML=phoneRow+us.map(u=>
       '<div onclick="mrbUseClient(this)" data-n="'+String(u.name||'').replace(/"/g,'')+'" data-p="'+u.phone+'"'+
       ' style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border-bottom:1px solid #EEF3FA;cursor:pointer">'+
       '<b style="font-size:14px;color:#0B2447">'+ (u.name||'—') +'</b>'+
       '<span class="num" style="font-size:12.5px;color:#5C7699">'+u.phone+'</span></div>').join('');
-  }catch(e){box.innerHTML='<div style="padding:14px;color:#B00020;font-size:13px;text-align:center">تعذّر الجلب — هذه القائمة تظهر لحساب المالك</div>';}
+  }catch(e){box.innerHTML=phoneRow+'<div style="padding:14px;color:#B00020;font-size:13px;text-align:center">تعذّر جلب عملاء BDL — هذه القائمة لحساب المالك</div>';}
 }
 (function(){
   const ph=document.getElementById('mrbPhone');
