@@ -1630,8 +1630,7 @@ function mrbMake(){
   let rows=[['المستلم',name+(mrbPh?'  ·  '+mrbPh:'')],
             ['رقم المستلم / الحساب',to],
             ['القناة',mrbChan()],
-            ['المبلغ',mrbFmt(amt)+' MRU'],
-            ['بالقديمة',mrbFmt(amt*10)+' UM']];
+            ['المبلغ',mrbFmt(amt)+' MRU']];
   if(ref)rows.push(['رقم العملية',ref]);
   const rowsY0=560, rowsH=rows.length*116;
   const H = rowsY0+rowsH+240;
@@ -1883,13 +1882,37 @@ async function mrbPush(name){
   }catch(e){}
 }
 async function mrbShare(){
-  const r=await mrbMakePdf(); if(!r)return;
-  mrbPush(r.name.replace(/\.pdf$/,''));
-  const blob=r.pdf.output('blob');
-  const file=new File([blob],r.name,{type:'application/pdf'});
-  if(navigator.canShare&&navigator.canShare({files:[file]})){
-    try{ await navigator.share({files:[file],title:'وصل تحويل BDL'}); }catch(e){}
-  }else{ r.pdf.save(r.name); }
+  /* الوجهة: واتساب الرقم المسجل باسمه العملية — الصورة أولًا ثم فتح محادثته */
+  const name=(document.getElementById('mrbName')||{}).value||'';
+  const ref=(document.getElementById('mrbRef')||{}).value||'';
+  const amt=(document.getElementById('mrbAmt')||{}).value||'';
+  let ph=String((document.getElementById('mrbPhone')||{}).value||'')
+    .replace(/[^0-9+]/g,'').replace(/^\+/,'').replace(/^00/,'');
+  if(ph&&ph.length===8)ph='222'+ph; /* محلي موريتاني */
+  mrbPush(ref||name);
+  const msg='وصل تحويل BDL ✓\n'+(name?name+'\n':'')+
+    'المبلغ: '+mrbFmt(Number(String(amt).replace(/[^\d.]/g,''))||0)+' MRU\n'+
+    (ref?'رقم العملية: '+ref+'\n':'')+
+    'تحقّق من صحته: https://lbdal.com/verify.html?ref='+encodeURIComponent(ref);
+  /* ١) الصورة عبر ورقة المشاركة (يختار محادثته بلمسة) */
+  let sharedFile=false;
+  try{
+    const cv=document.getElementById('mrbCv');
+    const blob=await new Promise(res=>cv.toBlob(res,'image/png',.95));
+    const file=new File([blob],'BDL-'+(ref||'receipt')+'.png',{type:'image/png'});
+    if(navigator.canShare&&navigator.canShare({files:[file]})){
+      await navigator.share({files:[file],text:msg});
+      sharedFile=true;
+    }
+  }catch(e){}
+  /* ٢) الضمانة: فتح محادثة رقمه مباشرة برسالة التحقق */
+  if(ph){
+    setTimeout(function(){
+      window.open('https://wa.me/'+ph+'?text='+encodeURIComponent(msg),'_blank');
+    }, sharedFile?400:0);
+  }else if(!sharedFile){
+    window.open('https://wa.me/?text='+encodeURIComponent(msg),'_blank');
+  }
 }
 async function mrbPdf(){
   const r=await mrbMakePdf(); if(!r)return;
