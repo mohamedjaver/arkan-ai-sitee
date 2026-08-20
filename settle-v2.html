@@ -369,6 +369,17 @@ input,select{font-family:inherit;color:var(--ink)}
       <div class="row"><span>العمليات المحددة</span><b class="num" id="ssN">—</b></div>
       <div class="row"><span>المستلم من العملاء</span><b class="num" id="ssIn">—</b></div>
       <div class="row hi"><span>المستحق (كوانزا)</span><b class="num" id="ssDue">—</b></div>
+      <div id="ssRateBox" style="display:none;background:#F2F8FF;border:1px solid #C9DFFA;border-radius:14px;padding:12px;margin:10px 0">
+        <div style="font-size:12px;font-weight:800;color:#0A56B8;margin-bottom:8px">تسعير العملية — يحدد المستحق بالكوانزا</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:8px;align-items:end">
+          <div><div class="clabel">سعر البيع (أوقية قديمة)</div>
+            <input id="ssRs" class="cin num" inputmode="decimal" placeholder="0.360" oninput="ssRatePrev()" style="width:100%;box-sizing:border-box"></div>
+          <div><div class="clabel">الشراء (للربح)</div>
+            <input id="ssRb" class="cin num" inputmode="decimal" placeholder="0.350" style="width:100%;box-sizing:border-box"></div>
+          <button onclick="ssRateApply()" style="height:46px;border:0;border-radius:11px;background:var(--navy);color:#fff;font-weight:800;font-size:12.5px;padding:0 16px;font-family:inherit;cursor:pointer">تطبيق</button>
+        </div>
+        <div id="ssRPrev" class="num" style="margin-top:8px;font-size:12.5px;color:#0A56B8"></div>
+      </div>
       <div class="row"><span>المدفوع من الإيصالات</span><b class="num" id="ssPaid">0</b></div>
     </div>
     <div class="match" id="ssMatch">
@@ -820,20 +831,55 @@ function renderRcpts(){
   }).join('');
 }
 var SS={due:0,dueCcy:'',paid:0};
+function ssUnpriced(){
+  return selected().filter(function(t){
+    return t&&t.ccy==='MRU'&&(!t.settle_amount||((t.settle_ccy||'AOA')===t.ccy));});
+}
+function ssRatePrev(){
+  var r=parseFloat($('#ssRs').value)||0;
+  var u=ssUnpriced();
+  if(r>0&&u.length){
+    var tot=u.reduce(function(s,t){return s+Number(t.amount)*10/r;},0);
+    $('#ssRPrev').textContent='← كوانزا '+u.length+' عملية: '+fmt(tot,2)+' AOA';
+  }else $('#ssRPrev').textContent='';
+}
+async function ssRateApply(){
+  var r=parseFloat($('#ssRs').value)||0;
+  if(r<0.15||r>0.9){toast('سعر الأوقية القديمة مثل 0.360');return;}
+  var rb=parseFloat($('#ssRb').value)||0;
+  var u=ssUnpriced();
+  if(!u.length){toast('كل العمليات مسعّرة');return;}
+  try{
+    for(var i=0;i<u.length;i++){var t=u[i];
+      var body={rate:r/10,settle_amount:Math.round(Number(t.amount)*10/r*100)/100,settle_ccy:'AOA'};
+      if(rb>0)body.meta=Object.assign({},t.meta||{},{rate_cost:rb});
+      var p=await fetch(SB+'/bdl_transactions?id=eq.'+t.id,{method:'PATCH',headers:H(),body:JSON.stringify(body)});
+      if(p.ok)Object.assign(t,body);
+    }
+    toast('سُعّرت '+u.length+' عملية ✓');
+    openSettle(); /* إعادة حساب المستحق فورًا */
+  }catch(e){toast('تعذّر التسعير');}
+}
 function openSettle(){
   var s=selected();if(!s.length)return;
   RCPTS=[];renderRcpts();$('#sNote').value='';
   var by={},bys={},noRate=0;
   s.forEach(function(t){by[t.ccy]=(by[t.ccy]||0)+Number(t.amount);
-    var sa=t.settle_amount?Number(t.settle_amount):(t.rate?Number(t.amount)/Number(t.rate):0);
-    if(sa)bys[t.settle_ccy||'AOA']=(bys[t.settle_ccy||'AOA']||0)+sa;else noRate++;});
+    var scy=t.settle_ccy||'AOA';
+    /* تسوية بنفس عملة الاستلام = استيراد خاطئ لا تسعير — تُعامل كغير مسعّرة */
+    var sa=(t.settle_amount&&scy!==t.ccy)?Number(t.settle_amount)
+          :((t.rate&&scy!==t.ccy)?Number(t.amount)/Number(t.rate):0);
+    if(sa)bys[scy]=(bys[scy]||0)+sa;else noRate++;});
   var dueCcy=Object.keys(bys)[0]||'';
   SS.due=bys[dueCcy]||0;SS.dueCcy=dueCcy;SS.paid=0;
   $('#ssN').textContent=s.length;
   $('#ssIn').textContent=Object.keys(by).map(function(c){return fmt(by[c])+' '+c;}).join(' + ');
   $('#ssDue').textContent=SS.due
     ?fmt(SS.due,2)+' '+dueCcy+(noRate?'  (⚠️ '+noRate+' بلا سعر)':'')
-    :'— سعّر العمليات من صندوق المالك أولًا';
+    :'— أدخل السعر أدناه';
+  SS.noRate=noRate;
+  $('#ssRateBox').style.display=noRate?'block':'none';
+  $('#ssRs').value='';$('#ssRb').value='';$('#ssRPrev').textContent='';
   updMatch();
   $('#ovl-settle').classList.add('on');
 }
