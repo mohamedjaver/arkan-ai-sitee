@@ -384,6 +384,7 @@ async function login(){
 
 /* ═══════════ التحميل ═══════════ */
 async function boot(){
+  if((location.hash||'')==='#clients')go('clients');
   loadGroups();
   syncPriced().then(function(n){if(n)loadGroups();});
   if(!sessionStorage.getItem('bdl-imp')){
