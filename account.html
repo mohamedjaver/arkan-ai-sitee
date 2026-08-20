@@ -1625,37 +1625,30 @@ function mrbMake(){
   const ref=document.getElementById('mrbRef').value.trim();
   const cv=document.getElementById('mrbCv'), x=cv.getContext('2d');
   const SC=2, W=1080;
-  let rows;
-  if(MRB_IMG){
-    /* التفاصيل ظاهرة في الإيصال الأصلي — نضيف المبلغين فقط */
-    rows=[['المبلغ',mrbFmt(amt)+' MRU'],['بالقديمة',mrbFmt(amt*10)+' UM']];
-  }else{
-    const mrbPh=(document.getElementById('mrbPhone')||{}).value||'';
-    rows=[['القناة',mrbChan()],['المستلم',name+(mrbPh?'  ·  '+mrbPh:'')],['رقم المستلم',to],
-          ['المبلغ',mrbFmt(amt)+' MRU'],['بالقديمة',mrbFmt(amt*10)+' UM']];
-    if(ref)rows.push(['رقم العملية',ref]);
-  }
-  /* حساب الارتفاع */
-  let cimg=null, bw=760, bh=0;
-  if(MRB_IMG){
-    MRB_CROP = MRB_CROP || mrbCropCard(MRB_IMG);
-    cimg = MRB_CROP || MRB_IMG;
-    bh = Math.round(bw*cimg.height/cimg.width);
-    if(bh>1150){ bh=1150; bw=Math.round(bh*cimg.width/cimg.height); }
-  }
+  /* وصل مصمم موحّد — بيانات نظيفة دائمًا؛ لقطة البنك تبقى في معرضك لا داخل الوصل */
+  const mrbPh=(document.getElementById('mrbPhone')||{}).value||'';
+  let rows=[['المستلم',name+(mrbPh?'  ·  '+mrbPh:'')],
+            ['رقم المستلم / الحساب',to],
+            ['القناة',mrbChan()],
+            ['المبلغ',mrbFmt(amt)+' MRU'],
+            ['بالقديمة',mrbFmt(amt*10)+' UM']];
+  if(ref)rows.push(['رقم العملية',ref]);
   const rowsY0=560, rowsH=rows.length*116;
-  const H = MRB_IMG ? (rowsY0+rowsH+70+bh+160) : (rowsY0+rowsH+180);
+  const H = rowsY0+rowsH+240;
   cv.width=W*SC; cv.height=H*SC; x.scale(SC,SC);
 
   /* الخلفية */
-  const g=x.createLinearGradient(0,0,0,H); g.addColorStop(0,'#0D3A8C'); g.addColorStop(1,'#082253');
-  x.fillStyle=g; x.fillRect(0,0,W,H);
+  const g=x.createLinearGradient(0,0,W,520); g.addColorStop(0,'#0B2F70'); g.addColorStop(.55,'#0A56B8'); g.addColorStop(1,'#19A9F5');
+  const g2=x.createLinearGradient(0,0,0,H); g2.addColorStop(0,'#0A2B66'); g2.addColorStop(1,'#071B45');
+  x.fillStyle=g2; x.fillRect(0,0,W,H); x.fillStyle=g; x.fillRect(0,0,W,Math.min(H,520));
   x.fillStyle='rgba(255,255,255,.04)'; x.beginPath(); x.arc(W-60,90,240,0,7); x.fill();
 
   /* الترويسة */
-  x.fillStyle='#FFFFFF'; x.font='800 92px Inter,Arial'; x.textAlign='left';
-  x.fillText('BDL',80,150);
-  x.font='600 34px Inter,Arial'; x.fillStyle='#8FB8E8'; x.fillText('EXCHANGE · lbdal.com',80,200);
+  try{ if(typeof BDL_LOGO!=='undefined'&&BDL_LOGO.complete&&BDL_LOGO.naturalWidth){
+    x.save(); x.beginPath(); mrbRR(x,80,84,100,100,24); x.clip(); x.drawImage(BDL_LOGO,80,84,100,100); x.restore(); } }catch(e){}
+  x.fillStyle='#FFFFFF'; x.font='800 74px Inter,Arial'; x.textAlign='left';
+  x.fillText('BDL',200,150);
+  x.font='600 30px Inter,Arial'; x.fillStyle='rgba(255,255,255,.85)'; x.fillText('لبدال · lbdal.com',200,196);
   x.textAlign='right'; x.font='700 40px "IBM Plex Sans Arabic",Arial'; x.fillStyle='#FFFFFF';
   x.fillText('وصل تحويل', 1000,150);
   x.font='500 30px Inter,Arial'; x.fillStyle='#8FB8E8';
@@ -1690,18 +1683,6 @@ function mrbMake(){
     y+=116;
   });
 
-  /* بطاقة بنكيلي المقصوصة */
-  if(MRB_IMG&&cimg){
-    x.textAlign='right'; x.font='600 29px "IBM Plex Sans Arabic",Arial'; x.fillStyle='#5A7396';
-    x.fillText('الإيصال الأصلي'+(MRB_CUR.n?' — '+MRB_CUR.n:''), 960, y+20);
-    const bx=(W-bw)/2, by=y+50;
-    x.save(); x.shadowColor='rgba(3,26,69,.18)'; x.shadowBlur=24; x.shadowOffsetY=8;
-    x.fillStyle='#FFFFFF'; mrbRR(x,bx-10,by-10,bw+20,bh+20,22); x.fill(); x.restore();
-    x.save(); mrbRR(x,bx,by,bw,bh,16); x.clip();
-    x.drawImage(cimg, bx, by, bw, bh);
-    x.restore();
-    x.strokeStyle='#D7E4F5'; x.lineWidth=2; mrbRR(x,bx-10,by-10,bw+20,bh+20,22); x.stroke();
-  }
 
   /* ═ بصمة التحقق QR — مربوطة بأرشيف BDL ═ */
   try{
@@ -1814,6 +1795,7 @@ else{bdlcContacts();}
 const MRB_SB='https://vyxzlazwpbstigcqvizb.supabase.co/rest/v1';
 const MRB_ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ5eHpsYXp3cGJzdGlnY3F2aXpiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU5MTU5OTcsImV4cCI6MjEwMTQ5MTk5N30.fxMt_jH4z8t7uVnFLLHyNobu6zsgu_ZwVGLibuqWj38';
 function mrbArchive(ref,name,to,amt){
+  var _ph=(document.getElementById('mrbPhone')||{}).value||'';
   try{bdlcPush(ref,name,to,amt);}catch(e){}
   try{
     fetch(MRB_SB+'/archive_docs?on_conflict=id',{method:'POST',
@@ -1821,7 +1803,7 @@ function mrbArchive(ref,name,to,amt){
                Prefer:'resolution=merge-duplicates'},
       body:JSON.stringify({id:'rc_'+ref,
         data:{kind:'transfer',ref:ref,from:'MRU',to:'MRU',amount:Number(amt)||0,
-              recv:Number(amt)||0,recvCcy:'MRU',client:name||'',benefIban:to||'',
+              recv:Number(amt)||0,recvCcy:'MRU',client:name||'',phone:_ph,benefIban:to||'',
               channel:(typeof mrbChan==='function'?mrbChan():''),status:'done',doneAt:Date.now(),src:'account'},
         updated_at:new Date().toISOString()})}).catch(function(){});
   }catch(e){}
