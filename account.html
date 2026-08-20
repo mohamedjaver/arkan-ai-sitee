@@ -1870,20 +1870,16 @@ async function mrbMakePdf(){
   }catch(e){}
 })();
 async function mrbPush(name){
-  /* ترابط: الوصل يسقط تلقائيًا في صندوق التسوية بانتظار التسعير */
+  /* القناة الموحدة: العملية تُنشأ مباشرة في «التسوية» (bdl_transactions عبر bdlcPush)
+     — التسعير يتم داخل نافذة إتمام التسوية (سعر البيع/الشراء الحي)، فلا صندوق انتظار */
   try{
     const amt=parseFloat(String(document.getElementById('mrbAmt').value||'').replace(/[^\d.]/g,''))||0;
     if(!amt)return;
-    fetch(AK_SB_URL+'/rest/v1/archive_docs?on_conflict=id',{method:'POST',
-      headers:{apikey:AK_SB_KEY,Authorization:'Bearer '+AK_SB_KEY,'Content-Type':'application/json',Prefer:'resolution=merge-duplicates'},
-      body:JSON.stringify({id:'op_'+name,
-        data:{kind:'operation',ref:document.getElementById('mrbRef').value||name,
-          from:'MRU',to:'AOA',amount:amt,
-          bank:(typeof MRB_CUR!=='undefined'&&MRB_CUR&&MRB_CUR.n)||'',
-          benefIban:document.getElementById('mrbTo').value||'',
-          client:document.getElementById('mrbName').value||'',
-          status:'pending_rate',src:'receipt-card',createdAt:Date.now()},
-        updated_at:new Date().toISOString()})}).catch(()=>{});
+    const ref=document.getElementById('mrbRef').value||name;
+    bdlcPush(ref,
+      document.getElementById('mrbName').value||'',
+      document.getElementById('mrbTo').value||'',
+      amt);
   }catch(e){}
 }
 async function mrbShare(){
