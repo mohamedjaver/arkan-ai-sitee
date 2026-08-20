@@ -1433,7 +1433,7 @@ async function ownerSetPin(){
 <div id="mrbSheet" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(4,20,50,.55);backdrop-filter:blur(4px)">
   <div style="position:absolute;left:0;right:0;bottom:0;background:#fff;border-radius:18px 18px 0 0;padding:20px 18px 30px;max-height:86vh;overflow:auto">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-      <b style="font-size:17px">وصل تحويل <span id="mrbBankName"></span> <small style="color:#B8C9E2;font-weight:500;font-size:10px">v16</small></b>
+      <b style="font-size:17px">وصل تحويل <span id="mrbBankName"></span> <small style="color:#B8C9E2;font-weight:500;font-size:10px">v17</small></b>
       <button onclick="mrbClose()" style="border:0;background:#EEF3FB;width:32px;height:32px;border-radius:50%;font-size:16px;cursor:pointer">✕</button>
     </div>
     <button onclick="document.getElementById('mrbFile').click()" id="mrbUpBtn" style="width:100%;padding:13px;border:2px dashed #7FA8DC;background:#F2F8FF;color:#0A56B8;font-weight:800;font-size:14px;border-radius:12px;cursor:pointer">📷 رفع إيصال التحويل — قراءة تلقائية</button>
@@ -1869,6 +1869,24 @@ async function mrbPdf(){
   mrbPush(r.name.replace(/\.pdf$/,''));
   r.pdf.save(r.name);
 }
+</script>
+<script id="akClickGuard">
+/* شبكة أمان كلاسيكية: إن مات الموديول لأي سبب، الأزرار الحرجة تتكلم بدل الصمت */
+(function(){
+  'use strict';
+  function say(m){var t=document.getElementById('toast'),x=document.getElementById('toastMsg');
+    if(t&&x){x.textContent=m;t.classList.add('on');setTimeout(function(){t.classList.remove('on');},3000);}
+    else alert(m);}
+  document.addEventListener('click',function(e){
+    var b=e.target&&e.target.closest?e.target.closest('#mrbPickBtn,#bnPickBtn'):null;
+    if(!b)return;
+    var fn=b.id==='mrbPickBtn'?'mrbPickContact':'bnPickContact';
+    if(typeof window[fn]!=='function'){
+      e.preventDefault();e.stopPropagation();
+      say('⚠️ الوظيفة لم تُحمَّل ('+fn+') — حدّث الصفحة؛ إن تكررت أرسل هذه الرسالة');
+    }
+  },true);
+})();
 </script>
 </body>
 </html>
