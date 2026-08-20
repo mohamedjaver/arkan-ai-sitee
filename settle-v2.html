@@ -181,6 +181,7 @@ input,select{font-family:inherit;color:var(--ink)}
   </div>
   <nav class="tabs">
     <button class="on" data-tab="settle" onclick="go('settle')">التسوية</button>
+    <button data-tab="clients" onclick="go('clients')">العملاء</button>
     <button data-tab="archive" onclick="go('archive')">الأرشيف</button>
     <button data-tab="profit" onclick="go('profit')">الأرباح</button>
   </nav>
@@ -196,6 +197,18 @@ input,select{font-family:inherit;color:var(--ink)}
     <div class="chips" id="ccyChips"></div>
   </div>
   <div class="list" id="groups"><div class="empty">جارٍ التحميل…</div></div>
+</div>
+
+<!-- ══ تبويب العملاء — بوابة المسجلين ══ -->
+<div id="v-clients" style="display:none">
+  <div class="fbar">
+    <div class="row">
+      <div class="srch">🔍<input id="cq" placeholder="اسم، هاتف، مرجع…" oninput="renderClients()"></div>
+      <button class="selall" onclick="CLIENTS=null;DUPS=null;loadClients()">تحديث</button>
+    </div>
+  </div>
+  <div id="dupBox"></div>
+  <div class="list" id="clientList"><div class="empty">جارٍ التحميل…</div></div>
 </div>
 
 <!-- ══ تبويب الأرشيف ══ -->
@@ -785,11 +798,120 @@ async function commitSettle(){
   $('#doSettle').disabled=false;
 }
 
+/* ═══════════ بوابة العملاء — المسجلون في الموقع + دمج الأسماء المكررة ═══════════ */
+var CLIENTS=null,DUPS=null,BDLC=null;
+function ownerCreds(){
+  var ph=(localStorage.getItem('arkan-owner-phone')||'').replace(/[^0-9]/g,'');
+  var pin=localStorage.getItem('arkan-pin')||'';
+  return ph&&pin?{phone:ph,pin:pin}:null;
+}
+async function loadClients(){
+  var cr=ownerCreds();
+  if(!cr){$('#clientList').innerHTML='<div class="empty">بيانات المالك غير محفوظة على هذا الجهاز — افتح settlement مرة واحدة للدخول</div>';return;}
+  $('#clientList').innerHTML='<div class="empty">جارٍ التحميل…</div>';
+  try{
+    var pr=[
+      fetch(API+'/admin/list-users',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(cr)}).then(function(r){return r.ok?r.json():{users:[]};}),
+      fetch(SB+'/bdl_customers?select=id,name,phone,code,created_at&order=created_at.asc&limit=500',{headers:H()}).then(function(r){return r.ok?r.json():[];})
+    ];
+    var res=await Promise.all(pr);
+    CLIENTS=(res[0]&&res[0].users)||[];
+    BDLC=res[1]||[];
+  }catch(e){CLIENTS=[];BDLC=[];}
+  findDups();renderClients();
+}
+function normName(n){return String(n||'').toLowerCase().replace(/\s+/g,' ').trim();}
+function findDups(){
+  var by={};(BDLC||[]).forEach(function(c){var k=normName(c.name);if(!k)return;(by[k]=by[k]||[]).push(c);});
+  DUPS=Object.keys(by).filter(function(k){return by[k].length>1;}).map(function(k){return by[k];});
+  $('#dupBox').innerHTML=DUPS.length?
+    '<div style="background:#FFF4E5;border:1px solid #F0C36D;border-radius:14px;padding:11px 13px;margin-bottom:10px">'+
+    '<div style="color:#8A5A00;font-size:12.5px;font-weight:700;margin-bottom:7px">⚠️ أسماء مكررة في السجل ('+DUPS.length+') — الدمج ينقل كل العمليات والحسابات إلى الأقدم</div>'+
+    DUPS.map(function(g,i){return '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-top:1px solid #F3E3C2">'+
+      '<span style="font-size:13px;font-weight:700;color:var(--navy)">'+esc(g[0].name)+' <small style="color:var(--muted)">×'+g.length+'</small></span>'+
+      '<button onclick="mergeDup('+i+')" style="background:var(--navy);color:#fff;border:0;border-radius:9px;padding:7px 14px;font-size:12px;font-weight:700">دمج</button></div>';}).join('')+
+    '</div>':'';
+}
+async function mergeDup(i){
+  var g=DUPS[i];if(!g||g.length<2)return;
+  if(!confirm('دمج '+g.length+' سجلات باسم «'+g[0].name+'»؟ يبقى الأقدم وتُنقل إليه كل العمليات.'))return;
+  var keep=g[0];
+  try{
+    for(var j=1;j<g.length;j++){var d=g[j];
+      await fetch(SB+'/bdl_accounts?customer_id=eq.'+d.id,{method:'PATCH',headers:H(),body:JSON.stringify({customer_id:keep.id})});
+      await fetch(SB+'/bdl_transactions?customer_id=eq.'+d.id,{method:'PATCH',headers:H(),body:JSON.stringify({customer_id:keep.id})});
+      if(!keep.phone&&d.phone)await fetch(SB+'/bdl_customers?id=eq.'+keep.id,{method:'PATCH',headers:H(),body:JSON.stringify({phone:d.phone})});
+      await fetch(SB+'/bdl_customers?id=eq.'+d.id,{method:'DELETE',headers:H()});
+    }
+    toast('دُمجت السجلات ✓');
+    CLIENTS=null;TXCACHE={};loadClients();loadGroups();
+  }catch(e){toast('تعذّر الدمج: '+e.message);}
+}
+function renderClients(){
+  if(!CLIENTS)return;
+  var q=($('#cq').value||'').trim().toLowerCase();
+  var byPhone={};(BDLC||[]).forEach(function(c){if(c.phone)byPhone[String(c.phone).replace(/[^0-9]/g,'')]=c;});
+  var byName={};(BDLC||[]).forEach(function(c){byName[normName(c.name)]=c;});
+  var rows=CLIENTS.filter(function(u){
+    if(u.role==='owner')return false;
+    if(!q)return true;
+    return [u.name,u.phone,u.ref].join(' ').toLowerCase().indexOf(q)>=0;
+  });
+  $('#clientList').innerHTML=rows.map(function(u){
+    var d=u.createdAt?new Date(u.createdAt):null;
+    var linked=byPhone[String(u.phone).replace(/[^0-9]/g,'')]||byName[normName(u.name)]||null;
+    var st=u.approved
+      ?'<span class="st settled">معتمد</span>'
+      :'<span class="st open">بانتظار الاعتماد</span>';
+    return '<div class="arch-tx">'+
+      '<div class="tx-i"><div style="font-size:13.5px;font-weight:800;color:var(--navy)">'+esc(u.name||'—')+'</div>'+
+      '<div class="tx-d num">'+esc(u.phone)+(u.ref?' · '+esc(u.ref):'')+(d?' · '+d.toLocaleDateString('en-GB'):'')+
+      (linked?' · <span style="color:var(--ok,#0B7A3B)">مربوط بالسجل</span>':'')+'</div></div>'+
+      st+
+      '<div style="display:flex;gap:6px">'+
+      (!u.approved?'<button onclick="approveUser(\''+esc(u.phone)+'\',\''+esc(u.name).replace(/'/g,'')+'\')" style="background:var(--blue,#0A56B8);color:#fff;border:0;border-radius:9px;padding:8px 12px;font-size:12px;font-weight:700">اعتماد</button>':'')+
+      '<button onclick="transferFor(\''+esc(u.phone)+'\',\''+esc(u.name).replace(/'/g,'')+'\')" style="background:var(--navy);color:#fff;border:0;border-radius:9px;padding:8px 12px;font-size:12px;font-weight:700">تحويل</button>'+
+      '</div></div>';
+  }).join('')||'<div class="empty">لا مسجلين'+(q?' مطابقين':'')+' — كل من ينشئ حسابًا في الموقع يظهر هنا</div>';
+}
+async function ensureCustomer(phone,name){
+  var ph=String(phone).replace(/[^0-9]/g,'');
+  var r=await fetch(SB+'/bdl_customers?select=id,name&or=(phone.eq.'+ph+',name.ilike.'+encodeURIComponent(name)+')&limit=1',{headers:H()});
+  var j=r.ok?await r.json():[];
+  if(j[0])return j[0].id;
+  var rn=await fetch(SB+'/bdl_customers',{method:'POST',headers:H({Prefer:'return=representation'}),
+    body:JSON.stringify({name:name,phone:ph})});
+  if(!rn.ok)throw new Error('cust');
+  return (await rn.json())[0].id;
+}
+async function approveUser(phone,name){
+  var cr=ownerCreds();if(!cr)return;
+  try{
+    var r=await fetch(API+'/admin/approve-user',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({phone:cr.phone,pin:cr.pin,target:phone})});
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    await ensureCustomer(phone,name); /* يظهر فورًا في سجل العملاء */
+    toast('اعتُمد '+name+' ✓');
+    CLIENTS=null;loadClients();
+  }catch(e){toast('تعذّر الاعتماد: '+e.message);}
+}
+async function transferFor(phone,name){
+  try{
+    var cid=await ensureCustomer(phone,name);
+    go('settle');
+    openNew();
+    PICK={cid:cid,name:name};
+    $('#nCust').value=name;
+    $('#custHint').textContent='✓ '+name+' — أدخل المبلغ وسعر الأوقية ثم احفظ؛ التسوية والأرشفة تتم من نفس المسار';
+  }catch(e){toast('تعذّر فتح التحويل');}
+}
+
 /* ═══════════ الأرشيف ═══════════ */
 function go(t){
   document.querySelectorAll('.tabs button').forEach(function(b){b.classList.toggle('on',b.dataset.tab===t);});
-  ['settle','archive','profit'].forEach(function(k){$('#v-'+k).style.display=k===t?'block':'none';});
+  ['settle','clients','archive','profit'].forEach(function(k){$('#v-'+k).style.display=k===t?'block':'none';});
   $('#bbar').style.display=t==='settle'?'flex':'none';
+  if(t==='clients'&&!CLIENTS)loadClients();
   if(t==='archive'&&!ARCH)loadArchive();
   if(t==='profit'&&!PROF)loadProfit();
 }
