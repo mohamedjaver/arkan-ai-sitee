@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="pt" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>BDL — Confirmação de Recebimento</title>
+<link rel="icon" href="arkan-icon-512.png?v=bdl5">
+<style>
+:root{--b1:#19A9F5;--b2:#0A56B8;--navy:#0B2F70;--ink:#0B2447;--muted:#5C7699;--bg:#F6FAFD;--line:#E3ECF7}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter','IBM Plex Sans Arabic',system-ui,sans-serif;background:var(--bg);color:var(--ink);min-height:100vh}
+.hd{background:linear-gradient(135deg,var(--navy),var(--b2) 55%,var(--b1));padding:26px 20px 60px;color:#fff}
+.hd .row{display:flex;align-items:center;gap:12px;max-width:560px;margin:0 auto}
+.hd img{width:46px;height:46px;border-radius:12px}
+.hd b{font-size:20px}
+.hd small{display:block;opacity:.85;font-size:12.5px;margin-top:2px}
+.wrap{max-width:560px;margin:-38px auto 40px;padding:0 16px}
+.card{background:#fff;border:1px solid var(--line);border-radius:20px;padding:20px;box-shadow:0 10px 34px rgba(16,42,67,.08)}
+.ref{display:inline-block;background:#EAF2FF;color:var(--b2);font-weight:800;font-size:13px;padding:6px 14px;border-radius:99px;letter-spacing:.5px}
+h1{font-size:17px;margin:12px 0 2px}
+.sub{color:var(--muted);font-size:13px}
+.tot{margin:16px 0;padding:16px;background:var(--bg);border-radius:14px;text-align:center}
+.tot .n{font-size:30px;font-weight:800;color:var(--navy);font-variant-numeric:tabular-nums}
+.tot .l{font-size:12px;color:var(--muted);margin-top:2px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{color:var(--muted);font-weight:700;text-align:left;padding:8px 6px;border-bottom:2px solid var(--line);font-size:11.5px}
+td{padding:10px 6px;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}
+td.a{font-weight:800;color:var(--navy);white-space:nowrap}
+td.t{color:var(--muted);font-size:11.5px;word-break:break-all}
+.btn{display:block;width:100%;margin-top:18px;padding:16px;border:0;border-radius:14px;
+  background:linear-gradient(135deg,var(--b1),var(--b2));color:#fff;font-weight:800;font-size:16px;
+  font-family:inherit;cursor:pointer;box-shadow:0 8px 24px rgba(10,86,184,.3)}
+.btn:disabled{opacity:.6}
+.ok{background:#E8F6EC;border:1px solid #BFE6CB;color:#0B7A3B;border-radius:14px;padding:16px;text-align:center;font-weight:800;margin-top:16px}
+.err{background:#FDECEA;border:1px solid #F5B5B0;color:#B00020;border-radius:14px;padding:16px;text-align:center;font-weight:700}
+.ar{direction:rtl;color:var(--muted);font-size:12px;text-align:center;margin-top:10px}
+.ft{text-align:center;color:#8AA3C4;font-size:12px;margin-top:22px}
+.sk{height:80px;border-radius:14px;background:linear-gradient(90deg,#EEF3FA,#F8FBFF,#EEF3FA);background-size:200%;animation:sk 1.2s infinite}
+@keyframes sk{to{background-position:-200% 0}}
+</style>
+</head>
+<body>
+<div class="hd"><div class="row">
+  <img src="arkan-icon-512.png?v=bdl5" alt="BDL">
+  <div><b>BDL · لبدال</b><small>Confirmação de Recebimento · تأكيد الاستلام</small></div>
+</div></div>
+
+<div class="wrap"><div class="card" id="card"><div class="sk"></div></div>
+<div class="ft">lbdal.com · Mauritânia ⇄ Angola</div></div>
+
+<script>
+var SB='https://vyxzlazwpbstigcqvizb.supabase.co/rest/v1';
+var ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ5eHpsYXp3cGJzdGlnY3F2aXpiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU5MTU5OTcsImV4cCI6MjEwMTQ5MTk5N30.fxMt_jH4z8t7uVnFLLHyNobu6zsgu_ZwVGLibuqWj38';
+var T=new URLSearchParams(location.search).get('t')||'';
+var OP=null;
+function esc(x){return String(x==null?'':x).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function fmt(n){return Number(n||0).toLocaleString('en-US',{maximumFractionDigits:0});}
+async function rpc(fn,args){
+  var r=await fetch(SB+'/rpc/'+fn,{method:'POST',
+    headers:{apikey:ANON,Authorization:'Bearer '+ANON,'Content-Type':'application/json'},
+    body:JSON.stringify(args)});
+  if(!r.ok)throw new Error('HTTP '+r.status);
+  return r.json();
+}
+function render(){
+  var c=document.getElementById('card');
+  if(!OP||!OP.ref){c.innerHTML='<div class="err">Link inválido ou expirado<br><span style="font-size:12px;font-weight:400">الرابط غير صالح أو منتهٍ</span></div>';return;}
+  var rows=(OP.receipts||[]).map(function(r){
+    return '<tr><td class="a">'+fmt(r.amount)+' Kz</td><td>'+esc(r.bank||'—')+'</td><td class="t">'+esc(r.txn)+'</td></tr>';
+  }).join('');
+  var done=OP.status==='confirmed'||OP.status==='closed';
+  c.innerHTML=
+    '<span class="ref">'+esc(OP.ref)+'</span>'+
+    '<h1>Pagamentos enviados para '+esc(OP.supplier||'si')+'</h1>'+
+    '<div class="sub">Cliente: '+esc(OP.client_name)+'</div>'+
+    '<div class="tot"><div class="n">'+fmt(OP.covered_aoa)+' Kz</div>'+
+    '<div class="l">'+(OP.receipts||[]).length+' comprovativo(s) · Total transferido</div></div>'+
+    '<table><tr><th>Valor</th><th>Banco</th><th>Nº Operação</th></tr>'+rows+'</table>'+
+    (done
+      ?'<div class="ok">✓ Recebimento confirmado'+(OP.confirmed_at?'<br><span style="font-size:12px;font-weight:400">'+new Date(OP.confirmed_at).toLocaleString('pt-PT')+'</span>':'')+'</div>'
+      :'<button class="btn" id="cbtn" onclick="doConfirm()">✓ Confirmo que recebi tudo</button>'+
+       '<div class="ar">بالضغط يؤكد المورد استلام كامل المبلغ أعلاه</div>');
+}
+async function doConfirm(){
+  var b=document.getElementById('cbtn');b.disabled=true;b.textContent='A confirmar…';
+  try{
+    var j=await rpc('bdl_op_confirm',{t:T});
+    if(j&&j.ok){OP.status=j.status;OP.confirmed_at=j.confirmed_at;render();}
+    else throw new Error('resp');
+  }catch(e){b.disabled=false;b.textContent='✓ Confirmo que recebi tudo';
+    alert('Falhou — tente novamente / فشل، أعد المحاولة');}
+}
+(async function(){
+  try{ OP=await rpc('bdl_op_public',{t:T}); }catch(e){ OP=null; }
+  render();
+})();
+</script>
+</body>
+</html>
