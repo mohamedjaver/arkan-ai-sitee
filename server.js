@@ -798,6 +798,41 @@ app.post('/chat-api/owner-session', async (req, res) => {
   } catch (e) { console.error('owner-session:', e.message); res.status(500).json({ error: 'server' }); }
 });
 
+/* ═══ بوابة العملاء — للمالك فقط (هاتف + PIN) ═══ */
+async function verifyOwner(req) {
+  const p = normPhone(req.body.phone);
+  if (!OWNER_PHONES.includes(p)) return null;
+  const snap = await findUserDoc(p);
+  if (!snap || String(snap.data().pin) !== String(req.body.pin || '')) return null;
+  return p;
+}
+app.post('/admin/list-users', async (req, res) => {
+  try {
+    if (!fbReady) return res.status(503).json({ ok: false, err: 'service' });
+    if (!(await verifyOwner(req))) return res.status(403).json({ ok: false, err: 'not owner' });
+    const q = await admin.firestore().collection('users').limit(300).get();
+    const users = [];
+    q.forEach(doc => { const d = doc.data() || {};
+      users.push({ phone: d.phone || doc.id, name: d.name || '', ref: d.ref || '',
+        role: d.role || 'customer', approved: !!d.approved, createdAt: d.createdAt || 0, via: d.via || '' });
+    });
+    users.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+    res.json({ ok: true, users });
+  } catch (e) { console.error('list-users:', e.message); res.status(500).json({ ok: false, err: 'server' }); }
+});
+app.post('/admin/approve-user', async (req, res) => {
+  try {
+    if (!fbReady) return res.status(503).json({ ok: false, err: 'service' });
+    if (!(await verifyOwner(req))) return res.status(403).json({ ok: false, err: 'not owner' });
+    const t = normPhone(req.body.target);
+    const snap = await findUserDoc(t);
+    if (!snap) return res.status(404).json({ ok: false, err: 'no user' });
+    const approved = req.body.approved !== false;
+    await snap.ref.set({ approved, approvedAt: Date.now() }, { merge: true });
+    res.json({ ok: true, phone: t, approved });
+  } catch (e) { console.error('approve-user:', e.message); res.status(500).json({ ok: false, err: 'server' }); }
+});
+
 /* رسائل محادثة */
 /* ═══════════════ Web Push — إشعارات رسائل الشات (iOS PWA 16.4+) ═══════════════
    VAPID: من env أو يولَّد مرة واحدة ويُحفظ في Firestore config/vapid — صفر إعداد يدوي */
