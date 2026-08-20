@@ -860,13 +860,15 @@ function renderClients(){
   });
   $('#clientList').innerHTML=rows.map(function(u){
     var d=u.createdAt?new Date(u.createdAt):null;
+    var ll=u.lastLoginAt?new Date(u.lastLoginAt):null;
     var linked=byPhone[String(u.phone).replace(/[^0-9]/g,'')]||byName[normName(u.name)]||null;
     var st=u.approved
       ?'<span class="st settled">معتمد</span>'
       :'<span class="st open">بانتظار الاعتماد</span>';
     return '<div class="arch-tx">'+
       '<div class="tx-i"><div style="font-size:13.5px;font-weight:800;color:var(--navy)">'+esc(u.name||'—')+'</div>'+
-      '<div class="tx-d num">'+esc(u.phone)+(u.ref?' · '+esc(u.ref):'')+(d?' · '+d.toLocaleDateString('en-GB'):'')+
+      '<div class="tx-d num">'+esc(u.phone)+(u.ref?' · '+esc(u.ref):'')+(d?' · سُجّل '+d.toLocaleDateString('en-GB'):'')+
+      (ll?' · <span style="color:var(--blue,#0A56B8)">آخر دخول '+ll.toLocaleDateString('en-GB')+' '+ll.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})+'</span>':'')+
       (linked?' · <span style="color:var(--ok,#0B7A3B)">مربوط بالسجل</span>':'')+'</div></div>'+
       st+
       '<div style="display:flex;gap:6px">'+
