@@ -609,7 +609,12 @@ async function mrbPickContact(){
       return;
     }catch(e){return;/* إلغاء */}
   }
-  /* iOS وغيره: قائمة من حسابات العملاء المسجلين */
+  /* iOS: بوابة Safari الوحيدة لجهات الهاتف هي مفتاح AutoFill 👤 فوق لوحة المفاتيح */
+  const ph=document.getElementById('mrbPhone');
+  ph.focus();
+  toast('اضغط أيقونة 👤 فوق لوحة المفاتيح ← «جهة اتصال أخرى…» لاختيار الرقم من هاتفك');
+}
+async function mrbBdlList(){
   const box=document.getElementById('mrbSug');
   if(box.style.display==='block'){box.style.display='none';return;}
   box.style.display='block';
@@ -627,6 +632,12 @@ async function mrbPickContact(){
       '<span class="num" style="font-size:12.5px;color:#5C7699">'+u.phone+'</span></div>').join('');
   }catch(e){box.innerHTML='<div style="padding:14px;color:#B00020;font-size:13px;text-align:center">تعذّر الجلب — هذه القائمة تظهر لحساب المالك</div>';}
 }
+(function(){
+  const ph=document.getElementById('mrbPhone');
+  if(ph)ph.addEventListener('change',function(){
+    this.value=String(this.value).replace(/[^0-9+]/g,'').replace(/^\+/,'').replace(/^00/,'');
+  });
+})();
 function mrbUseClient(el){
   document.getElementById('mrbName').value=el.dataset.n||'';
   document.getElementById('mrbPhone').value=el.dataset.p||'';
@@ -1423,9 +1434,10 @@ async function ownerSetPin(){
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0zM12 14a7 7 0 0 0-7 7h14a7 7 0 0 0-7-7z"/></svg>
         اختيار جهة</button>
     </div>
-    <input id="mrbName" class="mrbI" placeholder="محمد ولد ...">
+    <input id="mrbName" class="mrbI" placeholder="محمد ولد ..." autocomplete="name" name="recipient-name">
     <div id="mrbSug" style="display:none;border:1px solid #D6E4F7;border-radius:12px;background:#fff;max-height:220px;overflow-y:auto;margin-top:6px;box-shadow:0 10px 30px rgba(16,42,67,.12)"></div>
-    <label class="mrbL">هاتف المستلم</label><input id="mrbPhone" class="mrbI" inputmode="tel" dir="ltr" placeholder="36xxxxxx / 244xxxxxxxxx">
+    <label class="mrbL">هاتف المستلم</label><input id="mrbPhone" class="mrbI" type="tel" inputmode="tel" dir="ltr" placeholder="36xxxxxx / 244xxxxxxxxx" autocomplete="tel" name="recipient-tel">
+    <div style="text-align:left;margin-top:4px"><button type="button" onclick="mrbBdlList()" style="border:0;background:none;color:#0A56B8;font-weight:700;font-size:11.5px;font-family:inherit;cursor:pointer;text-decoration:underline">أو اختر من عملاء BDL المسجلين</button></div>
     <label class="mrbL">رقم المستلم / الحساب</label><input id="mrbTo" class="mrbI" inputmode="numeric" placeholder="36xxxxxx">
     <label class="mrbL">المبلغ (MRU جديدة)</label><input id="mrbAmt" class="mrbI" inputmode="decimal" placeholder="70000">
     <label class="mrbL">رقم العملية Txn ID (اختياري)</label><input id="mrbRef" class="mrbI" inputmode="numeric" placeholder="09260814...">
