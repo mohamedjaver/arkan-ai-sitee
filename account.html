@@ -618,6 +618,49 @@ function mrbPhoneAutofill(){
   ph.focus();
   toast('اضغط أيقونة 👤 فوق لوحة المفاتيح ← «جهة اتصال أخرى…»');
 }
+/* ═ دفتر المستلمين — يتعلم من كل وصل مولَّد ═ */
+function rcpBook(){try{return JSON.parse(localStorage.getItem('bdl-recipients')||'[]');}catch(e){return[];}}
+function rcpSave(rec){
+  if(!rec.name&&!rec.phone&&!rec.to)return;
+  let b=rcpBook();
+  b=b.filter(x=>!( (rec.name&&x.name===rec.name) && (x.to===rec.to||x.phone===rec.phone) ));
+  b.unshift({name:rec.name||'',phone:rec.phone||'',to:rec.to||'',at:Date.now()});
+  try{localStorage.setItem('bdl-recipients',JSON.stringify(b.slice(0,100)));}catch(e){}
+}
+function rcpFill(el){
+  document.getElementById('mrbName').value=el.dataset.n||'';
+  document.getElementById('mrbPhone').value=el.dataset.p||'';
+  if(el.dataset.a)document.getElementById('mrbTo').value=el.dataset.a;
+  document.getElementById('mrbSug').style.display='none';
+  toast('اختير '+(el.dataset.n||el.dataset.p)+' ✓');
+}
+function rcpRow(r){
+  return '<div onclick="rcpFill(this)" data-n="'+String(r.name||'').replace(/"/g,'')+'" data-p="'+(r.phone||'')+'" data-a="'+(r.to||'')+'"'+
+    ' style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border-bottom:1px solid #EEF3FA;cursor:pointer">'+
+    '<b style="font-size:14px;color:#0B2447">'+(r.name||'—')+'</b>'+
+    '<span class="num" style="font-size:12px;color:#5C7699">'+(r.phone||r.to||'')+'</span></div>';
+}
+function rcpSuggest(q){
+  const box=document.getElementById('mrbSug');
+  q=String(q||'').trim().toLowerCase();
+  if(q.length<1){box.style.display='none';return;}
+  const hits=rcpBook().filter(r=>
+    (r.name||'').toLowerCase().indexOf(q)>=0||(r.phone||'').indexOf(q)>=0||(r.to||'').indexOf(q)>=0).slice(0,6);
+  if(!hits.length){box.style.display='none';return;}
+  box.style.display='block';
+  box.innerHTML='<div style="padding:8px 14px;font-size:11px;color:#8AA3C4;border-bottom:1px solid #EEF3FA">مستلمون سابقون</div>'+hits.map(rcpRow).join('');
+}
+(function(){
+  const n=document.getElementById('mrbName');
+  if(n)n.addEventListener('input',function(){rcpSuggest(this.value);});
+  /* الحفظ الذاتي عند توليد أي وصل */
+  const gen=document.querySelector('button[onclick="mrbMake()"]');
+  if(gen)gen.addEventListener('click',function(){
+    rcpSave({name:(document.getElementById('mrbName')||{}).value,
+             phone:(document.getElementById('mrbPhone')||{}).value,
+             to:(document.getElementById('mrbTo')||{}).value});
+  });
+})();
 async function mrbBdlList(withPhoneRow){
   const box=document.getElementById('mrbSug');
   if(box.style.display==='block'){box.style.display='none';return;}
@@ -627,19 +670,26 @@ async function mrbBdlList(withPhoneRow){
      '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0A56B8" stroke-width="2" stroke-linecap="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>'+
      '<b style="font-size:13.5px;color:#0A56B8">من جهات هاتفك — عبر مفتاح 👤 فوق الكيبورد</b></div>'
     :'';
-  box.innerHTML=phoneRow+'<div style="padding:14px;color:#8AA3C4;font-size:13px;text-align:center">جارٍ الجلب…</div>';
+  const prev=rcpBook().slice(0,6);
+  const prevHtml=prev.length
+    ?'<div style="padding:8px 14px;font-size:11px;color:#8AA3C4;border-bottom:1px solid #EEF3FA">مستلمون سابقون</div>'+prev.map(rcpRow).join('')+
+     '<div style="padding:8px 14px;font-size:11px;color:#8AA3C4;border-bottom:1px solid #EEF3FA;border-top:2px solid #E3ECF7">عملاء BDL</div>'
+    :'';
+  box.innerHTML=phoneRow+prevHtml+'<div id="mrbSugNet" style="padding:14px;color:#8AA3C4;font-size:13px;text-align:center">جارٍ الجلب…</div>';
   try{
     const r=await fetch(API_BASE+'/admin/list-users',{method:'POST',
       headers:{'Content-Type':'application/json'},body:JSON.stringify(acCreds())});
     if(!r.ok)throw new Error(r.status);
     const us=((await r.json()).users||[]).filter(u=>u.role!=='owner');
-    if(!us.length){box.innerHTML=phoneRow+'<div style="padding:14px;color:#8AA3C4;font-size:13px;text-align:center">لا عملاء مسجلون بعد</div>';return;}
-    box.innerHTML=phoneRow+us.map(u=>
+    const net=document.getElementById('mrbSugNet');
+    if(!us.length){if(net)net.textContent=prev.length?'':'لا عملاء مسجلون بعد';return;}
+    if(net)net.outerHTML=us.map(u=>
       '<div onclick="mrbUseClient(this)" data-n="'+String(u.name||'').replace(/"/g,'')+'" data-p="'+u.phone+'"'+
       ' style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border-bottom:1px solid #EEF3FA;cursor:pointer">'+
       '<b style="font-size:14px;color:#0B2447">'+ (u.name||'—') +'</b>'+
       '<span class="num" style="font-size:12.5px;color:#5C7699">'+u.phone+'</span></div>').join('');
-  }catch(e){box.innerHTML=phoneRow+'<div style="padding:14px;color:#B00020;font-size:13px;text-align:center">تعذّر جلب عملاء BDL — هذه القائمة لحساب المالك</div>';}
+  }catch(e){const net=document.getElementById('mrbSugNet');
+    if(net)net.textContent=prev.length?'':'تعذّر جلب عملاء BDL';}
 }
 (function(){
   const ph=document.getElementById('mrbPhone');
@@ -741,7 +791,7 @@ async function bdlReceiptCard(d){
   return await new Promise(r=>c.toBlob(r,'image/png',.95));
 }
 /* تصدير للدوال المستدعاة من onclick المضمّن — إلزامي داخل module */
-Object.assign(window,{mrbPickContact,mrbBdlList,mrbUseClient,mrbPhoneAutofill,
+Object.assign(window,{mrbPickContact,mrbBdlList,mrbUseClient,mrbPhoneAutofill,rcpFill,rcpSuggest,
   acLoadClients,acLoadRequests,acApprove,bnPickContact,changePinUI:window.changePinUI||undefined});
 $('reqBtn').onclick = async () => {
   const amt = parseAmt(), out = $('toAmt').value;
@@ -1433,7 +1483,7 @@ async function ownerSetPin(){
 <div id="mrbSheet" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(4,20,50,.55);backdrop-filter:blur(4px)">
   <div style="position:absolute;left:0;right:0;bottom:0;background:#fff;border-radius:18px 18px 0 0;padding:20px 18px 30px;max-height:86vh;overflow:auto">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-      <b style="font-size:17px">وصل تحويل <span id="mrbBankName"></span> <small style="color:#B8C9E2;font-weight:500;font-size:10px">v18</small></b>
+      <b style="font-size:17px">وصل تحويل <span id="mrbBankName"></span> <small style="color:#B8C9E2;font-weight:500;font-size:10px">v19</small></b>
       <button onclick="mrbClose()" style="border:0;background:#EEF3FB;width:32px;height:32px;border-radius:50%;font-size:16px;cursor:pointer">✕</button>
     </div>
     <button onclick="document.getElementById('mrbFile').click()" id="mrbUpBtn" style="width:100%;padding:13px;border:2px dashed #7FA8DC;background:#F2F8FF;color:#0A56B8;font-weight:800;font-size:14px;border-radius:12px;cursor:pointer">📷 رفع إيصال التحويل — قراءة تلقائية</button>
