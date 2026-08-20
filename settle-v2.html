@@ -205,7 +205,7 @@ input,select{font-family:inherit;color:var(--ink)}
 
 <!-- ══ تبويب العمليات — عمود التغطية وقفل التكرار ══ -->
 <div id="v-ops" style="display:none">
-  <div id="opsDash" style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px"></div>
+  <div id="opsDash" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(80px,1fr));gap:8px;margin-bottom:12px"></div>
   <div class="fbar">
     <div class="row">
       <div class="srch">🔍<input id="opq" placeholder="زبون، مرجع، مورد…" oninput="renderOps()"></div>
@@ -216,6 +216,7 @@ input,select{font-family:inherit;color:var(--ink)}
       <button class="chip" data-st="open" onclick="setOpSt('open')">ناقصة</button>
       <button class="chip" data-st="covered" onclick="setOpSt('covered')">مكتملة</button>
       <button class="chip" data-st="sent" onclick="setOpSt('sent')">عند المورد</button>
+      <button class="chip" data-st="confirmed" onclick="setOpSt('confirmed')">أكّد ✓</button>
       <button class="chip" data-st="closed" onclick="setOpSt('closed')">مقفلة</button>
     </div>
   </div>
@@ -884,6 +885,8 @@ function opsDash(){
     card('فجوة AOA',fmt(gap,0),gap?'#B00020':null)+
     card('مكتملة — جاهزة للمورد',covered,covered?'#0A56B8':null)+
     card('عند المورد',sent,null);
+  var conf=d.filter(function(o){return o.status==='confirmed';}).length;
+  if(conf)$('#opsDash').innerHTML+=card('أكّد المورد — للإقفال',conf,'#0B7A3B');
 }
 function opBar(o){
   var pct=Math.min(100,Number(o.pct)||0);
@@ -894,7 +897,7 @@ function opBar(o){
     '<span class="num" style="color:'+col+';font-weight:800">'+pct+'%</span>'+
     '<span class="num" style="color:var(--muted)">'+fmt(o.covered_aoa,0)+' / '+fmt(o.target_aoa,0)+' AOA · '+o.receipts_n+' إيصال</span></div>';
 }
-var OP_STL={open:['open','ناقصة'],covered:['settling','مكتملة'],sent:['settling','عند المورد'],confirmed:['settled','أكّد المورد'],closed:['settled','مقفلة']};
+var OP_STL={open:['open','ناقصة'],covered:['settling','مكتملة'],sent:['settling','عند المورد'],confirmed:['settled','أكّد المورد ✓'],closed:['settled','مقفلة']};
 function renderOps(){
   if(!OPS_DATA)return;
   var q=($('#opq').value||'').trim().toLowerCase();
@@ -909,7 +912,9 @@ function renderOps(){
     if(o.status==='open')act='<button class="opact" onclick="opSheet(\''+o.id+'\')">+ إيصال</button>';
     else if(o.status==='covered')act='<button class="opact" onclick="opSetSt(\''+o.id+'\',\'sent\')">أُرسلت للمورد ←</button>'+
       '<button class="opact ghost" onclick="opSheet(\''+o.id+'\')">+ إيصال</button>';
-    else if(o.status==='sent')act='<button class="opact ok" onclick="opSetSt(\''+o.id+'\',\'closed\')">المورد أكّد — إقفال ✓</button>';
+    else if(o.status==='sent')act='<button class="opact ghost" onclick="opCopyLink(\''+(o.confirm_token||'')+'\')">🔗 رابط التأكيد</button>'+
+      '<button class="opact" style="background:#8AA3C4" disabled>بانتظار تأكيد المورد…</button>';
+    else if(o.status==='confirmed')act='<button class="opact ok" onclick="opSetSt(\''+o.id+'\',\'closed\')">المورد أكّد ✓ — إقفال</button>';
     return '<div style="background:#fff;border:1px solid #E3ECF7;border-radius:16px;padding:14px 15px;margin-bottom:10px">'+
       '<div style="display:flex;justify-content:space-between;align-items:center">'+
       '<div><b style="font-size:14.5px;color:var(--navy)">'+esc(o.client_name)+'</b>'+
@@ -983,13 +988,39 @@ async function opAddReceipt(){
     closeOvl('addr');OPS_DATA=null;loadOps();
   }catch(e){toast('تعذّر الإلحاق: '+e.message);}
 }
+function opToken(){
+  var a=new Uint8Array(16);crypto.getRandomValues(a);
+  return Array.from(a,function(b){return b.toString(16).padStart(2,'0');}).join('');
+}
 async function opSetSt(id,st){
   try{
-    await fetch(SB+'/bdl_ops?id=eq.'+id,{method:'PATCH',headers:H(),body:JSON.stringify({status:st})});
-    toast(st==='sent'?'سُجّلت عند المورد ✓':'أُقفلت العملية ✓');
+    var body={status:st};
+    var op=(OPS_DATA||[]).find(function(o){return o.id===id;});
+    if(st==='sent'){
+      body.confirm_token=(op&&op.confirm_token)||opToken();
+    }
+    await fetch(SB+'/bdl_ops?id=eq.'+id,{method:'PATCH',headers:H(),body:JSON.stringify(body)});
+    if(st==='sent'){
+      opShareConfirm(op?op.ref:'',body.confirm_token,op?op.supplier:'');
+      toast('سُجّلت عند المورد — شارك رابط التأكيد ✓');
+    }else toast('أُقفلت العملية ✓');
     OPS_DATA=null;loadOps();
   }catch(e){toast('تعذّر التحديث');}
 }
+function opConfirmUrl(t){return 'https://lbdal.com/confirm.html?t='+t;}
+async function opShareConfirm(ref,tok,sup){
+  var url=opConfirmUrl(tok);
+  var msg='BDL · '+ref+'\nOs comprovativos dos pagamentos estão aqui — confirme o recebimento:\n'+url;
+  try{
+    if(navigator.share){await navigator.share({title:'BDL '+ref,text:msg});return;}
+  }catch(e){}
+  try{await navigator.clipboard.writeText(msg);toast('نُسخ رابط التأكيد — ألصقه للمورد');}catch(e){
+    window.open('https://wa.me/?text='+encodeURIComponent(msg),'_blank');}
+}
+window.opCopyLink=async function(tok){
+  try{await navigator.clipboard.writeText(opConfirmUrl(tok));toast('نُسخ الرابط ✓');}
+  catch(e){window.open(opConfirmUrl(tok),'_blank');}
+};
 
 /* ═══════════ بوابة العملاء — المسجلون في الموقع + دمج الأسماء المكررة ═══════════ */
 var CLIENTS=null,DUPS=null,BDLC=null;
