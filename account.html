@@ -740,6 +740,9 @@ async function bdlReceiptCard(d){
   x.fillText('هذا طلب تحويل وليس إيصال دفع — يُنفَّذ بعد التأكيد',W/2,H-34);
   return await new Promise(r=>c.toBlob(r,'image/png',.95));
 }
+/* تصدير للدوال المستدعاة من onclick المضمّن — إلزامي داخل module */
+Object.assign(window,{mrbPickContact,mrbBdlList,mrbUseClient,mrbPhoneAutofill,
+  acLoadClients,acLoadRequests,acApprove,bnPickContact,changePinUI:window.changePinUI||undefined});
 $('reqBtn').onclick = async () => {
   const amt = parseAmt(), out = $('toAmt').value;
   if(!amt||amt<=0){ toast('أدخل المبلغ'); return; }
