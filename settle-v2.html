@@ -204,6 +204,12 @@ input,select{font-family:inherit;color:var(--ink)}
     <div class="row">
       <div class="srch">🔍<input id="aq" placeholder="اسم، حساب، مبلغ، مرجع، تاريخ…" oninput="renderArchive()"></div>
     </div>
+    <div class="chips" id="archChips">
+      <button class="chip on" data-st="ALL" onclick="setArchSt('ALL')">الكل</button>
+      <button class="chip" data-st="open" onclick="setArchSt('open')">مفتوحة</button>
+      <button class="chip" data-st="settling" onclick="setArchSt('settling')">قيد التسوية</button>
+      <button class="chip" data-st="settled" onclick="setArchSt('settled')">تمت</button>
+    </div>
   </div>
   <div class="list" id="archList"><div class="empty">جارٍ التحميل…</div></div>
 </div>
@@ -366,10 +372,44 @@ async function login(){
 /* ═══════════ التحميل ═══════════ */
 async function boot(){
   loadGroups();
+  syncPriced().then(function(n){if(n)loadGroups();});
   if(!sessionStorage.getItem('bdl-imp')){
     sessionStorage.setItem('bdl-imp','1');
     importLegacy().then(function(n){if(n)loadGroups();});
   }
+}
+/* ═ ربط قناة التسعير: عمليات المالك المسعّرة (archive_docs) → bdl_transactions ═
+   ١) كل عملية سُعِّرت في صندوق المالك تُحقن كوانزاها هنا تلقائيًا
+   ٢) إصلاح الصفوف القديمة المخزّنة بسعر الأوقية الخام (بدون ÷10)            */
+async function syncPriced(){
+  var fixed=0;
+  try{
+    /* أ) الإصلاح: MRU→AOA بسعر ≥0.15 = سعر أوقية قديم خام → ÷10 وإعادة حساب الكوانزا */
+    var rq=await fetch(SB+'/bdl_transactions?select=id,amount,rate&ccy=eq.MRU&settle_ccy=eq.AOA&rate=gte.0.15&status=in.(open,settling)',{headers:H()});
+    var bad=rq.ok?await rq.json():[];
+    for(var i=0;i<bad.length;i++){var t=bad[i],nr=Number(t.rate)/10;
+      var p=await fetch(SB+'/bdl_transactions?id=eq.'+t.id,{method:'PATCH',headers:H(),
+        body:JSON.stringify({rate:nr,settle_amount:Math.round(Number(t.amount)/nr*10000)/10000})});
+      if(p.ok)fixed++;}
+    /* ب) الحقن: أسعار صندوق المالك (status=done + recv) → العمليات المفتوحة بلا كوانزا */
+    var ro=await fetch(SB+'/bdl_transactions?select=id,ref&settle_amount=is.null&status=in.(open,settling)&limit=200',{headers:H()});
+    var open_=ro.ok?await ro.json():[];
+    if(open_.length){
+      var byRef={};open_.forEach(function(t){if(t.ref)byRef[String(t.ref).toUpperCase()]=t;});
+      var ra=await fetch(SB+'/archive_docs?select=id,data&data->>status=eq.done&order=updated_at.desc&limit=120',
+        {headers:{apikey:ANON,Authorization:'Bearer '+ANON}});
+      var docs=ra.ok?await ra.json():[];
+      for(var j=0;j<docs.length;j++){var d=docs[j].data||{};
+        if(!d.ref||!d.recv)continue;
+        var t2=byRef[String(d.ref).toUpperCase()];if(!t2)continue;
+        var nr2=d.rateNum?(Number(d.rateNum)>=0.15?Number(d.rateNum)/10:Number(d.rateNum)):null;
+        var p2=await fetch(SB+'/bdl_transactions?id=eq.'+t2.id,{method:'PATCH',headers:H(),
+          body:JSON.stringify({settle_amount:Number(d.recv),settle_ccy:d.recvCcy||'AOA',rate:nr2})});
+        if(p2.ok){fixed++;delete byRef[String(d.ref).toUpperCase()];}}
+    }
+  }catch(e){}
+  if(fixed){TXCACHE={};toast('حُدِّثت أسعار '+fixed+' عملية من صندوق التسعير ✓');}
+  return fixed;
 }
 /* يسحب تحويلات account.html وعمليات السجل القديم إلى النظام المركزي */
 async function importLegacy(){
@@ -417,8 +457,10 @@ async function importLegacy(){
       }
       var rt=await fetch(SB+'/bdl_transactions',{method:'POST',headers:H(),
         body:JSON.stringify({ref:d.ref,customer_id:cid,account_id:aid,
-          amount:Number(d.amount)||0,ccy:d.from||d.recvCcy||'MRU',settle_ccy:d.to||null,
-          rate:d.rateNum||null,status:'open',meta:{srcId:rows[i].id,src:'legacy'}})});
+          amount:Number(d.amount)||0,ccy:d.from||'MRU',settle_ccy:d.recvCcy||d.to||null,
+          settle_amount:d.recv?Number(d.recv):null,
+          rate:d.rateNum?(Number(d.rateNum)>=0.15?Number(d.rateNum)/10:Number(d.rateNum)):null,
+          status:'open',meta:{srcId:rows[i].id,src:'legacy'}})});
       if(rt.ok)added++;
     }
   }catch(e){}
@@ -497,7 +539,7 @@ function renderTxs(k){
       '<div class="ck'+(sel[t.id]?' on':'')+'" onclick="toggleTx(\''+k+'\',\''+t.id+'\')"></div>'+
       '<div class="tx-i"><div class="tx-r">'+esc(t.ref)+'</div>'+
       '<div class="tx-d num">'+d.toLocaleDateString('en-GB')+' '+d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})+
-      (t.rate?' · '+t.rate:'')+'</div></div>'+
+      archRateTxt(t)+'</div></div>'+
       '<span class="st '+t.status+'">'+(t.status==='open'?'مفتوحة':t.status==='settling'?'قيد التسوية':'تمت')+'</span>'+
       '<div class="tx-a num">'+fmt(t.amount)+' '+esc(t.ccy)+
       (t.settle_amount?'<small>'+fmt(t.settle_amount)+' '+esc(t.settle_ccy||'')+'</small>':'')+'</div></div>';
@@ -583,17 +625,25 @@ function pickCust(js){var d=JSON.parse(js);PICK=d;
 function newCustMode(){PICK={cid:null,name:$('#nCust').value.trim()};
   $('#custSg').classList.remove('on');$('#newAccBox').style.display='block';
   $('#custHint').textContent='عميل جديد — أدخل حسابه مرة واحدة، وسيُتعرف عليه تلقائيًا لاحقًا';}
+/* MRU→AOA: المدخل «سعر الأوقية القديمة» (مثل 0.36) — يُخزَّن داخليًا MRU/Kz (÷10) */
+function normRate(r,ccy,sccy){
+  r=Number(r)||0;if(!r)return 0;
+  if(ccy==='MRU'&&sccy==='AOA'&&r>=0.15)return r/10;
+  return r;
+}
 function calcNew(){
   var a=parseFloat(($('#nAmt').value||'').replace(/[^\d.]/g,''))||0;
   var r=parseFloat($('#nRate').value)||0;
-  var out=r?a/r:0;
-  $('#nCalc').textContent=a?fmt(a)+' '+$('#nCcy').value+(r?'  ÷ '+r+'  =  '+fmt(out,2)+' '+$('#nSCcy').value:''):'—';
+  var nr=normRate(r,$('#nCcy').value,$('#nSCcy').value);
+  var out=nr?a/nr:0;
+  var lbl=($('#nCcy').value==='MRU'&&$('#nSCcy').value==='AOA')?'سعر الأوقية '+r:'÷ '+r;
+  $('#nCalc').textContent=a?fmt(a)+' '+$('#nCcy').value+(nr?'  · '+lbl+'  =  '+fmt(out,2)+' '+$('#nSCcy').value:''):'—';
 }
 async function saveNew(){
   if(!PICK||!PICK.name){toast('اختر العميل أولًا');return;}
   var amt=parseFloat(($('#nAmt').value||'').replace(/[^\d.]/g,''));
   if(!amt){toast('أدخل المبلغ');return;}
-  var rate=parseFloat($('#nRate').value)||null;
+  var rate=normRate(parseFloat($('#nRate').value)||0,$('#nCcy').value,$('#nSCcy').value)||null;
   try{
     var cid=PICK.cid,aid=PICK.aid||null;
     if(!cid){ /* تسجيل العميل مرة واحدة */
@@ -676,14 +726,17 @@ var SS={due:0,dueCcy:'',paid:0};
 function openSettle(){
   var s=selected();if(!s.length)return;
   RCPTS=[];renderRcpts();$('#sNote').value='';
-  var by={},bys={};
+  var by={},bys={},noRate=0;
   s.forEach(function(t){by[t.ccy]=(by[t.ccy]||0)+Number(t.amount);
-    if(t.settle_amount)bys[t.settle_ccy||'']=(bys[t.settle_ccy||'']||0)+Number(t.settle_amount);});
+    var sa=t.settle_amount?Number(t.settle_amount):(t.rate?Number(t.amount)/Number(t.rate):0);
+    if(sa)bys[t.settle_ccy||'AOA']=(bys[t.settle_ccy||'AOA']||0)+sa;else noRate++;});
   var dueCcy=Object.keys(bys)[0]||'';
   SS.due=bys[dueCcy]||0;SS.dueCcy=dueCcy;SS.paid=0;
   $('#ssN').textContent=s.length;
   $('#ssIn').textContent=Object.keys(by).map(function(c){return fmt(by[c])+' '+c;}).join(' + ');
-  $('#ssDue').textContent=SS.due?fmt(SS.due,2)+' '+dueCcy:'— أدخل السعر في العمليات';
+  $('#ssDue').textContent=SS.due
+    ?fmt(SS.due,2)+' '+dueCcy+(noRate?'  (⚠️ '+noRate+' بلا سعر)':'')
+    :'— سعّر العمليات من صندوق المالك أولًا';
   updMatch();
   $('#ovl-settle').classList.add('on');
 }
@@ -747,25 +800,54 @@ async function loadArchive(){
   }catch(e){ARCH=[];}
   renderArchive();
 }
+var ARCH_ST='ALL';
+function setArchSt(st){ARCH_ST=st;
+  document.querySelectorAll('#archChips .chip').forEach(function(b){b.classList.toggle('on',b.dataset.st===st);});
+  renderArchive();}
+function archRateTxt(t){ /* عرض السعر بصيغة سعر الأوقية القديمة المألوفة */
+  if(!t.rate)return '';
+  var r=Number(t.rate);
+  if(t.ccy==='MRU'&&(t.settle_ccy||'AOA')==='AOA')r=r*10;
+  return ' · سعر '+(Math.round(r*1000)/1000);
+}
 function renderArchive(){
   if(!ARCH)return;
   var q=($('#aq').value||'').trim().toLowerCase();
   var rows=ARCH.filter(function(t){
+    if(ARCH_ST!=='ALL'&&t.status!==ARCH_ST)return false;
     if(!q)return true;
     return [t.ref,t.customer_name,t.account_number,String(t.amount),t.ccy,
       new Date(t.created_at).toLocaleDateString('en-GB')].join(' ').toLowerCase().indexOf(q)>=0;
-  }).slice(0,150);
-  $('#archList').innerHTML=rows.map(function(t){
-    var d=new Date(t.created_at);
-    return '<div class="arch-tx">'+
+  }).slice(0,200);
+  /* تجميع يومي مع إجماليات اليوم (مستلم + كوانزا) */
+  var html='',day='',dIn={},dSet={};
+  function dayHead(k){
+    var a=Object.keys(dIn).map(function(c){return fmt(dIn[c])+' '+c;}).join(' + ');
+    var b=Object.keys(dSet).map(function(c){return fmt(dSet[c],0)+' '+c;}).join(' + ');
+    return '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 4px 6px;font-size:11.5px;color:var(--muted)">'+
+      '<b style="color:var(--navy);font-size:12.5px">'+k+'</b>'+
+      '<span class="num">'+(a||'')+(b?'  ←  '+b:'')+'</span></div>';
+  }
+  var out=[],buf=[];
+  rows.forEach(function(t){
+    var d=new Date(t.created_at),k=d.toLocaleDateString('en-GB');
+    if(k!==day){
+      if(buf.length)out.push(dayHead(day)+buf.join(''));
+      day=k;buf=[];dIn={};dSet={};
+    }
+    dIn[t.ccy]=(dIn[t.ccy]||0)+Number(t.amount);
+    if(t.settle_amount)dSet[t.settle_ccy||'AOA']=(dSet[t.settle_ccy||'AOA']||0)+Number(t.settle_amount);
+    buf.push('<div class="arch-tx">'+
       '<div class="tx-i"><div class="tx-r">'+esc(t.ref)+'</div>'+
       '<div style="font-size:13px;font-weight:700;margin-top:2px">'+esc(t.customer_name)+
       (t.account_number&&t.account_number!=='—'?' <span class="acc" style="font-size:10.5px;color:var(--muted)">****'+esc(String(t.account_number).slice(-4))+'</span>':'')+'</div>'+
-      '<div class="tx-d num">'+d.toLocaleDateString('en-GB')+' '+d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})+'</div></div>'+
+      '<div class="tx-d num">'+d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})+archRateTxt(t)+'</div></div>'+
       '<span class="st '+t.status+'">'+(t.status==='open'?'مفتوحة':t.status==='settling'?'قيد التسوية':'تمت')+'</span>'+
       '<div class="tx-a num">'+fmt(t.amount)+' '+esc(t.ccy)+
-      (t.settle_amount?'<small>'+fmt(t.settle_amount,2)+' '+esc(t.settle_ccy||'')+'</small>':'')+'</div></div>';
-  }).join('')||'<div class="empty">لا نتائج</div>';
+      (t.settle_amount?'<small>'+fmt(t.settle_amount,0)+' '+esc(t.settle_ccy||'')+'</small>':'<small style="color:var(--bad)">بلا سعر</small>')+'</div></div>');
+  });
+  if(buf.length)out.push(dayHead(day)+buf.join(''));
+  $('#archList').innerHTML=out.join('')||'<div class="empty">لا نتائج</div>';
 }
 
 /* ═══════════ الأرباح ═══════════ */
