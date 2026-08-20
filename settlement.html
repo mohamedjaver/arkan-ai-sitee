@@ -4029,22 +4029,33 @@ async function imageText(dataUrl){
   return data.text||'';
 }
 /* ================= BUILD / AUTO-UPDATE ================= */
-const ARKAN_BUILD='1050';
+const ARKAN_BUILD='1053';
 function arkanVerLabel(){const e=$('verLbl');if(e)e.textContent=ARKAN_BUILD;}
 function arkanUpdateBanner(b){
   if(document.getElementById('updBar'))return;
+  try{if(sessionStorage.getItem('upd-snooze')===String(b))return;}catch(e){}
   const d=document.createElement('div');d.id='updBar';
   d.style.cssText='position:fixed;left:0;right:0;bottom:74px;z-index:9999;margin:0 12px;padding:11px 14px;border-radius:0;background:linear-gradient(135deg,#7B5CFF,#5B3EE8);color:#fff;font-size:12.5px;font-weight:700;display:flex;justify-content:space-between;align-items:center;gap:10px;box-shadow:0 8px 26px rgba(0,88,217,.45)';
   d.innerHTML='<span>تتوفر نسخة أحدث ('+b+')</span><span style="display:flex;gap:6px"><button style="background:#fff;color:#3B2A9E;border:0;border-radius:0;padding:6px 12px;font-weight:800;font-size:12px">تحديث</button><button style="background:transparent;color:#fff;border:1px solid rgba(255,255,255,.5);border-radius:0;padding:6px 10px;font-size:12px">لاحقًا</button></span>';
   const bt=d.querySelectorAll('button');
-  bt[0].onclick=()=>arkanHardReload(b);
-  bt[1].onclick=()=>d.remove();
+  bt[0].onclick=()=>{bt[0].textContent='جارٍ التحديث…';bt[0].disabled=true;arkanHardReload(b);};
+  bt[1].onclick=()=>{try{sessionStorage.setItem('upd-snooze',String(b));}catch(e){}d.remove();};
   document.body.appendChild(d);
 }
-function arkanHardReload(b){
-  try{if(window.caches&&caches.keys)caches.keys().then(k=>k.forEach(n=>caches.delete(n)));}catch(e){}
-  const u=location.pathname+'?v='+(b||Date.now());
-  setTimeout(()=>location.replace(u),250);
+async function arkanHardReload(b){
+  try{
+    if(window.caches&&caches.keys){
+      const ks=await caches.keys();
+      await Promise.all(ks.map(n=>caches.delete(n)));
+    }
+  }catch(e){}
+  try{
+    if(navigator.serviceWorker&&navigator.serviceWorker.getRegistrations){
+      const rs=await navigator.serviceWorker.getRegistrations();
+      await Promise.all(rs.map(r=>r.unregister()));
+    }
+  }catch(e){}
+  location.replace(location.pathname+'?v='+(b||Date.now()));
 }
 async function arkanCheckUpdate(manual){
   try{
