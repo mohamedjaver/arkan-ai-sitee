@@ -669,6 +669,7 @@ app.post('/account/login', async (req, res) => {
     if (!snap || String(snap.data().pin) !== pin)
       return res.status(401).json({ ok: false, err: 'رقم أو رمز غير صحيح' });
     const d = snap.data();
+    snap.ref.set({ lastLoginAt: Date.now() }, { merge: true }).catch(() => {});
     res.json({ ok: true, phone: p, name: d.name || '', ref: d.ref || '', pin: String(d.pin), role: d.role || 'customer' });
   } catch (e) {
     console.error('account/login:', e.message);
@@ -806,6 +807,36 @@ async function verifyOwner(req) {
   if (!snap || String(snap.data().pin) !== String(req.body.pin || '')) return null;
   return p;
 }
+/* ═══ سجل العميل الموحّد: طلباته + معاملاته — بصلاحية الخادم (يتجاوز قيود Rules بأمان) ═══ */
+app.post('/account/my-requests', async (req, res) => {
+  try {
+    if (!fbReady) return res.status(503).json({ ok: false, err: 'service' });
+    const p = normPhone(req.body.phone);
+    const snap = await findUserDoc(p);
+    if (!snap || String(snap.data().pin) !== String(req.body.pin || ''))
+      return res.status(401).json({ ok: false, err: 'auth' });
+    const db = admin.firestore();
+    const [rq, tx] = await Promise.all([
+      db.collection('payment_requests').where('contact', '==', p).limit(60).get().catch(() => null),
+      db.collection('transactions').where('uid', '==', p).limit(60).get().catch(() => null)
+    ]);
+    const items = [];
+    if (rq) rq.forEach(d => { const v = d.data() || {};
+      items.push({ kind: 'request', id: d.id, ref: v.ref || d.id.slice(-6),
+        amount: Number(v.amount) || 0, currency: v.currency || '', benefName: v.benefName || '',
+        status: v.status || 'pending',
+        at: v.createdAt && v.createdAt.toMillis ? v.createdAt.toMillis() : (v.createdAt || 0) }); });
+    if (tx) tx.forEach(d => { const v = d.data() || {};
+      items.push({ kind: 'tx', id: d.id, ref: (v.clientRef || d.id.slice(-6)),
+        amount: Number(v.amount) || 0, currency: (v.from || '') + '→' + (v.to || ''),
+        from: v.from || '', to: v.to || '', dp: v.dp,
+        status: v.status || 'pending',
+        at: v.createdAt && v.createdAt.toMillis ? v.createdAt.toMillis() : (v.createdAt || 0) }); });
+    items.sort((a, b) => (b.at || 0) - (a.at || 0));
+    res.json({ ok: true, items });
+  } catch (e) { console.error('my-requests:', e.message); res.status(500).json({ ok: false, err: 'server' }); }
+});
+
 app.post('/admin/list-users', async (req, res) => {
   try {
     if (!fbReady) return res.status(503).json({ ok: false, err: 'service' });
@@ -814,7 +845,8 @@ app.post('/admin/list-users', async (req, res) => {
     const users = [];
     q.forEach(doc => { const d = doc.data() || {};
       users.push({ phone: d.phone || doc.id, name: d.name || '', ref: d.ref || '',
-        role: d.role || 'customer', approved: !!d.approved, createdAt: d.createdAt || 0, via: d.via || '' });
+        role: d.role || 'customer', approved: !!d.approved, createdAt: d.createdAt || 0,
+        lastLoginAt: d.lastLoginAt || 0, via: d.via || '' });
     });
     users.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
     res.json({ ok: true, users });
