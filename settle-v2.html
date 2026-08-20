@@ -1568,7 +1568,8 @@ function renderProfit(){
     var cs=bucket[k];
     return '<div class="pcard"><div class="t"><b>'+esc(k)+'</b></div>'+
       Object.keys(cs).map(function(c){var x=cs[c];
-        return '<div class="v '+(x.pf>=0?'pos':'neg')+' num">'+(x.pf>=0?'+':'')+fmt(x.pf,2)+' '+esc(c)+'</div>'+
+        var hint=(x.pf===0&&x.set>0)?' <small style="color:#B00020;font-size:11px">بلا تكلفة مسجلة</small>':'';
+        return '<div class="v '+(x.pf>=0?'pos':'neg')+' num">'+(x.pf>=0?'+':'')+fmt(x.pf,2)+' '+esc(c)+hint+'</div>'+
         '<div class="s"><span class="num">'+x.n+'</span> عملية · <span class="num">'+fmt(x.amt)+'</span> '+esc(c)+
         ' → <span class="num">'+fmt(x.set,2)+'</span></div>';}).join('')+'</div>';
   }).join('')||'<div class="empty">لا تسويات مكتملة بعد</div>';
