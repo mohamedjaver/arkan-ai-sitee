@@ -64,7 +64,7 @@
   .pending-b{margin-top:14px;padding:11px 15px;border-radius:0;font-size:12.5px;
     background:rgba(0,181,255,.06);border:1px solid rgba(0,181,255,.06);color:var(--gold);display:none}
   .pending-b.on{display:block}
-  .actions{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:26px 0 34px}
+  .actions{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:26px 0 34px}
   .act{display:flex;flex-direction:column;align-items:center;gap:9px;cursor:pointer}
   .act .ic{width:58px;height:58px;border-radius:0;background:var(--card);border:1px solid var(--line);
     display:grid;place-items:center;transition:transform .15s ease}
@@ -140,11 +140,11 @@
   .picker-menu .mc{font-weight:600;font-size:14px} .picker-menu .mn{font-size:11.5px;color:var(--muted)}
   nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:min(520px,100vw);z-index:10;
     background:rgba(255,255,255,.92);backdrop-filter:blur(22px) saturate(1.4);-webkit-backdrop-filter:blur(22px) saturate(1.4);
-    border-top:1px solid #D9E5F2;box-shadow:0 -8px 30px rgba(16,42,67,.08);display:grid;grid-template-columns:repeat(4,1fr);
-    padding:10px 8px calc(14px + env(safe-area-inset-bottom))}
+    border-top:1px solid #D9E5F2;box-shadow:0 -8px 30px rgba(16,42,67,.08);display:grid;grid-auto-flow:column;grid-auto-columns:1fr;
+    padding:10px 6px calc(14px + env(safe-area-inset-bottom))}
   .nav-it{display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;padding:4px;position:relative}
-  .nav-it svg{width:23px;height:23px;stroke:#7A93AD;transition:stroke .2s}
-  .nav-it span{font-size:11px;color:#7A93AD;font-weight:600;transition:color .2s}
+  .nav-it svg{width:22px;height:22px;stroke:#7A93AD;transition:stroke .2s}
+  .nav-it span{font-size:10.5px;color:#7A93AD;font-weight:600;transition:color .2s}
   .nav-it.on svg{stroke:#0058D9} .nav-it.on span{color:#0058D9;font-weight:800}
   .nav-it.on::before{content:'';position:absolute;top:-11px;width:28px;height:3px;border-radius:0;background:linear-gradient(90deg,#0058D9,#0058D9)}
   .acct-head{display:flex;flex-direction:column;align-items:center;margin:14px 0 26px}
@@ -272,9 +272,7 @@
         <div class="pending-b" id="pendBox">حسابك قيد التفعيل — سيؤكده فريق لبدال قريباً.</div>
       </div>
       <div class="actions">
-        <div class="act gold" data-goto="s-send"><div class="ic"><svg fill="none" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M12 5l7 7-7 7"/></svg></div><span>تحويل</span></div>
-        <div class="act" data-act="deposit"><div class="ic"><svg fill="none" stroke="#486581" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14m7-7H5"/></svg></div><span>إيداع</span></div>
-        <div class="act" data-goto="s-rates"><div class="ic"><svg fill="none" stroke="#486581" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 17l6-6 4 4 8-8m0 0h-5m5 0v5"/></svg></div><span>الأسعار</span></div>
+        <div class="act gold" data-act="deposit"><div class="ic"><svg fill="none" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14m7-7H5"/></svg></div><span>إيداع</span></div>
         <div class="act" data-goto="s-acct"><div class="ic"><svg fill="none" stroke="#486581" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/></svg></div><span>السجل</span></div>
       </div>
       <div class="sec"><h2>وصل التحويل</h2><span style="font-size:12px;color:#8AA3C4">ارفع إيصال أي بنك — قراءة تلقائية</span></div>
@@ -316,6 +314,21 @@
         <div class="crow">
           <input id="toAmt" type="text" readonly value="0">
           <div class="cpicker" id="toPick"><div class="flag" id="tFlag" style="background-image:url('https://flagcdn.com/w160/mr.png')"></div><b id="tCode">MRU</b><svg fill="none" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M19 9l-7 7-7-7"/></svg><div class="picker-menu" id="tMenu"></div></div>
+        </div>
+      </div>
+      <div class="sec" style="margin-top:22px"><h2>بيانات المستفيد</h2></div>
+      <div class="conv" style="padding:16px">
+        <div class="clabel">اسم المستفيد الكامل</div>
+        <input id="bnName" placeholder="الاسم كما في الحساب البنكي" style="width:100%;border:1px solid #D6E4F7;background:#fff;padding:13px;font-size:15px;font-family:inherit;margin-bottom:12px">
+        <div style="display:grid;grid-template-columns:1fr 1.4fr;gap:10px">
+          <div><div class="clabel">القناة</div>
+            <select id="bnKind" style="width:100%;border:1px solid #D6E4F7;background:#fff;padding:13px;font-size:14.5px;font-family:inherit">
+              <option value="bankily">Bankily</option><option value="sedad">Sedad</option>
+              <option value="masrvi">Masrvi</option><option value="bank">حساب بنكي</option>
+              <option value="bank_ao">بنك أنغولا (IBAN)</option><option value="cash">استلام نقدي</option>
+            </select></div>
+          <div><div class="clabel">رقم الحساب / الهاتف</div>
+            <input id="bnAcc" inputmode="text" placeholder="مثال: 36xxxxxx" style="width:100%;border:1px solid #D6E4F7;background:#fff;padding:13px;font-size:15px;font-family:inherit;direction:ltr;text-align:left"></div>
         </div>
       </div>
       <div class="meta"><span>السعر المعتمد</span><b id="mRate">—</b></div>
@@ -557,6 +570,9 @@ $('swapBtn').onclick = () => { [st.from,st.to]=[st.to,st.from]; swapDeg+=180; $(
 $('reqBtn').onclick = async () => {
   const amt = parseAmt(), out = $('toAmt').value;
   if(!amt||amt<=0){ toast('أدخل المبلغ'); return; }
+  const bnName=($('bnName').value||'').trim(), bnAcc=($('bnAcc').value||'').trim(), bnKind=$('bnKind').value;
+  if(bnName.length<3){ toast('أدخل اسم المستفيد'); $('bnName').focus(); return; }
+  if(bnKind!=='cash'&&bnAcc.length<4){ toast('أدخل رقم الحساب أو الهاتف'); $('bnAcc').focus(); return; }
   const ref = 'TR'+Date.now().toString(36).toUpperCase().slice(-6);
   const phone = SESSION?.phone || USER?.phone || '';
   /* سجّل الطلب في السحابة (يظهر في صندوق طلبات الأدمن) */
@@ -565,10 +581,12 @@ $('reqBtn').onclick = async () => {
     await addDoc(collection(db,'payment_requests'),{
       ref, company:(USER?.name||'عميل لبدال'), amount:String(amt), currency:st.from+'→'+st.to,
       destination:st.to, purpose:'تحويل فردي', contact:String(phone),
+      benefName:bnName, benefKind:bnKind, benefAcc:bnAcc,
       type:'individual', status:'pending', createdAt:serverTimestamp()
     });
   }catch(e){ console.warn(e); }
-  const msg = `طلب تحويل — ${ref}\nالعميل: ${USER?.name||''} / ${phone}\nأرسل: ${fmt(amt)} ${st.from}\nيستلم: ${out} ${st.to}\nالمرجع: ${USER?.ref||''}`;
+  const kindTxt={bankily:'Bankily',sedad:'Sedad',masrvi:'Masrvi',bank:'حساب بنكي',bank_ao:'بنك أنغولا',cash:'استلام نقدي'}[bnKind]||bnKind;
+  const msg = `طلب تحويل — ${ref}\nالعميل: ${USER?.name||''} / ${phone}\nأرسل: ${fmt(amt)} ${st.from}\nيستلم: ${out} ${st.to}\nالمستفيد: ${bnName}\nالقناة: ${kindTxt}${bnAcc?' — '+bnAcc:''}\nالمرجع: ${USER?.ref||''}`;
   window.open(`https://wa.me/${WA}?text=${encodeURIComponent(msg)}`,'_blank');
   /* وجّه العميل لحسابه ليتابع الطلب */
   toast('✓ سُجّل طلبك — تابعه في حسابك');
@@ -886,7 +904,7 @@ async function silentOpen(phoneRaw){
 .orb,.orb-1,.orb-2,.grid-bg,#particles,.aurora,.noise{display:none!important}
 </style>
 
-<a id="akChatFab" href="chat-v2.html" style="position:fixed;bottom:calc(84px + env(safe-area-inset-bottom));inset-inline-start:16px;z-index:60;width:52px;height:52px;background:#0058D9;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 18px rgba(3,164,254,.4)" aria-label="المحادثة">
+<a id="akChatFab" href="chat-v2.html" style="position:fixed;bottom:calc(104px + env(safe-area-inset-bottom));inset-inline-start:16px;z-index:60;width:52px;height:52px;background:#0058D9;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 18px rgba(3,164,254,.4)" aria-label="المحادثة">
 <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" style="width:24px;height:24px"><path d="M21 11.5a8.4 8.4 0 01-9 8.4 8.6 8.6 0 01-3.9-.9L3 20l1-4.9a8.4 8.4 0 1117-3.6z"/></svg></a>
 
 <style id="akNightCss">
