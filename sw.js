@@ -1,7 +1,7 @@
 /* BDL — Service Worker v2.0
    إستراتيجية: الشبكة أولًا لصفحات HTML والبيانات (لا محتوى قديم أبدًا)
               الكاش أولًا للأصول الثابتة فقط (صور، أيقونات، شعار) */
-const V='arkan-v38'; /* استرجاع النظام الأول الكامل في settlement */
+const V='arkan-v39-1055'; /* شبكة أولًا حقيقية للصفحات — لا نسخة قديمة بعد اليوم */
 const STATIC=['./favicon.svg','./arkan-icon-512.png','./arkan-touch-180.png','./site-manifest.json'];
 
 self.addEventListener('install',e=>{
@@ -83,14 +83,16 @@ self.addEventListener('fetch',e=>{
     return;
   }
   if(isDoc){
-    /* البنوك: الكاش فورًا (≈0ms) + تحديث صامت بالخلفية للزيارة القادمة */
+    /* شبكة أولًا حقيقية: أحدث نسخة دائمًا؛ الكاش احتياط انقطاع فقط */
     e.respondWith((async()=>{
-      const cached=await caches.match(r);
       const net=fetch(r,{cache:'no-store'}).then(res=>{
         if(res&&res.ok){const c=res.clone();caches.open(V).then(x=>x.put(r,c));}
         return res;
       }).catch(()=>null);
-      if(cached){ e.waitUntil(net); return cached; }
+      const first=await Promise.race([net,new Promise(res=>setTimeout(()=>res(null),3500))]);
+      if(first)return first;
+      const cached=await caches.match(r);
+      if(cached){e.waitUntil(net);return cached;}
       const res=await net;
       return res||new Response('<!doctype html><meta charset=utf-8><title>BDL</title><body style="font-family:system-ui;display:grid;place-items:center;height:100vh"><div>لا اتصال — أعد المحاولة</div>',{headers:{'Content-Type':'text/html; charset=utf-8'}});
     })());
