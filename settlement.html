@@ -450,7 +450,6 @@ section#contacts.on{background:#F8FCFF;border-radius:0}
 /* ═ الشريط السفلي المختصر: عملية · التسوية · الأرباح · الأرشيف فقط ═ */
 .nv[data-t="contacts"],
 .nv[data-t="ledger"],
-.nv[data-t="inbox"],
 .nv[data-t="history"]{display:none!important}
 
 /* ═ إصلاح الشريط السفلي: فوق كل شيء، أهداف لمس أكبر، والفقاعة العائمة مرفوعة عنه ═ */
@@ -1167,7 +1166,7 @@ nav{z-index:5000!important}
   <div class="nv" data-t="contacts">
     <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="10" cy="7" r="4"/><path d="M21 21v-2a4 4 0 0 0-3-3.87"/></svg><div>الجهات</div>
   </div>
-  <div class="nv" data-t="inbox" style="position:relative">
+  <div class="nv" data-t="inbox" style="position:relative" onclick="setTimeout(()=>{try{loadInbox()}catch(e){}},80)">
     <svg viewBox="0 0 24 24"><path d="M3 8l9 6 9-6"/><rect x="3" y="5" width="18" height="14" rx="2"/></svg><div>الطلبات</div>
     <span id="inbBadge" style="display:none;position:absolute;top:2px;inset-inline-end:8px;background:#E53935;color:#fff;border-radius:0;min-width:16px;height:16px;font:700 9px sans-serif;line-height:16px;text-align:center;padding:0 3px"></span>
   </div>
@@ -4029,7 +4028,7 @@ async function imageText(dataUrl){
   return data.text||'';
 }
 /* ================= BUILD / AUTO-UPDATE ================= */
-const ARKAN_BUILD='1055';
+const ARKAN_BUILD='1062';
 function arkanVerLabel(){const e=$('verLbl');if(e)e.textContent=ARKAN_BUILD;}
 function arkanUpdateBanner(b){
   if(document.getElementById('updBar'))return;
