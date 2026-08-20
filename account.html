@@ -578,9 +578,13 @@ document.addEventListener('click', closeMenus);
 let swapDeg=0;
 $('swapBtn').onclick = () => { [st.from,st.to]=[st.to,st.from]; swapDeg+=180; $('swapBtn').firstElementChild.style.transform=`rotate(${swapDeg}deg)`; paintPickers(); calc(); };
 /* ═ وصل BDL البصري: 1080×1400 — الشعار، التدرج الرسمي، كل بيانات الطلب ═ */
+const BDL_LOGO=new Image();BDL_LOGO.src='arkan-icon-512.png';
 async function bdlReceiptCard(d){
   const W=1080,H=1400,c=document.createElement('canvas');c.width=W;c.height=H;
   const x=c.getContext('2d');
+  if(!x.roundRect){x.roundRect=function(a,b,w,h,r){r=Math.min(r,w/2,h/2);
+    this.moveTo(a+r,b);this.arcTo(a+w,b,a+w,b+h,r);this.arcTo(a+w,b+h,a,b+h,r);
+    this.arcTo(a,b+h,a,b,r);this.arcTo(a,b,a+w,b,r);this.closePath();};}
   const F="'IBM Plex Sans Arabic','Inter',system-ui,sans-serif";
   /* خلفية */
   x.fillStyle='#F6FAFD';x.fillRect(0,0,W,H);
@@ -590,10 +594,10 @@ async function bdlReceiptCard(d){
   x.fillStyle=g;x.fillRect(0,0,W,340);
   /* الشعار */
   try{
-    const img=new Image();img.src='arkan-icon-512.png';
-    await new Promise((r,j)=>{img.onload=r;img.onerror=j;setTimeout(j,1500);});
-    const s=110;x.save();x.beginPath();
-    x.roundRect(W-70-s,62,s,s,26);x.clip();x.drawImage(img,W-70-s,62,s,s);x.restore();
+    if(BDL_LOGO.complete&&BDL_LOGO.naturalWidth){
+      const s=110;x.save();x.beginPath();
+      x.roundRect(W-70-s,62,s,s,26);x.clip();x.drawImage(BDL_LOGO,W-70-s,62,s,s);x.restore();
+    }
   }catch(e){}
   x.textAlign='right';x.fillStyle='#fff';
   x.font='800 54px '+F;x.fillText('لبدال',W-210,118);
@@ -646,19 +650,9 @@ $('reqBtn').onclick = async () => {
   if(bnKind!=='cash'&&bnAcc.length<4){ toast('أدخل رقم الحساب أو الهاتف'); $('bnAcc').focus(); return; }
   const ref = 'TR'+Date.now().toString(36).toUpperCase().slice(-6);
   const phone = SESSION?.phone || USER?.phone || '';
-  /* سجّل الطلب في السحابة (يظهر في صندوق طلبات الأدمن) */
-  try{
-    const { collection, addDoc, serverTimestamp } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js');
-    await addDoc(collection(db,'payment_requests'),{
-      ref, company:(USER?.name||'عميل لبدال'), amount:String(amt), currency:st.from+'→'+st.to,
-      destination:st.to, purpose:'تحويل فردي', contact:String(phone),
-      benefName:bnName, benefKind:bnKind, benefAcc:bnAcc,
-      type:'individual', status:'pending', createdAt:serverTimestamp()
-    });
-  }catch(e){ console.warn(e); }
   const kindTxt={bankily:'Bankily',sedad:'Sedad',masrvi:'Masrvi',bank:'حساب بنكي',bank_ao:'بنك أنغولا',cash:'استلام نقدي'}[bnKind]||bnKind;
   const msg = `طلب تحويل — ${ref}\nالعميل: ${USER?.name||''} / ${phone}\nأرسل: ${fmt(amt)} ${st.from}\nيستلم: ${out} ${st.to}\nالمستفيد: ${bnName}\nالقناة: ${kindTxt}${bnAcc?' — '+bnAcc:''}\nالمرجع: ${USER?.ref||''}`;
-  /* وصل بصري بهوية BDL — مشاركة كصورة؛ النص احتياط فقط */
+  /* ١) الوصل البصري والمشاركة أولًا — داخل إيماءة الضغط (شرط Safari) */
   let shared=false;
   try{
     const blob=await bdlReceiptCard({ref,amt,from:st.from,out,to:st.to,
@@ -667,13 +661,28 @@ $('reqBtn').onclick = async () => {
     if(navigator.canShare&&navigator.canShare({files:[file]})){
       await navigator.share({files:[file],title:'طلب تحويل — لبدال',text:'طلب تحويل — '+ref});
       shared=true;
+    }else if(navigator.share){ /* دعم مشاركة بلا ملفات: نزّل ثم شارك النص */
+      const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+      a.download='BDL-'+ref+'.png';a.click();
+      setTimeout(()=>URL.revokeObjectURL(a.href),4000);
     }else{
       const a=document.createElement('a');a.href=URL.createObjectURL(blob);
       a.download='BDL-'+ref+'.png';a.click();
       setTimeout(()=>URL.revokeObjectURL(a.href),4000);
     }
-  }catch(e){}
-  if(!shared&&!document.hidden)
+  }catch(e){ console.warn('share:',e&&e.name); }
+  /* ٢) تسجيل الطلب بالخلفية — لا يعطّل المشاركة */
+  (async()=>{try{
+    const { collection, addDoc, serverTimestamp } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js');
+    await addDoc(collection(db,'payment_requests'),{
+      ref, company:(USER?.name||'عميل لبدال'), amount:String(amt), currency:st.from+'→'+st.to,
+      destination:st.to, purpose:'تحويل فردي', contact:String(phone),
+      benefName:bnName, benefKind:bnKind, benefAcc:bnAcc,
+      type:'individual', status:'pending', createdAt:serverTimestamp()
+    });
+  }catch(e){ console.warn(e); }})();
+  /* ٣) النص احتياط أخير فقط إن لم تنجح المشاركة إطلاقًا */
+  if(!shared&&!navigator.canShare&&!document.hidden)
     window.open(`https://wa.me/${WA}?text=${encodeURIComponent(msg)}`,'_blank');
   /* وجّه العميل لحسابه ليتابع الطلب */
   toast('✓ سُجّل طلبك — تابعه في حسابك');
