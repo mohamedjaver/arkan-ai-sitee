@@ -577,6 +577,67 @@ $('toPick').onclick   = e => { e.stopPropagation(); const o=$('tMenu').classList
 document.addEventListener('click', closeMenus);
 let swapDeg=0;
 $('swapBtn').onclick = () => { [st.from,st.to]=[st.to,st.from]; swapDeg+=180; $('swapBtn').firstElementChild.style.transform=`rotate(${swapDeg}deg)`; paintPickers(); calc(); };
+/* ═ وصل BDL البصري: 1080×1400 — الشعار، التدرج الرسمي، كل بيانات الطلب ═ */
+async function bdlReceiptCard(d){
+  const W=1080,H=1400,c=document.createElement('canvas');c.width=W;c.height=H;
+  const x=c.getContext('2d');
+  const F="'IBM Plex Sans Arabic','Inter',system-ui,sans-serif";
+  /* خلفية */
+  x.fillStyle='#F6FAFD';x.fillRect(0,0,W,H);
+  /* رأس متدرج */
+  const g=x.createLinearGradient(0,0,W,340);
+  g.addColorStop(0,'#0B2F70');g.addColorStop(.55,'#0A56B8');g.addColorStop(1,'#19A9F5');
+  x.fillStyle=g;x.fillRect(0,0,W,340);
+  /* الشعار */
+  try{
+    const img=new Image();img.src='arkan-icon-512.png';
+    await new Promise((r,j)=>{img.onload=r;img.onerror=j;setTimeout(j,1500);});
+    const s=110;x.save();x.beginPath();
+    x.roundRect(W-70-s,62,s,s,26);x.clip();x.drawImage(img,W-70-s,62,s,s);x.restore();
+  }catch(e){}
+  x.textAlign='right';x.fillStyle='#fff';
+  x.font='800 54px '+F;x.fillText('لبدال',W-210,118);
+  x.font='500 30px '+F;x.fillStyle='rgba(255,255,255,.85)';
+  x.fillText('طلب تحويل — بانتظار التنفيذ',W-210,168);
+  /* المرجع chip */
+  x.font='700 34px '+F;
+  const rw=x.measureText(d.ref).width+70;
+  x.fillStyle='rgba(255,255,255,.16)';x.beginPath();x.roundRect(W-70-rw,215,rw,64,32);x.fill();
+  x.fillStyle='#fff';x.textAlign='center';x.fillText(d.ref,W-70-rw/2,259);
+  /* بطاقة المبلغ */
+  x.fillStyle='#fff';x.shadowColor='rgba(16,42,67,.10)';x.shadowBlur=30;x.shadowOffsetY=10;
+  x.beginPath();x.roundRect(60,300,W-120,250,28);x.fill();x.shadowColor='transparent';
+  x.textAlign='center';x.fillStyle='#5C7699';x.font='600 30px '+F;
+  x.fillText('يستلم المستفيد',W/2,368);
+  x.fillStyle='#0B2447';x.font='800 84px '+F;
+  x.fillText(d.out+' '+d.to,W/2,470);
+  x.fillStyle='#0A56B8';x.font='600 32px '+F;
+  x.fillText('مقابل  '+Number(d.amt).toLocaleString('en-US')+' '+d.from,W/2,522);
+  /* صفوف التفاصيل */
+  const rows=[
+    ['المستفيد',d.bnName],
+    ['القناة',d.kindTxt+(d.bnAcc?'  ·  '+d.bnAcc:'')],
+    ['العميل',(d.client?d.client+'  ·  ':'')+d.phone],
+    ['رقم العميل المرجعي',d.cref||'—'],
+    ['التاريخ',new Date().toLocaleString('en-GB',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})]
+  ];
+  let y=610;
+  rows.forEach(r=>{
+    x.fillStyle='#fff';x.beginPath();x.roundRect(60,y,W-120,108,22);x.fill();
+    x.strokeStyle='#E3ECF7';x.lineWidth=2;x.stroke();
+    x.textAlign='right';x.fillStyle='#5C7699';x.font='600 28px '+F;
+    x.fillText(r[0],W-100,y+45);
+    x.fillStyle='#0B2447';x.font='700 34px '+F;
+    x.fillText(String(r[1]),W-100,y+88);
+    y+=128;
+  });
+  /* تذييل */
+  x.fillStyle='#8AA3C4';x.font='500 26px '+F;x.textAlign='center';
+  x.fillText('lbdal.com  ·  تحويلات موريتانيا ⇄ أنغولا',W/2,H-70);
+  x.fillStyle='#C7D8EE';x.font='500 22px '+F;
+  x.fillText('هذا طلب تحويل وليس إيصال دفع — يُنفَّذ بعد التأكيد',W/2,H-34);
+  return await new Promise(r=>c.toBlob(r,'image/png',.95));
+}
 $('reqBtn').onclick = async () => {
   const amt = parseAmt(), out = $('toAmt').value;
   if(!amt||amt<=0){ toast('أدخل المبلغ'); return; }
@@ -597,7 +658,23 @@ $('reqBtn').onclick = async () => {
   }catch(e){ console.warn(e); }
   const kindTxt={bankily:'Bankily',sedad:'Sedad',masrvi:'Masrvi',bank:'حساب بنكي',bank_ao:'بنك أنغولا',cash:'استلام نقدي'}[bnKind]||bnKind;
   const msg = `طلب تحويل — ${ref}\nالعميل: ${USER?.name||''} / ${phone}\nأرسل: ${fmt(amt)} ${st.from}\nيستلم: ${out} ${st.to}\nالمستفيد: ${bnName}\nالقناة: ${kindTxt}${bnAcc?' — '+bnAcc:''}\nالمرجع: ${USER?.ref||''}`;
-  window.open(`https://wa.me/${WA}?text=${encodeURIComponent(msg)}`,'_blank');
+  /* وصل بصري بهوية BDL — مشاركة كصورة؛ النص احتياط فقط */
+  let shared=false;
+  try{
+    const blob=await bdlReceiptCard({ref,amt,from:st.from,out,to:st.to,
+      bnName,kindTxt,bnAcc,client:USER?.name||'',phone,cref:USER?.ref||''});
+    const file=new File([blob],'BDL-'+ref+'.png',{type:'image/png'});
+    if(navigator.canShare&&navigator.canShare({files:[file]})){
+      await navigator.share({files:[file],title:'طلب تحويل — لبدال',text:'طلب تحويل — '+ref});
+      shared=true;
+    }else{
+      const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+      a.download='BDL-'+ref+'.png';a.click();
+      setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+    }
+  }catch(e){}
+  if(!shared&&!document.hidden)
+    window.open(`https://wa.me/${WA}?text=${encodeURIComponent(msg)}`,'_blank');
   /* وجّه العميل لحسابه ليتابع الطلب */
   toast('✓ سُجّل طلبك — تابعه في حسابك');
   setTimeout(()=>{ go('home'); }, 900);
