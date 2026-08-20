@@ -246,6 +246,24 @@ input,select{font-family:inherit;color:var(--ink)}
   <button class="cta" style="width:100%;margin-top:16px" id="dcBtn" onclick="dayCloseDo()">تأكيد الإقفال وإصدار التقرير PDF</button>
 </div></div>
 
+<!-- إقفال بربح -->
+<div class="ovl" id="ovl-closeop"><div class="sheet">
+  <h3>إقفال العملية<button onclick="closeOvl('closeop')">إغلاق ✕</button></h3>
+  <div id="clOp" style="font-size:12.5px;color:var(--muted);margin-bottom:12px"></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+    <div><div class="clabel">سعر العميل (أوقية قديمة)</div>
+      <input id="clRc" class="cin num" inputmode="decimal" placeholder="0.365" oninput="clCalc()" style="width:100%;box-sizing:border-box"></div>
+    <div><div class="clabel">سعر التكلفة</div>
+      <input id="clRk" class="cin num" inputmode="decimal" placeholder="0.355" oninput="clCalc()" style="width:100%;box-sizing:border-box"></div>
+  </div>
+  <div id="clOut" style="margin-top:14px;background:var(--bg,#F6FAFD);border:1px solid #E3ECF7;border-radius:14px;padding:14px;text-align:center">
+    <div class="num" id="clProfit" style="font-size:26px;font-weight:800;color:var(--navy)">—</div>
+    <div style="font-size:11.5px;color:var(--muted);margin-top:3px">الربح بالأوقية الجديدة (MRU)</div>
+  </div>
+  <button class="cta" style="width:100%;margin-top:16px" onclick="opCloseDo()">إقفال وتسجيل الربح ✓</button>
+  <button style="width:100%;margin-top:8px;border:1px solid #D6E4F7;background:#fff;color:var(--muted);border-radius:12px;padding:12px;font-family:inherit;font-size:13px;cursor:pointer" onclick="opCloseDo(true)">إقفال بلا ربح (تخطٍّ)</button>
+</div></div>
+
 <!-- إلحاق إيصال -->
 <div class="ovl" id="ovl-addr"><div class="sheet">
   <h3>إلحاق إيصال<button onclick="closeOvl('addr')">إغلاق ✕</button></h3>
@@ -292,6 +310,7 @@ input,select{font-family:inherit;color:var(--ink)}
 
 <!-- ══ تبويب الأرباح ══ -->
 <div id="v-profit" style="display:none">
+  <div id="opsProfBox"></div>
   <div class="seg">
     <button class="on" data-p="day" onclick="setPr('day')">يومي</button>
     <button data-p="week" onclick="setPr('week')">أسبوعي</button>
@@ -925,7 +944,7 @@ function renderOps(){
       '<button class="opact ghost" onclick="opSheet(\''+o.id+'\')">+ إيصال</button>';
     else if(o.status==='sent')act='<button class="opact ghost" onclick="opCopyLink(\''+(o.confirm_token||'')+'\')">🔗 رابط التأكيد</button>'+
       '<button class="opact" style="background:#8AA3C4" disabled>بانتظار تأكيد المورد…</button>';
-    else if(o.status==='confirmed')act='<button class="opact ok" onclick="opSetSt(\''+o.id+'\',\'closed\')">المورد أكّد ✓ — إقفال</button>';
+    else if(o.status==='confirmed')act='<button class="opact ok" onclick="opCloseSheet(\''+o.id+'\')">المورد أكّد ✓ — إقفال</button>';
     return '<div style="background:#fff;border:1px solid #E3ECF7;border-radius:16px;padding:14px 15px;margin-bottom:10px">'+
       '<div style="display:flex;justify-content:space-between;align-items:center">'+
       '<div><b style="font-size:14.5px;color:var(--navy)">'+esc(o.client_name)+'</b>'+
@@ -1033,6 +1052,73 @@ window.opCopyLink=async function(tok){
   catch(e){window.open(opConfirmUrl(tok),'_blank');}
 };
 
+/* ═══════════ ربحية العمليات (المرحلة 4) ═══════════ */
+var CL_OP=null;
+function opCloseSheet(id){
+  CL_OP=(OPS_DATA||[]).find(function(o){return o.id===id;});if(!CL_OP)return;
+  $('#clOp').textContent=CL_OP.ref+' · '+CL_OP.client_name+' · '+fmt(CL_OP.target_aoa,0)+' AOA';
+  $('#clRc').value='';$('#clRk').value='';$('#clProfit').textContent='—';
+  openOvl('closeop');
+}
+function clCalc(){
+  if(!CL_OP)return;
+  var rc=parseFloat($('#clRc').value)||0,rk=parseFloat($('#clRk').value)||0;
+  if(rc>0&&rk>0){
+    var p=Number(CL_OP.target_aoa)*(rc-rk)/10; /* أسعار أوقية قديمة ← ربح MRU جديدة */
+    $('#clProfit').textContent=fmt(p,0)+' MRU';
+    $('#clProfit').style.color=p>=0?'#0B7A3B':'#B00020';
+  } else $('#clProfit').textContent='—';
+}
+async function opCloseDo(skip){
+  if(!CL_OP)return;
+  var body={status:'closed',closed_at:new Date().toISOString()};
+  if(!skip){
+    var rc=parseFloat($('#clRc').value)||0,rk=parseFloat($('#clRk').value)||0;
+    if(rc<=0||rk<=0){toast('أدخل السعرين — أو اختر «إقفال بلا ربح»');return;}
+    body.rate_client=rc;body.rate_cost=rk;
+    body.profit_mru=Math.round(Number(CL_OP.target_aoa)*(rc-rk)/10*100)/100;
+  }
+  try{
+    var r=await fetch(SB+'/bdl_ops?id=eq.'+CL_OP.id,{method:'PATCH',headers:H(),body:JSON.stringify(body)});
+    if(!r.ok)throw new Error(r.status);
+    closeOvl('closeop');
+    toast(skip?'أُقفلت ✓':'أُقفلت — ربح '+fmt(body.profit_mru,0)+' MRU ✓');
+    OPS_DATA=null;loadOps();OPSPROF=null;
+  }catch(e){toast('تعذّر الإقفال: '+e.message);}
+}
+/* قسم ربح العمليات في تبويب الأرباح */
+var OPSPROF=null;
+async function loadOpsProfit(){
+  try{
+    var r=await fetch(SB+'/bdl_ops_profit_daily?select=*&order=day.desc&limit=60',{headers:H()});
+    OPSPROF=r.ok?await r.json():[];
+  }catch(e){OPSPROF=[];}
+  renderOpsProfit();
+}
+function renderOpsProfit(){
+  var el=$('#opsProfBox');if(!el)return;
+  var d=OPSPROF||[],today=todayISO();
+  var t7=0,t30=0,tToday=0,now=Date.now();
+  d.forEach(function(r){
+    var age=(now-new Date(r.day).getTime())/86400000;
+    if(r.day===today)tToday+=Number(r.profit_mru);
+    if(age<=7)t7+=Number(r.profit_mru);
+    if(age<=30)t30+=Number(r.profit_mru);
+  });
+  function c(t,v){return '<div style="background:#fff;border:1px solid #E3ECF7;border-radius:14px;padding:12px 8px;text-align:center">'+
+    '<div class="num" style="font-size:17px;font-weight:800;color:#0B7A3B">'+fmt(v,0)+'</div>'+
+    '<div style="font-size:10.5px;color:var(--muted);margin-top:2px">'+t+'</div></div>';}
+  el.innerHTML=
+    '<div style="font-size:14px;font-weight:800;color:var(--navy);margin:16px 0 10px">أرباح العمليات (AOA↔MRU)</div>'+
+    '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px">'+
+    c('اليوم',tToday)+c('٧ أيام',t7)+c('٣٠ يومًا',t30)+'</div>'+
+    (d.length?d.slice(0,14).map(function(r){
+      return '<div class="arch-tx"><div class="tx-i"><div class="tx-r num">'+r.day+'</div>'+
+        '<div class="tx-d num">'+r.ops_n+' عملية · حجم '+fmt(r.volume_aoa,0)+' AOA</div></div>'+
+        '<div class="tx-a num" style="color:#0B7A3B">'+fmt(r.profit_mru,0)+' MRU</div></div>';
+    }).join(''):'<div class="empty">لا عمليات مقفلة بربح بعد</div>');
+}
+
 /* ═══════════ المطابقة اليومية والإقفال (المرحلة 3) ═══════════ */
 var DC=null;
 function todayISO(){var d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
@@ -1051,9 +1137,13 @@ async function dayCalc(){
     if(o.status==='sent')sent++;
     if(o.status==='confirmed')conf++;
   });
+  /* ربح اليوم من العمليات المقفلة اليوم */
+  var pr=await fetch(SB+'/bdl_ops?select=profit_mru&status=eq.closed&closed_at=gte.'+encodeURIComponent(t0)+'&limit=500',{headers:H()});
+  var prj=pr.ok?await pr.json():[];
+  var profit=prj.reduce(function(s,r){return s+Number(r.profit_mru||0);},0);
   return {day:todayISO(),received_aoa:received,receipts_n:recs.length,
     ops_open:open_,gap_open:gap,ops_covered:covered,ops_sent:sent,
-    ops_confirmed:conf,ops_closed_today:closedToday};
+    ops_confirmed:conf,ops_closed_today:prj.length,profit_mru:profit};
 }
 async function dayCloseSheet(){
   openOvl('dclose');
@@ -1070,7 +1160,9 @@ async function dayCloseSheet(){
     c('عمليات ناقصة',DC.ops_open,DC.ops_open?'#B00020':null)+
     c('فجوة مفتوحة (AOA)',fmt(DC.gap_open,0),DC.gap_open?'#B00020':null)+
     c('مكتملة — للمورد',DC.ops_covered,'#0A56B8')+
-    c('عند المورد / أكّد',DC.ops_sent+' / '+DC.ops_confirmed,null);
+    c('عند المورد / أكّد',DC.ops_sent+' / '+DC.ops_confirmed,null)+
+    c('ربح اليوم (MRU)',fmt(DC.profit_mru||0,0),'#0B7A3B')+
+    c('عمليات أُقفلت اليوم',DC.ops_closed_today,null);
   /* هل أُقفل اليوم مسبقًا؟ */
   var q=await fetch(SB+'/bdl_day_close?select=id&day=eq.'+DC.day+'&limit=1',{headers:H()});
   var j=q.ok?await q.json():[];
@@ -1087,7 +1179,8 @@ async function dayCloseDo(){
       var r=await fetch(SB+'/bdl_day_close',{method:'POST',headers:H(),body:JSON.stringify({
         day:DC.day,received_aoa:DC.received_aoa,receipts_n:DC.receipts_n,
         ops_open:DC.ops_open,gap_open:DC.gap_open,ops_covered:DC.ops_covered,
-        ops_sent:DC.ops_sent,ops_confirmed:DC.ops_confirmed,ops_closed_today:DC.ops_closed_today})});
+        ops_sent:DC.ops_sent,ops_confirmed:DC.ops_confirmed,ops_closed_today:DC.ops_closed_today,
+        profit_mru:DC.profit_mru||0})});
       if(r.status===409){$('#dcNote').style.display='block';
         $('#dcNote').textContent='ℹ️ سبق إقفال اليوم — أُصدر التقرير فقط';}
       else if(!r.ok)throw new Error(r.status);
@@ -1119,7 +1212,8 @@ async function dayPdf(D){
             ['إيصالات اليوم',String(D.receipts_n),'#0B2447'],
             ['فجوة مفتوحة',fmt(D.gap_open,0)+' AOA',D.gap_open?'#B00020':'#0B7A3B'],
             ['ناقصة / مكتملة',D.ops_open+' / '+D.ops_covered,'#0A56B8'],
-            ['عند المورد / أكّد',D.ops_sent+' / '+D.ops_confirmed,'#0A56B8']];
+            ['عند المورد / أكّد',D.ops_sent+' / '+D.ops_confirmed,'#0A56B8'],
+            ['ربح اليوم',fmt(D.profit_mru||0,0)+' MRU','#0B7A3B']];
   var kw=(W-120-40)/3,y0=300;
   kpis.forEach(function(k,i){
     var col=i%3,row=Math.floor(i/3);
@@ -1275,7 +1369,7 @@ function go(t){
   if(t==='ops'&&!OPS_DATA)loadOps();
   if(t==='clients'&&!CLIENTS)loadClients();
   if(t==='archive'&&!ARCH)loadArchive();
-  if(t==='profit'&&!PROF)loadProfit();
+  if(t==='profit'){if(!PROF)loadProfit();if(!OPSPROF)loadOpsProfit();}
 }
 async function loadArchive(){
   try{
