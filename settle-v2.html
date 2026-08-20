@@ -480,10 +480,7 @@ async function boot(){
   if((location.hash||'')==='#clients')go('clients');
   loadGroups();
   syncPriced().then(function(n){if(n)loadGroups();});
-  if(!sessionStorage.getItem('bdl-imp')){
-    sessionStorage.setItem('bdl-imp','1');
-    importLegacy().then(function(n){if(n)loadGroups();});
-  }
+  importLegacy().then(function(n){if(n)loadGroups();}); /* idempotent — يلتقط أي وصل جديد فورًا */
 }
 /* ═ ربط قناة التسعير: عمليات المالك المسعّرة (archive_docs) → bdl_transactions ═
    ١) كل عملية سُعِّرت في صندوق المالك تُحقن كوانزاها هنا تلقائيًا
