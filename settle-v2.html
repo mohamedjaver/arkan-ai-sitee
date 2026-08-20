@@ -647,7 +647,9 @@ function renderTxs(k){
       '<div class="tx-i"><div class="tx-r">'+esc(t.ref)+'</div>'+
       '<div class="tx-d num">'+d.toLocaleDateString('en-GB')+' '+d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})+
       archRateTxt(t)+'</div></div>'+
-      '<span class="st '+t.status+'">'+(t.status==='open'?'مفتوحة':t.status==='settling'?'قيد التسوية':'تمت')+'</span>'+
+      '<span class="st '+t.status+'">'+(t.status==='open'?'مفتوحة'
+        :t.status==='settling'?((t.meta&&t.meta.paid_aoa)?'جزئية '+Math.round(100*t.meta.paid_aoa/Math.max(1,t.settle_amount))+'%':'قيد التسوية')
+        :'تمت')+'</span>'+
       '<div class="tx-a num">'+fmt(t.amount)+' '+esc(t.ccy)+
       (t.settle_amount?'<small>'+fmt(t.settle_amount)+' '+esc(t.settle_ccy||'')+'</small>':'')+'</div></div>';
   }).join('')||'<div class="tx" style="color:var(--muted)">لا عمليات</div>';
@@ -895,6 +897,7 @@ function openSettle(){
   var dueCcy=Object.keys(bys)[0]||'';
   SS.due=bys[dueCcy]||0;SS.dueCcy=dueCcy;SS.paid=0;
   SS.baseDue=SS.due;SS.liveRate=0;
+  SS.prevPaid=s.reduce(function(a,t){return a+((t.meta&&Number(t.meta.paid_aoa))||0);},0);
   $('#ssN').textContent=s.length;
   $('#ssIn').textContent=Object.keys(by).map(function(c){return fmt(by[c])+' '+c;}).join(' + ');
   $('#ssDue').textContent=SS.due
@@ -907,7 +910,7 @@ function openSettle(){
   $('#ovl-settle').classList.add('on');
 }
 function updMatch(){
-  SS.paid=0;
+  SS.paid=SS.prevPaid||0;
   RCPTS.forEach(function(r){var p=r.parsed;
     if(p&&p.amount&&(!r.dup||r.ok))SS.paid+=Number(p.amount)||0;});
   $('#ssPaid').textContent=fmt(SS.paid,2)+(SS.dueCcy?' '+SS.dueCcy:'');
@@ -927,6 +930,15 @@ async function commitSettle(){
   await ssPersistLiveRate(); /* السعر الحي يُحفظ أولًا */
   var s=selected();if(!s.length)return;
   if(RCPTS.some(function(r){return r.dup;})){toast('⛔ إيصال مستخدم من قبل — احذفه للمتابعة');return;}
+  /* ═ بوابة النقص: «تمت» لا تُمنح إلا بتغطية كاملة ═ */
+  var shortfall=(SS.due||0)-(SS.paid||0);
+  var isPartial=SS.due>0&&shortfall>1;
+  if(isPartial){
+    if(!confirm('⚠️ المدفوع '+fmt(SS.paid,0)+' من '+fmt(SS.due,0)+' '+SS.dueCcy+
+      '\nناقص: '+fmt(shortfall,0)+' '+SS.dueCcy+
+      '\n\nتسوية جزئية؟ العملية ستبقى «قيد التسوية» بالمتبقي حتى تكتمل.'))return;
+  }
+  if(SS.due>0&&SS.paid<=0){toast('لا إيصالات مدفوعة — ارفع الإيصالات أولًا');return;}
   $('#doSettle').disabled=true;
   try{
     /* حفظ الإيصالات أولًا */
@@ -941,12 +953,25 @@ async function commitSettle(){
         var rq=await fetch(SB+'/bdl_receipts?select=id&fingerprint=eq.'+rc.fp+'&limit=1',{headers:H()});
         var jq=rq.ok?await rq.json():[];if(jq[0])rids.push(jq[0].id);}
     }
-    /* التسوية الذرية */
-    var r=await fetch(SB+'/rpc/bdl_settle',{method:'POST',headers:H(),
-      body:JSON.stringify({p_tx:s.map(function(t){return t.id;}),p_receipts:rids,p_note:$('#sNote').value||null})});
-    if(!r.ok){var et=await r.text();throw new Error(et.slice(0,120));}
-    var st=await r.json();
-    toast('تمت التسوية ✓ '+(st.ref||''));
+    if(isPartial){
+      /* جزئية: العملية تبقى مفتوحة «قيد التسوية» والمدفوع يتراكم في السجل */
+      for(var k=0;k<s.length;k++){var t=s[k];
+        var prev=(t.meta&&Number(t.meta.paid_aoa))||0;
+        var body2={status:'settling',
+          meta:Object.assign({},t.meta||{},{paid_aoa:prev+SS.paid,
+            rcpt_ids:((t.meta&&t.meta.rcpt_ids)||[]).concat(rids),
+            partial_at:new Date().toISOString()})};
+        await fetch(SB+'/bdl_transactions?id=eq.'+t.id,{method:'PATCH',headers:H(),body:JSON.stringify(body2)});
+      }
+      toast('سُجّلت جزئية — المتبقي '+fmt(shortfall,0)+' '+SS.dueCcy);
+    }else{
+      /* التسوية الذرية الكاملة */
+      var r=await fetch(SB+'/rpc/bdl_settle',{method:'POST',headers:H(),
+        body:JSON.stringify({p_tx:s.map(function(t){return t.id;}),p_receipts:rids,p_note:$('#sNote').value||null})});
+      if(!r.ok){var et=await r.text();throw new Error(et.slice(0,120));}
+      var st=await r.json();
+      toast('تمت التسوية ✓ '+(st.ref||''));
+    }
     SEL={};TXCACHE={};RCPTS=[];closeOvl('settle');loadGroups();ARCH=null;PROF=null;
   }catch(e){toast('فشل: '+e.message);}
   $('#doSettle').disabled=false;
@@ -1490,7 +1515,9 @@ function renderArchive(){
       '<div style="font-size:13px;font-weight:700;margin-top:2px">'+esc(t.customer_name)+
       (t.account_number&&t.account_number!=='—'?' <span class="acc" style="font-size:10.5px;color:var(--muted)">****'+esc(String(t.account_number).slice(-4))+'</span>':'')+'</div>'+
       '<div class="tx-d num">'+d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})+archRateTxt(t)+'</div></div>'+
-      '<span class="st '+t.status+'">'+(t.status==='open'?'مفتوحة':t.status==='settling'?'قيد التسوية':'تمت')+'</span>'+
+      '<span class="st '+t.status+'">'+(t.status==='open'?'مفتوحة'
+        :t.status==='settling'?((t.meta&&t.meta.paid_aoa)?'جزئية '+Math.round(100*t.meta.paid_aoa/Math.max(1,t.settle_amount))+'%':'قيد التسوية')
+        :'تمت')+'</span>'+
       '<div class="tx-a num">'+fmt(t.amount)+' '+esc(t.ccy)+
       (t.settle_amount?'<small>'+fmt(t.settle_amount,0)+' '+esc(t.settle_ccy||'')+'</small>':'<small style="color:var(--bad)">بلا سعر</small>')+'</div></div>');
   });
