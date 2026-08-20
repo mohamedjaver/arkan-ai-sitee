@@ -1473,6 +1473,19 @@ async function loadArchive(){
   }catch(e){ARCH=[];}
   renderArchive();
 }
+/* ═ حذف تسوية — إعادة فتح ذرّية عبر bdl_unsettle ═ */
+async function unsettle(stId,ref){
+  if(!confirm('حذف التسوية التي تشمل «'+ref+'»؟\n\n• كل عمليات هذه التسوية تعود «مفتوحة»\n• الإيصالات تتحرر لإعادة الاستخدام\n• الربح المرتبط يُحذف من التقارير\n\nثم تعيد تسويتها بشكل صحيح.'))return;
+  try{
+    var r=await fetch(SB+'/rpc/bdl_unsettle',{method:'POST',headers:H(),
+      body:JSON.stringify({p_st:stId})});
+    if(r.status===404){toast('ثبّت أولًا bdl-unsettle.sql في Supabase');return;}
+    if(!r.ok){var et=await r.text();throw new Error(et.slice(0,100));}
+    var j=await r.json();
+    toast('أُعيد فتح '+(j.reopened||'')+' عملية ✓ — سوِّها الآن بشكل صحيح');
+    ARCH=null;TXCACHE={};PROF=null;loadArchive();loadGroups();
+  }catch(e){toast('تعذّر الحذف: '+e.message);}
+}
 var ARCH_ST='ALL';
 function setArchSt(st){ARCH_ST=st;
   document.querySelectorAll('#archChips .chip').forEach(function(b){b.classList.toggle('on',b.dataset.st===st);});
@@ -1519,7 +1532,11 @@ function renderArchive(){
         :t.status==='settling'?((t.meta&&t.meta.paid_aoa)?'جزئية '+Math.round(100*t.meta.paid_aoa/Math.max(1,t.settle_amount))+'%':'قيد التسوية')
         :'تمت')+'</span>'+
       '<div class="tx-a num">'+fmt(t.amount)+' '+esc(t.ccy)+
-      (t.settle_amount?'<small>'+fmt(t.settle_amount,0)+' '+esc(t.settle_ccy||'')+'</small>':'<small style="color:var(--bad)">بلا سعر</small>')+'</div></div>');
+      (t.settle_amount?'<small>'+fmt(t.settle_amount,0)+' '+esc(t.settle_ccy||'')+'</small>':'<small style="color:var(--bad)">بلا سعر</small>')+
+      ((t.status==='settled'||t.status==='done')&&t.settlement_id
+        ?'<button onclick="unsettle(\''+t.settlement_id+'\',\''+esc(t.ref)+'\')" style="display:block;margin-top:6px;border:1px solid #F5B5B0;border-radius:8px;background:#FFF5F5;color:#B00020;font-weight:800;font-size:10.5px;padding:5px 9px;font-family:inherit;cursor:pointer">↩ حذف التسوية</button>'
+        :'')+
+      '</div></div>');
   });
   if(buf.length)out.push(dayHead(day)+buf.join(''));
   $('#archList').innerHTML=out.join('')||'<div class="empty">لا نتائج</div>';
