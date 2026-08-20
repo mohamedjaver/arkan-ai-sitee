@@ -58,13 +58,13 @@
     const NAVY = '#003B8F', GRAD = 'linear-gradient(120deg,#00B5FF,#0058D9 30%,#003B8F 58%,#00B5FF)';
 
     const fab = el('button',
-      `position:fixed;inset-inline-end:16px;bottom:calc(env(safe-area-inset-bottom,0px) + 84px);z-index:99992;width:54px;height:54px;border-radius:50%;border:0;cursor:pointer;color:#fff;display:grid;place-items:center;background:${GRAD};box-shadow:0 14px 32px -10px rgba(0,88,217,.55);transition:transform .18s`,
+      `position:fixed;inset-inline-end:16px;bottom:calc(env(safe-area-inset-bottom,0px) + 104px);z-index:99992;width:54px;height:54px;border-radius:50%;border:0;cursor:pointer;color:#fff;display:grid;place-items:center;background:${GRAD};box-shadow:0 14px 32px -10px rgba(0,88,217,.55);transition:transform .18s`,
       '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3Z"/><path d="M19 15l.9 2.6L22.5 18.5l-2.6.9L19 22l-.9-2.6-2.6-.9 2.6-.9L19 15Z"/></svg>');
     fab.id = 'ark-ai-fab'; fab.title = 'BDL AI';
     document.body.appendChild(fab);
 
     const panel = el('div',
-      `position:fixed;inset-inline-end:12px;bottom:calc(env(safe-area-inset-bottom,0px) + 148px);z-index:99993;width:min(92vw,390px);max-height:min(70vh,560px);display:none;flex-direction:column;background:#fff;border:1px solid #DCE8F8;border-radius:20px;box-shadow:0 40px 90px -30px rgba(7,29,73,.45);overflow:hidden;font-family:'IBM Plex Sans Arabic','Manrope',sans-serif`);
+      `position:fixed;inset-inline-end:12px;bottom:calc(env(safe-area-inset-bottom,0px) + 168px);z-index:99993;width:min(92vw,390px);max-height:min(70vh,560px);display:none;flex-direction:column;background:#fff;border:1px solid #DCE8F8;border-radius:20px;box-shadow:0 40px 90px -30px rgba(7,29,73,.45);overflow:hidden;font-family:'IBM Plex Sans Arabic','Manrope',sans-serif`);
     panel.innerHTML = `
       <div style="display:flex;align-items:center;gap:10px;padding:13px 16px;background:${NAVY};color:#fff">
         <div style="width:30px;height:30px;border-radius:9px;background:${GRAD};display:grid;place-items:center">
