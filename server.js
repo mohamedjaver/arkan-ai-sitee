@@ -808,6 +808,12 @@ async function verifyOwner(req) {
   return p;
 }
 /* ═══ سجل العميل الموحّد: طلباته + معاملاته — بصلاحية الخادم (يتجاوز قيود Rules بأمان) ═══ */
+/* فحص صحي مفتوح — يؤكد أن نسخة الخادم الحالية تحمل نقاط البوابة */
+app.get('/admin/health', (req, res) => {
+  res.json({ ok: true, build: '1063', fb: fbReady,
+    endpoints: ['list-users', 'list-requests', 'approve-user', 'my-requests'] });
+});
+
 app.post('/account/my-requests', async (req, res) => {
   try {
     if (!fbReady) return res.status(503).json({ ok: false, err: 'service' });
