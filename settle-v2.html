@@ -1034,6 +1034,16 @@ async function commitSettle(){
   await ssPersistLiveRate(); /* السعر الحي يُحفظ أولًا */
   var s=selected();if(!s.length)return;
   if(RCPTS.some(function(r){return r.dup;})){toast('⛔ إيصال مستخدم من قبل — احذفه للمتابعة');return;}
+  /* ═ بوابة الزيادة: مدفوع أكثر من المستحق = نحن مدينون — لا إقفال حتى يستوي ═ */
+  var surplus=(SS.paid||0)-(SS.due||0);
+  if(SS.due>0&&surplus>1){
+    alert('⚠️ المدفوع '+fmt(SS.paid,0)+' من '+fmt(SS.due,0)+' '+SS.dueCcy+
+      '\nزائد: '+fmt(surplus,2)+' '+SS.dueCcy+
+      '\n\nلا تُقفل تسوية بمبلغ زائد — الفارق دَين علينا للعميل.'+
+      '\nالحلول: صحّح مبلغ إيصال من خانته، أو احذف إيصالًا زائدًا، أو راجع السعر.'+
+      '\nتبقى العملية في التسوية حتى تتطابق.');
+    return;
+  }
   /* ═ بوابة النقص: «تمت» لا تُمنح إلا بتغطية كاملة ═ */
   var shortfall=(SS.due||0)-(SS.paid||0);
   var isPartial=SS.due>0&&shortfall>1;
