@@ -1592,6 +1592,7 @@ function mrbPick(){
   MRB_CUR=MRB_BANKS[MRB_BANKS.length-1];
   document.getElementById('mrbBankName').textContent='';
   document.getElementById('mrbSheet').style.display='block';
+  try{mrbResetFlow();}catch(e){}
   document.getElementById('mrbFile').click();
 }
 function mrbManual(ev){
@@ -1599,6 +1600,7 @@ function mrbManual(ev){
   MRB_CUR=MRB_BANKS[MRB_BANKS.length-1];
   document.getElementById('mrbBankName').textContent='';
   document.getElementById('mrbSheet').style.display='block';
+  try{mrbResetFlow();}catch(e){}
 }
 function mrbClose(){document.getElementById('mrbSheet').style.display='none';}
 
@@ -1894,6 +1896,7 @@ async function mrbReadReceipt(file){
   const th=document.getElementById('mrbThumb'); th.src=url; th.style.display='block';
   const im=new Image(); im.onload=()=>{MRB_IMG=im;MRB_IMG_W=im.width;MRB_IMG_H=im.height;MRB_CROP=null;}; im.src=url;
   btn.textContent='⏳ جارٍ قراءة الإيصال…'; btn.disabled=true; msg.textContent='';
+  mrbResetFlow(); /* إيصال جديد = عملية جديدة — الدورة من أولها */
   try{
     const p=await (window.ArkanRead?window.ArkanRead.readAmount(file):null);
     if(p&&p.amount){ document.getElementById('mrbAmt').value=p.amount; }
@@ -1903,7 +1906,7 @@ async function mrbReadReceipt(file){
     MRB_CUR=mrbBankOf((p&&p.bank||'')+' '+(p&&p.name||''));
     document.getElementById('mrbBankName').textContent=MRB_CUR.n||'';
     MRB_CCY=String((p&&p.ccy)||'MRU').toUpperCase().replace('$','USD').replace('UM','MRU').replace('KZ','AOA');
-    if(MRB_CCY==='USD')MRB_CCY='USDT';
+    if(MRB_CCY==='USD'||MRB_CCY==='USDC')MRB_CCY='USDT';
     var _cl=document.getElementById('mrbCcyLbl');if(_cl)_cl.textContent=MRB_CCY;
     msg.style.color='#0B7A3B';
     msg.textContent=p&&p.amount?('✓ قُرئ: '+(MRB_CUR.n?MRB_CUR.n+' · ':'')+Number(p.amount).toLocaleString()+' '+(p.ccy||'MRU')+(p.txn?' · عملية '+p.txn:'')+(p.receiver?' · حساب '+p.receiver:'')):'لم تُقرأ تلقائيًا — أكمل الخانات يدويًا';
@@ -1961,6 +1964,13 @@ async function mrbPush(name){
       document.getElementById('mrbTo').value||'',
       amt, MRB_CCY);
   }catch(e){}
+}
+function mrbResetFlow(){
+  var b=document.getElementById('mrbDoneBtn');
+  if(b){b.disabled=false;
+    b.textContent='✓ تم التحويل — قيدها في التسوية';
+    b.style.background='#0B7A3B';}
+  var a=document.getElementById('mrbActs');if(a)a.style.display='none';
 }
 function toastSafe(m){
   var f=window.toast;if(typeof f==='function'){f(m);return;}
