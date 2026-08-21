@@ -370,7 +370,8 @@ input,select{font-family:inherit;color:var(--ink)}
       <div class="row"><span>المستلم من العملاء</span><b class="num" id="ssIn">—</b></div>
       <div class="row hi"><span>المستحق (كوانزا)</span><b class="num" id="ssDue">—</b></div>
       <div id="ssRateBox" style="display:none;background:#F2F8FF;border:1px solid #C9DFFA;border-radius:14px;padding:12px;margin:10px 0">
-        <div style="font-size:12.5px;font-weight:800;color:#0A56B8;margin-bottom:10px">تسعير العملية — يحدد المستحق بالكوانزا</div>
+        <div style="font-size:12.5px;font-weight:800;color:#0A56B8;margin-bottom:10px">تسعير العملية — يحدد المستحق</div>
+        <select id="ssPair" onchange="ssPairUi();ssRatePrev()" style="display:none;width:100%;box-sizing:border-box;height:50px;border:2px solid #0A56B8;border-radius:0;background:#fff;font-family:inherit;font-size:14.5px;font-weight:800;color:#0B2447;padding:0 12px;margin-bottom:10px"></select>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
           <div><div class="clabel" style="font-size:12.5px;margin-bottom:6px">سعر البيع (أوقية قديمة)</div>
             <input id="ssRs" inputmode="decimal" placeholder="0.360" oninput="ssRatePrev()" dir="ltr"
@@ -834,52 +835,91 @@ function renderRcpts(){
 var SS={due:0,dueCcy:'',paid:0};
 function ssUnpriced(){
   return selected().filter(function(t){
-    return t&&t.ccy==='MRU'&&(!t.settle_amount||((t.settle_ccy||'AOA')===t.ccy));});
+    return t&&(!t.settle_amount||((t.settle_ccy||'AOA')===t.ccy));});
+}
+/* زوج التسعير — نفس فكرة جسر تحويل: من عملة العملية إلى كوانزا أو أوقية */
+function ssPairOpts(){
+  var u=ssUnpriced();if(!u.length)return [];
+  var base=(u[0].ccy||'MRU').toUpperCase();
+  if(base==='MRU')return [
+    {v:'MRU_AOA_OLD',t:'أوقية ← كوانزا (سعر الأوقية القديمة)',ph_s:'0.360',ph_b:'0.350',base:'MRU',tgt:'AOA'}];
+  return [
+    {v:base+'_AOA',t:base+' ← كوانزا (كوانزا لكل 1 '+base+')',ph_s:'900',ph_b:'880',base:base,tgt:'AOA'},
+    {v:base+'_MRU',t:base+' ← أوقية (أوقية جديدة لكل 1 '+base+')',ph_s:'42.4',ph_b:'42.0',base:base,tgt:'MRU'}];
+}
+function ssPairCur(){
+  var o=ssPairOpts();if(!o.length)return null;
+  var v=($('#ssPair').value)||o[0].v;
+  return o.find(function(x){return x.v===v;})||o[0];
+}
+function ssPairUi(){
+  var o=ssPairOpts(),sel=$('#ssPair');
+  if(o.length<=1&&o[0]&&o[0].v==='MRU_AOA_OLD'){sel.style.display='none';}
+  else{sel.style.display='block';}
+  if(sel.options.length!==o.length||[].some.call(sel.options,function(op,i){return op.value!==o[i].v;})){
+    sel.innerHTML=o.map(function(x){return '<option value="'+x.v+'">'+x.t+'</option>';}).join('');
+  }
+  var p=ssPairCur();if(!p)return;
+  $('#ssRs').placeholder=p.ph_s;$('#ssRb').placeholder=p.ph_b;
+}
+function ssConv(amt,r,p){ /* كم في العملة الهدف */
+  if(p.v==='MRU_AOA_OLD')return Number(amt)*10/r;
+  return Number(amt)*r;
+}
+function ssRateOk(r,p){
+  if(!p)return false;
+  if(p.v==='MRU_AOA_OLD')return r>=0.15&&r<=0.9;
+  return r>0; /* أزواج مباشرة: أي سعر موجب */
 }
 function ssRatePrev(){
   var r=parseFloat($('#ssRs').value)||0;
-  var u=ssUnpriced();
-  if(r>=0.15&&r<=0.9&&u.length){
-    var tot=u.reduce(function(s,t){return s+Number(t.amount)*10/r;},0);
-    /* المستحق يتحدّث فورًا — والعداد والباقي معه */
-    SS.liveRate=r;
-    SS.due=(SS.baseDue||0)+tot;SS.dueCcy='AOA';
-    $('#ssDue').textContent=fmt(SS.due,2)+' AOA';
+  var u=ssUnpriced(),p=ssPairCur();
+  if(p&&ssRateOk(r,p)&&u.length){
+    var tot=u.reduce(function(s,t){return s+ssConv(t.amount,r,p);},0);
+    SS.liveRate=r;SS.livePair=p;
+    SS.due=(SS.baseDue||0)+tot;SS.dueCcy=p.tgt;
+    $('#ssDue').textContent=fmt(SS.due,2)+' '+p.tgt;
     $('#ssRPrev').textContent='✓ يُحفظ السعر تلقائيًا عند تأكيد التسوية';
     updMatch();
   }else{
-    SS.liveRate=0;SS.due=SS.baseDue||0;SS.dueCcy=SS.due?'AOA':'';
-    $('#ssDue').textContent=SS.due?fmt(SS.due,2)+' AOA':'— أدخل السعر أدناه';
+    SS.liveRate=0;SS.due=SS.baseDue||0;SS.dueCcy=SS.due?(SS.dueCcy||'AOA'):'';
+    $('#ssDue').textContent=SS.due?fmt(SS.due,2)+' '+SS.dueCcy:'— أدخل السعر أدناه';
     $('#ssRPrev').textContent='';updMatch();
   }
 }
+function ssRateBody(t,r,rb,p){
+  var due=Math.round(ssConv(t.amount,r,p)*100)/100;
+  var body={settle_amount:due,settle_ccy:p.tgt,
+    rate:(p.v==='MRU_AOA_OLD')?(r/10):(1/r)}; /* rate = وحدة الاستلام لكل وحدة هدف */
+  if(rb>0)body.meta=Object.assign({},t.meta||{},{rate_cost:rb,pair:p.v});
+  else body.meta=Object.assign({},t.meta||{},{pair:p.v});
+  return body;
+}
 async function ssRateApply(){
-  var r=parseFloat($('#ssRs').value)||0;
-  if(r<0.15||r>0.9){toast('سعر الأوقية القديمة مثل 0.360');return;}
+  var r=parseFloat($('#ssRs').value)||0,p=ssPairCur();
+  if(!ssRateOk(r,p)){toast(p&&p.v==='MRU_AOA_OLD'?'سعر الأوقية القديمة مثل 0.360':'أدخل سعرًا صحيحًا');return;}
   var rb=parseFloat($('#ssRb').value)||0;
   var u=ssUnpriced();
   if(!u.length){toast('كل العمليات مسعّرة');return;}
   try{
     for(var i=0;i<u.length;i++){var t=u[i];
-      var body={rate:r/10,settle_amount:Math.round(Number(t.amount)*10/r*100)/100,settle_ccy:'AOA'};
-      if(rb>0)body.meta=Object.assign({},t.meta||{},{rate_cost:rb});
-      var p=await fetch(SB+'/bdl_transactions?id=eq.'+t.id,{method:'PATCH',headers:H(),body:JSON.stringify(body)});
-      if(p.ok)Object.assign(t,body);
+      var body=ssRateBody(t,r,rb,p);
+      var rq=await fetch(SB+'/bdl_transactions?id=eq.'+t.id,{method:'PATCH',headers:H(),body:JSON.stringify(body)});
+      if(rq.ok)Object.assign(t,body);
     }
     toast('سُعّرت '+u.length+' عملية ✓');
-    SS.baseDue=SS.due; /* صار محفوظًا — بلا إعادة فتح، الإيصالات باقية */
+    SS.baseDue=SS.due;
     $('#ssRateBox').style.display='none';
   }catch(e){toast('تعذّر التسعير');}
 }
 /* حفظ السعر تلقائيًا ضمن تأكيد التسوية إن لم يُطبَّق يدويًا */
 async function ssPersistLiveRate(){
-  if(!SS.liveRate)return;
-  var r=SS.liveRate,rb=parseFloat($('#ssRb').value)||0,u=ssUnpriced();
+  if(!SS.liveRate||!SS.livePair)return;
+  var r=SS.liveRate,p=SS.livePair,rb=parseFloat($('#ssRb').value)||0,u=ssUnpriced();
   for(var i=0;i<u.length;i++){var t=u[i];
-    var body={rate:r/10,settle_amount:Math.round(Number(t.amount)*10/r*100)/100,settle_ccy:'AOA'};
-    if(rb>0)body.meta=Object.assign({},t.meta||{},{rate_cost:rb});
-    try{var p=await fetch(SB+'/bdl_transactions?id=eq.'+t.id,{method:'PATCH',headers:H(),body:JSON.stringify(body)});
-      if(p.ok)Object.assign(t,body);}catch(e){}
+    var body=ssRateBody(t,r,rb,p);
+    try{var rq=await fetch(SB+'/bdl_transactions?id=eq.'+t.id,{method:'PATCH',headers:H(),body:JSON.stringify(body)});
+      if(rq.ok)Object.assign(t,body);}catch(e){}
   }
   SS.liveRate=0;
 }
@@ -895,7 +935,8 @@ function openSettle(){
     if(sa)bys[scy]=(bys[scy]||0)+sa;else noRate++;});
   var dueCcy=Object.keys(bys)[0]||'';
   SS.due=bys[dueCcy]||0;SS.dueCcy=dueCcy;SS.paid=0;
-  SS.baseDue=SS.due;SS.liveRate=0;
+  SS.baseDue=SS.due;SS.liveRate=0;SS.livePair=null;
+  try{ssPairUi();}catch(e){}
   SS.prevPaid=s.reduce(function(a,t){return a+((t.meta&&Number(t.meta.paid_aoa))||0);},0);
   $('#ssN').textContent=s.length;
   $('#ssIn').textContent=Object.keys(by).map(function(c){return fmt(by[c])+' '+c;}).join(' + ');
