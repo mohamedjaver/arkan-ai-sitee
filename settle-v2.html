@@ -381,6 +381,10 @@ input,select{font-family:inherit;color:var(--ink)}
               style="width:100%;box-sizing:border-box;height:58px;border:2px solid #C9DFFA;border-radius:0;background:#fff;padding:0 14px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:22px;font-weight:700;color:#003B8F;letter-spacing:.5px;outline:none"></div>
         </div>
         <button onclick="ssRateApply()" style="width:100%;margin-top:10px;height:50px;border:0;border-radius:0;background:var(--navy);color:#fff;font-weight:800;font-size:14px;font-family:inherit;cursor:pointer">تطبيق</button>
+        <div id="ssPerOp" style="display:none;margin-top:10px;border-top:1.5px dashed #C9DFFA;padding-top:10px">
+          <div style="font-size:11.5px;font-weight:800;color:#5C7699;margin-bottom:8px">سعر كل عملية (عدّل ما يلزم — الباقي يتبع الرئيسي)</div>
+          <div id="ssPerOpList"></div>
+        </div>
         <div id="ssRPrev" class="num" style="margin-top:8px;font-size:12.5px;color:#0A56B8"></div>
       </div>
       <div class="row"><span>المدفوع من الإيصالات</span><b class="num" id="ssPaid">0</b></div>
@@ -862,6 +866,35 @@ function ssPairUi(){
   }
   var p=ssPairCur();if(!p)return;
   $('#ssRs').placeholder=p.ph_s;$('#ssRb').placeholder=p.ph_b;
+  ssPerOpUi();
+}
+/* أسعار فردية لكل عملية — الرئيسي يملأ غير المعدَّل */
+function ssPerOpUi(){
+  var u=ssUnpriced(),box=$('#ssPerOp'),list=$('#ssPerOpList');
+  SS.opRates=SS.opRates||{};SS.opDirty=SS.opDirty||{};
+  if(u.length<2){box.style.display='none';list.innerHTML='';return;}
+  box.style.display='block';
+  list.innerHTML=u.map(function(t){
+    var v=SS.opDirty[t.id]?(SS.opRates[t.id]||''):($('#ssRs').value||'');
+    return '<div style="display:grid;grid-template-columns:1fr 120px;gap:8px;align-items:center;margin-bottom:7px">'+
+      '<div style="min-width:0"><div class="num" style="font-size:12px;color:#0B2447;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(String(t.ref||'').toUpperCase())+'</div>'+
+      '<div class="num" style="font-size:11px;color:#5C7699">'+fmt(t.amount,0)+' '+esc(t.ccy)+'</div></div>'+
+      '<input inputmode="decimal" dir="ltr" value="'+v+'" data-op="'+t.id+'" oninput="ssOpRate(this)"'+
+      ' style="height:44px;border:1.5px solid '+(SS.opDirty[t.id]?'#0A56B8':'#C9DFFA')+';border-radius:0;background:#fff;text-align:center;font-family:\'IBM Plex Mono\',monospace;font-size:16px;font-weight:700;color:#003B8F;outline:none">'+
+      '</div>';
+  }).join('');
+}
+function ssOpRate(inp){
+  SS.opRates=SS.opRates||{};SS.opDirty=SS.opDirty||{};
+  var id=inp.dataset.op,v=parseFloat(inp.value)||0;
+  if(inp.value===''){delete SS.opDirty[id];delete SS.opRates[id];}
+  else{SS.opDirty[id]=true;SS.opRates[id]=v;}
+  inp.style.borderColor=SS.opDirty[id]?'#0A56B8':'#C9DFFA';
+  ssRatePrev();
+}
+function ssOpRateOf(t,main){
+  if(SS.opDirty&&SS.opDirty[t.id]&&SS.opRates[t.id]>0)return SS.opRates[t.id];
+  return main;
 }
 function ssConv(amt,r,p){ /* كم في العملة الهدف */
   if(p.v==='MRU_AOA_OLD')return Number(amt)*10/r;
@@ -875,12 +908,20 @@ function ssRateOk(r,p){
 function ssRatePrev(){
   var r=parseFloat($('#ssRs').value)||0;
   var u=ssUnpriced(),p=ssPairCur();
-  if(p&&ssRateOk(r,p)&&u.length){
-    var tot=u.reduce(function(s,t){return s+ssConv(t.amount,r,p);},0);
-    SS.liveRate=r;SS.livePair=p;
+  /* الرئيسي يملأ الحقول الفردية غير المعدلة */
+  if(u.length>=2){
+    document.querySelectorAll('#ssPerOpList input[data-op]').forEach(function(inp){
+      if(!(SS.opDirty&&SS.opDirty[inp.dataset.op]))inp.value=$('#ssRs').value||'';
+    });
+  }
+  var allOk=p&&u.length&&u.every(function(t){return ssRateOk(ssOpRateOf(t,r)||0,p);});
+  if(allOk){
+    var tot=u.reduce(function(s,t){return s+ssConv(t.amount,ssOpRateOf(t,r),p);},0);
+    var nd=Object.keys(SS.opDirty||{}).length;
+    SS.liveRate=r||1;SS.livePair=p;
     SS.due=(SS.baseDue||0)+tot;SS.dueCcy=p.tgt;
     $('#ssDue').textContent=fmt(SS.due,2)+' '+p.tgt;
-    $('#ssRPrev').textContent='✓ يُحفظ السعر تلقائيًا عند تأكيد التسوية';
+    $('#ssRPrev').textContent='✓ يُحفظ تلقائيًا عند التأكيد'+(nd?' — '+nd+' عملية بسعر خاص':'');
     updMatch();
   }else{
     SS.liveRate=0;SS.due=SS.baseDue||0;SS.dueCcy=SS.due?(SS.dueCcy||'AOA'):'';
@@ -889,6 +930,7 @@ function ssRatePrev(){
   }
 }
 function ssRateBody(t,r,rb,p){
+  r=ssOpRateOf(t,r); /* السعر الفردي إن وُجد */
   var due=Math.round(ssConv(t.amount,r,p)*100)/100;
   var body={settle_amount:due,settle_ccy:p.tgt,
     rate:(p.v==='MRU_AOA_OLD')?(r/10):(1/r)}; /* rate = وحدة الاستلام لكل وحدة هدف */
@@ -937,6 +979,7 @@ function openSettle(){
   var dueCcy=Object.keys(bys)[0]||'';
   SS.due=bys[dueCcy]||0;SS.dueCcy=dueCcy;SS.paid=0;
   SS.baseDue=SS.due;SS.liveRate=0;SS.livePair=null;
+  SS.opRates={};SS.opDirty={};
   try{ssPairUi();}catch(e){}
   SS.prevPaid=s.reduce(function(a,t){return a+((t.meta&&Number(t.meta.paid_aoa))||0);},0);
   $('#ssN').textContent=s.length;
