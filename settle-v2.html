@@ -821,8 +821,12 @@ async function addReceipts(files){
     var f=files[i];
     var fp=await sha256(await f.arrayBuffer());
     var dup=false;
-    try{var r=await fetch(SB+'/bdl_receipts?select=id,used_count&fingerprint=eq.'+fp+'&limit=1',{headers:H()});
-      var j=r.ok?await r.json():[];dup=!!j[0];}catch(e){}
+    try{
+      /* حيوية الاستخدام: الإيصال «مستخدم» فقط إن كان مربوطًا بتسوية ما زالت قائمة */
+      var r=await fetch(SB+'/bdl_receipts?select=id,bdl_settlement_receipts(settlement_id)&fingerprint=eq.'+fp+'&limit=3',{headers:H()});
+      var j=r.ok?await r.json():[];
+      dup=j.some(function(x){return (x.bdl_settlement_receipts||[]).length>0;});
+    }catch(e){}
     var rec={file:f,fp:fp,dup:dup,ok:!dup,parsed:null,id:null};
     RCPTS.push(rec);renderRcpts();
     readReceipt(f).then(function(rec){return function(p){rec.parsed=p;renderRcpts();updMatch();};}(rec));
