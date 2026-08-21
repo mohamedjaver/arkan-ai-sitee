@@ -827,7 +827,7 @@ setInterval(function(){try{
     window.__bdlOwner={phone:String(SESSION.phone),pin:String(USER.pin)};
 }catch(e){}},1500);
 /* تصدير للدوال المستدعاة من onclick المضمّن — إلزامي داخل module */
-Object.assign(window,{mrbPickContact,mrbBdlList,mrbUseClient,mrbPhoneAutofill,rcpFill,rcpSuggest,
+Object.assign(window,{toast,mrbPickContact,mrbBdlList,mrbUseClient,mrbPhoneAutofill,rcpFill,rcpSuggest,
   acLoadClients,acLoadRequests,acApprove,bnPickContact,changePinUI:window.changePinUI||undefined});
 $('reqBtn').onclick = async () => {
   const amt = parseAmt(), out = $('toAmt').value;
@@ -1521,7 +1521,7 @@ async function ownerSetPin(){
 <div id="mrbSheet" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(4,20,50,.55);backdrop-filter:blur(4px)">
   <div style="position:absolute;left:0;right:0;bottom:0;background:#fff;border-radius:18px 18px 0 0;padding:20px 18px 30px;max-height:86vh;overflow:auto">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-      <b style="font-size:17px">وصل تحويل <span id="mrbBankName"></span> <small style="color:#B8C9E2;font-weight:500;font-size:10px">v23</small></b>
+      <b style="font-size:17px">وصل تحويل <span id="mrbBankName"></span> <small style="color:#B8C9E2;font-weight:500;font-size:10px">v24</small></b>
       <button onclick="mrbClose()" style="border:0;background:#EEF3FB;width:32px;height:32px;border-radius:50%;font-size:16px;cursor:pointer">✕</button>
     </div>
     <button onclick="document.getElementById('mrbFile').click()" id="mrbUpBtn" style="width:100%;padding:13px;border:2px dashed #7FA8DC;background:#F2F8FF;color:#0A56B8;font-weight:800;font-size:14px;border-radius:12px;cursor:pointer">📷 رفع إيصال التحويل — قراءة تلقائية</button>
@@ -1538,9 +1538,12 @@ async function ownerSetPin(){
     <div id="mrbSug" style="display:none;border:1px solid #D6E4F7;border-radius:12px;background:#fff;max-height:220px;overflow-y:auto;margin-top:6px;box-shadow:0 10px 30px rgba(16,42,67,.12)"></div>
     <label class="mrbL">هاتف المستلم</label><input id="mrbPhone" class="mrbI" type="tel" inputmode="tel" dir="ltr" placeholder="36xxxxxx / 244xxxxxxxxx" autocomplete="tel" name="recipient-tel">
     <label class="mrbL">رقم المستلم / الحساب</label><input id="mrbTo" class="mrbI" inputmode="numeric" placeholder="36xxxxxx">
-    <label class="mrbL">المبلغ (MRU جديدة)</label><input id="mrbAmt" class="mrbI" inputmode="decimal" placeholder="70000">
+    <label class="mrbL">المبلغ (<span id="mrbCcyLbl">MRU</span>)</label><input id="mrbAmt" class="mrbI" inputmode="decimal" placeholder="70000">
     <label class="mrbL">رقم العملية Txn ID (اختياري)</label><input id="mrbRef" class="mrbI" inputmode="numeric" placeholder="09260814...">
-    <button onclick="mrbMake()" style="width:100%;margin-top:14px;padding:14px;border:0;background:linear-gradient(135deg,#19A9F5,#0A56B8);color:#fff;font-weight:800;font-size:15px;border-radius:12px;cursor:pointer">توليد الوصل</button>
+    <button id="mrbDoneBtn" onclick="mrbDone()" style="width:100%;margin-top:14px;padding:15px;border:0;background:#0B7A3B;color:#fff;font-weight:800;font-size:15px;border-radius:12px;cursor:pointer">✓ تم التحويل — قيدها في التسوية</button>
+    <div id="mrbActs" style="display:none">
+      <button onclick="mrbMake()" style="width:100%;margin-top:10px;padding:14px;border:0;background:linear-gradient(135deg,#19A9F5,#0A56B8);color:#fff;font-weight:800;font-size:15px;border-radius:12px;cursor:pointer">توليد الوصل</button>
+    </div>
     <div id="mrbOut" style="margin-top:14px;display:none">
       <canvas id="mrbCv" width="1080" height="1350" style="width:100%;border-radius:12px;box-shadow:0 8px 30px rgba(3,26,69,.18)"></canvas>
       <div style="display:flex;gap:10px;margin-top:12px">
@@ -1578,6 +1581,7 @@ const MRB_BANKS=[
  {k:'other',   n:'',         ar:'',        keys:[]}
 ];
 let MRB_CUR=MRB_BANKS[MRB_BANKS.length-1];
+let MRB_CCY='MRU';
 function mrbBankOf(s){
   const up=String(s||'').toUpperCase();
   return MRB_BANKS.find(b=>b.keys.some(k=>up.includes(k)||String(s||'').includes(k)))
@@ -1601,10 +1605,11 @@ function mrbClose(){document.getElementById('mrbSheet').style.display='none';}
 /* قصّ بطاقة النجاح تلقائيًا: أكبر كتلة بيضاء متصلة + امتداد الشريط السماوي أسفلها */
 function mrbCropCard(img){
   try{
+    const topCut=Math.round(img.height*0.06); /* شريط الحالة ليس من الحوالة */
     const DW=Math.min(360, img.width);
-    const scale=DW/img.width, DH=Math.round(img.height*scale);
+    const scale=DW/img.width, DH=Math.round((img.height-topCut)*scale);
     const c=document.createElement('canvas'); c.width=DW; c.height=DH;
-    const g=c.getContext('2d'); g.drawImage(img,0,0,DW,DH);
+    const g=c.getContext('2d'); g.drawImage(img,0,topCut,img.width,img.height-topCut,0,0,DW,DH);
     const d=g.getImageData(0,0,DW,DH).data;
     const white=(i)=>d[i]>228&&d[i+1]>228&&d[i+2]>228;
     // بداية التعبئة: أول بكسل أبيض قرب المركز
@@ -1682,7 +1687,7 @@ function mrbMake(){
     rows=[['المستلم',name+(mrbPh?'  ·  '+mrbPh:'')],
           ['رقم المستلم / الحساب',to],
           ['القناة',mrbChan()],
-          ['المبلغ',mrbFmt(amt)+' MRU']];
+          ['المبلغ',mrbFmt(amt)+' '+MRB_CCY]];
     if(ref)rows.push(['رقم العملية',ref]);
   }
   const rowsY0=560, rowsH=rows.length*116;
@@ -1827,7 +1832,7 @@ async function bdlcContacts(){
         if(a.number===tEl.value)hit=c;});});
       if(hit&&nEl&&!nEl.value)nEl.value=hit.name;});}
 }
-async function bdlcPush(ref,name,to,amt){
+async function bdlcPush(ref,name,to,amt,ccy){
   var tok=await bdlcAuth();if(!tok)return;
   try{
     var chk=await fetch(MRB_SB+'/bdl_transactions?select=id&ref=eq.'+encodeURIComponent(ref)+'&limit=1',{headers:bdlcH(tok)});
@@ -1856,7 +1861,7 @@ async function bdlcPush(ref,name,to,amt){
       if(r2.ok)aid=(await r2.json())[0].id;
     }
     await fetch(MRB_SB+'/bdl_transactions',{method:'POST',headers:bdlcH(tok),
-      body:JSON.stringify({ref:ref,customer_id:cid,account_id:aid,amount:Number(amt)||0,ccy:'MRU',
+      body:JSON.stringify({ref:ref,customer_id:cid,account_id:aid,amount:Number(amt)||0,ccy:(ccy||'MRU'),
         status:'open',meta:{srcId:'rc_'+ref,src:'account'}})});
     bdlcContacts();
   }catch(e){}
@@ -1869,14 +1874,13 @@ const MRB_SB='https://vyxzlazwpbstigcqvizb.supabase.co/rest/v1';
 const MRB_ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ5eHpsYXp3cGJzdGlnY3F2aXpiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU5MTU5OTcsImV4cCI6MjEwMTQ5MTk5N30.fxMt_jH4z8t7uVnFLLHyNobu6zsgu_ZwVGLibuqWj38';
 function mrbArchive(ref,name,to,amt){
   var _ph=(document.getElementById('mrbPhone')||{}).value||'';
-  try{bdlcPush(ref,name,to,amt);}catch(e){}
   try{
     fetch(MRB_SB+'/archive_docs?on_conflict=id',{method:'POST',
       headers:{apikey:MRB_ANON,Authorization:'Bearer '+MRB_ANON,'Content-Type':'application/json',
                Prefer:'resolution=merge-duplicates'},
       body:JSON.stringify({id:'rc_'+ref,
         data:{kind:'transfer',ref:ref,from:'MRU',to:'MRU',amount:Number(amt)||0,
-              recv:Number(amt)||0,recvCcy:'MRU',client:name||'',phone:_ph,benefIban:to||'',
+              recv:Number(amt)||0,recvCcy:MRB_CCY,client:name||'',phone:_ph,benefIban:to||'',
               channel:(typeof mrbChan==='function'?mrbChan():''),status:'done',doneAt:Date.now(),src:'account'},
         updated_at:new Date().toISOString()})}).catch(function(){});
   }catch(e){}
@@ -1898,6 +1902,9 @@ async function mrbReadReceipt(file){
     if(p&&p.name){ document.getElementById('mrbName').value=p.name; }
     MRB_CUR=mrbBankOf((p&&p.bank||'')+' '+(p&&p.name||''));
     document.getElementById('mrbBankName').textContent=MRB_CUR.n||'';
+    MRB_CCY=String((p&&p.ccy)||'MRU').toUpperCase().replace('$','USD').replace('UM','MRU').replace('KZ','AOA');
+    if(MRB_CCY==='USD')MRB_CCY='USDT';
+    var _cl=document.getElementById('mrbCcyLbl');if(_cl)_cl.textContent=MRB_CCY;
     msg.style.color='#0B7A3B';
     msg.textContent=p&&p.amount?('✓ قُرئ: '+(MRB_CUR.n?MRB_CUR.n+' · ':'')+Number(p.amount).toLocaleString()+' '+(p.ccy||'MRU')+(p.txn?' · عملية '+p.txn:'')+(p.receiver?' · حساب '+p.receiver:'')):'لم تُقرأ تلقائيًا — أكمل الخانات يدويًا';
     if(!(p&&p.amount)){msg.style.color='#B00020';}
@@ -1952,8 +1959,24 @@ async function mrbPush(name){
     bdlcPush(ref,
       document.getElementById('mrbName').value||'',
       document.getElementById('mrbTo').value||'',
-      amt);
+      amt, MRB_CCY);
   }catch(e){}
+}
+function toastSafe(m){
+  var f=window.toast;if(typeof f==='function'){f(m);return;}
+  var t=document.getElementById('toast'),g=document.getElementById('toastMsg');
+  if(t&&g){g.textContent=m;t.classList.add('on');setTimeout(function(){t.classList.remove('on');},2600);}
+}
+async function mrbDone(){
+  const amt=parseFloat(String((document.getElementById('mrbAmt')||{}).value||'').replace(/[^\d.]/g,''))||0;
+  if(amt<=0){toastSafe('أدخل المبلغ أولًا');return;}
+  const btn=document.getElementById('mrbDoneBtn');
+  btn.disabled=true;btn.textContent='… جارٍ القيد';
+  try{ await mrbPush((document.getElementById('mrbRef')||{}).value||('BDL-'+Date.now())); }catch(e){}
+  btn.textContent='✓ قُيّدت في التسوية ('+MRB_CCY+')';
+  btn.style.background='#5C7699';
+  document.getElementById('mrbActs').style.display='block';
+  toastSafe('قُيّدت — الآن ولّد الوصل أو شاركه');
 }
 async function mrbShare(){
   /* الوجهة: واتساب الرقم المسجل باسمه العملية — الصورة أولًا ثم فتح محادثته */
@@ -1963,9 +1986,8 @@ async function mrbShare(){
   let ph=String((document.getElementById('mrbPhone')||{}).value||'')
     .replace(/[^0-9+]/g,'').replace(/^\+/,'').replace(/^00/,'');
   if(ph&&ph.length===8)ph='222'+ph; /* محلي موريتاني */
-  mrbPush(ref||name);
   const msg='وصل تحويل BDL ✓\n'+(name?name+'\n':'')+
-    'المبلغ: '+mrbFmt(Number(String(amt).replace(/[^\d.]/g,''))||0)+' MRU\n'+
+    'المبلغ: '+mrbFmt(Number(String(amt).replace(/[^\d.]/g,''))||0)+' '+MRB_CCY+'\n'+
     (ref?'رقم العملية: '+ref+'\n':'')+
     'تحقّق من صحته: https://lbdal.com/verify.html?ref='+encodeURIComponent(ref);
   /* ١) الصورة عبر ورقة المشاركة (يختار محادثته بلمسة) */
