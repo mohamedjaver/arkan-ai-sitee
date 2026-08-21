@@ -1697,8 +1697,8 @@ function renderProfit(){
     if(PR==='day')k=d.toLocaleDateString('en-GB');
     else if(PR==='week'){var w=new Date(d);w.setDate(d.getDate()-((d.getDay()+6)%7));k='أسبوع '+w.toLocaleDateString('en-GB');}
     else k=d.toLocaleDateString('en-GB',{month:'2-digit',year:'numeric'});
-    bucket[k]=bucket[k]||{};var c=row.ccy;
-    bucket[k][c]=bucket[k][c]||{n:0,amt:0,set:0,pf:0};
+    bucket[k]=bucket[k]||{};var c=row.ccy+(row.settle_ccy&&row.settle_ccy!==row.ccy?'→'+row.settle_ccy:'');
+    bucket[k][c]=bucket[k][c]||{n:0,amt:0,set:0,pf:0,rc:row.ccy,pc:row.profit_ccy||row.ccy,sc:row.settle_ccy||row.ccy};
     bucket[k][c].n+=row.tx_count;bucket[k][c].amt+=Number(row.amount);
     bucket[k][c].set+=Number(row.settle_amount);bucket[k][c].pf+=Number(row.profit);
   });
@@ -1708,9 +1708,9 @@ function renderProfit(){
     return '<div class="pcard"><div class="t"><b>'+esc(k)+'</b></div>'+
       Object.keys(cs).map(function(c){var x=cs[c];
         var hint=(x.pf===0&&x.set>0)?' <small style="color:#B00020;font-size:11px">بلا تكلفة مسجلة</small>':'';
-        return '<div class="v '+(x.pf>=0?'pos':'neg')+' num">'+(x.pf>=0?'+':'')+fmt(x.pf,2)+' '+esc(c)+hint+'</div>'+
-        '<div class="s"><span class="num">'+x.n+'</span> عملية · <span class="num">'+fmt(x.amt)+'</span> '+esc(c)+
-        ' → <span class="num">'+fmt(x.set,2)+'</span></div>';}).join('')+'</div>';
+        return '<div class="v '+(x.pf>=0?'pos':'neg')+' num">'+(x.pf>=0?'+':'')+fmt(x.pf,2)+' '+esc(x.pc)+hint+'</div>'+
+        '<div class="s"><span class="num">'+x.n+'</span> عملية · <span class="num">'+fmt(x.amt)+'</span> '+esc(x.rc)+
+        ' → <span class="num">'+fmt(x.set,2)+'</span> '+esc(x.sc)+'</div>';}).join('')+'</div>';
   }).join('')||'<div class="empty">لا تسويات مكتملة بعد</div>';
 }
 
