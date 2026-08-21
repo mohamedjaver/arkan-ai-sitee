@@ -370,14 +370,16 @@ input,select{font-family:inherit;color:var(--ink)}
       <div class="row"><span>المستلم من العملاء</span><b class="num" id="ssIn">—</b></div>
       <div class="row hi"><span>المستحق (كوانزا)</span><b class="num" id="ssDue">—</b></div>
       <div id="ssRateBox" style="display:none;background:#F2F8FF;border:1px solid #C9DFFA;border-radius:14px;padding:12px;margin:10px 0">
-        <div style="font-size:12px;font-weight:800;color:#0A56B8;margin-bottom:8px">تسعير العملية — يحدد المستحق بالكوانزا</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:8px;align-items:end">
-          <div><div class="clabel">سعر البيع (أوقية قديمة)</div>
-            <input id="ssRs" class="cin num" inputmode="decimal" placeholder="0.360" oninput="ssRatePrev()" style="width:100%;box-sizing:border-box"></div>
-          <div><div class="clabel">الشراء (للربح)</div>
-            <input id="ssRb" class="cin num" inputmode="decimal" placeholder="0.350" style="width:100%;box-sizing:border-box"></div>
-          <button onclick="ssRateApply()" style="height:46px;border:0;border-radius:11px;background:var(--navy);color:#fff;font-weight:800;font-size:12.5px;padding:0 16px;font-family:inherit;cursor:pointer">تطبيق</button>
+        <div style="font-size:12.5px;font-weight:800;color:#0A56B8;margin-bottom:10px">تسعير العملية — يحدد المستحق بالكوانزا</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div><div class="clabel" style="font-size:12.5px;margin-bottom:6px">سعر البيع (أوقية قديمة)</div>
+            <input id="ssRs" inputmode="decimal" placeholder="0.360" oninput="ssRatePrev()" dir="ltr"
+              style="width:100%;box-sizing:border-box;height:58px;border:2px solid #0A56B8;border-radius:0;background:#fff;padding:0 14px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:22px;font-weight:700;color:#003B8F;letter-spacing:.5px;outline:none"></div>
+          <div><div class="clabel" style="font-size:12.5px;margin-bottom:6px">الشراء (للربح)</div>
+            <input id="ssRb" inputmode="decimal" placeholder="0.350" dir="ltr"
+              style="width:100%;box-sizing:border-box;height:58px;border:2px solid #C9DFFA;border-radius:0;background:#fff;padding:0 14px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:22px;font-weight:700;color:#003B8F;letter-spacing:.5px;outline:none"></div>
         </div>
+        <button onclick="ssRateApply()" style="width:100%;margin-top:10px;height:50px;border:0;border-radius:0;background:var(--navy);color:#fff;font-weight:800;font-size:14px;font-family:inherit;cursor:pointer">تطبيق</button>
         <div id="ssRPrev" class="num" style="margin-top:8px;font-size:12.5px;color:#0A56B8"></div>
       </div>
       <div class="row"><span>المدفوع من الإيصالات</span><b class="num" id="ssPaid">0</b></div>
