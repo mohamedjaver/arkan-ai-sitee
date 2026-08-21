@@ -299,10 +299,10 @@ input,select{font-family:inherit;color:var(--ink)}
       <div class="srch">🔍<input id="aq" placeholder="اسم، حساب، مبلغ، مرجع، تاريخ…" oninput="renderArchive()"></div>
     </div>
     <div class="chips" id="archChips">
-      <button class="chip on" data-st="ALL" onclick="setArchSt('ALL')">الكل</button>
+      <button class="chip" data-st="ALL" onclick="setArchSt('ALL')">الكل</button>
       <button class="chip" data-st="open" onclick="setArchSt('open')">مفتوحة</button>
       <button class="chip" data-st="settling" onclick="setArchSt('settling')">قيد التسوية</button>
-      <button class="chip" data-st="settled" onclick="setArchSt('settled')">تمت</button>
+      <button class="chip on" data-st="settled" onclick="setArchSt('settled')">تمت</button>
     </div>
   </div>
   <div class="list" id="archList"><div class="empty">جارٍ التحميل…</div></div>
@@ -537,6 +537,7 @@ async function importLegacy(){
     for(var i=0;i<rows.length;i++){
       var d=rows[i].data||{};
       if(!d.ref)continue;
+      if(d.status==='deleted')continue; /* شاهد القبر — لا بعث */
       if(['transfer','operation'].indexOf(d.kind)<0)continue;
       var chk=await fetch(SB+'/bdl_transactions?select=id&ref=eq.'+encodeURIComponent(d.ref)+'&limit=1',{headers:H()});
       if(chk.ok&&(await chk.json())[0])continue;
@@ -1393,9 +1394,21 @@ function ownerCreds(){
   var pin=localStorage.getItem('arkan-pin')||'';
   return ph&&pin?{phone:ph,pin:pin}:null;
 }
+function ocSave(){
+  var ph=String(($('#ocPh')||{}).value||'').replace(/[^0-9]/g,'');
+  var pin=String(($('#ocPin')||{}).value||'').trim();
+  if(ph.length<8||!pin){toast('أكمل الهاتف والرمز');return;}
+  localStorage.setItem('arkan-owner-phone',ph);
+  localStorage.setItem('arkan-pin',pin);
+  CLIENTS=null;loadClients();
+}
 async function loadClients(){
   var cr=ownerCreds();
-  if(!cr){$('#clientList').innerHTML='<div class="empty">بيانات المالك غير محفوظة على هذا الجهاز — افتح settlement مرة واحدة للدخول</div>';return;}
+  if(!cr){$('#clientList').innerHTML='<div class="empty">أدخل بيانات المالك لعرض العملاء'+
+    '<div style="margin-top:12px;display:grid;gap:8px;max-width:280px;margin-inline:auto">'+
+    '<input id="ocPh" inputmode="tel" placeholder="هاتف المالك" style="height:46px;border:1.5px solid #C9DFFA;border-radius:10px;padding:0 12px;font-family:inherit;font-size:14px;text-align:center">'+
+    '<input id="ocPin" inputmode="numeric" placeholder="الرمز" style="height:46px;border:1.5px solid #C9DFFA;border-radius:10px;padding:0 12px;font-family:inherit;font-size:14px;text-align:center">'+
+    '<button onclick="ocSave()" style="height:46px;border:0;border-radius:10px;background:var(--navy);color:#fff;font-weight:800;font-family:inherit;cursor:pointer">حفظ وعرض</button></div></div>';return;}
   $('#clientList').innerHTML='<div class="empty">جارٍ التحميل…</div>';
   try{
     var pr=[
@@ -1536,6 +1549,18 @@ async function delTx(txId,stId,ref){
     }
     var r2=await fetch(SB+'/bdl_transactions?id=eq.'+txId,{method:'DELETE',headers:H()});
     if(!r2.ok)throw new Error('DELETE '+r2.status);
+    /* شاهد قبر في الأرشيف — يمنع المستورد من بعثها للأبد */
+    try{
+      var tomb={id:'rc_'+ref,data:{ref:ref,kind:'transfer',status:'deleted',deletedAt:Date.now()},
+        updated_at:new Date().toISOString()};
+      var tp=await fetch(SB+'/archive_docs?on_conflict=id',{method:'POST',
+        headers:H({Prefer:'resolution=merge-duplicates'}),body:JSON.stringify(tomb)});
+      if(!tp.ok){ /* المسار البديل: مفتاح anon (سياسات السجل القديم) */
+        await fetch(SB+'/archive_docs?on_conflict=id',{method:'POST',
+          headers:{apikey:ANON,Authorization:'Bearer '+ANON,'Content-Type':'application/json',Prefer:'resolution=merge-duplicates'},
+          body:JSON.stringify(tomb)});
+      }
+    }catch(e){}
     toast('حُذفت «'+ref+'» نهائيًا ✓');
     ARCH=null;TXCACHE={};PROF=null;OPSPROF=null;
     loadArchive();loadGroups();
@@ -1553,7 +1578,7 @@ async function unsettle(stId,ref){
     ARCH=null;TXCACHE={};PROF=null;loadArchive();loadGroups();
   }catch(e){toast('تعذّر الحذف: '+e.message);}
 }
-var ARCH_ST='ALL';
+var ARCH_ST='settled';
 function setArchSt(st){ARCH_ST=st;
   document.querySelectorAll('#archChips .chip').forEach(function(b){b.classList.toggle('on',b.dataset.st===st);});
   renderArchive();}
