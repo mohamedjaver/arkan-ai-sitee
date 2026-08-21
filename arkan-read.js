@@ -96,7 +96,7 @@ function euNum(x){
 }
 function liteParse(t){
   const p={amount:0,currency:'',reference:'',bank:'',date:'',confidence:40};
-  const cm=t.match(/\b(Kz|KZ|AKZ|MRU|UM|USD|USDT|EUR|CNY|AED|AOA)\b/i);
+  const cm=t.match(/\b(Kz|KZ|AKZ|MRU|UM|USDT|USDC|USD|EUR|CNY|AED|AOA)\b/i);
   if(cm)p.currency=cm[1].toUpperCase().replace('AKZ','Kz').replace('AOA','Kz').replace('KZ','Kz').replace('UM','MRU');
   /* المبلغ: بعد كلماته المفتاحية أولاً — لا نلتقط أرقام الحساب/العملية */
   const am=t.match(/(?:amount|montante|valor|total|transfers\.amount|المبلغ)[^\d]{0,20}([\d][\d.,\s\u00A0]{2,})/i)
@@ -127,7 +127,7 @@ function asText(p,raw){
 }
 async function miniGemini(b64,mime){
   const key=KEY(); if(!key)throw new Error('NOKEY');
-  const P='اقرأ هذا الإيصال البنكي وأعد JSON فقط بلا أي نص آخر: {"amount":0,"currency":"","reference":"","receiver":"","name":"","bank":"","date":""}\n- amount: رقم المبلغ فقط بلا فواصل (Montante/المبلغ/Valor/Total). ليس رقم العملية ولا الحساب ولا Movimento.\n- reference: رقم العملية (Txn ID/Reference/Movimento) كاملًا.\n- receiver: رقم حساب أو هاتف المستلم (Receiver/Numéro/المستلم) كاملًا.\n- name: اسم المستلم الشخصي كما هو مكتوب (à .../Bénéficiaire/المستلم).\n- bank: اسم البنك أو التطبيق (Bankily/Masrvi/Sedad/BIM/BML...).\n- الفواصل الأوروبية: 3.500.000,00 تعني 3500000\n- currency: Kz أو MRU أو USD أو USDT أو EUR أو CNY أو AED (AKZ/AOA→Kz، UM→MRU)';
+  const P='اقرأ هذا الإيصال البنكي وأعد JSON فقط بلا أي نص آخر: {"amount":0,"currency":"","reference":"","receiver":"","name":"","bank":"","date":""}\n- amount: رقم المبلغ فقط بلا فواصل (Montante/المبلغ/Valor/Total). ليس رقم العملية ولا الحساب ولا Movimento.\n- reference: رقم العملية (Txn ID/Reference/Movimento) كاملًا.\n- receiver: رقم حساب أو هاتف المستلم (Receiver/Numéro/المستلم) كاملًا.\n- name: اسم المستلم الشخصي كما هو مكتوب (à .../Bénéficiaire/المستلم).\n- bank: اسم البنك أو التطبيق (Bankily/Masrvi/Sedad/BIM/BML...).\n- الفواصل الأوروبية: 3.500.000,00 تعني 3500000\n- currency: Kz أو MRU أو USD أو USDT أو USDC أو EUR أو CNY أو AED (AKZ/AOA→Kz، UM→MRU)';
   const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key='+encodeURIComponent(key),
     {method:'POST',headers:{'Content-Type':'application/json'},
      body:JSON.stringify({contents:[{parts:[{text:P},{inline_data:{mime_type:mime,data:b64}}]}],
@@ -163,7 +163,8 @@ window.ArkanRead={
         if(!p.bank&&lp.bank)p.bank=lp.bank;
       }catch(e){}
     }
-    const cy=String(p.currency||'').replace('AKZ','Kz').replace('AOA','Kz').replace('KZ','Kz').replace('UM','MRU');
+    const cy=String(p.currency||'').toUpperCase().replace('AKZ','KZ').replace('AOA','KZ')
+      .replace('USDC','USDT').replace('UM','MRU').replace(/^KZ$/,'Kz');
     return {amount:(+p.amount||null),ccy:cy||null,txn:p.reference||null,
             receiver:p.receiver||null,name:(p.name||'').trim()||null,
             bank:p.bank||null,date:p.date||null,eng};
