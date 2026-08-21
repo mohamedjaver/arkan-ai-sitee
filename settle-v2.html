@@ -832,13 +832,30 @@ async function addReceipts(files){
 function renderRcpts(){
   $('#rcptList').innerHTML=RCPTS.map(function(r,i){
     var p=r.parsed;
+    var amtBox='';
+    if(!r.dup||r.ok){
+      if(p){ /* قُرئ (أو فشل) — المبلغ قابل للتحرير دائمًا */
+        amtBox='<input inputmode="numeric" dir="ltr" value="'+(p.amount||'')+'"'+
+          ' placeholder="أدخل المبلغ" data-ri="'+i+'" oninput="rcptAmt(this)" onclick="event.stopPropagation()"'+
+          ' style="width:130px;height:40px;border:1.5px solid '+(p.amount?'#C9DFFA':'#E6A700')+';border-radius:0;background:#fff;text-align:center;font-family:\'IBM Plex Mono\',monospace;font-size:15px;font-weight:700;color:#003B8F;outline:none">'+
+          '<small style="display:block;color:var(--muted);font-size:10px;margin-top:2px">'+
+          (p.amount?'قُرئ تلقائيًا — عدّله إن أخطأ':'⚠️ لم يُقرأ — اكتبه يدويًا')+(p.ref?' · '+esc(p.ref):'')+'</small>';
+      } else amtBox='<small>جارٍ القراءة…</small>';
+    }
     return '<div class="rcpt'+(r.dup&&!r.ok?' dup':'')+'">'+
       '<div class="ic">🧾</div><div class="fi"><div>'+esc(r.file.name)+'</div>'+
-      '<small>'+(r.dup?(r.ok?'':'⛔ استُخدم من قبل — مرفوض، احذفه'):
-        (p?(p.amount?fmt(p.amount)+' '+(p.ccy||'')+(p.ref?' · '+p.ref:''):(gemKey()?'لم يُقرأ — سيُرفق كما هو':'<button style="color:var(--blue);font-weight:700;font-size:11px" onclick="promptGemKey()">فعّل القراءة التلقائية — أدخل مفتاح Gemini</button>')):'جارٍ القراءة…'))+'</small></div>'+
-
+      (r.dup&&!r.ok?'<small>⛔ استُخدم من قبل — مرفوض، احذفه</small>':amtBox)+'</div>'+
       '<button class="del" onclick="RCPTS.splice('+i+',1);renderRcpts();updMatch()">✕</button></div>';
   }).join('');
+}
+/* تحرير مبلغ إيصال يدويًا — العداد والباقي يتفاعلان لحظيًا */
+function rcptAmt(inp){
+  var i=+inp.dataset.ri,r=RCPTS[i];if(!r)return;
+  r.parsed=r.parsed||{};
+  r.parsed.amount=parseFloat(String(inp.value).replace(/[^\d.]/g,''))||0;
+  r.parsed.manual=true;
+  inp.style.borderColor=r.parsed.amount?'#0A56B8':'#E6A700';
+  updMatch();
 }
 var SS={due:0,dueCcy:'',paid:0};
 function ssUnpriced(){
