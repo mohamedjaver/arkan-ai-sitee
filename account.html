@@ -619,13 +619,44 @@ function mrbPhoneAutofill(){
   toast('اضغط أيقونة 👤 فوق لوحة المفاتيح ← «جهة اتصال أخرى…»');
 }
 /* ═ دفتر المستلمين — يتعلم من كل وصل مولَّد ═ */
-function rcpBook(){try{return JSON.parse(localStorage.getItem('bdl-recipients')||'[]');}catch(e){return[];}}
+/* ═ دفتر مركزي في Supabase — أي حفظ يظهر فورًا في كل الصفحات والأجهزة ═ */
+let RCP_CLOUD=null; /* ذاكرة الجلسة — تُملأ من السحابة */
+const RCP_SB='https://vyxzlazwpbstigcqvizb.supabase.co/rest/v1';
+function rcpJwt(){
+  try{const j=JSON.parse(localStorage.getItem('arkan_sb_jwt')||'null');
+    if(j&&j.token&&j.exp>Math.floor(Date.now()/1000)+60)return j.token;}catch(e){}
+  return null;
+}
+function rcpHdr(t){return {apikey:ANON_KEY_RCP,Authorization:'Bearer '+t,'Content-Type':'application/json',Prefer:'resolution=merge-duplicates'};}
+const ANON_KEY_RCP='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ5eHpsYXp3cGJzdGlnY3F2aXpiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU5MTU5OTcsImV4cCI6MjEwMTQ5MTk5N30.fxMt_jH4z8t7uVnFLLHyNobu6zsgu_ZwVGLibuqWj38';
+async function rcpCloudLoad(){
+  const t=rcpJwt();if(!t)return;
+  try{
+    const r=await fetch(RCP_SB+'/bdl_recipients?select=name,phone,acct,updated_at&order=updated_at.desc&limit=100',{headers:rcpHdr(t)});
+    if(!r.ok)return;
+    const rows=await r.json();
+    RCP_CLOUD=rows.map(x=>({name:x.name,phone:x.phone,to:x.acct,at:new Date(x.updated_at).getTime()}));
+    try{localStorage.setItem('bdl-recipients',JSON.stringify(RCP_CLOUD.slice(0,100)));}catch(e){} /* مرآة أوفلاين */
+  }catch(e){}
+}
+rcpCloudLoad();
+function rcpBook(){
+  if(RCP_CLOUD)return RCP_CLOUD;
+  try{return JSON.parse(localStorage.getItem('bdl-recipients')||'[]');}catch(e){return[];}
+}
 function rcpSave(rec){
   if(!rec.name&&!rec.phone&&!rec.to)return;
-  let b=rcpBook();
-  b=b.filter(x=>!( (rec.name&&x.name===rec.name) && (x.to===rec.to||x.phone===rec.phone) ));
-  b.unshift({name:rec.name||'',phone:rec.phone||'',to:rec.to||'',at:Date.now()});
-  try{localStorage.setItem('bdl-recipients',JSON.stringify(b.slice(0,100)));}catch(e){}
+  const row={name:rec.name||'',phone:rec.phone||'',to:rec.to||'',at:Date.now()};
+  /* الذاكرة والمرآة فورًا */
+  let b=rcpBook().filter(x=>!((row.name&&x.name===row.name)&&(x.to===row.to||x.phone===row.phone)));
+  b.unshift(row);RCP_CLOUD=b.slice(0,100);
+  try{localStorage.setItem('bdl-recipients',JSON.stringify(RCP_CLOUD));}catch(e){}
+  /* السحابة — مصدر الحقيقة لكل الصفحات */
+  const t=rcpJwt();if(!t)return;
+  fetch(RCP_SB+'/bdl_recipients?on_conflict=owner_id,name,phone,acct',{method:'POST',
+    headers:rcpHdr(t),
+    body:JSON.stringify({name:row.name,phone:row.phone,acct:row.to,updated_at:new Date().toISOString()})
+  }).catch(()=>{});
 }
 function rcpFill(el){
   document.getElementById('mrbName').value=el.dataset.n||'';
@@ -1490,7 +1521,7 @@ async function ownerSetPin(){
 <div id="mrbSheet" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(4,20,50,.55);backdrop-filter:blur(4px)">
   <div style="position:absolute;left:0;right:0;bottom:0;background:#fff;border-radius:18px 18px 0 0;padding:20px 18px 30px;max-height:86vh;overflow:auto">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-      <b style="font-size:17px">وصل تحويل <span id="mrbBankName"></span> <small style="color:#B8C9E2;font-weight:500;font-size:10px">v22</small></b>
+      <b style="font-size:17px">وصل تحويل <span id="mrbBankName"></span> <small style="color:#B8C9E2;font-weight:500;font-size:10px">v23</small></b>
       <button onclick="mrbClose()" style="border:0;background:#EEF3FB;width:32px;height:32px;border-radius:50%;font-size:16px;cursor:pointer">✕</button>
     </div>
     <button onclick="document.getElementById('mrbFile').click()" id="mrbUpBtn" style="width:100%;padding:13px;border:2px dashed #7FA8DC;background:#F2F8FF;color:#0A56B8;font-weight:800;font-size:14px;border-radius:12px;cursor:pointer">📷 رفع إيصال التحويل — قراءة تلقائية</button>
