@@ -1321,7 +1321,7 @@ function renderOps(){
     if(o.status==='open')act='<button class="opact" onclick="opSheet(\''+o.id+'\')">+ إيصال</button>';
     else if(o.status==='covered')act='<button class="opact" onclick="opSetSt(\''+o.id+'\',\'sent\')">أُرسلت للمورد ←</button>'+
       '<button class="opact ghost" onclick="opSheet(\''+o.id+'\')">+ إيصال</button>';
-    else if(o.status==='sent')act='<button class="opact ghost" onclick="opCopyLink(\''+(o.confirm_token||'')+'\')">🔗 رابط التأكيد</button>'+
+    else if(o.status==='sent')act='<button class="opact ghost" onclick="opCopyLink(\''+(o.confirm_token||'')+'\')">رابط التأكيد</button>'+
       '<button class="opact" style="background:#8AA3C4" disabled>بانتظار تأكيد المورد…</button>';
     else if(o.status==='confirmed')act='<button class="opact ok" onclick="opCloseSheet(\''+o.id+'\')">المورد أكّد ✓ — إقفال</button>';
     var rc=reconOf(o.id);
