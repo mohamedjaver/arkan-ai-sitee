@@ -1303,9 +1303,16 @@ async function opCreate(){
   if(t<=0){toast('أدخل المبلغ المستهدف');return;}
   var ref='OP-'+Date.now().toString(36).toUpperCase().slice(-5);
   try{
+    var base={ref:ref,client_name:c,target_aoa:t,supplier:($('#opSup').value||'').trim()||null};
+    var full=Object.assign({},base,{legs:+$('#opLegs').value||2,structure:opStructOf(+$('#opLegs').value)});
     var r=await fetch(SB+'/bdl_ops',{method:'POST',headers:H({Prefer:'return=representation'}),
-      body:JSON.stringify({ref:ref,client_name:c,target_aoa:t,supplier:($('#opSup').value||'').trim()||null,
-        legs:+$('#opLegs').value||2,structure:opStructOf(+$('#opLegs').value)})});
+      body:JSON.stringify(full)});
+    if(r.status===400){
+      /* القاعدة قبل ترقية bdl-ops5.sql — ننشئ بالأساسيات ونطلب اللصقة */
+      r=await fetch(SB+'/bdl_ops',{method:'POST',headers:H({Prefer:'return=representation'}),
+        body:JSON.stringify(base)});
+      if(r.ok)toast('أُنشئت بالنمط الأساسي — الصق bdl-ops5.sql لتفعيل الحارات والمطابقة');
+    }
     if(!r.ok)throw new Error(r.status);
     closeOvl('newop');toast('أُنشئت '+ref+' ✓');OPS_DATA=null;loadOps();
   }catch(e){toast('تعذّر الإنشاء: '+e.message);}
