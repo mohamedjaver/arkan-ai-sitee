@@ -1222,9 +1222,10 @@ async function loadBalance(){
   try{
     const tok=await bdlcTok(); if(!tok) return;
     const OWNER='22236295050';
-    const myPh=String((USER&&USER.phone)||'').replace(/[^0-9]/g,'');
+    const U=window.__USER||((typeof USER!=='undefined'&&USER)||{});
+    const myPh=String(U.phone||'').replace(/[^0-9]/g,'');
     let url;
-    if(myPh===OWNER||((USER&&USER.role)==='owner')){
+    if(myPh===OWNER||(U.role==='owner')){
       url=MRB_SB+'/bdl_transactions?select=amount,ccy&status=eq.done&limit=2000';
     }else{
       /* زبون: عملياته عبر ربط الهاتف بسجل الزبناء */
@@ -1242,6 +1243,7 @@ async function loadBalance(){
     paintBalance();
   }catch(e){}
 }
+window.loadBalance=loadBalance; /* جسر للكتل الأخرى (تحديث بعد القيد) */
 $('eyeBtn').onclick = () => { balHidden=!balHidden; paintBalance(); };
 
 function txHTML(t, id){
