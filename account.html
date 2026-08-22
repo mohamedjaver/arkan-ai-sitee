@@ -984,6 +984,7 @@ async function login(phone, pin, silent){
             role:tj.arkan_role,phone:lj.phone,exp:Math.floor(Date.now()/1000)+(tj.expires_in||86400)}));}
       }catch(e){}
       USER={name:lj.name,ref:lj.ref,pin:lj.pin,phone:lj.phone,role:lj.role};
+      try{window.__bdlOwner={phone:lj.phone,pin:String(lj.pin||pin||'')};}catch(e){}
       const nxt=new URLSearchParams(location.search).get('next');
       if(nxt&&/^[a-z0-9_-]+\.html$/i.test(nxt)){location.href=nxt;
         $('gEnter').disabled=false;$('gEnter').textContent='دخول';return;}
@@ -1099,7 +1100,7 @@ async function loadMyTx(phone){
       body:JSON.stringify({phone:phone,pin:USER&&USER.pin||''})});
     if(!r.ok)throw new Error('HTTP '+r.status);
     const j=await r.json();
-    renderMyTx(j.items||[]);
+    renderMyTx(j.items||[], j.settled||null);
   }catch(e){
     $('fullTx').innerHTML='<div class="empty">تعذّر تحميل السجل — أعد المحاولة</div>';
     $('homeTx').innerHTML='<div class="empty">تعذّر تحميل السجل</div>';
@@ -1108,23 +1109,42 @@ async function loadMyTx(phone){
 function myTxRow(t){
   const st=t.kind==='request'
     ?(t.status==='pending'?['wait','بانتظار التنفيذ']:t.status==='done'?['done','نُفِّذت']:['cancel','ملغاة'])
+    :t.kind==='settled'?['done','مسوّاة ✓']
     :(t.status==='done'?['done','مكتملة']:t.status==='cancel'?['cancel','ملغاة']:['wait','قيد الانتظار']);
   const d=t.at?new Date(t.at).toLocaleDateString('en-GB'):'—';
-  const cur=(t.currency||'').replace('→',' → ');
+  const cur=t.kind==='settled'
+    ?(t.currency+(t.to?' → '+t.to:''))
+    :(t.currency||'').replace('→',' → ');
+  const sub=t.kind==='settled'
+    ?`${d} · ${String(t.ref||'').toUpperCase()}${t.custName?' · '+t.custName:''}`
+    :`${d} · ${String(t.ref||'').toUpperCase()}${t.benefName?' · '+t.benefName:''}`;
   return `<div class="tx"><div class="ticon out"><svg fill="none" stroke="#0058D9" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14m-7-7l7 7-7 7"/></svg></div>
-    <div class="tinfo"><b>${cur||'تحويل'}</b><small class="num">${d} · ${String(t.ref||'').toUpperCase()}${t.benefName?' · '+t.benefName:''}</small></div>
+    <div class="tinfo"><b>${cur||'تحويل'}</b><small class="num">${sub}</small></div>
     <div class="tval"><b class="num">${fmt(t.amount||0,2)}</b><span class="pill ${st[0]}">${st[1]}</span></div></div>`;
 }
-function renderMyTx(items){
-  let totalMRU=0,done=0;
-  items.forEach(t=>{
-    if(t.kind==='tx'&&t.status==='done'){done++;
-      const amt=+t.amount||0,cur=(t.from||'').toUpperCase();
-      let mru=amt;
-      if(cur&&cur!=='MRU'){const r=RATES[cur];if(r&&r.m)mru=amt*(r.m/10);}
-      totalMRU+=mru;}
-  });
-  window.__bal=totalMRU;window.__doneCount=done;paintBalance();
+function renderMyTx(items, settled){
+  /* الرصيد المرجعي = التسويات من الخادم (bdl_transactions status=done) —
+     يظهر للمالك مجموع كل العمليات، ولكل زبون عملياته فقط */
+  if(settled&&typeof settled.MRU!=='undefined'){
+    let mru=settled.MRU||0;
+    Object.keys(settled.byCcy||{}).forEach(c=>{
+      if(c==='MRU'||c==='USDT')return;
+      const r=RATES[c];if(r&&r.m)mru+=(settled.byCcy[c]||0)*(r.m/10);
+    });
+    window.__bal=mru;window.__balUsdt=settled.USDT||0;
+    window.__doneCount=settled.count||0;paintBalance();
+  }else{
+    let totalMRU=0,done=0;
+    items.forEach(t=>{
+      if((t.kind==='tx'||t.kind==='settled')&&t.status==='done'){done++;
+        const amt=+t.amount||0,cur=(t.from||'').toUpperCase();
+        let mru=amt;
+        if(cur==='USDT'){window.__balUsdt=(window.__balUsdt||0)+amt;return;}
+        if(cur&&cur!=='MRU'){const r=RATES[cur];if(r&&r.m)mru=amt*(r.m/10);}
+        totalMRU+=mru;}
+    });
+    window.__bal=totalMRU;window.__doneCount=done;paintBalance();
+  }
   if(!items.length){$('homeTx').innerHTML='<div class="empty">لا توجد معاملات بعد</div>';
     $('fullTx').innerHTML='<div class="empty">لا توجد معاملات بعد</div>';return;}
   $('homeTx').innerHTML=items.slice(0,3).map(myTxRow).join('');
@@ -1223,9 +1243,11 @@ async function loadBalance(){
     const tok=await (window.bdlcAuth?window.bdlcAuth():null); if(!tok) return;
     const OWNER='22236295050';
     const U=window.__USER||((typeof USER!=='undefined'&&USER)||{});
-    const myPh=String(U.phone||'').replace(/[^0-9]/g,'');
+    let sjRole='';try{sjRole=(JSON.parse(localStorage.getItem('arkan_sb_jwt')||'null')||{}).role||'';}catch(e){}
+    let myPh=String(U.phone||'').replace(/[^0-9]/g,'');
+    if(!myPh){try{myPh=String((JSON.parse(localStorage.getItem('arkan_session')||'null')||{}).phone||'').replace(/[^0-9]/g,'');}catch(e){}}
     let url;
-    if(myPh===OWNER||(U.role==='owner')){
+    if(myPh===OWNER||(U.role==='owner')||sjRole==='owner'){
       url=window.MRB_SB_GET()+'/bdl_transactions?select=amount,ccy&status=eq.done&limit=2000';
     }else{
       /* زبون: عملياته عبر ربط الهاتف بسجل الزبناء */
@@ -1822,6 +1844,12 @@ function mrbMake(){
 var BDLC={tok:null,list:null};
 async function bdlcAuth(){
   if(BDLC.tok)return BDLC.tok;
+  /* 0) التوكن الموقّع المخزّن عند الدخول — يعمل للمالك والزبون معًا */
+  try{
+    var sj=JSON.parse(localStorage.getItem('arkan_sb_jwt')||'null');
+    if(sj&&sj.token&&(!sj.exp||sj.exp>Math.floor(Date.now()/1000)+60)){
+      BDLC.tok=sj.token;return BDLC.tok;}
+  }catch(e){}
   try{
     /* جسر الموديول أولًا (جلسة المالك الحية) ثم مفاتيح الجهاز */
     var o=window.__bdlOwner||{};

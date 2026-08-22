@@ -814,6 +814,51 @@ app.get('/admin/health', (req, res) => {
     endpoints: ['list-users', 'list-requests', 'approve-user', 'my-requests'] });
 });
 
+/* ═ التسويات من Supabase — الخادم يوقّع توكن مالك قصير العمر ويقرأ نيابةً ═
+   المالك ← كل العمليات المسوّاة (status=done). الزبون ← عملياته فقط عبر ربط هاتفه
+   بسجل bdl_customers. النتيجة: {items:[…kind:'settled'], totals:{MRU,USDT,byCcy,count}} */
+async function fetchSettled(phone) {
+  const out = { items: [], totals: { MRU: 0, USDT: 0, byCcy: {}, count: 0 } };
+  try {
+    if (!JWT_SECRET) return out;
+    const p = String(phone).replace(/\D/g, '');
+    const isOwner = OWNER_PHONES.includes(p);
+    const ts = Math.floor(Date.now() / 1000);
+    const tok = jwt.sign({ sub: phoneToUuid(OWNER_PHONES[0]), role: 'authenticated',
+      aud: 'authenticated', arkan_role: 'owner', iat: ts, exp: ts + 300 }, JWT_SECRET);
+    const H = { 'apikey': SB_PUB, 'Authorization': 'Bearer ' + tok };
+    const sel = 'select=id,ref,amount,ccy,settle_ccy,settle_amount,status,updated_at,created_at,bdl_customers(name,phone)';
+    let url;
+    if (isOwner) {
+      url = SB_REST + '/bdl_transactions?' + sel + '&status=eq.done&order=updated_at.desc&limit=500';
+    } else {
+      const local = p.replace(/^(222|244)/, '');
+      const rc = await fetch(SB_REST + '/bdl_customers?select=id&or=(phone.eq.' + p +
+        ',phone.eq.' + local + ',phone.like.*' + local + ')', { headers: H });
+      const ids = rc.ok ? (await rc.json()).map(x => x.id) : [];
+      if (!ids.length) return out;
+      url = SB_REST + '/bdl_transactions?' + sel + '&status=eq.done&customer_id=in.(' +
+        ids.join(',') + ')&order=updated_at.desc&limit=500';
+    }
+    const r = await fetch(url, { headers: H });
+    if (!r.ok) return out;
+    const rows = await r.json();
+    rows.forEach(t => {
+      const a = Number(t.amount) || 0, c = String(t.ccy || '').toUpperCase();
+      if (c === 'MRU') out.totals.MRU += a;
+      else if (c === 'USDT') out.totals.USDT += a;
+      out.totals.byCcy[c] = (out.totals.byCcy[c] || 0) + a;
+      out.totals.count++;
+      out.items.push({ kind: 'settled', id: t.id, ref: t.ref || '',
+        amount: a, currency: c, from: c, to: t.settle_ccy || '',
+        settleAmount: Number(t.settle_amount) || 0, status: 'done',
+        custName: (t.bdl_customers && t.bdl_customers.name) || '',
+        at: Date.parse(t.updated_at || t.created_at) || 0 });
+    });
+  } catch (e) { console.error('fetchSettled:', e.message); }
+  return out;
+}
+
 app.post('/account/my-requests', async (req, res) => {
   try {
     if (!fbReady) return res.status(503).json({ ok: false, err: 'service' });
@@ -822,11 +867,12 @@ app.post('/account/my-requests', async (req, res) => {
     if (!snap || String(snap.data().pin) !== String(req.body.pin || ''))
       return res.status(401).json({ ok: false, err: 'auth' });
     const db = admin.firestore();
-    const [rq, tx] = await Promise.all([
+    const [rq, tx, settled] = await Promise.all([
       db.collection('payment_requests').where('contact', '==', p).limit(60).get().catch(() => null),
-      db.collection('transactions').where('uid', '==', p).limit(60).get().catch(() => null)
+      db.collection('transactions').where('uid', '==', p).limit(60).get().catch(() => null),
+      fetchSettled(p)
     ]);
-    const items = [];
+    const items = [...settled.items];
     if (rq) rq.forEach(d => { const v = d.data() || {};
       items.push({ kind: 'request', id: d.id, ref: v.ref || d.id.slice(-6),
         amount: Number(v.amount) || 0, currency: v.currency || '', benefName: v.benefName || '',
@@ -839,7 +885,7 @@ app.post('/account/my-requests', async (req, res) => {
         status: v.status || 'pending',
         at: v.createdAt && v.createdAt.toMillis ? v.createdAt.toMillis() : (v.createdAt || 0) }); });
     items.sort((a, b) => (b.at || 0) - (a.at || 0));
-    res.json({ ok: true, items });
+    res.json({ ok: true, items, settled: settled.totals });
   } catch (e) { console.error('my-requests:', e.message); res.status(500).json({ ok: false, err: 'server' }); }
 });
 
