@@ -278,8 +278,9 @@ input,select{font-family:inherit;color:var(--ink)}
     <div class="clabel" style="color:#B00020">زبون جديد — رقم هاتفه مطلوب</div>
     <input id="opCustPh" class="cin num" inputmode="tel" dir="ltr" placeholder="36295050" style="width:100%;box-sizing:border-box">
   </div>
-  <div class="clabel" style="margin-top:10px">المبلغ المستهدف (AOA)</div>
-  <input id="opTarget" class="cin num" inputmode="numeric" placeholder="850000" style="width:100%;box-sizing:border-box">
+  <div class="clabel" style="margin-top:10px">المبلغ المستهدف (AOA) — خطة اختيارية</div>
+  <input id="opTarget" class="cin num" inputmode="numeric" placeholder="اتركه فارغًا — يُبنى من الإيصالات" style="width:100%;box-sizing:border-box">
+  <div style="font-size:11px;color:var(--muted);margin-top:6px">المال المعتمد في الحساب والربح = إيصالات الزبائن الفعلية فقط</div>
   <div class="clabel" style="margin-top:10px">المورد الأنغولي (اختياري)</div>
   <input id="opSup" class="cin" list="dlSuppliers" placeholder="اختر من السجل أو اكتب جديدًا" style="width:100%;box-sizing:border-box" autocomplete="off" oninput="partyNewUi('supplier')">
   <datalist id="dlSuppliers"></datalist>
@@ -1252,13 +1253,19 @@ function opsDash(){
   if(conf)$('#opsDash').innerHTML+=card('أكّد المورد — للإقفال',conf,'#0B7A3B');
 }
 function opBar(o){
-  var pct=Math.min(100,Number(o.pct)||0);
+  var tgt=Number(o.target_aoa)||0, cov=Number(o.covered_aoa)||0, n=o.receipts_n||o.rcpt_count||0;
+  if(tgt<=0){
+    return '<div style="display:flex;justify-content:space-between;margin-top:9px;font-size:11.5px;border-top:1px dashed #D7E2F2;padding-top:8px">'+
+      '<span style="color:var(--muted);font-weight:700">المستند: الإيصالات</span>'+
+      '<span class="num" style="color:#0B2447;font-weight:800">'+fmt(cov,0)+' AOA · '+n+' إيصال</span></div>';
+  }
+  var pct=Math.min(100,Math.round(cov/tgt*100));
   var col=pct>=100?'#0B7A3B':pct>=60?'#0A56B8':'#E6A700';
-  return '<div style="height:8px;background:#EAF0F8;border-radius:99px;overflow:hidden;margin-top:8px">'+
+  return '<div style="height:8px;background:#EAF0F8;border-radius:0;overflow:hidden;margin-top:8px">'+
     '<div style="width:'+pct+'%;height:100%;background:'+col+'"></div></div>'+
     '<div style="display:flex;justify-content:space-between;margin-top:5px;font-size:11.5px">'+
     '<span class="num" style="color:'+col+';font-weight:800">'+pct+'%</span>'+
-    '<span class="num" style="color:var(--muted)">'+fmt(o.covered_aoa,0)+' / '+fmt(o.target_aoa,0)+' AOA · '+o.receipts_n+' إيصال</span></div>';
+    '<span class="num" style="color:var(--muted)">'+fmt(cov,0)+' / '+fmt(tgt,0)+' AOA · '+n+' إيصال</span></div>';
 }
 var OP_STL={open:['open','ناقصة'],covered:['settling','مكتملة'],sent:['settling','عند المورد'],confirmed:['settled','أكّد المورد ✓'],closed:['settled','مقفلة']};
 var OP_LANE=0, RECON={}, RC_SIDE='in';
@@ -1396,7 +1403,7 @@ function opRepRender(){
     '<div style="font-size:10px;color:var(--muted)">'+t+'</div></div>';}
   $('#opRepTotals').innerHTML=
     cell('عمليات',T.n)+cell('مقفلة',T.closed)+
-    cell('الهدف AOA',fmt(T.target,0))+cell('الربح MRU',fmt(T.profit,0),T.profit>=0?'#0B7A3B':'#B00020');
+    cell('مغطى بإيصالات AOA',fmt(T.covered,0))+cell('الربح MRU',fmt(T.profit,0),T.profit>=0?'#0B7A3B':'#B00020');
   $('#opRepList').innerHTML=keys.map(function(k){var b=by[k];
     return '<div style="border:1px solid #D7E2F2;border-top:0;padding:11px 13px">'+
       '<div style="display:flex;justify-content:space-between;align-items:center">'+
@@ -1419,7 +1426,7 @@ function opNewSheet(){$('#opCust').value='';$('#opTarget').value='';$('#opSup').
 async function opCreate(){
   var c=($('#opCust').value||'').trim(),t=parseFloat(($('#opTarget').value||'').replace(/[^\d.]/g,''))||0;
   if(c.length<2){toast('أدخل اسم الزبون');return;}
-  if(t<=0){toast('أدخل المبلغ المستهدف');return;}
+  /* الهدف خطة اختيارية — المال الحقيقي يُبنى من الإيصالات */
   var sup=($('#opSup').value||'').trim();
   var cPh=($('#opCustPh')&&$('#opCustPh').value||'').replace(/[^0-9]/g,'');
   var sPh=($('#opSupPh')&&$('#opSupPh').value||'').replace(/[^0-9]/g,'');
@@ -1497,7 +1504,7 @@ async function opAddReceipt(){
     if(!r.ok)throw new Error(r.status);
     /* اكتمال التغطية → الحالة مكتملة تلقائيًا */
     var newCov=Number(OP_CUR.covered_aoa)+(RC_SIDE==='in'?a:0);
-    if(RC_SIDE==='in'&&newCov>=Number(OP_CUR.target_aoa)&&OP_CUR.status==='open'){
+    if(RC_SIDE==='in'&&Number(OP_CUR.target_aoa)>0&&newCov>=Number(OP_CUR.target_aoa)&&OP_CUR.status==='open'){
       await fetch(SB+'/bdl_ops?id=eq.'+OP_CUR.id,{method:'PATCH',headers:H(),body:JSON.stringify({status:'covered'})});
       toast('أُلحق — واكتملت تغطية '+OP_CUR.ref);
     }else toast('أُلحق ('+(RC_SIDE==='out'?'صادر للمورد':'وارد')+') — التغطية '+fmt(newCov,0)+' / '+fmt(OP_CUR.target_aoa,0));
@@ -1550,18 +1557,20 @@ function opCloseSheet(id){
     return;
   }
   CL_OP=(OPS_DATA||[]).find(function(o){return o.id===id;});if(!CL_OP)return;
-  $('#clOp').textContent=CL_OP.ref+' · '+CL_OP.client_name+' · '+fmt(CL_OP.target_aoa,0)+' AOA';
+  $('#clOp').textContent=CL_OP.ref+' · '+CL_OP.client_name+' · الأساس (إيصالات): '+fmt(Number(CL_OP.covered_aoa)||0,0)+' AOA';
   $('#clRc').value='';$('#clRk').value='';$('#clProfit').textContent='—';
   openOvl('closeop');
 }
+function clBase(){return Number(CL_OP&&CL_OP.covered_aoa)||0;} /* المال الموثق بالإيصالات فقط */
 function clCalc(){
   if(!CL_OP)return;
   var rc=parseFloat($('#clRc').value)||0,rk=parseFloat($('#clRk').value)||0;
-  if(rc>0&&rk>0){
-    var p=Number(CL_OP.target_aoa)*(rc-rk)/10; /* أسعار أوقية قديمة ← ربح MRU جديدة */
+  var base=clBase();
+  if(rc>0&&rk>0&&base>0){
+    var p=base*(rc-rk)/10;
     $('#clProfit').textContent=fmt(p,0)+' MRU';
     $('#clProfit').style.color=p>=0?'#0B7A3B':'#B00020';
-  } else $('#clProfit').textContent='—';
+  } else $('#clProfit').textContent=base>0?'—':'لا إيصالات — لا أساس للربح';
 }
 async function opCloseDo(skip){
   if(!CL_OP)return;
@@ -1569,8 +1578,10 @@ async function opCloseDo(skip){
   if(!skip){
     var rc=parseFloat($('#clRc').value)||0,rk=parseFloat($('#clRk').value)||0;
     if(rc<=0||rk<=0){toast('أدخل السعرين — أو اختر «إقفال بلا ربح»');return;}
+    var base=clBase();
+    if(base<=0){toast('لا إيصالات زبائن — لا يُعتمد ربح بلا إيصال');return;}
     body.rate_client=rc;body.rate_cost=rk;
-    body.profit_mru=Math.round(Number(CL_OP.target_aoa)*(rc-rk)/10*100)/100;
+    body.profit_mru=Math.round(base*(rc-rk)/10*100)/100;
   }
   try{
     var r=await fetch(SB+'/bdl_ops?id=eq.'+CL_OP.id,{method:'PATCH',headers:H(),body:JSON.stringify(body)});
