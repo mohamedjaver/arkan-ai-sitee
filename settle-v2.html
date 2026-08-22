@@ -1482,9 +1482,13 @@ async function opCreate(){
   var sup=($('#opSup').value||'').trim();
   var cPh=($('#opCustPh')&&$('#opCustPh').value||'').replace(/[^0-9]/g,'');
   var sPh=($('#opSupPh')&&$('#opSupPh').value||'').replace(/[^0-9]/g,'');
+  if(!partyKnown('client',c)&&partyKnown('supplier',c)){
+    partyNewUi('client');toast('«'+c+'» مسجل موردًا — انقله بالزر الظاهر أولًا');return;}
   if(!partyKnown('client',c)&&cPh.length<8){
     partyNewUi('client');toast('زبون جديد — أدخل رقم هاتفه أولًا');
     try{$('#opCustPh').focus();}catch(e){}return;}
+  if(sup&&!partyKnown('supplier',sup)&&partyKnown('client',sup)){
+    partyNewUi('supplier');toast('«'+sup+'» مسجل زبونًا — انقله بالزر الظاهر أولًا');return;}
   if(sup&&!partyKnown('supplier',sup)&&sPh.length<8){
     partyNewUi('supplier');toast('مورد جديد — أدخل رقم هاتفه أولًا');
     try{$('#opSupPh').focus();}catch(e){}return;}
