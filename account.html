@@ -1086,6 +1086,7 @@ function openApp(phone){
   /* السجل عبر الخادم — يشمل طلباته ومعاملاته، بلا permission-denied */
   loadMyTx(phone);
   clearInterval(window.__txIv); window.__txIv=setInterval(()=>loadMyTx(phone),45000);
+  try{loadBalance();}catch(e){}
   /* الوجهة الافتراضية بعد الدخول: الرئيسية */
   const h=(location.hash||'').replace('#','');
   const hasDeep=(h==='send'||h==='transfer'||h==='rates'||h==='acct'||h==='account'||new URLSearchParams(location.search).get('amt'));
@@ -1209,8 +1210,37 @@ let balHidden=false;
 function paintBalance(){
   const b = window.__bal||0;
   $('balAmt').textContent = balHidden ? '••••••' : fmt(b);
-  const usdt = (RATES.USDT&&RATES.USDT.m) ? b/RATES.USDT.m : 0;
-  $('balSub').innerHTML = balHidden ? '••••' : `≈ <b>${fmt(usdt)} USDT</b>`;
+  const uReal = window.__balUsdt||0;
+  if(uReal>0){ $('balSub').innerHTML = balHidden ? '••••' : `+ <b>${fmt(uReal)} USDT</b> محوّلة`; }
+  else{
+    const usdt = (RATES.USDT&&RATES.USDT.m) ? b/RATES.USDT.m : 0;
+    $('balSub').innerHTML = balHidden ? '••••' : `≈ <b>${fmt(usdt)} USDT</b>`;
+  }
+}
+/* الرصيد = العمليات المسوّاة (تمت) حصرًا — لا وعود ولا مفتوح */
+async function loadBalance(){
+  try{
+    const tok=await bdlcTok(); if(!tok) return;
+    const OWNER='22236295050';
+    const myPh=String((USER&&USER.phone)||'').replace(/[^0-9]/g,'');
+    let url;
+    if(myPh===OWNER||((USER&&USER.role)==='owner')){
+      url=MRB_SB+'/bdl_transactions?select=amount,ccy&status=eq.done&limit=2000';
+    }else{
+      /* زبون: عملياته عبر ربط الهاتف بسجل الزبناء */
+      const rc=await fetch(MRB_SB+'/bdl_customers?select=id&phone=eq.'+myPh,{headers:bdlcH(tok)});
+      const ids=rc.ok?(await rc.json()).map(x=>x.id):[];
+      if(!ids.length){window.__bal=0;window.__balUsdt=0;paintBalance();return;}
+      url=MRB_SB+'/bdl_transactions?select=amount,ccy&status=eq.done&customer_id=in.('+ids.join(',')+')&limit=2000';
+    }
+    const r=await fetch(url,{headers:bdlcH(tok)});
+    const rows=r.ok?await r.json():[];
+    let mru=0,usdt=0;
+    rows.forEach(t=>{const a=Number(t.amount)||0;
+      if(t.ccy==='USDT')usdt+=a; else if(t.ccy==='MRU')mru+=a; else mru+=0;});
+    window.__bal=mru; window.__balUsdt=usdt;
+    paintBalance();
+  }catch(e){}
 }
 $('eyeBtn').onclick = () => { balHidden=!balHidden; paintBalance(); };
 
@@ -1851,10 +1881,21 @@ async function bdlcPush(ref,name,to,amt,ccy){
       var jc=rc.ok?await rc.json():[];
       if(jc[0])cid=jc[0].id;
     }
+    var _bph=String((document.getElementById('mrbPhone')||{}).value||'').replace(/[^0-9]/g,'');
     if(!cid){
+      var _nb={name:(name&&name!=='—')?name:'عميل'};
+      if(_bph.length>=8)_nb.phone=_bph;
       var rn=await fetch(MRB_SB+'/bdl_customers',{method:'POST',headers:bdlcH(tok,{Prefer:'return=representation'}),
-        body:JSON.stringify({name:(name&&name!=='—')?name:'عميل'})});
-      if(!rn.ok)return;cid=(await rn.json())[0].id;
+        body:JSON.stringify(_nb)});
+      if(!rn.ok){ /* عمود الهاتف غير مثبت بعد — أنشئ بالاسم فقط */
+        rn=await fetch(MRB_SB+'/bdl_customers',{method:'POST',headers:bdlcH(tok,{Prefer:'return=representation'}),
+          body:JSON.stringify({name:_nb.name}) });
+        if(!rn.ok)return;
+      }
+      cid=(await rn.json())[0].id;
+    } else if(_bph.length>=8){
+      try{fetch(MRB_SB+'/bdl_customers?id=eq.'+cid,{method:'PATCH',headers:bdlcH(tok),
+        body:JSON.stringify({phone:_bph})});}catch(e){}
     }
     if(!aid&&acc.replace(/[^0-9A-Za-z]/g,'').length>=4){
       var kind='other';try{kind=String(mrbChan()||'other').toLowerCase();}catch(e){}
@@ -1984,6 +2025,7 @@ async function mrbDone(){
   btn.disabled=true;btn.textContent='… جارٍ القيد';
   try{ await mrbPush((document.getElementById('mrbRef')||{}).value||('BDL-'+Date.now())); }catch(e){}
   btn.textContent='✓ قُيّدت في التسوية ('+MRB_CCY+')';
+  try{if(typeof loadBalance==='function')setTimeout(loadBalance,800);}catch(e){}
   btn.style.background='#5C7699';
   document.getElementById('mrbActs').style.display='block';
   toastSafe('قُيّدت — الآن ولّد الوصل أو شاركه');
