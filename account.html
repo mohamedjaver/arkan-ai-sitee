@@ -1220,19 +1220,19 @@ function paintBalance(){
 /* الرصيد = العمليات المسوّاة (تمت) حصرًا — لا وعود ولا مفتوح */
 async function loadBalance(){
   try{
-    const tok=await (window.bdlcTok?window.bdlcTok():null); if(!tok) return;
+    const tok=await (window.bdlcAuth?window.bdlcAuth():null); if(!tok) return;
     const OWNER='22236295050';
     const U=window.__USER||((typeof USER!=='undefined'&&USER)||{});
     const myPh=String(U.phone||'').replace(/[^0-9]/g,'');
     let url;
     if(myPh===OWNER||(U.role==='owner')){
-      url=window.MRB_SB+'/bdl_transactions?select=amount,ccy&status=eq.done&limit=2000';
+      url=window.MRB_SB_GET()+'/bdl_transactions?select=amount,ccy&status=eq.done&limit=2000';
     }else{
       /* زبون: عملياته عبر ربط الهاتف بسجل الزبناء */
-      const rc=await fetch(window.MRB_SB+'/bdl_customers?select=id&phone=eq.'+myPh,{headers:window.bdlcH(tok)});
+      const rc=await fetch(window.MRB_SB_GET()+'/bdl_customers?select=id&phone=eq.'+myPh,{headers:window.bdlcH(tok)});
       const ids=rc.ok?(await rc.json()).map(x=>x.id):[];
       if(!ids.length){window.__bal=0;window.__balUsdt=0;paintBalance();return;}
-      url=window.MRB_SB+'/bdl_transactions?select=amount,ccy&status=eq.done&customer_id=in.('+ids.join(',')+')&limit=2000';
+      url=window.MRB_SB_GET()+'/bdl_transactions?select=amount,ccy&status=eq.done&customer_id=in.('+ids.join(',')+')&limit=2000';
     }
     const r=await fetch(url,{headers:window.bdlcH(tok)});
     const rows=r.ok?await r.json():[];
@@ -1836,6 +1836,8 @@ async function bdlcAuth(){
 }
 function bdlcH(tok,extra){var h={apikey:MRB_ANON,Authorization:'Bearer '+tok,'Content-Type':'application/json'};
   if(extra)Object.keys(extra).forEach(function(k){h[k]=extra[k];});return h;}
+window.bdlcAuth=bdlcAuth;window.bdlcH=bdlcH;
+window.MRB_SB_GET=function(){return MRB_SB;}; /* كسول — يتفادى TDZ */
 async function bdlcContacts(){
   var tok=await bdlcAuth();if(!tok)return;
   try{
@@ -1866,7 +1868,6 @@ async function bdlcContacts(){
         if(a.number===tEl.value)hit=c;});});
       if(hit&&nEl&&!nEl.value)nEl.value=hit.name;});}
 }
-window.bdlcTok=bdlcTok;window.bdlcH=bdlcH;window.MRB_SB=MRB_SB; /* جسور للموديول */
 async function bdlcPush(ref,name,to,amt,ccy){
   var tok=await bdlcAuth();if(!tok)return;
   try{
