@@ -265,6 +265,7 @@ input,select{font-family:inherit;color:var(--ink)}
       <button data-l="4" onclick="setLane(4)">رباعية</button>
     </div>
   </div>
+  <div id="opBridge"></div>
   <div class="list" id="opList"><div class="empty">جارٍ التحميل…</div></div>
 </div>
 
@@ -1225,10 +1226,14 @@ var OPS_DATA=null,OP_ST='ALL',OP_CUR=null;
 function setOpSt(st){OP_ST=st;
   document.querySelectorAll('#opChips .chip').forEach(function(b){b.classList.toggle('on',b.dataset.st===st);});
   renderOps();}
+function tFetch(url,opts,ms){
+  var ac=new AbortController();var t=setTimeout(function(){ac.abort();},ms||12000);
+  return fetch(url,Object.assign({},opts,{signal:ac.signal})).finally(function(){clearTimeout(t);});
+}
 async function loadRecon(){
   RECON={};
   try{
-    var r=await fetch(SB+'/bdl_op_receipts?select=op_id,txn_id,amount_aoa,side,match_txn&order=created_at.asc&limit=1000',{headers:H()});
+    var r=await tFetch(SB+'/bdl_op_receipts?select=op_id,txn_id,amount_aoa,side,match_txn&order=created_at.asc&limit=1000',{headers:H()});
     var rows=r.ok?await r.json():[];
     var outSet={};
     rows.forEach(function(x){if(x.side==='out'&&x.match_txn){outSet[x.op_id+'|'+x.match_txn]=1;}});
@@ -1245,14 +1250,43 @@ async function loadOps(){
   try{
     await loadRecon();
     if(PARTIES===null)loadParties(); /* السجل مرة لكل جلسة */
-    var r=await fetch(SB+'/bdl_ops_coverage?select=*&order=created_at.desc&limit=300',{headers:H()});
+    var r=await tFetch(SB+'/bdl_ops_coverage?select=*&order=created_at.desc&limit=300',{headers:H()});
     if(r.status===404||r.status===400){
       $('#opList').innerHTML='<div class="empty">جداول العمليات غير مثبتة بعد —<br>افتح Supabase ← SQL Editor والصق ملف <b>bdl-ops.sql</b> مرة واحدة ثم عد وحدّث</div>';
       OPS_DATA=[];opsDash();return;}
     if(!r.ok)throw new Error(r.status);
     OPS_DATA=await r.json();
-  }catch(e){OPS_DATA=[];$('#opList').innerHTML='<div class="empty">تعذّر التحميل — أعد المحاولة</div>';}
+  }catch(e){OPS_DATA=[];
+    $('#opList').innerHTML='<div class="empty">تعذّر التحميل ('+(e.name==='AbortError'?'مهلة الشبكة':(e.message||''))+')'+
+      '<br><button onclick="OPS_DATA=null;loadOps()" style="margin-top:10px;height:46px;padding:0 22px;border:1.5px solid var(--navy);border-radius:0;background:#fff;color:var(--navy);font-weight:800;font-family:inherit;cursor:pointer">أعد المحاولة</button></div>';}
   opsDash();renderOps();
+  loadOpBridge();
+}
+var BRIDGE=[],OP_SRC_TX=null;
+async function loadOpBridge(){
+  try{
+    var r=await tFetch(SB+'/bdl_transactions?select=id,ref,amount,ccy,status,created_at,meta,bdl_customers(name)'+
+      '&status=in.(open,settling)&order=created_at.desc&limit=15',{headers:H()});
+    BRIDGE=r.ok?(await r.json()).filter(function(t){return !(t.meta&&t.meta.op_ref);}):[];
+  }catch(e){BRIDGE=[];}
+  var box=$('#opBridge');if(!box)return;
+  if(!BRIDGE.length){box.innerHTML='';return;}
+  box.innerHTML='<div style="font-size:12px;font-weight:800;color:#5C7699;margin:4px 0 8px">قيود الوصل الأخيرة — حوّلها لعمليات</div>'+
+    BRIDGE.slice(0,6).map(function(t){
+      var nm=(t.bdl_customers&&t.bdl_customers.name)||'';
+      return '<div style="background:#fff;border:1px dashed #9DB6D9;padding:11px 13px;margin-bottom:7px;display:flex;justify-content:space-between;align-items:center;gap:8px">'+
+        '<div style="min-width:0"><div class="num" style="font-size:12.5px;font-weight:800;color:#0B2447">'+fmt(t.amount,0)+' '+esc(t.ccy)+(nm?' · '+esc(nm):'')+'</div>'+
+        '<div class="num" style="font-size:10.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(t.ref)+'</div></div>'+
+        '<button onclick="opFromTx(\''+t.id+'\')" style="flex-shrink:0;border:0;border-radius:0;background:var(--navy);color:#fff;font-weight:800;font-size:12px;padding:10px 14px;font-family:inherit;cursor:pointer">+ عملية</button></div>';
+    }).join('');
+}
+function opFromTx(id){
+  var t=BRIDGE.find(function(x){return x.id===id;});if(!t)return;
+  opNewSheet();
+  OP_SRC_TX=t;
+  $('#opCust').value=(t.bdl_customers&&t.bdl_customers.name)||'';
+  partyNewUi('client');
+  $('#opLegs').value=(t.ccy==='MRU')?'2':'3';opLegsUi();
 }
 function opsDash(){
   var d=OPS_DATA||[],today=new Date().toDateString();
@@ -1483,7 +1517,7 @@ function opReportSheet(){opRepPeriod(OP_REP);openOvl('opreport');}
 
 function opStructOf(l){return l===3?'MRU→AOA→USDT':l===4?'MRU→AOA→USDT→MRU':'MRU→AOA';}
 function opLegsUi(){$('#opStructPrev').textContent=opStructOf(+$('#opLegs').value);}
-function opNewSheet(){$('#opCust').value='';$('#opTarget').value='';$('#opSup').value='';$('#opLegs').value='2';
+function opNewSheet(){OP_SRC_TX=null;$('#opCust').value='';$('#opTarget').value='';$('#opSup').value='';$('#opLegs').value='2';
   $('#opCustPh').value='';$('#opSupPh').value='';
   $('#opCustPhBox').style.display='none';$('#opSupPhBox').style.display='none';
   var _f1=$('#opCustFix');if(_f1)_f1.remove();var _f2=$('#opSupFix');if(_f2)_f2.remove();
@@ -1520,6 +1554,11 @@ async function opCreate(){
     if(!r.ok)throw new Error(r.status);
     partyUpsert('client',c,cPh);
     partyUpsert('supplier',sup,sPh);
+    if(OP_SRC_TX){
+      try{await fetch(SB+'/bdl_transactions?id=eq.'+OP_SRC_TX.id,{method:'PATCH',headers:H(),
+        body:JSON.stringify({meta:Object.assign({},OP_SRC_TX.meta||{},{op_ref:ref})})});}catch(e){}
+      OP_SRC_TX=null;
+    }
     closeOvl('newop');toast('أُنشئت '+ref);OPS_DATA=null;loadOps();
   }catch(e){toast('تعذّر الإنشاء: '+e.message);}
 }
