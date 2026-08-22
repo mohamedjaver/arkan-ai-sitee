@@ -247,6 +247,7 @@ input,select{font-family:inherit;color:var(--ink)}
     <div class="row">
       <div class="srch"><input id="opq" placeholder="بحث: زبون، مرجع، مورد" oninput="renderOps()"></div>
       <button class="selall" onclick="opNewSheet()">+ عملية</button>
+      <button class="selall" onclick="opReportSheet()">تقرير</button>
       <button class="selall" style="background:var(--navy);color:#fff;border-color:var(--navy)" onclick="dayCloseSheet()">إقفال اليوم</button>
     </div>
     <div class="chips" id="opChips">
@@ -271,11 +272,13 @@ input,select{font-family:inherit;color:var(--ink)}
 <div class="ovl" id="ovl-newop"><div class="sheet">
   <h3>عملية جديدة<button onclick="closeOvl('newop')">إغلاق ✕</button></h3>
   <div class="clabel">الزبون</div>
-  <input id="opCust" class="cin" placeholder="اسم الزبون الموريتاني" style="width:100%;box-sizing:border-box">
+  <input id="opCust" class="cin" list="dlClients" placeholder="اختر من السجل أو اكتب جديدًا" style="width:100%;box-sizing:border-box" autocomplete="off">
+  <datalist id="dlClients"></datalist>
   <div class="clabel" style="margin-top:10px">المبلغ المستهدف (AOA)</div>
   <input id="opTarget" class="cin num" inputmode="numeric" placeholder="850000" style="width:100%;box-sizing:border-box">
   <div class="clabel" style="margin-top:10px">المورد الأنغولي (اختياري)</div>
-  <input id="opSup" class="cin" placeholder="Helenio Pay" style="width:100%;box-sizing:border-box">
+  <input id="opSup" class="cin" list="dlSuppliers" placeholder="اختر من السجل أو اكتب جديدًا" style="width:100%;box-sizing:border-box" autocomplete="off">
+  <datalist id="dlSuppliers"></datalist>
   <div class="clabel" style="margin-top:10px">أطراف العملية</div>
   <select id="opLegs" onchange="opLegsUi()" style="width:100%;box-sizing:border-box;height:50px;border:1.5px solid var(--navy);background:#fff;font-family:inherit;font-size:14px;font-weight:800;color:#0B2447;padding:0 12px">
     <option value="2">ثنائية — أوقية ← كوانزا</option>
@@ -284,6 +287,18 @@ input,select{font-family:inherit;color:var(--ink)}
   </select>
   <div id="opStructPrev" class="num" style="margin-top:8px;font-size:12px;color:var(--muted)">MRU → AOA</div>
   <button class="cta" style="width:100%;margin-top:16px" onclick="opCreate()">إنشاء</button>
+</div></div>
+
+<!-- تقرير العمليات الدوري -->
+<div class="ovl" id="ovl-opreport"><div class="sheet">
+  <h3>تقرير العمليات<button onclick="closeOvl('opreport')">إغلاق</button></h3>
+  <div class="lanebar" style="margin:4px 0 14px">
+    <button class="on" data-p="day" onclick="opRepPeriod('day')">يومي</button>
+    <button data-p="week" onclick="opRepPeriod('week')">أسبوعي</button>
+    <button data-p="month" onclick="opRepPeriod('month')">شهري</button>
+  </div>
+  <div id="opRepTotals" style="display:grid;grid-template-columns:repeat(4,1fr);gap:0;border:1.5px solid var(--navy);margin-bottom:14px"></div>
+  <div id="opRepList"></div>
 </div></div>
 
 <!-- المطابقة والإقفال اليومي -->
@@ -1191,6 +1206,7 @@ async function loadRecon(){
 async function loadOps(){
   try{
     await loadRecon();
+    if(PARTIES===null)loadParties(); /* السجل مرة لكل جلسة */
     var r=await fetch(SB+'/bdl_ops_coverage?select=*&order=created_at.desc&limit=300',{headers:H()});
     if(r.status===404||r.status===400){
       $('#opList').innerHTML='<div class="empty">جداول العمليات غير مثبتة بعد —<br>افتح Supabase ← SQL Editor والصق ملف <b>bdl-ops.sql</b> مرة واحدة ثم عد وحدّث</div>';
@@ -1294,6 +1310,78 @@ function renderOps(){
       '</div>';
   }).join('')||'<div class="empty">لا عمليات'+(q?' مطابقة':' — أنشئ الأولى بزر «+ عملية»')+'</div>';
 }
+/* ═ سجل الأطراف: تحميل ← اقتراح ← تسجيل تلقائي مرة واحدة (unique upsert) ═ */
+var PARTIES=null;
+async function loadParties(){
+  try{
+    var r=await fetch(SB+'/bdl_parties?select=kind,name,phone&order=updated_at.desc&limit=400',{headers:H()});
+    PARTIES=r.ok?await r.json():[];
+  }catch(e){PARTIES=PARTIES||[];}
+  var dc=$('#dlClients'),ds=$('#dlSuppliers');
+  if(dc)dc.innerHTML=(PARTIES||[]).filter(function(p){return p.kind==='client';})
+    .map(function(p){return '<option value="'+esc(p.name)+'">';}).join('');
+  if(ds)ds.innerHTML=(PARTIES||[]).filter(function(p){return p.kind==='supplier';})
+    .map(function(p){return '<option value="'+esc(p.name)+'">';}).join('');
+}
+async function partyUpsert(kind,name){
+  name=(name||'').trim();if(name.length<2)return;
+  var known=(PARTIES||[]).some(function(p){return p.kind===kind&&p.name===name;});
+  try{
+    await fetch(SB+'/bdl_parties?on_conflict=owner_id,kind,name',{method:'POST',
+      headers:H({Prefer:'resolution=merge-duplicates'}),
+      body:JSON.stringify({kind:kind,name:name,updated_at:new Date().toISOString()})});
+    if(!known){(PARTIES=PARTIES||[]).unshift({kind:kind,name:name,phone:''});loadPartiesUiOnly();}
+  }catch(e){}
+}
+function loadPartiesUiOnly(){
+  var dc=$('#dlClients'),ds=$('#dlSuppliers');
+  if(dc)dc.innerHTML=(PARTIES||[]).filter(function(p){return p.kind==='client';}).map(function(p){return '<option value="'+esc(p.name)+'">';}).join('');
+  if(ds)ds.innerHTML=(PARTIES||[]).filter(function(p){return p.kind==='supplier';}).map(function(p){return '<option value="'+esc(p.name)+'">';}).join('');
+}
+
+/* ═ التقرير الدوري: يومي/أسبوعي/شهري من العمليات المحملة ═ */
+var OP_REP='day';
+function opRepPeriod(p){OP_REP=p;
+  document.querySelectorAll('#ovl-opreport .lanebar button').forEach(function(b){b.classList.toggle('on',b.dataset.p===p);});
+  opRepRender();}
+function opRepKey(dt,p){
+  var d=new Date(dt);
+  if(p==='day')return d.toISOString().slice(0,10);
+  if(p==='month')return d.toISOString().slice(0,7);
+  var x=new Date(d);x.setDate(d.getDate()-((d.getDay()+1)%7)); /* أسبوع يبدأ السبت */
+  return 'أسبوع '+x.toISOString().slice(0,10);
+}
+function opRepRender(){
+  var rows=OPS_DATA||[],by={};
+  rows.forEach(function(o){
+    var k=opRepKey(o.created_at,OP_REP);
+    var b=by[k]=by[k]||{n:0,closed:0,target:0,covered:0,profit:0,matchedAll:0,recons:0};
+    b.n++;b.target+=Number(o.target_aoa)||0;b.covered+=Number(o.covered_aoa)||0;
+    if(o.status==='closed'){b.closed++;b.profit+=Number(o.profit_mru)||0;}
+    var rc=reconOf(o.id);if(rc.in_n){b.recons++;if(rc.matched>=rc.in_n)b.matchedAll++;}
+  });
+  var keys=Object.keys(by).sort().reverse();
+  var T={n:0,closed:0,target:0,covered:0,profit:0};
+  keys.forEach(function(k){var b=by[k];T.n+=b.n;T.closed+=b.closed;T.target+=b.target;T.covered+=b.covered;T.profit+=b.profit;});
+  function cell(t,v,c){return '<div style="padding:10px 4px;text-align:center;border-inline-start:1px solid var(--navy)">'+
+    '<div class="num" style="font-size:15px;font-weight:800;color:'+(c||'#0B2447')+'">'+v+'</div>'+
+    '<div style="font-size:10px;color:var(--muted)">'+t+'</div></div>';}
+  $('#opRepTotals').innerHTML=
+    cell('عمليات',T.n)+cell('مقفلة',T.closed)+
+    cell('الهدف AOA',fmt(T.target,0))+cell('الربح MRU',fmt(T.profit,0),T.profit>=0?'#0B7A3B':'#B00020');
+  $('#opRepList').innerHTML=keys.map(function(k){var b=by[k];
+    return '<div style="border:1px solid #D7E2F2;border-top:0;padding:11px 13px">'+
+      '<div style="display:flex;justify-content:space-between;align-items:center">'+
+      '<b class="num" style="font-size:13px;color:var(--navy)">'+esc(k)+'</b>'+
+      '<span class="num" style="font-size:13px;font-weight:800;color:'+(b.profit>=0?'#0B7A3B':'#B00020')+'">'+
+      (b.profit>=0?'+':'')+fmt(b.profit,0)+' MRU</span></div>'+
+      '<div class="num" style="font-size:11px;color:var(--muted);margin-top:4px">'+
+      b.n+' عملية · مقفلة '+b.closed+' · هدف '+fmt(b.target,0)+' · مغطى '+fmt(b.covered,0)+
+      ' · مطابقة تامة '+b.matchedAll+'/'+b.recons+'</div></div>';
+  }).join('')||'<div class="empty">لا عمليات في السجل بعد</div>';
+}
+function opReportSheet(){opRepPeriod(OP_REP);openOvl('opreport');}
+
 function opStructOf(l){return l===3?'MRU→AOA→USDT':l===4?'MRU→AOA→USDT→MRU':'MRU→AOA';}
 function opLegsUi(){$('#opStructPrev').textContent=opStructOf(+$('#opLegs').value);}
 function opNewSheet(){$('#opCust').value='';$('#opTarget').value='';$('#opSup').value='';$('#opLegs').value='2';opLegsUi();openOvl('newop');}
@@ -1314,7 +1402,9 @@ async function opCreate(){
       if(r.ok)toast('أُنشئت بالنمط الأساسي — الصق bdl-ops5.sql لتفعيل الحارات والمطابقة');
     }
     if(!r.ok)throw new Error(r.status);
-    closeOvl('newop');toast('أُنشئت '+ref+' ✓');OPS_DATA=null;loadOps();
+    partyUpsert('client',c);
+    partyUpsert('supplier',($('#opSup').value||'').trim());
+    closeOvl('newop');toast('أُنشئت '+ref);OPS_DATA=null;loadOps();
   }catch(e){toast('تعذّر الإنشاء: '+e.message);}
 }
 function opSheet(id){
