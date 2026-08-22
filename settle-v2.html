@@ -177,6 +177,21 @@ input,select{font-family:inherit;color:var(--ink)}
 #ovl-closeop .sheet input,#ovl-closeop .sheet button,
 #v-ops .opcard{border-radius:0!important}
 #v-ops .opcard{background:#fff;border:1px solid #D7E2F2;padding:14px 15px;margin-bottom:10px}
+/* خانات صفائح العمليات — كبيرة مقروءة بطراز مصرفي */
+#ovl-newop .sheet .cin,#ovl-newop .sheet select,
+#ovl-addr .sheet .cin,#ovl-addr .sheet select,
+#ovl-closeop .sheet .cin{
+  height:56px!important;font-size:17px!important;font-weight:700;
+  border:1.5px solid #9DB6D9!important;padding:0 14px!important;color:#0B2447;background:#fff}
+#ovl-newop .sheet .cin:focus,#ovl-addr .sheet .cin:focus,#ovl-closeop .sheet .cin:focus,
+#ovl-newop .sheet select:focus,#ovl-addr .sheet select:focus{border-color:var(--navy)!important;outline:none}
+#ovl-newop .sheet .clabel,#ovl-addr .sheet .clabel,#ovl-closeop .sheet .clabel{
+  font-size:13px;font-weight:800;color:#0B2447;margin-bottom:7px}
+#ovl-newop .sheet .cta,#ovl-addr .sheet .cta,#ovl-closeop .sheet .cta{
+  display:block;height:56px;line-height:56px;padding:0;text-align:center;
+  background:var(--navy)!important;color:#fff!important;font-size:16px;font-weight:800;
+  border:0;cursor:pointer}
+#ovl-newop .sheet h3 button,#ovl-addr .sheet h3 button{font-size:13px}
 .lanebar{display:flex;gap:0;margin:10px 0 4px;border:1px solid var(--navy)}
 .lanebar button{flex:1;padding:10px 0;border:0;background:#fff;color:var(--navy);
   font-family:inherit;font-weight:800;font-size:12.5px;cursor:pointer;border-inline-start:1px solid var(--navy)}
