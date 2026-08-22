@@ -272,13 +272,21 @@ input,select{font-family:inherit;color:var(--ink)}
 <div class="ovl" id="ovl-newop"><div class="sheet">
   <h3>عملية جديدة<button onclick="closeOvl('newop')">إغلاق ✕</button></h3>
   <div class="clabel">الزبون</div>
-  <input id="opCust" class="cin" list="dlClients" placeholder="اختر من السجل أو اكتب جديدًا" style="width:100%;box-sizing:border-box" autocomplete="off">
+  <input id="opCust" class="cin" list="dlClients" placeholder="اختر من السجل أو اكتب جديدًا" style="width:100%;box-sizing:border-box" autocomplete="off" oninput="partyNewUi('client')">
   <datalist id="dlClients"></datalist>
+  <div id="opCustPhBox" style="display:none;margin-top:8px">
+    <div class="clabel" style="color:#B00020">زبون جديد — رقم هاتفه مطلوب</div>
+    <input id="opCustPh" class="cin num" inputmode="tel" dir="ltr" placeholder="36295050" style="width:100%;box-sizing:border-box">
+  </div>
   <div class="clabel" style="margin-top:10px">المبلغ المستهدف (AOA)</div>
   <input id="opTarget" class="cin num" inputmode="numeric" placeholder="850000" style="width:100%;box-sizing:border-box">
   <div class="clabel" style="margin-top:10px">المورد الأنغولي (اختياري)</div>
-  <input id="opSup" class="cin" list="dlSuppliers" placeholder="اختر من السجل أو اكتب جديدًا" style="width:100%;box-sizing:border-box" autocomplete="off">
+  <input id="opSup" class="cin" list="dlSuppliers" placeholder="اختر من السجل أو اكتب جديدًا" style="width:100%;box-sizing:border-box" autocomplete="off" oninput="partyNewUi('supplier')">
   <datalist id="dlSuppliers"></datalist>
+  <div id="opSupPhBox" style="display:none;margin-top:8px">
+    <div class="clabel" style="color:#B00020">مورد جديد — رقم هاتفه مطلوب</div>
+    <input id="opSupPh" class="cin num" inputmode="tel" dir="ltr" placeholder="244937461010" style="width:100%;box-sizing:border-box">
+  </div>
   <div class="clabel" style="margin-top:10px">أطراف العملية</div>
   <select id="opLegs" onchange="opLegsUi()" style="width:100%;box-sizing:border-box;height:50px;border:1.5px solid var(--navy);background:#fff;font-family:inherit;font-size:14px;font-weight:800;color:#0B2447;padding:0 12px">
     <option value="2">ثنائية — أوقية ← كوانزا</option>
@@ -1323,14 +1331,27 @@ async function loadParties(){
   if(ds)ds.innerHTML=(PARTIES||[]).filter(function(p){return p.kind==='supplier';})
     .map(function(p){return '<option value="'+esc(p.name)+'">';}).join('');
 }
-async function partyUpsert(kind,name){
+function partyKnown(kind,name){
+  name=(name||'').trim();
+  return (PARTIES||[]).some(function(p){return p.kind===kind&&p.name===name;});
+}
+function partyNewUi(kind){
+  var inp=$(kind==='client'?'#opCust':'#opSup');
+  var box=$(kind==='client'?'#opCustPhBox':'#opSupPhBox');
+  if(!inp||!box)return;
+  var v=(inp.value||'').trim();
+  box.style.display=(v.length>=2&&!partyKnown(kind,v))?'block':'none';
+}
+async function partyUpsert(kind,name,phone){
   name=(name||'').trim();if(name.length<2)return;
-  var known=(PARTIES||[]).some(function(p){return p.kind===kind&&p.name===name;});
+  var known=partyKnown(kind,name);
   try{
+    var body={kind:kind,name:name,updated_at:new Date().toISOString()};
+    if(phone)body.phone=String(phone).replace(/[^0-9+]/g,'');
     await fetch(SB+'/bdl_parties?on_conflict=owner_id,kind,name',{method:'POST',
       headers:H({Prefer:'resolution=merge-duplicates'}),
-      body:JSON.stringify({kind:kind,name:name,updated_at:new Date().toISOString()})});
-    if(!known){(PARTIES=PARTIES||[]).unshift({kind:kind,name:name,phone:''});loadPartiesUiOnly();}
+      body:JSON.stringify(body)});
+    if(!known){(PARTIES=PARTIES||[]).unshift({kind:kind,name:name,phone:body.phone||''});loadPartiesUiOnly();}
   }catch(e){}
 }
 function loadPartiesUiOnly(){
@@ -1384,11 +1405,23 @@ function opReportSheet(){opRepPeriod(OP_REP);openOvl('opreport');}
 
 function opStructOf(l){return l===3?'MRU→AOA→USDT':l===4?'MRU→AOA→USDT→MRU':'MRU→AOA';}
 function opLegsUi(){$('#opStructPrev').textContent=opStructOf(+$('#opLegs').value);}
-function opNewSheet(){$('#opCust').value='';$('#opTarget').value='';$('#opSup').value='';$('#opLegs').value='2';opLegsUi();openOvl('newop');}
+function opNewSheet(){$('#opCust').value='';$('#opTarget').value='';$('#opSup').value='';$('#opLegs').value='2';
+  $('#opCustPh').value='';$('#opSupPh').value='';
+  $('#opCustPhBox').style.display='none';$('#opSupPhBox').style.display='none';
+  opLegsUi();openOvl('newop');}
 async function opCreate(){
   var c=($('#opCust').value||'').trim(),t=parseFloat(($('#opTarget').value||'').replace(/[^\d.]/g,''))||0;
   if(c.length<2){toast('أدخل اسم الزبون');return;}
   if(t<=0){toast('أدخل المبلغ المستهدف');return;}
+  var sup=($('#opSup').value||'').trim();
+  var cPh=($('#opCustPh')&&$('#opCustPh').value||'').replace(/[^0-9]/g,'');
+  var sPh=($('#opSupPh')&&$('#opSupPh').value||'').replace(/[^0-9]/g,'');
+  if(!partyKnown('client',c)&&cPh.length<8){
+    partyNewUi('client');toast('زبون جديد — أدخل رقم هاتفه أولًا');
+    try{$('#opCustPh').focus();}catch(e){}return;}
+  if(sup&&!partyKnown('supplier',sup)&&sPh.length<8){
+    partyNewUi('supplier');toast('مورد جديد — أدخل رقم هاتفه أولًا');
+    try{$('#opSupPh').focus();}catch(e){}return;}
   var ref='OP-'+Date.now().toString(36).toUpperCase().slice(-5);
   try{
     var base={ref:ref,client_name:c,target_aoa:t,supplier:($('#opSup').value||'').trim()||null};
@@ -1402,8 +1435,8 @@ async function opCreate(){
       if(r.ok)toast('أُنشئت بالنمط الأساسي — الصق bdl-ops5.sql لتفعيل الحارات والمطابقة');
     }
     if(!r.ok)throw new Error(r.status);
-    partyUpsert('client',c);
-    partyUpsert('supplier',($('#opSup').value||'').trim());
+    partyUpsert('client',c,cPh);
+    partyUpsert('supplier',sup,sPh);
     closeOvl('newop');toast('أُنشئت '+ref);OPS_DATA=null;loadOps();
   }catch(e){toast('تعذّر الإنشاء: '+e.message);}
 }
