@@ -1333,11 +1333,13 @@ function renderOps(){
   }).join('')||'<div class="empty">لا عمليات'+(q?' مطابقة':' — أنشئ الأولى بزر «+ عملية»')+'</div>';
 }
 /* ═ سجل الأطراف: تحميل ← اقتراح ← تسجيل تلقائي مرة واحدة (unique upsert) ═ */
-var PARTIES=null;
+var PARTIES=null,PARTIES_ERR=null;
 async function loadParties(){
   try{
     var r=await fetch(SB+'/bdl_parties?select=kind,name,phone&order=updated_at.desc&limit=400',{headers:H()});
-    PARTIES=r.ok?await r.json():[];
+    if(r.ok){PARTIES=await r.json();PARTIES_ERR=null;}
+    else if(r.status===404){PARTIES_ERR='nosql';PARTIES=PARTIES||[];partiesBanner();}
+    else{PARTIES=PARTIES||[];}
   }catch(e){PARTIES=PARTIES||[];}
   var dc=$('#dlClients'),ds=$('#dlSuppliers');
   if(dc)dc.innerHTML=(PARTIES||[]).filter(function(p){return p.kind==='client';})
@@ -1356,16 +1358,26 @@ function partyNewUi(kind){
   var v=(inp.value||'').trim();
   box.style.display=(v.length>=2&&!partyKnown(kind,v))?'block':'none';
 }
+function partiesBanner(){
+  /* الجدول غير مثبت — الزبناء لن يبقوا بعد الجلسة حتى تُلصق bdl-parties.sql */
+  var msg='<div style="background:#FDECEA;border:1.5px solid #B00020;padding:12px 14px;margin-bottom:10px;font-size:12.5px;font-weight:800;color:#B00020">'+
+    'سجل الأطراف غير مثبت في القاعدة — الزبناء لا يُحفظون دائمًا.<br>'+
+    '<span style="font-weight:700;color:#7A0015">الحل (مرة واحدة): Supabase ← SQL Editor ← الصق bdl-parties.sql ← Run</span></div>';
+  var cl=$('#clientList');if(cl&&cl.innerHTML.indexOf('غير مثبت')<0)cl.insertAdjacentHTML('beforebegin',msg);
+}
 async function partyUpsert(kind,name,phone){
   name=(name||'').trim();if(name.length<2)return;
   var known=partyKnown(kind,name);
+  var ph=phone?String(phone).replace(/[^0-9+]/g,''):'';
+  /* الانعكاس المحلي فورًا — استمرارية الجلسة مضمونة دائمًا */
+  if(!known){(PARTIES=PARTIES||[]).unshift({kind:kind,name:name,phone:ph});loadPartiesUiOnly();}
   try{
     var body={kind:kind,name:name,updated_at:new Date().toISOString()};
-    if(phone)body.phone=String(phone).replace(/[^0-9+]/g,'');
-    await fetch(SB+'/bdl_parties?on_conflict=owner_id,kind,name',{method:'POST',
+    if(ph)body.phone=ph;
+    var r=await fetch(SB+'/bdl_parties?on_conflict=owner_id,kind,name',{method:'POST',
       headers:H({Prefer:'resolution=merge-duplicates'}),
       body:JSON.stringify(body)});
-    if(!known){(PARTIES=PARTIES||[]).unshift({kind:kind,name:name,phone:body.phone||''});loadPartiesUiOnly();}
+    if(r.status===404){PARTIES_ERR='nosql';partiesBanner();}
   }catch(e){}
 }
 function loadPartiesUiOnly(){
