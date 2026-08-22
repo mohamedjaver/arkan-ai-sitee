@@ -367,16 +367,25 @@ input,select{font-family:inherit;color:var(--ink)}
   <div class="fbar">
     <div class="row">
       <div class="srch"><input id="cq" placeholder="بحث: اسم أو هاتف" oninput="renderClients()"></div>
-      <button class="selall" onclick="cNewToggle()">+ زبون</button>
+    </div>
+    <div class="lanebar" id="cKindBar" style="margin-top:8px">
+      <button class="on" data-k="all" onclick="cViewKind('all')">الكل</button>
+      <button data-k="client" onclick="cViewKind('client')">الزبناء</button>
+      <button data-k="supplier" onclick="cViewKind('supplier')">الموردون</button>
+      <button class="selall" onclick="cNewToggle()">+ طرف</button>
       <button class="selall" onclick="PARTIES=null;loadClients()">تحديث</button>
     </div>
   </div>
   <div id="cNewBox" style="display:none;background:#fff;border:1.5px solid var(--navy);padding:14px;margin-bottom:12px">
-    <div class="clabel">اسم الزبون</div>
+    <div class="sideseg" style="margin-bottom:12px" id="cKindSeg">
+      <button class="on" data-k="client" onclick="cKindSet('client')">زبون</button>
+      <button data-k="supplier" onclick="cKindSet('supplier')">مورد</button>
+    </div>
+    <div class="clabel" id="cNewNameLbl">اسم الزبون</div>
     <input id="cNewName" class="cin" style="width:100%;box-sizing:border-box;height:52px;border:1.5px solid #9DB6D9;border-radius:0;font-size:16px;padding:0 12px">
     <div class="clabel" style="margin-top:10px">رقم الهاتف</div>
     <input id="cNewPh" class="cin num" inputmode="tel" dir="ltr" style="width:100%;box-sizing:border-box;height:52px;border:1.5px solid #9DB6D9;border-radius:0;font-size:16px;padding:0 12px;text-align:center">
-    <button onclick="cNewSave()" style="width:100%;margin-top:12px;height:52px;border:0;border-radius:0;background:var(--navy);color:#fff;font-weight:800;font-size:15px;font-family:inherit;cursor:pointer">تسجيل — يظهر فورًا في العمليات</button>
+    <button id="cNewBtn" onclick="cNewSave()" style="width:100%;margin-top:12px;height:52px;border:0;border-radius:0;background:var(--navy);color:#fff;font-weight:800;font-size:15px;font-family:inherit;cursor:pointer">تسجيل الزبون — يظهر في خانة الزبون</button>
   </div>
   <div class="list" id="clientList"><div class="empty">جارٍ التحميل…</div></div>
 </div>
@@ -1780,60 +1789,91 @@ async function loadClients(){
   }catch(e){OPS_DATA=OPS_DATA||[];}}
   renderClients();
 }
+var C_KIND='client', C_VIEW='all';
+function cKindSet(k){C_KIND=k;
+  document.querySelectorAll('#cKindSeg button').forEach(function(b){b.classList.toggle('on',b.dataset.k===k);});
+  $('#cNewNameLbl').textContent=k==='client'?'اسم الزبون':'اسم المورد';
+  $('#cNewBtn').textContent=k==='client'?'تسجيل الزبون — يظهر في خانة الزبون':'تسجيل المورد — يظهر في خانة المورد';
+}
+function cViewKind(k){C_VIEW=k;
+  document.querySelectorAll('#cKindBar button').forEach(function(b){b.classList.toggle('on',b.dataset.k===k);});
+  renderClients();}
 function cNewToggle(){
   var b=$('#cNewBox');b.style.display=b.style.display==='none'?'block':'none';
-  if(b.style.display==='block'){$('#cNewName').value='';$('#cNewPh').value='';try{$('#cNewName').focus();}catch(e){}}
+  if(b.style.display==='block'){$('#cNewName').value='';$('#cNewPh').value='';cKindSet(C_KIND);try{$('#cNewName').focus();}catch(e){}}
 }
 async function cNewSave(){
   var n=($('#cNewName').value||'').trim();
   var p=($('#cNewPh').value||'').replace(/[^0-9]/g,'');
-  if(n.length<2){toast('أدخل اسم الزبون');return;}
+  if(n.length<2){toast(C_KIND==='client'?'أدخل اسم الزبون':'أدخل اسم المورد');return;}
   if(p.length<8){toast('رقم الهاتف مطلوب (٨ أرقام فأكثر)');return;}
-  await partyUpsert('client',n,p);
+  await partyUpsert(C_KIND,n,p);
   $('#cNewBox').style.display='none';
-  toast('سُجّل «'+n+'» — متاح الآن في العمليات');
+  toast('سُجّل «'+n+'» — يظهر الآن في خانة '+(C_KIND==='client'?'الزبون':'المورد'));
   renderClients();
 }
-async function cDelParty(name){
-  if(!confirm('حذف الزبون «'+name+'» من السجل؟ (بلا عمليات — الحذف آمن)'))return;
+/* تصحيح تسجيل خاطئ: تبديل نوع طرف بلا عمليات */
+async function cSwapKind(name,from){
+  var to=from==='client'?'supplier':'client';
+  if(!confirm('نقل «'+name+'» إلى سجل '+(to==='client'?'الزبناء':'الموردين')+'؟'))return;
   try{
-    var r=await fetch(SB+'/bdl_parties?kind=eq.client&name=eq.'+encodeURIComponent(name),{method:'DELETE',headers:H()});
+    var r=await fetch(SB+'/bdl_parties?kind=eq.'+from+'&name=eq.'+encodeURIComponent(name),
+      {method:'PATCH',headers:H(),body:JSON.stringify({kind:to,updated_at:new Date().toISOString()})});
     if(!r.ok)throw new Error(r.status);
-    PARTIES=(PARTIES||[]).filter(function(x){return !(x.kind==='client'&&x.name===name);});
+    (PARTIES||[]).forEach(function(x){if(x.kind===from&&x.name===name)x.kind=to;});
+    loadPartiesUiOnly();renderClients();
+    toast('نُقل — صار يظهر في خانة '+(to==='client'?'الزبون':'المورد'));
+  }catch(e){toast('تعذّر النقل: '+e.message);}
+}
+async function cDelParty(name,kind){
+  kind=kind||'client';
+  if(!confirm('حذف «'+name+'» من سجل '+(kind==='client'?'الزبناء':'الموردين')+'؟ (بلا عمليات — آمن)'))return;
+  try{
+    var r=await fetch(SB+'/bdl_parties?kind=eq.'+kind+'&name=eq.'+encodeURIComponent(name),{method:'DELETE',headers:H()});
+    if(!r.ok)throw new Error(r.status);
+    PARTIES=(PARTIES||[]).filter(function(x){return !(x.kind===kind&&x.name===name);});
     loadPartiesUiOnly();renderClients();
     toast('حُذف من السجل');
   }catch(e){toast('تعذّر الحذف: '+e.message);}
 }
 function renderClients(){
   var q=($('#cq').value||'').trim().toLowerCase();
-  /* عدّ العمليات لكل زبون بالاسم */
-  var opsBy={};(OPS_DATA||[]).forEach(function(o){
-    var k=String(o.client_name||'').trim();if(!k)return;
-    (opsBy[k]=opsBy[k]||{n:0,open:0}).n++;
-    if(o.status!=='closed')opsBy[k].open++;
+  /* عدّ العمليات: الزبون بالاسم، والمورد بحقل المورد */
+  var cBy={},sBy={};(OPS_DATA||[]).forEach(function(o){
+    var c=String(o.client_name||'').trim();
+    if(c){(cBy[c]=cBy[c]||{n:0,open:0}).n++;if(o.status!=='closed')cBy[c].open++;}
+    var sp=String(o.supplier||'').trim();
+    if(sp){(sBy[sp]=sBy[sp]||{n:0,open:0}).n++;if(o.status!=='closed')sBy[sp].open++;}
   });
-  var reg=(PARTIES||[]).filter(function(p){return p.kind==='client';});
-  /* زبناء لهم عمليات وليسوا بالسجل (قديمون) — يظهرون أيضًا */
-  var regNames={};reg.forEach(function(p){regNames[p.name]=1;});
-  Object.keys(opsBy).forEach(function(n){if(!regNames[n])reg.push({kind:'client',name:n,phone:''});});
+  function opsOf(p){return (p.kind==='client'?cBy[p.name]:sBy[p.name])||{n:0,open:0};}
+  var reg=(PARTIES||[]).slice();
+  var regK={};reg.forEach(function(p){regK[p.kind+'|'+p.name]=1;});
+  Object.keys(cBy).forEach(function(n){if(!regK['client|'+n])reg.push({kind:'client',name:n,phone:''});});
+  Object.keys(sBy).forEach(function(n){if(!regK['supplier|'+n])reg.push({kind:'supplier',name:n,phone:''});});
   var rows=reg.filter(function(p){
+    if(C_VIEW!=='all'&&p.kind!==C_VIEW)return false;
     if(!q)return true;
     return (p.name+' '+p.phone).toLowerCase().indexOf(q)>=0;
   });
-  /* الترتيب: أصحاب العمليات أولًا ثم الأحدث */
-  rows.sort(function(a,b){return ((opsBy[b.name]||{}).n||0)-((opsBy[a.name]||{}).n||0);});
+  var opsBy={};rows.forEach(function(p){opsBy[p.name]=opsOf(p);});
+  rows.sort(function(a,b){return opsOf(b).n-opsOf(a).n;});
   $('#clientList').innerHTML=rows.map(function(p){
-    var st=opsBy[p.name]||{n:0,open:0};
+    var st=(p.kind==='client'?cBy[p.name]:sBy[p.name])||{n:0,open:0};
+    var tag=p.kind==='client'
+      ?'<span style="font-size:10px;font-weight:800;color:#0A56B8;border:1px solid #C9DFFA;padding:2px 7px;margin-inline-start:7px">زبون</span>'
+      :'<span style="font-size:10px;font-weight:800;color:#7A4A00;border:1px solid #E9CE9C;padding:2px 7px;margin-inline-start:7px">مورد</span>';
+    var acts=st.n===0
+      ?'<div style="display:flex;gap:6px">'+
+       '<button onclick="cSwapKind(\''+esc(p.name).replace(/'/g,'')+'\',\''+p.kind+'\')" style="border:1px solid #C9DFFA;border-radius:0;background:#F2F8FF;color:#0A56B8;font-weight:800;font-size:11px;padding:8px 10px;font-family:inherit;cursor:pointer">'+(p.kind==='client'?'اجعله موردًا':'اجعله زبونًا')+'</button>'+
+       '<button onclick="cDelParty(\''+esc(p.name).replace(/'/g,'')+'\',\''+p.kind+'\')" style="border:1px solid #F5B5B0;border-radius:0;background:#FFF5F5;color:#B00020;font-weight:800;font-size:11.5px;padding:8px 12px;font-family:inherit;cursor:pointer">حذف</button></div>'
+      :'<span class="num" style="font-size:12px;font-weight:800;color:#0B7A3B">'+st.n+'</span>';
     return '<div style="background:#fff;border:1px solid #D7E2F2;border-radius:0;padding:13px 15px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center">'+
-      '<div><div style="font-size:14px;font-weight:800;color:var(--navy)">'+esc(p.name)+'</div>'+
+      '<div><div style="font-size:14px;font-weight:800;color:var(--navy)">'+esc(p.name)+tag+'</div>'+
       '<div class="num" style="font-size:11.5px;color:var(--muted);margin-top:2px">'+
       (p.phone?esc(p.phone)+' · ':'')+
       (st.n?st.n+' عملية'+(st.open?' ('+st.open+' مفتوحة)':''):'بلا عمليات')+'</div></div>'+
-      (st.n===0
-        ?'<button onclick="cDelParty(\''+esc(p.name).replace(/'/g,'')+'\')" style="border:1px solid #F5B5B0;border-radius:0;background:#FFF5F5;color:#B00020;font-weight:800;font-size:11.5px;padding:8px 12px;font-family:inherit;cursor:pointer">حذف</button>'
-        :'<span class="num" style="font-size:12px;font-weight:800;color:#0B7A3B">'+st.n+'</span>')+
-      '</div>';
-  }).join('')||'<div class="empty">السجل فارغ'+(q?' من المطابقين':'')+' — سجّل أول زبون بزر «+ زبون»</div>';
+      acts+'</div>';
+  }).join('')||'<div class="empty">السجل فارغ'+(q?' من المطابقين':'')+' — سجّل أول طرف بزر «+ طرف»</div>';
 }
 async function ensureCustomer(phone,name){
   var ph=String(phone).replace(/[^0-9]/g,'');
