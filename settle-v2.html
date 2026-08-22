@@ -1365,7 +1365,37 @@ function partyNewUi(kind){
   var box=$(kind==='client'?'#opCustPhBox':'#opSupPhBox');
   if(!inp||!box)return;
   var v=(inp.value||'').trim();
-  box.style.display=(v.length>=2&&!partyKnown(kind,v))?'block':'none';
+  var other=kind==='client'?'supplier':'client';
+  var isNew=v.length>=2&&!partyKnown(kind,v);
+  box.style.display=isNew?'block':'none';
+  /* مسجل بالنوع الآخر خطأً؟ اعرض النقل بضغطة بدل طلب الهاتف من جديد */
+  var fixId=kind==='client'?'opCustFix':'opSupFix';
+  var old=$('#'+fixId);if(old)old.remove();
+  if(isNew&&partyKnown(other,v)){
+    box.style.display='none';
+    var el=document.createElement('div');el.id=fixId;
+    el.style.cssText='margin-top:8px;background:#FFF8E8;border:1.5px solid #E9CE9C;padding:11px 13px';
+    el.innerHTML='<div style="font-size:12px;font-weight:800;color:#7A4A00;margin-bottom:8px">«'+esc(v)+'» مسجل '+(other==='client'?'زبونًا':'موردًا')+' — انقله بضغطة:</div>'+
+      '<button onclick="partyFixKind(\''+esc(v).replace(/'/g,'')+'\',\''+other+'\',\''+kind+'\')"'+
+      ' style="width:100%;height:46px;border:0;border-radius:0;background:var(--navy);color:#fff;font-weight:800;font-size:13.5px;font-family:inherit;cursor:pointer">'+
+      'اجعله '+(kind==='client'?'زبونًا':'موردًا')+' — يظهر هنا فورًا</button>';
+    box.insertAdjacentElement('afterend',el);
+  }
+}
+async function partyFixKind(name,from,to){
+  try{
+    var r=await fetch(SB+'/bdl_parties?kind=eq.'+from+'&name=eq.'+encodeURIComponent(name),
+      {method:'PATCH',headers:H(),body:JSON.stringify({kind:to,updated_at:new Date().toISOString()})});
+    if(r.status===409){
+      /* موجود بالنوعين — نحذف نسخة النوع الخاطئ */
+      await fetch(SB+'/bdl_parties?kind=eq.'+from+'&name=eq.'+encodeURIComponent(name),{method:'DELETE',headers:H()});
+    } else if(!r.ok) throw new Error(r.status);
+    (PARTIES||[]).forEach(function(x){if(x.kind===from&&x.name===name)x.kind=to;});
+    if(!partyKnown(to,name))(PARTIES=PARTIES||[]).unshift({kind:to,name:name,phone:''});
+    loadPartiesUiOnly();
+    partyNewUi(to==='supplier'?'supplier':'client');
+    toast('نُقل «'+name+'» — صار في خانة '+(to==='client'?'الزبون':'المورد'));
+  }catch(e){toast('تعذّر النقل: '+e.message);}
 }
 function partiesBanner(){
   /* الجدول غير مثبت — الزبناء لن يبقوا بعد الجلسة حتى تُلصق bdl-parties.sql */
