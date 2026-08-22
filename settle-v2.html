@@ -1473,6 +1473,7 @@ function opLegsUi(){$('#opStructPrev').textContent=opStructOf(+$('#opLegs').valu
 function opNewSheet(){$('#opCust').value='';$('#opTarget').value='';$('#opSup').value='';$('#opLegs').value='2';
   $('#opCustPh').value='';$('#opSupPh').value='';
   $('#opCustPhBox').style.display='none';$('#opSupPhBox').style.display='none';
+  var _f1=$('#opCustFix');if(_f1)_f1.remove();var _f2=$('#opSupFix');if(_f2)_f2.remove();
   opLegsUi();openOvl('newop');}
 async function opCreate(){
   var c=($('#opCust').value||'').trim(),t=parseFloat(($('#opTarget').value||'').replace(/[^\d.]/g,''))||0;
