@@ -20,8 +20,9 @@ create unique index if not exists ux_opr_txn_side
   on bdl_op_receipts(owner_id, txn_id, side);
 create index if not exists ix_opr_side on bdl_op_receipts(op_id, side);
 
--- التغطية = الوارد من الزبائن فقط
-create or replace view bdl_ops_coverage as
+-- التغطية = الوارد من الزبائن فقط (إسقاط ثم إنشاء — ترتيب الأعمدة تغيّر)
+drop view if exists bdl_ops_coverage;
+create view bdl_ops_coverage as
 select o.*,
        coalesce(sum(r.amount_aoa) filter (where r.side='in'),0) as covered_aoa,
        count(r.id)               filter (where r.side='in')     as rcpt_count
@@ -31,7 +32,8 @@ group by o.id;
 alter view bdl_ops_coverage set (security_invoker = on);
 
 -- ميزان المطابقة: كل وارد يجب أن يقابله صادر يحمل رقمه
-create or replace view bdl_ops_recon as
+drop view if exists bdl_ops_recon;
+create view bdl_ops_recon as
 select o.id as op_id,
        count(*) filter (where r.side='in')  as in_n,
        count(*) filter (where r.side='out') as out_n,
