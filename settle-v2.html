@@ -941,7 +941,9 @@ function renderRcpts(){
           ' placeholder="أدخل المبلغ" data-ri="'+i+'" oninput="rcptAmt(this)" onclick="event.stopPropagation()"'+
           ' style="width:130px;height:40px;border:1.5px solid '+(p.amount?'#C9DFFA':'#E6A700')+';border-radius:0;background:#fff;text-align:center;font-family:\'IBM Plex Mono\',monospace;font-size:15px;font-weight:700;color:#003B8F;outline:none">'+
           '<small style="display:block;color:var(--muted);font-size:10px;margin-top:2px">'+
-          (p.amount?'قُرئ تلقائيًا — عدّله إن أخطأ':'⚠️ لم يُقرأ — اكتبه يدويًا')+(p.ref?' · '+esc(p.ref):'')+'</small>';
+          (p.amount?(rcptCcyOk(r)?'قُرئ تلقائيًا — عدّله إن أخطأ'
+            :'<span style="color:#B00020;font-weight:800">عملة الإيصال '+esc(p.ccy)+' ≠ عملة المستحق '+esc(SS.dueCcy||'')+' — مستثنى من العدّاد</span>')
+            :'⚠️ لم يُقرأ — اكتبه يدويًا')+(p.ref?' · '+esc(p.ref):'')+'</small>';
       } else amtBox='<small>جارٍ القراءة…</small>';
     }
     return '<div class="rcpt'+(r.dup&&!r.ok?' dup':'')+'">'+
@@ -1129,10 +1131,21 @@ function openSettle(){
   updMatch();
   $('#ovl-settle').classList.add('on');
 }
+function ccyNorm(c){
+  c=String(c||'').toUpperCase().replace('AKZ','AOA').replace(/^KZ$/,'AOA').replace('UM','MRU');
+  if(c==='USD'||c==='USDC')c='USDT';
+  return c;
+}
+function rcptCcyOk(r){
+  /* إيصال بعملة معلومة تخالف عملة المستحق ← لا يدخل العدّاد */
+  var p=r.parsed;if(!p||!p.ccy)return true; /* مجهول العملة أو يدوي: يُحتسب */
+  if(!SS.dueCcy)return true;
+  return ccyNorm(p.ccy)===ccyNorm(SS.dueCcy);
+}
 function updMatch(){
   SS.paid=SS.prevPaid||0;
   RCPTS.forEach(function(r){var p=r.parsed;
-    if(p&&p.amount&&(!r.dup||r.ok))SS.paid+=Number(p.amount)||0;});
+    if(p&&p.amount&&(!r.dup||r.ok)&&rcptCcyOk(r))SS.paid+=Number(p.amount)||0;});
   $('#ssPaid').textContent=fmt(SS.paid,2)+(SS.dueCcy?' '+SS.dueCcy:'');
   var el=$('#ssMatch'),ring=$('#ssRing');
   if(!SS.due){$('#ssPct').textContent='—';$('#ssDiff').textContent='لا مستحق محسوب';
