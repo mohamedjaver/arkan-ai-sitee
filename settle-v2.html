@@ -1270,6 +1270,58 @@ async function loadOps(){
       '<br><button onclick="OPS_DATA=null;loadOps()" style="margin-top:10px;height:46px;padding:0 22px;border:1.5px solid var(--navy);border-radius:0;background:#fff;color:var(--navy);font-weight:800;font-family:inherit;cursor:pointer">أعد المحاولة</button></div>';}
   opsDash();renderOps();
   loadOpBridge();
+  opsIntake(); /* الاستيراد التلقائي للطلبات — لا يعطّل العرض */
+}
+/* ═══ خط الأنابيب الموحّد: كل طلب (زبون أو مالك) يدخل «العمليات» مصنّفًا ═══
+   المصدر: payment_requests عبر /admin/list-requests بهوية المالك.
+   عدم التكرار: req_ref (بعد bdl-ops6.sql) أو وسم REQ: في note (قبلها) +
+   القفل الفريد في القاعدة يحسم أي سباق. */
+var INTAKE_BUSY=false,OPS6=true;
+function opsOwnerCreds(){
+  var ph=(localStorage.getItem('arkan-owner-phone')||'').replace(/[^0-9]/g,'');
+  if(!ph){try{ph=String((JSON.parse(localStorage.getItem('arkan_session')||'null')||{}).phone||'').replace(/[^0-9]/g,'');}catch(e){}}
+  return {phone:ph,pin:localStorage.getItem('arkan-pin')||''};
+}
+function opsHasReq(ref){
+  return (OPS_DATA||[]).some(function(o){
+    return o.req_ref===ref||(o.note&&o.note.indexOf('REQ:'+ref)>=0);});
+}
+async function opsIntake(){
+  if(INTAKE_BUSY)return;INTAKE_BUSY=true;
+  try{
+    var cr=opsOwnerCreds();if(!cr.phone||!cr.pin)return;
+    var r=await fetch(API+'/admin/list-requests',{method:'POST',
+      headers:{'Content-Type':'application/json'},body:JSON.stringify(cr)});
+    if(!r.ok)return;
+    var j=await r.json(),reqs=(j.items||[]).filter(function(q){return q.status==='pending';});
+    var made=0;
+    for(var i=0;i<reqs.length;i++){
+      var q=reqs[i];if(!q.ref||opsHasReq(q.ref))continue;
+      var ph=String(q.phone||'').replace(/[^0-9]/g,'');
+      var src=(ph==='22236295050'||ph==='36295050')?'owner':'customer';
+      var cy=String(q.currency||'').toUpperCase();
+      var tgt=(cy.indexOf('AOA')>=0||cy.indexOf('KZ')>=0)?(+q.amount||0):0;
+      var nm=(q.name||q.benefName||'').trim()||('طلب '+q.ref);
+      var note='REQ:'+q.ref+' · من التطبيق ('+(src==='owner'?'المالك':'زبون')+')'+
+        ' · '+fmt(+q.amount||0,0)+' '+(q.currency||'')+(q.benefName?' → '+q.benefName:'');
+      var base={ref:'OP-'+Date.now().toString(36).toUpperCase().slice(-5)+i,
+        client_name:nm,target_aoa:tgt,note:note};
+      var body=OPS6?Object.assign({},base,{source:src,req_ref:q.ref}):base;
+      try{
+        var c=await fetch(SB+'/bdl_ops',{method:'POST',headers:H(),body:JSON.stringify(body)});
+        if(c.status===400&&OPS6){ /* القاعدة قبل bdl-ops6.sql — نكمل بالأساسيات */
+          OPS6=false;
+          c=await fetch(SB+'/bdl_ops',{method:'POST',headers:H(),body:JSON.stringify(base)});
+        }
+        if(c.ok)made++;
+        else if(c.status!==409)console.warn('intake',q.ref,c.status); /* 409 = القفل أمسك تكرارًا */
+      }catch(e){console.warn('intake',q.ref,e.message);}
+    }
+    if(made){toast('استُوردت '+made+' طلب'+(made>2?'ات':'')+' جديدة إلى العمليات');
+      if(!OPS6)toast('الصق bdl-ops6.sql في Supabase لتفعيل التصنيف الكامل');
+      OPS_DATA=null;await loadOps();}
+  }catch(e){}
+  finally{INTAKE_BUSY=false;}
 }
 var BRIDGE=[],OP_SRC_TX=null;
 async function loadOpBridge(){
@@ -1369,10 +1421,13 @@ function renderOps(){
     if(OP_ST!=='ALL'&&o.status!==OP_ST)return false;
     if(OP_LANE&&Number(o.legs||2)!==OP_LANE)return false;
     if(!q)return true;
-    return [o.ref,o.client_name,o.supplier].join(' ').toLowerCase().indexOf(q)>=0;
+    return [o.ref,o.client_name,o.supplier,o.req_ref,o.note].join(' ').toLowerCase().indexOf(q)>=0;
   });
   $('#opList').innerHTML=rows.map(function(o){
     var st=OP_STL[o.status]||['open',o.status];
+    var srcTag=o.source==='customer'?'<span style="background:#E8F1FF;color:#0058D9;font-size:10px;font-weight:800;padding:3px 8px;margin-inline-start:6px">زبون</span>'
+      :o.source==='owner'?'<span style="background:#FFF6E0;color:#8A6100;font-size:10px;font-weight:800;padding:3px 8px;margin-inline-start:6px">حساب المالك</span>'
+      :(o.note&&o.note.indexOf('REQ:')>=0?'<span style="background:#E8F1FF;color:#0058D9;font-size:10px;font-weight:800;padding:3px 8px;margin-inline-start:6px">من التطبيق</span>':'');
     var act='';
     if(o.status==='open')act='<button class="opact" onclick="opSheet(\''+o.id+'\')">+ إيصال</button>';
     else if(o.status==='covered')act='<button class="opact" onclick="opSetSt(\''+o.id+'\',\'sent\')">أُرسلت للمورد ←</button>'+
@@ -1387,7 +1442,7 @@ function renderOps(){
        :'color:#B00020">مطابقة الموردين '+rc.matched+'/'+rc.in_n+' — مفقود '+(rc.in_n-rc.matched))+'</span>'):'';
     return '<div class="opcard">'+
       '<div style="display:flex;justify-content:space-between;align-items:center">'+
-      '<div><b style="font-size:14.5px;color:var(--navy)">'+esc(o.client_name)+'</b>'+
+      '<div><b style="font-size:14.5px;color:var(--navy)">'+esc(o.client_name)+'</b>'+srcTag+
       '<div class="num" style="font-size:11px;color:var(--muted);margin-top:2px">'+esc(o.ref)+
       ' · '+laneTxt+' · '+esc(o.structure||'MRU→AOA')+(o.supplier?' · '+esc(o.supplier):'')+'</div></div>'+
       '<span class="st '+st[0]+'">'+st[1]+'</span></div>'+
