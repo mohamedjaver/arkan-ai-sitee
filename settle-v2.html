@@ -1279,6 +1279,18 @@ async function commitSettle(){
 
 /* ═══════════ العمليات — التغطية وقفل التكرار (المرحلة 1) ═══════════ */
 var OPS_DATA=null,OP_ST='ALL',OP_CUR=null;
+/* شبكة أمان العرض: «جارٍ التحميل» لا يعلق — محاولة تلقائية ثم زر صريح */
+setTimeout(function(){
+  var el=document.getElementById('opList');
+  if(!el||el.textContent.indexOf('جارٍ التحميل')<0)return;
+  try{OPS_DATA=null;loadOps();}catch(e){}
+  setTimeout(function(){
+    if(el.textContent.indexOf('جارٍ التحميل')<0)return;
+    el.innerHTML='<div class="empty">تأخّر التحميل — قد تكون نسخة قديمة من الكاش<br>'+
+      '<button onclick="OPS_DATA=null;loadOps()" style="margin-top:10px;height:46px;padding:0 22px;border:1.5px solid var(--navy);background:#fff;color:var(--navy);font-weight:800;font-family:inherit;cursor:pointer">أعد المحاولة</button> '+
+      '<button onclick="location.reload(true)" style="margin-top:10px;height:46px;padding:0 22px;border:0;background:var(--navy);color:#fff;font-weight:800;font-family:inherit;cursor:pointer">تحديث الصفحة</button></div>';
+  },8000);
+},8000);
 function setOpSt(st){OP_ST=st;
   document.querySelectorAll('#opChips .chip').forEach(function(b){b.classList.toggle('on',b.dataset.st===st);});
   renderOps();}
