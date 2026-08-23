@@ -270,6 +270,21 @@ input,select{font-family:inherit;color:var(--ink)}
 </div>
 
 <!-- إنشاء عملية -->
+<!-- تعديل عملية -->
+<div class="ovl" id="ovl-opedit"><div class="sheet">
+  <h3>تعديل العملية<button onclick="closeOvl('opedit')">إغلاق ✕</button></h3>
+  <div id="opeRef" class="num" style="font-size:12px;color:var(--muted);margin-bottom:10px"></div>
+  <div class="clabel">الزبون</div>
+  <input id="opeCust" class="cin" style="width:100%;box-sizing:border-box">
+  <div class="clabel" style="margin-top:10px">الهدف (AOA)</div>
+  <input id="opeTarget" class="cin num" inputmode="numeric" style="width:100%;box-sizing:border-box">
+  <div class="clabel" style="margin-top:10px">المورد</div>
+  <input id="opeSup" class="cin" style="width:100%;box-sizing:border-box">
+  <div class="clabel" style="margin-top:10px">ملاحظة</div>
+  <input id="opeNote" class="cin" style="width:100%;box-sizing:border-box">
+  <button class="cta" style="width:100%;margin-top:16px" onclick="opEditSave()">حفظ التعديل</button>
+</div></div>
+
 <div class="ovl" id="ovl-newop"><div class="sheet">
   <h3>عملية جديدة<button onclick="closeOvl('newop')">إغلاق ✕</button></h3>
   <div class="clabel">الزبون</div>
@@ -1321,7 +1336,87 @@ async function opsIntake(){
       if(!OPS6)toast('الصق bdl-ops6.sql في Supabase لتفعيل التصنيف الكامل');
       OPS_DATA=null;await loadOps();}
   }catch(e){}
-  finally{INTAKE_BUSY=false;}
+  finally{INTAKE_BUSY=false;
+    txIntake(); /* المرحلة الثانية: قيود الوصل الموحّد */
+  }
+}
+/* ═══ قيود الوصل الموحّد (bdl_transactions) ← عمليات تلقائيًا مصنّفة ═══
+   الهاتف = هاتف المالك ← «حساب المالك»، غيره ← «زبون».
+   عدم التكرار: req_ref='TX:ref' (القفل الفريد) + وسم meta.op_ref يخفيها من الجسر. */
+var TXIN_BUSY=false;
+async function txIntake(){
+  if(TXIN_BUSY)return;TXIN_BUSY=true;
+  var made=0;
+  try{
+    var r=await fetch(SB+'/bdl_transactions?select=id,ref,amount,ccy,status,meta,bdl_customers(name,phone)'+
+      '&status=in.(open,settling)&order=created_at.desc&limit=60',{headers:H()});
+    if(!r.ok)return;
+    var txs=(await r.json()).filter(function(t){return !(t.meta&&t.meta.op_ref);});
+    for(var i=0;i<txs.length;i++){
+      var t=txs[i];if(!t.ref||opsHasReq('TX:'+t.ref))continue;
+      var cph=String((t.bdl_customers&&t.bdl_customers.phone)||'').replace(/[^0-9]/g,'');
+      var src=(cph==='22236295050'||cph==='36295050')?'owner':'customer';
+      var nm=(t.bdl_customers&&t.bdl_customers.name)||('وصل '+t.ref);
+      var cy=String(t.ccy||'').toUpperCase();
+      var tgt=(cy==='AOA'||cy==='KZ')?(+t.amount||0):0;
+      var opRef='OP-'+Date.now().toString(36).toUpperCase().slice(-5)+i;
+      var note='REQ:TX:'+t.ref+' · وصل موحّد ('+(src==='owner'?'المالك':'زبون')+')'+
+        ' · '+fmt(+t.amount||0,0)+' '+(t.ccy||'');
+      var base={ref:opRef,client_name:nm,target_aoa:tgt,note:note};
+      var body=OPS6?Object.assign({},base,{source:src,req_ref:'TX:'+t.ref}):base;
+      try{
+        var c=await fetch(SB+'/bdl_ops',{method:'POST',headers:H(),body:JSON.stringify(body)});
+        if(c.status===400&&OPS6){OPS6=false;
+          c=await fetch(SB+'/bdl_ops',{method:'POST',headers:H(),body:JSON.stringify(base)});}
+        if(c.ok){made++;
+          /* وسم القيد حتى يختفي من جسر «حوّلها لعمليات» */
+          var meta=Object.assign({},t.meta||{},{op_ref:opRef});
+          fetch(SB+'/bdl_transactions?id=eq.'+t.id,{method:'PATCH',headers:H(),
+            body:JSON.stringify({meta:meta})}).catch(function(){});
+        }else if(c.status!==409)console.warn('txIntake',t.ref,c.status);
+      }catch(e){console.warn('txIntake',t.ref,e.message);}
+    }
+    if(made){toast('دخلت '+made+' عملي'+(made>2?'ات':'ة')+' من الوصل الموحّد');
+      OPS_DATA=null;await loadOps();}
+  }catch(e){}
+  finally{TXIN_BUSY=false;}
+}
+/* ═══ تعديل وحذف العملية ═══ */
+var OPE_ID=null;
+function opEditSheet(id){
+  var o=(OPS_DATA||[]).find(function(x){return x.id===id;});if(!o)return;
+  OPE_ID=id;
+  $('#opeRef').textContent=o.ref+(o.req_ref?' · '+o.req_ref:'');
+  $('#opeCust').value=o.client_name||'';
+  $('#opeTarget').value=o.target_aoa?String(Math.round(o.target_aoa)):'';
+  $('#opeSup').value=o.supplier||'';
+  $('#opeNote').value=o.note||'';
+  openOvl('opedit');
+}
+async function opEditSave(){
+  if(!OPE_ID)return;
+  var c=($('#opeCust').value||'').trim();
+  if(c.length<2){toast('أدخل اسم الزبون');return;}
+  var body={client_name:c,
+    target_aoa:parseFloat(($('#opeTarget').value||'').replace(/[^\d.]/g,''))||0,
+    supplier:($('#opeSup').value||'').trim()||null,
+    note:($('#opeNote').value||'').trim()||null};
+  try{
+    var r=await fetch(SB+'/bdl_ops?id=eq.'+OPE_ID,{method:'PATCH',headers:H(),body:JSON.stringify(body)});
+    if(!r.ok)throw new Error(r.status);
+    closeOvl('opedit');toast('حُفظ التعديل');OPS_DATA=null;loadOps();
+  }catch(e){toast('تعذّر الحفظ: '+e.message);}
+}
+async function opDelete(id){
+  var o=(OPS_DATA||[]).find(function(x){return x.id===id;});if(!o)return;
+  var rc=Number(o.rcpt_count||0);
+  if(!confirm('حذف العملية '+o.ref+' — '+o.client_name+
+    (rc?'\nسيُحذف معها '+rc+' إيصال مرفق نهائيًا.':'')+'\nلا يمكن التراجع.'))return;
+  try{
+    var r=await fetch(SB+'/bdl_ops?id=eq.'+id,{method:'DELETE',headers:H()});
+    if(!r.ok)throw new Error(r.status);
+    toast('حُذفت '+o.ref);OPS_DATA=null;loadOps();
+  }catch(e){toast('تعذّر الحذف: '+e.message);}
 }
 var BRIDGE=[],OP_SRC_TX=null;
 async function loadOpBridge(){
@@ -1435,6 +1530,8 @@ function renderOps(){
     else if(o.status==='sent')act='<button class="opact ghost" onclick="opCopyLink(\''+(o.confirm_token||'')+'\')">رابط التأكيد</button>'+
       '<button class="opact" style="background:#8AA3C4" disabled>بانتظار تأكيد المورد…</button>';
     else if(o.status==='confirmed')act='<button class="opact ok" onclick="opCloseSheet(\''+o.id+'\')">المورد أكّد ✓ — إقفال</button>';
+    act+='<button class="opact ghost" onclick="opEditSheet(\''+o.id+'\')">تعديل</button>'+
+      '<button class="opact ghost" style="color:#B00020;border-color:#E8B4B0" onclick="opDelete(\''+o.id+'\')">حذف</button>';
     var rc=reconOf(o.id);
     var laneTxt=(Number(o.legs)===3?'ثلاثية':Number(o.legs)===4?'رباعية':'ثنائية');
     var reconTag=rc.in_n?('<span class="num" style="font-size:11px;font-weight:800;'+
@@ -1448,7 +1545,7 @@ function renderOps(){
       '<span class="st '+st[0]+'">'+st[1]+'</span></div>'+
       opBar(o)+
       (reconTag?'<div style="margin-top:7px">'+reconTag+'</div>':'')+
-      (act?'<div style="display:flex;gap:8px;margin-top:11px">'+act+'</div>':'')+
+      (act?'<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:11px">'+act+'</div>':'')+
       '</div>';
   }).join('')||'<div class="empty">لا عمليات'+(q?' مطابقة':' — أنشئ الأولى بزر «+ عملية»')+'</div>';
 }
