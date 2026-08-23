@@ -1123,7 +1123,11 @@ function ssRateBody(t,r,rb,p){
   var due=Math.round(ssConv(t.amount,r,p)*100)/100;
   var body={settle_amount:due,settle_ccy:p.tgt,
     rate:(p.v==='MRU_AOA_OLD')?(r/10):(1/r)};
-  if(rb>0)body.meta=Object.assign({},t.meta||{},{rate_cost:rb,pair:p.v});
+  if(rb>0){
+    /* التكلفة بنفس تحويل المستحق لكن بسعر الشراء — هي ما يقرأه bdl_settle للربح */
+    body.cost=Math.round(ssConv(t.amount,rb,p)*100)/100;
+    body.meta=Object.assign({},t.meta||{},{rate_cost:rb,pair:p.v});
+  }
   else body.meta=Object.assign({},t.meta||{},{pair:p.v});
   return body;
 }
