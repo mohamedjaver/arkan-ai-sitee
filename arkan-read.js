@@ -105,7 +105,8 @@ function liteParse(t){
   if(am)p.amount=euNum(am[1]);
   const rm=t.match(/Txn\s*ID\s*:?\s*([A-Z]{0,4}[0-9]{6,})/i)
         ||t.match(/(?:ID\s*de\s*la\s*transaction|transaction\s*ID)\s*:?\s*([A-Z]{0,4}[0-9]{6,})/i)
-        ||t.match(/(?:ref|reference|operac|transac|movimento|number)[^\dA-Z]{0,15}([A-Z]{0,4}\d{5,})/i);
+        ||t.match(/(?:Transac[cç][aã]o|Opera[cç][aã]o|Movimento|Refer[eê]ncia)\s*(?:de\s*\w+\s*)?(?:n[.ºo°]{0,3})?\s*[:\-]?\s*#?\s*([A-Z]{0,4}\d{5,})/i)
+        ||t.match(/(?:ref|reference|operac|transac|movimento|number)[^\d]{0,20}?([A-Z]{0,4}\d{5,})/i);
   if(rm)p.reference=rm[1].toUpperCase();
   const rv=t.match(/Receiver\s*:?\s*([0-9]{8,})/i)
         ||t.match(/(?:num[ée]ro\s*de\s*t[ée]l[ée]phone|t[ée]l[ée]phone|المستلم|المستفيد|Beneficiaire|Beneficiary|To)[^\d]{0,10}([0-9]{8,})/i)
@@ -113,7 +114,7 @@ function liteParse(t){
   if(rv)p.receiver=rv[1];
   const nv=t.match(/(?:\bà\b|B[ée]n[ée]ficiaire|المستلم|المستفيد)\s*:?\s*([A-Za-z\u0600-\u06FF][A-Za-z\u0600-\u06FF' ]{2,32})/);
   if(nv&&!/^\d+$/.test(nv[1].trim()))p.name=nv[1].trim();
-  const bm=t.match(/\b(SEDAD|SADAD|BML|MASRVI|BANKILY|AMANTY|BAI|BFA|BIC|BCI|ATLANTICO|ATL|TRON|BIM)\b/i)||t.match(/(السداد|مصرفي|بنكيلي)/);
+  const bm=t.match(/\b(SEDAD|SADAD|BML|MASRVI|BANKILY|AMANTY|BAI|BFA|BIC|BCI|ATLANTICO|ATL|SOL|BPC|BNI|KEVE|YETU|MULTICAIXA|TRON|BIM)\b/i)||t.match(/(السداد|مصرفي|بنكيلي)/);
   if(bm)p.bank=bm[1].toUpperCase();
   const dm=t.match(/(\d{2}[-\/]\d{2}[-\/]\d{4}|\d{4}-\d{2}-\d{2})/);
   if(dm)p.date=dm[1];
