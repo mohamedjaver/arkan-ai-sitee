@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="bdl-qr.js?v=1" defer></script>
-<script src="arkan-read.js?v=3" defer></script>
+<script src="arkan-read.js?v=4" defer></script>
 <style>
 :root{--cyan:#19A9F5;--blue:#0A56B8;--navy:#0B2F70;--ink:#0C1526;--muted:#66788F;
   --line:#DCE4EF;--wash:#F4F7FB;--ok:#0E9F6E;--bad:#D64545;--warn:#B7791F;
@@ -984,6 +984,8 @@ function rcptAmt(inp){
   r.parsed.amount=parseFloat(String(inp.value).replace(/[^\d.]/g,''))||0;
   r.parsed.manual=true;
   inp.style.borderColor=r.parsed.amount?'#0A56B8':'#E6A700';
+  var note=inp.nextElementSibling;
+  if(note&&r.parsed.amount)note.innerHTML='✓ أُدخل يدويًا — معتمد في العدّاد'+(r.parsed.ref?' · '+esc(r.parsed.ref):'');
   updMatch();
 }
 var SS={due:0,dueCcy:'',paid:0};
@@ -1162,8 +1164,10 @@ function ccyNorm(c){
   return c;
 }
 function rcptCcyOk(r){
-  /* إيصال بعملة معلومة تخالف عملة المستحق ← لا يدخل العدّاد */
+  /* إيصال بعملة معلومة تخالف عملة المستحق ← لا يدخل العدّاد
+     — إلا إذا أدخل المالك المبلغ يدويًا: قراره يُعتمد دائمًا */
   var p=r.parsed;if(!p||!p.ccy)return true; /* مجهول العملة أو يدوي: يُحتسب */
+  if(p.manual)return true;
   if(!SS.dueCcy)return true;
   return ccyNorm(p.ccy)===ccyNorm(SS.dueCcy);
 }

@@ -99,11 +99,13 @@ function liteParse(t){
   const cm=t.match(/\b(Kz|KZ|AKZ|MRU|UM|USDT|USDC|USD|EUR|CNY|AED|AOA)\b/i);
   if(cm)p.currency=cm[1].toUpperCase().replace('AKZ','Kz').replace('AOA','Kz').replace('KZ','Kz').replace('UM','MRU');
   /* المبلغ: بعد كلماته المفتاحية أولاً — لا نلتقط أرقام الحساب/العملية */
-  const am=t.match(/(?:amount|montante|valor|total|transfers\.amount|المبلغ)[^\d]{0,20}([\d][\d.,\s\u00A0]{2,})/i)
+  const am=t.match(/(?:montant(?:\s*envoy[ée]{1,2})?|amount|montante|valor|total|transfers\.amount|المبلغ)[^\d]{0,20}([\d][\d.,\s\u00A0]{1,})/i)
+        ||t.match(/([\d][\d.,\s\u00A0]{1,})\s*(?:MRU|UM)\b/i)
         ||t.match(/(?:Kz|AKZ|KZ)\s*([\d][\d.,\s\u00A0]{4,})/i)
         ||t.match(/([\d]{1,3}(?:[.,\s\u00A0]\d{3})+(?:,\d{2})?)/);
   if(am)p.amount=euNum(am[1]);
   const rm=t.match(/Txn\s*ID\s*:?\s*([A-Z]{0,4}[0-9]{6,})/i)
+        ||t.match(/Trs\.?\s*ID\s*:?\s*([A-Z]{0,4}[0-9]{6,})/i)
         ||t.match(/(?:ID\s*de\s*la\s*transaction|transaction\s*ID)\s*:?\s*([A-Z]{0,4}[0-9]{6,})/i)
         ||t.match(/(?:Transac[cç][aã]o|Opera[cç][aã]o|Movimento|Refer[eê]ncia)\s*(?:de\s*\w+\s*)?(?:n[.ºo°]{0,3})?\s*[:\-]?\s*#?\s*([A-Z]{0,4}\d{5,})/i)
         ||t.match(/(?:ref|reference|operac|transac|movimento|number)[^\d]{0,20}?([A-Z]{0,4}\d{5,})/i);
@@ -114,7 +116,7 @@ function liteParse(t){
   if(rv)p.receiver=rv[1];
   const nv=t.match(/(?:\bà\b|B[ée]n[ée]ficiaire|المستلم|المستفيد)\s*:?\s*([A-Za-z\u0600-\u06FF][A-Za-z\u0600-\u06FF' ]{2,32})/);
   if(nv&&!/^\d+$/.test(nv[1].trim()))p.name=nv[1].trim();
-  const bm=t.match(/\b(SEDAD|SADAD|BML|MASRVI|BANKILY|AMANTY|BAI|BFA|BIC|BCI|ATLANTICO|ATL|SOL|BPC|BNI|KEVE|YETU|MULTICAIXA|TRON|BIM)\b/i)||t.match(/(السداد|مصرفي|بنكيلي)/);
+  const bm=t.match(/\b(SEDAD|SADAD|BML|MASRVI|BANKILY|AMANTY|BAI|BFA|BIC|BCI|ATLANTICO|ATL|SOL|BPC|BPM|BNI|KEVE|YETU|MULTICAIXA|TRON|BIM)\b/i)||t.match(/(السداد|مصرفي|بنكيلي)/);
   if(bm)p.bank=bm[1].toUpperCase();
   const dm=t.match(/(\d{2}[-\/]\d{2}[-\/]\d{4}|\d{4}-\d{2}-\d{2})/);
   if(dm)p.date=dm[1];
