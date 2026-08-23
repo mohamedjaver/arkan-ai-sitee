@@ -899,13 +899,24 @@ app.post('/account/log-transfer', async (req, res) => {
     if (!cid) {
       const mk = { name };
       if (benefPhone.length >= 8) mk.phone = benefPhone;
-      let cr = await fetch(SB_REST + '/bdl_customers', { method: 'POST',
-        headers: Object.assign({}, H, { Prefer: 'return=representation' }), body: JSON.stringify(mk) });
-      if (!cr.ok && mk.phone) /* قاعدة بلا عمود الهاتف */
-        cr = await fetch(SB_REST + '/bdl_customers', { method: 'POST',
-          headers: Object.assign({}, H, { Prefer: 'return=representation' }), body: JSON.stringify({ name }) });
-      if (!cr.ok) return res.status(502).json({ ok: false, err: 'customer ' + cr.status });
-      cid = (await cr.json())[0].id;
+      const mkCustomer = async (body) => fetch(SB_REST + '/bdl_customers', { method: 'POST',
+        headers: Object.assign({}, H, { Prefer: 'return=representation' }), body: JSON.stringify(body) });
+      let cr = await mkCustomer(mk);
+      if (!cr.ok && cr.status !== 409 && mk.phone) /* قاعدة بلا عمود الهاتف */
+        cr = await mkCustomer({ name });
+      if (cr.status === 409) {
+        /* عدّاد الكود في الـtrigger يصطدم بعد أي حذف — نعيد البحث ثم ننشئ بكود صريح فريد */
+        const rl = await fetch(SB_REST + '/bdl_customers?select=id&name=ilike.' +
+          encodeURIComponent(name) + '&limit=1', { headers: H });
+        if (rl.ok) { const j = await rl.json(); if (j[0]) cid = j[0].id; }
+        if (!cid) {
+          const explicit = Object.assign({}, mk, { code: 'C-' + Date.now().toString(36).toUpperCase() });
+          cr = await mkCustomer(explicit);
+          if (!cr.ok && mk.phone) cr = await mkCustomer({ name, code: explicit.code });
+          if (cr.ok) cid = (await cr.json())[0].id;
+        }
+      } else if (cr.ok) cid = (await cr.json())[0].id;
+      if (!cid) return res.status(502).json({ ok: false, err: 'customer ' + cr.status });
     }
     /* 5) القيد نفسه — مع فحص النتيجة الحقيقي */
     const tr = await fetch(SB_REST + '/bdl_transactions', { method: 'POST', headers: H,

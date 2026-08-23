@@ -1919,9 +1919,13 @@ async function bdlcPush(ref,name,to,amt,ccy){
       if(_bph.length>=8)_nb.phone=_bph;
       var rn=await fetch(MRB_SB+'/bdl_customers',{method:'POST',headers:bdlcH(tok,{Prefer:'return=representation'}),
         body:JSON.stringify(_nb)});
+      if(rn.status===409){ /* عدّاد الكود يصطدم بعد حذف زبون — كود صريح فريد */
+        rn=await fetch(MRB_SB+'/bdl_customers',{method:'POST',headers:bdlcH(tok,{Prefer:'return=representation'}),
+          body:JSON.stringify(Object.assign({},_nb,{code:'C-'+Date.now().toString(36).toUpperCase()}))});
+      }
       if(!rn.ok){ /* عمود الهاتف غير مثبت بعد — أنشئ بالاسم فقط */
         rn=await fetch(MRB_SB+'/bdl_customers',{method:'POST',headers:bdlcH(tok,{Prefer:'return=representation'}),
-          body:JSON.stringify({name:_nb.name}) });
+          body:JSON.stringify({name:_nb.name,code:'C-'+Date.now().toString(36).toUpperCase()}) });
         if(!rn.ok){console.warn('bdlcPush: customer',rn.status);return false;}
       }
       cid=(await rn.json())[0].id;
