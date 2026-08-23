@@ -350,6 +350,15 @@ input,select{font-family:inherit;color:var(--ink)}
     <div class="clabel">يغطي إيصال الزبون رقم</div>
     <select id="rcMatch" style="width:100%;box-sizing:border-box;height:50px;border:1.5px solid var(--navy);background:#fff;font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:700;color:#0B2447;padding:0 10px"></select>
   </div>
+  <input type="file" id="rcFile" accept="image/*,application/pdf" multiple style="display:none" onchange="rcFilesPicked(this.files)">
+  <div id="rcDrop" onclick="$('#rcFile').click()" style="display:flex;align-items:center;gap:12px;border:1.5px dashed var(--navy);background:#F4F8FF;padding:13px 14px;margin-bottom:12px;cursor:pointer">
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--navy)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7V5a2 2 0 0 1 2-2h2"/><path d="M16 3h2a2 2 0 0 1 2 2v2"/><path d="M20 17v2a2 2 0 0 1-2 2h-2"/><path d="M8 21H6a2 2 0 0 1-2-2v-2"/><line x1="4" y1="12" x2="20" y2="12"/></svg>
+    <div style="flex:1">
+      <b style="display:block;font-size:14px;color:#0B2447">ارفع الإيصال — قراءة تلقائية</b>
+      <small id="rcReadSt" style="font-size:11.5px;color:var(--muted)">صورة أو PDF · يُقرأ Txn والمبلغ والبنك تلقائيًا · يمكنك اختيار عدة إيصالات</small>
+    </div>
+    <span id="rcQBadge" style="display:none;background:var(--navy);color:#fff;font-size:11px;font-weight:800;padding:4px 9px"></span>
+  </div>
   <div class="clabel">رقم عملية البنك (Txn)</div>
   <input id="rcTxn" class="cin num" dir="ltr" placeholder="0726082013202240652" style="width:100%;box-sizing:border-box">
   <div id="rcDup" style="display:none;margin-top:8px;background:#FDECEA;border:1px solid #F5B5B0;border-radius:10px;padding:10px 12px;color:#B00020;font-size:12.5px;font-weight:700"></div>
@@ -1567,6 +1576,7 @@ function opSheet(id){
   $('#addrOp').textContent=OP_CUR.ref+' · '+OP_CUR.client_name+' — متبقٍ '+fmt(Math.max(0,OP_CUR.target_aoa-OP_CUR.covered_aoa),0)+' AOA';
   $('#rcTxn').value='';$('#rcAmt').value='';$('#rcBank').value='';$('#rcSender').value='';
   $('#rcDup').style.display='none';$('#rcSaveBtn').disabled=false;
+  RC_QUEUE=[];rcBadge();rcSt('صورة أو PDF · يُقرأ Txn والمبلغ والبنك تلقائيًا · يمكنك اختيار عدة إيصالات');
   setSide('in');reconRender();
   openOvl('addr');
 }
@@ -1616,12 +1626,66 @@ async function opAddReceipt(){
       await fetch(SB+'/bdl_ops?id=eq.'+OP_CUR.id,{method:'PATCH',headers:H(),body:JSON.stringify({status:'covered'})});
       toast('أُلحق — واكتملت تغطية '+OP_CUR.ref);
     }else toast('أُلحق ('+(RC_SIDE==='out'?'صادر للمورد':'وارد')+') — التغطية '+fmt(newCov,0)+' / '+fmt(OP_CUR.target_aoa,0));
+    if(RC_QUEUE.length){ /* طابور القراءة: الإيصال التالي يُعبّأ تلقائيًا */
+      OP_CUR.covered_aoa=newCov;
+      $('#addrOp').textContent=OP_CUR.ref+' · '+OP_CUR.client_name+' — متبقٍ '+fmt(Math.max(0,OP_CUR.target_aoa-newCov),0)+' AOA';
+      OPS_DATA=null;loadOps();rcNextInQueue();return;
+    }
     closeOvl('addr');OPS_DATA=null;loadOps();
   }catch(e){toast('تعذّر الإلحاق: '+e.message);}
 }
 function opToken(){
   var a=new Uint8Array(16);crypto.getRandomValues(a);
   return Array.from(a,function(b){return b.toString(16).padStart(2,'0');}).join('');
+}
+/* ═══ القراءة التلقائية للإيصالات — نفس محرك الأرشيف (ArkanRead) ═══
+   يعمل في الجهتين (وارد/صادر). عدة ملفات → طابور: الأول يعبّئ الحقول
+   والبقية تنتظر؛ بعد كل «إلحاق» ناجح يُعبّأ التالي تلقائيًا. */
+var RC_QUEUE=[];
+function rcBadge(){
+  var b=$('#rcQBadge');if(!b)return;
+  if(RC_QUEUE.length){b.style.display='inline-block';b.textContent=RC_QUEUE.length+' في الانتظار';}
+  else b.style.display='none';
+}
+function rcSt(m){var s=$('#rcReadSt');if(s)s.textContent=m;}
+function rcFill(p){
+  var txn=(p.transaction_id||p.reference||'').replace(/\s+/g,'');
+  if(txn)$('#rcTxn').value=txn;
+  var cy=String(p.currency||'').toUpperCase();
+  if(p.amount&&(!cy||cy==='AOA'||cy==='KZ'||cy==='AKZ'))$('#rcAmt').value=String(Math.round(+p.amount));
+  else if(p.amount)$('#rcAmt').value=String(Math.round(+p.amount)); /* المبلغ دائمًا — والمالك يراجع */
+  if(p.bank)$('#rcBank').value=String(p.bank).slice(0,40);
+  if(p.sender)$('#rcSender').value=String(p.sender).slice(0,60);
+  /* اقتراح الجهة: المحرك يصنّف customer/supplier — تنبيه بلا تبديل قسري */
+  if(p.receipt_side==='supplier'&&RC_SIDE==='in')toast('يبدو إيصال مورد صادر — بدّل التبويب إن لزم');
+  else if(p.receipt_side==='customer'&&RC_SIDE==='out')toast('يبدو إيصال زبون وارد — بدّل التبويب إن لزم');
+  if(txn)opDupCheck(); /* فحص التكرار فورًا */
+}
+async function rcReadOne(f){
+  rcSt('⏳ جارٍ قراءة '+(f.name||'الإيصال')+'…');
+  try{
+    var r=await window.ArkanRead.read(f);
+    var p=(r&&r.parsed)||{};
+    if(!p.transaction_id&&!p.reference&&!p.amount){rcSt('⚠️ لم يُقرأ — أدخل يدويًا أو جرّب صورة أوضح');return false;}
+    rcFill(p);
+    rcSt('✓ قُرئ ('+(r.engine==='gemini'?'ذكاء اصطناعي':'OCR محلي')+') — راجع ثم «إلحاق»');
+    return true;
+  }catch(e){rcSt('⚠️ تعذّرت القراءة: '+e.message);return false;}
+}
+async function rcFilesPicked(files){
+  if(!files||!files.length)return;
+  if(!window.ArkanRead){rcSt('⚠️ محرك القراءة لم يُحمّل — أعد فتح الصفحة');return;}
+  var arr=Array.prototype.slice.call(files);
+  $('#rcFile').value='';
+  RC_QUEUE=RC_QUEUE.concat(arr.slice(1));
+  rcBadge();
+  await rcReadOne(arr[0]);
+}
+async function rcNextInQueue(){
+  if(!RC_QUEUE.length)return;
+  var f=RC_QUEUE.shift();rcBadge();
+  $('#rcTxn').value='';$('#rcAmt').value='';$('#rcBank').value='';$('#rcSender').value='';
+  await rcReadOne(f);
 }
 async function opSetSt(id,st){
   try{
