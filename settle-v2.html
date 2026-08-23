@@ -1368,12 +1368,14 @@ async function txIntake(){
         var c=await fetch(SB+'/bdl_ops',{method:'POST',headers:H(),body:JSON.stringify(body)});
         if(c.status===400&&OPS6){OPS6=false;
           c=await fetch(SB+'/bdl_ops',{method:'POST',headers:H(),body:JSON.stringify(base)});}
-        if(c.ok){made++;
-          /* وسم القيد حتى يختفي من جسر «حوّلها لعمليات» */
-          var meta=Object.assign({},t.meta||{},{op_ref:opRef});
-          fetch(SB+'/bdl_transactions?id=eq.'+t.id,{method:'PATCH',headers:H(),
-            body:JSON.stringify({meta:meta})}).catch(function(){});
-        }else if(c.status!==409)console.warn('txIntake',t.ref,c.status);
+        if(c.ok||c.status===409){
+          if(c.ok)made++;
+          /* وسم القيد (حتى عند 409: القفل موجود أصلًا) — ننتظر النتيجة ونسجل أي فشل */
+          var meta=Object.assign({},t.meta||{},{op_ref:c.ok?opRef:'locked'});
+          var pm=await fetch(SB+'/bdl_transactions?id=eq.'+t.id,{method:'PATCH',headers:H(),
+            body:JSON.stringify({meta:meta})}).catch(function(){return {ok:false,status:'net'};});
+          if(!pm.ok)console.warn('txIntake meta-patch failed',t.ref,pm.status);
+        }else console.warn('txIntake',t.ref,c.status);
       }catch(e){console.warn('txIntake',t.ref,e.message);}
     }
     if(made){toast('دخلت '+made+' عملي'+(made>2?'ات':'ة')+' من الوصل الموحّد');
@@ -1411,11 +1413,14 @@ async function opDelete(id){
   var o=(OPS_DATA||[]).find(function(x){return x.id===id;});if(!o)return;
   var rc=Number(o.rcpt_count||0);
   if(!confirm('حذف العملية '+o.ref+' — '+o.client_name+
-    (rc?'\nسيُحذف معها '+rc+' إيصال مرفق نهائيًا.':'')+'\nلا يمكن التراجع.'))return;
+    (rc?'\nمرفق بها '+rc+' إيصال.':'')+'\nستُلغى نهائيًا ولن تعود للظهور أبدًا.'))return;
   try{
-    var r=await fetch(SB+'/bdl_ops?id=eq.'+id,{method:'DELETE',headers:H()});
+    /* إلغاء ناعم: الصف يبقى بحالة cancelled — فيبقى قفل req_ref حيًا
+       ولا يعيد الاستيراد التلقائي العملية أبدًا حتى لو فشل وسم المصدر */
+    var r=await fetch(SB+'/bdl_ops?id=eq.'+id,{method:'PATCH',headers:H(),
+      body:JSON.stringify({status:'cancelled'})});
     if(!r.ok)throw new Error(r.status);
-    toast('حُذفت '+o.ref);OPS_DATA=null;loadOps();
+    toast('أُلغيت '+o.ref+' نهائيًا');OPS_DATA=null;loadOps();
   }catch(e){toast('تعذّر الحذف: '+e.message);}
 }
 var BRIDGE=[],OP_SRC_TX=null;
@@ -1513,6 +1518,7 @@ function renderOps(){
   if(!OPS_DATA)return;
   var q=($('#opq').value||'').trim().toLowerCase();
   var rows=OPS_DATA.filter(function(o){
+    if(o.status==='cancelled')return false; /* الملغاة نهائيًا لا تُعرض أبدًا */
     if(OP_ST!=='ALL'&&o.status!==OP_ST)return false;
     if(OP_LANE&&Number(o.legs||2)!==OP_LANE)return false;
     if(!q)return true;
