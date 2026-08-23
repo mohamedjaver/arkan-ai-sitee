@@ -491,7 +491,7 @@ input,select{font-family:inherit;color:var(--ink)}
     <div class="ssum">
       <div class="row"><span>العمليات المحددة</span><b class="num" id="ssN">—</b></div>
       <div class="row"><span>المستلم من العملاء</span><b class="num" id="ssIn">—</b></div>
-      <div class="row hi"><span>المستحق (كوانزا)</span><b class="num" id="ssDue">—</b></div>
+      <div class="row hi"><span id="ssDueLbl">المستحق</span><b class="num" id="ssDue" onclick="ssDueEdit()" style="cursor:pointer;text-decoration:underline dotted #9DB6D9 2px;text-underline-offset:4px">—</b></div>
       <div id="ssRateBox" style="display:none;background:#F2F8FF;border:1px solid #C9DFFA;border-radius:14px;padding:12px;margin:10px 0">
         <div style="font-size:12.5px;font-weight:800;color:#0A56B8;margin-bottom:10px">تسعير العملية — يحدد المستحق</div>
         <select id="ssPair" onchange="ssPairUi();ssRatePrev()" style="display:none;width:100%;box-sizing:border-box;height:50px;border:2px solid #0A56B8;border-radius:0;background:#fff;font-family:inherit;font-size:14.5px;font-weight:800;color:#0B2447;padding:0 12px;margin-bottom:10px"></select>
@@ -1069,6 +1069,7 @@ function ssOpEff(t,r,p){ /* السعر الفعّال: الفردي ← الرئ
   return parseFloat(ssImplied(t,p))||0;
 }
 function ssRatePrev(){
+  if(SS.dueManual){ssDueRender();updMatch();return;} /* المستحق اليدوي حاكم حتى يُلغى */
   var r=parseFloat($('#ssRs').value)||0;
   var u=ssUnpriced(),p=ssPairCur();
   /* الرئيسي يملأ غير المعدل؛ وبغيابه يعود كل حقل لسعره الضمني المخزون */
@@ -1085,15 +1086,38 @@ function ssRatePrev(){
     var nd=Object.keys(SS.opDirty||{}).length;
     SS.liveRate=r||-1;SS.livePair=p;
     SS.due=tot;SS.dueCcy=p.tgt; /* سعر البيع الحاكم — استبدال كامل لا إضافة */
-    $('#ssDue').textContent=fmt(SS.due,2)+' '+p.tgt;
+    ssDueRender();
     $('#ssRPrev').textContent='✓ يُحفظ تلقائيًا عند التأكيد'+(nd?' — '+nd+' عملية بسعر خاص':'');
     updMatch();
   }else{
     SS.liveRate=0;SS.due=SS.baseDue||0;SS.dueCcy=SS.due?(SS.dueCcy||'AOA'):'';
-    $('#ssDue').textContent=SS.due?fmt(SS.due,2)+' '+SS.dueCcy:'— أدخل السعر أدناه';
+    if(SS.due)ssDueRender();else $('#ssDue').textContent='— أدخل السعر أدناه';
     $('#ssRPrev').textContent='';updMatch();
   }
 }
+/* ═ المستحق اليدوي: نقرة على القيمة ← اكتبه بالفلس ← يعتمد فورًا.
+   يحل فروق تقريب السعر الصغيرة التي تمنع الإقفال. ↺ يعيد الحساب التلقائي. ═ */
+function ssDueRender(){
+  var el=$('#ssDue');if(!el)return;
+  el.innerHTML=fmt(SS.due,2)+' '+(SS.dueCcy||'')+
+    (SS.dueManual?' <span onclick="event.stopPropagation();ssDueReset()" style="color:#B00020;font-size:11px;font-weight:800;cursor:pointer">يدوي ↺</span>':'');
+}
+function ssDueEdit(){
+  var el=$('#ssDue');if(!el||el.querySelector('input'))return;
+  var cur=SS.due?String(Math.round(SS.due*100)/100):'';
+  el.innerHTML='<input id="ssDueInp" inputmode="decimal" dir="ltr" value="'+cur+'"'+
+    ' style="width:150px;height:42px;border:2px solid #0A56B8;border-radius:0;background:#fff;text-align:center;font-family:\'IBM Plex Mono\',monospace;font-size:16px;font-weight:800;color:#003B8F;outline:none">';
+  var inp=$('#ssDueInp');inp.focus();inp.select();
+  function apply(){
+    var v=parseFloat(String(inp.value).replace(/[^\d.]/g,''))||0;
+    if(v>0){SS.due=v;SS.dueManual=true;if(!SS.dueCcy)SS.dueCcy='MRU';}
+    ssDueRender();updMatch();
+  }
+  inp.addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();inp.blur();}});
+  inp.addEventListener('blur',apply);
+  inp.addEventListener('click',function(e){e.stopPropagation();});
+}
+function ssDueReset(){SS.dueManual=false;ssDueRender();try{ssRatePrev();}catch(e){updMatch();}}
 function ssRateBody(t,r,rb,p){
   r=ssOpEff(t,r,p); /* نفس سلسلة القرار عند الحفظ */
   var due=Math.round(ssConv(t.amount,r,p)*100)/100;
@@ -1142,7 +1166,7 @@ function openSettle(){
           :((t.rate&&scy!==t.ccy)?Number(t.amount)/Number(t.rate):0);
     if(sa)bys[scy]=(bys[scy]||0)+sa;else noRate++;});
   var dueCcy=Object.keys(bys)[0]||'';
-  SS.due=0;SS.dueCcy=dueCcy;SS.paid=0;
+  SS.due=0;SS.dueCcy=dueCcy;SS.paid=0;SS.dueManual=false;
   SS.baseDue=0;SS.liveRate=0;SS.livePair=null;
   SS.opRates={};SS.opDirty={};
   try{ssPairUi();ssRatePrev();}catch(e){}
