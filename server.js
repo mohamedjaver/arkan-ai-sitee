@@ -859,6 +859,68 @@ async function fetchSettled(phone) {
   return out;
 }
 
+/* ═ قيد وصل التحويل — القناة المضمونة: توثيق بتوكن Supabase الموقّع، والكتابة
+   بهوية المالك الموحّدة دائمًا. يرجع النجاح أو الخطأ الحقيقي — لا صمت. ═ */
+app.post('/account/log-transfer', async (req, res) => {
+  try {
+    if (!JWT_SECRET) return res.status(503).json({ ok: false, err: 'service' });
+    /* 1) توثيق الطالب بتوكنه الموقّع */
+    let claims;
+    try {
+      const bearer = String(req.headers.authorization || '').replace(/^Bearer\s+/i, '');
+      claims = jwt.verify(bearer, JWT_SECRET);
+    } catch (e) { return res.status(401).json({ ok: false, err: 'auth' }); }
+    const byPhone = String(claims.phone || '').replace(/\D/g, '');
+    /* 2) مدخلات القيد */
+    const ref = String(req.body.ref || '').trim().slice(0, 64);
+    const name = String(req.body.name || '').trim().slice(0, 80) || 'عميل';
+    const benefPhone = String(req.body.benefPhone || '').replace(/\D/g, '');
+    const amount = Number(req.body.amount) || 0;
+    const ccy = String(req.body.ccy || 'MRU').toUpperCase().slice(0, 8);
+    if (!ref || amount <= 0) return res.status(400).json({ ok: false, err: 'bad input' });
+    /* 3) توكن مالك قصير العمر — هوية موحدة مهما كان الطالب */
+    const ts = Math.floor(Date.now() / 1000);
+    const tok = jwt.sign({ sub: phoneToUuid(OWNER_PHONES[0]), role: 'authenticated',
+      aud: 'authenticated', arkan_role: 'owner', iat: ts, exp: ts + 300 }, JWT_SECRET);
+    const H = { 'apikey': SB_PUB, 'Authorization': 'Bearer ' + tok, 'Content-Type': 'application/json' };
+    /* 4) الزبون: بالهاتف ثم بالاسم ثم إنشاء */
+    let cid = null;
+    if (benefPhone.length >= 8) {
+      const local = benefPhone.replace(/^(222|244)/, '');
+      const rc = await fetch(SB_REST + '/bdl_customers?select=id&or=(phone.eq.' + benefPhone +
+        ',phone.eq.' + local + ',phone.like.*' + local + ')&limit=1', { headers: H });
+      if (rc.ok) { const j = await rc.json(); if (j[0]) cid = j[0].id; }
+    }
+    if (!cid && name !== 'عميل') {
+      const rn = await fetch(SB_REST + '/bdl_customers?select=id&name=ilike.' +
+        encodeURIComponent(name) + '&limit=1', { headers: H });
+      if (rn.ok) { const j = await rn.json(); if (j[0]) cid = j[0].id; }
+    }
+    if (!cid) {
+      const mk = { name };
+      if (benefPhone.length >= 8) mk.phone = benefPhone;
+      let cr = await fetch(SB_REST + '/bdl_customers', { method: 'POST',
+        headers: Object.assign({}, H, { Prefer: 'return=representation' }), body: JSON.stringify(mk) });
+      if (!cr.ok && mk.phone) /* قاعدة بلا عمود الهاتف */
+        cr = await fetch(SB_REST + '/bdl_customers', { method: 'POST',
+          headers: Object.assign({}, H, { Prefer: 'return=representation' }), body: JSON.stringify({ name }) });
+      if (!cr.ok) return res.status(502).json({ ok: false, err: 'customer ' + cr.status });
+      cid = (await cr.json())[0].id;
+    }
+    /* 5) القيد نفسه — مع فحص النتيجة الحقيقي */
+    const tr = await fetch(SB_REST + '/bdl_transactions', { method: 'POST', headers: H,
+      body: JSON.stringify({ ref, customer_id: cid, amount, ccy, status: 'open',
+        meta: { src: 'account', by: byPhone } }) });
+    if (tr.status === 409) return res.json({ ok: true, dup: true, ref });
+    if (!tr.ok) {
+      const detail = await tr.text().catch(() => '');
+      console.error('log-transfer insert:', tr.status, detail.slice(0, 200));
+      return res.status(502).json({ ok: false, err: 'insert ' + tr.status });
+    }
+    res.json({ ok: true, ref });
+  } catch (e) { console.error('log-transfer:', e.message); res.status(500).json({ ok: false, err: 'server' }); }
+});
+
 app.post('/account/my-requests', async (req, res) => {
   try {
     if (!fbReady) return res.status(503).json({ ok: false, err: 'service' });

@@ -1897,10 +1897,10 @@ async function bdlcContacts(){
       if(hit&&nEl&&!nEl.value)nEl.value=hit.name;});}
 }
 async function bdlcPush(ref,name,to,amt,ccy){
-  var tok=await bdlcAuth();if(!tok)return;
+  var tok=await bdlcAuth();if(!tok){console.warn('bdlcPush: no token');return false;}
   try{
     var chk=await fetch(MRB_SB+'/bdl_transactions?select=id&ref=eq.'+encodeURIComponent(ref)+'&limit=1',{headers:bdlcH(tok)});
-    if(chk.ok&&(await chk.json())[0])return;
+    if(chk.ok&&(await chk.json())[0])return true; /* مقيّدة مسبقًا */
     var cid=null,aid=null;
     var acc=String(to||'').trim();
     if(acc.replace(/[^0-9A-Za-z]/g,'').length>=4){
@@ -1922,7 +1922,7 @@ async function bdlcPush(ref,name,to,amt,ccy){
       if(!rn.ok){ /* عمود الهاتف غير مثبت بعد — أنشئ بالاسم فقط */
         rn=await fetch(MRB_SB+'/bdl_customers',{method:'POST',headers:bdlcH(tok,{Prefer:'return=representation'}),
           body:JSON.stringify({name:_nb.name}) });
-        if(!rn.ok)return;
+        if(!rn.ok){console.warn('bdlcPush: customer',rn.status);return false;}
       }
       cid=(await rn.json())[0].id;
     } else if(_bph.length>=8){
@@ -1935,11 +1935,13 @@ async function bdlcPush(ref,name,to,amt,ccy){
         body:JSON.stringify({customer_id:cid,number:acc,kind:kind})});
       if(r2.ok)aid=(await r2.json())[0].id;
     }
-    await fetch(MRB_SB+'/bdl_transactions',{method:'POST',headers:bdlcH(tok),
+    var rt=await fetch(MRB_SB+'/bdl_transactions',{method:'POST',headers:bdlcH(tok),
       body:JSON.stringify({ref:ref,customer_id:cid,account_id:aid,amount:Number(amt)||0,ccy:(ccy||'MRU'),
         status:'open',meta:{srcId:'rc_'+ref,src:'account'}})});
+    if(!rt.ok&&rt.status!==409){console.warn('bdlcPush: insert',rt.status);return false;}
     bdlcContacts();
-  }catch(e){}
+    return true;
+  }catch(e){console.warn('bdlcPush:',e.message);return false;}
 }
 if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',function(){bdlcContacts();});}
 else{bdlcContacts();}
@@ -2026,17 +2028,29 @@ async function mrbMakePdf(){
   }catch(e){}
 })();
 async function mrbPush(name){
-  /* القناة الموحدة: العملية تُنشأ مباشرة في «التسوية» (bdl_transactions عبر bdlcPush)
-     — التسعير يتم داخل نافذة إتمام التسوية (سعر البيع/الشراء الحي)، فلا صندوق انتظار */
+  /* القناة المضمونة: /account/log-transfer بتوكن الجلسة الموقّع — الخادم يكتب
+     بهوية المالك الموحدة ويرجع النتيجة الحقيقية. bdlcPush احتياط عند تعذر الخادم. */
+  const amt=parseFloat(String(document.getElementById('mrbAmt').value||'').replace(/[^\d.]/g,''))||0;
+  if(!amt)return {ok:false,err:'المبلغ فارغ'};
+  const ref=document.getElementById('mrbRef').value||name;
+  const nm=document.getElementById('mrbName').value||'';
+  const bph=String((document.getElementById('mrbPhone')||{}).value||'').replace(/[^0-9]/g,'');
   try{
-    const amt=parseFloat(String(document.getElementById('mrbAmt').value||'').replace(/[^\d.]/g,''))||0;
-    if(!amt)return;
-    const ref=document.getElementById('mrbRef').value||name;
-    bdlcPush(ref,
-      document.getElementById('mrbName').value||'',
-      document.getElementById('mrbTo').value||'',
-      amt, MRB_CCY);
-  }catch(e){}
+    var sj=JSON.parse(localStorage.getItem('arkan_sb_jwt')||'null');
+    if(sj&&sj.token){
+      const r=await fetch('https://arkan-ai-site-production.up.railway.app/account/log-transfer',{
+        method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+sj.token},
+        body:JSON.stringify({ref:ref,name:nm,benefPhone:bph,amount:amt,ccy:MRB_CCY})});
+      const j=await r.json().catch(function(){return {};});
+      if(r.ok&&j.ok){try{bdlcContacts();}catch(e){}return {ok:true,dup:!!j.dup};}
+      console.warn('log-transfer:',r.status,j.err||'');
+    }
+  }catch(e){console.warn('log-transfer net:',e.message);}
+  /* الاحتياط: الكتابة المباشرة */
+  try{
+    const ok=await bdlcPush(ref,nm,document.getElementById('mrbTo').value||'',amt,MRB_CCY);
+    return ok?{ok:true}:{ok:false,err:'تعذّر القيد — تحقق من الاتصال'};
+  }catch(e){return {ok:false,err:e.message||'خطأ غير متوقع'};}
 }
 function mrbResetFlow(){
   var b=document.getElementById('mrbDoneBtn');
@@ -2055,12 +2069,21 @@ async function mrbDone(){
   if(amt<=0){toastSafe('أدخل المبلغ أولًا');return;}
   const btn=document.getElementById('mrbDoneBtn');
   btn.disabled=true;btn.textContent='… جارٍ القيد';
-  try{ await mrbPush((document.getElementById('mrbRef')||{}).value||('BDL-'+Date.now())); }catch(e){}
-  btn.textContent='✓ قُيّدت في التسوية ('+MRB_CCY+')';
-  try{if(typeof loadBalance==='function')setTimeout(loadBalance,800);}catch(e){}
-  btn.style.background='#5C7699';
-  document.getElementById('mrbActs').style.display='block';
-  toastSafe('قُيّدت — الآن ولّد الوصل أو شاركه');
+  let res={ok:false,err:'لم يُنفذ'};
+  try{ res=await mrbPush((document.getElementById('mrbRef')||{}).value||('BDL-'+Date.now())); }
+  catch(e){res={ok:false,err:e.message};}
+  if(res.ok){
+    btn.textContent='✓ قُيّدت في التسوية ('+MRB_CCY+')';
+    btn.style.background='#5C7699';
+    document.getElementById('mrbActs').style.display='block';
+    toastSafe(res.dup?'مقيّدة مسبقًا بنفس الرقم ✓':'قُيّدت — الآن ولّد الوصل أو شاركه');
+    try{if(typeof loadBalance==='function')setTimeout(loadBalance,800);}catch(e){}
+  }else{
+    btn.disabled=false;
+    btn.textContent='⚠ لم تُقيّد — اضغط لإعادة المحاولة';
+    btn.style.background='#B00020';
+    toastSafe('فشل القيد: '+(res.err||'')+' — أعد المحاولة');
+  }
 }
 async function mrbShare(){
   /* الوجهة: واتساب الرقم المسجل باسمه العملية — الصورة أولًا ثم فتح محادثته */
