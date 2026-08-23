@@ -250,7 +250,7 @@ app.use((req, res, next) => {
   const o = req.headers.origin || '';
   if (SITE_ORIGINS.includes(o)) res.setHeader('Access-Control-Allow-Origin', o);
   res.setHeader('Access-Control-Allow-Methods', 'POST, GET, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   if (req.method === 'OPTIONS') return res.sendStatus(204);
   next();
 });

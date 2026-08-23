@@ -2037,19 +2037,24 @@ async function mrbPush(name){
   const bph=String((document.getElementById('mrbPhone')||{}).value||'').replace(/[^0-9]/g,'');
   try{
     var sj=JSON.parse(localStorage.getItem('arkan_sb_jwt')||'null');
-    if(sj&&sj.token){
+    var stok=(sj&&sj.token&&(!sj.exp||sj.exp>Math.floor(Date.now()/1000)+60))?sj.token:null;
+    if(!stok&&window.bdlcAuth){try{stok=await window.bdlcAuth();}catch(e){}}
+    if(stok){
       const r=await fetch('https://arkan-ai-site-production.up.railway.app/account/log-transfer',{
-        method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+sj.token},
+        method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+stok},
         body:JSON.stringify({ref:ref,name:nm,benefPhone:bph,amount:amt,ccy:MRB_CCY})});
       const j=await r.json().catch(function(){return {};});
       if(r.ok&&j.ok){try{bdlcContacts();}catch(e){}return {ok:true,dup:!!j.dup};}
+      if(r.status===401){try{localStorage.removeItem('arkan_sb_jwt');}catch(e){}
+        return {ok:false,err:'انتهت الجلسة — سجّل الدخول مجددًا'};}
       console.warn('log-transfer:',r.status,j.err||'');
+      var srvErr='خادم '+r.status+(j.err?' ('+j.err+')':'');
     }
   }catch(e){console.warn('log-transfer net:',e.message);}
   /* الاحتياط: الكتابة المباشرة */
   try{
     const ok=await bdlcPush(ref,nm,document.getElementById('mrbTo').value||'',amt,MRB_CCY);
-    return ok?{ok:true}:{ok:false,err:'تعذّر القيد — تحقق من الاتصال'};
+    return ok?{ok:true}:{ok:false,err:(typeof srvErr!=='undefined'?srvErr+' + ':'')+'تعذّر القيد المباشر'};
   }catch(e){return {ok:false,err:e.message||'خطأ غير متوقع'};}
 }
 function mrbResetFlow(){
