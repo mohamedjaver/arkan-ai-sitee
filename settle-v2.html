@@ -1345,6 +1345,35 @@ function opsHasReq(ref){
   return (OPS_DATA||[]).some(function(o){
     return o.req_ref===ref||(o.note&&o.note.indexOf('REQ:'+ref)>=0);});
 }
+/* ═══ منع تكرار العمليات (1128): الإلحاق بالعملية القائمة بدل إنشاء جديدة ═══ */
+function opNorm(s){return String(s==null?'':s).toLowerCase().replace(/[^a-z0-9\u0600-\u06FF]/g,'');}
+function opFindOpen(name){
+  var k=opNorm(name);if(k.length<3)return null;
+  var hit=(OPS_DATA||[]).filter(function(o){
+    if(o.status!=='open')return false;
+    var c=opNorm(o.client_name);
+    return c&&(c===k||c.indexOf(k)>=0||k.indexOf(c)>=0);});
+  if(!hit.length)return null;
+  hit.sort(function(a,b){ /* الأولوية: هدف حقيقي ← إيصالات أكثر ← الأقدم */
+    var ta=Number(a.target_aoa)>0?1:0,tb=Number(b.target_aoa)>0?1:0;
+    if(ta!==tb)return tb-ta;
+    var ra=Number(a.rcpt_count||0),rb=Number(b.rcpt_count||0);
+    if(ra!==rb)return rb-ra;
+    return String(a.created_at||'').localeCompare(String(b.created_at||''));});
+  return hit[0];
+}
+async function opAttach(o,reqTag,addTgt,line){
+  /* يضيف قفل REQ إلى الملاحظة (opsHasReq يلتقطه) + يرفع الهدف إن كان القيد AOA */
+  var note=String(o.note||'');
+  if(note.indexOf(reqTag)<0)note=(note?note+' | ':'')+reqTag+(line?' · '+line:'');
+  var body={note:note.slice(0,4000)};
+  if(+addTgt>0)body.target_aoa=Number(o.target_aoa||0)+(+addTgt);
+  try{
+    var r=await fetch(SB+'/bdl_ops?id=eq.'+o.id,{method:'PATCH',headers:H(),body:JSON.stringify(body)});
+    if(r.ok){o.note=body.note;if(body.target_aoa!=null)o.target_aoa=body.target_aoa;}
+    return r.ok;
+  }catch(e){return false;}
+}
 async function opsIntake(){
   if(INTAKE_BUSY)return;INTAKE_BUSY=true;
   try{
@@ -1353,7 +1382,7 @@ async function opsIntake(){
       headers:{'Content-Type':'application/json'},body:JSON.stringify(cr)});
     if(!r.ok)return;
     var j=await r.json(),reqs=(j.items||[]).filter(function(q){return q.status==='pending';});
-    var made=0;
+    var made=0,att=0;
     for(var i=0;i<reqs.length;i++){
       var q=reqs[i];if(!q.ref||opsHasReq(q.ref))continue;
       var ph=String(q.phone||'').replace(/[^0-9]/g,'');
@@ -1361,6 +1390,12 @@ async function opsIntake(){
       var cy=String(q.currency||'').toUpperCase();
       var tgt=(cy.indexOf('AOA')>=0||cy.indexOf('KZ')>=0)?(+q.amount||0):0;
       var nm=(q.name||q.benefName||'').trim()||('طلب '+q.ref);
+      /* 1128: زبون له عملية مفتوحة؟ ألحق الطلب بها — لا عمليات مكررة */
+      var exq=opFindOpen(nm);
+      if(exq){
+        if(await opAttach(exq,'REQ:'+q.ref,tgt,fmt(+q.amount||0,0)+' '+(q.currency||'')))att=(att||0)+1;
+        continue;
+      }
       var note='REQ:'+q.ref+' · من التطبيق ('+(src==='owner'?'المالك':'زبون')+')'+
         ' · '+fmt(+q.amount||0,0)+' '+(q.currency||'')+(q.benefName?' → '+q.benefName:'');
       var base={ref:'OP-'+Date.now().toString(36).toUpperCase().slice(-5)+i,
@@ -1376,7 +1411,9 @@ async function opsIntake(){
         else if(c.status!==409)console.warn('intake',q.ref,c.status); /* 409 = القفل أمسك تكرارًا */
       }catch(e){console.warn('intake',q.ref,e.message);}
     }
-    if(made){toast('استُوردت '+made+' طلب'+(made>2?'ات':'')+' جديدة إلى العمليات');
+    if(made||att){
+      if(made)toast('استُوردت '+made+' طلب'+(made>2?'ات':'')+' جديدة إلى العمليات');
+      if(att)toast('أُلحق '+att+' طلب'+(att>2?'ات':'')+' بعمليات قائمة — بلا تكرار');
       if(!OPS6)toast('الصق bdl-ops6.sql في Supabase لتفعيل التصنيف الكامل');
       OPS_DATA=null;await loadOps();}
   }catch(e){}
@@ -1403,6 +1440,18 @@ async function txIntake(){
       var nm=(t.bdl_customers&&t.bdl_customers.name)||('وصل '+t.ref);
       var cy=String(t.ccy||'').toUpperCase();
       var tgt=(cy==='AOA'||cy==='KZ')?(+t.amount||0):0;
+      /* 1128: زبون له عملية مفتوحة؟ ألحق القيد بها + وسم المصدر — لا عمليات مكررة */
+      var exs=opFindOpen(nm);
+      if(exs){
+        if(await opAttach(exs,'REQ:TX:'+t.ref,tgt,fmt(+t.amount||0,0)+' '+(t.ccy||''))){
+          var mx=Object.assign({},t.meta||{},{op_ref:exs.ref});
+          try{var pmx=await fetch(SB+'/bdl_transactions?id=eq.'+t.id,{method:'PATCH',headers:H(),
+            body:JSON.stringify({meta:mx})});
+            if(!pmx.ok)console.warn('txIntake attach meta',t.ref,pmx.status);}catch(e){}
+          made++;
+        }
+        continue;
+      }
       var opRef='OP-'+Date.now().toString(36).toUpperCase().slice(-5)+i;
       var note='REQ:TX:'+t.ref+' · وصل موحّد ('+(src==='owner'?'المالك':'زبون')+')'+
         ' · '+fmt(+t.amount||0,0)+' '+(t.ccy||'');
@@ -1487,6 +1536,21 @@ async function loadOpBridge(){
 }
 function opFromTx(id){
   var t=BRIDGE.find(function(x){return x.id===id;});if(!t)return;
+  /* 1128: عملية مفتوحة لنفس الزبون؟ الإلحاق المباشر أولًا — لا تكرار */
+  var nmx=(t.bdl_customers&&t.bdl_customers.name)||'';
+  var exb=nmx?opFindOpen(nmx):null;
+  if(exb&&confirm('توجد عملية مفتوحة لهذا الزبون: '+exb.ref+'\nإلحاق هذا القيد بها بدل إنشاء عملية جديدة؟')){
+    (async function(){
+      var cy=String(t.ccy||'').toUpperCase();
+      var tg=(cy==='AOA'||cy==='KZ')?(+t.amount||0):0;
+      if(await opAttach(exb,'REQ:TX:'+t.ref,tg,fmt(+t.amount||0,0)+' '+(t.ccy||''))){
+        try{await fetch(SB+'/bdl_transactions?id=eq.'+t.id,{method:'PATCH',headers:H(),
+          body:JSON.stringify({meta:Object.assign({},t.meta||{},{op_ref:exb.ref})})});}catch(e){}
+        toast('أُلحق بالعملية '+exb.ref+' ✓');OPS_DATA=null;loadOps();
+      }else toast('تعذّر الإلحاق — حاول مجددًا');
+    })();
+    return;
+  }
   opNewSheet();
   OP_SRC_TX=t;
   $('#opCust').value=(t.bdl_customers&&t.bdl_customers.name)||'';
@@ -2404,6 +2468,6 @@ document.querySelectorAll('.ovl').forEach(function(o){
   o.addEventListener('click',function(e){if(e.target===o)o.classList.remove('on');});
 });
 </script>
-<script src="bdl-ops7.js?v=1"></script>
+<script src="bdl-ops7.js?v=2"></script>
 </body>
 </html>

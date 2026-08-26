@@ -443,14 +443,71 @@ window.op7Report=async function(){
   }catch(e){toast('تعذّر التقرير: '+e.message);}
 };
 
-/* ─────────── أزرار الشريط: رفع جماعي + تقرير الشركات ─────────── */
+/* ─────────── ٨) دمج العمليات المكررة — عملية واحدة لكل زبون ───────────
+   يجمع العمليات المفتوحة لنفس الزبون: يُبقي الأنسب (هدف حقيقي ← إيصالات أكثر ← الأقدم)،
+   ينقل إليه كل الإيصالات، يجمع الأهداف، ينسخ أقفال REQ للملاحظة، ويلغي الباقي نهائيًا. */
+window.op7Merge=async function(){
+  var open=(OPS_DATA||[]).filter(function(o){return o.status==='open';});
+  var G={};
+  open.forEach(function(o){
+    var k=fpNorm(o.client_name);if(k.length<3)return;
+    (G[k]=G[k]||[]).push(o);
+  });
+  var groups=Object.keys(G).filter(function(k){return G[k].length>1;});
+  if(!groups.length){toast('لا عمليات مكررة — كل زبون له عملية واحدة ✓');return;}
+  var dupN=groups.reduce(function(s,k){return s+G[k].length-1;},0);
+  if(!confirm('وُجد '+groups.length+' زبون بعمليات مكررة ('+dupN+' عملية زائدة).\n'+
+    'سيُبقى لكل زبون عملية واحدة: تُنقل إليها كل الإيصالات وتُجمع الأهداف والأقفال، وتُلغى الزائدة نهائيًا.\nمتابعة الدمج؟'))return;
+  var merged=0,fails=0;
+  for(var gi=0;gi<groups.length;gi++){
+    var arr=G[groups[gi]].slice();
+    arr.sort(function(a,b){
+      var ta=Number(a.target_aoa)>0?1:0,tb=Number(b.target_aoa)>0?1:0;
+      if(ta!==tb)return tb-ta;
+      var ra=Number(a.rcpt_count||0),rb=Number(b.rcpt_count||0);
+      if(ra!==rb)return rb-ra;
+      return String(a.created_at||'').localeCompare(String(b.created_at||''));});
+    var keep=arr[0],tgt=Number(keep.target_aoa)||0,tags=[];
+    for(var di=1;di<arr.length;di++){
+      var d=arr[di];
+      try{
+        /* ١) نقل الإيصالات للعملية الباقية */
+        var mv=await fetch(SB+'/bdl_op_receipts?op_id=eq.'+d.id,{method:'PATCH',headers:H(),
+          body:JSON.stringify({op_id:keep.id})});
+        if(!mv.ok&&mv.status!==404)throw new Error('mv '+mv.status);
+        /* ٢) جمع الهدف + أقفال REQ */
+        tgt+=Number(d.target_aoa)||0;
+        var tg=String(d.note||'').match(/REQ:[^\s|·]+/g)||[];
+        if(d.req_ref)tg.push('REQ:'+d.req_ref);
+        tg.forEach(function(x){if(tags.indexOf(x)<0&&String(keep.note||'').indexOf(x)<0)tags.push(x);});
+        /* ٣) إلغاء المكررة نهائيًا (قفل req_ref يبقى حيًا في الصف الملغى) */
+        var cx=await fetch(SB+'/bdl_ops?id=eq.'+d.id,{method:'PATCH',headers:H(),
+          body:JSON.stringify({status:'cancelled',note:String(d.note||'').slice(0,3800)+' | ↪ دُمجت في '+keep.ref})});
+        if(!cx.ok)throw new Error('cx '+cx.status);
+        merged++;
+      }catch(e){fails++;console.warn('merge',d.ref,e.message);}
+    }
+    /* ٤) تحديث العملية الباقية: الهدف المجموع + الأقفال المنسوخة */
+    try{
+      var nb={target_aoa:tgt};
+      if(tags.length)nb.note=(String(keep.note||'')+(keep.note?' | ':'')+tags.join(' | ')).slice(0,4000);
+      await fetch(SB+'/bdl_ops?id=eq.'+keep.id,{method:'PATCH',headers:H(),body:JSON.stringify(nb)});
+    }catch(e){}
+  }
+  toast('دُمج '+merged+' عملية مكررة ✓'+(fails?' · تعذّر '+fails+' — أعد المحاولة':''));
+  OPS_DATA=null;await loadOps();
+};
+
+/* ─────────── أزرار الشريط: رفع جماعي + تقرير الشركات + دمج المكرر ─────────── */
 (function(){
   var bar=document.querySelector('#v-ops .fbar .row');if(!bar)return;
   var b1=document.createElement('button');b1.className='selall';b1.textContent='⇪ جماعي';
   b1.onclick=function(){op7Bulk();};
   var b2=document.createElement('button');b2.className='selall';b2.textContent='تقرير الشركات';
   b2.onclick=function(){op7Report();};
-  bar.appendChild(b1);bar.appendChild(b2);
+  var b3=document.createElement('button');b3.className='selall';b3.textContent='🧹 دمج المكرر';
+  b3.onclick=function(){op7Merge();};
+  bar.appendChild(b1);bar.appendChild(b2);bar.appendChild(b3);
 })();
 
 /* إعادة الرسم بالنمط الجديد إن كانت البيانات محمّلة قبل هذه الطبقة */
