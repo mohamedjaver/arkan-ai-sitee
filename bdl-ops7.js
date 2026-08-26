@@ -24,8 +24,8 @@ async function sha256(buf){
 }
 async function fpFile(file){try{return await sha256(await file.arrayBuffer());}catch(e){return null;}}
 function fpNorm(s){return String(s==null?'':s).toLowerCase().replace(/[^a-z0-9\u0600-\u06FF]/g,'');}
-async function fpSem(txn,amt,date,acct,sender){
-  var key=[fpNorm(txn),Math.round(+amt||0),fpNorm(date),fpNorm(acct),fpNorm(sender)].join('|');
+async function fpSem(txn,amt,date,acct,sender,side){
+  var key=[fpNorm(txn),Math.round(+amt||0),fpNorm(date),fpNorm(acct),fpNorm(sender),fpNorm(side||'in')].join('|');
   return await sha256(new TextEncoder().encode(key));
 }
 
@@ -63,6 +63,7 @@ window.renderOps=function(){
   var q=($('#opq').value||'').trim().toLowerCase();
   var rows=OPS_DATA.filter(function(o){
     if(o.status==='cancelled')return false;
+    if(OP_ST==='ALL'&&o.status==='closed')return false;
     if(OP_ST!=='ALL'&&o.status!==OP_ST)return false;
     if(OP_LANE&&Number(o.legs||2)!==OP_LANE)return false;
     if(!q)return true;
@@ -96,6 +97,7 @@ window.op7Sheet=function(id){
   if(o.status==='covered')a+=it('','📤 أُرسلت للمورد',"opSetSt('"+id+"','sent')");
   if(o.status==='sent')a+=it('','🔗 رابط تأكيد المورد',"opCopyLink('"+(o.confirm_token||'')+"')");
   if(o.status==='confirmed')a+=it('main','✅ تسوية وإقفال',"opCloseSheet('"+id+"')");
+  if(o.status==='covered')a+=it('','🗄 تمت التسوية — أرشفة الآن',"op7Archive('"+id+"')");
   a+=it('','📄 التفاصيل والإيصالات',"op7Details('"+id+"')");
   a+=it('','✏️ تعديل',"opEditSheet('"+id+"')");
   a+=it('red','🗑 حذف',"opDelete('"+id+"')");
@@ -191,7 +193,12 @@ window.rcReadOne=async function(f){
         if(j[0]){rcSt('⛔ هذا الإيصال مسجل مسبقًا ('+fmt(j[0].amount_aoa,0)+' AOA · '+j[0].txn_id+')');
           $('#rcDup').style.display='block';
           $('#rcDup').textContent='⚠️ هذا الإيصال مسجل مسبقًا — نفس الصورة رُفعت من قبل';
-          $('#rcSaveBtn').disabled=true;return false;}}
+          $('#rcSaveBtn').disabled=true;
+          if(RC_QUEUE.length){setTimeout(function(){
+            $('#rcTxn').value='';$('#rcAmt').value='';$('#rcBank').value='';$('#rcSender').value='';
+            $('#rcDup').style.display='none';$('#rcSaveBtn').disabled=false;
+            rcNextInQueue();},1100);}
+          return false;}}
     }catch(e){}
   }
   window.OP7_META.fp_img=hi;
@@ -219,7 +226,7 @@ window.opAddReceipt=async function(){
     payload.match_txn=ins.indexOf(t)>=0?t:(($('#rcMatch').value)||null);
     if(!payload.match_txn){toast('حدد إيصال الزبون الذي يغطيه هذا الصادر');return;}
   }
-  payload.fp=await fpSem(t,a,window.OP7_META.date,window.OP7_META.account,payload.sender);
+  payload.fp=await fpSem(t,a,window.OP7_META.date,window.OP7_META.account,payload.sender,RC_SIDE);
   if(window.OP7_META.fp_img)payload.fp_img=window.OP7_META.fp_img;
   if(window.OP7_META.date)payload.rcpt_date=String(window.OP7_META.date).slice(0,20);
   if(window.OP7_META.account)payload.account=String(window.OP7_META.account).slice(0,40);
@@ -341,7 +348,7 @@ window.op7BulkSave=async function(){
     var body={op_id:x.opId,txn_id:x.txn,amount_aoa:x.amt,side:'in',
       bank:(x.bank||'').slice(0,40)||null,sender:(x.sender||'').slice(0,60)||null};
     if(OPS7){
-      body.fp=await fpSem(x.txn,x.amt,x.date,x.account,x.sender);
+      body.fp=await fpSem(x.txn,x.amt,x.date,x.account,x.sender,'in');
       if(x.fpImg)body.fp_img=x.fpImg;
       if(x.date)body.rcpt_date=String(x.date).slice(0,20);
       if(x.account)body.account=String(x.account).slice(0,40);
@@ -496,6 +503,41 @@ window.op7Merge=async function(){
   }
   toast('دُمج '+merged+' عملية مكررة ✓'+(fails?' · تعذّر '+fails+' — أعد المحاولة':''));
   OPS_DATA=null;await loadOps();
+};
+
+/* ─────────── الأرشفة اليدوية + قسم العمليات المؤرشفة ─────────── */
+window.op7Archive=async function(id){
+  var o=(OPS_DATA||[]).find(function(x){return x.id===id;});if(!o)return;
+  var rc=reconOf(id),warn='';
+  if(rc.in_n>0&&rc.matched<rc.in_n)warn='\n⚠️ مطابقة الموردين ناقصة ('+rc.matched+'/'+rc.in_n+').';
+  if(!confirm('أرشفة '+o.ref+' كعملية مسوّاة؟'+warn+'\nملاحظة: الربح يُسجَّل من «تسوية وإقفال» — الأرشفة المباشرة بلا ربح.'))return;
+  try{
+    await fetch(SB+'/bdl_ops?id=eq.'+id,{method:'PATCH',headers:H(),body:JSON.stringify({status:'closed'})});
+    toast('✓ تمت التسوية — '+o.ref+' انتقلت للأرشيف');
+    OPS_DATA=null;loadOps();
+  }catch(e){toast('تعذّرت الأرشفة');}
+};
+var _go7=window.go;
+window.go=function(t){_go7(t);if(t==='arch')op7ArchList();};
+window.op7ArchList=async function(){
+  var v=document.getElementById('v-arch');if(!v)return;
+  var box=document.getElementById('op7ArchBox');
+  if(!box){box=document.createElement('div');box.id='op7ArchBox';v.insertBefore(box,v.firstChild);}
+  try{
+    var r=await fetch(SB+'/bdl_ops_coverage?select=*&status=in.(closed,confirmed)&order=created_at.desc&limit=120',{headers:H()});
+    var j=r.ok?await r.json():[];
+    if(!j.length){box.innerHTML='';return;}
+    box.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;margin:2px 0 10px">'+
+      '<b style="font-size:14px;color:var(--navy)">عمليات مسوّاة — '+j.length+'</b>'+
+      '<button class="selall" onclick="op7Report()" style="height:38px">تقرير الشركات</button></div>'+
+      j.map(function(o){
+        return '<div class="op7card" onclick="op7Details(\''+o.id+'\')" style="opacity:.94">'+
+          '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px">'+
+          '<div style="min-width:0"><b style="font-size:13.5px;color:var(--navy)">'+esc(o.client_name)+'</b>'+
+          '<div class="num" style="font-size:11px;color:var(--muted);margin-top:2px">'+esc(o.ref)+' · '+fmt(o.covered_aoa,0)+' AOA</div></div>'+
+          '<span class="st done" style="flex-shrink:0">تمت التسوية ✓</span></div></div>';
+      }).join('')+'<div style="height:14px"></div>';
+  }catch(e){box.innerHTML='';}
 };
 
 /* ─────────── أزرار الشريط: رفع جماعي + تقرير الشركات + دمج المكرر ─────────── */
