@@ -92,15 +92,15 @@ window.op7Sheet=function(id){
   $('#op7s').textContent=fmt(o.covered_aoa,0)+' / '+fmt(o.target_aoa,0)+' AOA · '+(o.rcpt_count||0)+' إيصال';
   var a='';
   function it(cls,txt,fn){return '<button class="it '+cls+'" onclick="op7Close();'+fn+'">'+txt+'</button>';}
-  if(o.status==='open'||o.status==='covered')a+=it('main','📎 إضافة وصل',"opSheet('"+id+"')");
-  if(o.status==='open'||o.status==='covered')a+=it('','✍️ مبلغ يدوي — بدون وصل',"op7Manual('"+id+"')");
-  if(o.status==='covered')a+=it('','📤 أُرسلت للمورد',"opSetSt('"+id+"','sent')");
-  if(o.status==='sent')a+=it('','🔗 رابط تأكيد المورد',"opCopyLink('"+(o.confirm_token||'')+"')");
-  if(o.status==='confirmed')a+=it('main','✅ تسوية وإقفال',"opCloseSheet('"+id+"')");
-  if(o.status==='covered')a+=it('','🗄 تمت التسوية — أرشفة الآن',"op7Archive('"+id+"')");
-  a+=it('','📄 التفاصيل والإيصالات',"op7Details('"+id+"')");
-  a+=it('','✏️ تعديل',"opEditSheet('"+id+"')");
-  a+=it('red','🗑 حذف',"opDelete('"+id+"')");
+  if(o.status==='open'||o.status==='covered')a+=it('main',' إضافة وصل',"opSheet('"+id+"')");
+  if(o.status==='open'||o.status==='covered')a+=it('',' مبلغ يدوي — بدون وصل',"op7Manual('"+id+"')");
+  if(o.status==='covered')a+=it('',' أُرسلت للمورد',"opSetSt('"+id+"','sent')");
+  if(o.status==='sent')a+=it('',' رابط تأكيد المورد',"opCopyLink('"+(o.confirm_token||'')+"')");
+  if(o.status==='confirmed')a+=it('main',' تسوية وإقفال',"opCloseSheet('"+id+"')");
+  if(o.status==='covered')a+=it('',' تمت التسوية — أرشفة الآن',"op7Archive('"+id+"')");
+  a+=it('',' التفاصيل والإيصالات',"op7Details('"+id+"')");
+  a+=it('','تعديل',"opEditSheet('"+id+"')");
+  a+=it('red','حذف',"opDelete('"+id+"')");
   $('#op7acts').innerHTML=a;
   bs.classList.add('on');
 };
@@ -190,9 +190,9 @@ window.rcReadOne=async function(f){
       var r=await fetch(SB+'/bdl_op_receipts?select=id,amount_aoa,txn_id&fp_img=eq.'+hi+'&limit=1',{headers:H()});
       if(r.status===400)OPS7=false;
       else{var j=r.ok?await r.json():[];
-        if(j[0]){rcSt('⛔ هذا الإيصال مسجل مسبقًا ('+fmt(j[0].amount_aoa,0)+' AOA · '+j[0].txn_id+')');
+        if(j[0]){rcSt(' هذا الإيصال مسجل مسبقًا ('+fmt(j[0].amount_aoa,0)+' AOA · '+j[0].txn_id+')');
           $('#rcDup').style.display='block';
-          $('#rcDup').textContent='⚠️ هذا الإيصال مسجل مسبقًا — نفس الصورة رُفعت من قبل';
+          $('#rcDup').textContent=' هذا الإيصال مسجل مسبقًا — نفس الصورة رُفعت من قبل';
           $('#rcSaveBtn').disabled=true;
           if(RC_QUEUE.length){setTimeout(function(){
             $('#rcTxn').value='';$('#rcAmt').value='';$('#rcBank').value='';$('#rcSender').value='';
@@ -235,7 +235,7 @@ window.opAddReceipt=async function(){
     if(r.status===400){OPS7=false;return _opAddReceipt();} /* الأعمدة غير مثبتة بعد */
     if(r.status===409){
       $('#rcDup').style.display='block';
-      $('#rcDup').textContent='⚠️ هذا الإيصال مسجل مسبقًا — القفل الصلب منع التكرار';
+      $('#rcDup').textContent=' هذا الإيصال مسجل مسبقًا — القفل الصلب منع التكرار';
       return;}
     if(!r.ok)throw new Error(r.status);
     var newCov=Number(OP_CUR.covered_aoa)+(RC_SIDE==='in'?a:0);
@@ -287,7 +287,7 @@ window.op7Bulk=function(){
   $('#op7s').textContent='قراءة تلقائية · منع مكرر · ربط بالعميل والعملية';
   $('#op7acts').innerHTML=
     '<input id="b7File" type="file" accept="image/*,application/pdf" multiple style="display:none" onchange="op7BulkFiles(this.files)">'+
-    '<button class="it main" onclick="document.getElementById(\'b7File\').click()">📁 اختيار الملفات (١٠٠+ مدعوم)</button>'+
+    '<button class="it main" onclick="document.getElementById(\'b7File\').click()"> اختيار الملفات (١٠٠+ مدعوم)</button>'+
     '<div id="b7Sum" class="num" style="font-size:11.5px;color:#5C7699;margin:4px 2px 8px"></div>'+
     '<div id="b7List" style="max-height:44vh;overflow:auto"></div>'+
     '<button id="b7Save" class="it main" style="margin-top:10px" disabled onclick="op7BulkSave()">حفظ</button>';
@@ -509,7 +509,7 @@ window.op7Merge=async function(){
 window.op7Archive=async function(id){
   var o=(OPS_DATA||[]).find(function(x){return x.id===id;});if(!o)return;
   var rc=reconOf(id),warn='';
-  if(rc.in_n>0&&rc.matched<rc.in_n)warn='\n⚠️ مطابقة الموردين ناقصة ('+rc.matched+'/'+rc.in_n+').';
+  if(rc.in_n>0&&rc.matched<rc.in_n)warn='\n مطابقة الموردين ناقصة ('+rc.matched+'/'+rc.in_n+').';
   if(!confirm('أرشفة '+o.ref+' كعملية مسوّاة؟'+warn+'\nملاحظة: الربح يُسجَّل من «تسوية وإقفال» — الأرشفة المباشرة بلا ربح.'))return;
   try{
     await fetch(SB+'/bdl_ops?id=eq.'+id,{method:'PATCH',headers:H(),body:JSON.stringify({status:'closed'})});
@@ -547,7 +547,7 @@ window.op7ArchList=async function(){
   b1.onclick=function(){op7Bulk();};
   var b2=document.createElement('button');b2.className='selall';b2.textContent='تقرير الشركات';
   b2.onclick=function(){op7Report();};
-  var b3=document.createElement('button');b3.className='selall';b3.textContent='🧹 دمج المكرر';
+  var b3=document.createElement('button');b3.className='selall';b3.textContent=' دمج المكرر';
   b3.onclick=function(){op7Merge();};
   bar.appendChild(b1);bar.appendChild(b2);bar.appendChild(b3);
 })();
