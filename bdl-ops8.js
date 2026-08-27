@@ -2,7 +2,7 @@
    bdl-ops8.js — «دفاتر النقد» بنمط CashBook (طبقة إضافية فوق settle-v2)
    ١) دفتر مستقل لكل طرف: رصيد ملوّن لكل عملة + آخر نشاط + ترتيب تلقائي
    ٢) رصيد جارٍ Running Balance لكل قيد — يحسم أي خلاف مع العميل
-   ٣) إدخال سريع: قبض 🟢 / دفع 🔴 بمبلغ وعملة وملاحظة وتاريخ
+   ٣) إدخال سريع: قبض  / دفع  بمبلغ وعملة وملاحظة وتاريخ
    ٤) قائمة الدفتر: كشف حساب PDF، إعادة تسمية، تكرار، حذف
    ٥) متعدد العملات (تفوّق على CashBook): AOA/MRU/USD/EUR/CNY/USDT/AED
    يُحمَّل بعد bdl-ops7.js — لا يمس أي شيء قائم.
@@ -21,7 +21,7 @@ var st=document.createElement('style');
 st.textContent=
 '#v-books .bk8card{background:#fff;border:1px solid #D7E2F2;padding:13px 15px;margin-bottom:8px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:10px}'+
 '#v-books .bk8card:active{box-shadow:0 4px 18px rgba(10,86,184,.18)}'+
-'.bk8ic{width:40px;height:40px;border-radius:12px;background:#E8F1FF;display:flex;align-items:center;justify-content:center;font-size:18px;flex:none}'+
+'.bk8ic{width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,#0B2F70,#0A56B8);color:#fff;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;flex:none}'+
 '.bk8nm{font-size:14px;font-weight:800;color:#0B2447}'+
 '.bk8ls{font-size:11px;color:'+MUT+';margin-top:3px}'+
 '.bk8bal{text-align:left;flex:none}'+
@@ -86,7 +86,7 @@ if(tabs){var tb=document.createElement('button');tb.dataset.tab='books';tb.textC
 
 var v=document.createElement('div');v.id='v-books';v.style.display='none';
 v.innerHTML=
- '<div class="fbar"><div class="row"><div class="srch">🔍<input id="bk8q" placeholder="بحث في الدفاتر…" oninput="renderBooks()"></div></div></div>'+
+ '<div class="fbar"><div class="row"><div class="srch"><input id="bk8q" placeholder="بحث في الدفاتر…" oninput="renderBooks()"></div></div></div>'+
  '<div class="list" id="bk8list"><div class="empty">جارٍ التحميل…</div></div>';
 var anchor=$('#v-profit')||document.body;
 anchor.parentNode.insertBefore(v,anchor.nextSibling);
@@ -105,8 +105,8 @@ ov.innerHTML=
    '<div class="bk8sum num" id="bk8sum"></div></div>'+
  '<div class="bk8chips" id="bk8ccy"></div>'+
  '<div class="bk8list" id="bk8en"></div>'+
- '<div class="bk8btm"><button class="bk8in" onclick="entrySheet(\'in\')">🟢 قبض (له)</button>'+
- '<button class="bk8out" onclick="entrySheet(\'out\')">🔴 دفع (عليه)</button></div>';
+ '<div class="bk8btm"><button class="bk8in" onclick="entrySheet(\'in\')">قبض — له</button>'+
+ '<button class="bk8out" onclick="entrySheet(\'out\')">دفع — عليه</button></div>';
 document.body.appendChild(ov);
 
 /* ─────────── توسيع التنقل ─────────── */
@@ -154,13 +154,13 @@ window.loadBooks=async function(){
 };
 window.renderBooks=function(){
   var el=$('#bk8list');if(!el)return;
-  if(!OPS8_SQL){el.innerHTML='<div class="bk8note">⚠️ فعّل الدفاتر: الصق <b>bdl-ops8.sql</b> مرة واحدة في Supabase → SQL Editor ثم أعد فتح التبويب.</div>';return;}
+  if(!OPS8_SQL){el.innerHTML='<div class="bk8note"> فعّل الدفاتر: الصق <b>bdl-ops8.sql</b> مرة واحدة في Supabase → SQL Editor ثم أعد فتح التبويب.</div>';return;}
   var q=($('#bk8q').value||'').trim().toLowerCase();
   var rows=(BOOKS||[]).filter(function(b){return !q||(b.name||'').toLowerCase().indexOf(q)>=0;});
   if(!rows.length){el.innerHTML='<div class="empty">لا دفاتر بعد — أنشئ أول دفتر لعميل أو مورد.</div>';return;}
   el.innerHTML=rows.map(function(b){
     return '<div class="bk8card" onclick="openBook(\''+b.id+'\')">'+
-      '<div class="bk8ic">📒</div>'+
+      '<div class="bk8ic">'+esc((b.name||'؟').trim().charAt(0).toUpperCase())+'</div>'+
       '<div style="flex:1;min-width:0"><div class="bk8nm">'+esc(b.name)+'</div>'+
       '<div class="bk8ls">'+rel(b.last_entry_at||b.updated_at)+(b.n_entries?' · '+b.n_entries+' قيد':'')+'</div></div>'+
       '<div class="bk8bal">'+balHTML(b.bal)+'</div>'+
@@ -197,13 +197,13 @@ window.createBook=async function(){
 window.bkMenu=function(id,inside){
   var b=(BOOKS||[]).filter(function(x){return x.id===id;})[0];if(!b)return;
   sheet(b.name,rel(b.last_entry_at||b.updated_at)+(b.n_entries?' · '+b.n_entries+' قيد':''),
-   (inside?'':'<button class="it main" onclick="op8Close();openBook(\''+id+'\')">📖 فتح الدفتر</button>')+
-   '<button class="it grn" onclick="op8Close();openBook(\''+id+'\',function(){entrySheet(\'in\')})">🟢 قبض سريع</button>'+
-   '<button class="it red" onclick="op8Close();openBook(\''+id+'\',function(){entrySheet(\'out\')})">🔴 دفع سريع</button>'+
-   '<button class="it" onclick="bkPDF(\''+id+'\')">🧾 كشف حساب PDF</button>'+
-   '<button class="it" onclick="bkRename(\''+id+'\')">✏️ إعادة تسمية</button>'+
-   '<button class="it" onclick="bkDup(\''+id+'\')">📑 تكرار الدفتر</button>'+
-   '<button class="it red" onclick="bkDel(\''+id+'\')">🗑 حذف الدفتر</button>');
+   (inside?'':'<button class="it main" onclick="op8Close();openBook(\''+id+'\')"> فتح الدفتر</button>')+
+   '<button class="it grn" onclick="op8Close();openBook(\''+id+'\',function(){entrySheet(\'in\')})"> قبض سريع</button>'+
+   '<button class="it red" onclick="op8Close();openBook(\''+id+'\',function(){entrySheet(\'out\')})"> دفع سريع</button>'+
+   '<button class="it" onclick="bkPDF(\''+id+'\')"> كشف حساب PDF</button>'+
+   '<button class="it" onclick="bkRename(\''+id+'\')"> إعادة تسمية</button>'+
+   '<button class="it" onclick="bkDup(\''+id+'\')"> تكرار الدفتر</button>'+
+   '<button class="it red" onclick="bkDel(\''+id+'\')"> حذف الدفتر</button>');
 };
 window.bkRename=async function(id){
   var b=BOOKS.filter(function(x){return x.id===id;})[0];
@@ -292,7 +292,7 @@ window.renderBook=function(){
 window.entrySheet=function(side,e){
   if(!BK)return;
   var edit=!!e,ccy=e?e.ccy:(BK_CCY!=='ALL'?BK_CCY:'AOA');
-  sheet(edit?'تعديل القيد':(side==='in'?'🟢 قبض — دخل للدفتر':'🔴 دفع — خرج من الدفتر'),BK.name,
+  sheet(edit?'تعديل القيد':(side==='in'?'قبض — دخل للدفتر':'دفع — خرج من الدفتر'),BK.name,
    '<div class="fld"><label>المبلغ</label><input id="e8a" class="num" type="number" inputmode="decimal" step="any" value="'+(e?e.amount:'')+'" placeholder="0"></div>'+
    '<div class="fld"><label>العملة</label><select id="e8c">'+CCYS.map(function(c){
       return '<option '+(c===ccy?'selected':'')+'>'+c+'</option>';}).join('')+'</select></div>'+
@@ -322,8 +322,8 @@ window.saveEntry=async function(side,id){
 window.entryMenu=function(id){
   var e=BK_EN.filter(function(x){return x.id===id;})[0];if(!e)return;
   sheet((e.side==='in'?'قبض ':'دفع ')+money(+e.amount)+' '+e.ccy,(e.note||'')+' · '+(e.entry_date||''),
-   '<button class="it main" onclick="op8Close();entrySheet(\''+e.side+'\',BK_EN.filter(function(x){return x.id===\''+id+'\'})[0])">✏️ تعديل القيد</button>'+
-   '<button class="it red" onclick="delEntry(\''+id+'\')">🗑 حذف القيد</button>');
+   '<button class="it main" onclick="op8Close();entrySheet(\''+e.side+'\',BK_EN.filter(function(x){return x.id===\''+id+'\'})[0])"> تعديل القيد</button>'+
+   '<button class="it red" onclick="delEntry(\''+id+'\')"> حذف القيد</button>');
 };
 window.delEntry=async function(id){
   if(!confirm('حذف هذا القيد نهائيًا؟'))return;
