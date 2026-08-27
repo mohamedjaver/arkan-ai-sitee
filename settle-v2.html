@@ -232,7 +232,7 @@ input,select{font-family:inherit;color:var(--ink)}
 <div id="v-settle">
   <div class="fbar">
     <div class="row">
-      <div class="srch">🔍<input id="q" placeholder="بحث: اسم، حساب، مرجع…" oninput="renderGroups()"></div>
+      <div class="srch"><input id="q" placeholder="بحث: اسم، حساب، مرجع…" oninput="renderGroups()"></div>
       <button class="selall" id="selAllBtn" onclick="selAll()">تحديد الكل</button>
     </div>
     <div class="chips" id="ccyChips"></div>
@@ -419,7 +419,7 @@ input,select{font-family:inherit;color:var(--ink)}
 <div id="v-archive" style="display:none">
   <div class="fbar">
     <div class="row">
-      <div class="srch">🔍<input id="aq" placeholder="اسم، حساب، مبلغ، مرجع، تاريخ…" oninput="renderArchive()"></div>
+      <div class="srch"><input id="aq" placeholder="اسم، حساب، مبلغ، مرجع، تاريخ…" oninput="renderArchive()"></div>
     </div>
     <div class="chips" id="archChips">
       <button class="chip" data-st="ALL" onclick="setArchSt('ALL')">الكل</button>
@@ -746,7 +746,8 @@ function renderGroups(){
         '</div>'+
         '<div class="grp-amt" onclick="expand(this.closest(\'.grp\'),\''+k+'\')">'+
           '<div class="a num">'+fmt(g.total_amount)+'</div><div class="b">'+esc(g.ccy)+'</div></div>'+
-        '<span class="arrow">◀</span>'+
+        '<button onclick="event.stopPropagation();grpDelete(\''+k+'\')" style="border:1px solid #F0C9C5;background:#fff;color:#B00020;font-weight:800;font-size:10.5px;padding:6px 10px;font-family:inherit;cursor:pointer;flex:none">حذف</button>'+
+      '<span class="arrow">◀</span>'+
       '</div><div class="txs" id="tx-'+k.replace(/[^a-z0-9]/gi,'')+'"></div></div>';
   }).join('');
 }
@@ -781,11 +782,37 @@ function renderTxs(k){
       '<div class="tx-a num">'+fmt(t.amount)+' '+esc(t.ccy)+
       (t.settle_amount?'<small>'+fmt(t.settle_amount)+' '+esc(t.settle_ccy||'')+'</small>':'')+
       '<button onclick="event.stopPropagation();delTx(\''+t.id+'\',\''+(t.settlement_id||'')+'\',\''+esc(t.ref)+'\')"'+
-      ' style="display:block;margin-top:5px;margin-inline-start:auto;border:0;border-radius:8px;background:#FFF5F5;color:#B00020;font-weight:800;font-size:10.5px;padding:5px 10px;font-family:inherit;cursor:pointer;border:1px solid #F5B5B0">🗑 حذف</button>'+
+      ' style="display:block;margin-top:5px;margin-inline-start:auto;border:0;border-radius:8px;background:#FFF5F5;color:#B00020;font-weight:800;font-size:10.5px;padding:5px 10px;font-family:inherit;cursor:pointer;border:1px solid #F5B5B0">حذف</button>'+
       '</div></div>';
   }).join('')||'<div class="tx" style="color:var(--muted)">لا عمليات</div>';
 }
 
+
+/* ═══ حذف مجموعة تسوية كاملة (تشمل المجموعات الخاوية/الشبحية) ═══
+   يجلب القيود بنطاق المجموعة الدقيق؛ وإن كان خاويًا يوسّع بلا فلتر الحساب،
+   ثم يعرض العدد ويحذف بقائمة معرفات صريحة — لا حذف أعمى. */
+async function grpDelete(k){
+  var g=GROUPS.find(function(x){return gKey(x)===k;});if(!g)return;
+  var base=SB+'/bdl_transactions?select=id,ref&customer_id=eq.'+g.customer_id+
+    '&ccy=eq.'+encodeURIComponent(g.ccy)+'&status=in.(open,settling)';
+  var ids=[];
+  try{
+    var r=await fetch(base+(g.account_id?'&account_id=eq.'+g.account_id:'&account_id=is.null'),{headers:H()});
+    ids=r.ok?await r.json():[];
+    if(!ids.length){r=await fetch(base,{headers:H()});ids=r.ok?await r.json():[];}
+  }catch(e){}
+  if(!ids.length){toast('لا قيود خلف هذه المجموعة — حدّث الصفحة');loadGroups();return;}
+  if(!confirm('حذف مجموعة «'+g.customer_name+'» ('+g.ccy+')؟\n\nستُمحى '+ids.length+' عملية نهائيًا من النظام ولن تعود للظهور.'))return;
+  if(!confirm('تأكيد أخير: الحذف لا رجعة فيه.'))return;
+  try{
+    var d=await fetch(SB+'/bdl_transactions?id=in.('+ids.map(function(x){return x.id;}).join(',')+')',
+      {method:'DELETE',headers:H()});
+    if(!d.ok)throw new Error(d.status);
+    delete SEL[k];delete TXCACHE[k];
+    toast('حُذفت المجموعة ('+ids.length+' عملية)');
+    loadGroups();OPS_DATA=null;
+  }catch(e){toast('تعذّر الحذف: '+e.message);}
+}
 /* ═══════════ التحديد ═══════════ */
 async function toggleGrp(k){
   var g=GROUPS.find(function(x){return gKey(x)===k;});
@@ -968,12 +995,12 @@ function renderRcpts(){
           '<small style="display:block;color:var(--muted);font-size:10px;margin-top:2px">'+
           (p.amount?(rcptCcyOk(r)?'قُرئ تلقائيًا — عدّله إن أخطأ'
             :'<span style="color:#B00020;font-weight:800">عملة الإيصال '+esc(p.ccy)+' ≠ عملة المستحق '+esc(SS.dueCcy||'')+' — مستثنى من العدّاد</span>')
-            :'⚠️ لم يُقرأ — اكتبه يدويًا')+(p.ref?' · '+esc(p.ref):'')+'</small>';
+            :' لم يُقرأ — اكتبه يدويًا')+(p.ref?' · '+esc(p.ref):'')+'</small>';
       } else amtBox='<small>جارٍ القراءة…</small>';
     }
     return '<div class="rcpt'+(r.dup&&!r.ok?' dup':'')+'">'+
-      '<div class="ic">🧾</div><div class="fi"><div>'+esc(r.file.name)+'</div>'+
-      (r.dup&&!r.ok?'<small>⛔ استُخدم من قبل — مرفوض، احذفه</small>':amtBox)+'</div>'+
+      '<div class="ic"></div><div class="fi"><div>'+esc(r.file.name)+'</div>'+
+      (r.dup&&!r.ok?'<small> استُخدم من قبل — مرفوض، احذفه</small>':amtBox)+'</div>'+
       '<button class="del" onclick="RCPTS.splice('+i+',1);renderRcpts();updMatch()">✕</button></div>';
   }).join('');
 }
@@ -1219,11 +1246,11 @@ function updMatch(){
 async function commitSettle(){
   await ssPersistLiveRate(); /* السعر الحي يُحفظ أولًا */
   var s=selected();if(!s.length)return;
-  if(RCPTS.some(function(r){return r.dup;})){toast('⛔ إيصال مستخدم من قبل — احذفه للمتابعة');return;}
+  if(RCPTS.some(function(r){return r.dup;})){toast(' إيصال مستخدم من قبل — احذفه للمتابعة');return;}
   /* ═ بوابة الزيادة: مدفوع أكثر من المستحق = نحن مدينون — لا إقفال حتى يستوي ═ */
   var surplus=(SS.paid||0)-(SS.due||0);
   if(SS.due>0&&surplus>1){
-    alert('⚠️ المدفوع '+fmt(SS.paid,0)+' من '+fmt(SS.due,0)+' '+SS.dueCcy+
+    alert(' المدفوع '+fmt(SS.paid,0)+' من '+fmt(SS.due,0)+' '+SS.dueCcy+
       '\nزائد: '+fmt(surplus,2)+' '+SS.dueCcy+
       '\n\nلا تُقفل تسوية بمبلغ زائد — الفارق دَين علينا للعميل.'+
       '\nالحلول: صحّح مبلغ إيصال من خانته، أو احذف إيصالًا زائدًا، أو راجع السعر.'+
@@ -1234,7 +1261,7 @@ async function commitSettle(){
   var shortfall=(SS.due||0)-(SS.paid||0);
   var isPartial=SS.due>0&&shortfall>1;
   if(isPartial){
-    if(!confirm('⚠️ المدفوع '+fmt(SS.paid,0)+' من '+fmt(SS.due,0)+' '+SS.dueCcy+
+    if(!confirm(' المدفوع '+fmt(SS.paid,0)+' من '+fmt(SS.due,0)+' '+SS.dueCcy+
       '\nناقص: '+fmt(shortfall,0)+' '+SS.dueCcy+
       '\n\nتسوية جزئية؟ العملية ستبقى «قيد التسوية» بالمتبقي حتى تكتمل.'))return;
   }
@@ -1550,7 +1577,7 @@ async function loadOpBridge(){
         '<div class="num" style="font-size:10.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(t.ref)+'</div></div>'+
         '<div style="display:flex;gap:6px;flex-shrink:0">'+
         '<button onclick="opFromTx(\''+t.id+'\')" style="border:0;background:var(--navy);color:#fff;font-weight:800;font-size:12px;padding:10px 14px;font-family:inherit;cursor:pointer">+ عملية</button>'+
-        '<button onclick="opDelBridge(\''+t.id+'\')" style="border:0;background:#FFF5F5;color:#B00020;font-weight:800;font-size:14px;padding:10px 12px;font-family:inherit;cursor:pointer">🗑</button></div></div>';
+        '<button onclick="opDelBridge(\''+t.id+'\')" style="border:0;background:#FFF5F5;color:#B00020;font-weight:800;font-size:14px;padding:10px 12px;font-family:inherit;cursor:pointer"></button></div></div>';
     }).join('');
 }
 function opFromTx(id){
@@ -1880,7 +1907,7 @@ async function opDupCheck(){
     if(j[0]){
       var op=(OPS_DATA||[]).find(function(o){return o.id===j[0].op_id;});
       box.style.display='block';
-      box.innerHTML='⚠️ إيصال مكرر! هذا الرقم مسجل مسبقًا ('+fmt(j[0].amount_aoa,0)+' AOA'+(op?' في '+op.ref+' — '+esc(op.client_name):'')+')';
+      box.innerHTML=' إيصال مكرر! هذا الرقم مسجل مسبقًا ('+fmt(j[0].amount_aoa,0)+' AOA'+(op?' في '+op.ref+' — '+esc(op.client_name):'')+')';
       $('#rcSaveBtn').disabled=true;
     }else{box.style.display='none';$('#rcSaveBtn').disabled=false;}
   }catch(e){}
@@ -1902,7 +1929,7 @@ async function opAddReceipt(){
       body:JSON.stringify(payload)});
     if(r.status===409){ /* القفل الصلب أمسك تكرارًا تسلل */
       $('#rcDup').style.display='block';
-      $('#rcDup').textContent='⚠️ رُفض: رقم العملية مسجل مسبقًا — القفل الصلب يمنع التكرار';
+      $('#rcDup').textContent=' رُفض: رقم العملية مسجل مسبقًا — القفل الصلب يمنع التكرار';
       return;}
     if(!r.ok)throw new Error(r.status);
     /* اكتمال التغطية → الحالة مكتملة تلقائيًا */
@@ -1951,15 +1978,15 @@ async function rcReadOne(f){
   try{
     var r=await window.ArkanRead.read(f);
     var p=(r&&r.parsed)||{};
-    if(!p.transaction_id&&!p.reference&&!p.amount){rcSt('⚠️ لم يُقرأ — أدخل يدويًا أو جرّب صورة أوضح');return false;}
+    if(!p.transaction_id&&!p.reference&&!p.amount){rcSt(' لم يُقرأ — أدخل يدويًا أو جرّب صورة أوضح');return false;}
     rcFill(p);
     rcSt('✓ قُرئ ('+(r.engine==='gemini'?'ذكاء اصطناعي':'OCR محلي')+') — راجع ثم «إلحاق»');
     return true;
-  }catch(e){rcSt('⚠️ تعذّرت القراءة: '+e.message);return false;}
+  }catch(e){rcSt(' تعذّرت القراءة: '+e.message);return false;}
 }
 async function rcFilesPicked(files){
   if(!files||!files.length)return;
-  if(!window.ArkanRead){rcSt('⚠️ محرك القراءة لم يُحمّل — أعد فتح الصفحة');return;}
+  if(!window.ArkanRead){rcSt(' محرك القراءة لم يُحمّل — أعد فتح الصفحة');return;}
   var arr=Array.prototype.slice.call(files);
   $('#rcFile').value='';
   RC_QUEUE=RC_QUEUE.concat(arr.slice(1));
@@ -2129,7 +2156,7 @@ async function dayCloseSheet(){
   var q=await fetch(SB+'/bdl_day_close?select=id&day=eq.'+DC.day+'&limit=1',{headers:H()});
   var j=q.ok?await q.json():[];
   if(j[0]){$('#dcNote').style.display='block';
-    $('#dcNote').textContent='ℹ️ اليوم مُقفل مسبقًا — الزر سيعيد إصدار التقرير فقط';
+    $('#dcNote').textContent='ℹ اليوم مُقفل مسبقًا — الزر سيعيد إصدار التقرير فقط';
     DC._already=true;$('#dcBtn').textContent='إعادة إصدار تقرير اليوم PDF';}
   else $('#dcBtn').textContent='تأكيد الإقفال وإصدار التقرير PDF';
 }
@@ -2144,7 +2171,7 @@ async function dayCloseDo(){
         ops_sent:DC.ops_sent,ops_confirmed:DC.ops_confirmed,ops_closed_today:DC.ops_closed_today,
         profit_mru:DC.profit_mru||0})});
       if(r.status===409){$('#dcNote').style.display='block';
-        $('#dcNote').textContent='ℹ️ سبق إقفال اليوم — أُصدر التقرير فقط';}
+        $('#dcNote').textContent='ℹ سبق إقفال اليوم — أُصدر التقرير فقط';}
       else if(!r.ok)throw new Error(r.status);
       else toast('أُقفل يوم '+DC.day+' ✓');
     }catch(e){toast('تعذّر الإقفال: '+e.message);$('#dcBtn').disabled=false;return;}
@@ -2348,7 +2375,7 @@ async function delTx(txId,stId,ref){
     try{
       var q=await fetch(SB+'/bdl_transactions?select=id&settlement_id=eq.'+stId,{headers:H()});
       var n=q.ok?(await q.json()).length:1;
-      if(n>1)msg+='\n\n⚠️ تسويتها تشمل '+n+' عمليات — البقية ستعود «مفتوحة» وهذه وحدها تُحذف';
+      if(n>1)msg+='\n\n تسويتها تشمل '+n+' عمليات — البقية ستعود «مفتوحة» وهذه وحدها تُحذف';
       else msg+='\n• تسويتها وربحها يُحذفان معها';
     }catch(e){}
   }
@@ -2441,7 +2468,7 @@ function renderArchive(){
       ((t.status==='settled'||t.status==='done')&&t.settlement_id
         ?'<button onclick="unsettle(\''+t.settlement_id+'\',\''+esc(t.ref)+'\')" style="display:block;margin-top:6px;border:1px solid #F5B5B0;border-radius:8px;background:#FFF5F5;color:#B00020;font-weight:800;font-size:10.5px;padding:5px 9px;font-family:inherit;cursor:pointer">↩ حذف التسوية</button>'
         :'')+
-      '<button onclick="delTx(\''+(t.tx_id||t.id)+'\',\''+(t.settlement_id||'')+'\',\''+esc(t.ref)+'\')" style="display:block;margin-top:5px;border:0;border-radius:8px;background:#B00020;color:#fff;font-weight:800;font-size:10.5px;padding:5px 9px;font-family:inherit;cursor:pointer">🗑 حذف العملية</button>'+
+      '<button onclick="delTx(\''+(t.tx_id||t.id)+'\',\''+(t.settlement_id||'')+'\',\''+esc(t.ref)+'\')" style="display:block;margin-top:5px;border:0;border-radius:8px;background:#B00020;color:#fff;font-weight:800;font-size:10.5px;padding:5px 9px;font-family:inherit;cursor:pointer"> حذف العملية</button>'+
       '</div></div>');
   });
   if(buf.length)out.push(dayHead(day)+buf.join(''));
