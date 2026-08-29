@@ -522,6 +522,7 @@ input,select{font-family:inherit;color:var(--ink)}
       <div id="rcptList"></div>
     </div>
     <div class="fld"><label>ملاحظة (اختياري)</label><input id="sNote"></div>
+    <button id="doPend" onclick="savePending()" style="width:100%;height:52px;margin-bottom:10px;border:1.5px solid #B98900;background:#FFF9E8;color:#8A6100;font-weight:800;font-size:14px;font-family:inherit;cursor:pointer">حفظ مؤقت — تسوية معلقة (بانتظار الأوقية)</button>
     <button class="primary" id="doSettle" onclick="commitSettle()">تأكيد التسوية</button>
   </div>
 </div>
@@ -556,7 +557,7 @@ function H(extra){var h={apikey:ANON,Authorization:'Bearer '+(TOK||ANON),'Conten
   if(extra)Object.keys(extra).forEach(function(k){h[k]=extra[k];});return h;}
 
 var $=function(s){return document.querySelector(s);};
-var GROUPS=[],TXCACHE={},SEL={},ARCH=null,PROF=null,PR='day',CCY='ALL',RCPTS=[];
+var GROUPS=[],PENDMAP={},TXCACHE={},SEL={},ARCH=null,PROF=null,PR='day',CCY='ALL',RCPTS=[];
 function toast(m){var t=$('#toast');t.textContent=m;t.classList.add('on');
   clearTimeout(t._t);t._t=setTimeout(function(){t.classList.remove('on');},2600);}
 function fmt(n,d){n=Number(n);if(!isFinite(n))return '—';
@@ -707,6 +708,9 @@ async function loadGroups(){
     var r=await fetch(SB+'/bdl_open_groups?select=*&order=last_at.desc',{headers:H()});
     if(!r.ok)throw new Error(r.status);
     GROUPS=await r.json();syncUI('ok','متزامن');
+    try{var pr=await fetch(SB+'/bdl_transactions?select=customer_id,account_id,ccy&status=eq.settling&meta->>pending=eq.true&limit=500',{headers:H()});
+      PENDMAP={};(pr.ok?await pr.json():[]).forEach(function(t){PENDMAP[t.customer_id+'|'+(t.account_id||'x')+'|'+t.ccy]=1;});
+    }catch(e2){PENDMAP={};}
   }catch(e){GROUPS=[];syncUI('err','تعذّر الاتصال');}
   buildCcyChips();renderGroups();updateBar();
 }
@@ -741,6 +745,7 @@ function renderGroups(){
         '<div class="grp-i" onclick="expand(this.closest(\'.grp\'),\''+k+'\')">'+
           '<div class="grp-t"><b>'+esc(g.customer_name)+'</b><span class="acc">'+accTxt+'</span></div>'+
           '<div class="grp-s"><span><span class="n">'+g.tx_count+'</span> عمليات</span>'+
+          (PENDMAP[k]?'<span style="background:#FFF3CC;color:#8A6100;font-weight:800;font-size:10px;padding:3px 8px;border:1px solid #EAD48A">تسوية معلقة</span>':'')+
           '<span class="num">'+fmt(g.total_amount)+' '+esc(g.ccy)+'</span>'+
           (g.total_settle>0?'<span class="num">'+fmt(g.total_settle)+' '+esc(g.settle_ccy||'')+'</span>':'')+'</div>'+
         '</div>'+
@@ -1186,6 +1191,40 @@ async function ssPersistLiveRate(){
   }
   SS.liveRate=0;
 }
+
+/* ═══ حفظ مؤقت: تسوية معلقة — تُحفظ الأسعار والإيصالات وتبقى العملية
+   موسومة «تسوية معلقة» في التسوية حتى يكتمل ما على الزبون من الأوقية.
+   يقبل النقص والزيادة معًا — لا بوابات، لأنه ليس إقفالًا. ═══ */
+async function savePending(){
+  var s=selected();if(!s.length){toast('حدّد عملية أولًا');return;}
+  var dp=document.getElementById('doPend');dp.disabled=true;
+  try{
+    var rids=[];
+    for(var i=0;i<RCPTS.length;i++){var rc=RCPTS[i],p=rc.parsed||{};
+      var body={fingerprint:rc.fp,amount:p.amount||null,ccy:p.ccy||null,bank:p.bank||null,
+        account_no:p.account||null,txn_ref:p.ref||null,ocr:p};
+      var rr=await fetch(SB+'/bdl_receipts',{method:'POST',
+        headers:H({Prefer:'return=representation,resolution=merge-duplicates'}),body:JSON.stringify(body)});
+      if(rr.ok){var jj=await rr.json();if(jj[0])rids.push(jj[0].id);}
+      else{var rq=await fetch(SB+'/bdl_receipts?select=id&fingerprint=eq.'+rc.fp+'&limit=1',{headers:H()});
+        var jq=rq.ok?await rq.json():[];if(jq[0])rids.push(jq[0].id);}}
+    var newPaid=Math.max(0,(SS.paid||0)-(SS.prevPaid||0));
+    for(var k2=0;k2<s.length;k2++){var t=s[k2];
+      var prev=(t.meta&&Number(t.meta.paid_aoa))||0;
+      var body2={status:'settling',
+        meta:Object.assign({},t.meta||{},{
+          pending:true,pending_at:new Date().toISOString(),
+          paid_aoa:prev+newPaid,
+          saved_rates:{sale:$('#ssRs').value||null,buy:$('#ssRb').value||null},
+          rcpt_ids:((t.meta&&t.meta.rcpt_ids)||[]).concat(rids),
+          note:$('#sNote').value||((t.meta||{}).note||null)})};
+      newPaid=0; /* المدفوع الجديد يُسجَّل على أول عملية فقط — لا ازدواج */
+      await fetch(SB+'/bdl_transactions?id=eq.'+t.id,{method:'PATCH',headers:H(),body:JSON.stringify(body2)});}
+    toast('حُفظت كتسوية معلقة — أكملها عندما يسلّم الزبون الأوقية');
+    SEL={};TXCACHE={};RCPTS=[];closeOvl('settle');loadGroups();
+  }catch(e){toast('تعذّر الحفظ: '+e.message);}
+  dp.disabled=false;
+}
 function openSettle(){
   var s=selected();if(!s.length)return;
   RCPTS=[];renderRcpts();$('#sNote').value='';
@@ -1209,6 +1248,8 @@ function openSettle(){
   $('#ssRb').value='';$('#ssRPrev').textContent='';
   SS.baseDue=0; /* لا مستحق موروث — البيع الحالي يحكم الكل */
   $('#ssRs').value=''; /* الرئيسي فارغ — كل عملية تعرض ضمنيّها في قائمتها */
+  var sv=null;s.forEach(function(t){if(!sv&&t.meta&&t.meta.saved_rates)sv=t.meta.saved_rates;});
+  if(sv){if(sv.sale)$('#ssRs').value=sv.sale;if(sv.buy)$('#ssRb').value=sv.buy;}
   ssRatePrev(); /* المستحق فورًا من الأسعار الضمنية */
   updMatch();
   $('#ovl-settle').classList.add('on');
@@ -1285,7 +1326,7 @@ async function commitSettle(){
       for(var k=0;k<s.length;k++){var t=s[k];
         var prev=(t.meta&&Number(t.meta.paid_aoa))||0;
         var body2={status:'settling',
-          meta:Object.assign({},t.meta||{},{paid_aoa:prev+SS.paid,
+          meta:Object.assign({},t.meta||{},{paid_aoa:prev+(SS.paid-(SS.prevPaid||0)),
             rcpt_ids:((t.meta&&t.meta.rcpt_ids)||[]).concat(rids),
             partial_at:new Date().toISOString()})};
         await fetch(SB+'/bdl_transactions?id=eq.'+t.id,{method:'PATCH',headers:H(),body:JSON.stringify(body2)});
