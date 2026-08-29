@@ -1132,14 +1132,14 @@ function ssProfitPrev(){
     if(d>0&&c>0){due+=d;cost+=c;}else miss++;
   });
   if(due>0&&cost>0){
-    var pr=cost-due,pc=due>0?(pr/due*100):0;
+    var pr=due-cost,pc=cost>0?(pr/cost*100):0; /* قاعدة العمل: نشتري الأوقية بالكوانزا بسعر الشراء ونبيعها بالبيع — الشراء الأعلى = ربح */
     el.style.display='block';
     el.style.color=pr>=0?'#0B7A3B':'#B00020';
     el.style.background=pr>=0?'#F0FAF3':'#FFF5F5';
     el.style.borderColor=pr>=0?'#BFE3CB':'#F5B5B0';
     el.innerHTML=(pr>=0?'الربح المتوقع: <b>+':'خسارة متوقعة: <b>−')+fmt(Math.abs(pr),0)+' '+((p&&p.tgt)||SS.dueCcy||'AOA')+'</b>'+
       ' <span style="font-size:11.5px;opacity:.85">('+(pr>=0?'+':'−')+Math.abs(pc).toFixed(2)+'%)</span>'+
-      (pr<0?'<div style="font-size:11px;font-weight:800;margin-top:4px">سعر الشراء أعلى من البيع — راجع الرقمين قبل الإقفال</div>':'')+
+      (pr<0?'<div style="font-size:11px;font-weight:800;margin-top:4px">سعر الشراء أدنى من البيع — هذه خسارة، راجع الرقمين قبل الإقفال</div>':'')+
       (miss?' <span style="font-size:11px;color:#8A6100">· '+miss+' عملية بلا سعر شراء</span>':'');
   }else if(rb>0){el.style.display='block';el.style.color='#8A6100';el.style.background='#FFF9E8';el.style.borderColor='#EAD48A';
     el.textContent='أدخل سعر البيع ليُحتسب الربح';}
@@ -2607,7 +2607,7 @@ function renderProfit(){
     bucket[k]=bucket[k]||{};var c=row.ccy+(row.settle_ccy&&row.settle_ccy!==row.ccy?'→'+row.settle_ccy:'');
     bucket[k][c]=bucket[k][c]||{n:0,amt:0,set:0,pf:0,rc:row.ccy,pc:row.profit_ccy||row.ccy,sc:row.settle_ccy||row.ccy};
     bucket[k][c].n+=row.tx_count;bucket[k][c].amt+=Number(row.amount);
-    bucket[k][c].set+=Number(row.settle_amount);bucket[k][c].pf+=Number(row.profit);
+    bucket[k][c].set+=Number(row.settle_amount);bucket[k][c].pf+=-Number(row.profit); /* قاعدة المالك */
   });
   var keys=Object.keys(bucket);
   $('#profList').innerHTML=keys.map(function(k){
