@@ -512,6 +512,18 @@ input,select{font-family:inherit;color:var(--ink)}
         <div id="ssRPrev" class="num" style="margin-top:8px;font-size:12.5px;color:#0A56B8"></div>
       </div>
       <div class="row"><span>المدفوع من الإيصالات</span><b class="num" id="ssPaid">0</b></div>
+      <div style="margin-top:10px;padding:11px 12px;border:1px dashed #C9DFFA;background:#FBFDFF">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
+          <span style="font-size:12px;font-weight:800;color:#5C7699">فرق تقريب صغير (اختياري)</span>
+          <button onclick="ssAdjAuto()" style="border:1px solid #0A56B8;background:#fff;color:#0A56B8;font-weight:800;font-size:11.5px;padding:7px 12px;font-family:inherit;cursor:pointer">موازنة تلقائية</button>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:9px;align-items:stretch" dir="ltr">
+          <button id="ssAdjMinus" onclick="ssAdjSign(-1)" style="width:52px;border:1.5px solid #F5B5B0;background:#fff;color:#B00020;font-weight:800;font-size:20px;font-family:inherit;cursor:pointer">−</button>
+          <input id="ssAdjV" inputmode="decimal" placeholder="0" oninput="ssAdjApply()" style="flex:1;height:50px;border:1.5px solid #C9DFFA;background:#fff;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:17px;font-weight:800;color:#0B2447;outline:none;box-sizing:border-box">
+          <button id="ssAdjPlus" onclick="ssAdjSign(1)" style="width:52px;border:1.5px solid #BFE3CB;background:#fff;color:#0B7A3B;font-weight:800;font-size:20px;font-family:inherit;cursor:pointer">+</button>
+        </div>
+        <div id="ssAdjHint" class="num" style="margin-top:7px;font-size:11px;color:#5C7699"></div>
+      </div>
     </div>
     <div class="match" id="ssMatch">
       <svg viewBox="0 0 44 44"><circle class="bg" cx="22" cy="22" r="19"/><circle class="fg" id="ssRing" cx="22" cy="22" r="19"/></svg>
@@ -1249,6 +1261,7 @@ async function savePending(){
           pending:true,pending_at:new Date().toISOString(),
           paid_aoa:prev+newPaid,
           saved_rates:{sale:$('#ssRs').value||null,buy:$('#ssRb').value||null},
+          adj:SS.adj||0,
           rcpt_ids:((t.meta&&t.meta.rcpt_ids)||[]).concat(rids),
           note:$('#sNote').value||((t.meta||{}).note||null)})};
       newPaid=0; /* المدفوع الجديد يُسجَّل على أول عملية فقط — لا ازدواج */
@@ -1270,6 +1283,7 @@ function openSettle(){
     if(sa)bys[scy]=(bys[scy]||0)+sa;else noRate++;});
   var dueCcy=Object.keys(bys)[0]||'';
   SS.due=0;SS.dueCcy=dueCcy;SS.paid=0;SS.dueManual=false;
+  SS.adj=0;SS.adjSign=1;try{$('#ssAdjV').value='';$('#ssAdjHint').textContent='';$('#ssAdjPlus').style.background='#fff';$('#ssAdjMinus').style.background='#fff';}catch(e0){}
   SS.baseDue=0;SS.liveRate=0;SS.livePair=null;
   SS.opRates={};SS.opDirty={};
   try{ssPairUi();ssRatePrev();}catch(e){}
@@ -1301,10 +1315,33 @@ function rcptCcyOk(r){
   if(!SS.dueCcy)return true;
   return ccyNorm(p.ccy)===ccyNorm(SS.dueCcy);
 }
+
+/* ═══ فرق التقريب: مبلغ صغير موقّع يُضاف للمدفوع (+) أو يُخصم منه (−)
+   لإقفال فوارق الكسور. «موازنة تلقائية» تملأ الفارق الدقيق بضغطة. ═══ */
+function ssAdjSign(sg){SS.adjSign=sg;
+  $('#ssAdjPlus').style.background=sg>0?'#E7F6EC':'#fff';
+  $('#ssAdjMinus').style.background=sg<0?'#FFF5F5':'#fff';
+  ssAdjApply();}
+function ssAdjApply(){
+  var v=Math.abs(parseFloat($('#ssAdjV').value)||0);
+  SS.adj=v*(SS.adjSign||1);
+  $('#ssAdjHint').textContent=v?((SS.adj>0?'يُضاف +':'يُخصم −')+fmt(v,2)+' '+(SS.dueCcy||'')+' من المدفوع'):'';
+  updMatch();}
+function ssAdjAuto(){
+  var raw=SS.prevPaid||0;
+  RCPTS.forEach(function(r){var p=r.parsed;
+    if(p&&p.amount&&(!r.dup||r.ok)&&rcptCcyOk(r))raw+=Number(p.amount)||0;});
+  var d=(SS.due||0)-raw;
+  if(!SS.due){toast('أدخل السعر أولًا ليُحسب المستحق');return;}
+  SS.adjSign=d>=0?1:-1;
+  $('#ssAdjV').value=String(Math.round(Math.abs(d)*100)/100);
+  ssAdjSign(SS.adjSign);
+  toast('وُزّن الفارق: '+(d>=0?'+':'−')+fmt(Math.abs(d),2)+' '+SS.dueCcy);}
 function updMatch(){
   SS.paid=SS.prevPaid||0;
   RCPTS.forEach(function(r){var p=r.parsed;
     if(p&&p.amount&&(!r.dup||r.ok)&&rcptCcyOk(r))SS.paid+=Number(p.amount)||0;});
+  SS.paid+=Number(SS.adj||0);
   $('#ssPaid').textContent=fmt(SS.paid,2)+(SS.dueCcy?' '+SS.dueCcy:'');
   var el=$('#ssMatch'),ring=$('#ssRing');
   if(!SS.due){$('#ssPct').textContent='—';$('#ssDiff').textContent='لا مستحق محسوب';
@@ -1369,7 +1406,7 @@ async function commitSettle(){
     }else{
       /* التسوية الذرية الكاملة */
       var r=await fetch(SB+'/rpc/bdl_settle',{method:'POST',headers:H(),
-        body:JSON.stringify({p_tx:s.map(function(t){return t.id;}),p_receipts:rids,p_note:$('#sNote').value||null})});
+        body:JSON.stringify({p_tx:s.map(function(t){return t.id;}),p_receipts:rids,p_note:((($('#sNote').value||'')+(SS.adj?' [فرق تقريب: '+(SS.adj>0?'+':'')+fmt(SS.adj,2)+' '+SS.dueCcy+']':'')).trim())||null})});
       if(!r.ok){var et=await r.text();throw new Error(et.slice(0,120));}
       var st=await r.json();
       toast('تمت التسوية ✓ '+(st.ref||''));
