@@ -500,9 +500,10 @@ input,select{font-family:inherit;color:var(--ink)}
             <input id="ssRs" inputmode="decimal" placeholder="0.360" oninput="ssRatePrev()" dir="ltr"
               style="width:100%;box-sizing:border-box;height:58px;border:2px solid #0A56B8;border-radius:0;background:#fff;padding:0 14px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:22px;font-weight:700;color:#003B8F;letter-spacing:.5px;outline:none"></div>
           <div><div class="clabel" style="font-size:12.5px;margin-bottom:6px">الشراء (للربح)</div>
-            <input id="ssRb" inputmode="decimal" placeholder="0.350" dir="ltr"
+            <input id="ssRb" inputmode="decimal" placeholder="0.350" oninput="ssProfitPrev()" dir="ltr"
               style="width:100%;box-sizing:border-box;height:58px;border:2px solid #C9DFFA;border-radius:0;background:#fff;padding:0 14px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:22px;font-weight:700;color:#003B8F;letter-spacing:.5px;outline:none"></div>
         </div>
+        <div id="ssProfit" style="display:none;margin-top:10px;padding:11px 14px;border:1.5px solid #BFE3CB;background:#F0FAF3;font-weight:800;font-size:13.5px;color:#0B7A3B" class="num"></div>
         <button onclick="ssRateApply()" style="width:100%;margin-top:10px;height:50px;border:0;border-radius:0;background:var(--navy);color:#fff;font-weight:800;font-size:14px;font-family:inherit;cursor:pointer">تطبيق</button>
         <div id="ssPerOp" style="display:none;margin-top:10px;border-top:1.5px dashed #C9DFFA;padding-top:10px">
           <div style="font-size:11.5px;font-weight:800;color:#5C7699;margin-bottom:8px">سعر كل عملية (عدّل ما يلزم — الباقي يتبع الرئيسي)</div>
@@ -1100,7 +1101,39 @@ function ssOpEff(t,r,p){ /* السعر الفعّال: الفردي ← الرئ
   if(r>0)return r;
   return parseFloat(ssImplied(t,p))||0;
 }
+
+/* ═══ الربح الحي أثناء التسجيل: يظهر فور إدخال السعرين ═══
+   لكل عملية: الربح = المستحق بسعر البيع − التكلفة بسعر الشراء.
+   المسعّرة سابقًا تُحتسب من settle_amount/cost المخزونين. */
+function ssProfitPrev(){
+  var el=$('#ssProfit');if(!el)return;
+  var s=selected();if(!s.length){el.style.display='none';return;}
+  var rs=parseFloat($('#ssRs').value)||0,rb=parseFloat($('#ssRb').value)||0,p=ssPairCur();
+  var due=0,cost=0,miss=0;
+  s.forEach(function(t){
+    var d=0,c=0;
+    if(t.settle_amount&&(t.settle_ccy||'AOA')!==t.ccy){d=Number(t.settle_amount);}
+    else if(p){var er=ssOpEff(t,rs,p);if(ssRateOk(er,p))d=ssConv(t.amount,er,p);}
+    if(t.cost){c=Number(t.cost);}
+    else if(t.meta&&t.meta.rate_cost&&p){c=ssConv(t.amount,Number(t.meta.rate_cost),p);}
+    else if(rb>0&&p&&ssRateOk(rb,p)){c=ssConv(t.amount,rb,p);}
+    if(d>0&&c>0){due+=d;cost+=c;}else miss++;
+  });
+  if(due>0&&cost>0){
+    var pr=due-cost,pc=cost>0?(pr/cost*100):0;
+    el.style.display='block';
+    el.style.color=pr>=0?'#0B7A3B':'#B00020';
+    el.style.background=pr>=0?'#F0FAF3':'#FFF5F5';
+    el.style.borderColor=pr>=0?'#BFE3CB':'#F5B5B0';
+    el.innerHTML='الربح المتوقع: <b>'+fmt(pr,0)+' '+((p&&p.tgt)||SS.dueCcy||'AOA')+'</b>'+
+      ' <span style="font-size:11.5px;opacity:.85">('+(pr>=0?'+':'')+pc.toFixed(2)+'%)</span>'+
+      (miss?' <span style="font-size:11px;color:#8A6100">· '+miss+' عملية بلا سعر شراء</span>':'');
+  }else if(rb>0){el.style.display='block';el.style.color='#8A6100';el.style.background='#FFF9E8';el.style.borderColor='#EAD48A';
+    el.textContent='أدخل سعر البيع ليُحتسب الربح';}
+  else{el.style.display='none';}
+}
 function ssRatePrev(){
+  try{ssProfitPrev();}catch(e){}
   if(SS.dueManual){ssDueRender();updMatch();return;} /* المستحق اليدوي حاكم حتى يُلغى */
   var r=parseFloat($('#ssRs').value)||0;
   var u=ssUnpriced(),p=ssPairCur();
@@ -1250,6 +1283,7 @@ function openSettle(){
   $('#ssRs').value=''; /* الرئيسي فارغ — كل عملية تعرض ضمنيّها في قائمتها */
   var sv=null;s.forEach(function(t){if(!sv&&t.meta&&t.meta.saved_rates)sv=t.meta.saved_rates;});
   if(sv){if(sv.sale)$('#ssRs').value=sv.sale;if(sv.buy)$('#ssRb').value=sv.buy;}
+  try{ssProfitPrev();}catch(e){}
   ssRatePrev(); /* المستحق فورًا من الأسعار الضمنية */
   updMatch();
   $('#ovl-settle').classList.add('on');
