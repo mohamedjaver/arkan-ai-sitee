@@ -764,7 +764,7 @@ async function expand(el,k){
   if(!TXCACHE[k]){
     box.innerHTML='<div class="tx" style="color:var(--muted);font-size:12px">جارٍ التحميل…</div>';
     var g=GROUPS.find(function(x){return gKey(x)===k;});
-    var url=SB+'/bdl_transactions?select=id,ref,amount,ccy,settle_amount,settle_ccy,rate,status,created_at'+
+    var url=SB+'/bdl_transactions?select=id,ref,amount,ccy,settle_amount,settle_ccy,rate,status,created_at,meta,cost'+
       '&customer_id=eq.'+g.customer_id+'&ccy=eq.'+encodeURIComponent(g.ccy)+
       (g.account_id?'&account_id=eq.'+g.account_id:'&account_id=is.null')+
       '&status=in.(open,settling)&order=created_at.asc';
@@ -829,7 +829,7 @@ async function toggleGrp(k){
   renderGroups();renderTxs(k);updateBar();
 }
 async function expandFetch(g,k){
-  var url=SB+'/bdl_transactions?select=id,ref,amount,ccy,settle_amount,settle_ccy,rate,status,created_at'+
+  var url=SB+'/bdl_transactions?select=id,ref,amount,ccy,settle_amount,settle_ccy,rate,status,created_at,meta,cost'+
     '&customer_id=eq.'+g.customer_id+'&ccy=eq.'+encodeURIComponent(g.ccy)+
     (g.account_id?'&account_id=eq.'+g.account_id:'&account_id=is.null')+
     '&status=in.(open,settling)&order=created_at.asc';
