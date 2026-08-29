@@ -1019,9 +1019,61 @@ async function readReceipt(file){
   }catch(e){}
   return out;
 }
+
+/* ═══ قصّ الوصل تلقائيًا: يكشف البطاقة الفاتحة (الوصل) داخل لقطة الشاشة
+   ويقصّ عليها فيسقط كل ما حولها (خلفية معتمة، تطبيق، شريط الحالة).
+   احتياطات: PDF يمرّ كما هو؛ إن كانت الصورة كلها فاتحة أو النتيجة
+   صغيرة جدًا يُعاد الأصل دون مساس. ═══ */
+async function autoCropReceipt(f){
+  try{
+    if(!f||!/^image\//.test(f.type))return f;
+    var url=URL.createObjectURL(f);
+    var img=await new Promise(function(res,rej){var im=new Image();im.onload=function(){res(im);};im.onerror=rej;im.src=url;});
+    URL.revokeObjectURL(url);
+    var W=img.naturalWidth,Hh=img.naturalHeight;if(!W||!Hh)return f;
+    /* تحليل على نسخة مصغّرة للسرعة */
+    var aw=Math.min(320,W),ah=Math.round(Hh*aw/W);
+    var c=document.createElement('canvas');c.width=aw;c.height=ah;
+    var x=c.getContext('2d');x.drawImage(img,0,0,aw,ah);
+    var d=x.getImageData(0,0,aw,ah).data;
+    var rows=new Float32Array(ah),cols=new Float32Array(aw);
+    for(var y=0;y<ah;y++)for(var xx=0;xx<aw;xx++){
+      var i=(y*aw+xx)*4,L=.299*d[i]+.587*d[i+1]+.114*d[i+2];
+      if(L>=185){rows[y]++;cols[xx]++;}
+    }
+    for(y=0;y<ah;y++)rows[y]/=aw;for(xx=0;xx<aw;xx++)cols[xx]/=ah;
+    function band(pr,n,th){var bs=-1,be=-1,cs=-1;
+      for(var k=0;k<n;k++){
+        if(pr[k]>=th){if(cs<0)cs=k;}
+        else if(cs>=0){if(be-bs<k-cs){bs=cs;be=k;}cs=-1;}
+      }
+      if(cs>=0&&be-bs<n-cs){bs=cs;be=n;}
+      return bs<0?null:[bs,be];
+    }
+    var rb=band(rows,ah,.35);if(!rb)return f;
+    /* أعمدة داخل نطاق الصفوف فقط */
+    var cols2=new Float32Array(aw);
+    for(y=rb[0];y<rb[1];y++)for(xx=0;xx<aw;xx++){
+      var i2=(y*aw+xx)*4,L2=.299*d[i2]+.587*d[i2+1]+.114*d[i2+2];
+      if(L2>=185)cols2[xx]++;
+    }
+    for(xx=0;xx<aw;xx++)cols2[xx]/=(rb[1]-rb[0]);
+    var cb=band(cols2,aw,.5);if(!cb)return f;
+    var sc=W/aw,pad=Math.round(6*sc);
+    var sx=Math.max(0,Math.round(cb[0]*sc)-pad),sy=Math.max(0,Math.round(rb[0]*sc)-pad);
+    var sw=Math.min(W-sx,Math.round((cb[1]-cb[0])*sc)+2*pad),sh=Math.min(Hh-sy,Math.round((rb[1]-rb[0])*sc)+2*pad);
+    var area=(sw*sh)/(W*Hh);
+    if(area>=.9||area<=.12||sw<80||sh<80)return f; /* لا فائدة أو خطر — الأصل */
+    var oc=document.createElement('canvas');oc.width=sw;oc.height=sh;
+    oc.getContext('2d').drawImage(img,sx,sy,sw,sh,0,0,sw,sh);
+    var blob=await new Promise(function(res){oc.toBlob(res,'image/jpeg',.92);});
+    if(!blob)return f;
+    return new File([blob],f.name.replace(/\.(png|webp|heic|jpeg|jpg)$/i,'')+'-crop.jpg',{type:'image/jpeg'});
+  }catch(e){return f;}
+}
 async function addReceipts(files){
   for(var i=0;i<files.length;i++){
-    var f=files[i];
+    var f=await autoCropReceipt(files[i]);
     var fp=await sha256(await f.arrayBuffer());
     var dup=false;
     try{
@@ -2135,7 +2187,8 @@ async function rcReadOne(f){
 async function rcFilesPicked(files){
   if(!files||!files.length)return;
   if(!window.ArkanRead){rcSt(' محرك القراءة لم يُحمّل — أعد فتح الصفحة');return;}
-  var arr=Array.prototype.slice.call(files);
+  var arr=[];
+  for(var i0=0;i0<files.length;i0++)arr.push(await autoCropReceipt(files[i0]));
   $('#rcFile').value='';
   RC_QUEUE=RC_QUEUE.concat(arr.slice(1));
   rcBadge();
