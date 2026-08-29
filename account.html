@@ -1694,6 +1694,13 @@ function mrbCropCard(img){
       }
     }
     if(count < DW*DH*0.06) return null; // كتلة صغيرة جدًا — ليست البطاقة
+    /* تشذيب صارم: تُقصى الصفوف/الأعمدة الحدّية غير البيضاء (بقايا الخلفية) */
+    const frRow=(y)=>{let n=0,w=0;for(let x=minX;x<=maxX;x+=2){n++;if(white((y*DW+x)*4))w++;}return w/Math.max(n,1);};
+    const frCol=(x)=>{let n=0,w=0;for(let y=minY;y<=maxY;y+=2){n++;if(white((y*DW+x)*4))w++;}return w/Math.max(n,1);};
+    while(minY<maxY&&frRow(minY)<0.85)minY++;
+    while(maxY>minY&&frRow(maxY)<0.85)maxY--;
+    while(minX<maxX&&frCol(minX)<0.85)minX++;
+    while(maxX>minX&&frCol(maxX)<0.85)maxX--;
     // امتداد الشريط السماوي (Done!) أسفل البطاقة
     let ext=maxY;
     for(let ry=maxY+1; ry<Math.min(DH,maxY+Math.round(DH*0.12)); ry++){
@@ -1706,7 +1713,7 @@ function mrbCropCard(img){
     }
     maxY=ext;
     // إعادة للقياس الأصلي + هامش صغير
-    const pad=Math.round(4/scale);
+    const pad=0; /* حافة-إلى-حافة: لا بقايا خلفية */
     const ox=Math.max(0,Math.round(minX/scale)-pad);
     const oy=Math.max(0,Math.round(minY/scale)-pad);
     const ow=Math.min(img.width-ox, Math.round((maxX-minX)/scale)+pad*2);
