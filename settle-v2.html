@@ -234,6 +234,7 @@ input,select{font-family:inherit;color:var(--ink)}
     <div class="row">
       <div class="srch"><input id="q" placeholder="بحث: اسم، حساب، مرجع…" oninput="renderGroups()"></div>
       <button class="selall" id="selAllBtn" onclick="selAll()">تحديد الكل</button>
+      <button class="selall" onclick="purgeOld()" style="border-color:#F0C9C5;color:#B00020">تنظيف القديم</button>
     </div>
     <div class="chips" id="ccyChips"></div>
   </div>
@@ -830,6 +831,40 @@ async function grpDelete(k){
     toast('حُذفت المجموعة ('+ids.length+' عملية)');
     loadGroups();OPS_DATA=null;
   }catch(e){toast('تعذّر الحذف: '+e.message);}
+}
+
+/* ═══ تنظيف القديم: حذف كل العمليات قبل اليوم (تبقى عمليات اليوم فقط).
+   مع bdl-ops9.sql: يُحصَّن المرجع فلا تعيده المزامنة أبدًا.
+   بدونه: حذف مباشر بدفعات — قد تعيده المزامنة حتى يُلصق الملف. ═══ */
+async function purgeOld(){
+  var today=new Date();today.setHours(0,0,0,0);
+  var iso=today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
+  var cq=await fetch(SB+'/bdl_transactions?select=id&created_at=lt.'+iso+'&limit=1',{headers:H({Prefer:'count=exact'})});
+  var total=parseInt((cq.headers.get('content-range')||'/0').split('/')[1])||0;
+  if(!total){toast('لا عمليات قديمة — كل الموجود من اليوم');return;}
+  if(!confirm('حذف كل العمليات القديمة نهائيًا؟\n\nسيُمحى '+total+' عملية (كل ما قبل '+iso+') من التسوية والأرشيف والأرباح.\nتبقى عمليات اليوم فقط.'))return;
+  if(!confirm('تأكيد أخير: لا رجعة، ويشمل المقفلة والمؤرشفة.'))return;
+  try{
+    var r=await fetch(SB+'/rpc/bdl_purge_old',{method:'POST',headers:H(),body:JSON.stringify({p_keep_from:iso})});
+    if(r.ok){
+      var j=await r.json();
+      toast('حُذفت '+(j.deleted||total)+' عملية — ومُنعت من العودة نهائيًا');
+    }else{
+      /* بلا ops9: حذف مباشر بدفعات */
+      var done=0;
+      for(var loop=0;loop<40;loop++){
+        var q=await fetch(SB+'/bdl_transactions?select=id&created_at=lt.'+iso+'&limit=100',{headers:H()});
+        var rows=q.ok?await q.json():[];
+        if(!rows.length)break;
+        var d=await fetch(SB+'/bdl_transactions?id=in.('+rows.map(function(x){return x.id;}).join(',')+')',{method:'DELETE',headers:H()});
+        if(!d.ok)throw new Error(d.status);
+        done+=rows.length;
+      }
+      toast('حُذفت '+done+' عملية. لمنع عودتها من المزامنة الصق bdl-ops9.sql في Supabase');
+    }
+    SEL={};TXCACHE={};PENDMAP={};GROUPS=[];ARCH=null;PROF=null;OPS_DATA=null;BRIDGE=[];
+    loadGroups();
+  }catch(e){toast('تعذّر التنظيف: '+e.message);}
 }
 /* ═══════════ التحديد ═══════════ */
 async function toggleGrp(k){
