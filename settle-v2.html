@@ -1082,7 +1082,9 @@ async function ssShowPrevRcpts(s){
   try{
     var r=await fetch(SB+'/bdl_receipts?id=in.('+ids.join(',')+')&select=id,amount,ccy,txn_ref,bank',{headers:H()});
     var rows=r.ok?await r.json():[];
-    rows.forEach(function(x){if(x.txn_ref)SS.savedRefs[String(x.txn_ref)]=1;});
+    SS.savedAmts=[];
+    rows.forEach(function(x){if(x.txn_ref)SS.savedRefs[String(x.txn_ref)]=1;
+      var a=Number(x.amount)||0;if(a>0)SS.savedAmts.push({a:a,label:String(x.txn_ref||x.bank||'إيصال محفوظ')});});
     if(!rows.length)return;
     box.innerHTML='<div style="margin-top:10px;padding:11px 12px;border:1px solid #EAD48A;background:#FFFBEF">'+
       '<div style="font-size:12px;font-weight:800;color:#8A6100;margin-bottom:7px">إيصالات محفوظة في التسوية المعلقة ('+rows.length+') — محسوبة في المدفوع</div>'+
@@ -1096,9 +1098,21 @@ async function ssShowPrevRcpts(s){
 
 /* ═══ حارس المرجع: نفس رقم العملية البنكية لا يمر مرتين ولو اختلف الملف
    (صورة/PDF/قصّة مختلفة) — يُفحص بعد القراءة الآلية ═══ */
+
+/* ═══ بوابة المبلغ: إيصال بلا مرجع مقروء بمبلغ يطابق إيصالًا محفوظًا
+   → مرفوض احتياطًا مع خيار «احسبه» إن كان تحويلًا جديدًا فعلًا ═══ */
+function rcptAmtGuard(rec){
+  var amt=(rec.parsed&&Number(rec.parsed.amount))||0;
+  if(rec.dup||!(amt>0)||!SS.savedAmts||!SS.savedAmts.length)return;
+  var m=null;SS.savedAmts.forEach(function(x){if(!m&&x.a===amt)m=x;});
+  if(m){rec.dup=true;rec.ok=false;rec.soft=true;
+    rec.why='مبلغ مطابق لإيصال محفوظ ('+m.label+' · '+fmt(amt,0)+') ولا مرجع مقروء — مرفوض احتياطًا';
+    renderRcpts();updMatch();}
+}
 async function rcptRefGuard(rec){
   try{
-    var ref=rec.parsed&&rec.parsed.ref;if(!ref)return;
+    var ref=rec.parsed&&rec.parsed.ref;
+    if(!ref){rcptAmtGuard(rec);return;}
     if(SS.savedRefs&&SS.savedRefs[String(ref)]){
       rec.dup=true;rec.ok=false;rec.why='المرجع '+ref+' محسوب سابقًا في هذه التسوية المعلقة';
       renderRcpts();updMatch();return;}
@@ -1168,7 +1182,9 @@ function renderRcpts(){
     }
     return '<div class="rcpt'+(r.dup&&!r.ok?' dup':'')+'">'+
       '<div class="ic"></div><div class="fi"><div>'+esc(r.file.name)+'</div>'+
-      (r.dup&&!r.ok?'<small>'+esc(r.why||'استُخدم من قبل في تسوية — مرفوض، احذفه')+'</small>':amtBox)+'</div>'+
+      (r.dup&&!r.ok?'<small>'+esc(r.why||'استُخدم من قبل في تسوية — مرفوض، احذفه')+'</small>'+
+        (r.soft?'<button onclick="RCPTS['+i+'].ok=true;renderRcpts();updMatch()" style="display:block;margin-top:5px;border:1px solid #0A56B8;background:#fff;color:#0A56B8;font-weight:800;font-size:11px;padding:6px 11px;font-family:inherit;cursor:pointer">تحويل جديد مختلف فعلًا — احسبه</button>':'')
+        :amtBox)+'</div>'+
       '<button class="del" onclick="RCPTS.splice('+i+',1);renderRcpts();updMatch()">✕</button></div>';
   }).join('');
 }
