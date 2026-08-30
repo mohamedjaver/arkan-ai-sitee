@@ -1076,11 +1076,13 @@ async function autoCropReceipt(f){
 /* ═══ إيصالات محفوظة في تسوية معلقة: تُعرض دائمًا بمبالغها ومراجعها ═══ */
 async function ssShowPrevRcpts(s){
   var box=$('#ssPrevR');if(!box)return;box.innerHTML='';
-  var ids=[];s.forEach(function(t){((t.meta&&t.meta.rcpt_ids)||[]).forEach(function(id){if(ids.indexOf(id)<0)ids.push(id);});});
+  SS.savedR={};SS.savedRefs={};
+  var ids=[];s.forEach(function(t){((t.meta&&t.meta.rcpt_ids)||[]).forEach(function(id){if(ids.indexOf(id)<0)ids.push(id);SS.savedR[id]=1;});});
   if(!ids.length)return;
   try{
     var r=await fetch(SB+'/bdl_receipts?id=in.('+ids.join(',')+')&select=id,amount,ccy,txn_ref,bank',{headers:H()});
     var rows=r.ok?await r.json():[];
+    rows.forEach(function(x){if(x.txn_ref)SS.savedRefs[String(x.txn_ref)]=1;});
     if(!rows.length)return;
     box.innerHTML='<div style="margin-top:10px;padding:11px 12px;border:1px solid #EAD48A;background:#FFFBEF">'+
       '<div style="font-size:12px;font-weight:800;color:#8A6100;margin-bottom:7px">إيصالات محفوظة في التسوية المعلقة ('+rows.length+') — محسوبة في المدفوع</div>'+
@@ -1097,6 +1099,9 @@ async function ssShowPrevRcpts(s){
 async function rcptRefGuard(rec){
   try{
     var ref=rec.parsed&&rec.parsed.ref;if(!ref)return;
+    if(SS.savedRefs&&SS.savedRefs[String(ref)]){
+      rec.dup=true;rec.ok=false;rec.why='المرجع '+ref+' محسوب سابقًا في هذه التسوية المعلقة';
+      renderRcpts();updMatch();return;}
     /* مكرر داخل نفس القائمة الحالية */
     var local=RCPTS.some(function(r){return r!==rec&&r.parsed&&r.parsed.ref===ref&&(!r.dup||r.ok);});
     if(local){rec.dup=true;rec.ok=false;rec.why='نفس المرجع مكرر في هذه القائمة';renderRcpts();updMatch();return;}
@@ -1128,16 +1133,19 @@ async function addReceipts(files){
       var j=r.ok?await r.json():[];
       dup=j.some(function(x){return (x.bdl_settlement_receipts||[]).length>0;});
     }catch(e){}
-    /* استخدام معلق: الإيصال محفوظ في تسوية منتظرة لعملية أخرى غير المحددة */
+    var why=null;
+    /* محفوظ في هذه التسوية المعلقة نفسها — محسوب في المدفوع، لا يُعاد */
+    if(!dup&&j&&j[0]&&SS.savedR&&SS.savedR[j[0].id]){dup=true;why='هذا الإيصال محفوظ ومحسوب سابقًا في هذه التسوية';}
+    /* أو محجوز في تسوية معلقة لعميل آخر */
     if(!dup&&j&&j[0]&&j[0].id){
       try{
         var selIds=selected().map(function(t){return t.id;});
         var pq=await fetch(SB+'/bdl_transactions?select=id&status=eq.settling&meta-%3Ercpt_ids=cs.%5B%22'+j[0].id+'%22%5D&limit=3',{headers:H()});
         var pj=pq.ok?await pq.json():[];
-        if(pj.some(function(t){return selIds.indexOf(t.id)<0;}))dup=true;
+        if(pj.some(function(t){return selIds.indexOf(t.id)<0;})){dup=true;why='محجوز في تسوية معلقة أخرى';}
       }catch(e2){}
     }
-    var rec={file:f,fp:fp,dup:dup,ok:!dup,parsed:null,id:null};
+    var rec={file:f,fp:fp,dup:dup,ok:!dup,why:why,parsed:null,id:null};
     RCPTS.push(rec);renderRcpts();
     readReceipt(f).then(function(rec){return function(p){rec.parsed=p;rcptRefGuard(rec);renderRcpts();updMatch();};}(rec));
   }
