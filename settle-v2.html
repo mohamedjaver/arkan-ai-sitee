@@ -513,6 +513,7 @@ input,select{font-family:inherit;color:var(--ink)}
         <div id="ssRPrev" class="num" style="margin-top:8px;font-size:12.5px;color:#0A56B8"></div>
       </div>
       <div class="row"><span>المدفوع من الإيصالات</span><b class="num" id="ssPaid">0</b></div>
+      <div id="ssPrevR"></div>
       <div style="margin-top:10px;padding:11px 12px;border:1px dashed #C9DFFA;background:#FBFDFF">
         <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
           <span style="font-size:12px;font-weight:800;color:#5C7699">فرق تقريب صغير (اختياري)</span>
@@ -1071,6 +1072,51 @@ async function autoCropReceipt(f){
     return new File([blob],f.name.replace(/\.(png|webp|heic|jpeg|jpg)$/i,'')+'-crop.jpg',{type:'image/jpeg'});
   }catch(e){return f;}
 }
+
+/* ═══ إيصالات محفوظة في تسوية معلقة: تُعرض دائمًا بمبالغها ومراجعها ═══ */
+async function ssShowPrevRcpts(s){
+  var box=$('#ssPrevR');if(!box)return;box.innerHTML='';
+  var ids=[];s.forEach(function(t){((t.meta&&t.meta.rcpt_ids)||[]).forEach(function(id){if(ids.indexOf(id)<0)ids.push(id);});});
+  if(!ids.length)return;
+  try{
+    var r=await fetch(SB+'/bdl_receipts?id=in.('+ids.join(',')+')&select=id,amount,ccy,txn_ref,bank',{headers:H()});
+    var rows=r.ok?await r.json():[];
+    if(!rows.length)return;
+    box.innerHTML='<div style="margin-top:10px;padding:11px 12px;border:1px solid #EAD48A;background:#FFFBEF">'+
+      '<div style="font-size:12px;font-weight:800;color:#8A6100;margin-bottom:7px">إيصالات محفوظة في التسوية المعلقة ('+rows.length+') — محسوبة في المدفوع</div>'+
+      rows.map(function(x){
+        return '<div class="num" style="display:flex;justify-content:space-between;gap:8px;font-size:12.5px;font-weight:700;color:#0B2447;padding:5px 0;border-top:1px solid #F3E7C0">'+
+          '<span style="color:#5C7699">'+esc(x.txn_ref||x.bank||'إيصال')+'</span>'+
+          '<b>'+fmt(Number(x.amount)||0,0)+' '+esc(x.ccy||'')+'</b></div>';
+      }).join('')+'</div>';
+  }catch(e){}
+}
+
+/* ═══ حارس المرجع: نفس رقم العملية البنكية لا يمر مرتين ولو اختلف الملف
+   (صورة/PDF/قصّة مختلفة) — يُفحص بعد القراءة الآلية ═══ */
+async function rcptRefGuard(rec){
+  try{
+    var ref=rec.parsed&&rec.parsed.ref;if(!ref)return;
+    /* مكرر داخل نفس القائمة الحالية */
+    var local=RCPTS.some(function(r){return r!==rec&&r.parsed&&r.parsed.ref===ref&&(!r.dup||r.ok);});
+    if(local){rec.dup=true;rec.ok=false;rec.why='نفس المرجع مكرر في هذه القائمة';renderRcpts();updMatch();return;}
+    var q=await fetch(SB+'/bdl_receipts?txn_ref=eq.'+encodeURIComponent(ref)+
+      '&select=id,fingerprint,bdl_settlement_receipts(settlement_id)&limit=5',{headers:H()});
+    var j=q.ok?await q.json():[];
+    var used=j.some(function(x){return x.fingerprint!==rec.fp&&(x.bdl_settlement_receipts||[]).length>0;});
+    if(!used){
+      /* أو محجوز في تسوية معلقة أخرى */
+      for(var i=0;i<j.length&&!used;i++){
+        if(j[i].fingerprint===rec.fp)continue;
+        var selIds=selected().map(function(t){return t.id;});
+        var pq=await fetch(SB+'/bdl_transactions?select=id&status=eq.settling&meta-%3Ercpt_ids=cs.%5B%22'+j[i].id+'%22%5D&limit=3',{headers:H()});
+        var pj=pq.ok?await pq.json():[];
+        if(pj.some(function(t){return selIds.indexOf(t.id)<0;}))used=true;
+      }
+    }
+    if(used){rec.dup=true;rec.ok=false;rec.why='المرجع '+ref+' استُخدم في تسوية سابقة';renderRcpts();updMatch();}
+  }catch(e){}
+}
 async function addReceipts(files){
   for(var i=0;i<files.length;i++){
     var f=await autoCropReceipt(files[i]);
@@ -1082,9 +1128,18 @@ async function addReceipts(files){
       var j=r.ok?await r.json():[];
       dup=j.some(function(x){return (x.bdl_settlement_receipts||[]).length>0;});
     }catch(e){}
+    /* استخدام معلق: الإيصال محفوظ في تسوية منتظرة لعملية أخرى غير المحددة */
+    if(!dup&&j&&j[0]&&j[0].id){
+      try{
+        var selIds=selected().map(function(t){return t.id;});
+        var pq=await fetch(SB+'/bdl_transactions?select=id&status=eq.settling&meta-%3Ercpt_ids=cs.%5B%22'+j[0].id+'%22%5D&limit=3',{headers:H()});
+        var pj=pq.ok?await pq.json():[];
+        if(pj.some(function(t){return selIds.indexOf(t.id)<0;}))dup=true;
+      }catch(e2){}
+    }
     var rec={file:f,fp:fp,dup:dup,ok:!dup,parsed:null,id:null};
     RCPTS.push(rec);renderRcpts();
-    readReceipt(f).then(function(rec){return function(p){rec.parsed=p;renderRcpts();updMatch();};}(rec));
+    readReceipt(f).then(function(rec){return function(p){rec.parsed=p;rcptRefGuard(rec);renderRcpts();updMatch();};}(rec));
   }
   $('#sFiles').value='';
 }
@@ -1105,7 +1160,7 @@ function renderRcpts(){
     }
     return '<div class="rcpt'+(r.dup&&!r.ok?' dup':'')+'">'+
       '<div class="ic"></div><div class="fi"><div>'+esc(r.file.name)+'</div>'+
-      (r.dup&&!r.ok?'<small> استُخدم من قبل — مرفوض، احذفه</small>':amtBox)+'</div>'+
+      (r.dup&&!r.ok?'<small>'+esc(r.why||'استُخدم من قبل في تسوية — مرفوض، احذفه')+'</small>':amtBox)+'</div>'+
       '<button class="del" onclick="RCPTS.splice('+i+',1);renderRcpts();updMatch()">✕</button></div>';
   }).join('');
 }
@@ -1376,6 +1431,7 @@ function openSettle(){
   SS.opRates={};SS.opDirty={};
   try{ssPairUi();ssRatePrev();}catch(e){}
   SS.prevPaid=s.reduce(function(a,t){return a+((t.meta&&Number(t.meta.paid_aoa))||0);},0);
+  ssShowPrevRcpts(s);
   $('#ssN').textContent=s.length;
   $('#ssIn').textContent=Object.keys(by).map(function(c){return fmt(by[c])+' '+c;}).join(' + ');
   SS.noRate=noRate;
