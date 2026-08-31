@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════════
-   bdl-ops10.js — لوحة الأرباح المباشرة v2.2 (Build 1147) — طبقة إضافية فوق settle-v2
+   bdl-ops10.js — لوحة الأرباح المباشرة v2.3 (Build 1148) — طبقة إضافية فوق settle-v2
    • Profit Engine مركزي: الربح = الإيراد − التكلفة − الرسوم − المصاريف (حساب بدقة BigInt، تقريب عند العرض فقط)
    • Summary: إجمالي / اليوم / الأسبوع / الشهر / متوسط العملية + التغيّر % مقابل الفترة السابقة
    • رسم بياني تفاعلي (يومي/أسبوعي/شهري/سنوي) + إحصاءات الفترة عند النقر
@@ -471,24 +471,37 @@ async function csv(kind){
 }
 async function pdf(){
   const JS=(window.jspdf&&window.jspdf.jsPDF)||window.jsPDF;if(!JS){toast('jsPDF لم يُحمَّل');return;}
-  const P=periods(),T=P.total,B=chartBuckets().slice().reverse().slice(0,40);
-  const W=1240,rowH=54,top=360,lines=B.length+9,Hh=top+lines*rowH+140,c=document.createElement('canvas');c.width=W;c.height=Hh;
-  const x=c.getContext('2d'),F='"IBM Plex Sans Arabic","Inter",sans-serif';x.fillStyle='#fff';x.fillRect(0,0,W,Hh);
-  const g=x.createLinearGradient(0,0,W,0);g.addColorStop(0,'#19A9F5');g.addColorStop(.5,'#0A56B8');g.addColorStop(1,'#0B2F70');x.fillStyle=g;x.fillRect(0,0,W,210);
-  x.fillStyle='#fff';x.textAlign='right';x.font='800 40px '+F;x.fillText('BDL · تقرير الأرباح والخسائر',W-60,80);
-  x.font='500 24px '+F;x.fillText(new Date().toLocaleString('en-GB')+' · '+(S.range==='all'?'كل الفترات':'الفترة المختارة'),W-60,125);
-  x.font='800 56px Inter';x.textAlign='left';x.fillText(sgn(T.net,2)+' '+S.base,60,150);x.font='500 22px '+F;x.fillText('NET PROFIT · '+T.n+' transactions',60,185);
-  const kv=[['حجم التداول (Volume)',fmt(T.vol,0)+' MRU'],['الإيراد (Revenue)',fmt(T.rev,2)+' AOA'],['التكلفة (Cost)',fmt(T.cost,2)+' AOA'],['الرسوم (Fees)',fmt(T.fee,2)+' AOA'],
-    ['ربح إجمالي (Gross Profit)',sgn(T.gp,2)+' '+S.base],['خسارة إجمالية (Gross Loss)',sgn(T.gl,2)+' '+S.base],['نسبة العمليات الرابحة',T.rate.toFixed(1)+'%'],['صافي الربح (NET PROFIT)',sgn(T.net,2)+' '+S.base]];
-  let y=top-60;x.font='700 26px '+F;x.fillStyle='#0B2F70';x.textAlign='right';x.fillText('الملخّص',W-60,y);y+=20;
-  kv.forEach((r,i)=>{y+=rowH;x.fillStyle=i%2?'#F4F7FB':'#fff';x.fillRect(60,y-36,W-120,rowH);x.fillStyle='#66788F';x.font='500 24px '+F;x.textAlign='right';x.fillText(r[0],W-80,y);
-    x.fillStyle=i===kv.length-1?(T.net>=0?'#0E9F6E':'#D64545'):'#0C1526';x.font=(i===kv.length-1?'800 30px':'700 26px')+' Inter';x.textAlign='left';x.fillText(r[1],80,y);});
-  y+=70;x.font='700 26px '+F;x.fillStyle='#0B2F70';x.textAlign='right';x.fillText('الأرباح حسب الفترة ('+{day:'يومي',week:'أسبوعي',month:'شهري',year:'سنوي'}[S.period]+')',W-60,y);y+=20;
-  x.font='600 20px '+F;x.fillStyle='#66788F';y+=40;['الفترة','عمليات','الحجم MRU','الإيراد AOA','التكلفة AOA','صافي الربح '+S.base].forEach((h,i)=>{x.textAlign=i===0?'right':'left';x.fillText(h,i===0?W-80:80+(i-1)*230,y);});
-  B.forEach((b,i)=>{y+=rowH;x.fillStyle=i%2?'#F4F7FB':'#fff';x.fillRect(60,y-36,W-120,rowH);const T2=b.T;x.font='600 22px Inter';x.fillStyle='#0C1526';x.textAlign='right';x.fillText(b.k,W-80,y);
-    x.textAlign='left';[String(T2.n),fmt(T2.vol,0),fmt(T2.rev,0),fmt(T2.cost,0)].forEach((v,j)=>x.fillText(v,80+j*230,y));x.fillStyle=T2.net>=0?'#0E9F6E':'#D64545';x.font='800 24px Inter';x.fillText(sgn(T2.net,2),80+4*230,y);});
-  x.textAlign='center';x.fillStyle='#8AA3C4';x.font='500 20px '+F;x.fillText('أُصدر تلقائيًا من BDL Profit Engine · '+new Date().toLocaleString('en-GB'),W/2,Hh-36);
-  const p=new JS({unit:'px',format:[W/2,Hh/2]});p.addImage(c.toDataURL('image/jpeg',.92),'JPEG',0,0,W/2,Hh/2);p.save('BDL-PL-report-'+stamp()+'.pdf');toast('صدر تقرير PDF ✓');closeOvl('p10');
+  const P=periods(),T=P.total,B=chartBuckets().slice().reverse().slice(0,60);
+  const W=1400,M=70,rowH=56,c=document.createElement('canvas');
+  const Hh=250+70+8*rowH+90+70+(B.length+1)*rowH+120;c.width=W;c.height=Hh;
+  const x=c.getContext('2d'),F='"IBM Plex Sans Arabic","Inter",sans-serif';x.direction='ltr';
+  x.fillStyle='#fff';x.fillRect(0,0,W,Hh);
+  /* رأس */
+  const g=x.createLinearGradient(0,0,W,0);g.addColorStop(0,'#19A9F5');g.addColorStop(.5,'#0A56B8');g.addColorStop(1,'#0B2F70');x.fillStyle=g;x.fillRect(0,0,W,250);
+  x.fillStyle='#fff';x.textAlign='right';x.font='800 40px '+F;x.fillText('تقرير الأرباح والخسائر',W-M,90);
+  x.font='700 30px Inter';x.fillText('BDL',W-M-460,90);
+  x.font='500 22px '+F;x.fillStyle='rgba(255,255,255,.85)';x.fillText((S.range==='all'&&!S.f.from?'كل الفترات':'الفترة المختارة')+' · '+new Date().toLocaleString('en-GB'),W-M,132);
+  x.textAlign='left';x.fillStyle='#fff';x.font='800 60px Inter';x.fillText(sgn(T.net,2)+' '+S.base,M,150);
+  x.font='500 22px Inter';x.fillStyle='rgba(255,255,255,.85)';x.fillText('NET PROFIT  ·  '+T.n+' transactions  ·  win rate '+T.rate.toFixed(0)+'%',M,195);
+  /* الملخّص */
+  let y=250+60;x.font='700 28px '+F;x.fillStyle='#0B2F70';x.textAlign='right';x.fillText('الملخّص',W-M,y);y+=14;
+  const kv=[['حجم التداول (Volume)',fmt(T.vol,0)+' MRU'],['الإيراد (Revenue)',fmt(T.rev,2)+' AOA'],['التكلفة (Cost)',fmt(T.cost,2)+' AOA'],['الرسوم والمصاريف (Fees)',fmt(T.fee,2)+' AOA'],
+    ['ربح إجمالي (Gross Profit) · '+T.wins,sgn(T.gp,2)+' '+S.base],['خسارة إجمالية (Gross Loss) · '+T.losses,sgn(T.gl,2)+' '+S.base],['نسبة العمليات الرابحة',T.rate.toFixed(1)+'%'],['صافي الربح (NET PROFIT)',sgn(T.net,2)+' '+S.base]];
+  kv.forEach((r,i)=>{y+=rowH;const last=i===kv.length-1;x.fillStyle=last?'#EAF7F0':(i%2?'#F4F7FB':'#fff');x.fillRect(M,y-38,W-2*M,rowH);
+    x.fillStyle=last?'#0B2F70':'#66788F';x.font=(last?'800 25px ':'500 24px ')+F;x.textAlign='right';x.fillText(r[0],W-M-18,y);
+    x.fillStyle=last?(T.net>=0?'#0E9F6E':'#D64545'):'#0C1526';x.font=(last?'800 32px':'700 26px')+' Inter';x.textAlign='left';x.fillText(r[1],M+18,y);});
+  /* جدول الفترات — كل الأعمدة محاذاة يمين بحواف ثابتة */
+  y+=90;x.font='700 28px '+F;x.fillStyle='#0B2F70';x.textAlign='right';x.fillText('الأرباح حسب الفترة ('+{day:'يومي',week:'أسبوعي',month:'شهري',year:'سنوي'}[S.period]+')',W-M,y);y+=14;
+  const R=W-M-18,cols=[{t:'الفترة',x:R},{t:'عمليات',x:R-235},{t:'الحجم MRU',x:R-380},{t:'الإيراد AOA',x:R-630},{t:'التكلفة AOA',x:R-880},{t:'صافي الربح '+S.base,x:R-1130}];
+  y+=rowH;x.fillStyle='#EEF3FA';x.fillRect(M,y-38,W-2*M,rowH);x.font='700 20px '+F;x.fillStyle='#66788F';x.textAlign='right';cols.forEach(cc=>x.fillText(cc.t,cc.x,y));
+  B.forEach((b,i)=>{y+=rowH;x.fillStyle=i%2?'#F4F7FB':'#fff';x.fillRect(M,y-38,W-2*M,rowH);const T2=b.T;x.textAlign='right';
+    x.font='700 23px Inter';x.fillStyle='#0C1526';x.fillText(b.k.replace('أسبوع ','W '),cols[0].x,y);
+    x.font='600 23px Inter';[String(T2.n),fmt(T2.vol,0),fmt(T2.rev,0),fmt(T2.cost,0)].forEach((v,j)=>x.fillText(v,cols[j+1].x,y));
+    x.fillStyle=T2.net>=0?'#0E9F6E':'#D64545';x.font='800 24px Inter';x.fillText(sgn(T2.net,2),cols[5].x,y);});
+  x.textAlign='center';x.fillStyle='#8AA3C4';x.font='500 20px '+F;x.fillText('أُصدر تلقائيًا من BDL Profit Engine · '+new Date().toLocaleString('en-GB'),W/2,Hh-40);
+  /* صفحة PDF بنفس أبعاد اللوحة تمامًا (نقاط) */
+  const pw=W/2,ph=Hh/2,pdf=new JS({unit:'pt',format:[pw,ph],orientation:pw>ph?'l':'p'});
+  pdf.addImage(c.toDataURL('image/jpeg',.93),'JPEG',0,0,pw,ph);pdf.save('BDL-PL-report-'+stamp()+'.pdf');toast('صدر تقرير PDF ✓');closeOvl('p10');
 }
 function exportMenu(){
   sheet(hdr('تصدير')+'<div class="p10menu">'+

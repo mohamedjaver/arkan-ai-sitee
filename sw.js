@@ -1,7 +1,7 @@
 /* BDL — Service Worker v2.0
    إستراتيجية: الشبكة أولًا لصفحات HTML والبيانات (لا محتوى قديم أبدًا)
               الكاش أولًا للأصول الثابتة فقط (صور، أيقونات، شعار) */
-const V='arkan-v73-1147'; /* ops10 v2.2: glass PNG flags (settlement style), flags only on total */
+const V='arkan-v74-1148'; /* ops10 v2.3: PDF report layout fixed (margins, fixed right-aligned columns, exact page size) */
 const STATIC=['./favicon.svg','./arkan-icon-512.png','./arkan-touch-180.png','./site-manifest.json'];
 
 self.addEventListener('install',e=>{
