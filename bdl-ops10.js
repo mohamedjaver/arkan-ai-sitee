@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════════
-   bdl-ops10.js — لوحة الأرباح المباشرة v2 (Build 1145) — طبقة إضافية فوق settle-v2
+   bdl-ops10.js — لوحة الأرباح المباشرة v2.1 (Build 1146) — طبقة إضافية فوق settle-v2
    • Profit Engine مركزي: الربح = الإيراد − التكلفة − الرسوم − المصاريف (حساب بدقة BigInt، تقريب عند العرض فقط)
    • Summary: إجمالي / اليوم / الأسبوع / الشهر / متوسط العملية + التغيّر % مقابل الفترة السابقة
    • رسم بياني تفاعلي (يومي/أسبوعي/شهري/سنوي) + إحصاءات الفترة عند النقر
@@ -46,6 +46,24 @@ function eng(t){
   return o;
 }
 const netBase=e=>S.base==='MRU'?e.netMru:e.netAoa;
+/* أعلام العملات — دوائر بألوان الأعلام (SVG مضمّن) */
+function flag(c,sz){sz=sz||26;const id='p10f'+Math.random().toString(36).slice(2,7);let body;
+  switch(c){
+    case 'MRU':body='<rect width="40" height="40" fill="#D01C1F"/><rect y="6" width="40" height="28" fill="#00A95C"/><circle cx="20" cy="17" r="8.5" fill="#FFD700"/><circle cx="20" cy="14.5" r="8" fill="#00A95C"/><polygon points="20,10.5 21.6,15.2 26.5,15.2 22.5,18 24,22.7 20,19.9 16,22.7 17.5,18 13.5,15.2 18.4,15.2" fill="#FFD700"/>';break;
+    case 'AOA':body='<rect width="40" height="20" fill="#CC092F"/><rect y="20" width="40" height="20" fill="#000"/><path d="M15 27a8 8 0 1 0 5-14" stroke="#FFCB00" stroke-width="3" fill="none"/><polygon points="24,12 25.3,15.7 29.2,15.7 26,18 27.2,21.7 24,19.4 20.8,21.7 22,18 18.8,15.7 22.7,15.7" fill="#FFCB00"/>';break;
+    case 'USDT':body='<rect width="40" height="40" fill="#26A17B"/><text x="20" y="27" font-size="20" font-weight="800" text-anchor="middle" fill="#fff" font-family="Inter,sans-serif">₮</text>';break;
+    case 'USD':body='<rect width="40" height="40" fill="#1B6E3A"/><text x="20" y="27" font-size="20" font-weight="800" text-anchor="middle" fill="#fff" font-family="Inter,sans-serif">$</text>';break;
+    case 'EUR':body='<rect width="40" height="40" fill="#003399"/><text x="20" y="27" font-size="20" font-weight="800" text-anchor="middle" fill="#FFCC00" font-family="Inter,sans-serif">€</text>';break;
+    case 'CNY':body='<rect width="40" height="40" fill="#DE2910"/><text x="20" y="27" font-size="20" font-weight="800" text-anchor="middle" fill="#FFDE00" font-family="Inter,sans-serif">¥</text>';break;
+    case 'AED':body='<rect width="40" height="13.4" fill="#00732F"/><rect y="13.3" width="40" height="13.4" fill="#fff"/><rect y="26.6" width="40" height="13.4" fill="#000"/><rect width="13" height="40" fill="#FF0000"/>';break;
+    default:body='<rect width="40" height="40" fill="#66788F"/><text x="20" y="26" font-size="13" font-weight="800" text-anchor="middle" fill="#fff" font-family="Inter,sans-serif">'+esc(String(c||'?').slice(0,3))+'</text>';}
+  return '<svg class="p10flag" width="'+sz+'" height="'+sz+'" viewBox="0 0 40 40" aria-label="'+esc(c)+'"><defs><clipPath id="'+id+'"><circle cx="20" cy="20" r="20"/></clipPath></defs><g clip-path="url(#'+id+')">'+body+'</g><circle cx="20" cy="20" r="19.3" fill="none" stroke="rgba(0,0,0,.08)" stroke-width="1.4"/></svg>';}
+const shortRef=r=>{r=String(r||'—');return r.length>14?'…'+r.slice(-8):r;};
+/* شارة التغيّر: تُعرض فقط حين تكون المقارنة ذات معنى */
+function chg(cur,prev,lblPrev){
+  if(prev&&cur)return arrow(cur,prev);
+  if(prev&&!cur)return '<span class="p10prev">'+esc(lblPrev||'السابق')+' <span class="num">'+sgn(prev,0)+'</span></span>';
+  return '';}
 /* ═══════ ٣) Aggregation Engine ═══════ */
 function agg(rows){
   const T={n:0,na:0,net:0,netMru:0,netAoa:0,vol:0,rev:0,cost:0,fee:0,gp:0,gl:0,wins:0,losses:0,best:null,worst:null,other:{},ids:[]};
@@ -115,7 +133,7 @@ const css=document.createElement('style');css.textContent=`
 .p10c .s{font-size:10.5px;color:var(--muted);margin-top:2px}
 .pos{color:var(--ok)}.neg{color:var(--bad)}.zero{color:var(--muted)}
 .p10sec{background:#fff;border:1px solid var(--line);border-radius:14px;margin:10px 12px 0;padding:12px 14px}
-.p10sec .hd{display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:800;color:var(--navy);margin-bottom:8px}
+.p10sec .p10hd{display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:800;color:var(--navy);margin-bottom:8px}
 .p10tabs{display:flex;background:var(--wash);border:1px solid var(--line);border-radius:9px;overflow:hidden}
 .p10tabs button{flex:1;border:0;background:transparent;padding:6px 4px;font-size:11px;font-weight:700;color:var(--muted);font-family:inherit;cursor:pointer}
 .p10tabs button.on{background:var(--navy);color:#fff}
@@ -123,7 +141,7 @@ const css=document.createElement('style');css.textContent=`
 .p10chart .bar{cursor:pointer}.p10chart .bar rect.b{transition:opacity .15s}.p10chart .bar:hover rect.b,.p10chart .bar.on rect.b{opacity:1}
 .p10kv{display:grid;grid-template-columns:1fr 1fr;gap:6px 12px;font-size:11.5px;margin-top:8px}
 .p10kv div{display:flex;justify-content:space-between;border-bottom:1px dashed var(--line);padding:5px 0;color:var(--muted)}
-.p10kv b{font-family:"Inter",sans-serif;color:var(--ink);font-weight:700}
+.p10kv b{font-family:"Inter",sans-serif;color:var(--ink);font-weight:700;text-align:left;max-width:60%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .p10row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--line);font-size:12.5px;color:var(--muted)}
 .p10row:last-child{border-bottom:0}.p10row b{font-family:"Inter",sans-serif;font-weight:800;color:var(--ink);font-size:13.5px}
 .p10row.tot{border-top:2px solid var(--navy);border-bottom:0;margin-top:2px;color:var(--navy);font-weight:800}
@@ -153,6 +171,33 @@ const css=document.createElement('style');css.textContent=`
 .p10more{display:block;width:calc(100% - 24px);margin:6px 12px 0;padding:11px;border:1px dashed var(--line);background:#fff;color:var(--blue);font-weight:800;font-size:12px;border-radius:10px;font-family:inherit;cursor:pointer}
 .p10note{margin:8px 12px 0;background:#FFF9E8;border:1px solid #EAD48A;color:#8A6100;border-radius:10px;padding:8px 12px;font-size:11.5px;display:flex;justify-content:space-between;align-items:center;gap:8px}
 .p10note b{font-family:"Inter",sans-serif}
+/* Wise-style */
+.p10flag{border-radius:50%;flex:0 0 auto;display:inline-block;vertical-align:middle}
+.p10prev{font-size:10.5px;color:var(--muted);font-weight:600;margin:0 6px}
+.p10w .l .p10chg{margin:0 6px}
+.p10h .p10prev{color:rgba(255,255,255,.85)}
+.p10hero2{display:flex;align-items:center;gap:12px;margin-top:6px}
+.p10hero2 .p10tot{margin:0;font-size:38px;line-height:1.05}
+.p10hero2 .p10tot small{font-size:14px;display:block;text-align:right;opacity:.8;margin:2px 0 0}
+.p10base button{display:flex;align-items:center;gap:5px;padding:4px 10px 4px 6px}
+.p10wl{margin:10px 12px 0;display:flex;flex-direction:column;gap:8px}
+.p10w{background:#fff;border:1px solid var(--line);border-radius:18px;padding:16px 16px;display:flex;align-items:center;gap:14px;cursor:pointer;box-shadow:0 1px 0 rgba(11,47,112,.03)}
+.p10w:active{background:#F7FAFF}
+.p10w .txt{flex:1;min-width:0}
+.p10w .l{font-size:13px;color:var(--muted);font-weight:700;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.p10w .v{font-size:27px;font-weight:800;font-family:"Inter",sans-serif;direction:ltr;text-align:right;margin-top:3px;letter-spacing:-.4px;line-height:1.1}
+.p10w .v small{font-size:12px;font-weight:700;opacity:.65;margin-left:4px}
+.p10w .s{font-size:11.5px;color:var(--muted);margin-top:4px}
+.p10sec .p10hd{font-size:14px}
+.p10row b{font-size:15px}.p10row b .p10flag{margin-right:6px}
+.p10row.tot b{font-size:19px}
+.p10pair{display:inline-flex;align-items:center;margin-left:6px;vertical-align:middle}
+.p10pair .p10flag+.p10flag{margin-left:-7px}
+.p10ccyrow{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)}
+.p10ccyrow:last-child{border-bottom:0}
+.p10ccyrow .txt{flex:1}.p10ccyrow .txt b{font-size:14px;color:var(--ink);font-family:"Inter",sans-serif}
+.p10ccyrow .txt span{display:block;font-size:11px;color:var(--muted)}
+.p10ccyrow .val{font-family:"Inter",sans-serif;font-weight:800;font-size:17px;direction:ltr}
 /* الشيتات */
 .p10sheet .kv{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--line);font-size:12.5px;color:var(--muted)}
 .p10sheet .kv b{font-family:"Inter",sans-serif;color:var(--ink);font-weight:700;direction:ltr}
@@ -243,48 +288,49 @@ function periods(){
 /* ═══════ ٧) العرض ═══════ */
 function renderAll(full){ensure();if(full){renderHero();renderCards();renderNote();renderPL();renderCcy();}renderChart();renderRange();renderOps();}
 function renderHero(){
-  const P=periods(),T=P.total,chg=pctChg(P.month.net,P.pmonth.net);
+  const P=periods(),T=P.total;
   const wsTxt=S.wsOk?'مباشر (Realtime)':'مباشر';
   q('#p10hero').innerHTML=
     '<div class="p10h" onclick="p10.drill()"><div class="p10live"><span><span class="p10dot'+(S.busy?' busy':S.wsOk?'':' off')+'" id="p10dot"></span>'+
     '<span>'+wsTxt+' · '+(S.last?S.last.toLocaleTimeString('en-GB'):'—')+'</span></span><span style="opacity:.75">'+(P.srv?'حساب خادمي':'حساب محلي')+'</span></div>'+
-    '<div class="p10lbl"><span>إجمالي الأرباح المحققة</span><span class="p10base" onclick="event.stopPropagation()">'+['MRU','AOA'].map(c=>'<button class="'+(S.base===c?'on':'')+'" onclick="p10.base(\''+c+'\')">'+c+'</button>').join('')+'</span></div>'+
-    '<div class="p10tot">'+sgn(T.net,2)+'<small>'+S.base+'</small></div>'+
-    '<div class="p10sub">'+arrow(P.month.net,P.pmonth.net)+' هذا الشهر مقابل الشهر السابق · <span class="num">'+T.n+'</span> عملية'+
+    '<div class="p10lbl"><span>إجمالي الأرباح المحققة</span><span class="p10base" onclick="event.stopPropagation()">'+['MRU','AOA'].map(c=>'<button class="'+(S.base===c?'on':'')+'" onclick="p10.base(\''+c+'\')">'+flag(c,16)+c+'</button>').join('')+'</span></div>'+
+    '<div class="p10hero2">'+flag(S.base,46)+'<div class="p10tot" style="flex:1">'+sgn(T.net,2)+'<small>'+S.base+' · <span class="num">'+T.n+'</span> عملية</small></div></div>'+
+    '<div class="p10sub">'+(chg(P.month.net,P.pmonth.net,'الشهر السابق')||'')+(P.month.net&&P.pmonth.net?' هذا الشهر مقابل الشهر السابق':'')+
     (T.na?' · <span style="color:#FFD166">'+T.na+' بلا تكلفة</span>':'')+
     '<br><span style="opacity:.8">اضغط للتدقيق: كيف تكوّن هذا الرقم</span></div></div>';
 }
 function renderCards(){
   const P=periods();
-  const card=(l,T,prev,sub,fn)=>'<div class="p10c" onclick="'+fn+'"><div class="l"><span>'+l+'</span>'+(prev?arrow(T.net,prev.net):'')+'</div>'+
-    '<div class="v '+cls(T.net)+'">'+sgn(T.net,0)+'<small>'+S.base+'</small></div><div class="s">'+sub+'</div></div>';
-  q('#p10cards').innerHTML=
-    card('اليوم',P.today,P.yday,'<span class="num">'+P.today.n+'</span> عملية · مقابل أمس','p10.range(\'today\')')+
-    card('هذا الأسبوع',P.week,P.pweek,'<span class="num">'+P.week.n+'</span> عملية · مقابل الأسبوع السابق','p10.range(\'7\')')+
-    card('هذا الشهر',P.month,P.pmonth,'<span class="num">'+P.month.n+'</span> عملية · مقابل الشهر السابق','p10.range(\'30\')')+
-    '<div class="p10c" onclick="p10.range(\'all\')"><div class="l"><span>متوسط الربح / عملية</span></div><div class="v '+cls(P.total.avg)+'">'+sgn(P.total.avg,0)+'<small>'+S.base+'</small></div>'+
-    '<div class="s">على <span class="num">'+(P.total.n-P.total.na)+'</span> عملية مسعّرة · نسبة الربح <span class="num">'+P.total.rate.toFixed(0)+'%</span></div></div>';
+  const w=(l,T,prev,lblPrev,sub,fn)=>'<div class="p10w" onclick="'+fn+'">'+flag(S.base,40)+'<div class="txt"><div class="l"><span>'+l+'</span>'+chg(T.net,prev,lblPrev)+'</div>'+
+    '<div class="v '+cls(T.net)+'">'+sgn(T.net,0)+'<small>'+S.base+'</small></div><div class="s">'+sub+'</div></div></div>';
+  q('#p10cards').innerHTML='<div class="p10wl">'+
+    w('اليوم',P.today,P.yday.net,'أمس','<span class="num">'+P.today.n+'</span> عملية اليوم','p10.range(\'today\')')+
+    w('هذا الأسبوع',P.week,P.pweek.net,'الأسبوع السابق','<span class="num">'+P.week.n+'</span> عملية منذ الاثنين','p10.range(\'7\')')+
+    w('هذا الشهر',P.month,P.pmonth.net,'الشهر السابق','<span class="num">'+P.month.n+'</span> عملية هذا الشهر','p10.range(\'30\')')+
+    '<div class="p10w" onclick="p10.range(\'all\')">'+flag(S.base,40)+'<div class="txt"><div class="l"><span>متوسط الربح / عملية</span></div><div class="v '+cls(P.total.avg)+'">'+sgn(P.total.avg,0)+'<small>'+S.base+'</small></div>'+
+    '<div class="s">على <span class="num">'+(P.total.n-P.total.na)+'</span> عملية مسعّرة · نسبة الربح <span class="num">'+P.total.rate.toFixed(0)+'%</span></div></div></div></div>';
 }
 function renderNote(){
   const el=q('#p10note');
   el.innerHTML=S.srvOk===false?'<div class="p10note"><span>الحساب يجري على الجهاز. للأداء مع آلاف العمليات والسجل والـRealtime: الصق <b>bdl-ops10.sql</b> في Supabase مرة واحدة.</span></div>':'';
 }
 function renderPL(){
-  const P=periods(),T=P.total;
-  q('#p10pl').innerHTML='<div class="p10sec"><div class="hd"><span>الأرباح والخسائر — الإجمالي</span><span style="font-size:11px;color:var(--muted)">'+S.base+'</span></div>'+
-    '<div class="p10row"><span>حجم التداول (Volume)</span><b><span class="num">'+fmt(T.vol,0)+'</span> <small style="color:var(--muted)">MRU</small></b></div>'+
-    '<div class="p10row"><span>الإيراد (Revenue)</span><b><span class="num">'+fmt(T.rev,2)+'</span> <small style="color:var(--muted)">AOA</small></b></div>'+
-    '<div class="p10row"><span>التكلفة (Cost)</span><b><span class="num">'+fmt(T.cost,2)+'</span> <small style="color:var(--muted)">AOA</small></b></div>'+
-    '<div class="p10row"><span>الرسوم والمصاريف (Fees)</span><b><span class="num">'+fmt(T.fee,2)+'</span> <small style="color:var(--muted)">AOA</small></b></div>'+
-    '<div class="p10row"><span>ربح إجمالي (Gross Profit) · <span class="num">'+T.wins+'</span></span><b class="pos"><span class="num">'+sgn(T.gp,2)+'</span></b></div>'+
-    '<div class="p10row"><span>خسارة إجمالية (Gross Loss) · <span class="num">'+T.losses+'</span></span><b class="neg"><span class="num">'+sgn(T.gl,2)+'</span></b></div>'+
+  const P=periods(),T=P.total,m=(v,d,c)=>'<span class="num">'+fmt(v,d)+'</span>'+flag(c,18);
+  q('#p10pl').innerHTML='<div class="p10sec"><div class="p10hd"><span>الأرباح والخسائر — الإجمالي</span>'+flag(S.base,22)+'</div>'+
+    '<div class="p10row"><span>حجم التداول (Volume)</span><b>'+m(T.vol,0,'MRU')+'</b></div>'+
+    '<div class="p10row"><span>الإيراد (Revenue)</span><b>'+m(T.rev,2,'AOA')+'</b></div>'+
+    '<div class="p10row"><span>التكلفة (Cost)</span><b>'+m(T.cost,2,'AOA')+'</b></div>'+
+    '<div class="p10row"><span>الرسوم والمصاريف (Fees)</span><b>'+m(T.fee,2,'AOA')+'</b></div>'+
+    '<div class="p10row"><span>ربح إجمالي (Gross Profit) · <span class="num">'+T.wins+'</span></span><b class="pos"><span class="num">'+sgn(T.gp,2)+'</span>'+flag(S.base,18)+'</b></div>'+
+    '<div class="p10row"><span>خسارة إجمالية (Gross Loss) · <span class="num">'+T.losses+'</span></span><b class="neg"><span class="num">'+sgn(T.gl,2)+'</span>'+flag(S.base,18)+'</b></div>'+
     '<div class="p10row"><span>نسبة العمليات الرابحة</span><b><span class="num">'+T.rate.toFixed(1)+'%</span></b></div>'+
-    '<div class="p10row tot"><span>صافي الربح (NET PROFIT)</span><b class="'+cls(T.net)+'"><span class="num">'+sgn(T.net,2)+'</span> '+S.base+'</b></div></div>';
+    '<div class="p10row tot"><span>صافي الربح (NET PROFIT)</span><b class="'+cls(T.net)+'"><span class="num">'+sgn(T.net,2)+'</span>'+flag(S.base,22)+'</b></div></div>';
 }
 function renderCcy(){
   const P=periods();
-  q('#p10ccy').innerHTML='<div class="p10sec"><div class="hd"><span>الأرباح حسب العملة</span><span style="font-size:11px;color:var(--muted)">بعملة كل عملية</span></div>'+
-    (P.byCcy.length?P.byCcy.map(b=>'<div class="p10row"><span>'+esc(b.ccy)+' · <span class="num">'+b.n+'</span> عملية</span><b class="'+cls(b.net)+'"><span class="num">'+sgn(b.net,2)+'</span> '+esc(b.ccy)+'</b></div>').join(''):'<div class="empty" style="padding:14px">لا بيانات</div>')+'</div>';
+  q('#p10ccy').innerHTML='<div class="p10sec"><div class="p10hd"><span>الأرباح حسب العملة</span><span style="font-size:11px;color:var(--muted);font-weight:600">بعملة كل عملية</span></div>'+
+    (P.byCcy.length?P.byCcy.map(b=>'<div class="p10ccyrow">'+flag(b.ccy,36)+'<div class="txt"><b>'+esc(b.ccy)+'</b><span><span class="num">'+b.n+'</span> عملية · إيراد <span class="num">'+fmt(b.rev,0)+'</span></span></div>'+
+      '<div class="val '+cls(b.net)+'">'+sgn(b.net,2)+'</div></div>').join(''):'<div class="empty" style="padding:14px">لا بيانات</div>')+'</div>';
 }
 /* الرسم البياني */
 function chartBuckets(){const map={},order=[];visRows().forEach(t=>{const k=bucketKey(dayOf(t),S.period);if(!map[k]){map[k]={k,rows:[],d:startOf[S.period](dayOf(t))};order.push(k);}map[k].rows.push(t);});
@@ -292,7 +338,7 @@ function chartBuckets(){const map={},order=[];visRows().forEach(t=>{const k=buck
 function renderChart(){
   const B=chartBuckets(),el=q('#p10chart');
   const tabs='<div class="p10tabs">'+[['day','يومي'],['week','أسبوعي'],['month','شهري'],['year','سنوي']].map(x=>'<button class="'+(S.period===x[0]?'on':'')+'" onclick="p10.period(\''+x[0]+'\')">'+x[1]+'</button>').join('')+'</div>';
-  if(!B.length){el.innerHTML='<div class="p10sec"><div class="hd"><span>الأرباح حسب الفترة</span></div>'+tabs+'<div class="empty" style="padding:24px">لا بيانات في هذه الفترة</div></div>';return;}
+  if(!B.length){el.innerHTML='<div class="p10sec"><div class="p10hd"><span>الأرباح حسب الفترة</span></div>'+tabs+'<div class="empty" style="padding:24px">لا بيانات في هذه الفترة</div></div>';return;}
   const W=340,Hh=150,padL=6,padB=22,padT=8,n=B.length,gap=n>20?1:4,bw=Math.max(3,(W-padL*2)/n-gap);
   const mx=Math.max(...B.map(b=>Math.abs(b.T.net)),1),zero=padT+(Hh-padB-padT)*(Math.max(...B.map(b=>b.T.net),0)/(Math.max(...B.map(b=>b.T.net),0)-Math.min(...B.map(b=>b.T.net),0)||1));
   const posMax=Math.max(...B.map(b=>b.T.net),0),negMin=Math.min(...B.map(b=>b.T.net),0),span=(posMax-negMin)||1,scale=(Hh-padB-padT)/span,z=padT+posMax*scale;
@@ -303,12 +349,12 @@ function renderChart(){
       '<rect class="b" x="'+x+'" y="'+y+'" width="'+bw+'" height="'+h+'" rx="2" fill="'+(b.T.net>=0?'#0E9F6E':'#D64545')+'" opacity="'+(i===S.sel?1:.55)+'"/>'+
       (lab?'<text x="'+(x+bw/2)+'" y="'+(Hh-6)+'" font-size="9" text-anchor="middle" fill="#66788F" font-family="Inter">'+lab+'</text>':'')+'</g>';}).join('');
   const s=B[S.sel],T=s.T;
-  el.innerHTML='<div class="p10sec"><div class="hd"><span>الأرباح حسب الفترة</span><span style="font-size:11px;color:var(--muted)"><span class="num">'+n+'</span> فترة</span></div>'+tabs+
+  el.innerHTML='<div class="p10sec"><div class="p10hd"><span>الأرباح حسب الفترة</span><span style="font-size:11px;color:var(--muted)"><span class="num">'+n+'</span> فترة</span></div>'+tabs+
     '<div class="p10chart"><svg viewBox="0 0 '+W+' '+Hh+'" preserveAspectRatio="none"><line x1="0" x2="'+W+'" y1="'+z+'" y2="'+z+'" stroke="#DCE4EF"/>'+bars+'</svg></div>'+
-    '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px"><b style="font-size:13px;color:var(--navy);font-family:Inter">'+esc(s.k)+'</b><b class="'+cls(T.net)+'" style="font-family:Inter;font-size:16px">'+sgn(T.net,2)+' '+S.base+'</b></div>'+
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px"><b style="font-size:13px;color:var(--navy);font-family:Inter">'+esc(s.k)+'</b><b class="'+cls(T.net)+'" style="font-family:Inter;font-size:20px;display:flex;align-items:center;gap:6px;direction:ltr">'+sgn(T.net,2)+flag(S.base,20)+'</b></div>'+
     '<div class="p10kv"><div><span>عدد العمليات</span><b>'+T.n+'</b></div><div><span>حجم التداول</span><b>'+fmt(T.vol,0)+' MRU</b></div>'+
     '<div><span>متوسط الربح</span><b class="'+cls(T.avg)+'">'+sgn(T.avg,0)+'</b></div><div><span>الهامش</span><b>'+(T.cost?((T.netAoa||T.net)/T.cost*100).toFixed(2):'—')+'%</b></div>'+
-    '<div><span>أكبر ربح</span><b class="pos">'+(T.best?sgn(T.best.v,0)+' · '+esc(T.best.t.ref||''):'—')+'</b></div><div><span>أكبر خسارة</span><b class="neg">'+(T.worst&&T.worst.v<0?sgn(T.worst.v,0)+' · '+esc(T.worst.t.ref||''):'—')+'</b></div></div>'+
+    '<div><span>أكبر ربح</span><b class="pos">'+(T.best?sgn(T.best.v,0)+' · '+esc(shortRef(T.best.t.ref)):'—')+'</b></div><div><span>أكبر خسارة</span><b class="neg">'+(T.worst&&T.worst.v<0?sgn(T.worst.v,0)+' · '+esc(shortRef(T.worst.t.ref)):'—')+'</b></div></div>'+
     '<button class="p10btn" onclick="p10.openGroup(\''+esc(s.k).replace(/'/g,"\\'")+'\')">عرض عمليات هذه الفترة</button></div>';
 }
 function renderRange(){
@@ -323,7 +369,7 @@ function opRow(t){
       '<div class="pa">'+(v!=null&&e.tgt!==S.base?sgn(e.net,0)+' '+esc(e.tgt)+' · ':'')+(e.pct>=0?'+':'−')+Math.abs(e.pct).toFixed(2)+'%</div>'
     :'<div class="pf na">بلا تكلفة</div><div class="pa">أضف سعر الشراء من التسوية</div>';
   return '<div class="p10op" onclick="event.stopPropagation();p10.detail(\''+t.id+'\')"><div style="flex:1;min-width:0">'+
-    '<div class="ref">'+esc(t.ref||'—')+(t.status==='settling'?' <span class="p10chg dn" style="background:#FFF4E2;color:var(--warn)">معلقة</span>':'')+'</div>'+(e.who?'<div class="who">'+esc(e.who)+'</div>':'')+
+    '<div class="ref"><span class="p10pair">'+flag(t.ccy,16)+flag(e.tgt,16)+'</span>'+esc(shortRef(t.ref))+(t.status==='settling'?' <span class="p10chg dn" style="background:#FFF4E2;color:var(--warn)">معلقة</span>':'')+'</div>'+(e.who?'<div class="who">'+esc(e.who)+'</div>':'')+
     '<div class="amt">'+fmt(t.amount,0)+' '+esc(t.ccy)+' → '+fmt(t.settle_amount,2)+' '+esc(e.tgt)+' <span style="opacity:.75">· '+dayOf(t).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})+'</span></div>'+
     (rate?'<div class="rt">'+rate+'</div>':'')+'</div><div class="r">'+right+'</div></div>';
 }
@@ -336,7 +382,7 @@ function renderOps(){
     (order.length?order.map(k=>{const rows=groups[k],T=agg(rows);
       return '<div class="pcard p10g'+(S.open[k]?' open':'')+'" data-p10k="'+esc(k)+'" style="margin:0 12px 8px" onclick="p10.toggle(\''+esc(k).replace(/'/g,"\\'")+'\')">'+
         '<div class="t"><b>'+esc(k)+'</b><span class="p10n"><b>'+T.n+'</b> عملية'+(T.na?' · <span style="color:var(--warn)">'+T.na+' بلا تكلفة</span>':'')+'</span></div>'+
-        '<div class="v '+cls(T.net)+' num">'+sgn(T.net,2)+' '+S.base+'</div>'+
+        '<div class="v '+cls(T.net)+' num" style="display:flex;align-items:center;gap:7px;font-size:22px">'+sgn(T.net,2)+flag(S.base,22)+'</div>'+
         '<div class="s"><span class="num">'+fmt(T.vol,0)+'</span> MRU → <span class="num">'+fmt(T.rev,2)+'</span> AOA · تكلفة <span class="num">'+fmt(T.cost,0)+'</span>'+(T.fee?' · رسوم <span class="num">'+fmt(T.fee,0)+'</span>':'')+
         (T.cost?' · هامش <span class="num">'+((T.netAoa||T.net)/T.cost*100).toFixed(2)+'%</span>':'')+(Object.keys(T.other).length?' · '+Object.keys(T.other).map(c=>sgn(T.other[c],0)+' '+c).join(' · '):'')+'</div>'+
         '<span class="p10btn">'+(S.open[k]?'إخفاء التفاصيل':'عرض التفاصيل')+'</span>'+

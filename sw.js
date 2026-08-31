@@ -1,7 +1,7 @@
 /* BDL — Service Worker v2.0
    إستراتيجية: الشبكة أولًا لصفحات HTML والبيانات (لا محتوى قديم أبدًا)
               الكاش أولًا للأصول الثابتة فقط (صور، أيقونات، شعار) */
-const V='arkan-v71-1145'; /* ops10 v2: Profit Engine + Dashboard + Realtime + Ledger + Export */
+const V='arkan-v72-1146'; /* ops10 v2.1: Wise-style cards, flag badges, .hd collision fix */
 const STATIC=['./favicon.svg','./arkan-icon-512.png','./arkan-touch-180.png','./site-manifest.json'];
 
 self.addEventListener('install',e=>{
