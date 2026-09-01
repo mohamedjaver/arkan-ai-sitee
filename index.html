@@ -1107,6 +1107,14 @@ function setLang(l){
   document.documentElement.lang=l;
   document.documentElement.dir=(l==='ar')?'rtl':'ltr';
   document.querySelectorAll('[data-i]').forEach(el=>{const k=el.dataset.i;if(t[k]!==undefined)el.textContent=t[k];});
+  /* جلسة قائمة → «حسابي» بدل «دخول» */
+  try{const ss=JSON.parse(localStorage.getItem('arkan_session')||'null');
+    if(ss&&(ss.phone||ss.uid)){const nm=String(ss.name||'').trim().split(' ')[0];
+      const lbl={ar:'حسابي',fr:'Mon compte',en:'My account',pt:'Minha conta'}[l]||'حسابي';
+      document.querySelectorAll('[data-i="nav_signin"]').forEach(el=>{el.textContent=nm?lbl+' · '+nm:lbl;el.href='account.html';});
+      document.querySelectorAll('.akOwnerLink').forEach(a=>{if(/36295050$/.test(String(ss.phone||'').replace(/\D/g,'')))a.hidden=false;});}
+    else{const o=document.getElementById('akOutM');if(o)o.style.display='none';}
+  }catch(e){}
   document.querySelectorAll('[data-ih]').forEach(el=>{const k=el.dataset.ih;if(t[k]!==undefined)el.innerHTML=t[k];});
   document.querySelectorAll('#langSeg button').forEach(b=>b.classList.toggle('on',b.dataset.l===l));
   document.getElementById('waBtn').href='https://wa.me/22236295050?text='+encodeURIComponent(t.wa);
