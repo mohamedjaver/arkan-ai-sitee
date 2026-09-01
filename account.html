@@ -13,6 +13,7 @@
   <link rel="manifest" href="site-manifest.json">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<meta name="view-transition" content="same-origin">
 <style>html,body{overflow-x:hidden!important;max-width:100vw}input,select,textarea{font-size:16px!important}</style>
 <title>BDL — حسابي</title>
 <meta name="theme-color" content="#F7FAFD">
@@ -1361,7 +1362,7 @@ async function silentOpen(phoneRaw){
   import * as ARKAN from './arkan-core.js';
   window.ARKAN = ARKAN;
 </script>
-<script src="arkan-nav.js?v=10" defer></script>
+<script src="arkan-nav.js?v=11" defer></script>
 <script src="arkan-ai.js" defer></script>
 <script src="i18n.js"></script>
 <script src="arkan-wallet-badge.js" defer></script>
@@ -1447,7 +1448,7 @@ function apply(){
   try{ph=(JSON.parse(localStorage.getItem('arkan_session')||'null')||{}).phone;}catch(e){}
   if(!isOwner(ph))return false;
   /* 0) توثيق الجهاز كأدمن — بدونه يعيدك arkan-gate من settlement إلى الرئيسية */
-  try{localStorage.setItem('arkan_admin_dev','1');}catch(e){}
+  try{localStorage.setItem('arkan_admin_dev','1');var pf=document.createElement('link');pf.rel='prefetch';pf.href='settle-v2.html';document.head.appendChild(pf);}catch(e){}
   /* 1) الشارة بدل "قيد التفعيل" */
   const pb=document.getElementById('pendBox');
   if(pb){pb.textContent='حساب المالك — صلاحيات كاملة';
@@ -1458,7 +1459,7 @@ function apply(){
   /* الشريط نفسه زر الكونسول — بلا بلاطات إضافية */
   if(pb){pb.style.cursor='pointer';
     pb.innerHTML='حساب المالك — فتح الكونسول <span style="font-size:16px">←</span>';
-    pb.onclick=()=>location.href='settlement.html';}
+    pb.onclick=()=>location.href='settle-v2.html';}
   /* 3) بوابة العملاء في الشريط السفلي — تظهر للمالك فقط */
   const nav=document.getElementById('nav');
   if(nav&&!document.getElementById('navClients')){
@@ -1474,7 +1475,7 @@ function apply(){
     r.id='akOwnRow';
     r.style.cssText='display:flex;align-items:center;justify-content:space-between;background:#0058D9;color:#fff;padding:15px 16px;margin:12px 0;cursor:pointer;font-weight:800;font-size:14px';
     r.innerHTML='<span>كونسول التسوية — إدارة المالك</span><span style="font-size:18px">←</span>';
-    r.onclick=()=>location.href='settlement.html';
+    r.onclick=()=>location.href='settle-v2.html';
     acct.insertBefore(r,acct.firstElementChild.nextElementSibling);
   }
   return true;

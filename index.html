@@ -5,6 +5,7 @@
 <script>if(location.protocol==="http:"&&location.hostname.indexOf("lbdal")>-1)location.replace(location.href.replace("http:","https:"));</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="view-transition" content="same-origin">
 <meta name="theme-color" content="#0B2F70">
 <title>BDL — الصرف والتسويات الدولية</title>
 <meta name="description" content="Currency exchange and cross-border settlement between Mauritania, Angola, China and the Gulf.">
@@ -447,6 +448,7 @@ body::after{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;opac
       <a href="#exchange" data-i="nav_exchange"></a>
       <a href="#settle" data-i="nav_settle"></a>
       <a href="ai.html">AI</a>
+      <a href="settle-v2.html" class="akOwnerLink" hidden>كونسول التسوية</a>
     </div>
     <div class="sp"></div>
     <a id="wChip" href="wallet.html" hidden></a>
@@ -462,6 +464,7 @@ body::after{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;opac
   <a href="#network" data-i="nav_network"></a><a href="#wallet" data-i="nav_wallet"></a>
   <a href="#visa" data-i="nav_visa"></a><a href="#markets" data-i="nav_markets"></a>
   <a href="#exchange" data-i="nav_exchange"></a><a href="#settle" data-i="nav_settle"></a><a href="ai.html">AI</a>
+  <a href="settle-v2.html" class="akOwnerLink" hidden style="color:#7FD0FF;font-weight:800">كونسول التسوية ←</a>
   <a href="account.html" data-i="nav_signin"></a>
   <a href="#" id="akOutM" data-i="nav_signout" style="color:#FF8A80"></a>
 </div>
@@ -690,7 +693,7 @@ body::after{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;opac
     <div class="f-links">
       <a href="rates.html" data-i="f_rates"></a>
       <a href="request.html" data-i="f_transfer"></a>
-      <a href="settlement.html" data-i="f_settle"></a>
+      <a href="settle-v2.html" data-i="f_settle"></a>
       <a href="archive.html" data-i="f_archive"></a>
     </div>
     <div class="f-copy">© 2026 BDL INTERNATIONAL TRADING · Mauritania · Angola · China</div>
@@ -1300,6 +1303,12 @@ setInterval(loadTiers,180000);
 <span style="position:absolute;top:2px;inset-inline-end:2px;width:13px;height:13px;border-radius:50%;background:#168A52;border:2.5px solid #fff"></span>
 </a>
 <script src="arkan-nav.js" defer></script>
+<script>/* المالك: رابط الكونسول في القائمة + جلب مسبق للانتقال الفوري */
+(function(){try{var s=JSON.parse(localStorage.getItem('arkan_session')||'null'),ph=String((s||{}).phone||'').replace(/\D/g,'');
+  var own=/36295050$/.test(ph)||!!localStorage.getItem('arkan_admin_dev')||!!localStorage.getItem('arkan_owner_auth');
+  if(!own)return;document.querySelectorAll('.akOwnerLink').forEach(function(a){a.hidden=false;});
+  var l=document.createElement('link');l.rel='prefetch';l.href='settle-v2.html';document.head.appendChild(l);}catch(e){}})();
+</script>
 
 <style id="akBaiCss">
 /* BDL × BAI override — بلا زخارف عائمة */

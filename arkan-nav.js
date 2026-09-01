@@ -18,7 +18,9 @@
               (JSON.parse(localStorage.getItem('firebase:authUser:' +
                (Object.keys(localStorage).find(function(k){return k.indexOf('firebase:authUser:')===0;})||'').split('firebase:authUser:')[1] || 'null')) || {});
   } catch (e) {}
-  isOwner = !!localStorage.getItem('arkan_owner_auth');
+  isOwner = !!localStorage.getItem('arkan_owner_auth') || !!localStorage.getItem('arkan_admin_dev');
+  try { var ses = JSON.parse(localStorage.getItem('arkan_session') || 'null');
+        if (ses && /36295050$/.test(String(ses.phone || '').replace(/\D/g, ''))) isOwner = true; } catch (e) {}
 
   // روابط القائمة — الأساسية للجميع
   var LINKS = [
@@ -30,7 +32,8 @@
   ];
   // روابط المالك فقط
   var OWNER_LINKS = [
-    { href: 'settlement.html', icon: 'layers',   label: 'التسويات' },
+    { href: 'settle-v2.html',  icon: 'layers',   label: 'كونسول التسوية' },
+    { href: 'settle-v2.html#profit', icon: 'trending', label: 'الأرباح' },
     { href: 'archive.html',    icon: 'archive',  label: 'الأرشيف' },
     { href: 'admin.html',      icon: 'shield',   label: 'لوحة التحكم' }
   ];
