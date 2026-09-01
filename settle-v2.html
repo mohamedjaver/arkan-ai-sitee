@@ -36,7 +36,8 @@ input,select{font-family:inherit;color:var(--ink)}
 .sync{display:flex;align-items:center;gap:6px;font-size:10.5px;color:rgba(255,255,255,.85);
   background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);border-radius:999px;padding:4px 11px}
 .sync i{width:7px;height:7px;border-radius:50%;background:#8899AA;flex:0 0 auto}
-.hdnav{width:34px;height:34px;display:grid;place-items:center;color:#fff;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);text-decoration:none}
+.hdnav{width:34px;height:34px;display:grid;place-items:center;color:#fff;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);text-decoration:none;font-family:inherit;cursor:pointer;padding:0}
+#akNavBtns{display:none!important}
 .hdnav:active{background:rgba(255,255,255,.28)}
 .sync.ok i{background:#22D18C;box-shadow:0 0 0 3px rgba(34,209,140,.25)}
 .sync.err i{background:#FF7A7A}
@@ -222,6 +223,7 @@ input,select{font-family:inherit;color:var(--ink)}
     </div>
     <div style="display:flex;align-items:center;gap:8px">
       <a href="index.html" class="hdnav" aria-label="الرئيسية" title="الرئيسية"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10"/></svg></a>
+      <button type="button" class="hdnav" aria-label="كل صفحات المالك" title="كل صفحات المالك" onclick="if(window.akOpenMenu)akOpenMenu()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z"/></svg></button>
       <a href="account.html" class="hdnav" aria-label="حسابي" title="حسابي"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"/></svg></a>
       <div class="sync" id="sync"><i></i><span>غير متصل</span></div>
     </div>
@@ -2824,5 +2826,7 @@ document.querySelectorAll('.ovl').forEach(function(o){
 <script src="bdl-ops13.js?v=1"></script>
 <script src="bdl-ops14.js?v=1"></script>
 <link rel="stylesheet" href="bdl-sharp.css?v=1">
+<script src="arkan-nav.js?v=12" defer></script>
+<script>addEventListener('hashchange',function(){var t=(location.hash||'').slice(1);if(['ops','settle','clients','archive','profit','books'].indexOf(t)>=0&&typeof go==='function')go(t);});</script>
 </body>
 </html>

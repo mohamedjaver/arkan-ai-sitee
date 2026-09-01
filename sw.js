@@ -1,7 +1,7 @@
 /* BDL — Service Worker v2.0
    إستراتيجية: الشبكة أولًا لصفحات HTML والبيانات (لا محتوى قديم أبدًا)
               الكاش أولًا للأصول الثابتة فقط (صور، أيقونات، شعار) */
-const V='arkan-v81-1155'; /* permanent delete: tombstones on group delete + purged_refs guard; bdl-ops15.sql server trigger */
+const V='arkan-v82-1156'; /* owner hub: arkan-nav grid of all owner pages, in-console tab switching, prefetch */
 const STATIC=['./favicon.svg','./arkan-icon-512.png','./arkan-touch-180.png','./site-manifest.json'];
 
 self.addEventListener('install',e=>{
