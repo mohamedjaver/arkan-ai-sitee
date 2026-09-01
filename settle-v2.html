@@ -684,10 +684,12 @@ async function importLegacy(){
     var r=await fx(SB+'/archive_docs?select=id,data&order=updated_at.desc&limit=80');
     if(!r.ok)return 0;
     var rows=await r.json();
+    var purged={};try{var pr=await fetch(SB+'/bdl_purged_refs?select=ref&limit=2000',{headers:H()});if(pr.ok)(await pr.json()).forEach(function(x){purged[String(x.ref).toUpperCase()]=1;});}catch(e){}
     for(var i=0;i<rows.length;i++){
       var d=rows[i].data||{};
       if(!d.ref)continue;
       if(d.status==='deleted')continue; /* شاهد القبر — لا بعث */
+      if(purged[String(d.ref).toUpperCase()])continue; /* محظور نهائيًا */
       if(['transfer','operation'].indexOf(d.kind)<0)continue;
       var chk=await fetch(SB+'/bdl_transactions?select=id&ref=eq.'+encodeURIComponent(d.ref)+'&limit=1',{headers:H()});
       if(chk.ok&&(await chk.json())[0])continue;
@@ -818,6 +820,17 @@ function renderTxs(k){
 /* ═══ حذف مجموعة تسوية كاملة (تشمل المجموعات الخاوية/الشبحية) ═══
    يجلب القيود بنطاق المجموعة الدقيق؛ وإن كان خاويًا يوسّع بلا فلتر الحساب،
    ثم يعرض العدد ويحذف بقائمة معرفات صريحة — لا حذف أعمى. */
+/* ═ شواهد القبور: بعد أي حذف — تُحصَّن المراجع كي لا تعيدها المزامنة (bdl_purged_refs + archive_docs) ═ */
+async function tombstone(refs){
+  refs=(refs||[]).filter(Boolean);if(!refs.length)return;
+  try{await fetch(SB+'/bdl_purged_refs?on_conflict=owner_id,ref',{method:'POST',headers:H({Prefer:'resolution=ignore-duplicates'}),
+    body:JSON.stringify(refs.map(function(r){return {ref:r};}))});}catch(e){}
+  for(var i=0;i<refs.length;i++){var ref=refs[i];
+    var tomb={id:'rc_'+ref,data:{ref:ref,kind:'transfer',status:'deleted',deletedAt:Date.now()},updated_at:new Date().toISOString()};
+    try{var tp=await fetch(SB+'/archive_docs?on_conflict=id',{method:'POST',headers:H({Prefer:'resolution=merge-duplicates'}),body:JSON.stringify(tomb)});
+      if(!tp.ok)await fetch(SB+'/archive_docs?on_conflict=id',{method:'POST',headers:{apikey:ANON,Authorization:'Bearer '+ANON,'Content-Type':'application/json',Prefer:'resolution=merge-duplicates'},body:JSON.stringify(tomb)});
+    }catch(e){}}
+}
 async function grpDelete(k){
   var g=GROUPS.find(function(x){return gKey(x)===k;});if(!g)return;
   var base=SB+'/bdl_transactions?select=id,ref&customer_id=eq.'+g.customer_id+
@@ -835,8 +848,9 @@ async function grpDelete(k){
     var d=await fetch(SB+'/bdl_transactions?id=in.('+ids.map(function(x){return x.id;}).join(',')+')',
       {method:'DELETE',headers:H()});
     if(!d.ok)throw new Error(d.status);
+    await tombstone(ids.map(function(x){return x.ref;}));
     delete SEL[k];delete TXCACHE[k];
-    toast('حُذفت المجموعة ('+ids.length+' عملية)');
+    toast('حُذفت المجموعة ('+ids.length+' عملية) — ولن تعود');
     loadGroups();OPS_DATA=null;
   }catch(e){toast('تعذّر الحذف: '+e.message);}
 }
@@ -861,14 +875,15 @@ async function purgeOld(){
       /* بلا ops9: حذف مباشر بدفعات */
       var done=0;
       for(var loop=0;loop<40;loop++){
-        var q=await fetch(SB+'/bdl_transactions?select=id&created_at=lt.'+iso+'&limit=100',{headers:H()});
+        var q=await fetch(SB+'/bdl_transactions?select=id,ref&created_at=lt.'+iso+'&limit=100',{headers:H()});
         var rows=q.ok?await q.json():[];
         if(!rows.length)break;
         var d=await fetch(SB+'/bdl_transactions?id=in.('+rows.map(function(x){return x.id;}).join(',')+')',{method:'DELETE',headers:H()});
         if(!d.ok)throw new Error(d.status);
+        await tombstone(rows.map(function(x){return x.ref;}));
         done+=rows.length;
       }
-      toast('حُذفت '+done+' عملية. لمنع عودتها من المزامنة الصق bdl-ops9.sql في Supabase');
+      toast('حُذفت '+done+' عملية وحُصّنت مراجعها. للحماية الكاملة الصق bdl-ops15.sql في Supabase');
     }
     SEL={};TXCACHE={};PENDMAP={};GROUPS=[];ARCH=null;PROF=null;OPS_DATA=null;BRIDGE=[];
     loadGroups();
