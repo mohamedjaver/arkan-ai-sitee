@@ -1,7 +1,7 @@
 /* BDL — Service Worker v2.0
    إستراتيجية: الشبكة أولًا لصفحات HTML والبيانات (لا محتوى قديم أبدًا)
               الكاش أولًا للأصول الثابتة فقط (صور، أيقونات، شعار) */
-const V='arkan-v75-1149'; /* ops11: archive dashboard — stat cards, expandable op cards, bottom totals */
+const V='arkan-v76-1150'; /* ops12: receipt settlement ledger in الدفاتر — stats, customer/supplier columns, comparison */
 const STATIC=['./favicon.svg','./arkan-icon-512.png','./arkan-touch-180.png','./site-manifest.json'];
 
 self.addEventListener('install',e=>{
