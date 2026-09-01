@@ -181,6 +181,15 @@ input,select{font-family:inherit;color:var(--ink)}
 #ovl-closeop .sheet input,#ovl-closeop .sheet button,
 #v-ops .opcard{border-radius:0!important}
 #v-ops .opcard{background:#fff;border:1px solid #D7E2F2;padding:14px 15px;margin-bottom:10px}
+@media (prefers-color-scheme:dark){
+#ovl-login{background:#0A1220!important}
+#ovl-login .login{background:#101A2E!important;border-color:#1D2B47}
+#ovl-login h2,#ovl-login .fld label{color:#EDF2FA}
+#ovl-login p,#ovl-login div{color:#93A3BE}
+#ovl-login .fld input{background:#0A1220!important;border-color:#1D2B47!important;color:#EDF2FA}
+#ovl-login #lEye{background:#12213C;border-color:#1E4FA8;color:#7FA6E8}
+#ovl-login #lBioBtn{background:#101A2E!important;color:#7FA6E8!important;border-color:#1E4FA8!important}
+}
 #v-ops .oppipe{display:flex;align-items:flex-start;margin-top:11px}
 #v-ops .oppipe .s9{display:flex;flex-direction:column;align-items:center;gap:4px;flex:0 0 auto}
 #v-ops .oppipe .d{width:11px;height:11px;background:#fff;border:2.5px solid #C9D8EC;display:block}
@@ -572,8 +581,11 @@ input,select{font-family:inherit;color:var(--ink)}
     <h2>دخول حساب المالك</h2>
     <p id="lMsg">بياناتك محفوظة مركزيًا وتظهر على كل أجهزتك بعد الدخول.</p>
     <div class="fld"><label>الهاتف</label><input id="lPhone" class="num-in" inputmode="tel" placeholder="22236295050"></div>
-    <div class="fld"><label>الرمز السري PIN</label><input id="lPin" class="num-in" type="password" inputmode="numeric"></div>
+    <div class="fld"><label>الرمز السري PIN</label><div style="position:relative"><input id="lPin" class="num-in" type="password" inputmode="numeric" style="width:100%;padding-inline-end:66px"><button type="button" id="lEye" onclick="pinEye()" style="position:absolute;left:8px;top:50%;transform:translateY(-50%);border:1px solid #D6E4F7;background:#F4F8FF;color:var(--navy);font:700 11px 'IBM Plex Sans Arabic',sans-serif;padding:5px 10px;cursor:pointer">إظهار</button></div></div>
     <button class="primary" onclick="login()">دخول</button>
+    <button type="button" id="lBioBtn" onclick="bioLogin()" style="display:none;width:100%;margin-top:8px;padding:12px;background:#fff;color:var(--navy);border:1.5px solid var(--navy);font:800 13.5px 'IBM Plex Sans Arabic',sans-serif;cursor:pointer">الدخول ببصمة الوجه · Face ID</button>
+    <label id="lBioRow" style="display:none;align-items:center;gap:8px;margin-top:10px;font-size:12px;color:var(--muted);cursor:pointer"><input type="checkbox" id="lBioChk" checked style="width:16px;height:16px;accent-color:var(--navy)"> تفعيل الدخول السريع بـ Face ID بعد هذا الدخول</label>
+    <div style="margin-top:12px;font-size:10.5px;color:var(--muted)">اتصال مشفّر HTTPS · لا يُحفظ الرمز على الجهاز إلا بموافقتك لتفعيل Face ID</div>
     <div class="hint" id="lErr" style="color:var(--bad)"></div>
   </div>
 </div>
@@ -613,9 +625,44 @@ async function login(){
     TOK=j.token;
     try{sessionStorage.setItem('bdl-tok',JSON.stringify({t:j.token,e:j.exp||0}));}catch(e){}
     $('#ovl-login').classList.remove('on');$('#ovl-login').style.display='none';
+    try{localStorage.setItem('arkan-owner-phone',ph);
+      if(bioSupported()&&!localStorage.getItem('bdl_bio')&&$('#lBioChk')&&$('#lBioChk').checked)bioEnroll(ph,pin);}catch(e){}
     syncUI('ok','متزامن');boot();
   }catch(e){$('#lErr').textContent='فشل الدخول — تحقق من الهاتف والرمز';syncUI('err','خطأ');}
 }
+function pinEye(){var i=$('#lPin'),b=$('#lEye');if(!i)return;var sh=i.type==='password';i.type=sh?'text':'password';b.textContent=sh?'إخفاء':'إظهار';}
+function bioSupported(){return !!(window.PublicKeyCredential&&navigator.credentials&&navigator.credentials.create&&window.isSecureContext);}
+async function bioEnroll(ph,pin){
+  try{
+    var cred=await navigator.credentials.create({publicKey:{
+      challenge:crypto.getRandomValues(new Uint8Array(32)),
+      rp:{name:'BDL',id:location.hostname},
+      user:{id:new TextEncoder().encode('bdl-owner-'+ph),name:ph,displayName:'BDL — حساب المالك'},
+      pubKeyCredParams:[{type:'public-key',alg:-7},{type:'public-key',alg:-257}],
+      authenticatorSelection:{authenticatorAttachment:'platform',userVerification:'required',residentKey:'preferred'},
+      timeout:60000,attestation:'none'}});
+    var id=btoa(String.fromCharCode.apply(null,Array.prototype.slice.call(new Uint8Array(cred.rawId))));
+    localStorage.setItem('bdl_bio',JSON.stringify({id:id,ph:ph,p:btoa(pin)}));
+    toast('فُعّل الدخول بـ Face ID ✓');return true;
+  }catch(e){return false;}
+}
+async function bioLogin(){
+  var b=null;try{b=JSON.parse(localStorage.getItem('bdl_bio')||'null');}catch(e){}
+  if(!b||!b.id){toast('Face ID غير مفعّل — ادخل بالرمز أولًا');return;}
+  try{
+    var raw=Uint8Array.from(atob(b.id),function(c){return c.charCodeAt(0);});
+    await navigator.credentials.get({publicKey:{
+      challenge:crypto.getRandomValues(new Uint8Array(32)),
+      allowCredentials:[{type:'public-key',id:raw}],
+      userVerification:'required',timeout:60000}});
+    $('#lPhone').value=b.ph;$('#lPin').value=atob(b.p);login();
+  }catch(e){toast('تعذّر التحقق بالوجه — استخدم الرمز');}
+}
+(function(){try{
+  var b=JSON.parse(localStorage.getItem('bdl_bio')||'null');
+  if(b&&b.id){var x=$('#lBioBtn');if(x)x.style.display='block';}
+  else if(bioSupported()){var r=$('#lBioRow');if(r)r.style.display='flex';}
+}catch(e){}})();
 (async function(){ /* استئناف الجلسة، ثم دخول تلقائي ببيانات المالك المحفوظة */
   try{var c=JSON.parse(sessionStorage.getItem('bdl-tok')||'null');
     if(c&&c.t&&(!c.e||c.e-Date.now()/1000>3600)){TOK=c.t;
