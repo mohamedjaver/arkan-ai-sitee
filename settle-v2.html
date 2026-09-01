@@ -181,6 +181,16 @@ input,select{font-family:inherit;color:var(--ink)}
 #ovl-closeop .sheet input,#ovl-closeop .sheet button,
 #v-ops .opcard{border-radius:0!important}
 #v-ops .opcard{background:#fff;border:1px solid #D7E2F2;padding:14px 15px;margin-bottom:10px}
+#v-ops .oppipe{display:flex;align-items:flex-start;margin-top:11px}
+#v-ops .oppipe .s9{display:flex;flex-direction:column;align-items:center;gap:4px;flex:0 0 auto}
+#v-ops .oppipe .d{width:11px;height:11px;background:#fff;border:2.5px solid #C9D8EC;display:block}
+#v-ops .oppipe .d.done{background:var(--navy);border-color:var(--navy)}
+#v-ops .oppipe .d.cur{background:#E6A700;border-color:#E6A700;animation:oppulse 1.6s infinite}
+#v-ops .oppipe .t9{font-size:9.5px;color:#9AAAC2;font-weight:700;white-space:nowrap}
+#v-ops .oppipe .t9.on{color:#8A6100}
+#v-ops .oppipe .ln{flex:1;height:2.5px;background:#C9D8EC;margin:4.5px 3px 0}
+#v-ops .oppipe .ln.done{background:var(--navy)}
+@keyframes oppulse{0%{box-shadow:0 0 0 0 rgba(230,167,0,.55)}70%{box-shadow:0 0 0 6px rgba(230,167,0,0)}100%{box-shadow:0 0 0 0 rgba(230,167,0,0)}}
 /* خانات صفائح العمليات — كبيرة مقروءة بطراز مصرفي */
 #ovl-newop .sheet .cin,#ovl-newop .sheet select,
 #ovl-addr .sheet .cin,#ovl-addr .sheet select,
@@ -1916,16 +1926,27 @@ function opsDash(){
     if(o.status==='sent')sent++;
   });
   /* إيصالات اليوم تُحسب من التغطية المتغيرة — تقدير من created_at للعمليات الحديثة يُستبدل لاحقًا بعدّاد دقيق */
-  function card(t,v,c){return '<div style="background:#fff;border:1px solid #E3ECF7;border-radius:14px;padding:10px 8px;text-align:center">'+
+  function card(t,v,c,st){var ac=c||'#C9D8EC';
+    return '<div '+(st?'onclick="setOpSt(\''+st+'\')" ':'')+'style="background:#fff;border:1px solid #E3ECF7;border-top:3px solid '+ac+';padding:10px 8px;text-align:center'+(st?';cursor:pointer':'')+'">'+
     '<div class="num" style="font-size:17px;font-weight:800;color:'+(c||'var(--navy)')+'">'+v+'</div>'+
     '<div style="font-size:10.5px;color:var(--muted);margin-top:2px">'+t+'</div></div>';}
   $('#opsDash').innerHTML=
-    card('ناقصة التغطية',open_, open_?'#B00020':null)+
-    card('فجوة AOA',fmt(gap,0),gap?'#B00020':null)+
-    card('مكتملة — جاهزة للمورد',covered,covered?'#0A56B8':null)+
-    card('عند المورد',sent,null);
+    card('ناقصة التغطية',open_, open_?'#B00020':null,'open')+
+    card('فجوة AOA',fmt(gap,0),gap?'#B00020':null,'open')+
+    card('مكتملة — جاهزة للمورد',covered,covered?'#0B7A3B':null,'covered')+
+    card('عند المورد',sent,sent?'#E6A700':null,'sent');
   var conf=d.filter(function(o){return o.status==='confirmed';}).length;
-  if(conf)$('#opsDash').innerHTML+=card('أكّد المورد — للإقفال',conf,'#0B7A3B');
+  if(conf)$('#opsDash').innerHTML+=card('أكّد المورد — للإقفال',conf,'#0B7A3B','confirmed');
+}
+function opPipe(o){
+  var idx=o.status==='open'?1:(o.status==='covered'||o.status==='sent')?2:o.status==='confirmed'?3:o.status==='closed'?4:1;
+  var L=['إنشاء','الإيصالات','تأكيد المورد','التسوية'],h='<div class="oppipe">';
+  for(var i=0;i<4;i++){
+    var cl=i<idx?' done':i===idx?' cur':'';
+    h+='<div class="s9"><span class="d'+cl+'"></span><span class="t9'+(i===idx?' on':'')+'">'+L[i]+'</span></div>';
+    if(i<3)h+='<span class="ln'+(i<idx?' done':'')+'"></span>';
+  }
+  return h+'</div>';
 }
 function opBar(o){
   var tgt=Number(o.target_aoa)||0, cov=Number(o.covered_aoa)||0, n=o.receipts_n||o.rcpt_count||0;
@@ -2007,7 +2028,7 @@ function renderOps(){
       '<div class="num" style="font-size:11px;color:var(--muted);margin-top:2px">'+esc(o.ref)+
       ' · '+laneTxt+' · '+esc(o.structure||'MRU→AOA')+(o.supplier?' · '+esc(o.supplier):'')+'</div></div>'+
       '<span class="st '+st[0]+'">'+st[1]+'</span></div>'+
-      opBar(o)+
+      opPipe(o)+opBar(o)+
       (reconTag?'<div style="margin-top:7px">'+reconTag+'</div>':'')+
       (act?'<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:11px">'+act+'</div>':'')+
       '</div>';
