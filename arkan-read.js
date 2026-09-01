@@ -4,7 +4,7 @@ const GEM_PROMPT=`أنت محرك OCR مالي مؤسسي. اقرأ هذا ال�
 ${GEM_SCHEMA}
 - amount رقم فقط بلا فواصل، وأضف حقلاً "amount_verbatim" فيه نص المبلغ حرفيًا كما هو مكتوب في المستند (مثل "Kz 8 780 000,00").
 - المبلغ هو قيمة حقل Montante/المبلغ/Total/Valor فقط (مثل: Kz 8 000 000,00 → 8000000). لا تضع أبدًا في amount أرقام Movimento أو Número de Operação أو Transacção أو CHAVE أو PIN أو Conta/IBAN — هذه أرقام تعريفية تذهب في transaction_id/reference.
-- إثباتات Transfer to Atlântico (BANCO MILLENNIUM ATLANTICO): جدول Label/Value — reference هو قيمة سطر Reference حصراً؛ Account number/IBAN وCurrent account أرقام حسابات لا توضع أبدًا في reference ولا amount؛ beneficiary هو سطر Name؛ العملة AKZ تعني الكوانزا.
+- إثباتات Transfer to Atlântico / Transferência Atlântico (BANCO MILLENNIUM ATLANTICO): جدول Label/Value — reference هو قيمة سطر Reference/Referencia حصراً؛ amount من Amount/Montante؛ beneficiary من Name/Nome beneficiário؛ Account number/IBAN وCurrent account أرقام حسابات لا توضع أبدًا في reference ولا amount؛ beneficiary هو سطر Name؛ العملة AKZ تعني الكوانزا.
 - تجاهل تمامًا أرقام التذييل القانوني (Capital Social، NIF، الهواتف).
 - الكوانزا الأنغولية: AOA (تظهر كـ Kz أو KZ أو AKZ). الأوقية: MRU (أو UM). انتبه للفواصل الأوروبية 1.234.567,89 والمسافات 8 000 000,00.
 - قيّم جودة الصورة في quality (مقصوصة؟ ضبابية؟ أثر تعديل؟ زوايا ناقصة؟).
@@ -99,17 +99,17 @@ function liteParse(t){
   const p={amount:0,currency:'',reference:'',bank:'',date:'',confidence:40};
   /* قالب إثبات ATLANTICO (Transfer to Atlântico): جدول Label/Value —
      المرجع سطر Reference حصراً، لا Account number/IBAN ولا Current account */
-  if(/BANCO\s+MILLENNIUM\s+ATLANTICO|Transfer\s+to\s+Atl[âa]ntico/i.test(t)||(/ATLANTICO/i.test(t)&&/Reference/i.test(t)&&/Amount/i.test(t))){
-    const ref=t.match(/Reference[^\d]{0,14}(\d{6,})/i);
-    const am2=t.match(/Amount[^\d]{0,14}([\d][\d.,\s\u00A0]{2,})/i);
-    const nm2=t.match(/\bName\b[\s:]{0,6}([A-ZÀ-Ú][A-ZÀ-Ú0-9 .,&\-]{3,70})/);
-    const ac2=t.match(/Account\s*number\s*\/?\s*IBAN[^\d]{0,14}([\d][\d ]{5,})/i);
+  if(/BANCO\s+MILLENNIUM\s+ATLANTICO|Transfer\s+to\s+Atl[âa]ntico|Transfer[êe]ncia\s+Atl[âa]ntico/i.test(t)||(/ATLANTICO/i.test(t)&&/(Reference|Refer[eê]ncia)/i.test(t)&&/(Amount|Montante)/i.test(t))){
+    const ref=t.match(/(?:Reference|Refer[eê]ncia)[^\d]{0,14}(\d{6,})/i);
+    const am2=t.match(/(?:Amount|Montante)[^\d]{0,14}([\d][\d.,\s\u00A0]{2,})/i);
+    const nm2=t.match(/(?:\bName\b|Nome(?:\s+benefici[áa]rio)?)[\s:]{0,6}([A-ZÀ-Ú][A-ZÀ-Ú0-9 .,&\-]{3,70})/);
+    const ac2=t.match(/(?:Account\s*number|N[úu]mero\s*de\s*conta)\s*\/?\s*IBAN[^\d]{0,14}([\d][\d ]{5,})/i);
     const dt2=t.match(/(\d{2}-\d{2}-\d{4})/);
     if(ref||am2){
       p.bank='ATLANTICO';p.currency='Kz';
       if(am2)p.amount=euNum(am2[1]);
       if(ref)p.reference=ref[1];
-      if(nm2)p.name=nm2[1].replace(/\s+/g,' ').replace(/\s+(?:Amount|Currency|Type|Status|Current|Account|Description)\b.*$/i,'').replace(/(?:\s+[A-Z]){1,2}$/,'').trim();
+      if(nm2)p.name=nm2[1].replace(/\s+/g,' ').replace(/\s+(?:Amount|Currency|Type|Status|Current|Account|Description|Montante|Moeda|Tipo|Estado|Conta|Descri[çc][ãa]o)\b.*$/i,'').replace(/(?:\s+[A-Z]){1,2}$/,'').trim();
       if(ac2)p.receiver=ac2[1].replace(/\s+/g,'');
       if(dt2)p.date=dt2[1];
       p.confidence=85;return p;}
