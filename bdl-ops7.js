@@ -82,7 +82,7 @@ window.renderOps=function(){
       '<div class="num" style="font-size:11px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+
       esc(o.ref)+' · '+lane+(o.supplier?' · '+esc(o.supplier):'')+'</div></div>'+
       '<span class="st '+s[0]+'" style="flex-shrink:0">'+s[1]+'</span></div>'+
-      opBar(o)+rt+'</div>';
+      (window.opPipe?opPipe(o):'')+opBar(o)+rt+'</div>';
   }).join('')||'<div class="empty">لا عمليات'+(q?' مطابقة':' — أنشئ الأولى بزر «+ عملية»')+'</div>';
 };
 
