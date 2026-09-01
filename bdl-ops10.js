@@ -243,6 +243,27 @@ const css=document.createElement('style');css.textContent=`
 .p10menu button small{display:block;font-size:11px;color:var(--muted);font-weight:500;margin-top:2px}
 .p10led{display:flex;justify-content:space-between;gap:8px;padding:9px 0;border-bottom:1px solid var(--line);font-size:11.5px}
 .p10led .m{color:var(--muted)}.p10led b{font-family:"Inter",sans-serif;direction:ltr}
+
+/* الوضع المظلم — تلقائي حسب النظام + زر يدوي */
+#p10root.p10dark{background:#0A1220;padding-bottom:14px}
+#p10root.p10dark .p10c,#p10root.p10dark .p10sec,#p10root.p10dark .p10tools .srch,#p10root.p10dark .p10tools .tb,#p10root.p10dark .p10rng button,#p10root.p10dark .p10more{background:#101A2E;border-color:#1D2B47;color:#EDF2FA}
+#p10root.p10dark .p10w{background:linear-gradient(180deg,#101A2E,#0D1728);border-color:#1D2B47;box-shadow:none}
+#p10root.p10dark .p10w .l,#p10root.p10dark .p10w .s,#p10root.p10dark .p10c .l,#p10root.p10dark .p10c .s,#p10root.p10dark .p10row,#p10root.p10dark .p10kv div,#p10root.p10dark .p10ccyrow .txt span{color:#93A3BE}
+#p10root.p10dark .p10row b,#p10root.p10dark .p10kv b,#p10root.p10dark .p10ccyrow .txt b,#p10root.p10dark .p10tools input{color:#EDF2FA}
+#p10root.p10dark .p10sec .p10hd{color:#BFD2F2}
+#p10root.p10dark .p10tabs{background:#0A1220;border-color:#1D2B47}
+#p10root.p10dark .p10tabs button{color:#93A3BE}
+#p10root.p10dark .p10tabs button.on,#p10root.p10dark .p10rng button.on,#p10root.p10dark .p10tools .tb.on{background:#1E4FA8;border-color:#1E4FA8;color:#fff}
+#p10root.p10dark .p10cc{background:#0A1220;border-color:#1D2B47;color:#BFD2F2}
+#p10root.p10dark .p10ops{background:#0C1526;border-top-color:#1D2B47}
+#p10root.p10dark .p10op{border-bottom-color:#1D2B47}
+#p10root.p10dark .p10op .who{color:#EDF2FA}
+#p10root.p10dark .p10op:active{background:#14233F}
+#p10root.p10dark .p10note{background:#2A230C;border-color:#5A4A14;color:#EAD48A}
+#p10root.p10dark .p10row.tot{color:#7FA6E8;border-top-color:#1E4FA8}
+#p10root.p10dark .p10btn{background:#12213C;border-color:#1E4FA8;color:#7FA6E8}
+#p10root.p10dark .p10chg.up{background:#0D2B20;color:#5AD79A}
+#p10root.p10dark .p10chg.dn{background:#33141A;color:#F09B9B}
 `;document.head.appendChild(css);
 
 /* ═══════ ٥) الهيكل ═══════ */
@@ -313,7 +334,7 @@ function periods(){
 }
 
 /* ═══════ ٧) العرض ═══════ */
-function renderAll(full){ensure();if(full){renderHero();renderCards();renderNote();renderPL();renderCcy();}renderChart();renderRange();renderOps();}
+function renderAll(full){ensure();themeApply();if(full){renderHero();renderCards();renderNote();renderPL();renderCcy();}renderChart();renderRange();renderOps();}
 function dailySeries(days){
   const A=S.all||S.rows||[];if(!A.length)return [];
   const out=[],now=new Date();
@@ -342,7 +363,9 @@ function renderHero(){
   const wsTxt=S.wsOk?'مباشر (Realtime)':'مباشر';
   q('#p10hero').innerHTML=
     '<div class="p10h" onclick="p10.drill()"><div class="p10live"><span><span class="p10dot'+(S.busy?' busy':S.wsOk?'':' off')+'" id="p10dot"></span>'+
-    '<span>'+wsTxt+' · '+(S.last?S.last.toLocaleTimeString('en-GB'):'—')+'</span></span><span style="opacity:.75">'+(P.srv?'حساب خادمي':'حساب محلي')+'</span></div>'+
+    '<span>'+wsTxt+' · <span id="p10clk" class="num">'+new Date().toLocaleTimeString('en-GB')+'</span></span></span>'+
+    '<span style="display:flex;align-items:center;gap:8px"><span style="opacity:.75">'+(P.srv?'حساب خادمي':'حساب محلي')+'</span>'+
+    '<button id="p10thm" onclick="event.stopPropagation();p10.theme()" style="border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.12);color:#fff;font:700 10px \'IBM Plex Sans Arabic\',sans-serif;padding:3px 9px;cursor:pointer">'+themeLbl()+'</button></span></div>'+
     '<div class="p10lbl"><span>إجمالي الأرباح المحققة</span><span class="p10base" onclick="event.stopPropagation()">'+['MRU','AOA'].map(c=>'<button class="'+(S.base===c?'on':'')+'" onclick="p10.base(\''+c+'\')">'+flag(c,16)+c+'</button>').join('')+'</span></div>'+
     '<div class="p10hero2">'+flag(S.base,58,true)+'<div class="p10tot" style="flex:1">'+sgn(T.net,2)+'<small>'+S.base+' · <span class="num">'+T.n+'</span> عملية</small></div></div>'+
     '<div class="p10sub">'+(chg(P.month.net,P.pmonth.net,'الشهر السابق')||'')+(P.month.net&&P.pmonth.net?' هذا الشهر مقابل الشهر السابق':'')+
@@ -610,6 +633,14 @@ document.addEventListener('visibilitychange',()=>{if(visible()&&!S.busy)load(fal
 setInterval(()=>{if(visible()&&!S.busy&&!S.wsOk)load(false);},20000);   /* احتياطي إن لم يتوفر Realtime */
 setInterval(()=>{if(visible()&&!S.busy&&S.wsOk)load(false);},45000);    /* تحقق دوري خفيف */
 
+/* الوضع المظلم */
+function themeMode(){try{return localStorage.getItem('p10_theme')||'auto';}catch(e){return 'auto';}}
+function themeDark(){const m=themeMode();return m==='dark'||(m==='auto'&&matchMedia('(prefers-color-scheme: dark)').matches);}
+function themeLbl(){return {auto:'تلقائي',dark:'داكن',light:'فاتح'}[themeMode()];}
+function themeApply(){const r=q('#p10root');if(r)r.classList.toggle('p10dark',themeDark());const b=q('#p10thm');if(b)b.textContent=themeLbl();}
+try{matchMedia('(prefers-color-scheme: dark)').addEventListener('change',themeApply);}catch(e){}
+setInterval(()=>{const e=q('#p10clk');if(e)e.textContent=new Date().toLocaleTimeString('en-GB');},1000);
+
 /* ═══════ ١٠) الواجهة العامة + استبدال دوال الأصل ═══════ */
 window.p10={
   base:c=>{S.base=c;S.rows.forEach(t=>t._e=null);renderAll(true);},
@@ -619,6 +650,7 @@ window.p10={
   toggle:k=>{S.open[k]=!S.open[k];renderOps();},
   openGroup:(k,jump)=>{S.open[k]=true;if(jump){S.range='all';load(false).then(()=>{const el=document.querySelector('[data-p10k="'+k.replace(/"/g,'\\"')+'"]');if(el)el.scrollIntoView({behavior:'smooth',block:'start'});});return;}
     renderOps();const el=document.querySelector('[data-p10k="'+k.replace(/"/g,'\\"')+'"]');if(el)el.scrollIntoView({behavior:'smooth',block:'start'});},
+  theme:()=>{const nxt={auto:'dark',dark:'light',light:'auto'}[themeMode()];try{localStorage.setItem('p10_theme',nxt);}catch(e){}themeApply();toast('الوضع: '+themeLbl());},
   more:()=>load(true),eng,agg,state:S,detail,saveFees,drill,filters:filtersSheet,applyFilters,resetFilters,exportMenu,csv,pdf,ledger,copyDetail,
   applyFiltersFromQuery:()=>{}
 };
