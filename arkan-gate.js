@@ -9,17 +9,6 @@
   var needAdmin = ADMIN.indexOf(here)>-1;
   var needClient = CLIENT_STRICT.indexOf(here)>-1;
 
-  /* إخفاء فوري حتى التحقق — عدا الصفحات ذات شاشة الإقلاع الخاصة */
-  var SELF_LOADER=['chat-v2.html'];
-  if(SELF_LOADER.indexOf(here)===-1){
-    var st=document.createElement('style'); st.id='ark-gate-style';
-    st.textContent='body{visibility:hidden!important}';
-    (document.head||document.documentElement).appendChild(st);
-  }
-  function allow(){ var e=document.getElementById('ark-gate-style'); if(e)e.remove(); }
-  setTimeout(allow, 900);
-  function denyLogin(){ location.replace((needClient?'account.html':'account.html')+'?next='+encodeURIComponent(here)); }
-  function denyHome(){ location.replace('index.html'); }
   function session(){ try{return JSON.parse(localStorage.getItem('arkan_session')||'null');}catch(e){return null;} }
   function clientSession(){
     var s=session(); if(s&&s.phone)return true;
@@ -28,6 +17,19 @@
   }
   /* جهاز موثّق كأدمن: يُمنح فقط بعد دخول Firebase أدمن ناجح على هذا الجهاز */
   function adminDevice(){ return localStorage.getItem('arkan_admin_dev')==='1'; }
+  /* قرار فوري متزامن: جلسة محلية صالحة → لا إخفاء ولا شاشة بيضاء إطلاقًا.
+     الإخفاء فقط حين يكون القرار معلّقًا على Firebase. */
+  var instantOK = needClient ? clientSession() : (needAdmin ? adminDevice() : !!(session()||adminDevice()));
+  var SELF_LOADER=['chat-v2.html'];
+  if(!instantOK && SELF_LOADER.indexOf(here)===-1){
+    var st=document.createElement('style'); st.id='ark-gate-style';
+    st.textContent='body{visibility:hidden!important}';
+    (document.head||document.documentElement).appendChild(st);
+    setTimeout(allow, 900);
+  }
+  function allow(){ var e=document.getElementById('ark-gate-style'); if(e)e.remove(); }
+  function denyLogin(){ location.replace((needClient?'account.html':'account.html')+'?next='+encodeURIComponent(here)); }
+  function denyHome(){ location.replace('index.html'); }
   window.ARKAN_MARK_ADMIN=function(){ localStorage.setItem('arkan_admin_dev','1'); };
 
   document.addEventListener('DOMContentLoaded',function(){
