@@ -107,8 +107,20 @@ const visRows=()=>S.rows.filter(passes);
 /* ═══════ ٤) التنسيق ═══════ */
 const css=document.createElement('style');css.textContent=`
 #v-profit .seg{display:none}
-.p10h{background:var(--grad);color:#fff;margin:12px 12px 0;padding:16px 16px 14px;border-radius:16px;position:relative;overflow:hidden;cursor:pointer}
-.p10h::after{content:"";position:absolute;inset:auto -40px -60px auto;width:200px;height:200px;border-radius:50%;background:rgba(255,255,255,.07)}
+.p10h{color:#fff;margin:12px 12px 0;padding:16px 16px 14px;border-radius:16px;position:relative;overflow:hidden;cursor:pointer;
+  background:linear-gradient(90deg,#D9B44A,#FFE9A8,#D9B44A) top/100% 3px no-repeat,
+             radial-gradient(120% 90% at 85% -10%,rgba(64,169,255,.35) 0%,rgba(64,169,255,0) 45%),
+             radial-gradient(100% 120% at -10% 110%,rgba(21,63,148,.9) 0%,rgba(21,63,148,0) 55%),
+             linear-gradient(140deg,#071B45 0%,#0B2F70 48%,#0A56B8 100%);
+  padding-top:19px;box-shadow:0 22px 48px -18px rgba(7,27,69,.55)}
+.p10h::after{content:"";position:absolute;top:0;right:0;bottom:0;left:0;pointer-events:none;opacity:.5;
+  background:repeating-linear-gradient(0deg,rgba(255,255,255,.035) 0 1px,transparent 1px 26px),repeating-linear-gradient(90deg,rgba(255,255,255,.035) 0 1px,transparent 1px 26px)}
+.p10h::before{content:"";position:absolute;top:0;bottom:0;width:46%;left:-60%;pointer-events:none;
+  background:linear-gradient(105deg,transparent 0%,rgba(255,255,255,.14) 48%,transparent 100%);animation:p10sheen 2.4s .5s 1 forwards}
+@keyframes p10sheen{to{left:130%}}
+.p10spark{margin:10px -4px -2px;position:relative}
+.p10spark svg{width:100%;height:46px;display:block}
+.p10srv{font-family:"Inter",sans-serif;font-size:9.5px;font-weight:800;letter-spacing:.06em;padding:3px 8px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);text-transform:uppercase}
 .p10live{display:flex;align-items:center;justify-content:space-between;font-size:10.5px;opacity:.9;font-family:"Inter",sans-serif}
 .p10live>span{display:flex;align-items:center;gap:6px}
 .p10dot{width:7px;height:7px;border-radius:50%;background:#3DDC84;box-shadow:0 0 0 0 rgba(61,220,132,.6);animation:p10p 1.6s infinite}
@@ -182,17 +194,25 @@ const css=document.createElement('style');css.textContent=`
 .p10w .l .p10chg{margin:0 6px}
 .p10h .p10prev{color:rgba(255,255,255,.85)}
 .p10hero2{display:flex;align-items:center;gap:16px;margin-top:8px}
-.p10hero2 .p10tot{margin:0;font-size:34px;line-height:1.05;min-width:0;overflow:hidden}
+.p10hero2 .p10tot{margin:0;font-size:38px;line-height:1.02;min-width:0;overflow:hidden;font-variant-numeric:tabular-nums;text-shadow:0 2px 14px rgba(0,0,0,.25)}
 .p10hero2 .p10tot small{font-size:14px;display:block;text-align:right;opacity:.8;margin:2px 0 0}
 .p10base button{display:flex;align-items:center;gap:5px;padding:4px 10px 4px 6px}
-.p10wl{margin:10px 12px 0;display:flex;flex-direction:column;gap:8px}
-.p10w{background:#fff;border:1px solid var(--line);border-radius:18px;padding:16px 16px;display:flex;align-items:center;gap:14px;cursor:pointer;box-shadow:0 1px 0 rgba(11,47,112,.03)}
-.p10w:active{background:#F7FAFF}
-.p10w .txt{flex:1;min-width:0}
-.p10w .l{font-size:13px;color:var(--muted);font-weight:700;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.p10w .v{font-size:27px;font-weight:800;font-family:"Inter",sans-serif;direction:ltr;text-align:right;margin-top:3px;letter-spacing:-.4px;line-height:1.1}
-.p10w .v small{font-size:12px;font-weight:700;opacity:.65;margin-left:4px}
-.p10w .s{font-size:11.5px;color:var(--muted);margin-top:4px}
+.p10wl{margin:10px 12px 0;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+@media(min-width:640px){.p10wl{grid-template-columns:repeat(4,1fr)}}
+.p10w{position:relative;background:linear-gradient(180deg,#FFFFFF 0%,#FBFDFF 100%);border:1px solid var(--line);border-radius:0;padding:12px 13px 10px;cursor:pointer;overflow:hidden;
+  box-shadow:0 1px 0 rgba(11,47,112,.04);transition:transform .12s ease,box-shadow .12s ease;border-inline-start:3px solid var(--line)}
+.p10w.up{border-inline-start-color:#1FA855}.p10w.dn{border-inline-start-color:#D64545}
+.p10w:active{transform:scale(.985)}
+.p10w .txt{position:relative;z-index:1}
+.p10w .l{font-size:11px;color:var(--muted);font-weight:800;letter-spacing:.01em;display:flex;justify-content:space-between;align-items:center;gap:6px}
+.p10w .v{font-size:21px;font-weight:800;font-family:"Inter",sans-serif;font-variant-numeric:tabular-nums;direction:ltr;text-align:right;margin-top:5px;letter-spacing:-.4px;line-height:1.05}
+.p10w .v small{font-size:10.5px;font-weight:700;opacity:.6;margin-left:3px}
+.p10w .s{font-size:10.5px;color:var(--muted);margin-top:4px;position:relative;z-index:1}
+.p10w .mb{position:absolute;left:0;right:0;bottom:0;height:28px;display:flex;align-items:flex-end;gap:2px;padding:0 10px;opacity:.6;pointer-events:none}
+.p10w .mb i{flex:1;background:linear-gradient(180deg,#59C98F,#1FA855);min-height:2px}
+.p10w .mb i.n{background:linear-gradient(180deg,#F09B9B,#D64545)}
+.p10w .wr{height:4px;background:var(--wash);margin-top:7px;overflow:hidden}
+.p10w .wr i{display:block;height:100%;background:linear-gradient(90deg,#0A56B8,#19A9F5)}
 .p10sec .p10hd{font-size:14px}
 .p10row b{font-size:15px}.p10row b .p10flag{margin-right:6px}
 .p10row.tot b{font-size:19px}
@@ -294,6 +314,29 @@ function periods(){
 
 /* ═══════ ٧) العرض ═══════ */
 function renderAll(full){ensure();if(full){renderHero();renderCards();renderNote();renderPL();renderCcy();}renderChart();renderRange();renderOps();}
+function dailySeries(days){
+  const A=S.all||S.rows||[];if(!A.length)return [];
+  const out=[],now=new Date();
+  for(let i=days-1;i>=0;i--){const d=new Date(now);d.setHours(0,0,0,0);d.setDate(d.getDate()-i);out.push({t:+d,v:0,has:false});}
+  const t0=out[0].t;
+  A.forEach(t=>{const e=t._e||(t._e=eng(t));if(!e.ok)return;const d=dayOf(t);if(!d)return;const dd=new Date(d);dd.setHours(0,0,0,0);
+    const idx=Math.round((+dd-t0)/86400000);if(idx>=0&&idx<out.length){out[idx].v+=netBase(e)||0;out[idx].has=true;}});
+  return out;
+}
+function sparkSvg(ser){
+  if(!ser.length||!ser.some(x=>x.has))return '';
+  const W=600,Hh=46,vals=ser.map(x=>x.v);
+  const mn=Math.min(0,...vals),mx=Math.max(0,...vals),rg=(mx-mn)||1;
+  const X=i=>i*(W/(ser.length-1||1)),Y=v=>4+(Hh-8)*(1-(v-mn)/rg);
+  const pts=ser.map((x,i)=>X(i).toFixed(1)+','+Y(x.v).toFixed(1)).join(' ');
+  const up=(vals[vals.length-1]||0)>=0;
+  return '<div class="p10spark"><svg viewBox="0 0 '+W+' '+Hh+'" preserveAspectRatio="none">'+
+    '<defs><linearGradient id="p10sg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="'+(up?'#3DDC84':'#FF8A8A')+'" stop-opacity=".5"/><stop offset="1" stop-color="'+(up?'#3DDC84':'#FF8A8A')+'" stop-opacity="0"/></linearGradient></defs>'+
+    (mn<0?'<line x1="0" x2="'+W+'" y1="'+Y(0).toFixed(1)+'" y2="'+Y(0).toFixed(1)+'" stroke="rgba(255,255,255,.25)" stroke-dasharray="3 4"/>':'')+
+    '<polygon points="0,'+Hh+' '+pts+' '+W+','+Hh+'" fill="url(#p10sg)"/>'+
+    '<polyline points="'+pts+'" fill="none" stroke="'+(up?'#7CF2B4':'#FFB3B3')+'" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>'+
+    '<circle cx="'+X(ser.length-1).toFixed(1)+'" cy="'+Y(vals[vals.length-1]).toFixed(1)+'" r="3.6" fill="#fff"/></svg></div>';
+}
 function renderHero(){
   const P=periods(),T=P.total;
   const wsTxt=S.wsOk?'مباشر (Realtime)':'مباشر';
@@ -308,14 +351,20 @@ function renderHero(){
 }
 function renderCards(){
   const P=periods();
-  const w=(l,T,prev,lblPrev,sub,fn)=>'<div class="p10w" onclick="'+fn+'"><div class="txt"><div class="l"><span>'+l+'</span>'+chg(T.net,prev,lblPrev)+'</div>'+
-    '<div class="v '+cls(T.net)+'">'+sgn(T.net,0)+'<small>'+S.base+'</small></div><div class="s">'+sub+'</div></div></div>';
+  const bars=(a,b)=>{const ser=dailySeries(14).slice(a,b);if(!ser.some(x=>x.has))return '';
+    const mx=Math.max(...ser.map(x=>Math.abs(x.v)))||1;
+    return '<div class="mb">'+ser.map(x=>'<i class="'+(x.v<0?'n':'')+'" style="height:'+Math.max(6,Math.abs(x.v)/mx*100)+'%"></i>').join('')+'</div>';};
+  const w=(l,T,prev,lblPrev,sub,fn,mbar)=>{const dir=T.net>0?'up':T.net<0?'dn':'';
+    return '<div class="p10w '+dir+'" onclick="'+fn+'">'+(mbar||'')+'<div class="txt"><div class="l"><span>'+l+'</span>'+chg(T.net,prev,'')+'</div>'+
+    '<div class="v '+cls(T.net)+'">'+sgn(T.net,0)+'<small>'+S.base+'</small></div><div class="s">'+sub+'</div></div></div>';};
   q('#p10cards').innerHTML='<div class="p10wl">'+
-    w('اليوم',P.today,P.yday.net,'أمس','<span class="num">'+P.today.n+'</span> عملية اليوم','p10.range(\'today\')')+
-    w('هذا الأسبوع',P.week,P.pweek.net,'الأسبوع السابق','<span class="num">'+P.week.n+'</span> عملية منذ الاثنين','p10.range(\'7\')')+
-    w('هذا الشهر',P.month,P.pmonth.net,'الشهر السابق','<span class="num">'+P.month.n+'</span> عملية هذا الشهر','p10.range(\'30\')')+
-    '<div class="p10w" onclick="p10.range(\'all\')"><div class="txt"><div class="l"><span>متوسط الربح / عملية</span></div><div class="v '+cls(P.total.avg)+'">'+sgn(P.total.avg,0)+'<small>'+S.base+'</small></div>'+
-    '<div class="s">على <span class="num">'+(P.total.n-P.total.na)+'</span> عملية مسعّرة · نسبة الربح <span class="num">'+P.total.rate.toFixed(0)+'%</span></div></div></div></div>';
+    w('اليوم',P.today,P.yday.net,'أمس','<span class="num">'+P.today.n+'</span> عملية · أمس '+sgn(P.yday.net,0),'p10.range(\'today\')',bars(7,14))+
+    w('هذا الأسبوع',P.week,P.pweek.net,'','<span class="num">'+P.week.n+'</span> عملية منذ الاثنين','p10.range(\'7\')',bars(7,14))+
+    w('هذا الشهر',P.month,P.pmonth.net,'','<span class="num">'+P.month.n+'</span> عملية هذا الشهر','p10.range(\'30\')',bars(0,14))+
+    '<div class="p10w" onclick="p10.range(\'all\')"><div class="txt"><div class="l"><span>متوسط الربح / عملية</span><span class="num" style="font-weight:800;color:var(--navy)">'+P.total.rate.toFixed(0)+'%</span></div>'+
+    '<div class="v '+cls(P.total.avg)+'">'+sgn(P.total.avg,0)+'<small>'+S.base+'</small></div>'+
+    '<div class="s">على <span class="num">'+(P.total.n-P.total.na)+'</span> عملية مسعّرة</div>'+
+    '<div class="wr"><i style="width:'+Math.min(100,P.total.rate).toFixed(0)+'%"></i></div></div></div></div>';
 }
 function renderNote(){
   const el=q('#p10note');
