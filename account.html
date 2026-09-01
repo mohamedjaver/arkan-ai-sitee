@@ -723,9 +723,23 @@ async function mrbBdlList(withPhoneRow){
     if(net)net.textContent=prev.length?'':'تعذّر جلب عملاء BDL';}
 }
 (function(){
-  const ph=document.getElementById('mrbPhone');
-  if(ph)ph.addEventListener('change',function(){
-    this.value=String(this.value).replace(/[^0-9+]/g,'').replace(/^\+/,'').replace(/^00/,'');
+  const ph=document.getElementById('mrbPhone'),nm=document.getElementById('mrbName');
+  if(!ph)return;
+  /* هوية المستلم بالهاتف: تطبيع الرقم، وإن كان مسجّلًا سابقًا نملأ اسمه ونبيّن أن العملية ستُضاف إلى سجله */
+  function normP(v){let d=String(v||'').replace(/[^0-9]/g,'').replace(/^00/,'');if(d.length===8&&/^[234]/.test(d))d='222'+d;if(d.length===9&&/^9/.test(d))d='244'+d;return d;}
+  function hint(t,ok){let h=document.getElementById('mrbIdHint');
+    if(!h){h=document.createElement('div');h.id='mrbIdHint';h.style.cssText='font-size:11.5px;font-weight:700;margin:-6px 0 10px;padding:7px 11px;display:none';ph.insertAdjacentElement('afterend',h);}
+    if(!t){h.style.display='none';return;}h.style.display='block';h.textContent=t;
+    h.style.background=ok?'#E3F7EE':'#FFF4E2';h.style.color=ok?'#0B7A3B':'#8A6100';}
+  ph.addEventListener('change',function(){this.value=normP(this.value);});
+  ph.addEventListener('input',function(){
+    const d=normP(this.value);if(d.length<8){hint('');return;}
+    const k=d.slice(-8),hit=rcpBook().find(r=>String(r.phone||'').replace(/[^0-9]/g,'').slice(-8)===k);
+    if(hit){if(nm&&(!nm.value.trim()||/^[+\d][\d\s\-().]{6,}$/.test(nm.value)))nm.value=hit.name||'';hint('مستلم مسجّل: '+(hit.name||d)+' — ستُضاف العملية إلى سجله بلا تكرار',true);}
+    else hint('رقم جديد — سيُسجَّل المستلم بهذا الهاتف والاسم مرة واحدة',false);
+  });
+  if(nm)nm.addEventListener('blur',function(){ /* رقم هاتف مكتوب في خانة الاسم → ننقله للهاتف */
+    const v=this.value.trim();if(/^[+\d][\d\s\-().]{6,}$/.test(v)){if(!normP(ph.value))ph.value=normP(v);this.value='';ph.dispatchEvent(new Event('input'));toast('نُقل الرقم إلى خانة الهاتف — أدخل اسم المستلم');}
   });
 })();
 function mrbUseClient(el){
@@ -2044,8 +2058,10 @@ async function mrbPush(name){
   const amt=parseFloat(String(document.getElementById('mrbAmt').value||'').replace(/[^\d.]/g,''))||0;
   if(!amt)return {ok:false,err:'المبلغ فارغ'};
   const ref=document.getElementById('mrbRef').value||name;
-  const nm=document.getElementById('mrbName').value||'';
+  const nm=document.getElementById('mrbName').value.trim()||'';
   const bph=String((document.getElementById('mrbPhone')||{}).value||'').replace(/[^0-9]/g,'');
+  if(!nm||/^[+\d][\d\s\-().]{6,}$/.test(nm))return {ok:false,err:'أدخل اسم المستلم (لا يُقبل رقم في خانة الاسم)'};
+  if(bph.length<8)return {ok:false,err:'أدخل هاتف المستلم — هو هوية العميل في السجل'};
   try{
     var sj=JSON.parse(localStorage.getItem('arkan_sb_jwt')||'null');
     var stok=(sj&&sj.token&&(!sj.exp||sj.exp>Math.floor(Date.now()/1000)+60))?sj.token:null;

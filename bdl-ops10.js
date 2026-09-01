@@ -533,7 +533,7 @@ function copyDetail(id){const t=S.rows.find(x=>x.id===id);if(!t)return;const e=e
 /* ═══════ ٩) Real-Time: WebSocket (Supabase Realtime) + اعتراض الكتابة + مؤقّت ═══════ */
 let DEB=null,HB=null,wsTry=0;
 const visible=()=>{const v=q('#v-profit');return v&&v.style.display!=='none'&&document.visibilityState==='visible';};
-function bump(){clearTimeout(DEB);DEB=setTimeout(()=>{if(visible())load(false);else window.PROF=null;},700);}
+function bump(){try{window.dispatchEvent(new CustomEvent('bdl:change'));}catch(e){}clearTimeout(DEB);DEB=setTimeout(()=>{if(visible())load(false);else window.PROF=null;},700);}
 function wsConnect(){
   if(S.ws||!window.WebSocket||!(window.TOK))return;
   try{const base=SB.replace('/rest/v1','').replace(/^http/,'ws')+'/realtime/v1/websocket?apikey='+encodeURIComponent(ANON)+'&vsn=1.0.0';

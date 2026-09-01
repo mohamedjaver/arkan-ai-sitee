@@ -883,52 +883,67 @@ app.post('/account/log-transfer', async (req, res) => {
     const tok = jwt.sign({ sub: phoneToUuid(OWNER_PHONES[0]), role: 'authenticated',
       aud: 'authenticated', arkan_role: 'owner', iat: ts, exp: ts + 300 }, JWT_SECRET);
     const H = { 'apikey': SB_PUB, 'Authorization': 'Bearer ' + tok, 'Content-Type': 'application/json' };
-    /* 4) الزبون: بالهاتف ثم بالاسم ثم إنشاء */
-    let cid = null;
-    if (benefPhone.length >= 8) {
-      const local = benefPhone.replace(/^(222|244)/, '');
-      const rc = await fetch(SB_REST + '/bdl_customers?select=id&or=(phone.eq.' + benefPhone +
-        ',phone.eq.' + local + ',phone.like.*' + local + ')&limit=1', { headers: H });
-      if (rc.ok) { const j = await rc.json(); if (j[0]) cid = j[0].id; }
+    /* 4) هوية الزبون بالهاتف أولًا (مطبّع)، ثم بالاسم، ثم إنشاء — بلا تكرار */
+    const normPhone = (v) => { let d = String(v || '').replace(/\D/g, '').replace(/^00/, '');
+      if (d.length === 8 && /^[234]/.test(d)) d = '222' + d;            /* موريتانيا */
+      if (d.length === 9 && /^9/.test(d)) d = '244' + d;                 /* أنغولا */
+      return d; };
+    const phoneLike = (v) => /^[+\d][\d\s\-().]{6,}$/.test(String(v || '').trim());
+    const phoneN = normPhone(benefPhone || (phoneLike(name) ? name : ''));
+    const cleanName = (!name || name === 'عميل' || phoneLike(name)) ? '' : name;
+    let cid = null, cust = null, created = false;
+    const findBy = async (qs) => { const r = await fetch(SB_REST + '/bdl_customers?select=id,name,phone&' + qs + '&limit=1', { headers: H });
+      if (!r.ok) return null; const j = await r.json(); return j[0] || null; };
+    if (phoneN.length >= 8) {
+      const last8 = phoneN.slice(-8);
+      cust = await findBy('or=(phone.eq.' + phoneN + ',phone.like.*' + last8 + ')');
+      if (cust) { cid = cust.id;
+        /* اسم مسجّل عام أو رقم هاتف → نحدّثه بالاسم الحقيقي */
+        if (cleanName && (!cust.name || cust.name === 'عميل' || phoneLike(cust.name)))
+          await fetch(SB_REST + '/bdl_customers?id=eq.' + cid, { method: 'PATCH', headers: H, body: JSON.stringify({ name: cleanName }) }).catch(() => {});
+      }
     }
-    if (!cid && name !== 'عميل') {
-      const rn = await fetch(SB_REST + '/bdl_customers?select=id&name=ilike.' +
-        encodeURIComponent(name) + '&limit=1', { headers: H });
-      if (rn.ok) { const j = await rn.json(); if (j[0]) cid = j[0].id; }
+    if (!cid && cleanName) {
+      cust = await findBy('name=ilike.' + encodeURIComponent(cleanName));
+      if (cust) { cid = cust.id;
+        /* زبون مسجّل بالاسم فقط والآن معنا هاتفه → نُكمل سجله بدل إنشاء نسخة */
+        if (phoneN.length >= 8 && !(cust.phone || '').replace(/\D/g, ''))
+          await fetch(SB_REST + '/bdl_customers?id=eq.' + cid, { method: 'PATCH', headers: H, body: JSON.stringify({ phone: phoneN }) }).catch(() => {});
+      }
     }
     if (!cid) {
-      const mk = { name };
-      if (benefPhone.length >= 8) mk.phone = benefPhone;
+      const mk = { name: cleanName || (phoneN ? 'زبون ' + phoneN.slice(-8) : 'عميل') };
+      if (phoneN.length >= 8) mk.phone = phoneN;
       const mkCustomer = async (body) => fetch(SB_REST + '/bdl_customers', { method: 'POST',
         headers: Object.assign({}, H, { Prefer: 'return=representation' }), body: JSON.stringify(body) });
       let cr = await mkCustomer(mk);
       if (!cr.ok && cr.status !== 409 && mk.phone) /* قاعدة بلا عمود الهاتف */
-        cr = await mkCustomer({ name });
+        cr = await mkCustomer({ name: mk.name });
       if (cr.status === 409) {
         /* عدّاد الكود في الـtrigger يصطدم بعد أي حذف — نعيد البحث ثم ننشئ بكود صريح فريد */
-        const rl = await fetch(SB_REST + '/bdl_customers?select=id&name=ilike.' +
-          encodeURIComponent(name) + '&limit=1', { headers: H });
-        if (rl.ok) { const j = await rl.json(); if (j[0]) cid = j[0].id; }
+        const again = (phoneN.length >= 8 ? await findBy('phone.eq.' + phoneN) : null) || await findBy('name=ilike.' + encodeURIComponent(mk.name));
+        if (again) cid = again.id;
         if (!cid) {
           const explicit = Object.assign({}, mk, { code: 'C-' + Date.now().toString(36).toUpperCase() });
           cr = await mkCustomer(explicit);
-          if (!cr.ok && mk.phone) cr = await mkCustomer({ name, code: explicit.code });
-          if (cr.ok) cid = (await cr.json())[0].id;
+          if (!cr.ok && mk.phone) cr = await mkCustomer({ name: mk.name, code: explicit.code });
+          if (cr.ok) { cid = (await cr.json())[0].id; created = true; }
         }
-      } else if (cr.ok) cid = (await cr.json())[0].id;
+      } else if (cr.ok) { cid = (await cr.json())[0].id; created = true; }
       if (!cid) return res.status(502).json({ ok: false, err: 'customer ' + cr.status });
+      cust = { id: cid, name: mk.name, phone: mk.phone || '' };
     }
     /* 5) القيد نفسه — مع فحص النتيجة الحقيقي */
     const tr = await fetch(SB_REST + '/bdl_transactions', { method: 'POST', headers: H,
       body: JSON.stringify({ ref, customer_id: cid, amount, ccy, status: 'open',
         meta: { src: 'account', by: byPhone } }) });
-    if (tr.status === 409) return res.json({ ok: true, dup: true, ref });
+    if (tr.status === 409) return res.json({ ok: true, dup: true, ref, customer: { id: cid, name: (cust && cust.name) || '', phone: (cust && cust.phone) || '', created } });
     if (!tr.ok) {
       const detail = await tr.text().catch(() => '');
       console.error('log-transfer insert:', tr.status, detail.slice(0, 200));
       return res.status(502).json({ ok: false, err: 'insert ' + tr.status });
     }
-    res.json({ ok: true, ref });
+    res.json({ ok: true, ref, customer: { id: cid, name: (cust && cust.name) || '', phone: (cust && cust.phone) || '', created } });
   } catch (e) { console.error('log-transfer:', e.message); res.status(500).json({ ok: false, err: 'server' }); }
 });
 
