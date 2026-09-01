@@ -446,6 +446,7 @@ body::after{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;opac
       <a href="#visa" data-i="nav_visa"></a>
       <a href="#markets" data-i="nav_markets"></a>
       <a href="#exchange" data-i="nav_exchange"></a>
+      <a href="chat-v2.html" data-i="nav_chat"></a>
       <a href="#settle" data-i="nav_settle"></a>
       <a href="ai.html">AI</a>
       <a href="settle-v2.html" class="akOwnerLink" hidden>كونسول التسوية</a>
@@ -463,7 +464,7 @@ body::after{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;opac
 <div class="mmenu" id="mmenu">
   <a href="#network" data-i="nav_network"></a><a href="#wallet" data-i="nav_wallet"></a>
   <a href="#visa" data-i="nav_visa"></a><a href="#markets" data-i="nav_markets"></a>
-  <a href="#exchange" data-i="nav_exchange"></a><a href="#settle" data-i="nav_settle"></a><a href="ai.html">AI</a>
+  <a href="#exchange" data-i="nav_exchange"></a><a href="chat-v2.html" data-i="nav_chat"></a><a href="#settle" data-i="nav_settle"></a><a href="ai.html">AI</a>
   <a href="settle-v2.html" class="akOwnerLink" hidden style="color:#7FD0FF;font-weight:800">كونسول التسوية ←</a>
   <a href="account.html" data-i="nav_signin"></a>
   <a href="#" id="akOutM" data-i="nav_signout" style="color:#FF8A80"></a>
@@ -707,7 +708,7 @@ body::after{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;opac
 const I18N={
 ar:{
   nav_network:"الشبكة",nav_markets:"الأسعار",nav_exchange:"التحويل",nav_settle:"التسوية",nav_visa:"بطاقة فيزا",
-  nav_signin:"دخول",nav_signout:"خروج",nav_start:"ابدأ الآن",
+  nav_chat:"المحادثة",nav_signin:"دخول",nav_signout:"خروج",nav_start:"ابدأ الآن",
   pill:"ممرات إفريقيا × الصين × الخليج · مباشر",
   h1:"حوّل أموالك عبر إفريقيا <em>فورًا.</em>",
   lede:"الصرف والتسويات الدولية بين موريتانيا وأنغولا والصين والخليج — أسعار لبدال الرسمية، ثقة مؤسسية، وتنفيذ في دقائق.",
@@ -751,7 +752,7 @@ ar:{
 },
 fr:{
   nav_network:"Réseau",nav_markets:"Taux",nav_exchange:"Change",nav_settle:"Règlement",nav_visa:"Carte Visa",
-  nav_signin:"Connexion",nav_signout:"Déconnexion",nav_start:"Commencer →",
+  nav_chat:"Messagerie",nav_signin:"Connexion",nav_signout:"Déconnexion",nav_start:"Commencer →",
   pill:"Corridors Afrique × Chine × Golfe · En direct",
   h1:"Transférez votre argent en Afrique, <em>instantanément.</em>",
   lede:"Change et règlement transfrontalier entre la Mauritanie, l'Angola, la Chine et le Golfe — taux officiels BDL, confiance institutionnelle, exécution en quelques minutes.",
@@ -795,7 +796,7 @@ fr:{
 },
 en:{
   nav_network:"Network",nav_markets:"Rates",nav_exchange:"Exchange",nav_settle:"Settlement",nav_visa:"Visa Card",
-  nav_signin:"Sign in",nav_signout:"Sign out",nav_start:"Get started →",
+  nav_chat:"Chat",nav_signin:"Sign in",nav_signout:"Sign out",nav_start:"Get started →",
   pill:"Africa × China × Gulf corridors · Live",
   h1:"Move money across Africa, <em>instantly.</em>",
   lede:"Currency exchange and cross-border settlement between Mauritania, Angola, China and the Gulf — official BDL, institutional trust, executed in minutes.",
@@ -839,7 +840,7 @@ en:{
 },
 pt:{
   nav_network:"Rede",nav_markets:"Taxas",nav_exchange:"Câmbio",nav_settle:"Liquidação",nav_visa:"Cartão Visa",
-  nav_signin:"Entrar",nav_signout:"Sair",nav_start:"Começar →",
+  nav_chat:"Conversa",nav_signin:"Entrar",nav_signout:"Sair",nav_start:"Começar →",
   pill:"Corredores África × China × Golfo · Ao vivo",
   h1:"Envie dinheiro pela África, <em>instantaneamente.</em>",
   lede:"Câmbio e liquidação internacional entre Mauritânia, Angola, China e o Golfo — taxas oficiais BDL, confiança institucional, executado em minutos.",
@@ -1112,6 +1113,13 @@ function setLang(l){
     if(ss&&(ss.phone||ss.uid)){const nm=String(ss.name||'').trim().split(' ')[0];
       const lbl={ar:'حسابي',fr:'Mon compte',en:'My account',pt:'Minha conta'}[l]||'حسابي';
       document.querySelectorAll('[data-i="nav_signin"]').forEach(el=>{el.textContent=nm?lbl+' · '+nm:lbl;el.href='account.html';});
+      /* ترتيب قائمة الجوال حسب الأولوية للمسجّل: حسابي ← التحويل ← المحادثة ← الأسعار ← المحفظة ← فيزا ← الشبكة ← التسوية ← AI ← الكونسول ← خروج */
+      const mmq=document.getElementById('mmenu');
+      if(mmq&&!mmq.dataset.sorted){mmq.dataset.sorted='1';
+        const order=['nav_signin','nav_exchange','nav_chat','nav_markets','nav_wallet','nav_visa','nav_network','nav_settle','__ai','__owner','nav_signout'];
+        const keyOf=a=>a.dataset.i||(a.classList.contains('akOwnerLink')?'__owner':a.getAttribute('href')==='ai.html'?'__ai':'');
+        [...mmq.querySelectorAll('a')].sort((a,b)=>{const ia=order.indexOf(keyOf(a)),ib=order.indexOf(keyOf(b));return (ia<0?99:ia)-(ib<0?99:ib);}).forEach(a=>mmq.appendChild(a));
+        const acc=mmq.querySelector('[data-i="nav_signin"]');if(acc){acc.style.cssText='font-weight:800;color:#7FD0FF';}}
       document.querySelectorAll('.akOwnerLink').forEach(a=>{if(/36295050$/.test(String(ss.phone||'').replace(/\D/g,'')))a.hidden=false;});}
     else{const o=document.getElementById('akOutM');if(o)o.style.display='none';}
   }catch(e){}
