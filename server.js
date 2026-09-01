@@ -861,6 +861,32 @@ async function fetchSettled(phone) {
 
 /* ═ قيد وصل التحويل — القناة المضمونة: توثيق بتوكن Supabase الموقّع، والكتابة
    بهوية المالك الموحّدة دائمًا. يرجع النجاح أو الخطأ الحقيقي — لا صمت. ═ */
+/* جهات التحويل المسجّلة فقط: المالك يرى كل عملاء BDL؛ العميل يرى مستلميه الذين سجّلهم هو */
+app.get('/account/recipients', async (req, res) => {
+  try {
+    if (!JWT_SECRET) return res.status(503).json({ ok: false, err: 'service' });
+    let claims;
+    try { claims = jwt.verify(String(req.headers.authorization || '').replace(/^Bearer\s+/i, ''), JWT_SECRET); }
+    catch (e) { return res.status(401).json({ ok: false, err: 'auth' }); }
+    const byPhone = String(claims.phone || '').replace(/\D/g, '');
+    const ts = Math.floor(Date.now() / 1000);
+    const tok = jwt.sign({ sub: phoneToUuid(OWNER_PHONES[0]), role: 'authenticated', aud: 'authenticated', arkan_role: 'owner', iat: ts, exp: ts + 300 }, JWT_SECRET);
+    const H = { 'apikey': SB_PUB, 'Authorization': 'Bearer ' + tok };
+    const isOwner = OWNER_PHONES.some(o => o.slice(-8) === byPhone.slice(-8)) || claims.arkan_role === 'owner';
+    let items = [];
+    if (isOwner) {
+      const r = await fetch(SB_REST + '/bdl_customers?select=id,name,phone,created_at&order=created_at.desc&limit=600', { headers: H });
+      if (r.ok) items = await r.json();
+    } else {
+      const r = await fetch(SB_REST + '/bdl_transactions?select=customer_id,created_at,bdl_customers(id,name,phone)&meta->>by=eq.' + byPhone + '&order=created_at.desc&limit=600', { headers: H });
+      if (r.ok) items = (await r.json()).map(t => t.bdl_customers).filter(Boolean);
+    }
+    const seen = {}, out = [];
+    items.forEach(c => { const k = String(c.phone || '').replace(/\D/g, '').slice(-8) || ('n:' + String(c.name || '').toLowerCase()); if (seen[k]) return; seen[k] = 1; out.push({ id: c.id, name: c.name || '', phone: c.phone || '' }); });
+    res.json({ ok: true, owner: isOwner, items: out.slice(0, 400) });
+  } catch (e) { console.error('recipients:', e.message); res.status(500).json({ ok: false, err: 'server' }); }
+});
+
 app.post('/account/log-transfer', async (req, res) => {
   try {
     if (!JWT_SECRET) return res.status(503).json({ ok: false, err: 'service' });
