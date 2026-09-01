@@ -15,7 +15,7 @@
 (function(){
 const q=s=>document.querySelector(s);
 const TZ=(Intl.DateTimeFormat().resolvedOptions().timeZone)||'UTC';
-const S={base:'MRU',period:'day',range:'30',rows:[],all:null,srv:null,srvOk:null,ledger:null,ledgerOk:null,
+const S={refRb:null,base:'MRU',period:'day',range:'30',rows:[],all:null,srv:null,srvOk:null,ledger:null,ledgerOk:null,
   page:0,more:false,sel:null,open:{},f:{q:'',ccy:'',pair:'',client:'',status:'done',pl:'',min:'',max:'',from:'',to:''},
   last:null,busy:false,ws:null,wsOk:false};
 
@@ -42,9 +42,13 @@ function eng(t){
   if(tgt==='MRU'){o.netMru=o.net;o.netAoa=t.ccy==='AOA'?N(mulDiv(net,amt,rev)):null;}
   else if(old){o.netMru=N(mulDiv(net,amt,cost));o.netAoa=o.net;}          /* تحويل بسعر الشراء */
   else if(t.ccy==='MRU'){o.netMru=N(mulDiv(net,amt,rev));o.netAoa=tgt==='AOA'?o.net:null;}
-  else{o.netAoa=tgt==='AOA'?o.net:null;}
+  else{o.netAoa=tgt==='AOA'?o.net:null;
+    /* ربح بعملة أجنبية ← أوقية بسعر الشراء المرجعي (آخر تسوية أوقية←كوانزا) */
+    if(tgt==='AOA'&&S.refRb){o.netMru=N(mulDiv(net,BigInt(Math.round(S.refRb*1e6)),10n*SC));o.viaRef=true;}}
   return o;
 }
+function refRb(rows){const r=(rows||[]).find(t=>{const m=t.meta||{};return (m.pair==='MRU_AOA_OLD'||(t.ccy==='MRU'&&(t.settle_ccy||'AOA')==='AOA'))&&Number(t.cost)>0&&Number(t.amount)>0&&(t.status==='done'||t.status==='settled');});
+  if(!r)return null;const m=r.meta||{};return Number(m.rate_cost)||Number(r.amount)*10/Number(r.cost);}
 const netBase=e=>S.base==='MRU'?e.netMru:e.netAoa;
 /* أعلام العملات — دوائر بألوان الأعلام (SVG مضمّن) */
 const FLAG_FILE={AOA:'ao',MRU:'mr',CNY:'cn',AED:'ae',MAD:'ma',USD:'us',EUR:'eu',USDT:'usdt',XOF:'cfa',CFA:'cfa'};
@@ -267,6 +271,7 @@ async function load(append){
   if(S.busy)return;S.busy=true;ensure();wsConnect();
   const dot=q('#p10dot');if(dot)dot.classList.add('busy');
   try{await Promise.all([append?null:loadSummary(),loadRows(append)]);S.last=new Date();}catch(e){}
+  S.refRb=refRb(S.rows)||refRb(S.all)||S.refRb||null;S.rows.forEach(t=>t._e=null);
   S.busy=false;window.PROF=S.rows;renderAll(true);
 }
 /* ملخّص الفترات: من الخادم أو محليًا من S.all */
@@ -409,7 +414,7 @@ function detail(id){
       kv('هامش الربح (Margin)',(e.pct>=0?'+':'−')+Math.abs(e.pct).toFixed(3)+'%')+
       '<div class="p10fx"><div><span>الإيراد</span><span>'+fmt(e.rev,2)+' '+esc(e.tgt)+'</span></div><div><span>− التكلفة</span><span>− '+fmt(e.cost,2)+' '+esc(e.tgt)+'</span></div>'+
       '<div><span>− الرسوم</span><span>− '+fmt(e.fee+e.exp,2)+' '+esc(e.tgt)+'</span></div><div class="eq '+cls(e.net)+'"><span>= صافي الربح</span><span>'+sgn(e.net,2)+' '+esc(e.tgt)+'</span></div>'+
-      (e.netMru!=null&&e.tgt!=='MRU'?'<div style="font-size:11px;color:var(--muted)"><span>× (المبلغ ÷ التكلفة) بسعر الشراء</span><span>= '+sgn(e.netMru,2)+' MRU</span></div>':'')+'</div>'
+      (e.netMru!=null&&e.tgt!=='MRU'?'<div style="font-size:11px;color:var(--muted)"><span>'+(e.viaRef?'× سعر شراء الأوقية المرجعي '+S.refRb.toFixed(4):'× (المبلغ ÷ التكلفة) بسعر الشراء')+'</span><span>= '+sgn(e.netMru,2)+' MRU</span></div>':'')+'</div>'
      :'<div class="p10note" style="margin:12px 0"><span>لا يمكن حساب الربح: لا تكلفة (سعر شراء) مسجلة لهذه العملية. افتح التسوية وأدخل سعر الشراء.</span></div>')+
     '<div class="p10grid2"><div class="p10fld"><label>رسوم العملية ('+esc(e.tgt)+')</label><input id="p10fee" inputmode="decimal" value="'+(e.fee||'')+'" placeholder="0"></div>'+
     '<div class="p10fld"><label>مصاريف أخرى ('+esc(e.tgt)+')</label><input id="p10exp" inputmode="decimal" value="'+(e.exp||'')+'" placeholder="0"></div></div>'+

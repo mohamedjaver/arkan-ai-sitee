@@ -99,6 +99,13 @@ function liteParse(t){
   const cm=t.match(/\b(Kz|KZ|AKZ|MRU|UM|USDT|USDC|USD|EUR|CNY|AED|AOA)\b/i);
   if(cm)p.currency=cm[1].toUpperCase().replace('AKZ','Kz').replace('AOA','Kz').replace('KZ','Kz').replace('UM','MRU');
   /* المبلغ: بعد كلماته المفتاحية أولاً — لا نلتقط أرقام الحساب/العملية */
+  /* محافظ العملات الرقمية (Trust/Binance/OKX…): "Sent: 20,000 USDT", "-20,000 USDT", "20 000 USDT (TRC20)" + عنوان 0x…/T… */
+  const cr=t.match(/(?:sent|send|transfer(?:red)?|withdraw(?:al)?|envoy[ée]|enviado|amount)?[:\s]*[-−]?\s*([\d][\d.,\s\u00A0]{0,14}\d|\d)\s*(USDT|USDC|USD\s*T|BUSD|BTC|ETH|TRX|BNB)\b/i);
+  if(cr){p.amount=euNum(cr[1]);p.currency=cr[2].replace(/\s/g,'').toUpperCase().replace('USDC','USDT');
+    const ad=t.match(/\b(0x[a-fA-F0-9]{4,}(?:\.{2,3}[a-fA-F0-9]{2,})?|T[1-9A-HJ-NP-Za-km-z]{4,}(?:\.{2,3}[1-9A-HJ-NP-Za-km-z]{2,})?)\b/);
+    if(ad)p.reference=ad[1];
+    const wl=t.match(/\b(Trust\s*Wallet|Binance|OKX|Bybit|KuCoin|Coinbase|MetaMask|TronLink|Kraken|Bitget|Gate\.io|HTX)\b/i);
+    p.bank=wl?wl[1]:'Crypto';p.confidence=70;return p;}
   const am=t.match(/(?:montant(?:\s*envoy[ée]{1,2})?|amount|montante|valor|total|transfers\.amount|المبلغ)[^\d]{0,20}([\d][\d.,\s\u00A0]{1,})/i)
         ||t.match(/([\d][\d.,\s\u00A0]{1,})\s*(?:MRU|UM)\b/i)
         ||t.match(/(?:Kz|AKZ|KZ)\s*([\d][\d.,\s\u00A0]{4,})/i)

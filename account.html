@@ -405,8 +405,13 @@
     var j=JSON.parse(localStorage.getItem('arkan_sb_jwt')||'null');
     if(s&&s.phone&&j&&j.phone===String(s.phone).replace(/\D/g,'')&&j.exp>Date.now()/1000+300){
       var st=document.createElement('style');st.id='akNoFlashCss';
-      st.textContent='#gate{display:none!important}';
+      /* عرض تفاؤلي فوري: التطبيق والشريط يظهران مباشرة من الجلسة المحفوظة، والتحقق الصامت يجري في الخلفية */
+      st.textContent='#gate{display:none!important}#app{display:block!important}#nav{display:grid!important}';
       document.documentElement.appendChild(st);
+      try{localStorage.setItem('arkan_user_cache',localStorage.getItem('arkan_user_cache')||'{}');
+        document.addEventListener('DOMContentLoaded',function(){try{var u=JSON.parse(localStorage.getItem('arkan_user_cache')||'{}'),nm=u.name||'عميل لبدال';
+          var g=document.getElementById('greet');if(g)g.textContent='مرحباً، '+nm;var a=document.getElementById('avatar');if(a)a.textContent=nm.charAt(0);
+          var an=document.getElementById('acctName');if(an)an.textContent=nm;var ap=document.getElementById('acctPhone');if(ap)ap.textContent='+'+String(s.phone).replace(/\D/g,'');}catch(e){}});}catch(e){}
       /* صمّام أمان: إن فشل الدخول الصامت خلال 8 ثوانٍ تعود البوابة */
       setTimeout(function(){var e=document.getElementById('akNoFlashCss');if(e)e.remove();},8000);
     }
@@ -1065,7 +1070,7 @@ function openApp(phone){
   $('gate').classList.remove('on');
   $('app').style.display='block';
   $('nav').style.display='grid';
-  const nm = USER.name||'عميل لبدال';
+  const nm = USER.name||'عميل لبدال';try{localStorage.setItem('arkan_user_cache',JSON.stringify({name:nm}));}catch(e){}
   $('greet').textContent = 'مرحباً، '+nm;
   $('avatar').textContent = nm.charAt(0); akAvatarInit(nm);
   $('acctName').textContent = nm;
@@ -1339,8 +1344,8 @@ async function silentOpen(phoneRaw){
         if(!q.empty){snap=q.docs[0];foundId=q.docs[0].id;break;}
       }
     }
-    if(!snap){var e=document.getElementById('akNoFlashCss');if(e)e.remove();return;}
-    SESSION={phone:d}; USER=snap.data();
+    if(!snap){var e=document.getElementById('akNoFlashCss');if(e)e.remove();$('app').style.display='none';$('nav').style.display='none';return;}
+    SESSION={phone:d}; USER=snap.data();try{localStorage.setItem('arkan_user_cache',JSON.stringify({name:USER.name||''}));}catch(e){}
     const nxt=new URLSearchParams(location.search).get('next');
     if(nxt&&/^[a-z0-9_-]+\.html$/i.test(nxt)){location.href=nxt;return;}
     openApp(foundId);
@@ -1575,7 +1580,7 @@ async function ownerSetPin(){
 </script>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
-<script src="arkan-read.js?v=4bdl7" defer></script>
+<script src="arkan-read.js?v=4bdl8" defer></script>
 <div id="mrbSheet" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(4,20,50,.55);backdrop-filter:blur(4px)">
   <div style="position:absolute;left:0;right:0;bottom:0;background:#fff;border-radius:18px 18px 0 0;padding:20px 18px 30px;max-height:86vh;overflow:auto">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
@@ -1596,7 +1601,14 @@ async function ownerSetPin(){
     <div id="mrbSug" style="display:none;border:1px solid #D6E4F7;border-radius:12px;background:#fff;max-height:220px;overflow-y:auto;margin-top:6px;box-shadow:0 10px 30px rgba(16,42,67,.12)"></div>
     <label class="mrbL">هاتف المستلم</label><input id="mrbPhone" class="mrbI" type="tel" inputmode="tel" dir="ltr" placeholder="" autocomplete="tel" name="recipient-tel">
     <label class="mrbL">رقم المستلم / الحساب</label><input id="mrbTo" class="mrbI" inputmode="numeric" placeholder="">
-    <label class="mrbL">المبلغ (<span id="mrbCcyLbl">MRU</span>)</label><input id="mrbAmt" class="mrbI" inputmode="decimal" placeholder="">
+    <label class="mrbL">المبلغ</label>
+    <div style="position:relative">
+      <input id="mrbAmt" class="mrbI" inputmode="decimal" placeholder="" style="padding-inline-start:128px">
+      <button type="button" id="mrbCcyBtn" onclick="mrbCcyMenu()" style="position:absolute;inset-inline-start:0;top:0;bottom:0;display:inline-flex;align-items:center;gap:7px;border:0;border-inline-end:1.5px solid #C7D8EE;background:#F4F8FF;color:#0B2F70;font-weight:800;font-size:13px;padding:0 12px;cursor:pointer;font-family:'Inter',sans-serif">
+        <img id="mrbCcyFlag" src="flags/mr.png" alt="" style="width:24px;height:24px;border-radius:50%!important;object-fit:cover;box-shadow:0 0 0 1.5px #fff,0 2px 6px rgba(0,0,0,.18)"><b id="mrbCcyLbl">MRU</b>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg></button>
+      <div id="mrbCcyList" style="display:none;position:absolute;inset-inline-start:0;top:calc(100% + 4px);z-index:5;background:#fff;border:1.5px solid #C7D8EE;box-shadow:0 12px 30px rgba(11,47,112,.18);min-width:220px"></div>
+    </div>
     <label class="mrbL">رقم العملية Txn ID (اختياري)</label><input id="mrbRef" class="mrbI" inputmode="numeric" placeholder="">
     <button id="mrbDoneBtn" onclick="mrbDone()" style="width:100%;margin-top:14px;padding:15px;border:0;background:#0B7A3B;color:#fff;font-weight:800;font-size:15px;border-radius:12px;cursor:pointer">✓ تم التحويل — قيدها في التسوية</button>
     <div id="mrbActs" style="display:none">
@@ -1649,6 +1661,16 @@ const MRB_BANKS=[
 ];
 let MRB_CUR=MRB_BANKS[MRB_BANKS.length-1];
 let MRB_CCY='MRU';
+const MRB_CCYS=[['MRU','mr','أوقية موريتانية'],['AOA','ao','كوانزا أنغولي'],['USDT','usdt','تيثر (USDT)'],['USD','us','دولار أمريكي'],['EUR','eu','يورو'],['CNY','cn','يوان صيني'],['AED','ae','درهم إماراتي']];
+function mrbSetCcy(c){c=String(c||'MRU').toUpperCase();const it=MRB_CCYS.find(x=>x[0]===c)||MRB_CCYS[0];MRB_CCY=it[0];
+  const l=document.getElementById('mrbCcyLbl'),f=document.getElementById('mrbCcyFlag'),ls=document.getElementById('mrbCcyList');
+  if(l)l.textContent=it[0];if(f)f.src='flags/'+it[1]+'.png';if(ls)ls.style.display='none';}
+function mrbCcyMenu(){const ls=document.getElementById('mrbCcyList');if(!ls)return;
+  if(ls.style.display==='block'){ls.style.display='none';return;}
+  ls.innerHTML=MRB_CCYS.map(x=>'<div onclick="mrbSetCcy(\''+x[0]+'\')" style="display:flex;align-items:center;gap:10px;padding:11px 13px;border-bottom:1px solid #EEF3FA;cursor:pointer'+(x[0]===MRB_CCY?';background:#F2F8FF':'')+'">'+
+    '<img src="flags/'+x[1]+'.png" style="width:26px;height:26px;border-radius:50%!important;object-fit:cover;box-shadow:0 0 0 1.5px #fff,0 2px 6px rgba(0,0,0,.18)"><b style="font-family:Inter,sans-serif;font-size:13.5px;color:#0B2F70;min-width:44px">'+x[0]+'</b><span style="font-size:12px;color:#5A7396">'+x[2]+'</span></div>').join('');
+  ls.style.display='block';}
+document.addEventListener('click',e=>{const ls=document.getElementById('mrbCcyList');if(ls&&ls.style.display==='block'&&!e.target.closest('#mrbCcyBtn,#mrbCcyList'))ls.style.display='none';});
 function mrbBankOf(s){
   const up=String(s||'').toUpperCase();
   return MRB_BANKS.find(b=>b.keys.some(k=>up.includes(k)||String(s||'').includes(k)))
@@ -2005,13 +2027,13 @@ async function mrbReadReceipt(file){
     MRB_CUR=mrbBankOf((p&&p.bank||'')+' '+(p&&p.name||''));
     document.getElementById('mrbBankName').textContent=MRB_CUR.n||'';
     MRB_CCY=String((p&&p.ccy)||'MRU').toUpperCase().replace('$','USD').replace('UM','MRU').replace('KZ','AOA');
-    if(MRB_CCY==='USD'||MRB_CCY==='USDC')MRB_CCY='USDT';
-    var _cl=document.getElementById('mrbCcyLbl');if(_cl)_cl.textContent=MRB_CCY;
+    if(MRB_CCY==='USDC')MRB_CCY='USDT';
+    mrbSetCcy(MRB_CCY);
     msg.style.color='#0B7A3B';
     msg.textContent=p&&p.amount?('✓ قُرئ: '+(MRB_CUR.n?MRB_CUR.n+' · ':'')+Number(p.amount).toLocaleString()+' '+(p.ccy||'MRU')+(p.txn?' · عملية '+p.txn:'')+(p.receiver?' · حساب '+p.receiver:'')):'لم تُقرأ تلقائيًا — أكمل الخانات يدويًا';
     if(!(p&&p.amount)){msg.style.color='#B00020';}
   }catch(e){ msg.style.color='#B00020'; msg.textContent='تعذرت القراءة — أكمل يدويًا'; }
-  btn.textContent='📷 رفع إيصال التحويل — قراءة تلقائية'; btn.disabled=false;
+  btn.innerHTML='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-inline-end:6px"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>رفع إيصال التحويل — قراءة تلقائية'; btn.disabled=false;
 }
 function mrbRR(x,a,b,w,h,r){x.beginPath();x.moveTo(a+r,b);x.arcTo(a+w,b,a+w,b+h,r);x.arcTo(a+w,b+h,a,b+h,r);x.arcTo(a,b+h,a,b,r);x.arcTo(a,b,a+w,b,r);x.closePath();}
 function mrbFmt(n){return Number(n||0).toLocaleString('en-US');}
