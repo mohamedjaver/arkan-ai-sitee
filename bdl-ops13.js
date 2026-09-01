@@ -184,7 +184,7 @@ function card(r,side){
       '<div><span>طريقة المطابقة</span><b>'+({stored:'مثبّتة',ref:'رقم العملية',amount:'المبلغ مطابق',approx:'المبلغ ضمن الهامش'}[side==='sup'?(r.matched.how||'ref'):r.how]||'—')+'</b></div>':'<div><span>المطابقة</span><b style="color:#ED6C02">لا إيصال مقابل بعد</b></div>')+
     '<div><span>المصدر</span><b>'+src+'</b></div>'+
     '<div class="act">'+(r.file?'<button onclick="event.stopPropagation();window.open(\''+esc(r.file)+'\',\'_blank\')">عرض الملف</button>':'')+
-    (r.src==='upload'?'<button class="del" onclick="event.stopPropagation();m13.del(\''+r.id+'\')">حذف</button>':'')+'</div></div></div>';
+    ((r.rid||r.oid)?'<button class="del" onclick="event.stopPropagation();m13.del(\''+r.id+'\')">حذف</button>':'')+'</div></div></div>';
 }
 function col(side){
   const rows=(side==='sup'?M.sup:M.cust).filter(passes),sum=rows.reduce((s,x)=>s+(x.ccy==='AOA'?x.amount:0),0),ok=rows.filter(r=>r.matched).length;
@@ -288,10 +288,16 @@ async function manualSave(){
   M.up.items=[{status:'ok',amount:a,ccy:g('mm_c')||'AOA',bank:g('mm_b'),ref:g('mm_r'),name:g('mm_n'),file:null,fp:null}];
   const b=document.createElement('button');b.id='m13save';q('#m13sb').appendChild(b);await save();
 }
-async function del(id){const r=(M.cust.concat(M.sup)).find(x=>x.id===id);if(!r||!r.rid)return;if(!confirm('حذف هذا الإيصال نهائيًا؟'))return;
-  const x=await fetch(SB+'/bdl_receipts?id=eq.'+r.rid,{method:'DELETE',headers:H()});if(x.ok){toast('حُذف ✓');load();}else toast('تعذّر الحذف');}
+async function del(id){const r=(M.cust.concat(M.sup)).find(x=>x.id===id);if(!r||(!r.rid&&!r.oid))return;
+  if(!confirm('حذف هذا الإيصال نهائيًا؟\nسيتحرّر رقم عمليته وبصمته ويمكن رفعه من جديد.'))return;
+  let ok=false;
+  try{
+    if(r.rid)ok=(await fetch(SB+'/bdl_receipts?id=eq.'+r.rid,{method:'DELETE',headers:H()})).ok;
+    else if(r.oid)ok=(await fetch(SB+'/bdl_op_receipts?id=eq.'+r.oid,{method:'DELETE',headers:H()})).ok;
+  }catch(e){}
+  if(ok){toast('حُذف ✓ — يمكن رفعه من جديد الآن');load();}else toast('تعذّر الحذف');}
 
-window.m13={toggle:id=>{M.open[id]=!M.open[id];render();},range:r=>{M.range=r;M.open={};load();},retol:()=>{M.tol=Number(q('#m13tol').value)||0;matchAll();render();},
+window.m13={toggle:id=>{M.open[id]=!M.open[id];render();},range:r=>{M.range=r;M.open={};load();},retol:async()=>{const b=q('#m13rng');M.tol=Number(q('#m13tol').value)||0;M.open={};toast('جارٍ إعادة المطابقة…');M.loaded=false;await load();toast('أعيدت المطابقة على هامش '+M.tol+'% ✓');},
   commit,upload:uploadSheet,manual:manualSheet,files,edit:(i,k,v)=>{if(M.up&&M.up.items[i])M.up.items[i][k]=v;},save,manualSave,del,reload:()=>load()};
 /* التبويب + التحديث */
 const G=window.go;window.go=function(t){G.apply(this,arguments);if(t==='books'){ensure();if(!M.loaded)load();}};
