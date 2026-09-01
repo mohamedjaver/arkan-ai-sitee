@@ -1237,17 +1237,27 @@ async function rcptRefGuard(rec){
     var j=q.ok?await q.json():[];
     var used=j.some(function(x){return x.fingerprint!==rec.fp&&(x.bdl_settlement_receipts||[]).length>0;});
     if(!used){
-      /* أو محجوز في تسوية معلقة أخرى */
+      var selIds=selected().map(function(t){return t.id;});
       for(var i=0;i<j.length&&!used;i++){
         if(j[i].fingerprint===rec.fp)continue;
-        var selIds=selected().map(function(t){return t.id;});
-        var pq=await fetch(SB+'/bdl_transactions?select=id&status=eq.settling&meta-%3Ercpt_ids=cs.%5B%22'+j[i].id+'%22%5D&limit=3',{headers:H()});
-        var pj=pq.ok?await pq.json():[];
-        if(pj.some(function(t){return selIds.indexOf(t.id)<0;}))used=true;
+        used=await rcptUsedByTx(j[i].id,selIds);
       }
     }
-    if(used){rec.dup=true;rec.ok=false;rec.why='المرجع '+ref+' استُخدم في تسوية سابقة';renderRcpts();updMatch();}
+    if(used){rec.dup=true;rec.ok=false;
+      rec.why='المرجع '+ref+(used==='pending'?' محجوز في تسوية معلقة أخرى':' استُخدم في تسوية سابقة مكتملة');
+      renderRcpts();updMatch();}
   }catch(e){}
+}
+async function rcptUsedByTx(rid,selIds){
+  /* الإيصال «مستخدم» إن ظهر في rcpt_ids لعملية معلقة أخرى أو مكتملة/مسوّاة */
+  try{
+    var pq=await fetch(SB+'/bdl_transactions?select=id,status&status=in.(settling,done,settled)&meta-%3Ercpt_ids=cs.%5B%22'+rid+'%22%5D&limit=6',{headers:H()});
+    var pj=pq.ok?await pq.json():[];
+    for(var i=0;i<pj.length;i++){var t=pj[i];
+      if(t.status==='done'||t.status==='settled')return 'settled';
+      if((selIds||[]).indexOf(t.id)<0)return 'pending';}
+  }catch(e){}
+  return null;
 }
 async function addReceipts(files){
   for(var i=0;i<files.length;i++){
@@ -1267,9 +1277,8 @@ async function addReceipts(files){
     if(!dup&&j&&j[0]&&j[0].id){
       try{
         var selIds=selected().map(function(t){return t.id;});
-        var pq=await fetch(SB+'/bdl_transactions?select=id&status=eq.settling&meta-%3Ercpt_ids=cs.%5B%22'+j[0].id+'%22%5D&limit=3',{headers:H()});
-        var pj=pq.ok?await pq.json():[];
-        if(pj.some(function(t){return selIds.indexOf(t.id)<0;})){dup=true;why='محجوز في تسوية معلقة أخرى';}
+        var u=await rcptUsedByTx(j[0].id,selIds);
+        if(u){dup=true;why=(u==='pending'?'محجوز في تسوية معلقة أخرى':'استُخدم من قبل في تسوية مكتملة — مرفوض');}
       }catch(e2){}
     }
     var rec={file:f,fp:fp,dup:dup,ok:!dup,why:why,parsed:null,id:null};
