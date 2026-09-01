@@ -4,6 +4,7 @@ const GEM_PROMPT=`أنت محرك OCR مالي مؤسسي. اقرأ هذا ال�
 ${GEM_SCHEMA}
 - amount رقم فقط بلا فواصل، وأضف حقلاً "amount_verbatim" فيه نص المبلغ حرفيًا كما هو مكتوب في المستند (مثل "Kz 8 780 000,00").
 - المبلغ هو قيمة حقل Montante/المبلغ/Total/Valor فقط (مثل: Kz 8 000 000,00 → 8000000). لا تضع أبدًا في amount أرقام Movimento أو Número de Operação أو Transacção أو CHAVE أو PIN أو Conta/IBAN — هذه أرقام تعريفية تذهب في transaction_id/reference.
+- إثباتات Transfer to Atlântico (BANCO MILLENNIUM ATLANTICO): جدول Label/Value — reference هو قيمة سطر Reference حصراً؛ Account number/IBAN وCurrent account أرقام حسابات لا توضع أبدًا في reference ولا amount؛ beneficiary هو سطر Name؛ العملة AKZ تعني الكوانزا.
 - تجاهل تمامًا أرقام التذييل القانوني (Capital Social، NIF، الهواتف).
 - الكوانزا الأنغولية: AOA (تظهر كـ Kz أو KZ أو AKZ). الأوقية: MRU (أو UM). انتبه للفواصل الأوروبية 1.234.567,89 والمسافات 8 000 000,00.
 - قيّم جودة الصورة في quality (مقصوصة؟ ضبابية؟ أثر تعديل؟ زوايا ناقصة؟).
@@ -96,6 +97,23 @@ function euNum(x){
 }
 function liteParse(t){
   const p={amount:0,currency:'',reference:'',bank:'',date:'',confidence:40};
+  /* قالب إثبات ATLANTICO (Transfer to Atlântico): جدول Label/Value —
+     المرجع سطر Reference حصراً، لا Account number/IBAN ولا Current account */
+  if(/BANCO\s+MILLENNIUM\s+ATLANTICO|Transfer\s+to\s+Atl[âa]ntico/i.test(t)||(/ATLANTICO/i.test(t)&&/Reference/i.test(t)&&/Amount/i.test(t))){
+    const ref=t.match(/Reference[^\d]{0,14}(\d{6,})/i);
+    const am2=t.match(/Amount[^\d]{0,14}([\d][\d.,\s\u00A0]{2,})/i);
+    const nm2=t.match(/\bName\b[\s:]{0,6}([A-ZÀ-Ú][A-ZÀ-Ú0-9 .,&\-]{3,70})/);
+    const ac2=t.match(/Account\s*number\s*\/?\s*IBAN[^\d]{0,14}([\d][\d ]{5,})/i);
+    const dt2=t.match(/(\d{2}-\d{2}-\d{4})/);
+    if(ref||am2){
+      p.bank='ATLANTICO';p.currency='Kz';
+      if(am2)p.amount=euNum(am2[1]);
+      if(ref)p.reference=ref[1];
+      if(nm2)p.name=nm2[1].replace(/\s+/g,' ').replace(/\s+(?:Amount|Currency|Type|Status|Current|Account|Description)\b.*$/i,'').replace(/(?:\s+[A-Z]){1,2}$/,'').trim();
+      if(ac2)p.receiver=ac2[1].replace(/\s+/g,'');
+      if(dt2)p.date=dt2[1];
+      p.confidence=85;return p;}
+  }
   const cm=t.match(/\b(Kz|KZ|AKZ|MRU|UM|USDT|USDC|USD|EUR|CNY|AED|AOA)\b/i);
   if(cm)p.currency=cm[1].toUpperCase().replace('AKZ','Kz').replace('AOA','Kz').replace('KZ','Kz').replace('UM','MRU');
   /* المبلغ: بعد كلماته المفتاحية أولاً — لا نلتقط أرقام الحساب/العملية */
@@ -111,17 +129,18 @@ function liteParse(t){
         ||t.match(/(?:Kz|AKZ|KZ)\s*([\d][\d.,\s\u00A0]{4,})/i)
         ||t.match(/([\d]{1,3}(?:[.,\s\u00A0]\d{3})+(?:,\d{2})?)/);
   if(am)p.amount=euNum(am[1]);
-  const rm=t.match(/Txn\s*ID\s*:?\s*([A-Z]{0,4}[0-9]{6,})/i)
-        ||t.match(/Trs\.?\s*ID\s*:?\s*([A-Z]{0,4}[0-9]{6,})/i)
-        ||t.match(/(?:ID\s*de\s*la\s*transaction|transaction\s*ID)\s*:?\s*([A-Z]{0,4}[0-9]{6,})/i)
-        ||t.match(/(?:Transac[cç][aã]o|Opera[cç][aã]o|Movimento|Refer[eê]ncia)\s*(?:de\s*\w+\s*)?(?:n[.ºo°]{0,3})?\s*[:\-]?\s*#?\s*([A-Z]{0,4}\d{5,})/i)
-        ||t.match(/(?:ref|reference|operac|transac|movimento|number)[^\d]{0,20}?([A-Z]{0,4}\d{5,})/i);
+  const tref=t.replace(/(account\s*number(\s*\/?\s*iban)?|current\s*account|iban|n[úu]mero\s*de\s*conta|conta(\s*corrente)?)[^\n]{0,40}/gi,' ');
+  const rm=tref.match(/Txn\s*ID\s*:?\s*([A-Z]{0,4}[0-9]{6,})/i)
+        ||tref.match(/Trs\.?\s*ID\s*:?\s*([A-Z]{0,4}[0-9]{6,})/i)
+        ||tref.match(/(?:ID\s*de\s*la\s*transaction|transaction\s*ID)\s*:?\s*([A-Z]{0,4}[0-9]{6,})/i)
+        ||tref.match(/(?:Transac[cç][aã]o|Opera[cç][aã]o|Movimento|Refer[eê]ncia|Reference)\s*(?:de\s*\w+\s*)?(?:n[.ºo°]{0,3})?\s*[:\-]?\s*#?\s*([A-Z]{0,4}\d{5,})/i)
+        ||tref.match(/(?:ref|reference|operac|transac|movimento|number)[^\d]{0,20}?([A-Z]{0,4}\d{5,})/i);
   if(rm)p.reference=rm[1].toUpperCase();
   const rv=t.match(/Receiver\s*:?\s*([0-9]{8,})/i)
         ||t.match(/(?:num[ée]ro\s*de\s*t[ée]l[ée]phone|t[ée]l[ée]phone|المستلم|المستفيد|Beneficiaire|Beneficiary|To)[^\d]{0,10}([0-9]{8,})/i)
         ||t.match(/(?:^|\D)([234]\d{7})(?!\d)/);
   if(rv)p.receiver=rv[1];
-  const nv=t.match(/(?:\bà\b|B[ée]n[ée]ficiaire|المستلم|المستفيد)\s*:?\s*([A-Za-z\u0600-\u06FF][A-Za-z\u0600-\u06FF' ]{2,32})/);
+  const nv=t.match(/(?:\bà\b|B[ée]n[ée]ficiaire|المستلم|المستفيد|\bName\b|\bNome\b)\s*:?\s*([A-Za-z\u0600-\u06FF][A-Za-z\u0600-\u06FF'. &-]{2,60})/);
   if(nv&&!/^\d+$/.test(nv[1].trim()))p.name=nv[1].trim();
   const bm=t.match(/\b(SEDAD|SADAD|BML|MASRVI|BANKILY|AMANTY|BAI|BFA|BIC|BCI|ATLANTICO|ATL|SOL|BPC|BPM|BNI|KEVE|YETU|MULTICAIXA|TRON|BIM)\b/i)||t.match(/(السداد|مصرفي|بنكيلي)/);
   if(bm)p.bank=bm[1].toUpperCase();
@@ -137,7 +156,7 @@ function asText(p,raw){
 }
 async function miniGemini(b64,mime){
   const key=KEY(); if(!key)throw new Error('NOKEY');
-  const P='اقرأ هذا الإيصال البنكي وأعد JSON فقط بلا أي نص آخر: {"amount":0,"currency":"","reference":"","receiver":"","name":"","bank":"","date":""}\n- amount: رقم المبلغ فقط بلا فواصل (Montante/المبلغ/Valor/Total). ليس رقم العملية ولا الحساب ولا Movimento.\n- reference: رقم العملية (Txn ID/Reference/Movimento) كاملًا.\n- receiver: رقم حساب أو هاتف المستلم (Receiver/Numéro/المستلم) كاملًا.\n- name: اسم المستلم الشخصي كما هو مكتوب (à .../Bénéficiaire/المستلم).\n- bank: اسم البنك أو التطبيق (Bankily/Masrvi/Sedad/BIM/BML...).\n- الفواصل الأوروبية: 3.500.000,00 تعني 3500000\n- currency: Kz أو MRU أو USD أو USDT أو USDC أو EUR أو CNY أو AED (AKZ/AOA→Kz، UM→MRU)';
+  const P='اقرأ هذا الإيصال البنكي وأعد JSON فقط بلا أي نص آخر: {"amount":0,"currency":"","reference":"","receiver":"","name":"","bank":"","date":""}\n- amount: رقم المبلغ فقط بلا فواصل (Montante/المبلغ/Valor/Total). ليس رقم العملية ولا الحساب ولا Movimento.\n- reference: رقم العملية (Txn ID/Reference/Movimento) كاملًا. في إثبات Transfer to Atlântico خذ سطر Reference فقط — لا Account number/IBAN ولا Current account.\n- receiver: رقم حساب أو هاتف المستلم (Receiver/Numéro/المستلم) كاملًا.\n- name: اسم المستلم الشخصي كما هو مكتوب (à .../Bénéficiaire/المستلم).\n- bank: اسم البنك أو التطبيق (Bankily/Masrvi/Sedad/BIM/BML...).\n- الفواصل الأوروبية: 3.500.000,00 تعني 3500000\n- currency: Kz أو MRU أو USD أو USDT أو USDC أو EUR أو CNY أو AED (AKZ/AOA→Kz، UM→MRU)';
   const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key='+encodeURIComponent(key),
     {method:'POST',headers:{'Content-Type':'application/json'},
      body:JSON.stringify({contents:[{parts:[{text:P},{inline_data:{mime_type:mime,data:b64}}]}],
