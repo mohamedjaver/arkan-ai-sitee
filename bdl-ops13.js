@@ -42,6 +42,12 @@ const css=document.createElement('style');css.textContent=`
 .m13up button{flex:1;border:0;border-radius:9px;padding:10px;font-weight:800;font-size:12px;font-family:inherit;cursor:pointer;background:var(--navy);color:#fff}
 .m13up button.ghost{background:#fff;color:var(--navy);border:1px solid #D6E4F7}
 
+.m13r.v2 .supn{color:var(--blue,#0A56B8);cursor:pointer}
+.m13r.v2 .supn.emp{color:#ED6C02;border-bottom:1px dashed #ED6C02;font-weight:700}
+.m13tb2{width:100%;border-collapse:collapse;font-size:12.5px}
+.m13tb2 th{background:#EEF4FC;color:var(--navy,#0B2F70);padding:8px 9px;text-align:right;font-size:11.5px}
+.m13tb2 td{padding:8px 9px;border-bottom:1px solid #EDF2FA}
+.m13tb2 td.num{font-variant-numeric:tabular-nums;font-weight:700}
 .m13r.v2{background:#fff;border:1px solid #E3ECF7;border-inline-start:4px solid #E65100;padding:13px 14px;margin-bottom:10px;cursor:pointer}
 .m13r.v2.ok{border-inline-start-color:#2E7D32}
 .m13r.v2 .v2t{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:9px}
@@ -152,7 +158,7 @@ async function load(){
     /* ٢) الإيصالات المرفوعة هنا مباشرة */
     const rd=await fetch(SB+'/bdl_receipts?select=id,amount,ccy,bank,account_no,txn_ref,ocr,fingerprint,file_url,created_at&ocr->>source=eq.match-center'+gte+'&order=created_at.desc&limit=400',{headers:H()});
     (rd.ok?await rd.json():[]).forEach(x=>{if(rcMap[x.id])return;const o=x.ocr||{},row={id:'r:'+x.id,rid:x.id,src:'upload',amount:Number(x.amount)||0,ccy:norm(x.ccy),bank:x.bank||'',ref:x.txn_ref||'',date:new Date(x.created_at),file:x.file_url,
-        who:o.name||o.receiver||'',txRefs:[],settled:false,pendingTx:false,ocr:o,stored:o.matched_rcpt||o.covers||null};
+        who:o.sup_name||o.name||o.receiver||'',txRefs:[],settled:false,pendingTx:false,ocr:o,stored:o.matched_rcpt||o.covers||null};
       (o.side==='supplier'?sup:cust).push(row);});
     /* ٣) إيصالات العمليات (bdl_ops) */
     const ro=await fetch(SB+'/bdl_op_receipts?select=*&order=created_at.desc'+gte+'&limit=400',{headers:H()});
@@ -192,7 +198,7 @@ function card(r,side){
     '<div class="v2t"><span class="m13b '+st+'">'+label(r)+'</span>'+
     '<div class="v2a '+st+'">'+fmt(r.amount,0)+' <small>'+esc(r.ccy)+'</small></div></div>'+
     '<div class="v2rows">'+
-    '<div><span>'+(side==='sup'?'المورد':'العميل')+'</span><b>'+esc(r.who||'—')+'</b></div>'+
+    (side==='sup'?'<div><span>المورد</span><b class="supn'+(r.who?'':' emp')+'" onclick="event.stopPropagation();m13.nameSup(\''+r.id+'\')">'+(r.who?esc(r.who):'اضغط لكتابة اسم المورد')+'</b></div>':'<div><span>العميل</span><b>'+esc(r.who||'—')+'</b></div>')+
     '<div><span>المرجع</span><b class="num">'+esc(r.ref||'—')+'</b></div>'+
     '<div><span>القناة</span><b>'+esc(r.bank||'—')+'</b></div>'+
     '<div><span>التاريخ</span><b class="num">'+r.date.toLocaleDateString('en-GB')+' '+r.date.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})+'</b></div>'+
@@ -238,9 +244,38 @@ function render(){
     bar('إجمالي إيصالات الزبائن',sIn,100,'b')+bar('مطابَق بإيصالات الموردين',sOk,pct,'g')+bar('بانتظار المورد',sPend,100-pct,'o')+
     (pend.length?'<div class="m13status warn">لم تُطابَق جميع الإيصالات — <span class="num">'+pend.length+'</span> إيصال زبون بقيمة <span class="num">'+fmt(sPend,0)+'</span> AOA بلا إيصال مورد مقابل'+(unmatchedSup.length?' · و<span class="num">'+unmatchedSup.length+'</span> إيصال مورد ('+fmt(sUS,0)+' AOA) بلا زبون':'')+'</div>'
       :C.length?'<div class="m13status ok">✓ كل إيصالات الزبائن مطابَقة بإيصالات الموردين'+(unmatchedSup.length?' · يوجد '+unmatchedSup.length+' إيصال مورد فائض ('+fmt(sUS,0)+' AOA)':'')+'</div>':'')+
-    '<div class="m13tol"><span>هامش التطابق %</span><input id="m13tol" inputmode="decimal" value="'+M.tol+'"><button onclick="m13.retol()">إعادة المطابقة</button><button class="pri" onclick="m13.commit()">تثبيت المطابقات</button></div></div>';
+    '<div class="m13tol"><span>هامش التطابق %</span><input id="m13tol" inputmode="decimal" value="'+M.tol+'"><button onclick="m13.pairs()">تقرير الارتباطات</button><button onclick="m13.retol()">إعادة المطابقة</button><button class="pri" onclick="m13.commit()">تثبيت المطابقات</button></div></div>';
 }
 
+/* ───── تسمية المورد على الإيصال ───── */
+async function nameSup(id){
+  const r=M.sup.find(x=>x.id===id);if(!r)return;
+  const v=prompt('اسم المورد لهذا الإيصال:',r.who||'');if(v===null)return;
+  const name=v.trim();
+  try{
+    if(r.rid){const o=Object.assign({},r.ocr,{sup_name:name});
+      const x=await fetch(SB+'/bdl_receipts?id=eq.'+r.rid,{method:'PATCH',headers:H(),body:JSON.stringify({ocr:o})});
+      if(!x.ok)throw 0;r.ocr=o;}
+    else if(r.oid){const x=await fetch(SB+'/bdl_op_receipts?id=eq.'+r.oid,{method:'PATCH',headers:H(),body:JSON.stringify({sender:name})});
+      if(!x.ok)throw 0;}
+    r.who=name;toast(name?('سُمّي المورد: '+name+' ✓'):'أُزيل الاسم');render();
+  }catch(e){toast('تعذّر حفظ الاسم');}
+}
+/* ───── تقرير الارتباطات: زبون × مورد ───── */
+function pairsReport(){
+  const agg={};
+  M.cust.forEach(c=>{if(!c.matched)return;const su=c.matched;
+    const k=(c.who||'—')+'\u21E0'+(su.who||'—');
+    (agg[k]=agg[k]||{c:c.who||'—',s:su.who||'—',n:0,amt:0});agg[k].n++;agg[k].amt+=(c.ccy==='AOA'?c.amount:0);});
+  const rows=Object.values(agg).sort((a,b)=>b.n-a.n||b.amt-a.amt);
+  const un=rows.filter(r=>r.s==='—').reduce((sm,x)=>sm+x.n,0);
+  sheet(hdr('تقرير الارتباطات — زبون × مورد')+
+    (rows.length
+      ?'<table class="m13tb2"><tr><th>الزبون</th><th>المورد</th><th>مطابقات</th><th>الإجمالي AOA</th></tr>'+
+        rows.map(r=>'<tr><td>'+esc(r.c)+'</td><td>'+(r.s==='—'?'<span style="color:#ED6C02;font-weight:700">بلا اسم</span>':esc(r.s))+'</td><td class="num">'+r.n+'</td><td class="num">'+fmt(r.amt,0)+'</td></tr>').join('')+'</table>'+
+        (un?'<div class="m13status warn" style="margin-top:10px">'+un+' مطابقة بمورد بلا اسم — اضغط «اضغط لكتابة اسم المورد» على بطاقة الإيصال لتسميته</div>':'')
+      :'<div class="empty" style="padding:20px">لا مطابقات في هذه الفترة</div>'));
+}
 /* ───── تثبيت المطابقات في القاعدة ───── */
 async function commit(){
   const pairs=M.cust.filter(c=>c.matched&&c.how!=='stored');if(!pairs.length){toast('لا مطابقات جديدة للتثبيت');return;}
@@ -324,7 +359,7 @@ async function del(id){const r=(M.cust.concat(M.sup)).find(x=>x.id===id);if(!r||
   if(ok){toast('حُذف ✓ — يمكن رفعه من جديد الآن');load();}else toast('تعذّر الحذف');}
 
 window.m13={toggle:id=>{M.open[id]=!M.open[id];render();},range:r=>{M.range=r;M.open={};load();},retol:async()=>{const b=q('#m13rng');M.tol=Number(q('#m13tol').value)||0;M.open={};toast('جارٍ إعادة المطابقة…');M.loaded=false;await load();toast('أعيدت المطابقة على هامش '+M.tol+'% ✓');},
-  commit,upload:uploadSheet,manual:manualSheet,files,edit:(i,k,v)=>{if(M.up&&M.up.items[i])M.up.items[i][k]=v;},save,manualSave,del,reload:()=>load()};
+  commit,upload:uploadSheet,manual:manualSheet,files,nameSup,pairs:pairsReport,edit:(i,k,v)=>{if(M.up&&M.up.items[i])M.up.items[i][k]=v;},save,manualSave,del,reload:()=>load()};
 /* التبويب + التحديث */
 const G=window.go;window.go=function(t){G.apply(this,arguments);if(t==='books'){ensure();if(!M.loaded)load();}};
 const F=window.fetch;window.fetch=function(u,o){const p=F.apply(this,arguments);
