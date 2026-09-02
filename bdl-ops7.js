@@ -82,7 +82,7 @@ window.renderOps=function(){
       '<div class="num" style="font-size:11px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+
       esc(o.ref)+' · '+lane+(o.supplier?' · '+esc(o.supplier):'')+'</div></div>'+
       '<span class="st '+s[0]+'" style="flex-shrink:0">'+s[1]+'</span></div>'+
-      (window.opPipe?opPipe(o):'')+opBar(o)+rt+'</div>';
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;font-size:12.5px">'+'<span style="color:#5C7699;font-weight:600">المورد المكلَّف</span>'+'<b onclick="event.stopPropagation();op7Sup(\''+o.id+'\')" style="cursor:pointer;color:'+(o.supplier?'#0A56B8':'#ED6C02')+';'+(o.supplier?'':'border-bottom:1px dashed #ED6C02;')+'font-weight:800">'+(o.supplier?esc(o.supplier):'حدّد المورد')+'</b></div>'+(window.opPipe?opPipe(o):'')+opBar(o)+rt+'</div>';
   }).join('')||'<div class="empty">لا عمليات'+(q?' مطابقة':' — أنشئ الأولى بزر «+ عملية»')+'</div>';
 };
 
@@ -553,6 +553,15 @@ window.op7ArchList=async function(){
 })();
 
 /* إعادة الرسم بالنمط الجديد إن كانت البيانات محمّلة قبل هذه الطبقة */
+window.op7Sup=async function(id){
+  var op=(window.OPS_DATA||[]).find(function(x){return x.id===id;});if(!op)return;
+  var v=prompt('المورد المكلَّف بهذه العملية:',op.supplier||'');if(v===null)return;
+  var name=v.trim();
+  try{
+    var r=await fetch(SB+'/bdl_ops?id=eq.'+id,{method:'PATCH',headers:H(),body:JSON.stringify({supplier:name||null})});
+    if(!r.ok)throw 0;op.supplier=name;toast(name?('كُلِّف: '+name+' ✓'):'أُزيل التكليف');renderOps();
+  }catch(e){toast('تعذّر الحفظ');}
+};
 try{if(window.OPS_DATA)renderOps();}catch(e){}
 console.log('bdl-ops7 ✓ — البطاقات النظيفة، البصمات، الرفع الجماعي، تقرير الشركات');
 })();
