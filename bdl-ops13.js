@@ -297,19 +297,20 @@ function uploadSheet(side){
   M.up={side,items:[]};
   sheet(hdr('رفع إيصالات '+(side==='sup'?'الموردين':'الزبائن'))+
     '<div class="drop" onclick="document.getElementById(\'m13f\').click()"><b>اختر صور الإيصالات أو PDF</b>قراءة تلقائية للمبلغ والبنك ورقم العملية · يمكن اختيار عدة ملفات<input id="m13f" type="file" accept="image/*,application/pdf" multiple style="display:none" onchange="m13.files(this.files)"></div>'+
+    '<div class="m13fld" style="margin:10px 0 4px"><label>'+(side==='sup'?'اسم المورد للدفعة كاملة':'اسم الزبون للدفعة كاملة')+' — يُطبَّق على كل الإيصالات أدناه</label><input id="m13bn" oninput="m13.bname(this.value)" placeholder="'+(side==='sup'?'مثال: Arnesto':'اختياري')+'"></div>'+
     '<div class="m13q" id="m13qq"></div>'+
     '<div class="m13act"><button id="m13save" disabled onclick="m13.save()">حفظ ومطابقة</button><button class="ghost" onclick="closeOvl(\'m13\')">إلغاء</button></div>');
 }
 async function files(list){
   const arr=Array.from(list||[]);if(!arr.length)return;const box=q('#m13qq');
-  for(const f0 of arr){const it={file:f0,status:'rd',amount:'',ccy:'AOA',bank:'',ref:'',name:'',url:''};M.up.items.push(it);
+  for(const f0 of arr){const it={file:f0,status:'rd',amount:'',ccy:'AOA',bank:'',ref:'',name:(M.up.bname||''),url:''};M.up.items.push(it);
     try{it.file=window.autoCropReceipt?await autoCropReceipt(f0):f0;}catch(e){}
     if(/^image\//.test(it.file.type))it.url=URL.createObjectURL(it.file);
     drawQueue();
     try{it.fp=await fp(it.file);
       if(it.fp){const r=await fetch(SB+'/bdl_receipts?select=id&fingerprint=eq.'+it.fp+'&limit=1',{headers:H()});const j=r.ok?await r.json():[];if(j.length){it.status='dup';drawQueue();continue;}}
       let p={};if(window.readReceipt)p=await readReceipt(it.file);
-      it.amount=p.amount||'';it.ccy=norm(p.ccy||'AOA');it.bank=p.bank||'';it.ref=p.ref||'';it.name=(p.name||p.receiver||'');
+      it.amount=p.amount||'';it.ccy=norm(p.ccy||'AOA');it.bank=p.bank||'';it.ref=p.ref||'';it.name=(M.up.bname||p.name||p.receiver||'');
       if(!it.ref&&it.amount){const r=await fetch(SB+'/bdl_receipts?select=id&amount=eq.'+it.amount+'&ocr->>side=eq.'+(M.up.side==='sup'?'supplier':'customer')+'&limit=1',{headers:H()});const j=r.ok?await r.json():[];if(j.length)it.warn='نفس المبلغ موجود — تأكد أنه تحويل مختلف';}
       it.status='ok';}catch(e){it.status='ok';}
     drawQueue();}
@@ -332,6 +333,7 @@ async function save(){
       if(up.ok)url=SB.replace('/rest/v1','/storage/v1')+'/object/public/receipts/'+path;}catch(e){}}
     const body={fingerprint:it.fp||null,amount:Number(String(it.amount).replace(/[^\d.]/g,''))||null,ccy:norm(it.ccy),bank:it.bank||null,txn_ref:it.ref||null,file_url:url,
       ocr:{side:side==='sup'?'supplier':'customer',source:'match-center',name:it.name||null,uploaded_at:new Date().toISOString(),manual:!it.file}};
+    if(side==='sup'&&it.name)body.ocr.sup_name=it.name;
     const r=await fetch(SB+'/bdl_receipts',{method:'POST',headers:H({Prefer:'return=representation'}),body:JSON.stringify(body)});if(r.ok)n++;}catch(e){}}
   toast('حُفظ '+n+' إيصال ✓ — جارٍ المطابقة');closeOvl('m13');M.up=null;await load();
   const newOk=(side==='sup'?M.sup:M.cust).filter(r=>r.src==='upload'&&r.matched).length;if(newOk)toast(newOk+' إيصال تمت تسويته ✓');
@@ -359,7 +361,7 @@ async function del(id){const r=(M.cust.concat(M.sup)).find(x=>x.id===id);if(!r||
   if(ok){toast('حُذف ✓ — يمكن رفعه من جديد الآن');load();}else toast('تعذّر الحذف');}
 
 window.m13={toggle:id=>{M.open[id]=!M.open[id];render();},range:r=>{M.range=r;M.open={};load();},retol:async()=>{const b=q('#m13rng');M.tol=Number(q('#m13tol').value)||0;M.open={};toast('جارٍ إعادة المطابقة…');M.loaded=false;await load();toast('أعيدت المطابقة على هامش '+M.tol+'% ✓');},
-  commit,upload:uploadSheet,manual:manualSheet,files,nameSup,pairs:pairsReport,edit:(i,k,v)=>{if(M.up&&M.up.items[i])M.up.items[i][k]=v;},save,manualSave,del,reload:()=>load()};
+  commit,upload:uploadSheet,manual:manualSheet,files,nameSup,pairs:pairsReport,edit:(i,k,v)=>{if(M.up&&M.up.items[i])M.up.items[i][k]=v;},bname:v=>{if(!M.up)return;M.up.bname=v.trim();M.up.items.forEach(it=>{it.name=M.up.bname;});drawQueue();},save,manualSave,del,reload:()=>load()};
 /* التبويب + التحديث */
 const G=window.go;window.go=function(t){G.apply(this,arguments);if(t==='books'){ensure();if(!M.loaded)load();}};
 const F=window.fetch;window.fetch=function(u,o){const p=F.apply(this,arguments);
