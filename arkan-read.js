@@ -4,7 +4,7 @@ const GEM_PROMPT=`أنت محرك OCR مالي مؤسسي. اقرأ هذا ال�
 ${GEM_SCHEMA}
 - amount رقم فقط بلا فواصل، وأضف حقلاً "amount_verbatim" فيه نص المبلغ حرفيًا كما هو مكتوب في المستند (مثل "Kz 8 780 000,00").
 - المبلغ هو قيمة حقل Montante/المبلغ/Total/Valor فقط (مثل: Kz 8 000 000,00 → 8000000). لا تضع أبدًا في amount أرقام Movimento أو Número de Operação أو Transacção أو CHAVE أو PIN أو Conta/IBAN — هذه أرقام تعريفية تذهب في transaction_id/reference.
-- إثباتات Transfer to Atlântico / Transferência Atlântico (BANCO MILLENNIUM ATLANTICO): جدول Label/Value — reference هو قيمة سطر Reference/Referencia حصراً؛ amount من Amount/Montante؛ beneficiary من Name/Nome beneficiário؛ Account number/IBAN وCurrent account أرقام حسابات لا توضع أبدًا في reference ولا amount؛ beneficiary هو سطر Name؛ العملة AKZ تعني الكوانزا.
+- قاعدة حاسمة لإثباتات ATLANTICO (Transfer to Atlântico / Transferência Atlântico): reference = قيمة سطر Reference/Referencia فقط (مثال: Reference 648084834 → reference=648084834). ACCOUNT NUMBER وAccount number/IBAN وCurrent account/Conta origem (مثل 292750887 أو 347805651) أرقام حسابات — يُمنع منعًا باتًا وضعها في reference أو amount. amount من Amount/Montante؛ beneficiary من Name/Nome beneficiário؛ Account number/IBAN وCurrent account أرقام حسابات لا توضع أبدًا في reference ولا amount؛ beneficiary هو سطر Name؛ العملة AKZ تعني الكوانزا.
 - تجاهل تمامًا أرقام التذييل القانوني (Capital Social، NIF، الهواتف).
 - الكوانزا الأنغولية: AOA (تظهر كـ Kz أو KZ أو AKZ). الأوقية: MRU (أو UM). انتبه للفواصل الأوروبية 1.234.567,89 والمسافات 8 000 000,00.
 - قيّم جودة الصورة في quality (مقصوصة؟ ضبابية؟ أثر تعديل؟ زوايا ناقصة؟).
@@ -246,6 +246,6 @@ window.ArkanRead={
     const parsed=liteParse(raw);
     return {parsed,text:asText(parsed,raw.slice(0,1500)),engine:isPdf?'pdf':'ocr'};
   },
-  gemini, ocrText, worker
+  gemini, ocrText, worker, liteParse, pdfText
 };
 })();

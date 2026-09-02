@@ -1139,6 +1139,23 @@ async function readReceipt(file){
       out.engine=r.engine;
       var fc=p.field_confidence&&Number(p.field_confidence.amount);
       out.conf=Math.round(fc||Number(p.confidence)||0)||(r.engine==='gemini'?85:r.engine==='pdf'?70:50);
+      /* PDF: القالب المحلي حَكَم — إن تعرّف على النوع بثقة عالية تُعتمد قيمه فوق Gemini */
+      try{
+        var isPdf=/pdf/i.test(file.type||'')||/\.pdf$/i.test(file.name||'');
+        if(isPdf&&ArkanRead.pdfText&&ArkanRead.liteParse){
+          var raw=await ArkanRead.pdfText(file);
+          var lp=ArkanRead.liteParse(raw||'');
+          if(lp&&lp.confidence>=85){
+            if(lp.reference)out.ref=lp.reference;
+            if(lp.amount)out.amount=lp.amount;
+            if(lp.bank)out.bank=lp.bank;
+            if(lp.name)out.name=lp.name;
+            if(lp.currency)out.ccy=lp.currency;
+            out.conf=Math.max(out.conf||0,lp.confidence);
+            out.engine=out.engine+'+tpl';
+          }
+        }
+      }catch(e){}
     }
   }catch(e){}
   return out;
