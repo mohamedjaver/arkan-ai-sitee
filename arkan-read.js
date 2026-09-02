@@ -97,6 +97,33 @@ function euNum(x){
 }
 function liteParse(t){
   const p={amount:0,currency:'',reference:'',bank:'',date:'',confidence:40};
+  /* قالب قسيمة MULTICAIXA الورقية (ماكينة ATM): TRANSFERÊNCIA BANCÁRIA */
+  if(/IMPORT[ÂA]NCIA\s+A\s+TRANSFERIR/i.test(t)||(/MULTICAIXA/i.test(t)&&/TRANSAC[ÇC][ÃA]O/i.test(t))){
+    const amM=t.match(/IMPORT[ÂA]NCIA\s+A\s+TRANSFERIR:?\s*([\d.,\s\u00A0]+?)\s*KZ/i)||t.match(/([\d][\d.\s]{4,},\d{2})\s*KZ/);
+    const rfM=t.match(/TRANSAC[ÇC][ÃA]O:?\s*(\d{3,})/i);
+    const nmM=t.match(/NOME\s+DO\s+DESTINAT[ÁA]RIO:?\s*\n?\s*([A-ZÀ-Ú][A-ZÀ-Ú .,&\-]{3,70})/i);
+    const ibM=t.match(/IBAN\s+DO\s+DESTINAT[ÁA]RIO:?\s*\n?\s*(A[O0][\d.\s]{10,})/i);
+    const dtM=t.match(/(\d{4}\/\d{2}\/\d{2})/);
+    if(amM){p.bank='MULTICAIXA';p.currency='Kz';p.amount=euNum(amM[1]);
+      if(rfM)p.reference=rfM[1];
+      if(nmM)p.name=nmM[1].replace(/\s+(N[ºo°]|BANCO|TENHA).*$/i,'').replace(/\s+/g,' ').replace(/(?:\s+[A-Z]){1,2}$/,'').trim();
+      if(ibM)p.receiver=ibM[1].replace(/[.\s]/g,'');
+      if(dtM)p.date=dtM[1];
+      p.confidence=(p.amount&&p.reference)?100:80;return p;}
+  }
+  /* قالب BANCO SOL — Transferência Interna */
+  if(/BANCO\s+SOL/i.test(t)&&/transfer[êe]ncia/i.test(t)){
+    const rfS=t.match(/N[úu]mero\s+de\s+transfer[êe]ncia\s+atribu[íi]do:?\s*(\d{5,})/i);
+    const amS=t.match(/Montante:?\s*([\d][\d.,\s\u00A0]{2,})/i);
+    const nmS=t.match(/Nome\s+do\s+primeiro\s+titular:?\s*([A-ZÀ-Ú][A-ZÀ-Ú .,&\-]{3,70})/i);
+    const dtS=t.match(/Data\s+da\s+transfer[êe]ncia:?\s*(\d{2}-\d{2}-\d{4})/i);
+    if(rfS||amS){p.bank='SOL';p.currency='Kz';
+      if(amS)p.amount=euNum(amS[1]);
+      if(rfS)p.reference=rfS[1];
+      if(nmS)p.name=nmS[1].replace(/\s+(Data|Moeda|Descri|Email).*$/i,'').replace(/\s+/g,' ').trim();
+      if(dtS)p.date=dtS[1];
+      p.confidence=(p.amount&&p.reference)?100:80;return p;}
+  }
   /* قالب إثبات ATLANTICO (Transfer to Atlântico): جدول Label/Value —
      المرجع سطر Reference حصراً، لا Account number/IBAN ولا Current account */
   if(/BANCO\s+MILLENNIUM\s+ATLANTICO|Transfer\s+to\s+Atl[âa]ntico|Transfer[êe]ncia\s+Atl[âa]ntico/i.test(t)||(/ATLANTICO/i.test(t)&&/(Reference|Refer[eê]ncia)/i.test(t)&&/(Amount|Montante)/i.test(t))){
@@ -112,7 +139,7 @@ function liteParse(t){
       if(nm2)p.name=nm2[1].replace(/\s+/g,' ').replace(/\s+(?:Amount|Currency|Type|Status|Current|Account|Description|Montante|Moeda|Tipo|Estado|Conta|Descri[çc][ãa]o)\b.*$/i,'').replace(/(?:\s+[A-Z]){1,2}$/,'').trim();
       if(ac2)p.receiver=ac2[1].replace(/\s+/g,'');
       if(dt2)p.date=dt2[1];
-      p.confidence=85;return p;}
+      p.confidence=(p.amount&&p.reference)?100:85;return p;}
   }
   const cm=t.match(/\b(Kz|KZ|AKZ|MRU|UM|USDT|USDC|USD|EUR|CNY|AED|AOA)\b/i);
   if(cm)p.currency=cm[1].toUpperCase().replace('AKZ','Kz').replace('AOA','Kz').replace('KZ','Kz').replace('UM','MRU');
@@ -123,7 +150,7 @@ function liteParse(t){
     const ad=t.match(/\b(0x[a-fA-F0-9]{4,}(?:\.{2,3}[a-fA-F0-9]{2,})?|T[1-9A-HJ-NP-Za-km-z]{4,}(?:\.{2,3}[1-9A-HJ-NP-Za-km-z]{2,})?)\b/);
     if(ad)p.reference=ad[1];
     const wl=t.match(/\b(Trust\s*Wallet|Binance|OKX|Bybit|KuCoin|Coinbase|MetaMask|TronLink|Kraken|Bitget|Gate\.io|HTX)\b/i);
-    p.bank=wl?wl[1]:'Crypto';p.confidence=70;return p;}
+    p.bank=wl?wl[1]:'Crypto';p.confidence=(p.amount&&p.reference)?95:70;return p;}
   const am=t.match(/(?:montant(?:\s*envoy[ée]{1,2})?|amount|montante|valor|total|transfers\.amount|المبلغ)[^\d]{0,20}([\d][\d.,\s\u00A0]{1,})/i)
         ||t.match(/([\d][\d.,\s\u00A0]{1,})\s*(?:MRU|UM)\b/i)
         ||t.match(/(?:Kz|AKZ|KZ)\s*([\d][\d.,\s\u00A0]{4,})/i)
@@ -146,6 +173,8 @@ function liteParse(t){
   if(bm)p.bank=bm[1].toUpperCase();
   const dm=t.match(/(\d{2}[-\/]\d{2}[-\/]\d{4}|\d{4}-\d{2}-\d{2})/);
   if(dm)p.date=dm[1];
+  let _sc=30;if(p.amount)_sc+=25;if(p.reference)_sc+=25;if(p.bank)_sc+=10;if(p.currency)_sc+=5;if(p.date)_sc+=5;
+  p.confidence=Math.min(100,_sc);
   return p;
 }
 function asText(p,raw){
