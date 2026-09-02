@@ -587,7 +587,7 @@ input,select{font-family:inherit;color:var(--ink)}
     </div>
     <div class="fld">
       <label>المورد المكلَّف بإيصالات هذه التسوية — يُسجَّل على كل إيصال ويُغذّي كشف الذمم</label>
-      <input id="sFwdSup" placeholder="مثال: Domingo" oninput="SS.fwdSup=this.value.trim()" style="margin-bottom:10px">
+      <input id="sFwdSup" placeholder="مثال: Domingo" oninput="SS.fwdSup=this.value.trim();RCPTS.forEach(function(r){if(!r.fwdTouched)r.fwdSup=SS.fwdSup;});renderRcpts()" style="margin-bottom:10px">
       <label>إيصالات التسوية (صورة / PDF — يُقرأ تلقائيًا)</label>
       <input type="file" id="sFiles" multiple accept="image/*,.pdf" onchange="addReceipts(this.files)">
       <div id="sSupSum" style="font-size:11.5px;font-weight:700;margin:6px 0 2px"></div><div id="rcptList"></div>
@@ -1354,10 +1354,13 @@ function renderRcpts(){
       '<div class="ic"></div><div class="fi"><div>'+esc(r.file.name)+'</div>'+
       (r.dup&&!r.ok?'<small>'+esc(r.why||'استُخدم من قبل في تسوية — مرفوض، احذفه')+'</small>'+
         (r.soft?'<button onclick="RCPTS['+i+'].ok=true;renderRcpts();updMatch()" style="display:block;margin-top:5px;border:1px solid #0A56B8;background:#fff;color:#0A56B8;font-weight:800;font-size:11px;padding:6px 11px;font-family:inherit;cursor:pointer">تحويل جديد مختلف فعلًا — احسبه</button>':'')
-        :amtBox)+'</div>'+
+        :amtBox+'<input value="'+esc(r.fwdSup||SS.fwdSup||'')+'" placeholder="المورد لهذا الإيصال" data-ri="'+i+'" oninput="rcptSup(this)" onclick="event.stopPropagation()" style="display:block;width:170px;height:32px;margin-top:6px;border:1px solid '+((r.fwdSup||SS.fwdSup)?'#C9DFFA':'#E6A700')+';background:#F6FAFF;text-align:center;font:700 12px \'IBM Plex Sans Arabic\',sans-serif;color:#0B2F70;outline:none">')+'</div>'+
       '<button class="del" onclick="RCPTS.splice('+i+',1);renderRcpts();updMatch()">✕</button></div>';
   }).join('');
 }
+function rcptSup(el){var r=RCPTS[+el.dataset.ri];if(!r)return;
+  r.fwdSup=el.value.trim();r.fwdTouched=true;
+  el.style.borderColor=r.fwdSup?'#C9DFFA':'#E6A700';}
 /* تحرير مبلغ إيصال يدويًا — العداد والباقي يتفاعلان لحظيًا */
 function rcptAmt(inp){
   var i=+inp.dataset.ri,r=RCPTS[i];if(!r)return;
@@ -1584,7 +1587,7 @@ async function savePending(){
     var rids=[];
     for(var i=0;i<RCPTS.length;i++){var rc=RCPTS[i],p=rc.parsed||{};
       var body={fingerprint:rc.fp,amount:p.amount||null,ccy:p.ccy||null,bank:p.bank||null,
-        account_no:p.account||null,txn_ref:p.ref||null,ocr:Object.assign({},p,SS.fwdSup?{fwd_sup:SS.fwdSup,fwd_at:new Date().toISOString()}:{})};
+        account_no:p.account||null,txn_ref:p.ref||null,ocr:Object.assign({},p,(rc.fwdSup||SS.fwdSup)?{fwd_sup:(rc.fwdSup||SS.fwdSup),fwd_at:new Date().toISOString()}:{})};
       var rr=await fetch(SB+'/bdl_receipts',{method:'POST',
         headers:H({Prefer:'return=representation,resolution=merge-duplicates'}),body:JSON.stringify(body)});
       if(rr.ok){var jj=await rr.json();if(jj[0])rids.push(jj[0].id);}
@@ -1722,7 +1725,7 @@ async function commitSettle(){
     var rids=[];
     for(var i=0;i<RCPTS.length;i++){var rc=RCPTS[i],p=rc.parsed||{};
       var body={fingerprint:rc.fp,amount:p.amount||null,ccy:p.ccy||null,bank:p.bank||null,
-        account_no:p.account||null,txn_ref:p.ref||null,ocr:Object.assign({},p,SS.fwdSup?{fwd_sup:SS.fwdSup,fwd_at:new Date().toISOString()}:{})};
+        account_no:p.account||null,txn_ref:p.ref||null,ocr:Object.assign({},p,(rc.fwdSup||SS.fwdSup)?{fwd_sup:(rc.fwdSup||SS.fwdSup),fwd_at:new Date().toISOString()}:{})};
       var rr=await fetch(SB+'/bdl_receipts',{method:'POST',
         headers:H({Prefer:'return=representation,resolution=merge-duplicates'}),body:JSON.stringify(body)});
       if(rr.ok){var jj=await rr.json();if(jj[0])rids.push(jj[0].id);}
