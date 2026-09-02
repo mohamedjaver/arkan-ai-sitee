@@ -201,6 +201,12 @@ function render(){
   const sIn=C.reduce((s,x)=>s+(x.ccy==='AOA'?x.amount:0),0),sOut=S.reduce((s,x)=>s+(x.ccy==='AOA'?x.amount:0),0);
   const okC=C.filter(r=>r.matched),sOk=okC.reduce((s,x)=>s+(x.ccy==='AOA'?x.amount:0),0),pend=C.filter(r=>!r.matched),sPend=sIn-sOk,pct=sIn?sOk/sIn*100:0;
   const unmatchedSup=S.filter(r=>!r.matched),sUS=unmatchedSup.reduce((s,x)=>s+(x.ccy==='AOA'?x.amount:0),0);
+  try{ /* دين المطابقة: مسوّى بلا مورد — على كامل البيانات لا على فلتر المدى */
+    const dAll=M.cust.filter(r=>r.settled&&!r.matched);
+    const dAmt=dAll.reduce((s,x)=>s+(x.ccy==='AOA'?x.amount:0),0);
+    localStorage.setItem('bdl_match_debt',JSON.stringify({n:dAll.length,amt:dAmt,ts:Date.now()}));
+    if(window.bdlDebtPaint)bdlDebtPaint();
+  }catch(e){}
   q('#m13st').innerHTML='<div class="m13st">'+
     '<div><span class="m13ic b">IN</span><div><div class="v" style="color:var(--blue)">'+short(sIn)+'<small>AOA</small></div><div class="l">إيصالات الزبائن · '+C.length+'</div></div></div>'+
     '<div><span class="m13ic g">OUT</span><div><div class="v" style="color:#2E7D32">'+short(sOut)+'<small>AOA</small></div><div class="l">إيصالات الموردين · '+S.length+'</div></div></div>'+

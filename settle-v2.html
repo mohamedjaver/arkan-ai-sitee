@@ -170,6 +170,11 @@ input,select{font-family:inherit;color:var(--ink)}
 .seg{display:flex;background:#fff;border:1px solid var(--line);margin:10px 12px 0}
 .seg button{flex:1;padding:9px;font-size:12.5px;font-weight:600;color:var(--muted)}
 .seg button.on{background:var(--navy);color:#fff}
+#debtBar{display:none;width:100%;border:0;background:linear-gradient(90deg,#E65100,#F57C00);color:#fff;
+  font:800 12.5px 'IBM Plex Sans Arabic',sans-serif;padding:9px 14px;cursor:pointer;text-align:center;
+  animation:debtPulse 2.4s infinite}
+#debtBar.onn{display:block}
+@keyframes debtPulse{0%,100%{filter:brightness(1)}50%{filter:brightness(1.18)}}
 .login{max-width:380px;margin:60px auto;background:#fff;border:1px solid var(--line);padding:24px 20px}
 #ovl-login{align-items:stretch!important;padding:0}
 #ovl-login .login{width:100%;max-width:none;margin:0;min-height:100dvh;box-sizing:border-box;border:0;
@@ -274,6 +279,7 @@ input,select{font-family:inherit;color:var(--ink)}
     <button data-tab="archive" onclick="go('archive')">الأرشيف</button>
     <button data-tab="profit" onclick="go('profit')">الأرباح</button>
   </nav>
+  <button id="debtBar" onclick="try{go('match')}catch(e){}"></button>
 </header>
 
 <!-- ══ تبويب التسوية ══ -->
@@ -2764,7 +2770,16 @@ async function ensureCustomer(phone,name){
 }
 
 /* ═══════════ الأرشيف ═══════════ */
-function go(t){
+function bdlDebtPaint(){
+  var b=document.getElementById('debtBar');if(!b)return;
+  var d=null;try{d=JSON.parse(localStorage.getItem('bdl_match_debt')||'null');}catch(e){}
+  if(!d||!d.n){b.classList.remove('onn');return;}
+  var age=Date.now()-(d.ts||0),h=Math.floor(age/3600000);
+  b.innerHTML='مطابقة ناقصة: <span class="num">'+d.n+'</span> إيصال زبون مسوّى · <span class="num">'+fmt(d.amt,0)+'</span> AOA بلا إيصال مورد — اضغط للمطابقة'+(h>=6?' <span style="opacity:.8">(آخر فحص منذ '+h+' س)</span>':'');
+  b.classList.add('onn');
+}
+try{bdlDebtPaint();setInterval(bdlDebtPaint,60000);}catch(e){}
+function go(t){bdlDebtPaint();
   document.querySelectorAll('.tabs button').forEach(function(b){b.classList.toggle('on',b.dataset.tab===t);});
   ['ops','settle','clients','archive','profit'].forEach(function(k){$('#v-'+k).style.display=k===t?'block':'none';});
   $('#bbar').style.display=t==='settle'?'flex':'none';
