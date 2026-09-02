@@ -41,6 +41,19 @@ const css=document.createElement('style');css.textContent=`
 .m13up{display:flex;gap:6px;margin-bottom:9px}
 .m13up button{flex:1;border:0;border-radius:9px;padding:10px;font-weight:800;font-size:12px;font-family:inherit;cursor:pointer;background:var(--navy);color:#fff}
 .m13up button.ghost{background:#fff;color:var(--navy);border:1px solid #D6E4F7}
+
+.m13r.v2{background:#fff;border:1px solid #E3ECF7;border-inline-start:4px solid #E65100;padding:13px 14px;margin-bottom:10px;cursor:pointer}
+.m13r.v2.ok{border-inline-start-color:#2E7D32}
+.m13r.v2 .v2t{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:9px}
+.m13r.v2 .v2a{font-size:20px;font-weight:800;font-variant-numeric:tabular-nums;color:#E65100}
+.m13r.v2 .v2a.ok{color:#2E7D32}
+.m13r.v2 .v2a small{font-size:11px;font-weight:700;color:#8AA3C4}
+.m13r.v2 .v2rows div{display:flex;justify-content:space-between;gap:12px;padding:4.5px 0;border-bottom:1px dashed #EDF2FA;font-size:12.5px}
+.m13r.v2 .v2rows div:last-child{border-bottom:0}
+.m13r.v2 .v2rows span{color:#5C7699;font-weight:600;flex:0 0 auto}
+.m13r.v2 .v2rows b{color:var(--ink,#0E1B33);font-weight:700;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.m13r.v2 .v2go{display:block;width:100%;margin-top:11px;padding:11px;border:0;background:var(--navy,#0B2F70);color:#fff;font:800 13px 'IBM Plex Sans Arabic',sans-serif;cursor:pointer}
+.m13r.v2 .v2go:active{filter:brightness(1.15)}
 .m13r{border:1px solid var(--line);border-radius:11px;padding:10px 11px;margin-bottom:7px;cursor:pointer;background:#fff;transition:border-color .15s,box-shadow .15s}
 .m13r:hover,.m13r.open{border-color:#B9CCEB;box-shadow:0 6px 16px -8px rgba(11,47,112,.2)}
 .m13r.ok{border-inline-start:3px solid #2E7D32}.m13r.pend{border-inline-start:3px solid #ED6C02}.m13r.half{border-inline-start:3px solid var(--blue)}
@@ -173,11 +186,18 @@ function passes(r){if(!M.q)return true;return [r.who,r.bank,r.ref,String(r.amoun
 
 /* ───── العرض ───── */
 function card(r,side){
-  const open=!!M.open[r.id],st=state(r),ini=String(r.bank||'BD').replace(/[^A-Za-z\u0600-\u06FF]/g,'').slice(0,2).toUpperCase()||'BD';
+  const open=!!M.open[r.id],st=state(r);
   const src={settle:'تسوية',upload:'مرفوع هنا',ops:'عمليات'}[r.src];
-  return '<div class="m13r '+st+(open?' open':'')+'" onclick="m13.toggle(\''+r.id+'\')"><div class="m13rt"><span class="m13bk'+(side==='sup'?' g':'')+'">'+esc(ini)+'</span>'+
-    '<div class="m13mid"><div class="bn">'+esc(r.who||'—')+'</div><div class="dt">'+esc(r.bank||'')+(r.bank?' · ':'')+r.date.toLocaleDateString('en-GB')+' '+r.date.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})+'</div></div>'+
-    '<div class="m13amt"><div class="a '+st+'">'+fmt(r.amount,0)+' <small style="font-size:10px">'+esc(r.ccy)+'</small></div><span class="m13b '+st+'">'+label(r)+'</span></div></div>'+
+  return '<div class="m13r v2 '+st+(open?' open':'')+'" onclick="m13.toggle(\''+r.id+'\')">'+
+    '<div class="v2t"><span class="m13b '+st+'">'+label(r)+'</span>'+
+    '<div class="v2a '+st+'">'+fmt(r.amount,0)+' <small>'+esc(r.ccy)+'</small></div></div>'+
+    '<div class="v2rows">'+
+    '<div><span>'+(side==='sup'?'المورد':'العميل')+'</span><b>'+esc(r.who||'—')+'</b></div>'+
+    '<div><span>المرجع</span><b class="num">'+esc(r.ref||'—')+'</b></div>'+
+    '<div><span>القناة</span><b>'+esc(r.bank||'—')+'</b></div>'+
+    '<div><span>التاريخ</span><b class="num">'+r.date.toLocaleDateString('en-GB')+' '+r.date.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})+'</b></div>'+
+    '</div>'+
+    (side!=='sup'&&st!=='ok'?'<button class="v2go" onclick="event.stopPropagation();m13.upload(\'sup\')">مطابقة مع إيصال المورد — رفع الإيصال</button>':'')+
     '<div class="m13x"><div><span>'+(side==='sup'?'المورد':'الزبون')+'</span><b>'+esc(r.who||'—')+'</b></div><div><span>رقم عملية البنك</span><b>'+esc(r.ref||'—')+'</b></div>'+
     (r.txRefs.length?'<div><span>'+(r.src==='ops'?'مرجع العملية':'العمليات المسوّاة (ربح مسجّل)')+'</span><b>'+esc(r.txRefs.join(', '))+'</b></div>':'')+
     (r.matched?'<div><span>'+(side==='sup'?'يغطي إيصال الزبون':'إيصال المورد المقابل')+'</span><b>'+esc(r.matched.who||'')+' · '+fmt(r.matched.amount,0)+' '+esc(r.matched.ccy)+(r.matched.ref?' · '+esc(r.matched.ref):'')+'</b></div>'+
