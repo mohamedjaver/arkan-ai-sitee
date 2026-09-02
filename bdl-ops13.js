@@ -237,7 +237,7 @@ function render(){
   const okC=C.filter(r=>r.matched),sOk=okC.reduce((s,x)=>s+(x.ccy==='AOA'?x.amount:0),0),pend=C.filter(r=>!r.matched),sPend=sIn-sOk,pct=sIn?sOk/sIn*100:0;
   const unmatchedSup=S.filter(r=>!r.matched),sUS=unmatchedSup.reduce((s,x)=>s+(x.ccy==='AOA'?x.amount:0),0);
   try{ /* دين المطابقة: مسوّى بلا مورد — على كامل البيانات لا على فلتر المدى */
-    const dAll=M.cust.filter(r=>r.settled&&!r.matched);
+    const dAll=M.cust.filter(r=>!r.matched); /* كل إيصال زبون بلا إيصال مورد — مسوّى أو قيد الانتظار */
     const dAmt=dAll.reduce((s,x)=>s+(x.ccy==='AOA'?x.amount:0),0);
     localStorage.setItem('bdl_match_debt',JSON.stringify({n:dAll.length,amt:dAmt,ts:Date.now()}));
     if(window.bdlDebtPaint)bdlDebtPaint();
