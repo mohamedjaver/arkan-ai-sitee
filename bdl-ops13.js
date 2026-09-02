@@ -333,7 +333,7 @@ async function files(list){
   /* ٣: القراءة — ٣ متوازية */
   const todo=M.up.items.map((it,i)=>({it,i})).filter(x=>x.i>=t0&&x.it.status!=='dup');
   await POOL(todo,3,async(x)=>{const it=x.it;
-    try{let p={};if(window.readReceipt)p=await readReceipt(it.file);
+    try{let p={};if(window.readReceipt)p=await Promise.race([readReceipt(it.file),new Promise((_,rj)=>setTimeout(()=>rj(new Error('timeout')),45000))]);
       it.amount=p.amount||'';it.ccy=norm(p.ccy||'AOA');it.bank=p.bank||'';it.ref=p.ref||p.txn||'';
       it.name=(M.up.bname||p.name||p.receiver||it.name||'');it.conf=Number(p.conf)||0;it.status='ok';
     }catch(e){it.status='ok';it.conf=0;}
@@ -363,7 +363,7 @@ function drawStats(){
     (dup?' · <span style="color:#B00020">مكرر <b class="num">'+dup+'</b></span>':'')+
     (lo?' · <span style="color:#9A4B00">للمراجعة <b class="num">'+lo+'</b></span>':'')+
     (rd?' · <span style="color:var(--blue)">جارٍ القراءة…</span>':'');
-  const b=q('#m13save');if(b&&!M.saving)b.disabled=!ok||rd>0;
+  const b=q('#m13save');if(b&&!M.saving){b.disabled=!ok||rd>0;b.textContent=rd?('جارٍ القراءة… '+(t-rd)+'/'+t):(!ok&&dup?'لا جديد — كل الدفعة مكررة':'حفظ ومطابقة'+(ok?' ('+ok+')':''));}
 }
 function itemHTML(it,i){
   const thumb=it.url&&/^image\//.test(it.file&&it.file.type||'')
@@ -395,8 +395,14 @@ function viewItem(i){
   drawItem(i);
 }
 async function save(){
-  const side=M.up.side,items=M.up.items.filter(it=>it.status==='ok');if(!items.length)return;
+  if(!M.up)return;
+  const side=M.up.side,items=M.up.items.filter(it=>it.status==='ok');
+  if(!items.length){
+    const dup=M.up.items.filter(it=>it.status==='dup').length,rd=M.up.items.filter(it=>it.status==='rd').length;
+    toast(rd?'انتظر انتهاء القراءة…':dup?'كل إيصالات هذه الدفعة مكررة ومحفوظة مسبقًا — لا جديد للحفظ':'لا إيصالات جاهزة للحفظ');
+    return;}
   const btn=q('#m13save');btn.disabled=true;M.saving=true;let n=0,done=0;
+  try{
   await POOL(items,4,async(it)=>{try{
     let url=null;
     if(it.file&&it.fp){try{const path=(side==='sup'?'supplier':'customer')+'/'+new Date().toISOString().slice(0,10)+'/'+it.fp.slice(0,16)+(/pdf/i.test(it.file.type)?'.pdf':'.jpg');
@@ -407,7 +413,7 @@ async function save(){
     if(side==='sup'&&it.name)body.ocr.sup_name=it.name;
     const r=await fetch(SB+'/bdl_receipts',{method:'POST',headers:H({Prefer:'return=representation'}),body:JSON.stringify(body)});if(r.ok)n++;}catch(e){}
     done++;if(btn)btn.textContent='حفظ… '+done+'/'+items.length;});
-  M.saving=false;
+  }finally{M.saving=false;if(btn){btn.disabled=false;btn.textContent='حفظ ومطابقة';}}
   toast('حُفظ '+n+' إيصال ✓ — جارٍ المطابقة');closeOvl('m13');M.up=null;await load();
   const newOk=(side==='sup'?M.sup:M.cust).filter(r=>r.src==='upload'&&r.matched).length;if(newOk)toast(newOk+' إيصال تمت تسويته ✓');
 }
