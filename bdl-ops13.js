@@ -498,7 +498,7 @@ async function del(id){const r=(M.cust.concat(M.sup,M.arch||[])).find(x=>x.id===
   if(ok){toast('حُذف ✓ — يمكن رفعه من جديد الآن');load();}else toast('تعذّر الحذف');}
 
 window.m13={toggle:id=>{M.open[id]=!M.open[id];render();},range:r=>{M.range=r;M.open={};load();},retol:async()=>{const b=q('#m13rng');M.tol=Number(q('#m13tol').value)||0;M.open={};toast('جارٍ إعادة المطابقة…');M.loaded=false;await load();toast('أعيدت المطابقة على هامش '+M.tol+'% ✓');},
-  commit,upload:uploadSheet,manual:manualSheet,files,nameSup,pairs:pairsReport,edit:(i,k,v)=>{if(M.up&&M.up.items[i])M.up.items[i][k]=v;},bname:v=>{if(!M.up)return;M.up.bname=v.trim();M.up.items.forEach((it,i)=>{it.name=M.up.bname;const el=document.querySelector('#m13qi'+i+' input.nm');if(el)el.value=M.up.bname;});},save,manualSave,del,view:viewItem,arch:archOne,unarch:unarchOne,archiveOrphans,reload:()=>load()};
+  commit,upload:uploadSheet,manual:manualSheet,files,nameSup,fwdSet,bsup:v=>{if(M.up)M.up.bsup=v.trim();(M.up&&M.up.items||[]).forEach((it,i)=>{it.fwdSup=M.up.bsup;const el=document.querySelector('#m13qi'+i+' input.fs');if(el)el.value=M.up.bsup;});},pairs:pairsReport,edit:(i,k,v)=>{if(M.up&&M.up.items[i])M.up.items[i][k]=v;},bname:v=>{if(!M.up)return;M.up.bname=v.trim();M.up.items.forEach((it,i)=>{it.name=M.up.bname;const el=document.querySelector('#m13qi'+i+' input.nm');if(el)el.value=M.up.bname;});},save,manualSave,del,view:viewItem,arch:archOne,unarch:unarchOne,archiveOrphans,reload:()=>load()};
 /* التبويب + التحديث */
 const G=window.go;window.go=function(t){G.apply(this,arguments);if(t==='books'){ensure();if(!M.loaded)load();}};
 const F=window.fetch;window.fetch=function(u,o){const p=F.apply(this,arguments);
