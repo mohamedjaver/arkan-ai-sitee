@@ -338,6 +338,20 @@ async function files(list){
       it.name=(M.up.bname||p.name||p.receiver||it.name||'');it.conf=Number(p.conf)||0;it.status='ok';
     }catch(e){it.status='ok';it.conf=0;}
     drawItem(x.i);drawStats();});
+  /* ٣ب: تكرار رقم العملية — البصمة لا تكفي (إعادة قص الصورة تغيّرها) */
+  try{
+    const wref=M.up.items.map((it,i)=>({it,i})).filter(x=>x.i>=t0&&x.it.status==='ok'&&String(x.it.ref||'').trim());
+    const refs=[...new Set(wref.map(x=>String(x.it.ref).trim()))],hitR=new Set();
+    for(let i=0;i<refs.length;i+=80){const part=refs.slice(i,i+80);
+      const r=await fetch(SB+'/bdl_receipts?select=txn_ref&ocr-%3E%3Eside=eq.'+(M.up.side==='sup'?'supplier':'customer')+'&txn_ref=in.('+part.map(x=>'"'+encodeURIComponent(x)+'"').join(',')+')',{headers:H()});
+      (r.ok?await r.json():[]).forEach(x=>hitR.add(String(x.txn_ref)));}
+    /* التكرار داخل الدفعة نفسها أيضًا */
+    const inBatch={};
+    wref.forEach(x=>{const k=String(x.it.ref).trim();
+      if(hitR.has(k)||inBatch[k]){x.it.status='dup';x.it.warn='';x.it.dupWhy='مكرر بالمرجع '+k;drawItem(x.i);}
+      else inBatch[k]=1;});
+  }catch(e){}
+  drawStats();
   /* ٤: تحذير تشابه المبلغ لمن بلا مرجع — استعلام مجمّع */
   try{
     const noref=M.up.items.map((it,i)=>({it,i})).filter(x=>x.i>=t0&&x.it.status==='ok'&&!x.it.ref&&x.it.amount);
@@ -373,7 +387,7 @@ function itemHTML(it,i){
     '<div class="g"><input placeholder="المبلغ" inputmode="decimal" class="num'+(it.status==='ok'&&(it.conf||0)>0&&it.conf<70?' lowc':'')+'" value="'+esc(it.amount)+'" oninput="m13.edit('+i+',\'amount\',this.value)"><input placeholder="العملة" value="'+esc(it.ccy)+'" oninput="m13.edit('+i+',\'ccy\',this.value)">'+
     '<input placeholder="البنك" value="'+esc(it.bank)+'" oninput="m13.edit('+i+',\'bank\',this.value)"><input placeholder="رقم العملية" class="num" value="'+esc(it.ref)+'" oninput="m13.edit('+i+',\'ref\',this.value)">'+
     '<input placeholder="'+(M.up&&M.up.side==='sup'?'اسم المورد':'اسم الزبون')+'" class="nm" value="'+esc(it.name)+'" oninput="m13.edit('+i+',\'name\',this.value)" style="grid-column:1/-1">'+
-    '<div class="st '+it.status+'">'+(it.status==='rd'?'جارٍ القراءة…':it.status==='dup'?'مكرر — هذا الإيصال محفوظ مسبقًا، لن يُحفظ':confBadge(it)+'جاهز'+(it.warn?' · <span style="color:#9A4B00">'+it.warn+'</span>':''))+'</div></div>';
+    '<div class="st '+it.status+'">'+(it.status==='rd'?'جارٍ القراءة…':it.status==='dup'?(it.dupWhy?'مكرر — '+esc(it.dupWhy)+'، لن يُحفظ':'مكرر — هذا الإيصال محفوظ مسبقًا، لن يُحفظ'):confBadge(it)+'جاهز'+(it.warn?' · <span style="color:#9A4B00">'+it.warn+'</span>':''))+'</div></div>';
 }
 function drawItem(i){
   const box=q('#m13qq');if(!box||!M.up)return;const it=M.up.items[i];if(!it)return;
@@ -401,9 +415,19 @@ async function save(){
     const dup=M.up.items.filter(it=>it.status==='dup').length,rd=M.up.items.filter(it=>it.status==='rd').length;
     toast(rd?'انتظر انتهاء القراءة…':dup?'كل إيصالات هذه الدفعة مكررة ومحفوظة مسبقًا — لا جديد للحفظ':'لا إيصالات جاهزة للحفظ');
     return;}
-  const btn=q('#m13save');btn.disabled=true;M.saving=true;let n=0,done=0;
+  const btn=q('#m13save');btn.disabled=true;M.saving=true;let n=0,done=0,rej=0;
   try{
-  await POOL(items,4,async(it)=>{try{
+  /* فحص مرجع أخير قبل الإرسال — يغطي الإدخال اليدوي أيضًا */
+  try{
+    const refs=[...new Set(items.map(it=>String(it.ref||'').trim()).filter(Boolean))],hitR=new Set();
+    for(let i=0;i<refs.length;i+=80){const part=refs.slice(i,i+80);
+      const r=await fetch(SB+'/bdl_receipts?select=txn_ref&ocr-%3E%3Eside=eq.'+(side==='sup'?'supplier':'customer')+'&txn_ref=in.('+part.map(x=>'"'+encodeURIComponent(x)+'"').join(',')+')',{headers:H()});
+      (r.ok?await r.json():[]).forEach(x=>hitR.add(String(x.txn_ref)));}
+    items.forEach(it=>{if(it.ref&&hitR.has(String(it.ref).trim())){it.status='dup';it.dupWhy='مكرر بالمرجع';}});
+  }catch(e){}
+  const live=items.filter(it=>it.status==='ok');
+  if(!live.length){drawQueue();toast('كل الإيصالات مكررة — لا جديد للحفظ');M.saving=false;btn.disabled=false;btn.textContent='حفظ ومطابقة';return;}
+  await POOL(live,4,async(it)=>{try{
     let url=null;
     if(it.file&&it.fp){try{const path=(side==='sup'?'supplier':'customer')+'/'+new Date().toISOString().slice(0,10)+'/'+it.fp.slice(0,16)+(/pdf/i.test(it.file.type)?'.pdf':'.jpg');
       const up=await fetch(SB.replace('/rest/v1','/storage/v1')+'/object/receipts/'+path,{method:'POST',headers:{apikey:ANON,Authorization:'Bearer '+(TOK||ANON),'Content-Type':it.file.type||'image/jpeg','x-upsert':'true'},body:it.file});
@@ -411,10 +435,10 @@ async function save(){
     const body={fingerprint:it.fp||null,amount:Number(String(it.amount).replace(/[^\d.]/g,''))||null,ccy:norm(it.ccy),bank:it.bank||null,txn_ref:it.ref||null,file_url:url,
       ocr:{side:side==='sup'?'supplier':'customer',source:'match-center',name:it.name||null,conf:it.conf||null,uploaded_at:new Date().toISOString(),manual:!it.file}};
     if(side==='sup'&&it.name)body.ocr.sup_name=it.name;
-    const r=await fetch(SB+'/bdl_receipts',{method:'POST',headers:H({Prefer:'return=representation'}),body:JSON.stringify(body)});if(r.ok)n++;}catch(e){}
-    done++;if(btn)btn.textContent='حفظ… '+done+'/'+items.length;});
+    const r=await fetch(SB+'/bdl_receipts',{method:'POST',headers:H({Prefer:'return=representation'}),body:JSON.stringify(body)});if(r.ok)n++;else if(r.status===409){rej++;it.status='dup';it.dupWhy='رفضته القاعدة كمكرر';}}catch(e){}
+    done++;if(btn)btn.textContent='حفظ… '+done+'/'+live.length;});
   }finally{M.saving=false;if(btn){btn.disabled=false;btn.textContent='حفظ ومطابقة';}}
-  toast('حُفظ '+n+' إيصال ✓ — جارٍ المطابقة');closeOvl('m13');M.up=null;await load();
+  toast('حُفظ '+n+' إيصال ✓'+(rej?' · رُفض '+rej+' كمكرر (حماية القاعدة)':'')+' — جارٍ المطابقة');closeOvl('m13');M.up=null;await load();
   const newOk=(side==='sup'?M.sup:M.cust).filter(r=>r.src==='upload'&&r.matched).length;if(newOk)toast(newOk+' إيصال تمت تسويته ✓');
 }
 function manualSheet(side){
