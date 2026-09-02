@@ -166,7 +166,7 @@ async function load(){
     /* ٢) الإيصالات المرفوعة هنا مباشرة */
     const rd=await fetch(SB+'/bdl_receipts?select=id,amount,ccy,bank,account_no,txn_ref,ocr,fingerprint,file_url,created_at&ocr->>source=eq.match-center'+gte+'&order=created_at.desc&limit=400',{headers:H()});
     (rd.ok?await rd.json():[]).forEach(x=>{if(rcMap[x.id])return;const o=x.ocr||{},row={id:'r:'+x.id,rid:x.id,src:'upload',amount:Number(x.amount)||0,ccy:norm(x.ccy),bank:x.bank||'',ref:x.txn_ref||'',date:new Date(x.created_at),file:x.file_url,
-        who:o.sup_name||o.name||o.receiver||'',txRefs:[],settled:false,pendingTx:false,ocr:o,stored:o.matched_rcpt||o.covers||null};
+        who:o.sup_name||o.name||o.receiver||'',fwdSup:o.fwd_sup||'',txRefs:[],settled:false,pendingTx:false,ocr:o,stored:o.matched_rcpt||o.covers||null};
       if(o.side==='supplier'&&o.archived)arch.push(row);else (o.side==='supplier'?sup:cust).push(row);});
     /* ٣) إيصالات العمليات (bdl_ops) */
     const ro=await fetch(SB+'/bdl_op_receipts?select=*&order=created_at.desc'+gte+'&limit=400',{headers:H()});
@@ -206,7 +206,7 @@ function card(r,side){
     '<div class="v2t"><span class="m13b '+st+'">'+label(r)+'</span>'+
     '<div class="v2a '+st+'">'+fmt(r.amount,0)+' <small>'+esc(r.ccy)+'</small></div></div>'+
     '<div class="v2rows">'+
-    (side==='sup'?'<div><span>المورد</span><b class="supn'+(r.who?'':' emp')+'" onclick="event.stopPropagation();m13.nameSup(\''+r.id+'\')">'+(r.who?esc(r.who):'اضغط لكتابة اسم المورد')+'</b></div>':'<div><span>العميل</span><b>'+esc(r.who||'—')+'</b></div>')+
+    (side==='sup'?'<div><span>المورد</span><b class="supn'+(r.who?'':' emp')+'" onclick="event.stopPropagation();m13.nameSup(\''+r.id+'\')">'+(r.who?esc(r.who):'اضغط لكتابة اسم المورد')+'</b></div>':'<div><span>العميل</span><b>'+esc(r.who||'—')+'</b></div>'+(r.rid?'<div><span>المورد المكلَّف</span><b class="supn'+(r.fwdSup?'':' emp')+'" onclick="event.stopPropagation();m13.fwdSet(\''+r.id+'\')">'+(r.fwdSup?esc(r.fwdSup):'حدّد المورد')+'</b></div>':''))+
     '<div><span>المرجع</span><b class="num">'+esc(r.ref||'—')+'</b></div>'+
     '<div><span>القناة</span><b>'+esc(r.bank||'—')+'</b></div>'+
     '<div><span>التاريخ</span><b class="num">'+r.date.toLocaleDateString('en-GB')+' '+r.date.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})+'</b></div>'+
@@ -303,15 +303,34 @@ async function nameSup(id){
     r.who=name;toast(name?('سُمّي المورد: '+name+' ✓'):'أُزيل الاسم');render();
   }catch(e){toast('تعذّر حفظ الاسم');}
 }
+async function fwdSet(id){
+  const r=M.cust.find(x=>x.id===id);if(!r||!r.rid)return;
+  const v=prompt('المورد المكلَّف بهذا الإيصال (إلى من حُوِّل):',r.fwdSup||'');if(v===null)return;
+  const name=v.trim();
+  try{
+    const o=Object.assign({},r.ocr,{fwd_sup:name||null,fwd_at:name?(r.ocr.fwd_at||new Date().toISOString()):null});
+    const x=await fetch(SB+'/bdl_receipts?id=eq.'+r.rid,{method:'PATCH',headers:H(),body:JSON.stringify({ocr:o})});
+    if(!x.ok)throw 0;r.ocr=o;r.fwdSup=name;toast(name?'كُلِّف: '+name+' ✓':'أُزيل التكليف');render();
+  }catch(e){toast('تعذّر الحفظ');}
+}
 /* ───── تقرير الارتباطات: زبون × مورد ───── */
 function pairsReport(){
   const agg={};
   M.cust.forEach(c=>{if(!c.matched)return;const su=c.matched;
     const k=(c.who||'—')+'\u21E0'+(su.who||'—');
     (agg[k]=agg[k]||{c:c.who||'—',s:su.who||'—',n:0,amt:0});agg[k].n++;agg[k].amt+=(c.ccy==='AOA'?c.amount:0);});
+  /* المكشوف على الموردين */
+  const exp={};const now=Date.now();
+  M.cust.forEach(c=>{if(c.matched)return;const k=c.fwdSup||'غير مخصَّص';
+    const e=(exp[k]=exp[k]||{s:k,n:0,amt:0,old:0});e.n++;e.amt+=(c.ccy==='AOA'?c.amount:0);
+    const h=Math.floor((now-c.date.getTime())/36e5);if(h>e.old)e.old=h;});
+  const erows=Object.values(exp).sort((a,b)=>b.amt-a.amt);
   const rows=Object.values(agg).sort((a,b)=>b.n-a.n||b.amt-a.amt);
   const un=rows.filter(r=>r.s==='—').reduce((sm,x)=>sm+x.n,0);
-  sheet(hdr('تقرير الارتباطات — زبون × مورد')+
+  sheet(hdr('الارتباطات والذمم')+
+    (erows.length?'<div class="m13status warn" style="margin-bottom:8px">المكشوف على الموردين — إيصالات زبائن حُوِّلت ولا يقابلها إيصال مورد</div>'+
+      '<table class="m13tb2" style="margin-bottom:14px"><tr><th>المورد المكلَّف</th><th>إيصالات</th><th>المكشوف AOA</th><th>أقدم</th></tr>'+
+      erows.map(r=>'<tr><td>'+(r.s==='غير مخصَّص'?'<span style="color:#B00020;font-weight:800">غير مخصَّص</span>':esc(r.s))+'</td><td class="num">'+r.n+'</td><td class="num" style="color:#B00020;font-weight:800">'+fmt(r.amt,0)+'</td><td class="num">'+(r.old>=24?Math.floor(r.old/24)+' يوم':r.old+' س')+'</td></tr>').join('')+'</table>':'')+
     (rows.length
       ?'<table class="m13tb2"><tr><th>الزبون</th><th>المورد</th><th>مطابقات</th><th>الإجمالي AOA</th></tr>'+
         rows.map(r=>'<tr><td>'+esc(r.c)+'</td><td>'+(r.s==='—'?'<span style="color:#ED6C02;font-weight:700">بلا اسم</span>':esc(r.s))+'</td><td class="num">'+r.n+'</td><td class="num">'+fmt(r.amt,0)+'</td></tr>').join('')+'</table>'+
@@ -340,6 +359,7 @@ function uploadSheet(side){
   sheet(hdr('رفع إيصالات '+(side==='sup'?'الموردين':'الزبائن'))+
     '<div class="drop" onclick="document.getElementById(\'m13f\').click()"><b>اختر صور الإيصالات أو PDF</b>قراءة تلقائية للمبلغ والبنك ورقم العملية · يمكن اختيار عدة ملفات<input id="m13f" type="file" accept="image/*,application/pdf" multiple style="display:none" onchange="m13.files(this.files)"></div>'+
     '<div class="m13fld" style="margin:10px 0 4px"><label>'+(side==='sup'?'اسم المورد للدفعة كاملة':'اسم الزبون للدفعة كاملة')+' — يُطبَّق على كل الإيصالات أدناه</label><input id="m13bn" oninput="m13.bname(this.value)" placeholder="'+(side==='sup'?'مثال: Arnesto':'اختياري')+'"></div>'+
+    (side==='cust'?'<div class="m13fld" style="margin:0 0 4px"><label>المورد المكلَّف بهذه الدفعة — إلى من ستُحوَّل</label><input id="m13bs" oninput="m13.bsup(this.value)" placeholder="مثال: Domingo"></div>':'')+
     '<div class="m13ps" id="m13ps"></div>'+
     '<div class="m13q" id="m13qq"></div>'+
     '<div class="m13act"><button id="m13save" disabled onclick="m13.save()">حفظ ومطابقة</button><button class="ghost" onclick="closeOvl(\'m13\')">إلغاء</button></div>');
@@ -348,7 +368,7 @@ const POOL=async(arr,n,fn)=>{let i=0;const w=Array.from({length:Math.min(n,arr.l
 async function files(list){
   const arr=Array.from(list||[]);if(!arr.length||!M.up)return;
   const t0=M.up.items.length;
-  arr.forEach(f0=>M.up.items.push({file:f0,status:'rd',amount:'',ccy:'AOA',bank:'',ref:'',name:(M.up.bname||''),url:'',conf:0}));
+  arr.forEach(f0=>M.up.items.push({file:f0,status:'rd',amount:'',ccy:'AOA',bank:'',ref:'',name:(M.up.bname||''),fwdSup:(M.up.bsup||''),url:'',conf:0}));
   for(let i=t0;i<M.up.items.length;i++)drawItem(i);
   drawStats();
   /* ١: قصّ + بصمة — ٤ متوازية */
@@ -421,6 +441,7 @@ function itemHTML(it,i){
     '<div class="g"><input placeholder="المبلغ" inputmode="decimal" class="num'+(it.status==='ok'&&(it.conf||0)>0&&it.conf<70?' lowc':'')+'" value="'+esc(it.amount)+'" oninput="m13.edit('+i+',\'amount\',this.value)"><input placeholder="العملة" value="'+esc(it.ccy)+'" oninput="m13.edit('+i+',\'ccy\',this.value)">'+
     '<input placeholder="البنك" value="'+esc(it.bank)+'" oninput="m13.edit('+i+',\'bank\',this.value)"><input placeholder="رقم العملية" class="num" value="'+esc(it.ref)+'" oninput="m13.edit('+i+',\'ref\',this.value)">'+
     '<input placeholder="'+(M.up&&M.up.side==='sup'?'اسم المورد':'اسم الزبون')+'" class="nm" value="'+esc(it.name)+'" oninput="m13.edit('+i+',\'name\',this.value)" style="grid-column:1/-1">'+
+    (M.up&&M.up.side==='cust'?'<input placeholder="المورد المكلَّف — إلى من حُوِّل" class="fs" value="'+esc(it.fwdSup||'')+'" oninput="m13.edit('+i+',\'fwdSup\',this.value)" style="grid-column:1/-1">':'')+
     '<div class="st '+it.status+'">'+(it.status==='rd'?'جارٍ القراءة…':it.status==='dup'?(it.dupWhy?'مكرر — '+esc(it.dupWhy)+'، لن يُحفظ':'مكرر — هذا الإيصال محفوظ مسبقًا، لن يُحفظ'):confBadge(it)+'جاهز'+(it.warn?' · <span style="color:#9A4B00">'+it.warn+'</span>':''))+'</div></div>';
 }
 function drawItem(i){
@@ -469,6 +490,7 @@ async function save(){
     const body={fingerprint:it.fp||null,amount:Number(String(it.amount).replace(/[^\d.]/g,''))||null,ccy:norm(it.ccy),bank:it.bank||null,txn_ref:it.ref||null,file_url:url,
       ocr:{side:side==='sup'?'supplier':'customer',source:'match-center',name:it.name||null,conf:it.conf||null,uploaded_at:new Date().toISOString(),manual:!it.file}};
     if(side==='sup'&&it.name)body.ocr.sup_name=it.name;
+    if(side!=='sup'&&it.fwdSup){body.ocr.fwd_sup=it.fwdSup;body.ocr.fwd_at=new Date().toISOString();}
     const r=await fetch(SB+'/bdl_receipts',{method:'POST',headers:H({Prefer:'return=representation'}),body:JSON.stringify(body)});if(r.ok)n++;else if(r.status===409){rej++;it.status='dup';it.dupWhy='رفضته القاعدة كمكرر';}}catch(e){}
     done++;if(btn)btn.textContent='حفظ… '+done+'/'+live.length;});
   }finally{M.saving=false;if(btn){btn.disabled=false;btn.textContent='حفظ ومطابقة';}}
