@@ -1139,6 +1139,11 @@ async function readReceipt(file){
       out.engine=r.engine;
       var fc=p.field_confidence&&Number(p.field_confidence.amount);
       out.conf=Math.round(fc||Number(p.confidence)||0)||(r.engine==='gemini'?85:r.engine==='pdf'?70:50);
+      /* صور: إن كان المرجع مقتطعًا من رقم الحساب/IBAN الذي قرأه Gemini نفسه — يُلغى بدل حفظه خاطئًا */
+      try{
+        var accDigits=(String(p.iban||'')+' '+String(p.account||'')).replace(/[^0-9]/g,'');
+        if(out.ref&&accDigits&&accDigits.indexOf(String(out.ref).replace(/[^0-9]/g,''))>=0){out.ref=null;out.conf=Math.min(out.conf||0,60);}
+      }catch(e){}
       /* PDF: القالب المحلي حَكَم — إن تعرّف على النوع بثقة عالية تُعتمد قيمه فوق Gemini */
       try{
         var isPdf=/pdf/i.test(file.type||'')||/\.pdf$/i.test(file.name||'');
