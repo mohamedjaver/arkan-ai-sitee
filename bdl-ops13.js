@@ -145,7 +145,7 @@ function bounds(){const d0=new Date();d0.setHours(0,0,0,0);let from=null;
 async function load(){
   if(M.busy||!ensure())return;M.busy=true;
   const from=bounds(),gte=from?'&created_at=gte.'+encodeURIComponent(from.toISOString()):'',gteU=from?'&updated_at=gte.'+encodeURIComponent(from.toISOString()):'';
-  const cust=[],sup=[];
+  const cust=[],sup=[],arch=[];
   try{
     /* ١) عمليات التسوية (مسوّاة/معلقة) وإيصالاتها */
     const rt=await fetch(SB+'/bdl_transactions?select=id,ref,status,settlement_id,meta,updated_at,amount,ccy,settle_amount,settle_ccy,bdl_customers(name)&status=in.(done,settled,settling)'+gteU+'&order=updated_at.desc&limit=400',{headers:H()});
@@ -167,7 +167,7 @@ async function load(){
     const rd=await fetch(SB+'/bdl_receipts?select=id,amount,ccy,bank,account_no,txn_ref,ocr,fingerprint,file_url,created_at&ocr->>source=eq.match-center'+gte+'&order=created_at.desc&limit=400',{headers:H()});
     (rd.ok?await rd.json():[]).forEach(x=>{if(rcMap[x.id])return;const o=x.ocr||{},row={id:'r:'+x.id,rid:x.id,src:'upload',amount:Number(x.amount)||0,ccy:norm(x.ccy),bank:x.bank||'',ref:x.txn_ref||'',date:new Date(x.created_at),file:x.file_url,
         who:o.sup_name||o.name||o.receiver||'',txRefs:[],settled:false,pendingTx:false,ocr:o,stored:o.matched_rcpt||o.covers||null};
-      (o.side==='supplier'?sup:cust).push(row);});
+      if(o.side==='supplier'&&o.archived)arch.push(row);else (o.side==='supplier'?sup:cust).push(row);});
     /* ٣) إيصالات العمليات (bdl_ops) */
     const ro=await fetch(SB+'/bdl_op_receipts?select=*&order=created_at.desc'+gte+'&limit=400',{headers:H()});
     const ops={};if(ro.ok){const rows=await ro.json();const opIds=[...new Set(rows.map(x=>x.op_id))];
@@ -176,7 +176,7 @@ async function load(){
           who:x.side==='in'?(o.client_name||x.sender||''):(o.supplier||x.sender||''),txRefs:o.ref?[o.ref]:[],settled:o.status==='closed'||o.status==='confirmed',pendingTx:false,ocr:{},stored:x.match_txn||null,matchTxn:x.match_txn||null};
         (x.side==='out'?sup:cust).push(row);});}
   }catch(e){console.warn('m13',e);}
-  M.cust=cust.sort((a,b)=>b.date-a.date);M.sup=sup.sort((a,b)=>b.date-a.date);M.loaded=true;M.busy=false;
+  M.cust=cust.sort((a,b)=>b.date-a.date);M.sup=sup.sort((a,b)=>b.date-a.date);M.arch=arch.sort((a,b)=>b.date-a.date);M.loaded=true;M.busy=false;
   matchAll();render();
 }
 /* ───── محرّك المطابقة ───── */
@@ -218,6 +218,7 @@ function card(r,side){
       '<div><span>طريقة المطابقة</span><b>'+({stored:'مثبّتة',ref:'رقم العملية',amount:'المبلغ مطابق',approx:'المبلغ ضمن الهامش'}[side==='sup'?(r.matched.how||'ref'):r.how]||'—')+'</b></div>':'<div><span>المطابقة</span><b style="color:#ED6C02">لا إيصال مقابل بعد</b></div>')+
     '<div><span>المصدر</span><b>'+src+'</b></div>'+
     '<div class="act">'+(r.file?'<button onclick="event.stopPropagation();window.open(\''+esc(r.file)+'\',\'_blank\')">عرض الملف</button>':'')+
+    (side==='sup'&&!r.matched&&r.rid?'<button onclick="event.stopPropagation();m13.arch(\''+r.id+'\')">أرشفة — بلا تسوية</button>':'')+
     ((r.rid||r.oid)?'<button class="del" onclick="event.stopPropagation();m13.del(\''+r.id+'\')">حذف</button>':'')+'</div></div></div>';
 }
 function col(side){
@@ -226,7 +227,7 @@ function col(side){
   return '<div class="m13col"><div class="m13ch"><span class="m13ic '+(side==='sup'?'g':'b')+'">'+(side==='sup'?'OUT':'IN')+'</span><div class="t"><b>'+(side==='sup'?'إيصالات الموردين':'إيصالات الزبائن')+'</b><span><span class="num">'+rows.length+'</span> إيصال · <span class="num">'+ok+'</span> مطابَق</span></div><span class="sum">'+fmt(sum,0)+' AOA</span></div>'+
     '<div class="m13up"><button onclick="m13.upload(\''+side+'\')">رفع إيصالات '+(side==='sup'?'الموردين':'الزبائن')+'</button><button class="ghost" onclick="m13.manual(\''+side+'\')">إدخال يدوي</button></div>'+
     (show.length?show.map(r=>card(r,side)).join(''):'<div class="empty" style="padding:16px">لا إيصالات في هذه الفترة</div>')+
-    (rows.length>6?'<button class="m13more" onclick="m13.toggle(\'all:'+side+'\')">'+(M.open['all:'+side]?'عرض أقل':'عرض الكل ('+rows.length+')')+'</button>':'')+'</div>';
+    (rows.length>6?'<button class="m13more" onclick="m13.toggle(\'all:'+side+'\')">'+(M.open['all:'+side]?'عرض أقل':'عرض الكل ('+rows.length+')')+'</button>':'')+(side==='sup'&&(M.arch||[]).length?'<button class="m13more" style="color:#6A5A8E;border-color:#D9D2E8" onclick="m13.toggle(\'archl\')">'+(M.open['archl']?'إخفاء المؤرشفة':'مؤرشفة بلا تسوية — خارج الحساب ('+M.arch.length+')')+'</button>'+(M.open['archl']?M.arch.map(archRow).join(''):''):'')+'</div>';
 }
 function render(){
   if(!ensure()||!M.loaded)return;
@@ -252,9 +253,42 @@ function render(){
     bar('إجمالي إيصالات الزبائن',sIn,100,'b')+bar('مطابَق بإيصالات الموردين',sOk,pct,'g')+bar('بانتظار المورد',sPend,100-pct,'o')+
     (pend.length?'<div class="m13status warn">لم تُطابَق جميع الإيصالات — <span class="num">'+pend.length+'</span> إيصال زبون بقيمة <span class="num">'+fmt(sPend,0)+'</span> AOA بلا إيصال مورد مقابل'+(unmatchedSup.length?' · و<span class="num">'+unmatchedSup.length+'</span> إيصال مورد ('+fmt(sUS,0)+' AOA) بلا زبون':'')+'</div>'
       :C.length?'<div class="m13status ok">✓ كل إيصالات الزبائن مطابَقة بإيصالات الموردين'+(unmatchedSup.length?' · يوجد '+unmatchedSup.length+' إيصال مورد فائض ('+fmt(sUS,0)+' AOA)':'')+'</div>':'')+
-    '<div class="m13tol"><span>هامش التطابق %</span><input id="m13tol" inputmode="decimal" value="'+M.tol+'"><button onclick="m13.pairs()">تقرير الارتباطات</button><button onclick="m13.retol()">إعادة المطابقة</button><button class="pri" onclick="m13.commit()">تثبيت المطابقات</button></div></div>';
+    '<div class="m13tol"><span>هامش التطابق %</span><input id="m13tol" inputmode="decimal" value="'+M.tol+'"><button onclick="m13.pairs()">تقرير الارتباطات</button><button onclick="m13.archiveOrphans()">أرشفة بلا تسوية</button><button onclick="m13.retol()">إعادة المطابقة</button><button class="pri" onclick="m13.commit()">تثبيت المطابقات</button></div></div>';
 }
 
+function archRow(r){
+  return '<div class="m13r v2" style="opacity:.72;border-inline-start-color:#6A5A8E">'+
+    '<div class="v2t"><span class="m13b" style="background:#EFEAF7;color:#6A5A8E">مؤرشف — لا يُحتسب</span>'+
+    '<div class="v2a" style="color:#6A5A8E">'+fmt(r.amount,0)+' <small>'+esc(r.ccy)+'</small></div></div>'+
+    '<div class="v2rows"><div><span>المورد</span><b>'+esc(r.who||'—')+'</b></div>'+
+    '<div><span>المرجع</span><b class="num">'+esc(r.ref||'—')+'</b></div>'+
+    '<div><span>البنك</span><b>'+esc(r.bank||'—')+'</b></div></div>'+
+    '<div class="act"><button onclick="m13.unarch(\''+r.id+'\')">استرجاع للحساب</button>'+
+    (r.file?'<button onclick="window.open(\''+esc(r.file)+'\',\'_blank\')">عرض الملف</button>':'')+
+    '<button class="del" onclick="m13.del(\''+r.id+'\')">حذف</button></div></div>';
+}
+async function archSet(r,on){
+  const o=Object.assign({},r.ocr,{archived:!!on,archived_at:on?new Date().toISOString():null});
+  const x=await fetch(SB+'/bdl_receipts?id=eq.'+r.rid,{method:'PATCH',headers:H(),body:JSON.stringify({ocr:o})});
+  if(!x.ok)throw 0;r.ocr=o;
+}
+async function archOne(id){
+  const r=M.sup.find(x=>x.id===id);if(!r||!r.rid)return;
+  if(!confirm('أرشفة هذا الإيصال؟\nسيخرج من الحساب والمطابقة والمقارنات، ويبقى محفوظًا ويمكن استرجاعه.'))return;
+  try{await archSet(r,true);toast('أُرشف — خارج الحساب ✓');load();}catch(e){toast('تعذّرت الأرشفة');}
+}
+async function unarchOne(id){
+  const r=(M.arch||[]).find(x=>x.id===id);if(!r||!r.rid)return;
+  try{await archSet(r,false);toast('استُرجع للحساب ✓');load();}catch(e){toast('تعذّر الاسترجاع');}
+}
+async function archiveOrphans(){
+  const list=M.sup.filter(r=>!r.matched&&r.rid&&r.src==='upload');
+  if(!list.length){toast('لا إيصالات مورد بلا تسوية للأرشفة');return;}
+  const sum=list.reduce((a,x)=>a+(x.ccy==='AOA'?x.amount:0),0);
+  if(!confirm('أرشفة '+list.length+' إيصال مورد بلا تسوية ('+fmt(sum,0)+' AOA)؟\nتخرج من الحساب وتبقى قابلة للاسترجاع.'))return;
+  let n=0;await POOL(list,4,async(r)=>{try{await archSet(r,true);n++;}catch(e){}});
+  toast('أُرشف '+n+' إيصال ✓ — خارج الحساب');load();
+}
 /* ───── تسمية المورد على الإيصال ───── */
 async function nameSup(id){
   const r=M.sup.find(x=>x.id===id);if(!r)return;
@@ -454,7 +488,7 @@ async function manualSave(){
   M.up.items=[{status:'ok',amount:a,ccy:g('mm_c')||'AOA',bank:g('mm_b'),ref:g('mm_r'),name:g('mm_n'),file:null,fp:null}];
   const b=document.createElement('button');b.id='m13save';q('#m13sb').appendChild(b);await save();
 }
-async function del(id){const r=(M.cust.concat(M.sup)).find(x=>x.id===id);if(!r||(!r.rid&&!r.oid))return;
+async function del(id){const r=(M.cust.concat(M.sup,M.arch||[])).find(x=>x.id===id);if(!r||(!r.rid&&!r.oid))return;
   if(!confirm('حذف هذا الإيصال نهائيًا؟\nسيتحرّر رقم عمليته وبصمته ويمكن رفعه من جديد.'))return;
   let ok=false;
   try{
@@ -464,7 +498,7 @@ async function del(id){const r=(M.cust.concat(M.sup)).find(x=>x.id===id);if(!r||
   if(ok){toast('حُذف ✓ — يمكن رفعه من جديد الآن');load();}else toast('تعذّر الحذف');}
 
 window.m13={toggle:id=>{M.open[id]=!M.open[id];render();},range:r=>{M.range=r;M.open={};load();},retol:async()=>{const b=q('#m13rng');M.tol=Number(q('#m13tol').value)||0;M.open={};toast('جارٍ إعادة المطابقة…');M.loaded=false;await load();toast('أعيدت المطابقة على هامش '+M.tol+'% ✓');},
-  commit,upload:uploadSheet,manual:manualSheet,files,nameSup,pairs:pairsReport,edit:(i,k,v)=>{if(M.up&&M.up.items[i])M.up.items[i][k]=v;},bname:v=>{if(!M.up)return;M.up.bname=v.trim();M.up.items.forEach((it,i)=>{it.name=M.up.bname;const el=document.querySelector('#m13qi'+i+' input.nm');if(el)el.value=M.up.bname;});},save,manualSave,del,view:viewItem,reload:()=>load()};
+  commit,upload:uploadSheet,manual:manualSheet,files,nameSup,pairs:pairsReport,edit:(i,k,v)=>{if(M.up&&M.up.items[i])M.up.items[i][k]=v;},bname:v=>{if(!M.up)return;M.up.bname=v.trim();M.up.items.forEach((it,i)=>{it.name=M.up.bname;const el=document.querySelector('#m13qi'+i+' input.nm');if(el)el.value=M.up.bname;});},save,manualSave,del,view:viewItem,arch:archOne,unarch:unarchOne,archiveOrphans,reload:()=>load()};
 /* التبويب + التحديث */
 const G=window.go;window.go=function(t){G.apply(this,arguments);if(t==='books'){ensure();if(!M.loaded)load();}};
 const F=window.fetch;window.fetch=function(u,o){const p=F.apply(this,arguments);
