@@ -162,7 +162,7 @@ async function load(){
       (r.ok?await r.json():[]).forEach(x=>rcMap[x.id]=x);}
     rcIds.forEach(id=>{const x=rcMap[id];if(!x)return;const ts=byRc[id],done=ts.some(t=>t.status==='done'||t.status==='settled');
       cust.push({id:'r:'+x.id,rid:x.id,src:'settle',amount:Number(x.amount)||0,ccy:norm(x.ccy),bank:x.bank||'',ref:x.txn_ref||'',date:new Date(x.created_at),file:x.file_url,
-        who:(ts[0]&&ts[0].bdl_customers&&ts[0].bdl_customers.name)||'',txRefs:ts.map(t=>t.ref),settled:done,pendingTx:!done,ocr:x.ocr||{},stored:(x.ocr&&x.ocr.matched_rcpt)||null});});
+        who:(ts[0]&&ts[0].bdl_customers&&ts[0].bdl_customers.name)||'',txRefs:ts.map(t=>t.ref),settled:done,pendingTx:!done,ocr:x.ocr||{},fwdSup:(x.ocr&&x.ocr.fwd_sup)||'',stored:(x.ocr&&x.ocr.matched_rcpt)||null});});
     /* ٢) الإيصالات المرفوعة هنا مباشرة */
     const rd=await fetch(SB+'/bdl_receipts?select=id,amount,ccy,bank,account_no,txn_ref,ocr,fingerprint,file_url,created_at&ocr->>source=eq.match-center'+gte+'&order=created_at.desc&limit=400',{headers:H()});
     (rd.ok?await rd.json():[]).forEach(x=>{if(rcMap[x.id])return;const o=x.ocr||{},row={id:'r:'+x.id,rid:x.id,src:'upload',amount:Number(x.amount)||0,ccy:norm(x.ccy),bank:x.bank||'',ref:x.txn_ref||'',date:new Date(x.created_at),file:x.file_url,
