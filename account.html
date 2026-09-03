@@ -2171,6 +2171,15 @@ async function mrbDone(){
       btn.textContent=res.dup?('✓ مكرر '+(dupWhy||'— محفوظ مسبقًا')):'✓ سُجّل إيصال المورد — سيُطابَق فورًا';
       btn.style.background='#0B7A3B';
       toastSafe(res.dup?('مكرر '+(dupWhy||'— محفوظ مسبقًا')):'سُجّل وسيُطابَق مع إيصالات الزبائن ✓');
+      try{
+        var nx=document.getElementById('mrbNext');
+        if(!nx){nx=document.createElement('button');nx.id='mrbNext';
+          nx.style.cssText='display:block;width:100%;margin-top:10px;padding:14px;border:0;background:#0B2F70;color:#fff;font:800 14px \'IBM Plex Sans Arabic\',sans-serif;cursor:pointer';
+          btn.parentNode.appendChild(nx);}
+        var supN=((document.getElementById('mrbName')||{}).value||'').trim();
+        nx.textContent='متابعة في التسوية — رفع الكوانزا المقابلة'+(supN?' لـ '+supN:'')+' ←';
+        nx.onclick=function(){location.href='settle-v2.html#pair='+encodeURIComponent(supN);};
+      }catch(e){}
     }else{
       btn.disabled=false;btn.textContent='⚠ لم يُسجَّل — اضغط لإعادة المحاولة';btn.style.background='#B00020';
       toastSafe('فشل التسجيل: '+(res.err||'')+' — أعد المحاولة');

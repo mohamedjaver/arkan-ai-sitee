@@ -2832,6 +2832,21 @@ function bdlDebtPaint(){
   b.classList.add('onn');
 }
 try{bdlDebtPaint();setInterval(bdlDebtPaint,60000);}catch(e){}
+try{ /* جسر البطاقة الخضراء: #pair=SUPPLIER → مركز المطابقة + رفع زبائن بالمورد معبأ */
+  var _hm=location.hash.match(/pair=([^&]*)/);
+  if(_hm){var _supN=decodeURIComponent(_hm[1]||'');history.replaceState(null,'',location.pathname);
+    setTimeout(function(){try{go('books');
+      var _t0=Date.now();(function _w(){
+        if(window.m13&&m13.upload){m13.upload('cust');
+          setTimeout(function(){try{
+            var el=document.getElementById('m13bs');if(el)el.value=_supN;
+            if(window.m13&&m13.bsup)m13.bsup(_supN);
+            toast('ارفع إيصالات الكوانزا المقابلة — المورد المكلَّف: '+(_supN||'حدّده'));
+          }catch(e){}},450);
+        } else if(Date.now()-_t0<9000) setTimeout(_w,300);
+      })();
+    }catch(e){}},600);}
+}catch(e){}
 function go(t){bdlDebtPaint();
   document.querySelectorAll('.tabs button').forEach(function(b){b.classList.toggle('on',b.dataset.tab===t);});
   ['ops','settle','clients','archive','profit'].forEach(function(k){$('#v-'+k).style.display=k===t?'block':'none';});
