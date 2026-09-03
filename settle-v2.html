@@ -1278,16 +1278,24 @@ async function rcptRefGuard(rec){
       }
     }
     if(used){rec.dup=true;rec.ok=false;
-      rec.why='المرجع '+ref+(used==='pending'?' محجوز في تسوية معلقة أخرى':' استُخدم في تسوية سابقة مكتملة');
+      rec.why='المرجع '+ref+(used==='pending'?' محجوز في تسوية معلقة أخرى':' استُخدم في تسوية '+(sheetSide()==='supplier'?'مورد':'زبون')+' سابقة مكتملة');
       renderRcpts();updMatch();}
   }catch(e){}
 }
+function sheetSide(){
+  /* جانب التسوية الحالية من العمليات المحددة: مورد إن كانت كلها موردًا */
+  try{var ops=selected();if(ops.length&&ops.every(function(t){return t.meta&&t.meta.side==='supplier';}))return 'supplier';}catch(e){}
+  return 'customer';
+}
 async function rcptUsedByTx(rid,selIds){
-  /* الإيصال «مستخدم» إن ظهر في rcpt_ids لعملية معلقة أخرى أو مكتملة/مسوّاة */
+  /* «مستخدم» فقط داخل نفس الجانب: إيصال تسوية زبون مشروعٌ مجددًا في تسوية مورد والعكس */
   try{
-    var pq=await fetch(SB+'/bdl_transactions?select=id,status&status=in.(settling,done,settled)&meta-%3Ercpt_ids=cs.%5B%22'+rid+'%22%5D&limit=6',{headers:H()});
+    var side=sheetSide();
+    var pq=await fetch(SB+'/bdl_transactions?select=id,status,meta&status=in.(settling,done,settled)&meta-%3Ercpt_ids=cs.%5B%22'+rid+'%22%5D&limit=8',{headers:H()});
     var pj=pq.ok?await pq.json():[];
     for(var i=0;i<pj.length;i++){var t=pj[i];
+      var tSide=(t.meta&&t.meta.side)||'customer';
+      if(tSide!==side)continue;
       if(t.status==='done'||t.status==='settled')return 'settled';
       if((selIds||[]).indexOf(t.id)<0)return 'pending';}
   }catch(e){}
