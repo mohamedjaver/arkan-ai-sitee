@@ -98,6 +98,22 @@ function euNum(x){
 }
 function liteParse(t){
   const p={amount:0,currency:'',reference:'',bank:'',date:'',confidence:40};
+  /* قالب BFA — Comprovativo de Operação (Banco de Fomento Angola) */
+  if(/Comprovativo\s+de\s+Opera[çc][ãa]o/i.test(t)||/Banco\s+de\s+Fomento\s+Angola/i.test(t)){
+    const rf=t.match(/N\.?\s*[ºo°]?\s*da\s+opera[çc][ãa]o[\s:]{0,6}(\d{5,})/i);
+    const am=t.match(/Valor\s+da\s+Opera[çc][ãa]o[\s:]{0,6}([\d][\d.\s\u00A0]{2,},\d{2})\s*(?:AKZ|Kz)?/i);
+    const nm=t.match(/Nome\s+do\s+Benefici[áa]rio[\s:]{0,6}([A-ZÀ-Ú][A-ZÀ-Ú0-9 .,&\-]{3,70})/);
+    const cr=t.match(/Conta\s*\/?\s*IBAN\s+Creditado[\s:]{0,6}([\d ]{6,})/i);
+    const dt=t.match(/Data\s+da\s+Opera[çc][ãa]o[\s:]{0,6}(\d{2}\/\d{2}\/\d{4})/i);
+    if(rf||am){
+      p.bank='BFA';p.currency='Kz';
+      if(am)p.amount=euNum(am[1]);
+      if(rf)p.reference=rf[1];
+      if(nm)p.name=nm[1].replace(/\s+(Tipo|Data|E-?mail|Perioc|Descritivo).*$/i,'').replace(/(?:\s+[A-Z]){1,2}$/,'').trim();
+      if(cr)p.receiver=cr[1].replace(/\s+/g,'');
+      if(dt)p.date=dt[1];
+      p.confidence=(p.amount&&p.reference)?100:80;return p;}
+  }
   /* قالب Binance — Detalhes do saque (سحب USDT): Txid كامل + تاريخ بالثواني */
   if((/Detalhes\s+do\s+saque|Binance/i.test(t))&&/(Txid|USDT)/i.test(t)){
     const tx=t.match(/Txid[\s:]{0,6}(0x[a-fA-F0-9]{16,})/i)||t.match(/\b(0x[a-fA-F0-9]{40,})\b/);
