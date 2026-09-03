@@ -216,7 +216,10 @@ function matchAll(){
   /* ج) المبلغ ضمن الهامش — الأكبر أولًا */
   const tol=Math.max(0,Number(M.tol)||0)/100;
   M.cust.slice().sort((a,b)=>b.amount-a.amount).forEach(c=>{if(c.matched||!c.amount)return;
-    let best=null,bd=Infinity;M.sup.forEach(s=>{if(s.matched||s.ccy!==c.ccy||!s.amount)return;const d=Math.abs(s.amount-c.amount)/c.amount;if(d<=tol&&d<bd){bd=d;best=s;}});
+    let best=null,bd=Infinity;M.sup.forEach(s=>{if(s.matched||s.ccy!==c.ccy||!s.amount)return;
+      const d=Math.abs(s.amount-c.amount)/c.amount;
+      const dt=Math.abs((s.date&&s.date.getTime()||0)-(c.date&&c.date.getTime()||0));
+      if(d<=tol&&dt<=48*36e5&&d<bd){bd=d;best=s;}});
     if(best){c.matched=best;best.matched=c;c.how=bd===0?'amount':'approx';}});
 }
 const state=r=>r.matched?'ok':(r.settled?'half':'pend');
@@ -236,6 +239,7 @@ function card(r,side){
     '<div><span>القناة</span><b>'+esc(r.bank||'—')+'</b></div>'+
     '<div><span>التاريخ</span><b class="num">'+r.date.toLocaleDateString('en-GB')+' '+r.date.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})+'</b></div>'+
     '</div>'+
+    (side!=='sup'&&st!=='ok'?'<div style="margin-top:9px;padding:7px 10px;background:#FBEAEC;color:#B00020;font-size:12px;font-weight:800">المطابقة ينقصها '+fmt(r.amount,0)+' '+esc(r.ccy)+' — لا إيصال مورد لهذا المبلغ بعد</div>':'')+
     (side!=='sup'&&st!=='ok'?'<button class="v2go" onclick="event.stopPropagation();m13.upload(\'sup\')">مطابقة مع إيصال المورد — رفع الإيصال</button>':'')+
     '<div class="m13x"><div><span>'+(side==='sup'?'المورد':'الزبون')+'</span><b>'+esc(r.who||'—')+'</b></div><div><span>رقم عملية البنك</span><b>'+esc(r.ref||'—')+'</b></div>'+
     (r.txRefs.length?'<div><span>'+(r.src==='ops'?'مرجع العملية':'العمليات المسوّاة (ربح مسجّل)')+'</span><b>'+esc(r.txRefs.join(', '))+'</b></div>':'')+

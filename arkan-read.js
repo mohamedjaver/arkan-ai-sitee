@@ -97,6 +97,22 @@ function euNum(x){
 }
 function liteParse(t){
   const p={amount:0,currency:'',reference:'',bank:'',date:'',confidence:40};
+  /* قالب Comprovativo Digital — MULTICAIXA Express (PDF رقمي): Data-Hora بالثواني */
+  if(/Comprovativo\s+Digital/i.test(t)||(/MULTICAIXA\s+Express/i.test(t)&&/Transac[çc][ãa]o/i.test(t))){
+    const dh=t.match(/Data\s*-?\s*Hora[^\d]{0,10}(\d{4}-\d{2}-\d{2})[\sT]+(\d{2}:\d{2}(?::\d{2})?)/i);
+    const am=t.match(/(?:Total|Montante)[^\d]{0,10}([\d][\d.\s\u00A0]{2,},\d{2})\s*Kz/i)||t.match(/(?:Total|Montante)[^\d]{0,10}([\d][\d.,\s\u00A0]{2,})/i);
+    const rf=t.match(/Transac[çc][ãa]o[^\d]{0,10}(\d{5,})/i);
+    const nm=t.match(/Destinat[áa]rio\s*:?\s*([A-ZÀ-Ú][A-ZÀ-Ú0-9 .,&\-]{3,70})/i);
+    const ib=t.match(/IBAN\s*:?\s*(A[O0][\d.\s]{10,})/i);
+    if(rf||am){
+      p.bank='MULTICAIXA';p.currency='Kz';
+      if(am)p.amount=euNum(am[1]);
+      if(rf)p.reference=rf[1];
+      if(nm)p.name=nm[1].replace(/\s+(IBAN|Montante|Comiss|Imposto|Total|Transac).*$/i,'').replace(/(?:\s+[A-Z]){1,2}$/,'').trim();
+      if(ib)p.receiver=ib[1].replace(/[.\s]/g,'');
+      if(dh)p.date=dh[1]+' '+dh[2];
+      p.confidence=(p.amount&&p.reference)?100:80;return p;}
+  }
   /* قالب قسيمة MULTICAIXA الورقية (ماكينة ATM): TRANSFERÊNCIA BANCÁRIA */
   if(/IMPORT[ÂA]NCIA\s+A\s+TRANSFERIR/i.test(t)||(/MULTICAIXA/i.test(t)&&/TRANSAC[ÇC][ÃA]O/i.test(t))){
     const amM=t.match(/IMPORT[ÂA]NCIA\s+A\s+TRANSFERIR:?\s*([\d.,\s\u00A0]+?)\s*KZ/i)||t.match(/([\d][\d.\s]{4,},\d{2})\s*KZ/);

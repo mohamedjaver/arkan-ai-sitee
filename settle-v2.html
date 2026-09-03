@@ -1325,16 +1325,24 @@ async function supProbe(rec){
   /* هل يوجد إيصال مورد مقابل (نفس رقم العملية أو نفس المبلغ)؟ */
   var p=rec.parsed;if(!p||(!p.ref&&!p.amount))return;
   try{
-    var qs=p.ref?('txn_ref=eq.'+encodeURIComponent(p.ref)):('amount=eq.'+Number(p.amount));
-    var r=await fetch(SB+'/bdl_receipts?select=id,ocr&ocr-%3E%3Eside=eq.supplier&'+qs+'&limit=1',{headers:H()});
-    var j=r.ok?await r.json():[];
-    rec.sup=j[0]?(((j[0].ocr||{}).sup_name)||((j[0].ocr||{}).name)||'مورد'):null;
+    rec.sup=null;rec.supAmtOnly=false;
+    if(p.ref){ /* التأكيد الحقيقي: نفس رقم العملية */
+      var r1=await fetch(SB+'/bdl_receipts?select=id,ocr&ocr-%3E%3Eside=eq.supplier&txn_ref=eq.'+encodeURIComponent(p.ref)+'&limit=1',{headers:H()});
+      var j1=r1.ok?await r1.json():[];
+      if(j1[0])rec.sup=(((j1[0].ocr||{}).sup_name)||((j1[0].ocr||{}).name)||'مورد');
+    }
+    if(!rec.sup&&p.amount){ /* تشابه مبلغ فقط — تنبيه، ليس تأكيدًا */
+      var r2=await fetch(SB+'/bdl_receipts?select=id&ocr-%3E%3Eside=eq.supplier&amount=eq.'+Number(p.amount)+'&limit=1',{headers:H()});
+      var j2=r2.ok?await r2.json():[];
+      if(j2[0])rec.supAmtOnly=true;
+    }
     rec.supChecked=true;renderRcpts();
   }catch(e){}
 }
 function renderRcpts(){
   try{var ck=RCPTS.filter(function(r){return r.supChecked;}),mt=ck.filter(function(r){return r.sup;});
-    var el=$('#sSupSum');if(el)el.innerHTML=RCPTS.length?('مطابقة الموردين: <span class="num">'+mt.length+'/'+RCPTS.length+'</span>'+(mt.length===RCPTS.length&&RCPTS.length?' <span style="color:#0E8F5B">✓ كل إيصال له مورد مقابل</span>':' <span style="color:#9A4B00">إيصالات بلا مورد بعد</span>')):'';
+    var miss=0;RCPTS.forEach(function(r){if(!(r.sup)&&r.parsed&&r.parsed.amount)miss+=Number(r.parsed.amount)||0;});
+    var el=$('#sSupSum');if(el)el.innerHTML=RCPTS.length?('مطابقة الموردين: <span class="num">'+mt.length+'/'+RCPTS.length+'</span>'+(mt.length===RCPTS.length&&RCPTS.length?' <span style="color:#0E8F5B">✓ كل إيصال له مورد مقابل بالمرجع</span>':' · <span style="color:#B00020;font-weight:800">المطابقة ينقصها '+fmt(miss,0)+' AOA</span>')):'';
   }catch(e){}
   $('#rcptList').innerHTML=RCPTS.map(function(r,i){
     var p=r.parsed;
@@ -1347,7 +1355,7 @@ function renderRcpts(){
           '<small style="display:block;color:var(--muted);font-size:10px;margin-top:2px">'+
           (p.amount?(rcptCcyOk(r)?'قُرئ تلقائيًا — عدّله إن أخطأ'
             :'<span style="color:#B00020;font-weight:800">عملة الإيصال '+esc(p.ccy)+' ≠ عملة المستحق '+esc(SS.dueCcy||'')+' — مستثنى من العدّاد</span>')
-            :' لم يُقرأ — اكتبه يدويًا')+(p.ref?' · '+esc(p.ref):'')+(r.supChecked?(r.sup?' · <span style="color:#0E8F5B;font-weight:800">مورد مقابل: '+esc(r.sup)+' ✓</span>':' · <span style="color:#9A4B00;font-weight:800">بانتظار إيصال المورد</span>'):'')+'</small>';
+            :' لم يُقرأ — اكتبه يدويًا')+(p.ref?' · '+esc(p.ref):'')+(r.supChecked?(r.sup?' · <span style="color:#0E8F5B;font-weight:800">مورد مقابل بالمرجع: '+esc(r.sup)+' ✓</span>':(r.supAmtOnly?' · <span style="color:#9A4B00;font-weight:800">تشابه مبلغ فقط — ليس تأكيدًا</span>':' · <span style="color:#B00020;font-weight:800">بانتظار إيصال المورد</span>')):'')+'</small>';
       } else amtBox='<small>جارٍ القراءة…</small>';
     }
     return '<div class="rcpt'+(r.dup&&!r.ok?' dup':'')+'">'+
