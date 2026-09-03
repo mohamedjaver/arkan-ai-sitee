@@ -2108,7 +2108,7 @@ async function mrbPush(name){
     if(stok){
       const r=await fetch('https://arkan-ai-site-production.up.railway.app/account/log-transfer',{
         method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+stok},
-        body:JSON.stringify({ref:ref,name:nm,benefPhone:bph,amount:amt,ccy:MRB_CCY})});
+        body:JSON.stringify({ref:ref,name:nm,benefPhone:bph,amount:amt,ccy:MRB_CCY,side:(typeof MRB_SIDE!=='undefined'?MRB_SIDE:'customer')})});
       const j=await r.json().catch(function(){return {};});
       if(r.ok&&j.ok){try{bdlcContacts();}catch(e){}try{rcpCloudLoad();}catch(e){}return {ok:true,dup:!!j.dup};}
       if(r.status===401){try{localStorage.removeItem('arkan_sb_jwt');}catch(e){}
@@ -2160,36 +2160,21 @@ async function mrbDone(){
   const btn=document.getElementById('mrbDoneBtn');
   btn.disabled=true;btn.textContent='… جارٍ القيد';
   let res={ok:false,err:'لم يُنفذ'};
-  if(MRB_SIDE==='supplier'){
-    try{res=await receiptLog();}catch(e){res={ok:false,err:e.message};}
-    if(res.ok){
-      var dupWhy='';
-      if(res.dup&&res.prev){
-        var when='';try{var d=new Date(res.prev.at);when=d.toLocaleDateString('en-GB')+' '+d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});}catch(e){}
-        dupWhy=(res.prev.by==='ref'?'بنفس رقم العملية':'بنفس بصمة الملف')+(when?' — محفوظ منذ '+when:'')+(res.prev.amount?' بمبلغ '+Number(res.prev.amount).toLocaleString()+' '+(res.prev.ccy||''):'');
-      }
-      btn.textContent=res.dup?('✓ مكرر '+(dupWhy||'— محفوظ مسبقًا')):'✓ سُجّل إيصال المورد — سيُطابَق فورًا';
-      btn.style.background='#0B7A3B';
-      toastSafe(res.dup?('مكرر '+(dupWhy||'— محفوظ مسبقًا')):'سُجّل وسيُطابَق مع إيصالات الزبائن ✓');
-      try{
-        var nx=document.getElementById('mrbNext');
-        if(!nx){nx=document.createElement('button');nx.id='mrbNext';
-          nx.style.cssText='display:block;width:100%;margin-top:10px;padding:14px;border:0;background:#0B2F70;color:#fff;font:800 14px \'IBM Plex Sans Arabic\',sans-serif;cursor:pointer';
-          btn.parentNode.appendChild(nx);}
-        var supN=((document.getElementById('mrbName')||{}).value||'').trim();
-        nx.textContent='متابعة في التسوية — رفع الكوانزا المقابلة'+(supN?' لـ '+supN:'')+' ←';
-        nx.onclick=function(){location.href='settle-v2.html#pair='+encodeURIComponent(supN);};
-      }catch(e){}
-    }else{
-      btn.disabled=false;btn.textContent='⚠ لم يُسجَّل — اضغط لإعادة المحاولة';btn.style.background='#B00020';
-      toastSafe('فشل التسجيل: '+(res.err||'')+' — أعد المحاولة');
-    }
-    return;
-  }
   try{ res=await mrbPush((document.getElementById('mrbRef')||{}).value||('BDL-'+Date.now())); }
   catch(e){res={ok:false,err:e.message};}
   if(res.ok){
     try{receiptLog();}catch(e){}
+    if(MRB_SIDE==='supplier'){
+      try{
+        btn.textContent=res.dup?'✓ مكرر — العملية مسجلة مسبقًا':'✓ سُجّلت عملية المورد في التسوية';
+        var nx=document.getElementById('mrbNext');
+        if(!nx){nx=document.createElement('button');nx.id='mrbNext';
+          nx.style.cssText='display:block;width:100%;margin-top:10px;padding:14px;border:0;background:#0B2F70;color:#fff;font:800 14px \'IBM Plex Sans Arabic\',sans-serif;cursor:pointer';
+          btn.parentNode.appendChild(nx);}
+        nx.textContent='فتح التسوية — العملية باسم المورد ←';
+        nx.onclick=function(){location.href='settle-v2.html';};
+      }catch(e){}
+    }
     btn.textContent='✓ قُيّدت في التسوية ('+MRB_CCY+')';
     btn.style.background='#5C7699';
     document.getElementById('mrbActs').style.display='block';

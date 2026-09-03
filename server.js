@@ -962,7 +962,7 @@ app.post('/account/log-transfer', async (req, res) => {
     /* 5) القيد نفسه — مع فحص النتيجة الحقيقي */
     const tr = await fetch(SB_REST + '/bdl_transactions', { method: 'POST', headers: H,
       body: JSON.stringify({ ref, customer_id: cid, amount, ccy, status: 'open',
-        meta: { src: 'account', by: byPhone } }) });
+        meta: { src: 'account', by: byPhone, side: (req.body.side === 'supplier' ? 'supplier' : 'customer') } }) });
     if (tr.status === 409) return res.json({ ok: true, dup: true, ref, customer: { id: cid, name: (cust && cust.name) || '', phone: (cust && cust.phone) || '', created } });
     if (!tr.ok) {
       const detail = await tr.text().catch(() => '');
