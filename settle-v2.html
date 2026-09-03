@@ -1295,8 +1295,8 @@ async function rcptUsedByTx(rid,selIds){
 }
 async function addReceipts(files){
   for(var i=0;i<files.length;i++){
+    var fp=await sha256(await files[i].arrayBuffer()); /* البصمة من الأصل قبل القص */
     var f=await autoCropReceipt(files[i]);
-    var fp=await sha256(await f.arrayBuffer());
     var dup=false;
     try{
       /* حيوية الاستخدام: الإيصال «مستخدم» فقط إن كان مربوطًا بتسوية ما زالت قائمة */

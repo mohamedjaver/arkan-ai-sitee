@@ -2151,7 +2151,7 @@ async function receiptLog(){
       method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+stok},
       body:JSON.stringify(body)});
     var j=await r.json().catch(function(){return {};});
-    return {ok:!!(r.ok&&j.ok),dup:!!j.dup};
+    return {ok:!!(r.ok&&j.ok),dup:!!j.dup,prev:j.prev||null};
   }catch(e){return {ok:false,err:e.message};}
 }
 async function mrbDone(){
@@ -2163,9 +2163,14 @@ async function mrbDone(){
   if(MRB_SIDE==='supplier'){
     try{res=await receiptLog();}catch(e){res={ok:false,err:e.message};}
     if(res.ok){
-      btn.textContent=res.dup?'✓ إيصال مكرر — محفوظ مسبقًا':'✓ سُجّل إيصال المورد — سيُطابَق فورًا';
+      var dupWhy='';
+      if(res.dup&&res.prev){
+        var when='';try{var d=new Date(res.prev.at);when=d.toLocaleDateString('en-GB')+' '+d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});}catch(e){}
+        dupWhy=(res.prev.by==='ref'?'بنفس رقم العملية':'بنفس بصمة الملف')+(when?' — محفوظ منذ '+when:'')+(res.prev.amount?' بمبلغ '+Number(res.prev.amount).toLocaleString()+' '+(res.prev.ccy||''):'');
+      }
+      btn.textContent=res.dup?('✓ مكرر '+(dupWhy||'— محفوظ مسبقًا')):'✓ سُجّل إيصال المورد — سيُطابَق فورًا';
       btn.style.background='#0B7A3B';
-      toastSafe(res.dup?'مكرر — النظام لا يقبل التكرار':'سُجّل وسيُطابَق مع إيصالات الزبائن ✓');
+      toastSafe(res.dup?('مكرر '+(dupWhy||'— محفوظ مسبقًا')):'سُجّل وسيُطابَق مع إيصالات الزبائن ✓');
     }else{
       btn.disabled=false;btn.textContent='⚠ لم يُسجَّل — اضغط لإعادة المحاولة';btn.style.background='#B00020';
       toastSafe('فشل التسجيل: '+(res.err||'')+' — أعد المحاولة');

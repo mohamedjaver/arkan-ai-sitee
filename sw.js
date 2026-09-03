@@ -1,7 +1,7 @@
 /* BDL — Service Worker v2.0
    إستراتيجية: الشبكة أولًا لصفحات HTML والبيانات (لا محتوى قديم أبدًا)
               الكاش أولًا للأصول الثابتة فقط (صور، أيقونات، شعار) */
-const V='arkan-v121-1196'; /* Binance withdrawal template: Txid ref, USDT EU-decimals, network, to-the-second date */
+const V='arkan-v122-1197'; /* fp from original bytes (pre-crop) + proven duplicate messages with prior-save evidence */
 const STATIC=['./favicon.svg','./arkan-icon-512.png','./arkan-touch-180.png','./site-manifest.json'];
 
 self.addEventListener('install',e=>{

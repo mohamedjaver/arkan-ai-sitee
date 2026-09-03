@@ -402,8 +402,8 @@ async function files(list){
   drawStats();
   /* ١: قصّ + بصمة — ٤ متوازية */
   await POOL(M.up.items.slice(t0),4,async(it,k)=>{const i=t0+k;
+    try{it.fp=await fp(it.file);}catch(e){} /* البصمة من الأصل — قبل أي قصّ */
     try{it.file=window.autoCropReceipt?await autoCropReceipt(it.file):it.file;}catch(e){}
-    try{it.fp=await fp(it.file);}catch(e){}
     if(i-t0<40&&/^image\//.test(it.file.type||'')){try{it.url=URL.createObjectURL(it.file);}catch(e){}}
     drawItem(i);});
   /* ٢: فحص التكرار دفعةً واحدة (chunks 100) */

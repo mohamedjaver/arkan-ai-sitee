@@ -1051,7 +1051,24 @@ app.post('/account/receipt-log', async (req, res) => {
     if (side === 'supplier' && name) ocr.sup_name = name;
     const r = await fetch(SB_REST + '/bdl_receipts', { method: 'POST', headers: H2,
       body: JSON.stringify({ fingerprint: fp, amount, ccy, bank, txn_ref: ref, ocr }) });
-    if (r.status === 409) return res.json({ ok: true, dup: true });
+    if (r.status === 409) {
+      let prev = null;
+      try {
+        if (ref) {
+          const q = await fetch(SB_REST + '/bdl_receipts?select=amount,ccy,created_at&txn_ref=eq.' + encodeURIComponent(ref) + '&ocr-%3E%3Eside=eq.' + side + '&limit=1',
+            { headers: { apikey: SB_PUB, Authorization: 'Bearer ' + tok } });
+          const arr = q.ok ? await q.json() : [];
+          if (arr[0]) prev = { by: 'ref', amount: arr[0].amount, ccy: arr[0].ccy, at: arr[0].created_at };
+        }
+        if (!prev && fp) {
+          const q2 = await fetch(SB_REST + '/bdl_receipts?select=amount,ccy,created_at&fingerprint=eq.' + fp + '&limit=1',
+            { headers: { apikey: SB_PUB, Authorization: 'Bearer ' + tok } });
+          const a2 = q2.ok ? await q2.json() : [];
+          if (a2[0]) prev = { by: 'fp', amount: a2[0].amount, ccy: a2[0].ccy, at: a2[0].created_at };
+        }
+      } catch (e) {}
+      return res.json({ ok: true, dup: true, prev });
+    }
     if (!r.ok) { const d = await r.text().catch(() => ''); console.error('receipt-log:', r.status, d.slice(0, 150));
       return res.status(500).json({ ok: false, err: 'db' }); }
     res.json({ ok: true });
