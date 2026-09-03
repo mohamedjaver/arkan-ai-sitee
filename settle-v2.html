@@ -1221,6 +1221,26 @@ async function autoCropReceipt(f){
 }
 
 /* ═══ إيصالات محفوظة في تسوية معلقة: تُعرض دائمًا بمبالغها ومراجعها ═══ */
+async function ssDropSaved(rid,amt,label){
+  if(!confirm('إزالة الإيصال «'+label+'» ('+fmt(amt,0)+') من هذه التسوية المعلقة؟\nيُخصم من المدفوع ويُفك ربطه — الإيصال نفسه يبقى محفوظًا في السجل ويمكن استخدامه من جديد.'))return;
+  try{
+    var ops=selected();var done=0;
+    for(var i=0;i<ops.length;i++){var t=ops[i];
+      var ids=(t.meta&&t.meta.rcpt_ids)||[];
+      if(ids.indexOf(rid)<0)continue;
+      var nids=ids.filter(function(x){return x!==rid;});
+      var prev=(t.meta&&Number(t.meta.paid_aoa))||0;
+      var nm=Object.assign({},t.meta||{},{rcpt_ids:nids,paid_aoa:Math.max(0,prev-(Number(amt)||0))});
+      var x=await fetch(SB+'/bdl_transactions?id=eq.'+t.id,{method:'PATCH',headers:H(),body:JSON.stringify({meta:nm})});
+      if(x.ok){t.meta=nm;done++;}
+    }
+    if(done){
+      toast('أُزيل من التسوية وخُصم '+fmt(amt,0)+' — الإيصال باقٍ في السجل');
+      SS.prevPaid=Math.max(0,(SS.prevPaid||0)-(Number(amt)||0));
+      await ssShowPrevRcpts(selected());updMatch();
+    }else toast('لم يوجد في عمليات هذه التسوية');
+  }catch(e){toast('تعذّرت الإزالة');}
+}
 async function ssShowPrevRcpts(s){
   var box=$('#ssPrevR');if(!box)return;box.innerHTML='';
   SS.savedR={};SS.savedRefs={};
@@ -1236,8 +1256,9 @@ async function ssShowPrevRcpts(s){
     box.innerHTML='<div style="margin-top:10px;padding:11px 12px;border:1px solid #EAD48A;background:#FFFBEF">'+
       '<div style="font-size:12px;font-weight:800;color:#8A6100;margin-bottom:7px">إيصالات محفوظة في التسوية المعلقة ('+rows.length+') — محسوبة في المدفوع</div>'+
       rows.map(function(x){
-        return '<div class="num" style="display:flex;justify-content:space-between;gap:8px;font-size:12.5px;font-weight:700;color:#0B2447;padding:5px 0;border-top:1px solid #F3E7C0">'+
-          '<span style="color:#5C7699">'+esc(x.txn_ref||x.bank||'إيصال')+'</span>'+
+        return '<div class="num" style="display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12.5px;font-weight:700;color:#0B2447;padding:5px 0;border-top:1px solid #F3E7C0">'+
+          '<button onclick="ssDropSaved(\''+x.id+'\','+(Number(x.amount)||0)+',\''+esc(String(x.txn_ref||x.bank||'إيصال')).replace(/'/g,'')+'\')" style="flex:0 0 auto;border:1.4px solid #B00020;background:#fff;color:#B00020;font:800 11px \'IBM Plex Sans Arabic\',sans-serif;padding:4px 9px;cursor:pointer">إزالة</button>'+
+          '<span style="color:#5C7699;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(x.txn_ref||x.bank||'إيصال')+'</span>'+
           '<b>'+fmt(Number(x.amount)||0,0)+' '+esc(x.ccy||'')+'</b></div>';
       }).join('')+'</div>';
   }catch(e){}
