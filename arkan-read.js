@@ -4,6 +4,7 @@ const GEM_PROMPT=`أنت محرك OCR مالي مؤسسي. اقرأ هذا ال�
 ${GEM_SCHEMA}
 - amount رقم فقط بلا فواصل، وأضف حقلاً "amount_verbatim" فيه نص المبلغ حرفيًا كما هو مكتوب في المستند (مثل "Kz 8 780 000,00").
 - المبلغ هو قيمة حقل Montante/المبلغ/Total/Valor فقط (مثل: Kz 8 000 000,00 → 8000000). لا تضع أبدًا في amount أرقام Movimento أو Número de Operação أو Transacção أو CHAVE أو PIN أو Conta/IBAN — هذه أرقام تعريفية تذهب في transaction_id/reference.
+- إيصالات Binance (Detalhes do saque): reference هو Txid كاملًا (0x...)؛ amount قيمة USDT (فواصل عشرية أوروبية)؛ Endereço عنوان المستلم؛ التاريخ بالثواني.
 - قاعدة حاسمة لإثباتات ATLANTICO (Transfer to Atlântico / Transferência Atlântico): reference = قيمة سطر Reference/Referencia فقط (مثال: Reference 648084834 → reference=648084834). ACCOUNT NUMBER وAccount number/IBAN وCurrent account/Conta origem (مثل 292750887 أو 347805651) أرقام حسابات — يُمنع منعًا باتًا وضعها في reference أو amount. amount من Amount/Montante؛ beneficiary من Name/Nome beneficiário؛ Account number/IBAN وCurrent account أرقام حسابات لا توضع أبدًا في reference ولا amount؛ beneficiary هو سطر Name؛ العملة AKZ تعني الكوانزا.
 - تجاهل تمامًا أرقام التذييل القانوني (Capital Social، NIF، الهواتف).
 - الكوانزا الأنغولية: AOA (تظهر كـ Kz أو KZ أو AKZ). الأوقية: MRU (أو UM). انتبه للفواصل الأوروبية 1.234.567,89 والمسافات 8 000 000,00.
@@ -97,6 +98,21 @@ function euNum(x){
 }
 function liteParse(t){
   const p={amount:0,currency:'',reference:'',bank:'',date:'',confidence:40};
+  /* قالب Binance — Detalhes do saque (سحب USDT): Txid كامل + تاريخ بالثواني */
+  if((/Detalhes\s+do\s+saque|Binance/i.test(t))&&/(Txid|USDT)/i.test(t)){
+    const tx=t.match(/Txid[\s:]{0,6}(0x[a-fA-F0-9]{16,})/i)||t.match(/\b(0x[a-fA-F0-9]{40,})\b/);
+    const am=t.match(/-?\s*([\d][\d\s.\u00A0]{0,15},\d{1,2})\s*USDT/)||t.match(/Valor[\s:]{0,6}([\d][\d\s.\u00A0]{0,15})\s*USDT/i);
+    const ad=t.match(/Endere[çc]o[\s:]{0,6}(0x[a-fA-F0-9]{8,})/i);
+    const dt=t.match(/(\d{4}-\d{2}-\d{2})[\sT]+(\d{2}:\d{2}(?::\d{2})?)/);
+    const net=t.match(/Rede[\s:]{0,6}([A-Z0-9]{2,12})\b/i);
+    if(tx||am){
+      p.bank='BINANCE'+(net?' '+net[1].toUpperCase():'');p.currency='USDT';
+      if(am)p.amount=euNum(am[1]);
+      if(tx)p.reference=tx[1];
+      if(ad)p.receiver=ad[1];
+      if(dt)p.date=dt[1]+' '+dt[2];
+      p.confidence=(p.amount&&p.reference)?100:80;return p;}
+  }
   /* قالب Comprovativo Digital — MULTICAIXA Express (PDF رقمي): Data-Hora بالثواني */
   if(/Comprovativo\s+Digital/i.test(t)||(/MULTICAIXA\s+Express/i.test(t)&&/Transac[çc][ãa]o/i.test(t))){
     const dh=t.match(/Data\s*-?\s*Hora[^\d]{0,10}(\d{4}-\d{2}-\d{2})[\sT]+(\d{2}:\d{2}(?::\d{2})?)/i);
