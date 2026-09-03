@@ -963,7 +963,15 @@ app.post('/account/log-transfer', async (req, res) => {
     const tr = await fetch(SB_REST + '/bdl_transactions', { method: 'POST', headers: H,
       body: JSON.stringify({ ref, customer_id: cid, amount, ccy, status: 'open',
         meta: { src: 'account', by: byPhone, side: (req.body.side === 'supplier' ? 'supplier' : 'customer') } }) });
-    if (tr.status === 409) return res.json({ ok: true, dup: true, ref, customer: { id: cid, name: (cust && cust.name) || '', phone: (cust && cust.phone) || '', created } });
+    if (tr.status === 409) {
+      let prev = null;
+      try {
+        const q = await fetch(SB_REST + '/bdl_transactions?select=amount,ccy,created_at,status,bdl_customers(name)&ref=eq.' + encodeURIComponent(ref) + '&limit=1', { headers: H });
+        const a = q.ok ? await q.json() : [];
+        if (a[0]) prev = { amount: a[0].amount, ccy: a[0].ccy, at: a[0].created_at, status: a[0].status, name: (a[0].bdl_customers && a[0].bdl_customers.name) || '' };
+      } catch (e) {}
+      return res.json({ ok: true, dup: true, ref, prev, customer: { id: cid, name: (cust && cust.name) || '', phone: (cust && cust.phone) || '', created } });
+    }
     if (!tr.ok) {
       const detail = await tr.text().catch(() => '');
       console.error('log-transfer insert:', tr.status, detail.slice(0, 200));
@@ -971,6 +979,35 @@ app.post('/account/log-transfer', async (req, res) => {
     }
     res.json({ ok: true, ref, customer: { id: cid, name: (cust && cust.name) || '', phone: (cust && cust.phone) || '', created } });
   } catch (e) { console.error('log-transfer:', e.message); res.status(500).json({ ok: false, err: 'server' }); }
+});
+
+/* تحرير مرجع قيد قديم (لا حذف): يُنحّى المرجع على الصف القديم ليصبح التقييد الجديد ممكنًا */
+app.post('/account/unlock-ref', async (req, res) => {
+  try {
+    if (!JWT_SECRET) return res.status(503).json({ ok: false, err: 'service' });
+    try { jwt.verify(String(req.headers.authorization || '').replace(/^Bearer\s+/i, ''), JWT_SECRET); }
+    catch (e) { return res.status(401).json({ ok: false, err: 'auth' }); }
+    const ref = String(req.body.ref || '').trim().slice(0, 64);
+    if (!ref) return res.status(400).json({ ok: false, err: 'ref' });
+    const side = req.body.side === 'supplier' ? 'supplier' : 'customer';
+    const ts = Math.floor(Date.now() / 1000);
+    const tok = jwt.sign({ sub: phoneToUuid(OWNER_PHONES[0]), role: 'authenticated',
+      aud: 'authenticated', arkan_role: 'owner', iat: ts, exp: ts + 300 }, JWT_SECRET);
+    const H2 = { apikey: SB_PUB, Authorization: 'Bearer ' + tok, 'Content-Type': 'application/json', Prefer: 'return=representation' };
+    const nr = (ref.slice(0, 44) + '-v' + Date.now().toString(36)).slice(0, 64);
+    let freedTx = 0, freedRc = 0;
+    try {
+      const t = await fetch(SB_REST + '/bdl_transactions?ref=eq.' + encodeURIComponent(ref), {
+        method: 'PATCH', headers: H2, body: JSON.stringify({ ref: nr }) });
+      if (t.ok) freedTx = (await t.json().catch(() => [])).length;
+    } catch (e) {}
+    try {
+      const r2 = await fetch(SB_REST + '/bdl_receipts?txn_ref=eq.' + encodeURIComponent(ref) + '&ocr-%3E%3Eside=eq.' + side, {
+        method: 'PATCH', headers: H2, body: JSON.stringify({ txn_ref: null }) });
+      if (r2.ok) freedRc = (await r2.json().catch(() => [])).length;
+    } catch (e) {}
+    res.json({ ok: true, freedTx, freedRc, movedTo: freedTx ? nr : null });
+  } catch (e) { console.error('unlock-ref:', e.message); res.status(500).json({ ok: false, err: 'server' }); }
 });
 
 /* رفع إيصال (زبون/مورد) من الرئيسية إلى محرك المطابقة مباشرة */

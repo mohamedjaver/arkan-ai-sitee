@@ -2110,7 +2110,7 @@ async function mrbPush(name){
         method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+stok},
         body:JSON.stringify({ref:ref,name:nm,benefPhone:bph,amount:amt,ccy:MRB_CCY,side:(typeof MRB_SIDE!=='undefined'?MRB_SIDE:'customer')})});
       const j=await r.json().catch(function(){return {};});
-      if(r.ok&&j.ok){try{bdlcContacts();}catch(e){}try{rcpCloudLoad();}catch(e){}return {ok:true,dup:!!j.dup};}
+      if(r.ok&&j.ok){try{bdlcContacts();}catch(e){}try{rcpCloudLoad();}catch(e){}return {ok:true,dup:!!j.dup,prev:j.prev||null};}
       if(r.status===401){try{localStorage.removeItem('arkan_sb_jwt');}catch(e){}
         return {ok:false,err:'انتهت الجلسة — سجّل الدخول مجددًا'};}
       console.warn('log-transfer:',r.status,j.err||'');
@@ -2166,7 +2166,35 @@ async function mrbDone(){
     try{receiptLog();}catch(e){}
     if(MRB_SIDE==='supplier'){
       try{
-        btn.textContent=res.dup?'✓ مكرر — العملية مسجلة مسبقًا':'✓ سُجّلت عملية المورد في التسوية';
+        var pv='';
+        if(res.dup&&res.prev){
+          var w='';try{var d=new Date(res.prev.at);w=d.toLocaleDateString('en-GB')+' '+d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});}catch(e){}
+          pv=' — القيد القديم: '+(res.prev.name?res.prev.name+' · ':'')+Number(res.prev.amount||0).toLocaleString()+' '+(res.prev.ccy||'')+(w?' · '+w:'');
+        }
+        btn.textContent=res.dup?('✓ مكرر'+(pv||' — العملية مسجلة مسبقًا')):'✓ سُجّلت عملية المورد في التسوية';
+        if(res.dup){
+          var rl=document.getElementById('mrbRelease');
+          if(!rl){rl=document.createElement('button');rl.id='mrbRelease';
+            rl.style.cssText='display:block;width:100%;margin-top:8px;padding:12px;border:1.5px solid #B00020;background:#fff;color:#B00020;font:800 13px \'IBM Plex Sans Arabic\',sans-serif;cursor:pointer';
+            btn.parentNode.appendChild(rl);}
+          rl.textContent='القيد القديم خاطئ؟ حرّر المرجع وقيّد من جديد';
+          rl.onclick=async function(){
+            rl.disabled=true;rl.textContent='جارٍ تحرير المرجع…';
+            try{
+              var sj=JSON.parse(localStorage.getItem('arkan_sb_jwt')||'null');
+              var stok=(sj&&sj.token)?sj.token:null;
+              if(!stok&&window.bdlcAuth){try{stok=await window.bdlcAuth();}catch(e){}}
+              var rr=await fetch('https://arkan-ai-site-production.up.railway.app/account/unlock-ref',{
+                method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+stok},
+                body:JSON.stringify({ref:((document.getElementById('mrbRef')||{}).value||'').trim(),side:MRB_SIDE})});
+              var jj=await rr.json().catch(function(){return{};});
+              if(rr.ok&&jj.ok){
+                toastSafe('حُرر المرجع (قيود: '+(jj.freedTx||0)+' · إيصالات: '+(jj.freedRc||0)+') — اضغط للتقييد من جديد');
+                rl.remove();btn.disabled=false;btn.style.background='';btn.textContent='قيّد الآن من جديد';
+              }else{rl.disabled=false;rl.textContent='تعذّر التحرير — أعد المحاولة';}
+            }catch(e){rl.disabled=false;rl.textContent='تعذّر التحرير — أعد المحاولة';}
+          };
+        }
         var nx=document.getElementById('mrbNext');
         if(!nx){nx=document.createElement('button');nx.id='mrbNext';
           nx.style.cssText='display:block;width:100%;margin-top:10px;padding:14px;border:0;background:#0B2F70;color:#fff;font:800 14px \'IBM Plex Sans Arabic\',sans-serif;cursor:pointer';
