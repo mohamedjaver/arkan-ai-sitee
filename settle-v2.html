@@ -1221,6 +1221,42 @@ async function autoCropReceipt(f){
 }
 
 /* ═══ إيصالات محفوظة في تسوية معلقة: تُعرض دائمًا بمبالغها ومراجعها ═══ */
+function ssSelCnt(){
+  var cs=document.querySelectorAll('.ssRc:checked'),sum=0;
+  cs.forEach(function(c){sum+=Number(c.dataset.amt)||0;});
+  var b=document.getElementById('ssDropBtn');
+  if(b)b.textContent='إزالة المحدد ('+cs.length+')'+(cs.length?' — '+fmt(sum,0):'');
+}
+function ssSelAll(){
+  var all=document.querySelectorAll('.ssRc'),chk=document.querySelectorAll('.ssRc:checked');
+  var on=chk.length<all.length;
+  all.forEach(function(c){c.checked=on;});ssSelCnt();
+}
+async function ssDropSel(){
+  var cs=Array.prototype.slice.call(document.querySelectorAll('.ssRc:checked'));
+  if(!cs.length){toast('حدّد إيصالات أولًا');return;}
+  var set={},amts={},sum=0;
+  cs.forEach(function(c){set[c.dataset.rid]=1;amts[c.dataset.rid]=Number(c.dataset.amt)||0;sum+=Number(c.dataset.amt)||0;});
+  if(!confirm('إزالة '+cs.length+' إيصال ('+fmt(sum,0)+') من هذه التسوية المعلقة؟\nتُخصم من المدفوع وتُفك — تبقى محفوظة في السجل وقابلة للاستخدام من جديد.'))return;
+  var b=document.getElementById('ssDropBtn');if(b){b.disabled=true;b.textContent='جارٍ الإزالة…';}
+  try{
+    var ops=selected(),removed=0;
+    for(var i=0;i<ops.length;i++){var t=ops[i];
+      var ids=(t.meta&&t.meta.rcpt_ids)||[];
+      var nids=ids.filter(function(x){return !set[x];});
+      if(nids.length===ids.length)continue;
+      var ded=0;ids.forEach(function(x){if(set[x])ded+=amts[x]||0;});
+      var prev=(t.meta&&Number(t.meta.paid_aoa))||0;
+      var nm=Object.assign({},t.meta||{},{rcpt_ids:nids,paid_aoa:Math.max(0,prev-ded)});
+      var x2=await fetch(SB+'/bdl_transactions?id=eq.'+t.id,{method:'PATCH',headers:H(),body:JSON.stringify({meta:nm})});
+      if(x2.ok){t.meta=nm;removed+=ded?1:0;}
+    }
+    SS.prevPaid=Math.max(0,(SS.prevPaid||0)-sum);
+    toast('أُزيل '+cs.length+' إيصال — خُصم '+fmt(sum,0)+' من المدفوع');
+    await ssShowPrevRcpts(selected());updMatch();
+  }catch(e){toast('تعذّرت الإزالة الجماعية');}
+  finally{if(b)b.disabled=false;}
+}
 async function ssDropSaved(rid,amt,label){
   if(!confirm('إزالة الإيصال «'+label+'» ('+fmt(amt,0)+') من هذه التسوية المعلقة؟\nيُخصم من المدفوع ويُفك ربطه — الإيصال نفسه يبقى محفوظًا في السجل ويمكن استخدامه من جديد.'))return;
   try{
@@ -1254,10 +1290,14 @@ async function ssShowPrevRcpts(s){
       var a=Number(x.amount)||0;if(a>0)SS.savedAmts.push({a:a,label:String(x.txn_ref||x.bank||'إيصال محفوظ')});});
     if(!rows.length)return;
     box.innerHTML='<div style="margin-top:10px;padding:11px 12px;border:1px solid #EAD48A;background:#FFFBEF">'+
-      '<div style="font-size:12px;font-weight:800;color:#8A6100;margin-bottom:7px">إيصالات محفوظة في التسوية المعلقة ('+rows.length+') — محسوبة في المدفوع</div>'+
+      '<div style="font-size:12px;font-weight:800;color:#8A6100;margin-bottom:8px">إيصالات محفوظة في التسوية المعلقة ('+rows.length+') — محسوبة في المدفوع</div>'+
+      '<div style="display:flex;gap:8px;margin-bottom:8px">'+
+        '<button onclick="ssSelAll()" style="flex:1;border:1.4px solid #0B2F70;background:#fff;color:#0B2F70;font:800 12px \'IBM Plex Sans Arabic\',sans-serif;padding:8px;cursor:pointer">تحديد الكل</button>'+
+        '<button id="ssDropBtn" onclick="ssDropSel()" style="flex:1.4;border:0;background:#B00020;color:#fff;font:800 12px \'IBM Plex Sans Arabic\',sans-serif;padding:8px;cursor:pointer">إزالة المحدد (0)</button>'+
+      '</div>'+
       rows.map(function(x){
-        return '<div class="num" style="display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12.5px;font-weight:700;color:#0B2447;padding:5px 0;border-top:1px solid #F3E7C0">'+
-          '<button onclick="ssDropSaved(\''+x.id+'\','+(Number(x.amount)||0)+',\''+esc(String(x.txn_ref||x.bank||'إيصال')).replace(/'/g,'')+'\')" style="flex:0 0 auto;border:1.4px solid #B00020;background:#fff;color:#B00020;font:800 11px \'IBM Plex Sans Arabic\',sans-serif;padding:4px 9px;cursor:pointer">إزالة</button>'+
+        return '<div class="num" style="display:flex;align-items:center;gap:9px;font-size:12.5px;font-weight:700;color:#0B2447;padding:5px 0;border-top:1px solid #F3E7C0">'+
+          '<input type="checkbox" class="ssRc" data-rid="'+x.id+'" data-amt="'+(Number(x.amount)||0)+'" onchange="ssSelCnt()" style="width:19px;height:19px;flex:0 0 auto;accent-color:#B00020">'+
           '<span style="color:#5C7699;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(x.txn_ref||x.bank||'إيصال')+'</span>'+
           '<b>'+fmt(Number(x.amount)||0,0)+' '+esc(x.ccy||'')+'</b></div>';
       }).join('')+'</div>';
