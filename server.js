@@ -973,6 +973,35 @@ app.post('/account/log-transfer', async (req, res) => {
   } catch (e) { console.error('log-transfer:', e.message); res.status(500).json({ ok: false, err: 'server' }); }
 });
 
+/* رفع إيصال (زبون/مورد) من الرئيسية إلى محرك المطابقة مباشرة */
+app.post('/account/receipt-log', async (req, res) => {
+  try {
+    if (!JWT_SECRET) return res.status(503).json({ ok: false, err: 'service' });
+    try { jwt.verify(String(req.headers.authorization || '').replace(/^Bearer\s+/i, ''), JWT_SECRET); }
+    catch (e) { return res.status(401).json({ ok: false, err: 'auth' }); }
+    const side = req.body.side === 'supplier' ? 'supplier' : 'customer';
+    const amount = Number(req.body.amount) || 0;
+    if (amount <= 0) return res.status(400).json({ ok: false, err: 'bad amount' });
+    const ccy = String(req.body.ccy || 'AOA').toUpperCase().slice(0, 8);
+    const bank = String(req.body.bank || '').trim().slice(0, 40) || null;
+    const ref = String(req.body.ref || '').trim().slice(0, 64) || null;
+    const name = String(req.body.name || '').trim().slice(0, 80) || null;
+    const fp = String(req.body.fp || '').trim().slice(0, 128) || null;
+    const ts = Math.floor(Date.now() / 1000);
+    const tok = jwt.sign({ sub: phoneToUuid(OWNER_PHONES[0]), role: 'authenticated',
+      aud: 'authenticated', arkan_role: 'owner', iat: ts, exp: ts + 300 }, JWT_SECRET);
+    const H2 = { apikey: SB_PUB, Authorization: 'Bearer ' + tok, 'Content-Type': 'application/json', Prefer: 'return=minimal' };
+    const ocr = { side, source: 'home', name, uploaded_at: new Date().toISOString() };
+    if (side === 'supplier' && name) ocr.sup_name = name;
+    const r = await fetch(SB_REST + '/bdl_receipts', { method: 'POST', headers: H2,
+      body: JSON.stringify({ fingerprint: fp, amount, ccy, bank, txn_ref: ref, ocr }) });
+    if (r.status === 409) return res.json({ ok: true, dup: true });
+    if (!r.ok) { const d = await r.text().catch(() => ''); console.error('receipt-log:', r.status, d.slice(0, 150));
+      return res.status(500).json({ ok: false, err: 'db' }); }
+    res.json({ ok: true });
+  } catch (e) { console.error('receipt-log:', e.message); res.status(500).json({ ok: false, err: 'server' }); }
+});
+
 app.post('/account/my-requests', async (req, res) => {
   try {
     if (!fbReady) return res.status(503).json({ ok: false, err: 'service' });
