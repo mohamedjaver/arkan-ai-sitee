@@ -974,6 +974,62 @@ app.post('/account/log-transfer', async (req, res) => {
 });
 
 /* رفع إيصال (زبون/مورد) من الرئيسية إلى محرك المطابقة مباشرة */
+/* ═══ بوت واتساب: أي إيصال يُرسل إلى رقم البوت يدخل محرك المطابقة فورًا ═══
+   ENV المطلوبة على Railway: WHATSAPP_TOKEN (توكن دائم من Meta)،
+   WA_VERIFY_TOKEN (كلمة تحقق تختارها). الويبهوك: /wa/webhook          */
+const WA_TOKEN = String(process.env.WHATSAPP_TOKEN || '').trim();
+const WA_VERIFY = String(process.env.WA_VERIFY_TOKEN || 'bdl-verify').trim();
+app.get('/wa/webhook', (req, res) => {
+  if (req.query['hub.mode'] === 'subscribe' && req.query['hub.verify_token'] === WA_VERIFY)
+    return res.send(req.query['hub.challenge']);
+  res.sendStatus(403);
+});
+app.post('/wa/webhook', async (req, res) => {
+  res.sendStatus(200); /* إقرار فوري لميتا ثم معالجة خلفية */
+  try {
+    if (!WA_TOKEN || !JWT_SECRET) return;
+    const ch = req.body && req.body.entry && req.body.entry[0] && req.body.entry[0].changes && req.body.entry[0].changes[0];
+    const val = ch && ch.value; const msgs = (val && val.messages) || [];
+    const pnid = val && val.metadata && val.metadata.phone_number_id;
+    for (const m of msgs) {
+      let mediaId = null, mime = '', caption = '';
+      if (m.type === 'image') { mediaId = m.image.id; mime = m.image.mime_type || 'image/jpeg'; caption = m.image.caption || ''; }
+      else if (m.type === 'document') { mediaId = m.document.id; mime = m.document.mime_type || 'application/pdf'; caption = m.document.caption || m.document.filename || ''; }
+      else continue;
+      const mi = await fetch('https://graph.facebook.com/v20.0/' + mediaId, { headers: { Authorization: 'Bearer ' + WA_TOKEN } });
+      const mj = await mi.json().catch(() => ({})); if (!mj.url) continue;
+      const bin = await fetch(mj.url, { headers: { Authorization: 'Bearer ' + WA_TOKEN } });
+      const buf = Buffer.from(await bin.arrayBuffer());
+      const fp = require('crypto').createHash('sha256').update(buf).digest('hex');
+      const side = /مورد|supplier|sup/i.test(caption) ? 'supplier' : 'customer';
+      const supName = side === 'supplier' ? caption.replace(/مورد|supplier|sup/ig, '').trim().slice(0, 60) : '';
+      const ts = Math.floor(Date.now() / 1000);
+      const tok = jwt.sign({ sub: phoneToUuid(OWNER_PHONES[0]), role: 'authenticated',
+        aud: 'authenticated', arkan_role: 'owner', iat: ts, exp: ts + 300 }, JWT_SECRET);
+      const base = SB_REST.replace('/rest/v1', '');
+      const ext = /pdf/.test(mime) ? '.pdf' : '.jpg';
+      const path = 'whatsapp/' + new Date().toISOString().slice(0, 10) + '/' + fp.slice(0, 16) + ext;
+      let furl = null;
+      const up = await fetch(base + '/storage/v1/object/receipts/' + path, { method: 'POST',
+        headers: { apikey: SB_PUB, Authorization: 'Bearer ' + tok, 'Content-Type': mime, 'x-upsert': 'true' }, body: buf });
+      if (up.ok) furl = base + '/storage/v1/object/public/receipts/' + path;
+      const ocr = { side, source: 'whatsapp', from: m.from, caption: String(caption).slice(0, 120),
+        pending: true, uploaded_at: new Date().toISOString() };
+      if (supName) ocr.sup_name = supName;
+      const ins = await fetch(SB_REST + '/bdl_receipts', { method: 'POST',
+        headers: { apikey: SB_PUB, Authorization: 'Bearer ' + tok, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+        body: JSON.stringify({ fingerprint: fp, amount: null, ccy: null, bank: null, txn_ref: null, file_url: furl, ocr }) });
+      let reply;
+      if (ins.status === 409) reply = 'مكرر — هذا الإيصال محفوظ مسبقًا ولن يُحفظ مرة أخرى.';
+      else if (ins.ok) reply = 'وصل ✓ (' + (side === 'supplier' ? 'مورد' + (supName ? ': ' + supName : '') : 'زبون') + ') — سيُقرأ ويُطابَق تلقائيًا.';
+      else reply = 'تعذّر الحفظ — أعد إرسال الإيصال.';
+      if (pnid) await fetch('https://graph.facebook.com/v20.0/' + pnid + '/messages', { method: 'POST',
+        headers: { Authorization: 'Bearer ' + WA_TOKEN, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messaging_product: 'whatsapp', to: m.from, text: { body: reply } }) }).catch(() => {});
+    }
+  } catch (e) { console.error('wa-webhook:', e.message); }
+});
+
 app.post('/account/receipt-log', async (req, res) => {
   try {
     if (!JWT_SECRET) return res.status(503).json({ ok: false, err: 'service' });

@@ -1,7 +1,7 @@
 /* BDL — Service Worker v2.0
    إستراتيجية: الشبكة أولًا لصفحات HTML والبيانات (لا محتوى قديم أبدًا)
               الكاش أولًا للأصول الثابتة فقط (صور، أيقونات، شعار) */
-const V='arkan-v117-1192'; /* home: customer/supplier upload cards feeding the matcher; deposit/log tiles removed */
+const V='arkan-v118-1193'; /* WhatsApp bot ingestion: webhook capture + client-side OCR of pending receipts */
 const STATIC=['./favicon.svg','./arkan-icon-512.png','./arkan-touch-180.png','./site-manifest.json'];
 
 self.addEventListener('install',e=>{

@@ -167,6 +167,7 @@ async function load(){
     const rd=await fetch(SB+'/bdl_receipts?select=id,amount,ccy,bank,account_no,txn_ref,ocr,fingerprint,file_url,created_at&ocr->>source=eq.match-center'+gte+'&order=created_at.desc&limit=400',{headers:H()});
     (rd.ok?await rd.json():[]).forEach(x=>{if(rcMap[x.id])return;const o=x.ocr||{},row={id:'r:'+x.id,rid:x.id,src:'upload',amount:Number(x.amount)||0,ccy:norm(x.ccy),bank:x.bank||'',ref:x.txn_ref||'',date:new Date(x.created_at),file:x.file_url,
         who:o.sup_name||o.name||o.receiver||'',fwdSup:o.fwd_sup||'',txRefs:[],settled:false,pendingTx:false,ocr:o,stored:o.matched_rcpt||o.covers||null};
+      if(o.pending)return; /* وارد واتساب لم يُقرأ بعد */
       if(o.side==='supplier'&&o.archived)arch.push(row);else (o.side==='supplier'?sup:cust).push(row);});
     /* ٣) إيصالات العمليات (bdl_ops) */
     const ro=await fetch(SB+'/bdl_op_receipts?select=*&order=created_at.desc'+gte+'&limit=400',{headers:H()});
@@ -177,6 +178,30 @@ async function load(){
         (x.side==='out'?sup:cust).push(row);});}
   }catch(e){console.warn('m13',e);}
   M.cust=cust.sort((a,b)=>b.date-a.date);M.sup=sup.sort((a,b)=>b.date-a.date);M.arch=arch.sort((a,b)=>b.date-a.date);M.loaded=true;M.busy=false;
+  /* قراءة الوارد من واتساب ثم إعادة التحميل */
+  try{
+    const pq=await fetch(SB+'/bdl_receipts?select=id,file_url,ocr&ocr-%3E%3Epending=eq.true&order=created_at.desc&limit=15',{headers:H()});
+    const pj=pq.ok?await pq.json():[];
+    if(pj.length&&window.readReceipt){
+      toast('قراءة '+pj.length+' إيصال وارد من واتساب…');
+      await POOL(pj,3,async(row)=>{try{
+        if(!row.file_url)throw 0;
+        const fr=await fetch(row.file_url);const bl=await fr.blob();
+        const f=new File([bl],(/pdf/.test(bl.type||'')?'wa.pdf':'wa.jpg'),{type:bl.type||'image/jpeg'});
+        const p=await Promise.race([readReceipt(f),new Promise((_,rj)=>setTimeout(()=>rj(new Error('to')),45000))]);
+        const oc=Object.assign({},row.ocr,{pending:false,conf:p.conf||0});
+        if(p.name&&!oc.name)oc.name=p.name;
+        let body={amount:p.amount||null,ccy:norm(p.ccy||'AOA'),bank:p.bank||null,txn_ref:(p.ref||p.txn||null),ocr:oc};
+        let x=await fetch(SB+'/bdl_receipts?id=eq.'+row.id,{method:'PATCH',headers:H(),body:JSON.stringify(body)});
+        if(x.status===409){oc.dup_ref=true;body.txn_ref=null;body.ocr=oc;
+          await fetch(SB+'/bdl_receipts?id=eq.'+row.id,{method:'PATCH',headers:H(),body:JSON.stringify(body)});}
+      }catch(e){
+        try{const oc2=Object.assign({},row.ocr,{pending:false,read_fail:true});
+          await fetch(SB+'/bdl_receipts?id=eq.'+row.id,{method:'PATCH',headers:H(),body:JSON.stringify({ocr:oc2})});}catch(e2){}
+      }});
+      toast('قُرئ الوارد ✓');return load();
+    }
+  }catch(e){}
   matchAll();render();
 }
 /* ───── محرّك المطابقة ───── */
