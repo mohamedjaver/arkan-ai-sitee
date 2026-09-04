@@ -449,6 +449,7 @@ body::after{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;opac
       <a href="chat-v2.html" data-i="nav_chat"></a>
       <a href="#settle" data-i="nav_settle"></a>
       <a href="ai.html">AI</a>
+      <a href="books.html" class="akUserLink" hidden>دفاتري</a>
       <a href="settle-v2.html" class="akOwnerLink" hidden>كونسول التسوية</a>
     </div>
     <div class="sp"></div>
@@ -465,6 +466,7 @@ body::after{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;opac
   <a href="#network" data-i="nav_network"></a><a href="#wallet" data-i="nav_wallet"></a>
   <a href="#visa" data-i="nav_visa"></a><a href="#markets" data-i="nav_markets"></a>
   <a href="#exchange" data-i="nav_exchange"></a><a href="chat-v2.html" data-i="nav_chat"></a><a href="#settle" data-i="nav_settle"></a><a href="ai.html">AI</a>
+  <a href="books.html" class="akUserLink" hidden style="font-weight:800">دفاتري</a>
   <a href="settle-v2.html" class="akOwnerLink" hidden style="color:#7FD0FF;font-weight:800">كونسول التسوية ←</a>
   <a href="account.html" data-i="nav_signin"></a>
   <a href="#" id="akOutM" data-i="nav_signout" style="color:#FF8A80"></a>
@@ -1116,10 +1118,11 @@ function setLang(l){
       /* ترتيب قائمة الجوال حسب الأولوية للمسجّل: حسابي ← التحويل ← المحادثة ← الأسعار ← المحفظة ← فيزا ← الشبكة ← التسوية ← AI ← الكونسول ← خروج */
       const mmq=document.getElementById('mmenu');
       if(mmq&&!mmq.dataset.sorted){mmq.dataset.sorted='1';
-        const order=['nav_signin','nav_exchange','nav_chat','nav_markets','nav_wallet','nav_visa','nav_network','nav_settle','__ai','__owner','nav_signout'];
-        const keyOf=a=>a.dataset.i||(a.classList.contains('akOwnerLink')?'__owner':a.getAttribute('href')==='ai.html'?'__ai':'');
+        const order=['nav_signin','__books','nav_exchange','nav_chat','nav_markets','nav_wallet','nav_visa','nav_network','nav_settle','__ai','__owner','nav_signout'];
+        const keyOf=a=>a.dataset.i||(a.classList.contains('akUserLink')?'__books':a.classList.contains('akOwnerLink')?'__owner':a.getAttribute('href')==='ai.html'?'__ai':'');
         [...mmq.querySelectorAll('a')].sort((a,b)=>{const ia=order.indexOf(keyOf(a)),ib=order.indexOf(keyOf(b));return (ia<0?99:ia)-(ib<0?99:ib);}).forEach(a=>mmq.appendChild(a));
         const acc=mmq.querySelector('[data-i="nav_signin"]');if(acc){acc.style.cssText='font-weight:800;color:#7FD0FF';}}
+      document.querySelectorAll('.akUserLink').forEach(a=>{a.hidden=false;});
       document.querySelectorAll('.akOwnerLink').forEach(a=>{if(/36295050$/.test(String(ss.phone||'').replace(/\D/g,'')))a.hidden=false;});}
     else{const o=document.getElementById('akOutM');if(o)o.style.display='none';}
   }catch(e){}
