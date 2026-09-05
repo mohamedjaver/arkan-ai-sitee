@@ -556,7 +556,7 @@ async function pdf(){
   /* رأس */
   const g=x.createLinearGradient(0,0,W,0);g.addColorStop(0,'#19A9F5');g.addColorStop(.5,'#0A56B8');g.addColorStop(1,'#0B2F70');x.fillStyle=g;x.fillRect(0,0,W,250);
   x.fillStyle='#fff';x.textAlign='right';x.font='800 40px '+F;x.fillText('تقرير الأرباح والخسائر',W-M,90);
-  x.font='700 30px Inter';x.fillText('BDL',W-M-460,90);
+  if(!(typeof bdlLogo==='function'&&bdlLogo(x,M,60,130))){x.font='700 30px Inter';x.fillText('BDL',W-M-460,90);}
   x.font='500 22px '+F;x.fillStyle='rgba(255,255,255,.85)';x.fillText((S.range==='all'&&!S.f.from?'كل الفترات':'الفترة المختارة')+' · '+new Date().toLocaleString('en-GB'),W-M,132);
   x.textAlign='left';x.fillStyle='#fff';x.font='800 60px Inter';x.fillText(sgn(T.net,2)+' '+S.base,M,150);
   x.font='500 22px Inter';x.fillStyle='rgba(255,255,255,.85)';x.fillText('NET PROFIT  ·  '+T.n+' transactions  ·  win rate '+T.rate.toFixed(0)+'%',M,195);

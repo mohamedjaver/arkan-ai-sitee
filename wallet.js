@@ -345,8 +345,9 @@ async function makeReceipt(){
 
     /* الشعار */
     x.textAlign='left'; x.direction='ltr';
-    x.fillStyle='#fff'; x.font='800 56px Archivo, Arial'; x.fillText('BDL',70,120);
-    x.fillStyle='#7FE3C1'; x.fillText('EXCHANGE',215,120);
+    var _lg=(typeof bdlLogo==='function')&&bdlLogo(x,70,52,96);
+    x.fillStyle='#fff'; x.font='800 56px Archivo, Arial'; x.fillText('BDL',_lg?186:70,120);
+    x.fillStyle='#7FE3C1'; x.fillText('EXCHANGE',_lg?331:215,120);
     x.textAlign='right'; x.direction='rtl'; x.fillStyle='rgba(255,255,255,.85)';
     x.font='400 27px "IBM Plex Sans Arabic"'; x.fillText('إيصال تحويل USDT', W-70,116);
 

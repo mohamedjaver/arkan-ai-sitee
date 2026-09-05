@@ -293,6 +293,7 @@ footer{border-top:1px solid var(--stroke);margin-top:60px;padding:52px 0 40px;po
 </style>
   <link rel="stylesheet" href="arkan-theme.css">
   <link rel="stylesheet" href="arkan-light.css">
+  <script src="bdl-brand.js?v=1"></script>
   <script src="arkan-gate.js?v=3"></script>
 </head>
 <body>
@@ -1671,9 +1672,10 @@ function mrbMake(){
   // بطاقة بيضاء
   x.fillStyle='#F7FAFF'; rr(x,60,260,960,880,28); x.fill();
   // ترويسة BDL
+  var _lg=(typeof bdlLogo==='function')&&bdlLogo(x,80,68,120);
   x.fillStyle='#FFFFFF'; x.font='800 92px Inter,Arial'; x.textAlign='left';
-  x.fillText('BDL',80,150);
-  x.font='600 34px Inter,Arial'; x.fillStyle='#8FB8E8'; x.fillText('EXCHANGE · lbdal.com',80,200);
+  x.fillText('BDL',_lg?222:80,150);
+  x.font='600 34px Inter,Arial'; x.fillStyle='#8FB8E8'; x.fillText('EXCHANGE · lbdal.com',_lg?222:80,200);
   x.textAlign='right'; x.font='700 40px "IBM Plex Sans Arabic",Arial'; x.fillStyle='#FFFFFF';
   x.fillText('وصل تحويل', 1000,150);
   x.font='500 30px Inter,Arial'; x.fillStyle='#8FB8E8';

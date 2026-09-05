@@ -10,6 +10,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="bdl-brand.js?v=1"></script>
 <script src="bdl-qr.js?v=1" defer></script>
 <script src="arkan-read.js?v=4" defer></script>
 <style>
@@ -2747,6 +2748,7 @@ async function dayPdf(D){
   var g=x.createLinearGradient(0,0,W,250);
   g.addColorStop(0,'#0B2F70');g.addColorStop(.55,'#0A56B8');g.addColorStop(1,'#19A9F5');
   x.fillStyle=g;x.fillRect(0,0,W,250);
+  if(typeof bdlLogo==='function')bdlLogo(x,60,60,130);
   x.textAlign='right';x.fillStyle='#fff';
   x.font='800 46px '+F;x.fillText('تقرير الإقفال اليومي — BDL',W-60,105);
   x.font='600 30px '+F;x.fillStyle='rgba(255,255,255,.9)';x.fillText(D.day,W-60,160);
@@ -3092,9 +3094,9 @@ document.querySelectorAll('.ovl').forEach(function(o){
   o.addEventListener('click',function(e){if(e.target===o)o.classList.remove('on');});
 });
 </script>
-<script src="bdl-ops7.js?v=3"></script>
-<script src="bdl-ops8.js?v=1"></script>
-<script src="bdl-ops10.js?v=8"></script>
+<script src="bdl-ops7.js?v=4"></script>
+<script src="bdl-ops8.js?v=2"></script>
+<script src="bdl-ops10.js?v=9"></script>
 <script src="bdl-ops11.js?v=1"></script>
 <script src="bdl-ops13.js?v=1"></script>
 <script src="bdl-ops14.js?v=1"></script>

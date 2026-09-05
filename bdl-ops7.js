@@ -416,6 +416,7 @@ window.op7Report=async function(){
     var g=x.createLinearGradient(0,0,W,240);
     g.addColorStop(0,'#0B2F70');g.addColorStop(.55,'#0A56B8');g.addColorStop(1,'#19A9F5');
     x.fillStyle=g;x.fillRect(0,0,W,240);
+    if(typeof bdlLogo==='function')bdlLogo(x,60,55,130);
     x.textAlign='right';x.fillStyle='#fff';x.font='800 44px '+F;
     x.fillText('تقرير التسوية حسب الشركة — BDL',W-60,100);
     x.font='600 27px '+F;x.fillStyle='rgba(255,255,255,.9)';

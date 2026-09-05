@@ -353,6 +353,7 @@ window.bkPDF=async function(id){
     var g=x.createLinearGradient(0,0,W,220);
     g.addColorStop(0,'#0B2F70');g.addColorStop(.55,'#0A56B8');g.addColorStop(1,'#19A9F5');
     x.fillStyle=g;x.fillRect(0,0,W,220);
+    if(typeof bdlLogo==='function')bdlLogo(x,60,50,120);
     x.textAlign='right';x.fillStyle='#fff';x.font='800 42px '+F;
     x.fillText('كشف حساب — '+b.name,W-60,92);
     x.font='600 25px '+F;x.fillStyle='rgba(255,255,255,.92)';

@@ -13,6 +13,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="bdl-brand.js?v=1"></script>
 <script src="arkan-gate.js?v=3"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" defer></script>
@@ -596,7 +597,7 @@ function statementPDF(){
   c.fillStyle='#0B2F70';c.fillRect(0,0,W,120);
   c.fillStyle='#fff';c.font='700 34px "IBM Plex Sans Arabic",sans-serif';c.fillText('كشف حساب — '+BK.name,W-50,58);
   c.font='500 20px "IBM Plex Sans Arabic",sans-serif';c.fillText(KIND_L[m.kind]+(m.phone?'  ·  '+m.phone:'')+'  ·  '+todayISO(),W-50,96);
-  c.textAlign='left';c.font='800 30px Inter,sans-serif';c.fillText('BDL',50,70);
+  var _lg=(typeof bdlLogo==='function')&&bdlLogo(c,44,20,80);c.textAlign='left';c.font='800 30px Inter,sans-serif';c.fillText('BDL',_lg?140:50,70);
   var run={},tin={},tout={};EN.forEach(function(e){var a=+e.amount;run[e.ccy]=(run[e.ccy]||0)+(e.side==='in'?a:-a);e._run=run[e.ccy];});
   c.fillStyle='#0B2447';c.textAlign='right';
   var cols=[W-50,W-330,W-720,W-940,W-1100];
