@@ -84,7 +84,6 @@ a{color:inherit;text-decoration:none}
 [data-theme=dark] .tabs button.on::before{background:#7FB2FF}
 .fab{position:fixed;bottom:calc(72px + env(safe-area-inset-bottom));inset-inline-start:50%;transform:translateX(50%);z-index:60;background:var(--navy);color:#fff;border:0;height:48px;padding:0 20px;font-size:14px;font-weight:700;box-shadow:0 10px 26px rgba(11,47,112,.35);display:inline-flex;align-items:center;gap:8px}
 .fab svg{width:18px;height:18px;stroke:#fff;fill:none;stroke-width:2.4}
-.upd{position:fixed;bottom:calc(58px + env(safe-area-inset-bottom));inset-inline:0;z-index:69;background:#101828;color:#fff;display:flex;align-items:center;gap:10px;padding:10px 14px;font-size:12.5px;font-weight:700}
 .upd button{margin-inline-start:auto;border:0;background:var(--blue);color:#fff;height:34px;padding:0 14px;font-weight:700}
 .ov{position:fixed;inset:0;background:var(--bg);z-index:120;display:none;flex-direction:column}
 .ov.on{display:flex}
@@ -245,7 +244,6 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
   <button data-t="Reports"><svg viewBox="0 0 24 24"><path d="M4 20h16"/><path d="M6 16V9M11 16V5M16 16v-7"/></svg>التقارير</button>
   <button data-t="Settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></svg>الإعدادات</button>
 </nav>
-<div class="upd" id="upd" hidden><span>يتوفر إصدار جديد من دفاتري</span><button id="updBtn">تحديث</button></div>
 
 <section class="ov" id="ov">
   <div class="hd">
@@ -276,7 +274,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 <script src="arkan-read.js" defer></script>
 <script>
 'use strict';
-var BUILD='1209';
+var BUILD='1211';
 var SBU='https://vyxzlazwpbstigcqvizb.supabase.co', SB=SBU+'/rest/v1';
 var ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ5eHpsYXp3cGJzdGlnY3F2aXpiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU5MTU5OTcsImV4cCI6MjEwMTQ5MTk5N30.fxMt_jH4z8t7uVnFLLHyNobu6zsgu_ZwVGLibuqWj38';
 var KIND_L={customer:'زبون',supplier:'مورد',cash:'صندوق'};
@@ -352,7 +350,7 @@ function tableMissing(e){return e&&(e.status===404||/PGRST205|does not exist/.te
   else start();
 })();
 async function sha(s){var b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode('bdl:'+s));return Array.from(new Uint8Array(b)).map(function(x){return x.toString(16).padStart(2,'0');}).join('');}
-async function start(){loadProfile();await loadBooks();checkUpdate();}
+async function start(){loadProfile();await loadBooks();}
 async function loadProfile(){
   try{var r=await sbq('/bdl_profiles?select=*&uid=eq.'+ME.uid);PROFILE=r&&r[0]||null;}catch(e){if(tableMissing(e))V2=false;PROFILE=null;}
   if(PROFILE){if(PROFILE.name)ME.name=PROFILE.name;if(PROFILE.business_name)$('#bizName').textContent=PROFILE.business_name;}
@@ -364,8 +362,6 @@ async function saveProfile(patch){
     $('#bizName').textContent=PROFILE.business_name||'حسابات الزبائن والموردين والصندوق';return true;}
   catch(e){toast('لم يُحفظ: '+(tableMissing(e)?'نفّذ bdl-books-v2.sql أولًا':e.message),'bad');return false;}
 }
-async function checkUpdate(){try{var r=await fetch('build.json?t='+Date.now(),{cache:'no-store'});var j=await r.json();var b=parseInt(String(j.build||''),10);if(b&&b>parseInt(BUILD,10))$('#upd').hidden=false;}catch(e){}}
-$('#updBtn').onclick=async function(){try{var rs=await navigator.serviceWorker.getRegistrations();for(var i=0;i<rs.length;i++)await rs[i].unregister();var ks=await caches.keys();for(var j=0;j<ks.length;j++)await caches.delete(ks[j]);}catch(e){}location.reload();};
 
 /* ---------- التبويبات ---------- */
 document.querySelector('.tabs').addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;showTab(b.dataset.t);});
