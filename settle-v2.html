@@ -454,7 +454,7 @@ input,select{font-family:inherit;color:var(--ink)}
       <button data-k="client" onclick="cViewKind('client')">الزبناء</button>
       <button data-k="supplier" onclick="cViewKind('supplier')">الموردون</button>
       <button class="selall" onclick="cNewToggle()">+ طرف</button>
-      <button class="selall" onclick="PARTIES=null;loadClients()">تحديث</button>
+      <button class="selall" onclick="PARTIES=null;BOOKS_MAP=null;loadClients()">تحديث</button>
     </div>
   </div>
   <div id="cNewBox" style="display:none;background:#fff;border:1.5px solid var(--navy);padding:14px;margin-bottom:12px">
@@ -2855,7 +2855,19 @@ async function cDelParty(name,kind){
     toast('حُذف من السجل');
   }catch(e){toast('تعذّر الحذف: '+e.message);}
 }
+var BOOKS_MAP=null,BOOKS_LOADING=false;
+async function loadBooksMap(){if(BOOKS_LOADING)return;BOOKS_LOADING=true;try{var r=await fetch(SB+'/bdl_books_summary?select=id,name,kind,cust_id,bal,n_entries,last_entry_at&limit=1000',{headers:H()});var rows=r.ok?await r.json():[];BOOKS_MAP={};rows.forEach(function(b){var k=(b.kind==='supplier'?'supplier':'client')+'|'+String(b.name||'').trim().toLowerCase();BOOKS_MAP[k]=b;});}catch(e){BOOKS_MAP={};}BOOKS_LOADING=false;renderClients();}
+function bookCell(p){
+  if(!BOOKS_MAP){return '<span class="num" style="font-size:11px;color:var(--muted)">…</span>';}
+  var b=BOOKS_MAP[p.kind+'|'+String(p.name).trim().toLowerCase()];
+  var open=b?'<a href="books.html?book='+b.id+'" style="border:1px solid var(--navy);background:#fff;color:var(--navy);font-weight:800;font-size:11px;padding:7px 10px;text-decoration:none;white-space:nowrap">الدفتر ›</a>':'';
+  if(!b||!b.bal||!Object.keys(b.bal).length)return '<div style="display:flex;gap:6px;align-items:center"><span style="font-size:11px;color:var(--muted)">لا قيود</span>'+open+'</div>';
+  var ks=Object.keys(b.bal).sort(function(a,c){return Math.abs(b.bal[c].net)-Math.abs(b.bal[a].net);});var cc=ks[0],net=+b.bal[cc].net||0;
+  var lbl=net<0?'مستحق لك':net>0?'عليك له':'متعادل',col=net<0?'#0B7A3B':net>0?'#B00020':'var(--muted)';
+  return '<div style="display:flex;gap:8px;align-items:center"><div style="text-align:left"><div class="num" style="font-size:13px;font-weight:800;color:'+col+'">'+Math.abs(net).toLocaleString('en-US',{maximumFractionDigits:2})+' '+cc+'</div><div style="font-size:10px;color:var(--muted)">'+lbl+(ks.length>1?' +'+(ks.length-1):'')+' · '+(b.n_entries||0)+' قيد</div></div>'+open+'</div>';
+}
 function renderClients(){
+  if(!BOOKS_MAP&&!BOOKS_LOADING)loadBooksMap();
   var q=($('#cq').value||'').trim().toLowerCase();
   /* عدّ العمليات: الزبون بالاسم، والمورد بحقل المورد */
   var cBy={},sBy={};(OPS_DATA||[]).forEach(function(o){
@@ -2891,7 +2903,7 @@ function renderClients(){
       '<div class="num" style="font-size:11.5px;color:var(--muted);margin-top:2px">'+
       (p.phone?esc(p.phone)+' · ':'')+
       (st.n?st.n+' عملية'+(st.open?' ('+st.open+' مفتوحة)':''):'بلا عمليات')+'</div></div>'+
-      acts+'</div>';
+      '<div style="display:flex;gap:10px;align-items:center">'+bookCell(p)+acts+'</div></div>';
   }).join('')||'<div class="empty">السجل فارغ'+(q?' من المطابقين':'')+' — سجّل أول طرف بزر «+ طرف»</div>';
 }
 async function ensureCustomer(phone,name){

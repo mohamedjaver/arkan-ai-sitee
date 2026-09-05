@@ -332,7 +332,7 @@ function flagErr(img){img.outerHTML=flagFallback(img.dataset.ccy||'',img.classNa
 var JWT=null,SESSION=null,ME={phone:'',name:'',uid:''},PROFILE=null;
 var BOOKS=null,KIND='all',Q='';
 var BK=null,EN=[],MEMBERS=[],MYROLE='owner';
-var F0={range:'all',from:'',to:'',side:'all',ccy:'ALL',method:'ALL',cat:'ALL',party:'ALL',by:'ALL',q:''},F=Object.assign({},F0);
+var F0={range:'all',from:'',to:'',side:'all',ccy:'ALL',method:'ALL',cat:'ALL',party:'ALL',by:'ALL',source:'ALL',q:''},F=Object.assign({},F0);
 var V2=true;
 var RECENT_CCY=JSON.parse(localStorage.getItem('bdl_recent_ccy')||'["AOA","MRU","USD","EUR","CNY","USDT"]');
 
@@ -369,7 +369,7 @@ function tableMissing(e){return e&&(e.status===404||/PGRST205|does not exist/.te
   else start();
 })();
 async function sha(s){var b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode('bdl:'+s));return Array.from(new Uint8Array(b)).map(function(x){return x.toString(16).padStart(2,'0');}).join('');}
-async function start(){loadProfile();await loadBooks();}
+async function start(){loadProfile();await loadBooks();var qb=new URLSearchParams(location.search).get('book');if(qb&&BOOKS){var b=BOOKS.find(function(x){return x.id===qb;});if(b)openBook(b);}}
 async function loadProfile(){
   try{var r=await sbq('/bdl_profiles?select=*&uid=eq.'+ME.uid);PROFILE=r&&r[0]||null;}catch(e){if(tableMissing(e))V2=false;PROFILE=null;}
   if(PROFILE){if(PROFILE.name)ME.name=PROFILE.name;if(PROFILE.business_name)$('#bizName').textContent=PROFILE.business_name;}
@@ -418,7 +418,7 @@ function renderBooks(){
   if(!list.length){box.innerHTML='<div class="empty"><b>'+(BOOKS&&BOOKS.length?'لا نتائج':'ابدأ دفترك الأول')+'</b>'+(BOOKS&&BOOKS.length?'جرّب اسمًا أو رقمًا آخر':'دفتر لكل زبون أو مورد، أو صندوق لنقدك اليومي. كل قيد يُحفظ سحابيًا، ويمكن مشاركة الدفتر مع فريقك.')+'</div>';return;}
   box.innerHTML=list.map(function(b){var m=meta(b),n=netOf(b),bt=n?balText(m.kind,n.net):{t:'لا قيود بعد',c:'z'};var ini=String(b.name||'?').trim().charAt(0).toUpperCase();
     return '<div class="bk" data-id="'+b.id+'"><div class="av '+(m.kind==='supplier'?'sup':m.kind==='cash'?'cash':'')+'">'+esc(ini)+flagImg(n?n.ccy:m.currency)+'</div>'+
-      '<div class="m"><div class="n">'+esc(b.name)+(isOwner(b)?'':' <span class="tag">'+ROLE_L[roleOf(b)]+'</span>')+(+b.n_members?' <span class="tag">'+b.n_members+' عضو</span>':'')+'</div><div class="s">'+KIND_L[m.kind]+(m.phone?' · <span class="num">'+esc(m.phone)+'</span>':'')+' · '+rel(b.last_entry_at)+'</div></div>'+
+      '<div class="m"><div class="n">'+esc(b.name)+(isOwner(b)?'':' <span class="tag">'+ROLE_L[roleOf(b)]+'</span>')+(+b.n_members?' <span class="tag">'+b.n_members+' عضو</span>':'')+((b.cust_id||(b.source&&b.source!=='manual'))?' <span class="tag" style="color:var(--navy)">تسوية</span>':'')+'</div><div class="s">'+KIND_L[m.kind]+(m.phone?' · <span class="num">'+esc(m.phone)+'</span>':'')+' · '+rel(b.last_entry_at)+'</div></div>'+
       '<div class="b"><b class="num '+bt.c+'">'+(n?fmt(Math.abs(n.net),n.ccy)+' '+n.ccy:'—')+'</b><small>'+bt.t+(n&&n.more?' +'+n.more:'')+'</small></div></div>';}).join('');
 }
 $('#q').addEventListener('input',function(){Q=this.value;renderBooks();});
@@ -502,7 +502,7 @@ function closeBook(){ov.classList.remove('on');BK=null;}
 $('#ovBack').onclick=function(){history.back();};
 window.addEventListener('popstate',function(){if(bs.classList.contains('on')||bs2.classList.contains('on')){bsClose();bs2Close();history.pushState({bk:1},'');return;}if(ov.classList.contains('on'))closeBook();});
 $('#ovMenu').onclick=bookMenu;$('#ovMembers').onclick=membersSheet;$('#ovPdf').onclick=function(){reportSheet(BK);};$('#ovNm').onclick=function(){if(MYROLE==='owner'||MYROLE==='admin')bookForm(BK);};
-function paintHead(){if(!BK)return;var m=meta(BK);$('#ovName').textContent=BK.name;$('#ovSub').innerHTML=KIND_L[m.kind]+(m.phone?' · <span class="num">'+esc(m.phone)+'</span>':'')+' · '+ROLE_L[MYROLE]+((MYROLE==='owner'||MYROLE==='admin')?' · اضغط للإعدادات':'');}
+function paintHead(){if(!BK)return;var m=meta(BK);$('#ovName').textContent=BK.name;$('#ovSub').innerHTML=KIND_L[m.kind]+(m.phone?' · <span class="num">'+esc(m.phone)+'</span>':'')+(BK.cust_id||(BK.source&&BK.source!=='manual')?' · مرتبط بالتسوية':'')+' · '+ROLE_L[MYROLE]+((MYROLE==='owner'||MYROLE==='admin')?' · اضغط للإعدادات':'');}
 async function loadEntries(){try{EN=await sbq('/bdl_book_entries?book_id=eq.'+BK.id+'&select=*&order=entry_date.asc,created_at.asc&limit=5000');}catch(e){toast('تعذّر تحميل القيود','bad');EN=[];}renderEntries();}
 async function loadMembers(){try{MEMBERS=await sbq('/bdl_book_members?book_id=eq.'+BK.id+'&select=*&order=created_at.asc');}catch(e){MEMBERS=[];}}
 function weekStart(){var n=new Date(),day=(n.getDay()+1)%7;var s=new Date(n);s.setDate(n.getDate()-day);return iso(s);}
@@ -515,7 +515,7 @@ function filtered(){var q=F.q.trim().toLowerCase(),qn=q.replace(/[^\d.]/g,'');
   return EN.filter(function(e){
     if(!inRange(e.entry_date))return false;if(F.side!=='all'&&e.side!==F.side)return false;if(F.ccy!=='ALL'&&e.ccy!==F.ccy)return false;
     if(F.method!=='ALL'&&(e.method||'other')!==F.method)return false;if(F.cat!=='ALL'&&(e.category||'')!==F.cat)return false;
-    if(F.party!=='ALL'&&(e.party||'')!==F.party)return false;if(F.by!=='ALL'&&(e.created_by_phone||'')!==F.by)return false;
+    if(F.party!=='ALL'&&(e.party||'')!==F.party)return false;if(F.source&&F.source!=='ALL'&&(e.source||'manual')!==F.source)return false;if(F.by!=='ALL'&&(e.created_by_phone||'')!==F.by)return false;
     if(q&&!(String(e.note||'').toLowerCase().indexOf(q)>-1||String(e.party||'').toLowerCase().indexOf(q)>-1||String(e.category||'').toLowerCase().indexOf(q)>-1||(qn&&String(e.amount).indexOf(qn)>-1)))return false;return true;});}
 function uniq(k){var s={};EN.forEach(function(e){var v=e[k];if(v)s[v]=1;});return Object.keys(s);}
 var RL={all:'كل الوقت',today:'اليوم',yesterday:'أمس',week:'هذا الأسبوع',month:'هذا الشهر',lastmonth:'الشهر الماضي'};
@@ -530,6 +530,7 @@ function renderFilterChips(){
   if(bys.length>1||MEMBERS.length)html+='<button class="chip '+(F.by!=='ALL'?'on':'')+'" data-f="by">'+(F.by==='ALL'?'الأعضاء':esc(nameOfPhone(F.by)))+' ▾</button>';
   if(parties.length)html+='<button class="chip '+(F.party!=='ALL'?'on':'')+'" data-f="party">'+(F.party==='ALL'?'جهة اتصال':esc(F.party))+' ▾</button>';
   if(cats.length)html+='<button class="chip '+(F.cat!=='ALL'?'on':'')+'" data-f="cat">'+(F.cat==='ALL'?'الفئة':esc(F.cat))+' ▾</button>';
+  if(uniq('source').length>1)html+='<button class="chip '+(F.source&&F.source!=='ALL'?'on':'')+'" data-f="source">'+(!F.source||F.source==='ALL'?'المصدر':({manual:'يدوي',settle:'تسوية',ops:'عمليات'})[F.source])+' ▾</button>';
   html+='<button class="chip '+(F.method!=='ALL'?'on':'')+'" data-f="method">'+(F.method==='ALL'?'طريقة الدفع':METHOD_L[F.method])+' ▾</button>';
   $('#fChips').innerHTML=html;
 }
@@ -540,6 +541,7 @@ function filterSheet(k){
   if(k==='side'){title='نوع الحركة';opts=[['all','الكل'],['in','وارد (+)'],['out','صادر (−)']];}
   if(k==='ccy'){title='العملة';opts=[['ALL','الكل']].concat(uniq('ccy').map(function(c){return [c,c+' — '+(CUR[c]?CUR[c].name:'')];}));}
   if(k==='method'){title='طريقة الدفع';opts=[['ALL','الكل']].concat(METHODS);}
+  if(k==='source'){title='المصدر';opts=[['ALL','الكل'],['manual','يدوي'],['settle','كونسول التسوية'],['ops','عمليات الكوانزا']];}
   if(k==='cat'){title='الفئة';opts=[['ALL','الكل']].concat(uniq('category').map(function(c){return [c,c];}));}
   if(k==='party'){title='جهة الاتصال';opts=[['ALL','الكل']].concat(uniq('party').map(function(c){return [c,c];}));}
   if(k==='by'){title='العضو';var ph={};uniq('created_by_phone').forEach(function(p){ph[p]=1;});MEMBERS.forEach(function(m){ph[m.phone]=1;});ph[ME.phone]=1;opts=[['ALL','الكل']].concat(Object.keys(ph).map(function(p){return [p,nameOfPhone(p)];}));}
@@ -581,7 +583,7 @@ function renderEntries(){
       html+='<div class="day"><span>'+dayLabel(e.entry_date)+'</span><span class="num">'+dt+'</span></div>';}
     var rc=e.receipt_url?'<img class="rc" src="'+esc(e.receipt_url)+'" alt="" loading="lazy">':'';
     var title=e.party||e.note||e.category||(e.side==='in'?'وارد':'صادر');
-    var sub=[];if(e.party&&e.note)sub.push(esc(e.note));if(e.category)sub.push('<span class="tag">'+esc(e.category)+'</span>');if(e.method)sub.push('<span class="tag">'+METHOD_L[e.method]+'</span>');if(e.ref)sub.push('<span class="num">'+esc(e.ref)+'</span>');
+    var sub=[];if(e.party&&e.note)sub.push(esc(e.note));if(e.source&&e.source!=='manual')sub.push('<span class="tag" style="background:var(--soft);color:var(--navy)">'+(e.source==='settle'?'تسوية':'عملية')+'</span>');else if(e.category)sub.push('<span class="tag">'+esc(e.category)+'</span>');if(e.method)sub.push('<span class="tag">'+METHOD_L[e.method]+'</span>');if(e.ref)sub.push('<span class="num">'+esc(e.ref)+'</span>');
     var by=(!e.created_by_phone||e.created_by_phone===ME.phone)?'بواسطتك':'بواسطة '+esc(e.created_by_name||nameOfPhone(e.created_by_phone));
     var tm=e.entry_time?String(e.entry_time).slice(0,5):(e.created_at?hm(new Date(e.created_at)):'');
     sub.push('<span>'+by+(tm?' · <span class="num">'+tm+'</span>':'')+'</span>');
@@ -597,8 +599,8 @@ $('#btnIn').onclick=function(){entrySheet('in',null);};$('#btnOut').onclick=func
 /* ============================================================ القيد */
 var RC={file:null,url:null,ref:null};
 function entrySheet(side,e,pre){
-  pre=pre||{};RC={file:null,url:null,ref:null};var m=meta(BK),ro=MYROLE==='viewer';
-  var title=e?(ro?'تفاصيل القيد':'تعديل القيد'):(side==='in'?(m.kind==='cash'?'نقدي وارد إلى الصندوق':'نقدي وارد — قبضت من '+BK.name):(m.kind==='cash'?'نقدي صادر من الصندوق':'نقدي صادر — دفعت إلى '+BK.name));
+  pre=pre||{};RC={file:null,url:null,ref:null};var m=meta(BK),synced=!!(e&&e.source&&e.source!=='manual'),ro=MYROLE==='viewer'||synced;
+  var title=e?(synced?(e.source==='settle'?'قيد من كونسول التسوية':'قيد من عملية كوانزا'):ro?'تفاصيل القيد':'تعديل القيد'):(side==='in'?(m.kind==='cash'?'نقدي وارد إلى الصندوق':'نقدي وارد — قبضت من '+BK.name):(m.kind==='cash'?'نقدي صادر من الصندوق':'نقدي صادر — دفعت إلى '+BK.name));
   var ccy=e?e.ccy:(pre.ccy||m.currency||'AOA');var cats=CAT_SUGG[m.kind].concat(uniq('category')).filter(function(v,i,a){return a.indexOf(v)===i;}).slice(0,10);
   var parties=uniq('party').slice(0,8);var curCat=e?e.category:pre.category,curM=e?(e.method||'cash'):(pre.method||'cash');
   sheet(esc(title),e?'':'يُحفظ فورًا ويظهر في الرصيد',
@@ -612,7 +614,7 @@ function entrySheet(side,e,pre){
     '<div class="f"><label>البيان / ملاحظة</label><input id="eNote" value="'+esc(e?e.note:(pre.note||''))+'" placeholder="مثال: بضاعة، دفعة، تحويل…" maxlength="140" '+(ro?'disabled':'')+'></div>'+
     (ro?'':'<button class="cta '+side+'" id="eSave">'+(e?'حفظ التعديل':(side==='in'?'تسجيل الوارد':'تسجيل الصادر'))+'</button>')+
     (e&&!ro?'<button class="it red" id="eDel" style="margin-top:8px;justify-content:center">حذف القيد</button>':'')+
-    (e?'<div class="sub" style="margin-top:10px">أُضيف '+((!e.created_by_phone||e.created_by_phone===ME.phone)?'بواسطتك':'بواسطة '+esc(e.created_by_name||nameOfPhone(e.created_by_phone)))+' · '+new Date(e.created_at).toLocaleString('ar',{dateStyle:'medium',timeStyle:'short'})+'</div>':''));
+    (synced?'<div class="note">هذا القيد مُزامَن تلقائيًا من '+(e.source==='settle'?'كونسول التسوية':'عمليات الكوانزا')+' (المرجع '+esc(e.ref||'')+'). يُعدَّل أو يُحذف من مصدره فقط.'+(isOwner(BK)?' <a href="settle-v2.html" style="color:var(--blue);font-weight:700">افتح التسوية ›</a>':'')+'</div>':'')+(e?'<div class="sub" style="margin-top:10px">أُضيف '+((!e.created_by_phone||e.created_by_phone===ME.phone)?'بواسطتك':'بواسطة '+esc(e.created_by_name||nameOfPhone(e.created_by_phone)))+' · '+new Date(e.created_at).toLocaleString('ar',{dateStyle:'medium',timeStyle:'short'})+'</div>':''));
   bindCurPick('eCur');
   $('#eMeth').onclick=function(ev){var b=ev.target.closest('button');if(!b)return;[].forEach.call(this.children,function(x){x.classList.toggle('on',x===b);});};
   $('#eCatS').onclick=function(ev){var b=ev.target.closest('button');if(!b)return;$('#eCat').value=b.dataset.v;[].forEach.call(this.children,function(x){x.classList.toggle('on',x===b);});};
@@ -741,16 +743,16 @@ function bookMenu(){
   sheet(esc(BK.name),KIND_L[meta(BK).kind]+' · '+ROLE_L[MYROLE],
     (admin?'<button class="it" id="mEdit">'+ic('edit')+'إعدادات الدفتر<small>الاسم، النوع، العملة، الهاتف</small></button>':'')+
     '<button class="it" id="mMem">'+ic('users')+'الأعضاء<small>'+(MEMBERS.length+1)+'</small></button>'+
-    '<button class="it" id="mAct">'+ic('hist')+'نشاط الدفتر</button>'+
+    '<button class="it" id="mAct">'+ic('hist')+'نشاط الدفتر</button>'+(isOwner(BK)&&(BK.cust_id||(BK.source&&BK.source!=='manual'))?'<button class="it" id="mSettle">'+ic('desk')+'افتح في كونسول التسوية<small>الكروت والمعاملات</small></button>':'')+
     '<button class="it" id="mRep">'+ic('pdf')+'إنشاء تقرير<small>PDF / Excel</small></button>'+
     '<button class="it" id="mWa">'+ic('wa')+'إرسال الرصيد عبر واتساب<small>'+(meta(BK).phone?'إلى '+prettyPhone(meta(BK).phone):'نص جاهز')+'</small></button>'+
     (admin?'<button class="it" id="mDup">'+ic('copy')+'نسخ الدفتر</button>':'')+
     (writer?'<button class="it red" id="mClear">'+ic('trash')+'حذف جميع الإدخالات</button>':'')+
     (MYROLE==='owner'?'<button class="it red" id="mDel">'+ic('trash')+'حذف الدفتر</button>':'<button class="it red" id="mLeave">'+ic('out')+'مغادرة الدفتر</button>'));
   if(admin)$('#mEdit').onclick=function(){bookForm(BK);};
-  $('#mMem').onclick=membersSheet;$('#mAct').onclick=activitySheet;$('#mRep').onclick=function(){reportSheet(BK);};$('#mWa').onclick=function(){bsClose();shareWA();};
+  $('#mMem').onclick=membersSheet;$('#mAct').onclick=activitySheet;if($('#mSettle'))$('#mSettle').onclick=function(){location.href='settle-v2.html#clients';};$('#mRep').onclick=function(){reportSheet(BK);};$('#mWa').onclick=function(){bsClose();shareWA();};
   if(admin)$('#mDup').onclick=async function(){try{await sbq('/rpc/bdl_book_duplicate',{method:'POST',body:{p_book:BK.id}});bsClose();closeBook();toast('نُسخ الدفتر','good');loadBooks();}catch(e){toast('لم يُنسخ','bad');}};
-  if(writer)$('#mClear').onclick=async function(){if(!confirm('حذف كل قيود «'+BK.name+'» ('+EN.length+')؟ لا يمكن التراجع.'))return;try{await sbq('/bdl_book_entries?book_id=eq.'+BK.id,{method:'DELETE'});logAct(BK.id,'entries.clear',{n:EN.length});bsClose();toast('حُذفت القيود');await loadEntries();loadBooks();}catch(e){toast('لم تُحذف','bad');}};
+  if(writer)$('#mClear').onclick=async function(){var manualN=EN.filter(function(x){return !x.source||x.source==='manual';}).length;if(!confirm('حذف القيود اليدوية في «'+BK.name+'» ('+manualN+')؟ القيود المُزامنة من التسوية تبقى. لا يمكن التراجع.'))return;try{await sbq('/bdl_book_entries?book_id=eq.'+BK.id+'&source=eq.manual',{method:'DELETE'});logAct(BK.id,'entries.clear',{n:EN.length});bsClose();toast('حُذفت القيود');await loadEntries();loadBooks();}catch(e){toast('لم تُحذف','bad');}};
   if(MYROLE==='owner')$('#mDel').onclick=async function(){if(!confirm('حذف «'+BK.name+'» مع '+(BK.n_entries||0)+' قيد؟ لا يمكن التراجع.'))return;try{await sbq('/bdl_books?id=eq.'+BK.id,{method:'DELETE'});bsClose();closeBook();toast('حُذف الدفتر');loadBooks();}catch(e){toast('لم يُحذف','bad');}};
   else $('#mLeave').onclick=async function(){var me=MEMBERS.find(function(x){return x.phone===ME.phone;});if(!me)return;if(!confirm('مغادرة هذا الدفتر؟'))return;try{await sbq('/bdl_book_members?id=eq.'+me.id,{method:'DELETE'});bsClose();closeBook();loadBooks();}catch(e){toast('تعذّرت المغادرة','bad');}};
 }
