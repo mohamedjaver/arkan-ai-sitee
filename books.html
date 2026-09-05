@@ -627,7 +627,7 @@ function entrySheet(side,e,pre){
     if(!e)body.entry_time=hm();
     try{
       if(!e){if(RC.ref){var d=EN.find(function(x){return x.ref&&x.ref===RC.ref;});if(d)throw new Error('هذا الإيصال مسجّل مسبقًا في '+d.entry_date+' بمبلغ '+fmt(d.amount,d.ccy)+' '+d.ccy);}
-        if(RC.file){var up=await uploadFile(RC.file,'books');if(up)body.receipt_url=up;}if(RC.ref)body.ref=RC.ref;}
+        if(RC.file){try{body.receipt_url=await uploadFile(RC.file,'books');}catch(ue){toast(ue.message,'bad');}}if(RC.ref)body.ref=RC.ref;}
       var save=function(b){return e?sbq('/bdl_book_entries?id=eq.'+e.id,{method:'PATCH',body:b}):sbq('/bdl_book_entries',{method:'POST',body:b});};
       try{await save(body);}
       catch(err){if(colMissing(err)){V2=false;['method','category','party','created_by_name','entry_time','receipt_url','ref'].forEach(function(k){delete body[k];});await save(body);}else if(err.status===409)throw new Error('مرجع الإيصال مسجّل مسبقًا');else throw err;}
@@ -654,9 +654,11 @@ $('#rcFile').addEventListener('change',async function(){
   }catch(err){att.className='att rd';att.innerHTML='<img src="'+RC.url+'" alt=""><div class="st"><b>تعذّرت القراءة — أدخل المبلغ يدويًا</b><small>'+esc(err.message)+'</small></div>';}
 });
 async function uploadFile(file,folder){
-  try{var path=folder+'/'+ME.uid+'/'+Date.now()+'_'+Math.random().toString(36).slice(2,7)+(/pdf/i.test(file.type)?'.pdf':'.jpg');
-    var r=await fetch(SBU+'/storage/v1/object/receipts/'+path,{method:'POST',headers:{apikey:ANON,Authorization:'Bearer '+JWT.token,'Content-Type':file.type||'image/jpeg','x-upsert':'true'},body:file});if(!r.ok)return null;
-    var s=await fetch(SBU+'/storage/v1/object/sign/receipts/'+path,{method:'POST',headers:H(),body:JSON.stringify({expiresIn:60*60*24*365*5})});if(!s.ok)return null;var j=await s.json();return SBU+'/storage/v1'+j.signedURL;}catch(e){return null;}
+  var path=folder+'/'+ME.uid+'/'+Date.now()+'_'+Math.random().toString(36).slice(2,7)+(/pdf/i.test(file.type)?'.pdf':'.jpg');
+  var r=await fetch(SBU+'/storage/v1/object/receipts/'+path,{method:'POST',headers:{apikey:ANON,Authorization:'Bearer '+JWT.token,'Content-Type':file.type||'image/jpeg','x-upsert':'true'},body:file});
+  if(!r.ok){var t=await r.text();throw new Error(/Bucket not found|not_found/i.test(t)?'مجلد التخزين غير مفعّل — نفّذ bdl-books-v2.sql في Supabase':/row-level|policy|Unauthorized|403/i.test(t+r.status)?'لا صلاحية رفع — نفّذ bdl-books-v2.sql (سياسة avatars)':'فشل الرفع ('+r.status+')');}
+  var s=await fetch(SBU+'/storage/v1/object/sign/receipts/'+path,{method:'POST',headers:H(),body:JSON.stringify({expiresIn:60*60*24*365*5})});
+  if(!s.ok)throw new Error('تعذّر توقيع الرابط');var j=await s.json();return SBU+'/storage/v1'+j.signedURL;
 }
 async function logAct(book,action,detail){if(!V2)return;try{await sbq('/bdl_book_activity',{method:'POST',body:{book_id:book,action:action,detail:detail||{},actor_name:firstName()||null}});}catch(e){}}
 
@@ -802,27 +804,55 @@ async function exportAll(){
 }
 function statementPDF(b){
   var JS=(window.jspdf&&window.jspdf.jsPDF)||window.jsPDF;if(!JS){toast('مولّد PDF لم يُحمّل بعد','bad');return;}
-  var m=meta(b),R=reportRows(filtered()),rows=R.rows,head=R.head;
-  var W=1240,rowH=50,top=280,H_=top+rows.length*rowH+200;var cv=$('#pdfCv');cv.width=W;cv.height=H_;var c=cv.getContext('2d');
-  c.fillStyle='#fff';c.fillRect(0,0,W,H_);c.direction='rtl';c.textAlign='right';
-  var g=c.createLinearGradient(0,0,W,0);g.addColorStop(0,'#0A56B8');g.addColorStop(1,'#0B2F70');c.fillStyle=g;c.fillRect(0,0,W,150);
-  if(typeof bdlLogo==='function')bdlLogo(c,44,25,100);
-  c.fillStyle='#fff';c.font='700 34px "IBM Plex Sans Arabic",sans-serif';c.fillText((PROFILE&&PROFILE.business_name?PROFILE.business_name+' — ':'')+'كشف حساب — '+b.name,W-50,62);
-  c.font='500 20px "IBM Plex Sans Arabic",sans-serif';c.fillText(KIND_L[m.kind]+(m.phone?'  ·  '+m.phone:'')+'  ·  '+rangeLabel()+'  ·  صدر '+todayISO()+' '+hm(),W-50,102);
-  c.font='500 18px "IBM Plex Sans Arabic",sans-serif';c.fillText({all:'تقرير جميع الحركات',daily:'ملخص يومي',party:'ملخص حسب جهة اتصال',cat:'ملخص حسب الفئة',method:'ملخص حسب طريقة الدفع'}[RT],W-50,134);
-  var cols=RT==='all'?[[0,110],[1,60],[2,150],[3,220],[4,110],[5,110],[6,120],[7,120],[8,60],[9,130]]:[[0,300],[1,90],[2,200],[3,200],[4,200],[5,120]];
-  var x=W-50,pos=[];cols.forEach(function(cc){pos.push(x);x-=cc[1];});
-  c.fillStyle='#EEF3FA';c.fillRect(30,top-44,W-60,40);c.fillStyle='#5C7699';c.font='700 17px "IBM Plex Sans Arabic",sans-serif';cols.forEach(function(cc,i){c.fillText(head[cc[0]],pos[i],top-16);});
-  c.font='600 18px "IBM Plex Sans Arabic",sans-serif';
-  rows.forEach(function(r,i){var y=top+i*rowH+32;if(i%2){c.fillStyle='#F8FAFF';c.fillRect(30,top+i*rowH,W-60,rowH);}
-    cols.forEach(function(cc,j){var v=r[cc[0]];var isIn=(RT==='all'&&cc[0]===6)||(RT!=='all'&&cc[0]===2),isOut=(RT==='all'&&cc[0]===7)||(RT!=='all'&&cc[0]===3);
-      c.fillStyle=isIn?'#0B7A3B':isOut?'#B00020':'#0B2447';var t=typeof v==='number'?fmt(v):String(v||'');if(t.length>26)t=t.slice(0,25)+'…';c.fillText(t,pos[j],y);});});
-  var y2=top+rows.length*rowH+36;c.fillStyle='#0B2F70';c.fillRect(30,y2,W-60,3);
-  var run={},tin={},tout={};filtered().forEach(function(e){if(e.side==='in')tin[e.ccy]=(tin[e.ccy]||0)+ +e.amount;else tout[e.ccy]=(tout[e.ccy]||0)+ +e.amount;});EN.forEach(function(e){run[e.ccy]=(run[e.ccy]||0)+(e.side==='in'?+e.amount:-e.amount);});
-  c.font='700 21px "IBM Plex Sans Arabic",sans-serif';var yy=y2+40;c.fillStyle='#0B2447';
-  Object.keys(run).forEach(function(cc){var bt=balText(m.kind,run[cc]);c.fillText('وارد '+fmt(tin[cc]||0,cc)+'   صادر '+fmt(tout[cc]||0,cc)+'   '+bt.t+' '+fmt(Math.abs(run[cc]),cc)+' '+cc,W-50,yy);yy+=32;});
-  c.fillStyle='#5C7699';c.font='500 15px "IBM Plex Sans Arabic",sans-serif';c.fillText('صادر من دفاتر BDL — lbdal.com · '+rows.length+' سطر',W-50,H_-28);
-  var img=cv.toDataURL('image/jpeg',.92);var pdf=new JS({unit:'pt',format:[W*.6,H_*.6]});pdf.addImage(img,'JPEG',0,0,W*.6,H_*.6);
+  var m=meta(b),list=filtered(),R=reportRows(list),rows=R.rows,head=R.head;
+  var AF='"IBM Plex Sans Arabic","Noto Sans Arabic",sans-serif',NF='Inter,sans-serif';
+  var W=1240,PH=1754,PER=30,rowH=44,pages=Math.max(1,Math.ceil(rows.length/PER));
+  var cols=RT==='all'?[[0,112],[1,58],[2,160],[3,240],[4,110],[5,110],[6,125],[7,125],[8,60],[9,140]]:[[0,320],[1,90],[2,200],[3,200],[4,200],[5,130]];
+  var pos=[],x=W-40;cols.forEach(function(cc){pos.push(x);x-=cc[1];});
+  var run={},tin={},tout={};list.forEach(function(e){if(e.side==='in')tin[e.ccy]=(tin[e.ccy]||0)+ +e.amount;else tout[e.ccy]=(tout[e.ccy]||0)+ +e.amount;});EN.forEach(function(e){run[e.ccy]=(run[e.ccy]||0)+(e.side==='in'?+e.amount:-e.amount);});
+  var sc=F.ccy!=='ALL'?F.ccy:(Object.keys(run).sort(function(a,c){return Math.abs(run[c])-Math.abs(run[a]);})[0]||m.currency);
+  var RTL={all:'تقرير جميع الحركات',daily:'ملخص يومي',party:'ملخص حسب جهة اتصال',cat:'ملخص حسب الفئة',method:'ملخص حسب طريقة الدفع'}[RT];
+  var pdf=null,cv=$('#pdfCv');cv.width=W;cv.height=PH;var c=cv.getContext('2d');
+  function txt(t,px,py,font,color,align){c.font=font;c.fillStyle=color;c.textAlign=align||'right';c.fillText(String(t),px,py);}
+  function money(v,cc){return typeof v==='number'?fmt(v,cc):String(v||'');}
+  for(var pg=0;pg<pages;pg++){
+    c.setTransform(1,0,0,1,0,0);c.fillStyle='#fff';c.fillRect(0,0,W,PH);
+    /* الرأس */
+    var g=c.createLinearGradient(0,0,W,0);g.addColorStop(0,'#0A56B8');g.addColorStop(1,'#0B2F70');c.fillStyle=g;c.fillRect(0,0,W,170);
+    if(typeof bdlLogo==='function')bdlLogo(c,44,35,100);
+    txt(b.name,W-40,62,'700 36px '+AF,'#fff');
+    txt((PROFILE&&PROFILE.business_name?PROFILE.business_name+'  ·  ':'')+KIND_L[m.kind]+(m.phone?'  ·  '+m.phone:''),W-40,100,'500 19px '+AF,'rgba(255,255,255,.88)');
+    txt(RTL+'  ·  '+rangeLabel()+(F.method!=='ALL'?'  ·  '+METHOD_L[F.method]:'')+(F.cat!=='ALL'?'  ·  '+F.cat:''),W-40,136,'600 18px '+AF,'#BFD6FF');
+    txt('BDL  ·  lbdal.com',170,84,'800 20px '+NF,'rgba(255,255,255,.9)','left');
+    txt(todayISO()+' '+hm(),170,114,'500 15px '+NF,'rgba(255,255,255,.7)','left');
+    var y0=190;
+    if(pg===0){
+      /* بطاقات الملخص */
+      var bt=balText(m.kind,run[sc]||0);var cards=[['صافي الرصيد · '+sc,fmt(Math.abs(run[sc]||0),sc),bt.t,'#0B2447'],['إجمالي الوارد (+)',fmt(tin[sc]||0,sc),list.filter(function(e){return e.side==='in'&&e.ccy===sc;}).length+' حركة','#0B7A3B'],['إجمالي الصادر (−)',fmt(tout[sc]||0,sc),list.filter(function(e){return e.side==='out'&&e.ccy===sc;}).length+' حركة','#B00020']];
+      var cw=(W-80-24)/3;cards.forEach(function(k,i){var cx=W-40-i*(cw+12);c.fillStyle='#F4F8FD';c.fillRect(cx-cw,y0,cw,96);c.fillStyle='#D7E2F2';c.fillRect(cx-cw,y0,cw,1);
+        txt(k[0],cx-16,y0+30,'600 15px '+AF,'#5C7699');txt(k[1],cx-16,y0+66,'800 28px '+NF,k[3]);txt(k[2],cx-cw+16,y0+66,'600 13px '+AF,'#5C7699','left');});
+      y0+=120;
+      var extra=Object.keys(run).filter(function(k){return k!==sc;});
+      if(extra.length){txt('عملات أخرى: '+extra.map(function(k){var bb=balText(m.kind,run[k]);return bb.t+' '+fmt(Math.abs(run[k]),k)+' '+k;}).join('  ·  '),W-40,y0+6,'600 15px '+AF,'#5C7699');y0+=28;}
+    }
+    /* رأس الجدول */
+    c.fillStyle='#EEF3FA';c.fillRect(30,y0,W-60,40);
+    cols.forEach(function(cc,i){txt(head[cc[0]],pos[i],y0+27,'700 15px '+AF,'#5C7699');});
+    var yy=y0+40;var slice=rows.slice(pg*PER,pg*PER+PER);
+    slice.forEach(function(r,i){if(i%2){c.fillStyle='#F8FAFF';c.fillRect(30,yy,W-60,rowH);}
+      cols.forEach(function(cc,j){var v=r[cc[0]];var isIn=(RT==='all'&&cc[0]===6)||(RT!=='all'&&cc[0]===2),isOut=(RT==='all'&&cc[0]===7)||(RT!=='all'&&cc[0]===3);
+        var isNum=typeof v==='number';var t=isNum?money(v,RT==='all'?r[8]:r[1]):String(v||'');if(t.length>28)t=t.slice(0,27)+'…';
+        txt(t,pos[j],yy+29,(isNum?'700 16px '+NF:'500 16px '+AF),isIn?'#0B7A3B':isOut?'#B00020':'#0B2447');});
+      yy+=rowH;c.fillStyle='#EDF2F9';c.fillRect(30,yy-1,W-60,1);});
+    if(!rows.length)txt('لا حركات ضمن هذا العرض',W/2,yy+60,'600 18px '+AF,'#5C7699','center');
+    /* التذييل */
+    c.fillStyle='#0B2F70';c.fillRect(30,PH-70,W-60,2);
+    txt('صادر من دفاتر BDL — lbdal.com  ·  '+rows.length+' سطر',W-40,PH-38,'500 14px '+AF,'#5C7699');
+    txt('صفحة '+(pg+1)+' / '+pages,40,PH-38,'500 14px '+NF,'#5C7699','left');
+    var img=cv.toDataURL('image/jpeg',.9);
+    if(!pdf)pdf=new JS({unit:'pt',format:[W*.6,PH*.6]});else pdf.addPage([W*.6,PH*.6]);
+    pdf.addImage(img,'JPEG',0,0,W*.6,PH*.6);
+  }
   var fn='تقرير-'+b.name.replace(/[\\/:*?"<>|]/g,'')+'-'+todayISO()+'.pdf';
   try{var blob=pdf.output('blob');var file=new File([blob],fn,{type:'application/pdf'});if(navigator.canShare&&navigator.canShare({files:[file]})){navigator.share({files:[file],title:fn}).catch(function(){});return;}}catch(e){}
   pdf.save(fn);
@@ -875,7 +905,9 @@ function renderSettings(){
   $('#sDelAcc').onclick=function(){sheet('حذف الحساب','يحذف كل دفاترك وقيودك نهائيًا','<div class="note">لا يمكن التراجع. الدفاتر المشتركة معك من الآخرين لا تُحذف. اكتب «حذف» للتأكيد.</div><div class="f"><input id="delC" placeholder="حذف"></div><button class="cta" id="delGo" style="background:var(--bad)">حذف كل بياناتي</button>');
     $('#delGo').onclick=async function(){if($('#delC').value.trim()!=='حذف'){toast('اكتب «حذف» للتأكيد','bad');return;}this.disabled=true;try{await sbq('/bdl_books?owner_id=eq.'+ME.uid,{method:'DELETE'});try{await sbq('/bdl_profiles?uid=eq.'+ME.uid,{method:'DELETE'});}catch(e){}['arkan_session','arkan_sb_jwt','arkanClient','bdl_pin'].forEach(function(k){localStorage.removeItem(k);});location.replace('index.html');}catch(e){toast('تعذّر الحذف: '+e.message,'bad');this.disabled=false;}};};
 }
-$('#avFile').addEventListener('change',async function(){var f=this.files&&this.files[0];if(!f)return;toast('جارٍ رفع الصورة…');var u=await uploadFile(f,'avatars');if(!u){toast('تعذّر الرفع — نفّذ bdl-books-v2.sql','bad');return;}if(await saveProfile({avatar_url:u}))renderSettings();});
+$('#avFile').addEventListener('change',async function(){var f=this.files&&this.files[0];if(!f)return;toast('جارٍ رفع الصورة…');
+  try{var img=await shrinkImage(f,512);var u=await uploadFile(img,'avatars');if(await saveProfile({avatar_url:u}))renderSettings();}catch(e){toast(e.message,'bad');}});
+function shrinkImage(file,max){return new Promise(function(res){var im=new Image();im.onload=function(){var s=Math.min(1,max/Math.max(im.width,im.height));var cv=document.createElement('canvas');cv.width=Math.round(im.width*s);cv.height=Math.round(im.height*s);cv.getContext('2d').drawImage(im,0,0,cv.width,cv.height);cv.toBlob(function(b){res(b||file);},'image/jpeg',.86);};im.onerror=function(){res(file);};im.src=URL.createObjectURL(file);});}
 function profileForm(){var p=PROFILE||{};
   sheet('ملفك الشخصي','الاسم، رقم الجوال، البريد الإلكتروني','<div class="f"><label>الاسم</label><input id="pName" value="'+esc(ME.name)+'" maxlength="60"></div><div class="f"><label>رقم الجوال</label><input class="num" value="'+prettyPhone(ME.phone)+'" disabled></div><div class="f"><label>البريد الإلكتروني</label><input id="pEmail" type="email" inputmode="email" value="'+esc(p.email||'')+'"></div><div class="grid2"><div class="f"><label>المدينة</label><input id="pCity" value="'+esc(p.city||'')+'"></div><div class="f"><label>الدولة</label><select id="pCountry"><option value="">—</option>'+[['MR','موريتانيا'],['AO','أنغولا'],['CN','الصين'],['MA','المغرب'],['SN','السنغال'],['ML','مالي'],['AE','الإمارات'],['other','أخرى']].map(function(x){return '<option value="'+x[0]+'" '+(p.country===x[0]?'selected':'')+'>'+x[1]+'</option>';}).join('')+'</select></div></div><button class="cta" id="pSave">حفظ</button>');
   $('#pSave').onclick=async function(){this.disabled=true;if(await saveProfile({name:$('#pName').value.trim()||null,email:$('#pEmail').value.trim()||null,city:$('#pCity').value.trim()||null,country:$('#pCountry').value||null})){bsClose();toast('تم الحفظ','good');renderSettings();}else this.disabled=false;};}
