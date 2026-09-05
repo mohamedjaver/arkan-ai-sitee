@@ -72,6 +72,16 @@ begin
                 method=excluded.method, category=excluded.category, ref=excluded.ref, party=excluded.party, updated_at=now();
 end $$;
 
+-- ───────── سعر الشراء المرجعي (نسخة مستقلة عن ops10b): آخر معاملة MRU→AOA مكتملة لها تكلفة
+create or replace function bdl_books_ref_rb(p_owner uuid) returns numeric
+language sql stable security definer set search_path=public as $$
+  select coalesce(nullif(m.meta->>'rate_cost','')::numeric, m.amount*10/m.cost)
+  from bdl_transactions m
+  where m.owner_id=p_owner and m.ccy='MRU' and coalesce(m.settle_ccy,'AOA')='AOA'
+    and m.cost>0 and m.amount>0 and m.status in ('done','settled')
+  order by m.updated_at desc limit 1;
+$$;
+
 -- ───────── دفتر «أرباح التسوية» (صندوق واحد لكل مالك)
 create or replace function bdl_profit_book(p_owner uuid) returns uuid
 language plpgsql security definer set search_path=public as $$
@@ -89,7 +99,7 @@ end $$;
 create or replace function bdl_sync_tx(t bdl_transactions) returns void
 language plpgsql security definer set search_path=public as $$
 declare side text := coalesce(t.meta->>'side','customer'); kind text; b uuid; done boolean; d date; recip text;
-        cname text; p numeric; pc text := 'MRU'; pb uuid;
+        cname text; p numeric; pc text := 'MRU'; pb uuid; rb numeric; est boolean := false;
 begin
   kind := case when side='supplier' then 'supplier' else 'customer' end;
   b := bdl_book_for_customer(t.owner_id, t.customer_id, kind, t.ccy);
@@ -110,17 +120,27 @@ begin
   end if;
   -- P: الربح إلى دفتر «أرباح التسوية» (بالأوقية عبر bdl_tx_net_mru إن وُجدت، وإلا settle_amount − cost بعملة التسوية)
   p := null;
-  if done then
+  if done and t.settle_amount is not null and t.settle_amount<>0 then
     begin p := bdl_tx_net_mru(t); exception when others then p := null; end;
-    if p is null and t.settle_amount is not null and t.cost is not null and t.cost<>0 then
-      p := t.settle_amount - t.cost - coalesce(nullif(t.meta->>'fee','')::numeric,0) - coalesce(nullif(t.meta->>'expense','')::numeric,0);
-      pc := coalesce(t.settle_ccy,'AOA');
+    if p is null then
+      -- تكلفة فعلية بلا تحويل للأوقية
+      if t.cost is not null and t.cost<>0 then
+        p := t.settle_amount - t.cost - coalesce(nullif(t.meta->>'fee','')::numeric,0) - coalesce(nullif(t.meta->>'expense','')::numeric,0);
+        pc := coalesce(t.settle_ccy,'AOA');
+      -- لا تكلفة مسجّلة: تقدير بسعر الشراء المرجعي (آخر معاملة MRU→AOA لها سعر شراء)، كما تفعل صفحة P&L
+      elsif t.ccy='MRU' and coalesce(t.settle_ccy,'AOA')='AOA' and t.amount>0 then
+        rb := bdl_books_ref_rb(t.owner_id);
+        if rb is not null and rb>0 then
+          p := (t.settle_amount - t.amount*10/rb - coalesce(nullif(t.meta->>'fee','')::numeric,0) - coalesce(nullif(t.meta->>'expense','')::numeric,0)) * rb / 10;
+          pc := 'MRU'; est := true;
+        end if;
+      end if;
     end if;
   end if;
   if p is not null and p<>0 then
     pb := bdl_profit_book(t.owner_id);
     perform bdl_upsert_leg(t.owner_id, pb, case when p>0 then 'in' else 'out' end, abs(round(p,2)), pc,
-      (case when p>0 then 'ربح' else 'خسارة' end)||' تسوية '||t.ref||coalesce(' — '||cname,''), d, t.id, 'P', 'settle', 'transfer', 'أرباح', t.ref, cname);
+      (case when p>0 then 'ربح' else 'خسارة' end)||' تسوية '||t.ref||coalesce(' — '||cname,'')||(case when est then ' (تقديري بسعر الشراء المرجعي)' else '' end), d, t.id, 'P', 'settle', 'transfer', case when est then 'أرباح تقديرية' else 'أرباح' end, t.ref, cname);
   else
     delete from bdl_book_entries where tx_id=t.id and tx_leg='P';
   end if;
