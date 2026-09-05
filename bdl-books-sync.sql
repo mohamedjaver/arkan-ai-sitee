@@ -7,6 +7,7 @@
 --       للمورد تُعكس الجهتان.
 --   • عمليات الكوانزا (bdl_ops / bdl_op_receipts): إيصالات الزبون = وارد AOA، الإغلاق = صادر target_aoa،
 --       والمورد المغطّي = وارد target_aoa في دفتره.
+--   • الأرباح: كل معاملة مكتملة تُقيَّد ربحها/خسارتها في دفتر صندوق «أرباح التسوية» (leg P).
 --   • القيود المصدرها التسوية/العمليات للقراءة فقط في الواجهة (source ≠ manual).
 -- يُنفَّذ بعد bdl-books-v2.sql. آمن للتكرار. يشمل تعبئة رجعية لكل ما سبق.
 -- ─────────────────────────────────────────────────────────────
@@ -71,10 +72,24 @@ begin
                 method=excluded.method, category=excluded.category, ref=excluded.ref, party=excluded.party, updated_at=now();
 end $$;
 
--- ───────── مزامنة معاملة تسوية
+-- ───────── دفتر «أرباح التسوية» (صندوق واحد لكل مالك)
+create or replace function bdl_profit_book(p_owner uuid) returns uuid
+language plpgsql security definer set search_path=public as $$
+declare b uuid;
+begin
+  select id into b from bdl_books where owner_id=p_owner and kind='cash' and settings->>'system'='profit' limit 1;
+  if b is not null then return b; end if;
+  insert into bdl_books(owner_id,name,kind,currency,source,settings,note)
+    values(p_owner,'أرباح التسوية','cash','MRU','settle','{"system":"profit"}'::jsonb,'يُغذَّى تلقائيًا من كل معاملة مكتملة في كونسول التسوية')
+    returning id into b;
+  return b;
+end $$;
+
+-- ───────── مزامنة معاملة تسوية (A/B للجهة + P للأرباح)
 create or replace function bdl_sync_tx(t bdl_transactions) returns void
 language plpgsql security definer set search_path=public as $$
 declare side text := coalesce(t.meta->>'side','customer'); kind text; b uuid; done boolean; d date; recip text;
+        cname text; p numeric; pc text := 'MRU'; pb uuid;
 begin
   kind := case when side='supplier' then 'supplier' else 'customer' end;
   b := bdl_book_for_customer(t.owner_id, t.customer_id, kind, t.ccy);
@@ -82,6 +97,7 @@ begin
   done := t.status in ('done','settled','closed');
   d := coalesce((t.meta->>'date')::date, t.created_at::date);
   recip := coalesce(t.meta->>'recipient', t.meta->>'to', null);
+  select name into cname from bdl_customers where id=t.customer_id;
   -- A: ما دفعته الجهة لنا
   perform bdl_upsert_leg(t.owner_id, b, case when kind='supplier' then 'out' else 'in' end, t.amount, t.ccy,
     'تحويل '||t.ref||coalesce(' — '||nullif(t.note,''),''), d, t.id, 'A', 'settle', 'transfer', 'تسوية', t.ref, recip);
@@ -91,6 +107,22 @@ begin
       'تسليم '||t.ref||coalesce(' بسعر '||t.rate::text,''), d, t.id, 'B', 'settle', 'transfer', 'تسوية', t.ref, recip);
   else
     delete from bdl_book_entries where tx_id=t.id and tx_leg='B';
+  end if;
+  -- P: الربح إلى دفتر «أرباح التسوية» (بالأوقية عبر bdl_tx_net_mru إن وُجدت، وإلا settle_amount − cost بعملة التسوية)
+  p := null;
+  if done then
+    begin p := bdl_tx_net_mru(t); exception when others then p := null; end;
+    if p is null and t.settle_amount is not null and t.cost is not null and t.cost<>0 then
+      p := t.settle_amount - t.cost - coalesce(nullif(t.meta->>'fee','')::numeric,0) - coalesce(nullif(t.meta->>'expense','')::numeric,0);
+      pc := coalesce(t.settle_ccy,'AOA');
+    end if;
+  end if;
+  if p is not null and p<>0 then
+    pb := bdl_profit_book(t.owner_id);
+    perform bdl_upsert_leg(t.owner_id, pb, case when p>0 then 'in' else 'out' end, abs(round(p,2)), pc,
+      (case when p>0 then 'ربح' else 'خسارة' end)||' تسوية '||t.ref||coalesce(' — '||cname,''), d, t.id, 'P', 'settle', 'transfer', 'أرباح', t.ref, cname);
+  else
+    delete from bdl_book_entries where tx_id=t.id and tx_leg='P';
   end if;
 end $$;
 
