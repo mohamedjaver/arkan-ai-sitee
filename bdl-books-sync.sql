@@ -14,6 +14,9 @@
 alter table bdl_book_entries add column if not exists source text not null default 'manual';   -- manual | settle | ops
 alter table bdl_book_entries add column if not exists tx_leg text;                              -- A/B (تسوية) R/D/S (عمليات)
 drop index if exists ux_bke_tx;
+-- قيد مرجع الإيصال الفريد يخصّ القيود اليدوية فقط (قيدا A وB يحملان نفس مرجع المعاملة)
+drop index if exists ux_bke_ref;
+create unique index if not exists ux_bke_ref on bdl_book_entries(book_id, ref) where ref is not null and coalesce(source,'manual')='manual';
 create unique index if not exists ux_bke_txleg on bdl_book_entries(book_id, tx_id, tx_leg) where tx_id is not null;
 alter table bdl_books add column if not exists source text not null default 'manual';
 create unique index if not exists ux_books_cust on bdl_books(owner_id, cust_id) where cust_id is not null;
@@ -174,11 +177,18 @@ create policy p_bke_del on bdl_book_entries for delete to authenticated
   using (bdl_can_write(book_id) and coalesce(source,'manual')='manual');
 
 -- ───────── تعبئة رجعية
-do $$ declare t bdl_transactions; o bdl_ops; r bdl_op_receipts;
+do $$ declare t bdl_transactions; o bdl_ops; r bdl_op_receipts; bad int := 0;
 begin
-  for t in select * from bdl_transactions loop perform bdl_sync_tx(t); end loop;
-  for o in select * from bdl_ops loop perform bdl_sync_op(o); end loop;
-  for r in select * from bdl_op_receipts loop perform bdl_sync_opr(r); end loop;
+  for t in select * from bdl_transactions loop
+    begin perform bdl_sync_tx(t); exception when others then bad := bad + 1; raise notice 'tx % skipped: %', t.ref, sqlerrm; end;
+  end loop;
+  for o in select * from bdl_ops loop
+    begin perform bdl_sync_op(o); exception when others then bad := bad + 1; raise notice 'op % skipped: %', o.ref, sqlerrm; end;
+  end loop;
+  for r in select * from bdl_op_receipts loop
+    begin perform bdl_sync_opr(r); exception when others then bad := bad + 1; raise notice 'op receipt % skipped: %', r.txn_id, sqlerrm; end;
+  end loop;
+  raise notice 'backfill done, skipped: %', bad;
 end $$;
 
 -- ملخص الدفاتر يحمل cust_id/source أصلًا عبر b.* — لا حاجة لتعديل bdl_books_summary
