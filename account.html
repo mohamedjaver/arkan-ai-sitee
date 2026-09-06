@@ -263,6 +263,64 @@
   background:rgba(255,255,255,.05)!important;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
 .gate #signupBox p,.gate #resetBox p{color:#fff!important}
 </style>
+
+<style id="hmCss">
+/* ===== Build 1214 — الرئيسية بطراز مصرفي (BAI/CashBook) ===== */
+.hm-top{align-items:center}
+.hm-user{display:flex;align-items:center;gap:10px}
+.hm-user small{display:block;font-size:11px;color:#6B84A6}
+.hm-user b{font-size:16px;color:#0B2447}
+.hm-av{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#0A56B8,#0B2F70);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;overflow:hidden;flex:none}
+.hm-av img{width:100%;height:100%;object-fit:cover}
+.hm-bell{position:relative;width:42px;height:42px;border-radius:50%!important;background:#fff;border:1px solid #DCE6F5;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.hm-bell svg{width:20px;height:20px;stroke:#0B2F70}
+.hm-bell i{position:absolute;top:9px;inset-inline-end:10px;width:8px;height:8px;border-radius:50%;background:#E5484D;border:2px solid #fff}
+.hm-card{margin:12px 0 0;padding:18px 18px 14px;border-radius:18px;background:linear-gradient(150deg,#0E3D8F 0%,#0B2F70 55%,#071F4E 100%);color:#fff;box-shadow:0 14px 34px rgba(11,47,112,.28);position:relative;overflow:hidden}
+.hm-card::after{content:"";position:absolute;inset-inline-start:-40px;top:-60px;width:220px;height:220px;border-radius:50%;background:rgba(255,255,255,.06)}
+.hm-lbl{display:flex;align-items:center;justify-content:space-between;font-size:12px;opacity:.9}
+.hm-lbl .eye{border:0;background:rgba(255,255,255,.14);color:#fff;width:32px;height:32px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center}
+.hm-amt{font-size:32px;font-weight:800;letter-spacing:-.5px;margin-top:6px;line-height:1.1}
+.hm-amt .cur{font-size:13px;font-weight:700;margin-inline-start:6px;opacity:.85}
+.hm-sub{font-size:12.5px;opacity:.85;margin-top:4px;min-height:16px}
+.hm-ccy{display:flex;gap:8px;overflow-x:auto;margin-top:12px;padding-bottom:2px}
+.hm-ccy .c{flex:none;display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.18);border-radius:999px;padding:6px 12px 6px 6px;font-size:12px}
+.hm-ccy .c img,.hm-ccy .c .fl{width:22px;height:22px;border-radius:50%;object-fit:cover;background:#fff}
+.hm-ccy .c b{font-family:Inter,sans-serif;font-weight:800}
+.hm-stats{display:flex;gap:0;margin-top:14px;border-top:1px solid rgba(255,255,255,.16);padding-top:10px;position:relative;z-index:1}
+.hm-stats>div{flex:1;min-width:0}
+.hm-stats>div+div{border-inline-start:1px solid rgba(255,255,255,.16);padding-inline-start:12px}
+.hm-stats small{display:block;font-size:10.5px;opacity:.8}
+.hm-stats b{display:block;font-size:15px;font-weight:800;margin-top:2px}
+.hm-ref{cursor:pointer;background:transparent!important;border:0!important;padding:0!important;margin:0!important;color:#fff!important;display:block!important}
+.hm-ref b{letter-spacing:1.5px;font-size:13px}
+.hm-qa{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:14px}
+.hm-qa button{border:0;background:transparent;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:10.5px;font-weight:700;color:#0B2447;cursor:pointer;padding:4px 0}
+.hm-qa button span{width:52px;height:52px;border-radius:16px;background:#fff;border:1px solid #DCE6F5;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(11,36,71,.05)}
+.hm-qa button span svg{width:22px;height:22px;fill:none;stroke:#0A56B8;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.hm-qa button:active span{background:#EEF3FA}
+.hm-owner{margin-top:14px;border-radius:14px!important}
+.hm-sec{margin-top:22px!important}
+.hm-sec a{color:#0A56B8;font-weight:700;font-size:12px;cursor:pointer}
+.hm-rates{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px}
+.hm-rates .rt{flex:none;width:150px;background:#fff;border:1px solid #DCE6F5;border-radius:14px;padding:10px 12px;display:flex;flex-direction:column;gap:4px}
+.hm-rates .rt .hd{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:800}
+.hm-rates .rt .hd img,.hm-rates .rt .hd .fl{width:20px;height:20px;border-radius:50%;object-fit:cover}
+.hm-rates .rt .hd small{font-weight:600;color:#6B84A6;font-size:10.5px}
+.hm-rates .rt .v{font-family:Inter,sans-serif;font-weight:800;font-size:15px;color:#0B2447}
+.hm-rates .rt .v small{font-size:10px;color:#6B84A6;font-weight:700}
+.hm-rates .rt .w{font-size:10.5px;color:#0B7A3B;font-weight:700}
+.hm-rates .sk{width:150px;height:74px;flex:none}
+.hm-mrb{margin-top:22px}
+.hm-mrb .mrbUni.big{margin-bottom:10px;border-radius:18px!important}
+#homeTx .tx{border-radius:14px}
+/* الإشعارات */
+.hm-nt{position:fixed;inset:0;background:rgba(11,36,71,.5);z-index:300;display:none;align-items:flex-end}
+.hm-nt.on{display:flex}
+.hm-nt .bx{background:#fff;width:100%;max-width:640px;margin:0 auto;border-radius:22px 22px 0 0;padding:8px 16px calc(18px + env(safe-area-inset-bottom));max-height:80vh;overflow-y:auto}
+.hm-nt .grab{width:40px;height:4px;background:#DCE6F5;border-radius:4px;margin:6px auto 12px}
+.hm-nt h3{margin:0 0 4px;font-size:15px}
+.hm-nt .sub{font-size:11.5px;color:#6B84A6;margin-bottom:12px}
+</style>
 <script src="bdl-qr.js?v=1"></script>
 </head>
 <body>
@@ -271,40 +329,44 @@
 
   <main id="app" style="display:none">
     <section class="screen active" id="s-home">
-      <div class="topbar">
-        <div class="brand"><img class="logo" src="favicon.svg?v=bdl6" alt="لبدال"><div><b>لبدال<small id="greet">مرحباً</small></b></div></div>
-        <div class="bell" id="bell"><svg fill="none" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" d="M15 17h5l-1.4-1.4A2 2 0 0 1 18 14.2V11a6 6 0 0 0-4-5.7V5a2 2 0 1 0-4 0v.3A6 6 0 0 0 6 11v3.2a2 2 0 0 1-.6 1.4L4 17h5m6 0v1a3 3 0 1 1-6 0v-1m6 0H9"/></svg></div>
-      </div>
-      <div class="hero">
-        <div class="label">إجمالي ما حوّلته عبرنا<button class="eye" id="eyeBtn"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg></button></div>
-        <div class="amount num"><span id="balAmt">0</span><span class="cur">MRU</span></div>
-        <div class="sub num" id="balSub">≈ <b>0 USDT</b></div>
-        <div class="ref-chip" id="refChip"><svg fill="none" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" d="M8 16H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v2m-6 12h8a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-8a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2z"/></svg>رقمك المرجعي&nbsp;<b id="refVal">—</b></div>
-        <div class="pending-b" id="pendBox">حسابك قيد التفعيل — سيؤكده فريق لبدال قريباً.</div>
+      <!-- Build 1214: الرئيسية بطراز مصرفي -->
+      <div class="topbar hm-top">
+        <div class="hm-user"><div class="hm-av" id="hmAv">B</div><div><small>مرحبًا</small><b id="greet"></b></div></div>
+        <div class="bell hm-bell" id="bell" role="button" aria-label="الإشعارات"><svg fill="none" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" d="M15 17h5l-1.4-1.4A2 2 0 0 1 18 14.2V11a6 6 0 0 0-4-5.7V5a2 2 0 1 0-4 0v.3A6 6 0 0 0 6 11v3.2a2 2 0 0 1-.6 1.4L4 17h5m6 0v1a3 3 0 1 1-6 0v-1m6 0H9"/></svg><i id="bellDot" hidden></i></div>
       </div>
 
-      <div class="sec" style="margin-top:18px"><h2>الرفع والمطابقة</h2><span style="font-size:12px;color:#8AA3C4">يُقرأ ويُطابَق فورًا</span></div>
-      <div class="mrbUni big cust" onclick="mrbPick('customer')">
-        <div class="wm">↓</div>
-        <div class="cardIn">
-          <span class="tag">IN · وارد الزبائن</span>
-          <div class="ttl"><span class="ictile"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M4 21h16"/></svg></span>إيصال زبون</div>
-          <div class="sub">كوانزا واردة من الزبائن · صورة أو PDF · تُقرأ وتُطابَق مع الموردين تلقائيًا</div>
-          <div class="foot"><span class="go">اضغط للرفع <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m15 6-6 6 6 6"/></svg></span><button class="mrbUniManual v2" onclick="mrbManual(event,'customer')">إدخال يدوي</button></div>
+      <div class="hm-card">
+        <div class="hm-lbl"><span>إجمالي ما حوّلته عبرنا</span><button class="eye" id="eyeBtn" aria-label="إظهار/إخفاء"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg></button></div>
+        <div class="hm-amt num"><span id="balAmt">0</span><span class="cur">MRU</span></div>
+        <div class="hm-sub num" id="balSub"></div>
+        <div class="hm-ccy" id="hmCcy"></div>
+        <div class="hm-stats">
+          <div><small>قيد التنفيذ</small><b class="num" id="hmPend">0</b></div>
+          <div><small>مكتملة</small><b class="num" id="hmDone">0</b></div>
+          <div class="ref-chip hm-ref" id="refChip"><small>رقمك المرجعي</small><b class="num" id="refTxt"></b></div>
         </div>
       </div>
-      <div class="mrbUni big sup" onclick="mrbPick('supplier')">
-        <div class="wm">₮</div>
-        <div class="cardIn">
-          <span class="tag">OUT · الموردون — بائعو USDT</span>
-          <div class="ttl"><span class="ictile"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21V9"/><path d="m7 14 5-5 5 5"/><path d="M4 3h16"/></svg></span>إيصال مورد</div>
-          <div class="sub">إيصالات الموردين وتأكيداتهم · تُطابَق مع إيصالات الزبائن وتُسقط المكشوف مباشرة</div>
-          <div class="foot"><span class="go">اضغط للرفع <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m15 6-6 6 6 6"/></svg></span><button class="mrbUniManual v2" onclick="mrbManual(event,'supplier')">إدخال يدوي</button></div>
-        </div>
+
+      <div class="hm-qa">
+        <button type="button" data-qa="send"><span><svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></span>تحويل</button>
+        <button type="button" data-qa="cust"><span><svg viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></svg></span>إيصال زبون</button>
+        <button type="button" data-qa="sup"><span><svg viewBox="0 0 24 24"><path d="M12 21V9M7 14l5-5 5 5M4 3h16"/></svg></span>إيصال مورد</button>
+        <button type="button" data-qa="books"><span><svg viewBox="0 0 24 24"><path d="M4 4h12a2 2 0 0 1 2 2v14H6a2 2 0 0 1-2-2z"/><path d="M8 4v16"/></svg></span>دفاتري</button>
+        <button type="button" data-qa="stmt"><span><svg viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M9 13h6M9 17h6"/></svg></span>كشف حساب</button>
       </div>
-      <div class="rates" id="homeRates"><div class="sk"></div><div class="sk"></div></div>
-      <div class="sec" style="margin-top:30px"><h2>آخر المعاملات</h2><a data-goto="s-acct">الكل</a></div>
+
+      <div class="pending-b hm-owner" id="pendBox">حسابك قيد المراجعة — سنفعّله فور التأكد من بياناتك.</div>
+
+      <div class="sec hm-sec"><h2>أسعار اليوم</h2><a data-goto="s-rates">كل الأسعار ›</a></div>
+      <div class="hm-rates" id="homeRates"><div class="sk"></div><div class="sk"></div></div>
+
+      <div class="sec hm-sec"><h2>آخر العمليات</h2><a data-goto="s-acct">الكل ›</a></div>
       <div class="rates" id="homeTx"><div class="sk"></div></div>
+
+      <div class="hm-mrb">
+        <div class="mrbUni big cust" onclick="mrbPick('customer')"><div class="cardIn"><span class="tag">IN · وارد الزبائن</span><div class="ttl">إيصال زبون</div><div class="sub">كوانزا واردة من الزبائن · صورة أو PDF · تُقرأ وتُطابَق تلقائيًا</div><div class="foot"><span class="go">اضغط للرفع ›</span><button class="mrbUniManual v2" onclick="mrbManual(event,'customer')">إدخال يدوي</button></div></div></div>
+        <div class="mrbUni big sup" onclick="mrbPick('supplier')"><div class="cardIn"><span class="tag">OUT · الموردون — بائعو USDT</span><div class="ttl">إيصال مورد</div><div class="sub">إيصالات الموردين وتأكيداتهم · تُطابَق مع إيصالات الزبائن وتُسقط من المستحقات</div><div class="foot"><span class="go">اضغط للرفع ›</span><button class="mrbUniManual v2" onclick="mrbManual(event,'supplier')">إدخال يدوي</button></div></div></div>
+      </div>
     </section>
 
     <section class="screen" id="s-rates">
@@ -2269,6 +2331,61 @@ async function mrbPdf(){
       say('⚠️ الوظيفة لم تُحمَّل ('+fn+') — حدّث الصفحة؛ إن تكررت أرسل هذه الرسالة');
     }
   },true);
+})();
+</script>
+<div class="hm-nt" id="hmNt"><div class="bx"><div class="grab"></div><h3>الإشعارات</h3><div class="sub" id="hmNtSub"></div><div id="hmNtList"></div></div></div>
+
+<script>
+/* ===== Build 1214 — الرئيسية بطراز مصرفي: إحصاءات، شرائح العملات، الإشعارات، الإجراءات السريعة ===== */
+(function(){
+  window.__hmStats={pend:0,pendAmt:{},done:0,byCcy:{}};
+  const _renderMyTx=window.renderMyTx;
+  window.renderMyTx=function(items,settled){
+    try{
+      const st={pend:0,pendAmt:{},done:0,byCcy:{}};
+      (items||[]).forEach(t=>{
+        const c=String(t.currency||t.from||'').replace(/→.*/,'').trim().toUpperCase().split(' ')[0]||'MRU';
+        const a=+t.amount||0;
+        if(t.status==='pending'||(t.kind!=='settled'&&t.status!=='done'&&t.status!=='cancel')){st.pend++;st.pendAmt[c]=(st.pendAmt[c]||0)+a;}
+        else if(t.status==='done'||t.kind==='settled'){st.done++;st.byCcy[c]=(st.byCcy[c]||0)+a;}
+      });
+      if(settled&&settled.byCcy){st.byCcy=Object.assign({},settled.byCcy);if(settled.USDT)st.byCcy.USDT=settled.USDT;if(settled.MRU)st.byCcy.MRU=settled.MRU;if(settled.count)st.done=settled.count;}
+      window.__hmStats=st;window.__hmItems=items||[];hmPaint();
+    }catch(e){}
+    return _renderMyTx.apply(this,arguments);
+  };
+  const _paint=window.paintBalance;
+  window.paintBalance=function(){_paint.apply(this,arguments);hmPaint();};
+  function hmPaint(){
+    const st=window.__hmStats||{};const hid=typeof balHidden!=='undefined'&&balHidden;
+    const pend=$('hmPend'),done=$('hmDone'),cc=$('hmCcy');if(!pend)return;
+    const pa=Object.keys(st.pendAmt||{}).map(c=>fmt(st.pendAmt[c],0)+' '+c).slice(0,2).join(' · ');
+    pend.innerHTML=st.pend+(pa&&!hid?' <small style="font-size:10px;opacity:.8">'+pa+'</small>':'');
+    done.textContent=st.done||window.__doneCount||0;
+    const by=st.byCcy||{};const ks=Object.keys(by).filter(k=>by[k]>0).sort((a,b)=>by[b]-by[a]);
+    cc.innerHTML=ks.length?ks.slice(0,5).map(c=>'<div class="c">'+flagHTML(c)+'<span>'+c+'</span><b>'+(hid?'••••':fmt(by[c],0))+'</b></div>').join(''):'';
+    const bd=$('bellDot');if(bd)bd.hidden=!(st.pend>0);
+    const rt=$('refTxt');if(rt)rt.textContent=(window.USER&&USER.ref)||(window.__USER&&__USER.ref)||'';
+  }
+  window.hmPaint=hmPaint;
+  /* الإشعارات */
+  const nt=document.getElementById('hmNt');
+  document.getElementById('bell').onclick=function(){
+    const items=(window.__hmItems||[]).slice(0,20);
+    const pend=items.filter(t=>t.status==='pending'||(t.kind!=='settled'&&t.status!=='done'&&t.status!=='cancel'));
+    $('hmNtSub').textContent=pend.length?pend.length+' عملية قيد التنفيذ':'لا عمليات معلّقة';
+    $('hmNtList').innerHTML=items.length?items.map(myTxRow).join(''):'<div class="empty">لا إشعارات بعد</div>';
+    nt.classList.add('on');
+  };
+  nt.addEventListener('click',e=>{if(e.target===nt)nt.classList.remove('on');});
+  /* الصورة/الحرف */
+  try{const s=JSON.parse(localStorage.getItem('arkan_session')||'null');const n=(s&&s.name||'').trim();if(n)$('hmAv').textContent=n.charAt(0).toUpperCase();}catch(e){}
+  /* الإجراءات السريعة */
+  document.querySelectorAll('.hm-qa [data-qa]').forEach(b=>b.onclick=()=>{
+    const k=b.dataset.qa;
+    if(k==='send')go('s-send');else if(k==='cust')mrbPick('customer');else if(k==='sup')mrbPick('supplier');
+    else if(k==='books')location.href='books.html';else if(k==='stmt')go('s-acct');
+  });
 })();
 </script>
 </body>
