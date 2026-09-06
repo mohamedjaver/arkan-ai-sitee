@@ -116,18 +116,26 @@ window.addEventListener('beforeunload',e=>{if(S.cust.length||S.sup.length){e.pre
 /* ───── الإدخال ───── */
 function pick(side){S.side=side;$('#fi').value='';$('#fi').click();}
 $('#fi').addEventListener('change',async function(){const list=[...this.files];if(!list.length)return;
-  for(const f of list){const r={id:'r'+(++S.seq),side:S.side,file:f,url:URL.createObjectURL(f),amount:null,ccy:'AOA',ref:'',who:'',bank:'',date:new Date(f.lastModified||Date.now()),reading:true,matched:null,how:''};
-    (S.side==='sup'?S.sup:S.cust).push(r);}
+  let dup=0;const arr=S.side==='sup'?S.sup:S.cust;
+  for(const f of list){const fp=await fpOf(f);
+    if(fp&&arr.some(x=>x.fp===fp)){dup++;continue;}
+    const r={id:'r'+(++S.seq),side:S.side,file:f,fp,url:URL.createObjectURL(f),amount:null,ccy:'AOA',ref:'',who:'',bank:'',date:new Date(f.lastModified||Date.now()),reading:true,matched:null,how:''};
+    arr.push(r);}
+  if(dup)toast('رُفض '+dup+' ملف مكرر في نفس العمود');
   render();
   const pending=(S.side==='sup'?S.sup:S.cust).filter(r=>r.reading);
   let i=0;const worker=async()=>{while(i<pending.length){const r=pending[i++];try{
       const p=window.ArkanRead?await Promise.race([ArkanRead.readAmount(r.file),new Promise((_,j)=>setTimeout(()=>j('timeout'),45000))]):null;
       if(p){r.amount=p.amount||null;r.ccy=norm(p.ccy||'AOA');r.ref=p.txn||'';r.who=p.name||p.receiver||'';r.bank=p.bank||'';const d=p.date&&new Date(p.date);if(d&&!isNaN(d))r.date=d;r.eng=p.eng;}
-    }catch(e){r.fail=true;}r.reading=false;render();}};
+    }catch(e){r.fail=true;}r.reading=false;
+    const d0=dupOf(r);if(d0){const arr=r.side==='sup'?S.sup:S.cust;arr.splice(arr.indexOf(r),1);toast('مكرر: رقم العملية '+r.ref+' موجود في نفس العمود ('+fmt(d0.amount)+') — رُفض');}
+    render();}};
   await Promise.all([worker(),worker(),worker()]);rematch();toast('اكتملت القراءة — راجع المبالغ ثم المطابقة');
 });
+async function fpOf(f){try{const h=await crypto.subtle.digest('SHA-256',await f.arrayBuffer());return Array.from(new Uint8Array(h)).map(b=>b.toString(16).padStart(2,'0')).join('');}catch(e){return null;}}
+function dupOf(r){const k=key(r);if(!k)return null;const arr=r.side==='sup'?S.sup:S.cust;return arr.find(x=>x!==r&&key(x)===k)||null;}
 function manual(side){const r={id:'r'+(++S.seq),side,file:null,url:null,amount:null,ccy:'AOA',ref:'',who:'',bank:'يدوي',date:new Date(),reading:false,matched:null,how:'',edit:true};(side==='sup'?S.sup:S.cust).push(r);render();}
-function upd(id,k,v){const r=find(id);if(!r)return;if(k==='amount')r.amount=Number(String(v).replace(/[^\d.]/g,''))||null;else if(k==='date'){const d=new Date(v);if(!isNaN(d))r.date=d;}else if(k==='ccy')r.ccy=norm(v);else r[k]=v;rematch(false);}
+function upd(id,k,v){const r=find(id);if(!r)return;if(k==='amount')r.amount=Number(String(v).replace(/[^\d.]/g,''))||null;else if(k==='date'){const d=new Date(v);if(!isNaN(d))r.date=d;}else if(k==='ccy')r.ccy=norm(v);else if(k==='ref'){const prev=r.ref;r.ref=v;const d0=dupOf(r);if(d0){r.ref=prev;toast('رقم العملية موجود في نفس العمود ('+fmt(d0.amount)+' '+d0.ccy+') — لا يُقبل التكرار');render();return;}}else r[k]=v;rematch(false);}
 function del(id){S.cust=S.cust.filter(r=>r.id!==id);S.sup=S.sup.filter(r=>r.id!==id);if(S.selC===id)S.selC=null;if(S.selS===id)S.selS=null;rematch();}
 function find(id){return S.cust.find(r=>r.id===id)||S.sup.find(r=>r.id===id);}
 function clearAll(){if(!confirm('مسح كل الإيصالات من هذه الجلسة؟ لم يُحفظ شيء أصلًا.'))return;S.cust=[];S.sup=[];S.selC=S.selS=null;render();}
@@ -157,7 +165,7 @@ function card(r){const ok=!!r.matched,sel=r.id===S.selC||r.id===S.selS;
   return '<div class="r '+(ok?'ok':'pend')+(sel?' sel':'')+'" onclick="tap(\''+r.id+'\')">'+
     '<button class="x" onclick="event.stopPropagation();del(\''+r.id+'\')">حذف</button>'+(r.url&&!/pdf/i.test(r.file.type)?'<img src="'+r.url+'" onclick="event.stopPropagation();window.open(\''+r.url+'\',\'_blank\')">':'')+
     '<div class="t"><span class="st '+(ok?'ok':'pend')+'">'+(r.reading?'جارٍ القراءة…':ok?'مطابَق ✓':'بلا مقابل')+'</span><span class="a">'+(r.amount?fmt(r.amount)+' '+esc(r.ccy):'—')+'</span></div>'+
-    '<div class="m">'+esc(r.who||'—')+' · '+esc(r.ref||'بلا مرجع')+' · '+esc(r.bank||'—')+' · <span class="num">'+r.date.toLocaleDateString('en-GB')+'</span>'+(r.fail?' · <span style="color:var(--red)">تعذّرت القراءة — أدخل يدويًا</span>':'')+'</div>'+
+    '<div class="m">'+esc(r.who||'—')+' · '+esc(r.ref||'بلا مرجع')+' · '+esc(r.bank||'—')+' · <span class="num">'+r.date.toLocaleDateString('en-GB')+'</span>'+(r.fail?' · <span style="color:var(--red)">تعذّرت القراءة — أدخل يدويًا</span>':'')+(!key(r)&&r.amount&&(r.side==='sup'?S.sup:S.cust).some(x=>x!==r&&!key(x)&&x.amount===r.amount&&x.date.toDateString()===r.date.toDateString())?' · <span style="color:var(--amber)">تنبيه: نفس المبلغ والتاريخ لإيصال آخر بلا مرجع</span>':'')+'</div>'+
     (ok?'<div class="m" style="color:var(--green)">'+(r.side==='cust'?'إيصال المورد: ':'يغطي: ')+esc(r.matched.who||'—')+' · '+fmt(r.matched.amount)+' · '+(HOW[r.side==='cust'?r.how:r.matched.how]||'')+(S.link?' <button class="x" style="position:static;color:var(--red)" onclick="event.stopPropagation();unlink(\''+r.id+'\')">فك الربط</button>':'')+'</div>':'')+
     (r.edit?'<div class="f" onclick="event.stopPropagation()"><input placeholder="المبلغ" inputmode="decimal" value="'+(r.amount||'')+'" onchange="upd(\''+r.id+'\',\'amount\',this.value)"><input placeholder="العملة" value="'+esc(r.ccy)+'" onchange="upd(\''+r.id+'\',\'ccy\',this.value)"><input placeholder="رقم العملية" value="'+esc(r.ref)+'" onchange="upd(\''+r.id+'\',\'ref\',this.value)"><input class="ar" placeholder="'+(r.side==='cust'?'الزبون':'المورد')+'" value="'+esc(r.who)+'" onchange="upd(\''+r.id+'\',\'who\',this.value)"><input class="ar" placeholder="البنك" value="'+esc(r.bank)+'" onchange="upd(\''+r.id+'\',\'bank\',this.value)"><input type="date" value="'+r.date.toISOString().slice(0,10)+'" onchange="upd(\''+r.id+'\',\'date\',this.value)"></div>':'')+
     '</div>';}
