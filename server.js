@@ -250,7 +250,7 @@ app.use((req, res, next) => {
   const o = req.headers.origin || '';
   if (SITE_ORIGINS.includes(o)) res.setHeader('Access-Control-Allow-Origin', o);
   res.setHeader('Access-Control-Allow-Methods', 'POST, GET, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-gemini-key, x-file-name, x-side');
   if (req.method === 'OPTIONS') return res.sendStatus(204);
   next();
 });
@@ -757,7 +757,7 @@ app.use('/chat-api', (req, res, next) => {
   const o = req.headers.origin || '';
   if (SITE_ORIGINS.includes(o)) res.setHeader('Access-Control-Allow-Origin', o);
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-gemini-key, x-file-name, x-side');
   if (req.method === 'OPTIONS') return res.sendStatus(204);
   next();
 });
@@ -1469,6 +1469,11 @@ app.post('/admin/refresh-rates', async (req,res)=>{
   }catch(e){ res.status(401).json({ok:false}); }
 });
 
+/* محرك مقارنة الإيصالات بالجملة (compare.html) — إضافي */
+try {
+  require('./bdl-compare-server')(app, { express, jwt, JWT_SECRET, SB_REST, SB_PUB,
+    ownerToken: () => { const ts = Math.floor(Date.now() / 1000); return jwt.sign({ sub: phoneToUuid(OWNER_PHONES[0]), role: 'authenticated', aud: 'authenticated', arkan_role: 'owner', iat: ts, exp: ts + 300 }, JWT_SECRET); } });
+} catch (e) { console.warn('compare engine off:', e.message); }
 app.listen(ENV.PORT, () => {
   console.log(`▲ BDL STORE on :${ENV.PORT}`);
   console.log(`  Wallet: ${ENV.WALLET}`);
