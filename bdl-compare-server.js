@@ -62,14 +62,17 @@ module.exports = function (app, ctx) {
     const b = String(bankHint || '').toUpperCase();
     const pick = EXAMPLES.filter(x => !b || String(x.bank || '').toUpperCase().indexOf(b) >= 0).slice(0, 6);
     if (!pick.length) return '';
-    return '\nأمثلة مؤكدة من إيصالات سابقة لهذا المالك (تعلّم منها مواضع الحقول):\n' + pick.map(x => JSON.stringify(x.fields)).join('\n') + '\n';
+    /* قيم الأمثلة تُقنَّع (لا أرقام حقيقية) حتى لا ينسخها النموذج في إيصال آخر */
+    const mask = f => JSON.stringify({ bank: f.bank || '', amount: String(f.amount || '').replace(/\d/g, '#'), currency: f.currency || '', reference: String(f.reference || '').replace(/\d/g, '#'), date: String(f.date || '').replace(/\d/g, '#') });
+    return '\nأنماط حقول مؤكدة من إيصالات سابقة لهذا المالك (# = رقم؛ تعلّم الشكل والموضع فقط، ولا تنسخ أي قيمة منها):\n' + pick.map(x => mask(x.fields || {}) + (x.hint ? ' // ' + String(x.hint).slice(0, 80) : '')).join('\n') + '\n';
   }
 
   /* ── Gemini ── */
   const P1 = `أنت قارئ إيصالات بنكية أنغولية (BAI, BFA, BIC, ATLANTICO, SOL, KEVE, BCI, MULTICAIXA Express, Standard Bank, Yetu, Caixa Angola...).
-أعد JSON فقط: {"is_bank_receipt":true,"bank":"","amount":0,"currency":"","reference":"","date":"","sender":"","receiver":"","confidence":0,"doc_type":""}
+أعد JSON فقط: {"is_bank_receipt":true,"bank":"","amount":0,"amount_verbatim":"","currency":"","reference":"","date":"","sender":"","receiver":"","confidence":0,"doc_type":""}
 قواعد صارمة:
-- amount: مبلغ التحويل فقط (Montante/Valor/Importância). ليس رقم العملية ولا الحساب ولا IBAN ولا الرصيد ولا الرسوم. الفاصلة العشرية البرتغالية (1.234.567,00 = 1234567).
+- amount: مبلغ التحويل فقط (Montante/Valor/Importância). ليس رقم العملية ولا الحساب ولا IBAN ولا الرصيد ولا الرسوم. الفاصلة العشرية البرتغالية (1.234.567,00 = 1234567)، والمسافات فواصل آلاف (Kz 7 500 000,00 = 7500000). اقرأ الأرقام واحدًا واحدًا ولا تضف رقمًا في البداية.
+- amount_verbatim: المبلغ كما هو مكتوب حرفيًا.
 - currency: Kz/AKZ/AOA → "AOA". إن كان الإيصال USDT/USDC/EUR/USD اكتب العملة الحقيقية.
 - reference: رقم العملية/Referência/Transacção/N.º da operação/Trs ID. لا تأخذ أبدًا رقم الحساب أو IBAN (يبدأ بـ AO06 أو طويل 21 رقمًا) كمرجع.
 - date: بصيغة YYYY-MM-DD HH:MM إن وُجدت.
@@ -80,7 +83,8 @@ module.exports = function (app, ctx) {
 - صورة شارع/أشخاص/حيوان/كتالوج/فاتورة تجارية/عرض أسعار/محادثة → is_bank_receipt=false وdoc_type يصف الصورة (photo/catalog/invoice/chat). المبلغ في الفاتورة التجارية ليس تحويلًا بنكيًا.
 - المبلغ المنطقي للتحويل بين 100 و500,000,000 Kz. رقم أطول من 9 خانات ليس مبلغًا.`;
   const P2 = (c) => `تحقّق مستقل. اقرأ هذا الإيصال من جديد رقمًا رقمًا وأعد JSON فقط:
-{"amount":0,"currency":"","reference":"","agree_amount":true,"agree_reference":true,"note":""}
+{"amount_verbatim":"","amount":0,"currency":"","reference":"","agree_amount":true,"agree_reference":true,"note":""}
+- amount_verbatim أولًا كما هو مكتوب (مثل "Kz 7 500 000,00")، ثم amount رقمًا بلا فواصل. المسافات والنقاط فواصل آلاف.
 قراءة أولى مقترحة: amount=${c.amount || 0} currency=${c.currency || ''} reference=${c.reference || ''}.
 لا تُصدّق القراءة الأولى — اقرأ بنفسك ثم قارن: agree_amount=true فقط إذا كان مبلغك مطابقًا تمامًا، وagree_reference=true فقط إذا كان المرجع مطابقًا.
 تذكّر: المبلغ ليس رقم الحساب ولا IBAN ولا الرصيد ولا الرسوم.`;
@@ -155,7 +159,7 @@ module.exports = function (app, ctx) {
     if (r.isReceipt && r.amount) {
       try {
         const p2 = await gem(job.key, P2(p1) + examplesFor(r.bank), b64, mime, 200, eng === 'pdf-text' ? txt : null);
-        const a2 = num(p2.amount); const ref2 = String(p2.reference || '').trim();
+        const a2 = num(p2.amount) || num(p2.amount_verbatim); const ref2 = String(p2.reference || '').trim();
         const sameA = a2 != null && Math.abs(a2 - r.amount) < 0.5, sameR = !r.ref || !ref2 || ref2.replace(/\s+/g, '').toLowerCase() === r.ref.replace(/\s+/g, '').toLowerCase();
         if (sameA && sameR) { r.verified = true; if (!r.ref && ref2) r.ref = ref2.slice(0, 64); }
         else { r.review = true; r.alt = { amount: a2, ref: ref2 }; if (!sameA && (p2.agree_amount === false)) { /* تعارض حقيقي: لا نكتب مبلغًا */ r.amountRead = r.amount; r.amount = null; } }
