@@ -2,7 +2,7 @@
 (function(){
   var here=(location.pathname.split('/').pop()||'index.html');
   var PUBLIC=['index.html','home-v2.html','account.html','offline.html','brand.html'];
-  var ADMIN =['settlement.html','compare.html','admin.html','rates-admin.html','archive.html','trading.html','invoice.html'];
+  var ADMIN =['settlement.html','admin.html','rates-admin.html','archive.html','trading.html','invoice.html'];
   /* صفحات تتطلب حساب عميل مسجلًا دائمًا — تجاوز الأدمن لا يكفي */
   var CLIENT_STRICT=['request.html','chat-v2.html','settings.html','app.html'];
   if(PUBLIC.indexOf(here)>-1) return;
