@@ -121,7 +121,7 @@ async function addFiles(side,list,tag){let dup=0;const arr=side==='sup'?S.sup:S.
   for(const f of list){const fp=await fpOf(f);
     if(fp&&arr.some(x=>x.fp===fp)){dup++;continue;}
     const r={id:'r'+(++S.seq),side,file:f,fp,url:URL.createObjectURL(f),amount:null,ccy:'AOA',ref:'',who:'',bank:tag||'',date:new Date(f.lastModified||Date.now()),reading:true,matched:null,how:'',src:tag?'wa-img':'file'};
-    if(f._waDate)r.date=f._waDate;if(f._waWho)r.who=f._waWho;
+    if(f._waDate)r.date=f._waDate;if(f._waWho)r.who=f._waWho;if(tag)r.edit=true;
     arr.push(r);added.push(r);}
   if(dup)toast('رُفض '+dup+' ملف مكرر في نفس العمود');
   render();return added;}
@@ -129,7 +129,7 @@ async function readPending(side){const pending=(side==='sup'?S.sup:S.cust).filte
   let i=0;const worker=async()=>{while(i<pending.length){const r=pending[i++];try{
       const p=window.ArkanRead?await Promise.race([ArkanRead.readAmount(r.file),new Promise((_,j)=>setTimeout(()=>j('timeout'),45000))]):null;
       if(p){r.amount=p.amount||null;r.ccy=norm(p.ccy||'AOA');r.ref=p.txn||'';if(!r.who)r.who=p.name||p.receiver||'';r.bank=p.bank||r.bank;const d=p.date&&new Date(p.date);if(d&&!isNaN(d)&&r.src!=='wa-img')r.date=d;r.eng=p.eng;}
-    }catch(e){r.fail=true;}r.reading=false;
+    }catch(e){r.fail=true;}r.reading=false;if(!r.amount)r.edit=true;
     const d0=dupOf(r);if(d0){const arr=r.side==='sup'?S.sup:S.cust;arr.splice(arr.indexOf(r),1);toast('مكرر: رقم العملية '+r.ref+' موجود في نفس العمود ('+fmt(d0.amount)+') — رُفض');}
     render();}};
   await Promise.all([worker(),worker(),worker()]);rematch();}
@@ -165,7 +165,10 @@ async function importWA(side,file){
     const att=t.match(/<attached:\s*([^>]+)>|([\w.-]+\.(?:jpe?g|png|webp|pdf))\s*\(file attached\)|([\w.-]+\.(?:jpe?g|png|webp|pdf))/i);
     if(att){const nm=(att[1]||att[2]||att[3]||'').trim();const md=media[nm];if(md&&!md.used){md.used=true;const blob=await md.entry.async('blob');const f=new File([blob],nm,{type:/pdf$/i.test(nm)?'application/pdf':'image/jpeg'});f._waDate=m.date;f._waWho=m.who;imgs.push(f);}else if(!md)nSkip++;continue;}
     if(/omitted|تم حذف|deleted|حُذفت/i.test(t))continue;
-    const a=waAmount(t);if(!a)continue;
+    /* نص: فقط مبالغ موسومة صراحةً بالكوانزا، وبلا IBAN/حسابات/عمليات حسابية/عملات أخرى */
+    if(!/(kz|akz|aoa|kwz|kwanza|كوانزا)/i.test(t))continue;
+    if(/iban|swift|bic|compte|conta|account|n[ºo°]\s*conta|[=*×÷]|eur|€|usdt|usd|\$|mru|\bum\b|أوقية|اوقية|درهم|aed/i.test(t))continue;
+    const a=waAmount(t);if(!a||a.ccy!=='AOA')continue;
     const ref=waRef(t);
     if(ref&&arr.some(x=>key(x)===ref.replace(/\s+/g,'').toLowerCase())){nDup++;continue;}
     if(!ref&&arr.some(x=>x.src==='wa-txt'&&x.amount===a.v&&Math.abs(x.date-m.date)<60000)){nDup++;continue;}
@@ -175,7 +178,7 @@ async function importWA(side,file){
   render();
   if(imgs.length){const added=await addFiles(side,imgs,'واتساب · صورة');nI=added.length;await readPending(side);}
   rematch();
-  toast('واتساب: '+nT+' مبلغ من النص · '+nI+' صورة قُرئت'+(nDup?' · '+nDup+' مكرر رُفض':'')+' — راجع الحقول الحمراء');}
+  toast('واتساب: '+nI+' إيصال صورة قُرئ'+(nT?' · '+nT+' مبلغ كوانزا من النص':'')+(nDup?' · '+nDup+' مكرر رُفض':'')+' — راجع الحقول الحمراء');}
 async function fpOf(f){try{const h=await crypto.subtle.digest('SHA-256',await f.arrayBuffer());return Array.from(new Uint8Array(h)).map(b=>b.toString(16).padStart(2,'0')).join('');}catch(e){return null;}}
 function dupOf(r){const k=key(r);if(!k)return null;const arr=r.side==='sup'?S.sup:S.cust;return arr.find(x=>x!==r&&key(x)===k)||null;}
 function manual(side){const r={id:'r'+(++S.seq),side,file:null,url:null,amount:null,ccy:'AOA',ref:'',who:'',bank:'يدوي',date:new Date(),reading:false,matched:null,how:'',edit:true};(side==='sup'?S.sup:S.cust).push(r);render();}
