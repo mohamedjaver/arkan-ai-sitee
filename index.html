@@ -1125,7 +1125,7 @@ function setLang(l){
       document.querySelectorAll('.akUserLink').forEach(a=>{a.hidden=false;});
       document.querySelectorAll('.akOwnerLink').forEach(a=>{if(/36295050$/.test(String(ss.phone||'').replace(/\D/g,'')))a.hidden=false;});
       /* المالك: «التسوية» تفتح صفحة التسوية نفسها بدل قسم الشرح */
-      if(/36295050$/.test(String(ss.phone||'').replace(/\D/g,'')))document.querySelectorAll('[data-i="nav_settle"]').forEach(a=>{a.href='settlement.html';});}
+      if(/36295050$/.test(String(ss.phone||'').replace(/\D/g,'')))document.querySelectorAll('[data-i="nav_settle"]').forEach(a=>{a.href='compare.html';});}
     else{const o=document.getElementById('akOutM');if(o)o.style.display='none';}
   }catch(e){}
   document.querySelectorAll('[data-ih]').forEach(el=>{const k=el.dataset.ih;if(t[k]!==undefined)el.innerHTML=t[k];});
@@ -1323,7 +1323,7 @@ setInterval(loadTiers,180000);
 <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8.5 8.5 0 01-8.5 8.5c-1.4 0-2.8-.34-4-.95L3 21l1.5-5.3A8.5 8.5 0 1121 12z"/><path d="M8.5 10.5h7M8.5 13.5h4.5"/></svg>
 <span style="position:absolute;top:2px;inset-inline-end:2px;width:13px;height:13px;border-radius:50%;background:#168A52;border:2.5px solid #fff"></span>
 </a>
-<script src="arkan-nav.js?v=12" defer></script>
+<script src="arkan-nav.js?v=13" defer></script>
 <script>/* المالك: رابط الكونسول في القائمة + جلب مسبق للانتقال الفوري */
 (function(){try{var s=JSON.parse(localStorage.getItem('arkan_session')||'null'),ph=String((s||{}).phone||'').replace(/\D/g,'');
   var own=/36295050$/.test(ph)||!!localStorage.getItem('arkan_admin_dev')||!!localStorage.getItem('arkan_owner_auth');
