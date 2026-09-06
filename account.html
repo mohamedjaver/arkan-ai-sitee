@@ -266,7 +266,8 @@
 
 <style id="hmCss">
 /* ===== Build 1214 — الرئيسية بطراز مصرفي (BAI/CashBook) ===== */
-.hm-top{align-items:center}
+.hm-top{align-items:center;padding-top:calc(env(safe-area-inset-top) + 6px)}
+.hm-sec h2{color:#0B2447!important}
 .hm-user{display:flex;align-items:center;gap:10px}
 .hm-user small{display:block;font-size:11px;color:#6B84A6}
 .hm-user b{font-size:16px;color:#0B2447}
@@ -331,7 +332,7 @@
     <section class="screen active" id="s-home">
       <!-- Build 1214: الرئيسية بطراز مصرفي -->
       <div class="topbar hm-top">
-        <div class="hm-user"><div class="hm-av" id="hmAv">B</div><div><small>مرحبًا</small><b id="greet"></b></div></div>
+        <div class="hm-user"><div class="hm-av" id="hmAv">B</div><div><small id="hmDate"></small><b id="greet"></b></div></div>
         <div class="bell hm-bell" id="bell" role="button" aria-label="الإشعارات"><svg fill="none" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" d="M15 17h5l-1.4-1.4A2 2 0 0 1 18 14.2V11a6 6 0 0 0-4-5.7V5a2 2 0 1 0-4 0v.3A6 6 0 0 0 6 11v3.2a2 2 0 0 1-.6 1.4L4 17h5m6 0v1a3 3 0 1 1-6 0v-1m6 0H9"/></svg><i id="bellDot" hidden></i></div>
       </div>
 
@@ -343,7 +344,7 @@
         <div class="hm-stats">
           <div><small>قيد التنفيذ</small><b class="num" id="hmPend">0</b></div>
           <div><small>مكتملة</small><b class="num" id="hmDone">0</b></div>
-          <div class="ref-chip hm-ref" id="refChip"><small>رقمك المرجعي</small><b class="num" id="refTxt"></b></div>
+          <div class="ref-chip hm-ref" id="refChip"><small>رقمك المرجعي</small><b class="num" id="refVal"></b></div>
         </div>
       </div>
 
@@ -2365,7 +2366,7 @@ async function mrbPdf(){
     const by=st.byCcy||{};const ks=Object.keys(by).filter(k=>by[k]>0).sort((a,b)=>by[b]-by[a]);
     cc.innerHTML=ks.length?ks.slice(0,5).map(c=>'<div class="c">'+flagHTML(c)+'<span>'+c+'</span><b>'+(hid?'••••':fmt(by[c],0))+'</b></div>').join(''):'';
     const bd=$('bellDot');if(bd)bd.hidden=!(st.pend>0);
-    const rt=$('refTxt');if(rt)rt.textContent=(window.USER&&USER.ref)||(window.__USER&&__USER.ref)||'';
+    
   }
   window.hmPaint=hmPaint;
   /* الإشعارات */
@@ -2380,6 +2381,7 @@ async function mrbPdf(){
   nt.addEventListener('click',e=>{if(e.target===nt)nt.classList.remove('on');});
   /* الصورة/الحرف */
   try{const s=JSON.parse(localStorage.getItem('arkan_session')||'null');const n=(s&&s.name||'').trim();if(n)$('hmAv').textContent=n.charAt(0).toUpperCase();}catch(e){}
+  try{$('hmDate').textContent=new Date().toLocaleDateString('ar',{weekday:'long',day:'numeric',month:'long'});}catch(e){}
   /* الإجراءات السريعة */
   document.querySelectorAll('.hm-qa [data-qa]').forEach(b=>b.onclick=()=>{
     const k=b.dataset.qa;
