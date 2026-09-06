@@ -10,6 +10,7 @@
 <script src="arkan-gate.js?v=4"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
 <script src="arkan-read.js?v=4" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" defer></script>
 <script src="arkan-nav.js?v=13" defer></script>
 <style>
 :root{--navy:#0B2F70;--blue:#1E63D6;--gold:#D4AF37;--ink:#0F1F3D;--muted:#5A6E92;--line:#D6E4F7;--bg:#EEF3FB;--red:#B00020;--green:#2E7D32;--amber:#ED6C02}
@@ -98,6 +99,7 @@ table{width:100%;border-collapse:collapse;font-size:12px}th{background:#F3F7FD;c
 <div class="bar" id="bar"></div>
 <div id="toast"></div>
 <input type="file" id="fi" multiple accept="image/*,application/pdf" style="display:none">
+<input type="file" id="fw" accept=".zip,.txt,application/zip,text/plain" style="display:none">
 <script>
 'use strict';
 const $=s=>document.querySelector(s);
@@ -115,23 +117,65 @@ window.addEventListener('beforeunload',e=>{if(S.cust.length||S.sup.length){e.pre
 
 /* ───── الإدخال ───── */
 function pick(side){S.side=side;$('#fi').value='';$('#fi').click();}
-$('#fi').addEventListener('change',async function(){const list=[...this.files];if(!list.length)return;
-  let dup=0;const arr=S.side==='sup'?S.sup:S.cust;
+async function addFiles(side,list,tag){let dup=0;const arr=side==='sup'?S.sup:S.cust,added=[];
   for(const f of list){const fp=await fpOf(f);
     if(fp&&arr.some(x=>x.fp===fp)){dup++;continue;}
-    const r={id:'r'+(++S.seq),side:S.side,file:f,fp,url:URL.createObjectURL(f),amount:null,ccy:'AOA',ref:'',who:'',bank:'',date:new Date(f.lastModified||Date.now()),reading:true,matched:null,how:''};
-    arr.push(r);}
+    const r={id:'r'+(++S.seq),side,file:f,fp,url:URL.createObjectURL(f),amount:null,ccy:'AOA',ref:'',who:'',bank:tag||'',date:new Date(f.lastModified||Date.now()),reading:true,matched:null,how:'',src:tag?'wa-img':'file'};
+    if(f._waDate)r.date=f._waDate;if(f._waWho)r.who=f._waWho;
+    arr.push(r);added.push(r);}
   if(dup)toast('رُفض '+dup+' ملف مكرر في نفس العمود');
-  render();
-  const pending=(S.side==='sup'?S.sup:S.cust).filter(r=>r.reading);
+  render();return added;}
+async function readPending(side){const pending=(side==='sup'?S.sup:S.cust).filter(r=>r.reading);
   let i=0;const worker=async()=>{while(i<pending.length){const r=pending[i++];try{
       const p=window.ArkanRead?await Promise.race([ArkanRead.readAmount(r.file),new Promise((_,j)=>setTimeout(()=>j('timeout'),45000))]):null;
-      if(p){r.amount=p.amount||null;r.ccy=norm(p.ccy||'AOA');r.ref=p.txn||'';r.who=p.name||p.receiver||'';r.bank=p.bank||'';const d=p.date&&new Date(p.date);if(d&&!isNaN(d))r.date=d;r.eng=p.eng;}
+      if(p){r.amount=p.amount||null;r.ccy=norm(p.ccy||'AOA');r.ref=p.txn||'';if(!r.who)r.who=p.name||p.receiver||'';r.bank=p.bank||r.bank;const d=p.date&&new Date(p.date);if(d&&!isNaN(d)&&r.src!=='wa-img')r.date=d;r.eng=p.eng;}
     }catch(e){r.fail=true;}r.reading=false;
     const d0=dupOf(r);if(d0){const arr=r.side==='sup'?S.sup:S.cust;arr.splice(arr.indexOf(r),1);toast('مكرر: رقم العملية '+r.ref+' موجود في نفس العمود ('+fmt(d0.amount)+') — رُفض');}
     render();}};
-  await Promise.all([worker(),worker(),worker()]);rematch();toast('اكتملت القراءة — راجع المبالغ ثم المطابقة');
-});
+  await Promise.all([worker(),worker(),worker()]);rematch();}
+$('#fi').addEventListener('change',async function(){const list=[...this.files];if(!list.length)return;await addFiles(S.side,list);await readPending(S.side);toast('اكتملت القراءة — راجع المبالغ ثم المطابقة');});
+
+/* ───── استيراد محادثة واتساب (ZIP أو _chat.txt) — لا يُحفظ شيء ───── */
+function pickWA(side){S.side=side;$('#fw').value='';$('#fw').click();}
+$('#fw').addEventListener('change',async function(){const f=this.files[0];if(!f)return;try{await importWA(S.side,f);}catch(e){console.error(e);toast('تعذّر قراءة الملف: '+(e.message||e));}});
+const WA_LINE=/^\u200e?\[?(\d{1,2})[\/.](\d{1,2})[\/.](\d{2,4}),?\s+(\d{1,2}):(\d{2})(?::(\d{2}))?\s*([AP]M)?\]?\s*(?:-\s*)?([^:]{1,60}?):\s(.*)$/;
+function waDate(d,m,y,h,mi,ap){y=+y;if(y<100)y+=2000;h=+h;if(ap){if(/P/i.test(ap)&&h<12)h+=12;if(/A/i.test(ap)&&h===12)h=0;}return new Date(y,+m-1,+d,h,+mi);}
+function waAmount(t){const s=t.replace(/[\u200e\u200f]/g,'').replace(/\+\d[\d\s-]{6,}\d/g,' ');if(/^\+?\d[\d\s-]{7,}$/.test(s.trim()))return null;
+  const cur=/(MRU|UM|أوقية|اوقية|AOA|KZ|كوانزا|USDT|USD|\$|€|EUR|AED|درهم|CNY|يوان)/i;
+  const re=/(?:(MRU|UM|AOA|KZ|USDT|USD|\$|€|EUR|AED|CNY)\s*)?(\d{1,3}(?:[.,\s]\d{3})+(?:[.,]\d{1,2})?|\d{4,}(?:[.,]\d{1,2})?)\s*(MRU|UM|أوقية|اوقية|AOA|KZ|كوانزا|USDT|USD|\$|€|EUR|AED|درهم|CNY|يوان)?/gi;
+  let best=null,m;while((m=re.exec(s))){let raw=m[2].replace(/\s/g,'');const c=(m[1]||m[3]||'').toUpperCase();
+    if(/\d{4}[\/.-]/.test(raw)||/^(19|20)\d{2}$/.test(raw)&&!c)continue;if(/^[234]\d{7}$/.test(raw)&&!c)continue;
+    let v;if(/,\d{3}(?![\d])/.test(raw)&&!/\.\d{1,2}$/.test(raw))v=Number(raw.replace(/,/g,''));else if(/\.\d{3}(?![\d])/.test(raw)&&!/,\d{1,2}$/.test(raw))v=Number(raw.replace(/\./g,'').replace(',','.'));else v=Number(raw.replace(/,/g,''));
+    if(!isFinite(v)||v<100)continue;const ccy=/UM|MRU|أوقية|اوقية/i.test(c)?'MRU':/AOA|KZ|كوانزا/i.test(c)?'AOA':/USDT/i.test(c)?'USDT':/USD|\$/.test(c)?'USD':/EUR|€/.test(c)?'EUR':/AED|درهم/i.test(c)?'AED':/CNY|يوان/i.test(c)?'CNY':null;
+    const cand={v,ccy,scored:(ccy?2:0)+(v>=1000?1:0)};if(!best||cand.scored>best.scored||(cand.scored===best.scored&&v>best.v))best=cand;}
+  if(!best)return null;if(!best.ccy&&!cur.test(s)&&best.v<1000)return null;return best;}
+function waRef(t){const m=t.match(/\b(?:OP|REF|TRX|TXN|ID|N[ºo°]?|Ref[eé]rence|Transa[cç][cç]?[aã]o)[\s:.#-]*([A-Z0-9][A-Z0-9-]{5,})/i);if(m)return m[1];const d=t.match(/\b\d{9,16}\b/);return d&&!/^\+?\d{8,9}$/.test(d[0])?d[0]:'';}
+async function importWA(side,file){
+  let txt='',media={};
+  if(/\.zip$/i.test(file.name)){if(!window.JSZip)throw new Error('JSZip لم تُحمّل');const z=await JSZip.loadAsync(file);
+    const names=Object.keys(z.files).filter(n=>!z.files[n].dir);const tn=names.find(n=>/_chat\.txt$/i.test(n))||names.find(n=>/\.txt$/i.test(n));
+    if(tn)txt=await z.files[tn].async('string');
+    for(const n of names){if(/\.(jpe?g|png|webp|pdf)$/i.test(n)){media[n.split('/').pop()]={entry:z.files[n],name:n.split('/').pop()};}}}
+  else txt=await file.text();
+  if(!txt&&!Object.keys(media).length)throw new Error('لا نص ولا صور في الملف');
+  const msgs=[];let cur=null;
+  txt.split(/\r?\n/).forEach(l=>{const m=l.match(WA_LINE);if(m){cur={date:waDate(m[1],m[2],m[3],m[4],m[5],m[7]),who:m[8].replace(/[\u200e\u200f]/g,'').trim(),text:m[9]};msgs.push(cur);}else if(cur)cur.text+='\n'+l;});
+  const arr=side==='sup'?S.sup:S.cust;let nT=0,nI=0,nDup=0,nSkip=0;const imgs=[];
+  for(const m of msgs){const t=m.text;
+    const att=t.match(/<attached:\s*([^>]+)>|([\w.-]+\.(?:jpe?g|png|webp|pdf))\s*\(file attached\)|([\w.-]+\.(?:jpe?g|png|webp|pdf))/i);
+    if(att){const nm=(att[1]||att[2]||att[3]||'').trim();const md=media[nm];if(md&&!md.used){md.used=true;const blob=await md.entry.async('blob');const f=new File([blob],nm,{type:/pdf$/i.test(nm)?'application/pdf':'image/jpeg'});f._waDate=m.date;f._waWho=m.who;imgs.push(f);}else if(!md)nSkip++;continue;}
+    if(/omitted|تم حذف|deleted|حُذفت/i.test(t))continue;
+    const a=waAmount(t);if(!a)continue;
+    const ref=waRef(t);
+    if(ref&&arr.some(x=>key(x)===ref.replace(/\s+/g,'').toLowerCase())){nDup++;continue;}
+    if(!ref&&arr.some(x=>x.src==='wa-txt'&&x.amount===a.v&&Math.abs(x.date-m.date)<60000)){nDup++;continue;}
+    arr.push({id:'r'+(++S.seq),side,file:null,url:null,amount:a.v,ccy:a.ccy||'AOA',ref,who:m.who,bank:'واتساب · نص',date:m.date,reading:false,matched:null,how:'',src:'wa-txt',note:t.slice(0,120)});nT++;}
+  /* صور لم تُذكر في النص (تصدير أندرويد بلا أسماء) */
+  for(const k in media){if(!media[k].used){const blob=await media[k].entry.async('blob');imgs.push(new File([blob],k,{type:/pdf$/i.test(k)?'application/pdf':'image/jpeg'}));}}
+  render();
+  if(imgs.length){const added=await addFiles(side,imgs,'واتساب · صورة');nI=added.length;await readPending(side);}
+  rematch();
+  toast('واتساب: '+nT+' مبلغ من النص · '+nI+' صورة قُرئت'+(nDup?' · '+nDup+' مكرر رُفض':'')+' — راجع الحقول الحمراء');}
 async function fpOf(f){try{const h=await crypto.subtle.digest('SHA-256',await f.arrayBuffer());return Array.from(new Uint8Array(h)).map(b=>b.toString(16).padStart(2,'0')).join('');}catch(e){return null;}}
 function dupOf(r){const k=key(r);if(!k)return null;const arr=r.side==='sup'?S.sup:S.cust;return arr.find(x=>x!==r&&key(x)===k)||null;}
 function manual(side){const r={id:'r'+(++S.seq),side,file:null,url:null,amount:null,ccy:'AOA',ref:'',who:'',bank:'يدوي',date:new Date(),reading:false,matched:null,how:'',edit:true};(side==='sup'?S.sup:S.cust).push(r);render();}
@@ -164,15 +208,15 @@ const HOW={ref:'رقم العملية',amount:'المبلغ مطابق',approx:'
 function card(r){const ok=!!r.matched,sel=r.id===S.selC||r.id===S.selS;
   return '<div class="r '+(ok?'ok':'pend')+(sel?' sel':'')+'" onclick="tap(\''+r.id+'\')">'+
     '<button class="x" onclick="event.stopPropagation();del(\''+r.id+'\')">حذف</button>'+(r.url&&!/pdf/i.test(r.file.type)?'<img src="'+r.url+'" onclick="event.stopPropagation();window.open(\''+r.url+'\',\'_blank\')">':'')+
-    '<div class="t"><span class="st '+(ok?'ok':'pend')+'">'+(r.reading?'جارٍ القراءة…':ok?'مطابَق ✓':'بلا مقابل')+'</span><span class="a">'+(r.amount?fmt(r.amount)+' '+esc(r.ccy):'—')+'</span></div>'+
-    '<div class="m">'+esc(r.who||'—')+' · '+esc(r.ref||'بلا مرجع')+' · '+esc(r.bank||'—')+' · <span class="num">'+r.date.toLocaleDateString('en-GB')+'</span>'+(r.fail?' · <span style="color:var(--red)">تعذّرت القراءة — أدخل يدويًا</span>':'')+(!key(r)&&r.amount&&(r.side==='sup'?S.sup:S.cust).some(x=>x!==r&&!key(x)&&x.amount===r.amount&&x.date.toDateString()===r.date.toDateString())?' · <span style="color:var(--amber)">تنبيه: نفس المبلغ والتاريخ لإيصال آخر بلا مرجع</span>':'')+'</div>'+
+    '<div class="t"><span class="st '+(ok?'ok':'pend')+'">'+(r.reading?'جارٍ القراءة…':ok?'مطابَق ✓':'بلا مقابل')+'</span><span class="a" style="'+(r.amount?'':'color:var(--red)')+'">'+(r.amount?fmt(r.amount)+' '+esc(r.ccy):'اكتب المبلغ')+'</span></div>'+
+    '<div class="m">'+esc(r.who||'—')+' · '+esc(r.ref||'بلا مرجع')+' · '+esc(r.bank||'—')+' · <span class="num">'+r.date.toLocaleDateString('en-GB')+'</span>'+(r.fail?' · <span style="color:var(--red)">تعذّرت القراءة — أدخل يدويًا</span>':'')+(r.note?'<div style="color:var(--muted);font-weight:600;margin-top:3px;white-space:pre-wrap">'+esc(r.note)+'</div>':'')+(!key(r)&&r.amount&&(r.side==='sup'?S.sup:S.cust).some(x=>x!==r&&!key(x)&&x.amount===r.amount&&x.date.toDateString()===r.date.toDateString())?' · <span style="color:var(--amber)">تنبيه: نفس المبلغ والتاريخ لإيصال آخر بلا مرجع</span>':'')+'</div>'+
     (ok?'<div class="m" style="color:var(--green)">'+(r.side==='cust'?'إيصال المورد: ':'يغطي: ')+esc(r.matched.who||'—')+' · '+fmt(r.matched.amount)+' · '+(HOW[r.side==='cust'?r.how:r.matched.how]||'')+(S.link?' <button class="x" style="position:static;color:var(--red)" onclick="event.stopPropagation();unlink(\''+r.id+'\')">فك الربط</button>':'')+'</div>':'')+
     (r.edit?'<div class="f" onclick="event.stopPropagation()"><input placeholder="المبلغ" inputmode="decimal" value="'+(r.amount||'')+'" onchange="upd(\''+r.id+'\',\'amount\',this.value)"><input placeholder="العملة" value="'+esc(r.ccy)+'" onchange="upd(\''+r.id+'\',\'ccy\',this.value)"><input placeholder="رقم العملية" value="'+esc(r.ref)+'" onchange="upd(\''+r.id+'\',\'ref\',this.value)"><input class="ar" placeholder="'+(r.side==='cust'?'الزبون':'المورد')+'" value="'+esc(r.who)+'" onchange="upd(\''+r.id+'\',\'who\',this.value)"><input class="ar" placeholder="البنك" value="'+esc(r.bank)+'" onchange="upd(\''+r.id+'\',\'bank\',this.value)"><input type="date" value="'+r.date.toISOString().slice(0,10)+'" onchange="upd(\''+r.id+'\',\'date\',this.value)"></div>':'')+
     '</div>';}
 function col(side){const rows=side==='sup'?S.sup:S.cust,ok=rows.filter(r=>r.matched).length;
   return '<div class="col"><div class="ch"><span class="ic '+(side==='sup'?'g':'b')+'">'+(side==='sup'?'OUT':'IN')+'</span><div><b>'+(side==='sup'?'إيصالات الموردين':'إيصالات الزبائن')+'</b><span><span class="num">'+fmt(sum(rows))+'</span> AOA · '+rows.length+' إيصال · مطابَق '+ok+'</span></div></div>'+
-    '<div class="up"><button onclick="pick(\''+side+'\')">رفع إيصالات</button><button class="ghost" onclick="manual(\''+side+'\')">إدخال يدوي</button></div>'+
-    (rows.length?rows.map(card).join(''):'<div class="empty">ارفع صور/PDF الإيصالات — تُقرأ تلقائيًا ولا تُحفظ في أي مكان</div>')+'</div>';}
+    '<div class="up"><button onclick="pick(\''+side+'\')">رفع إيصالات</button><button class="ghost" onclick="pickWA(\''+side+'\')">محادثة واتساب</button><button class="ghost" onclick="manual(\''+side+'\')">يدوي</button></div>'+
+    (rows.length?rows.map(card).join(''):'<div class="empty">ارفع صور/PDF الإيصالات أو تصدير محادثة واتساب (ZIP / _chat.txt) — تُقرأ تلقائيًا ولا تُحفظ في أي مكان</div>')+'</div>';}
 function render(){
   const def=S.cust.filter(r=>!r.matched),exc=S.sup.filter(r=>!r.matched),ok=S.cust.filter(r=>r.matched);
   const vD=sum(def),vE=sum(exc),vO=sum(ok),tot=vD+vE+vO,net=vE-vD;
