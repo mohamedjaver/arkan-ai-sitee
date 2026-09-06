@@ -74,7 +74,11 @@ module.exports = function (app, ctx) {
 - reference: رقم العملية/Referência/Transacção/N.º da operação/Trs ID. لا تأخذ أبدًا رقم الحساب أو IBAN (يبدأ بـ AO06 أو طويل 21 رقمًا) كمرجع.
 - date: بصيغة YYYY-MM-DD HH:MM إن وُجدت.
 - is_bank_receipt=false إن لم يكن إيصال تحويل (محادثة، لقطة تطبيق عملات رقمية، صورة عادية).
-- confidence: 0–100 لثقتك في amount وreference معًا.`;
+- confidence: 0–100 لثقتك في amount وreference معًا.
+- التاريخ في الإيصالات الأنغولية بصيغة يوم/شهر/سنة (DD/MM/YYYY). لا تخترع سنة؛ إن لم يظهر التاريخ اترك date فارغًا. التاريخ لا يكون في المستقبل أبدًا.
+- تطبيقات موريتانيا (SEDAD, Bankily, Masrvi, Click, BimBank, Moov, BCI, BMCI, BNM, BPM) → currency="MRU" حتى لو لم تُكتب العملة. amount بالأوقية كما هو.
+- صورة شارع/أشخاص/حيوان/كتالوج/فاتورة تجارية/عرض أسعار/محادثة → is_bank_receipt=false وdoc_type يصف الصورة (photo/catalog/invoice/chat). المبلغ في الفاتورة التجارية ليس تحويلًا بنكيًا.
+- المبلغ المنطقي للتحويل بين 100 و500,000,000 Kz. رقم أطول من 9 خانات ليس مبلغًا.`;
   const P2 = (c) => `تحقّق مستقل. اقرأ هذا الإيصال من جديد رقمًا رقمًا وأعد JSON فقط:
 {"amount":0,"currency":"","reference":"","agree_amount":true,"agree_reference":true,"note":""}
 قراءة أولى مقترحة: amount=${c.amount || 0} currency=${c.currency || ''} reference=${c.reference || ''}.
@@ -95,7 +99,23 @@ module.exports = function (app, ctx) {
     throw new Error('quota');
   }
   const num = v => { if (v == null) return null; if (typeof v === 'number') return v; let s = String(v).replace(/[^\d.,]/g, ''); if (/,\d{1,2}$/.test(s)) s = s.replace(/\./g, '').replace(',', '.'); else s = s.replace(/,/g, ''); const n = Number(s); return isFinite(n) && n > 0 ? n : null; };
-  const ccyN = c => { c = String(c || '').toUpperCase(); return /KZ|AKZ|AOA/.test(c) ? 'AOA' : /UM|MRU/.test(c) ? 'MRU' : c || null; };
+  const ccyN = c => { c = String(c || '').toUpperCase(); return /KZ|AKZ|AOA/.test(c) ? 'AOA' : /UM|MRU|OUGUIYA|أوقية/.test(c) ? 'MRU' : c || null; };
+  const MRU_APP = /SEDAD|BANKILY|MASR[IV]?VI|CLICK|BIM\s?BANK|MOOV|GAZA|BCI\s*MAURI|BMCI|\bBNM\b|\bBPM\b|أوقية|اوقية|سداد|بنكيلي|مصرفي/i;
+  const AMAX = 500e6, AMIN = 100;
+  /* بوابة السلامة على الخادم: مبلغ منطقي، تاريخ منطقي، عملة موريتانية */
+  function gate(r) {
+    r.flags = [];
+    if (!r.ccy && MRU_APP.test((r.bank || '') + ' ' + (r.who || '') + ' ' + (r.receiver || ''))) r.ccy = 'MRU';
+    if (r.amount != null && (r.ccy === 'AOA' || !r.ccy)) {
+      const refD = String(r.ref || '').replace(/\D/g, '');
+      if (r.amount > AMAX || r.amount < AMIN || (refD && String(Math.round(r.amount)) === refD)) { r.amountRead = r.amount; r.amount = null; r.review = true; r.verified = false; r.flags.push('amount-implausible'); }
+    }
+    if (r.date) {
+      const d = new Date(String(r.date).replace(' ', 'T')); const now = Date.now();
+      if (isNaN(d) || d.getTime() > now + 864e5 || d.getFullYear() < 2020) { r.dateBad = String(r.date).slice(0, 16); r.date = null; r.flags.push('date-implausible'); }
+    }
+    return r;
+  }
 
   async function readOne(job, it) {
     const b64 = it.data.toString('base64'), mime = mimeOf(it.name);
@@ -114,7 +134,7 @@ module.exports = function (app, ctx) {
         else { r.review = true; r.alt = { amount: a2, ref: ref2 }; if (!sameA && (p2.agree_amount === false)) { /* تعارض حقيقي: لا نكتب مبلغًا */ r.amountRead = r.amount; r.amount = null; } }
       } catch (e) { r.review = r.conf < 85; }
     } else if (r.isReceipt) r.review = true;
-    return r;
+    return gate(r);
   }
 
   async function run(job) {
