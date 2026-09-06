@@ -127,7 +127,9 @@ async function addFiles(side,list,tag){let dup=0;const arr=side==='sup'?S.sup:S.
   render();return added;}
 async function readPending(side){const pending=(side==='sup'?S.sup:S.cust).filter(r=>r.reading);
   let i=0;const worker=async()=>{while(i<pending.length){const r=pending[i++];try{
-      const p=window.ArkanRead?await Promise.race([ArkanRead.readAmount(r.file),new Promise((_,j)=>setTimeout(()=>j('timeout'),45000))]):null;
+      const T=(f)=>Promise.race([ArkanRead.readAmount(f),new Promise((_,j)=>setTimeout(()=>j('timeout'),45000))]);
+      let p=window.ArkanRead?await T(r.file):null;
+      if(isPdf(r.file)){const png=await pdfPage(r.file);if(png){r.png=png;r.url=URL.createObjectURL(png);if(window.ArkanRead&&(!p||!p.amount)){try{const p2=await T(png);if(p2&&p2.amount)p=Object.assign({},p||{},p2,{eng:(p2.eng||'')+'+pdf-page'});}catch(e){}}}}
       if(p){r.amount=p.amount||null;r.ccy=norm(p.ccy||'AOA');r.ref=p.txn||'';if(!r.who)r.who=p.name||p.receiver||'';r.bank=p.bank||r.bank;const d=p.date&&new Date(p.date);if(d&&!isNaN(d)&&r.src!=='wa-img')r.date=d;r.eng=p.eng;}
     }catch(e){r.fail=true;}r.reading=false;if(!r.amount)r.edit=true;
     const d0=dupOf(r);if(d0){const arr=r.side==='sup'?S.sup:S.cust;arr.splice(arr.indexOf(r),1);toast('مكرر: رقم العملية '+r.ref+' موجود في نفس العمود ('+fmt(d0.amount)+') — رُفض');}
@@ -179,6 +181,12 @@ async function importWA(side,file){
   if(imgs.length){const added=await addFiles(side,imgs,'واتساب · صورة');nI=added.length;await readPending(side);}
   rematch();
   toast('واتساب: '+nI+' إيصال صورة قُرئ'+(nT?' · '+nT+' مبلغ كوانزا من النص':'')+(nDup?' · '+nDup+' مكرر رُفض':'')+' — راجع الحقول الحمراء');}
+async function pdfPage(f){try{if(!window.pdfjsLib){await new Promise((res,rej)=>{const sc=document.createElement('script');sc.src='vendor/pdf.min.js';sc.onload=res;sc.onerror=rej;document.head.appendChild(sc);});}
+  try{pdfjsLib.GlobalWorkerOptions.workerSrc=new URL('vendor/pdf.worker.min.js',location.href).href;}catch(e){}
+  const doc=await pdfjsLib.getDocument({data:await f.arrayBuffer()}).promise;const pg=await doc.getPage(1);const vp=pg.getViewport({scale:2});
+  const cv=document.createElement('canvas');cv.width=vp.width;cv.height=vp.height;await pg.render({canvasContext:cv.getContext('2d'),viewport:vp}).promise;
+  const blob=await new Promise(r=>cv.toBlob(r,'image/png'));return new File([blob],f.name.replace(/\.pdf$/i,'')+'.png',{type:'image/png'});}catch(e){return null;}}
+const isPdf=f=>f&&(/pdf/i.test(f.type||'')||/\.pdf$/i.test(f.name||''));
 async function fpOf(f){try{const h=await crypto.subtle.digest('SHA-256',await f.arrayBuffer());return Array.from(new Uint8Array(h)).map(b=>b.toString(16).padStart(2,'0')).join('');}catch(e){return null;}}
 function dupOf(r){const k=key(r);if(!k)return null;const arr=r.side==='sup'?S.sup:S.cust;return arr.find(x=>x!==r&&key(x)===k)||null;}
 function manual(side){const r={id:'r'+(++S.seq),side,file:null,url:null,amount:null,ccy:'AOA',ref:'',who:'',bank:'يدوي',date:new Date(),reading:false,matched:null,how:'',edit:true};(side==='sup'?S.sup:S.cust).push(r);render();}
@@ -210,7 +218,7 @@ function unlink(id){const r=find(id);if(!r||!r.matched)return;const o=r.matched;
 const HOW={ref:'رقم العملية',amount:'المبلغ مطابق',approx:'ضمن الهامش',manual:'ربط يدوي'};
 function card(r){const ok=!!r.matched,sel=r.id===S.selC||r.id===S.selS;
   return '<div class="r '+(ok?'ok':'pend')+(sel?' sel':'')+'" onclick="tap(\''+r.id+'\')">'+
-    '<button class="x" onclick="event.stopPropagation();del(\''+r.id+'\')">حذف</button>'+(r.url&&!/pdf/i.test(r.file.type)?'<img src="'+r.url+'" onclick="event.stopPropagation();window.open(\''+r.url+'\',\'_blank\')">':'')+
+    '<button class="x" onclick="event.stopPropagation();del(\''+r.id+'\')">حذف</button>'+(r.url&&(r.png||!isPdf(r.file))?'<img src="'+r.url+'" onclick="event.stopPropagation();window.open(\''+(r.png?URL.createObjectURL(r.file):r.url)+'\',\'_blank\')">':isPdf(r.file)?'<span style="float:inline-end;margin-inline-start:10px;width:84px;height:84px;border:1px solid var(--line);display:grid;place-items:center;font:800 12px Inter,sans-serif;color:var(--red);cursor:pointer" onclick="event.stopPropagation();window.open(\''+r.url+'\',\'_blank\')">PDF</span>':'')+
     '<div class="t"><span class="st '+(ok?'ok':'pend')+'">'+(r.reading?'جارٍ القراءة…':ok?'مطابَق ✓':'بلا مقابل')+'</span><span class="a" style="'+(r.amount?'':'color:var(--red)')+'">'+(r.amount?fmt(r.amount)+' '+esc(r.ccy):'اكتب المبلغ')+'</span></div>'+
     '<div class="m">'+esc(r.who||'—')+' · '+esc(r.ref||'بلا مرجع')+' · '+esc(r.bank||'—')+' · <span class="num">'+r.date.toLocaleDateString('en-GB')+'</span>'+(r.fail?' · <span style="color:var(--red)">تعذّرت القراءة — أدخل يدويًا</span>':'')+(r.note?'<div style="color:var(--muted);font-weight:600;margin-top:3px;white-space:pre-wrap">'+esc(r.note)+'</div>':'')+(!key(r)&&r.amount&&(r.side==='sup'?S.sup:S.cust).some(x=>x!==r&&!key(x)&&x.amount===r.amount&&x.date.toDateString()===r.date.toDateString())?' · <span style="color:var(--amber)">تنبيه: نفس المبلغ والتاريخ لإيصال آخر بلا مرجع</span>':'')+'</div>'+
     (ok?'<div class="m" style="color:var(--green)">'+(r.side==='cust'?'إيصال المورد: ':'يغطي: ')+esc(r.matched.who||'—')+' · '+fmt(r.matched.amount)+' · '+(HOW[r.side==='cust'?r.how:r.matched.how]||'')+(S.link?' <button class="x" style="position:static;color:var(--red)" onclick="event.stopPropagation();unlink(\''+r.id+'\')">فك الربط</button>':'')+'</div>':'')+
