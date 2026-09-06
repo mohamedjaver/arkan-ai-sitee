@@ -84,11 +84,29 @@ module.exports = function (app, ctx) {
 قراءة أولى مقترحة: amount=${c.amount || 0} currency=${c.currency || ''} reference=${c.reference || ''}.
 لا تُصدّق القراءة الأولى — اقرأ بنفسك ثم قارن: agree_amount=true فقط إذا كان مبلغك مطابقًا تمامًا، وagree_reference=true فقط إذا كان المرجع مطابقًا.
 تذكّر: المبلغ ليس رقم الحساب ولا IBAN ولا الرصيد ولا الرسوم.`;
-  async function gem(key, prompt, b64, mime, maxTok) {
+  /* ── PDF: طبقة النص (pdfjs-dist بلا canvas) — احتياط عندما لا يقرأ Gemini ملف الـ PDF مباشرة ── */
+  let _pdfjs = null;
+  async function pdfText(buf) {
+    try {
+      if (!_pdfjs) _pdfjs = await import('pdfjs-dist/legacy/build/pdf.mjs');
+      const doc = await _pdfjs.getDocument({ data: new Uint8Array(buf), disableWorker: true, isEvalSupported: false, useSystemFonts: false, standardFontDataUrl: path.join(path.dirname(require.resolve('pdfjs-dist/package.json')), 'standard_fonts/') }).promise;
+      let out = '';
+      for (let i = 1; i <= Math.min(doc.numPages, 3); i++) { const pg = await doc.getPage(i); const tc = await pg.getTextContent(); let last = null; tc.items.forEach(it => { if (last != null && Math.abs(last - it.transform[5]) > 2) out += '\n'; out += it.str + (it.hasEOL ? '\n' : ' '); last = it.transform[5]; }); out += '\n'; }
+      return out.replace(/[ \t]+/g, ' ').trim();
+    } catch (e) {
+      /* بلا pdfjs (لم يُثبَّت بعد على Railway): استخراج بدائي من تيارات FlateDecode */
+      try {
+        let out = '', i = 0; const s = buf.toString('latin1');
+        while ((i = s.indexOf('stream', i)) >= 0) { let a = i + 6; if (s[a] === '\r') a++; if (s[a] === '\n') a++; const e = s.indexOf('endstream', a); if (e < 0) break; let t = null; try { t = zlib.inflateSync(buf.slice(a, e)).toString('latin1'); } catch (er) { t = s.slice(a, e); } (t.match(/\(((?:\\.|[^\\)])*)\)\s*Tj|\[((?:[^\]]|\\\])*)\]\s*TJ/g) || []).forEach(m => { out += m.replace(/\)\s*-?\d+(?:\.\d+)?\s*\(/g, '').replace(/^\[|\]\s*TJ$|\(|\)\s*Tj$/g, '').replace(/\\([()\\])/g, '$1') + ' '; }); out += '\n'; i = e + 9; }
+        return out.replace(/[ \t]+/g, ' ').trim();
+      } catch (e2) { return ''; }
+    }
+  }
+  async function gem(key, prompt, b64, mime, maxTok, textOnly) {
     for (let a = 0; a < 4; a++) {
       const r = await fetch('https://generativelanguage.googleapis.com/v1beta/models/' + MODEL + ':generateContent?key=' + encodeURIComponent(key), {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }, { inline_data: { mime_type: mime, data: b64 } }] }], generationConfig: { temperature: 0, maxOutputTokens: maxTok || 300, responseMimeType: 'application/json' } })
+        body: JSON.stringify({ contents: [{ parts: textOnly ? [{ text: prompt + '\n\nنص الإيصال (مستخرج من PDF):\n' + textOnly }] : [{ text: prompt }, { inline_data: { mime_type: mime, data: b64 } }] }], generationConfig: { temperature: 0, maxOutputTokens: maxTok || 300, responseMimeType: 'application/json' } })
       });
       const j = await r.json().catch(() => ({}));
       if (r.status === 429 || r.status >= 500) { await new Promise(res => setTimeout(res, 1500 * (a + 1) * (a + 1))); continue; }
@@ -98,7 +116,7 @@ module.exports = function (app, ctx) {
     }
     throw new Error('quota');
   }
-  const num = v => { if (v == null) return null; if (typeof v === 'number') return v; let s = String(v).replace(/[^\d.,]/g, ''); if (/,\d{1,2}$/.test(s)) s = s.replace(/\./g, '').replace(',', '.'); else s = s.replace(/,/g, ''); const n = Number(s); return isFinite(n) && n > 0 ? n : null; };
+  const num = v => { if (v == null) return null; if (typeof v === 'number') return isFinite(v) && v > 0 ? v : null; let s = String(v).replace(/[^\d.,]/g, ''); if (/,\d{1,2}$/.test(s)) s = s.replace(/\./g, '').replace(',', '.'); else s = s.replace(/,/g, ''); const n = Number(s); return isFinite(n) && n > 0 ? n : null; };
   const ccyN = c => { c = String(c || '').toUpperCase(); return /KZ|AKZ|AOA/.test(c) ? 'AOA' : /UM|MRU|OUGUIYA|أوقية/.test(c) ? 'MRU' : c || null; };
   const MRU_APP = /SEDAD|BANKILY|MASR[IV]?VI|CLICK|BIM\s?BANK|MOOV|GAZA|BCI\s*MAURI|BMCI|\bBNM\b|\bBPM\b|أوقية|اوقية|سداد|بنكيلي|مصرفي/i;
   const AMAX = 500e6, AMIN = 100;
@@ -118,8 +136,17 @@ module.exports = function (app, ctx) {
   }
 
   async function readOne(job, it) {
-    const b64 = it.data.toString('base64'), mime = mimeOf(it.name);
-    let p1 = await gem(job.key, P1 + examplesFor(''), b64, mime, 320);
+    const b64 = it.data.toString('base64'), mime = mimeOf(it.name), isPdf = mime === 'application/pdf';
+    let p1 = null, txt = null, eng = 'gemini-image', err1 = '';
+    try { p1 = await gem(job.key, P1 + examplesFor(''), b64, mime, 320); } catch (e) { if (!isPdf) throw e; err1 = String(e.message || e).slice(0, 80); }
+    if (isPdf && (!p1 || p1.is_bank_receipt === false || !num(p1.amount))) {
+      /* Gemini لم يفتح الـ PDF أو لم يجد مبلغًا: طبقة النص ثم قراءة نصية بقراءتين */
+      txt = await pdfText(it.data);
+      if (txt && txt.length > 30) { try { const p1t = await gem(job.key, P1 + examplesFor(''), null, null, 320, txt); if (p1t && num(p1t.amount)) { p1 = p1t; eng = 'pdf-text'; err1 = ''; } else if (!p1) p1 = p1t || {}; } catch (e) { if (!p1) p1 = {}; err1 = err1 || String(e.message || e).slice(0, 80); } }
+      else if (!p1) p1 = {};
+      if (!num(p1.amount) && (!txt || txt.length <= 30)) err1 = err1 || 'pdf-scan: لا طبقة نص — ارفعه صورة أو اكتب المبلغ';
+    }
+    if (!p1) p1 = {};
     const r = { bank: String(p1.bank || '').slice(0, 40), amount: num(p1.amount), ccy: ccyN(p1.currency), ref: String(p1.reference || '').trim().slice(0, 64), date: p1.date || null,
       who: String(p1.sender || p1.receiver || '').slice(0, 80), receiver: String(p1.receiver || '').slice(0, 80), conf: Number(p1.confidence) || 0, isReceipt: p1.is_bank_receipt !== false, docType: p1.doc_type || '' };
     if (r.ref && /^AO\d{2}/i.test(r.ref)) r.ref = '';                       // IBAN ليس مرجعًا
@@ -127,13 +154,14 @@ module.exports = function (app, ctx) {
     r.review = false; r.verified = false;
     if (r.isReceipt && r.amount) {
       try {
-        const p2 = await gem(job.key, P2(p1) + examplesFor(r.bank), b64, mime, 200);
+        const p2 = await gem(job.key, P2(p1) + examplesFor(r.bank), b64, mime, 200, eng === 'pdf-text' ? txt : null);
         const a2 = num(p2.amount); const ref2 = String(p2.reference || '').trim();
         const sameA = a2 != null && Math.abs(a2 - r.amount) < 0.5, sameR = !r.ref || !ref2 || ref2.replace(/\s+/g, '').toLowerCase() === r.ref.replace(/\s+/g, '').toLowerCase();
         if (sameA && sameR) { r.verified = true; if (!r.ref && ref2) r.ref = ref2.slice(0, 64); }
         else { r.review = true; r.alt = { amount: a2, ref: ref2 }; if (!sameA && (p2.agree_amount === false)) { /* تعارض حقيقي: لا نكتب مبلغًا */ r.amountRead = r.amount; r.amount = null; } }
       } catch (e) { r.review = r.conf < 85; }
     } else if (r.isReceipt) r.review = true;
+    r.eng = eng; if (err1) r.err = err1;
     return gate(r);
   }
 
