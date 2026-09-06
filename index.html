@@ -1123,7 +1123,9 @@ function setLang(l){
         [...mmq.querySelectorAll('a')].sort((a,b)=>{const ia=order.indexOf(keyOf(a)),ib=order.indexOf(keyOf(b));return (ia<0?99:ia)-(ib<0?99:ib);}).forEach(a=>mmq.appendChild(a));
         const acc=mmq.querySelector('[data-i="nav_signin"]');if(acc){acc.style.cssText='font-weight:800;color:#7FD0FF';}}
       document.querySelectorAll('.akUserLink').forEach(a=>{a.hidden=false;});
-      document.querySelectorAll('.akOwnerLink').forEach(a=>{if(/36295050$/.test(String(ss.phone||'').replace(/\D/g,'')))a.hidden=false;});}
+      document.querySelectorAll('.akOwnerLink').forEach(a=>{if(/36295050$/.test(String(ss.phone||'').replace(/\D/g,'')))a.hidden=false;});
+      /* المالك: «التسوية» تفتح صفحة التسوية نفسها بدل قسم الشرح */
+      if(/36295050$/.test(String(ss.phone||'').replace(/\D/g,'')))document.querySelectorAll('[data-i="nav_settle"]').forEach(a=>{a.href='settlement.html';});}
     else{const o=document.getElementById('akOutM');if(o)o.style.display='none';}
   }catch(e){}
   document.querySelectorAll('[data-ih]').forEach(el=>{const k=el.dataset.ih;if(t[k]!==undefined)el.innerHTML=t[k];});
