@@ -39,7 +39,7 @@
     { href: 'settle-v2.html#clients', icon: 'users',    label: 'العملاء' },
     { href: 'settle-v2.html#profit',  icon: 'trending', label: 'الأرباح' },
     { href: 'settle-v2.html#books',   icon: 'match',    label: 'مركز المطابقة' },
-    { href: 'compare.html',           icon: 'match',    label: 'مقارنة الإيصالات — بلا حفظ' },
+    { href: 'compare.html',           icon: 'match',    label: 'مقارنة الإيصالات — الدفتر' },
     { href: 'settle-v2.html#archive', icon: 'archive',  label: 'أرشيف العمليات' },
     { href: 'admin.html',             icon: 'shield',   label: 'لوحة التحكم' },
     { href: 'rates-admin.html',       icon: 'rate',     label: 'إدارة الأسعار' },
