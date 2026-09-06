@@ -121,7 +121,10 @@ begin
   -- P: الربح إلى دفتر «أرباح التسوية» (بالأوقية عبر bdl_tx_net_mru إن وُجدت، وإلا settle_amount − cost بعملة التسوية)
   p := null;
   if done and t.settle_amount is not null and t.settle_amount<>0 then
-    begin p := bdl_tx_net_mru(t); exception when others then p := null; end;
+    -- 1) نفس رقم صفحة P&L (العرض bdl_tx_profit)
+    begin select v.net_mru into p from bdl_tx_profit v where v.id=t.id; exception when others then p := null; end;
+    -- 2) دالة ops10 إن وُجدت
+    if p is null then begin p := bdl_tx_net_mru(t); exception when others then p := null; end; end if;
     if p is null then
       -- تكلفة فعلية بلا تحويل للأوقية
       if t.cost is not null and t.cost<>0 then
