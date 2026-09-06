@@ -107,7 +107,8 @@ table{width:100%;border-collapse:collapse;font-size:12px}th{background:#F3F7FD;c
   <button onclick="exportPDF()">تقرير PDF</button>
   <button onclick="shareText()">نسخ للواتساب</button>
   <button style="color:var(--green);border-color:var(--green)" onclick="partyPanel()">حفظ الإيصالات إلى الدفتر</button>
-  <button class="danger" onclick="clearAll()">مسح الجلسة</button>
+  <button class="danger" onclick="clearAll()">مسح الجلسة (الجهاز)</button>
+  <button class="danger" style="background:var(--red);color:#fff;border-color:var(--red)" onclick="wipeAll()">مسح كامل — الجهاز والدفتر</button>
 </div>
 <div class="tools" id="rng" style="margin-top:0">
   <span style="font-size:11px;color:var(--muted);font-weight:700">الفترة</span><input type="date" id="rf" onchange="setRange(this.value,$('#rt').value)"><span style="font-size:11px;color:var(--muted)">→</span><input type="date" id="rt" onchange="setRange($('#rf').value,this.value)">
@@ -443,6 +444,15 @@ function upd(id,k,v){const r=find(id);if(!r)return;if(k==='amount'){r.amount=Num
 function del(id){const r0=find(id);if(r0&&r0.led&&!confirm('يُحذف من هذه الجلسة فقط — يبقى مسجّلًا في الدفتر. متابعة؟'))return;IDB.del('files',id).catch(()=>{});IDB.del('files',id+'_t').catch(()=>{});S.cust=S.cust.filter(r=>r.id!==id);S.sup=S.sup.filter(r=>r.id!==id);if(S.selC===id)S.selC=null;if(S.selS===id)S.selS=null;rematch();}
 function restore(id){const i=(S.excl||[]).findIndex(r=>r.id===id);if(i<0)return;const r=S.excl.splice(i,1)[0];r.excl=false;r.why='';r.ccy='AOA';r.rccy=null;r.edit=true;(r.side==='sup'?S.sup:S.cust).push(r);toast('أُعيد الإيصال — اكتب مبلغه بالكوانزا');rematch();}
 function find(id){return S.cust.find(r=>r.id===id)||S.sup.find(r=>r.id===id);}
+/* ───── مسح كامل: الجلسة المحلية + دفتر الإيصالات الدائم + قيود الدفاتر التي أنشأتها هذه الصفحة ───── */
+async function wipeAll(){if(!tokenOf()){toast('سجّل الدخول أولًا');return;}
+  if(!confirm('مسح كامل؟ سيُحذف من هذا الجهاز ومن الدفتر الدائم كل إيصال سُجّل عبر صفحة المقارنة (زبائن وموردون) وكل قيد دفتر أنشأته هذه الصفحة. لا يمكن التراجع.'))return;
+  const word=prompt('اكتب: مسح الكل');if(word!=='مسح الكل'){toast('أُلغي');return;}
+  let n=0,b=0;try{const rows=await sbq('/bdl_cmp_receipts?select=fp,book_entry_id');n=rows.length;const oids=[...new Set(rows.map(x=>x.book_entry_id).filter(Boolean))];
+    for(let i=0;i<oids.length;i+=50){const part=oids.slice(i,i+50);try{await sbq('/bdl_book_entries?id=in.('+part.join(',')+')',{method:'DELETE',headers:{Prefer:'return=minimal'}});b+=part.length;}catch(e){}}
+    await sbq('/bdl_cmp_receipts?fp=not.is.null',{method:'DELETE',headers:{Prefer:'return=minimal'}});}catch(e){toast('تعذّر مسح الدفتر: '+(e.message||e));}
+  S.cust=[];S.sup=[];S.excl=[];S.jobs=[];S.selC=S.selS=null;S.ts=null;S.party={cust:{who:'',phone:''},sup:{who:'',phone:''}};await IDB.clear().catch(()=>{});LED.idx={};
+  toast('تم المسح الكامل: '+n+' إيصال من الدفتر'+(b?' · '+b+' قيد':'')+' — ابدأ غدًا من صفر');render(true);}
 function clearAll(){if(!confirm('مسح الجلسة من هذا الجهاز فقط — الإيصالات المسجّلة تبقى في الدفتر ويمكن تحميلها من «تحميل من الدفتر». متابعة؟'))return;S.cust=[];S.sup=[];S.excl=[];S.selC=S.selS=null;S.ts=null;IDB.clear().catch(()=>{});LED.index();render();}
 
 /* ───── المطابقة ───── */
