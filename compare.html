@@ -83,7 +83,7 @@ table{width:100%;border-collapse:collapse;font-size:12px}th{background:#F3F7FD;c
 </style>
 </head>
 <body>
-<header><img src="favicon.svg?v=bdl7" alt=""><div><h1>مقارنة الإيصالات</h1><small>الزبائن مقابل الموردين — جلسة مؤقتة</small></div><span class="tag">لا يُحفظ شيء</span></header>
+<header><img src="favicon.svg?v=bdl7" alt=""><div><h1>مقارنة الإيصالات</h1><small>الزبائن مقابل الموردين — جلسة مؤقتة</small></div><span class="tag" id="tag">حفظ محلي ٢٤ ساعة</span></header>
 <main>
 <div class="hero" id="hero"></div>
 <div class="tools">
@@ -104,7 +104,8 @@ table{width:100%;border-collapse:collapse;font-size:12px}th{background:#F3F7FD;c
 <script>
 'use strict';
 const $=s=>document.querySelector(s);
-const S={cust:[],sup:[],link:false,selC:null,selS:null,seq:0,side:null};
+const S={cust:[],sup:[],excl:[],link:false,selC:null,selS:null,seq:0,side:null,lim:{},rep:'period'};
+let _rt=null;function renderSoon(){if(_rt)return;_rt=setTimeout(()=>{_rt=null;render();},350);}
 const fmt=(n,d)=>{n=Number(n);return isFinite(n)?n.toLocaleString('en-US',{maximumFractionDigits:d==null?0:d}):'—';};
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const toast=m=>{const t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(toast._t);toast._t=setTimeout(()=>t.classList.remove('on'),2200);};
@@ -114,29 +115,55 @@ const ageC=n=>n<=1?'#B00020':n<=7?'#ED6C02':n<=30?'#E6B800':'#1E63D6';const ageL
 const fx=v=>{v=Number(v)||0;return v>=1e6?(v/1e6).toFixed(2).replace(/\.?0+$/,'')+'M':v>=1e3?(v/1e3).toFixed(1).replace(/\.0$/,'')+'K':fmt(v);};
 const norm=c=>{c=String(c||'AOA').toUpperCase();return /KZ|AKZ|AOA/.test(c)?'AOA':/UM|MRU/.test(c)?'MRU':c;};
 const key=r=>String(r.ref||'').replace(/\s+/g,'').toLowerCase();
-window.addEventListener('beforeunload',e=>{if(S.cust.length||S.sup.length){e.preventDefault();e.returnValue='';}});
 
+
+/* ───── حفظ محلي (IndexedDB على هذا الجهاز فقط، ٢٤ ساعة) ───── */
+const IDB={db:null,open(){if(this.db)return Promise.resolve(this.db);return new Promise((res,rej)=>{const q=indexedDB.open('bdl_compare',1);q.onupgradeneeded=()=>{const d=q.result;if(!d.objectStoreNames.contains('files'))d.createObjectStore('files');if(!d.objectStoreNames.contains('state'))d.createObjectStore('state');};q.onsuccess=()=>{this.db=q.result;res(this.db);};q.onerror=()=>rej(q.error);});},
+  async put(st,k,v){const d=await this.open();return new Promise((res,rej)=>{const t=d.transaction(st,'readwrite');t.objectStore(st).put(v,k);t.oncomplete=res;t.onerror=()=>rej(t.error);});},
+  async get(st,k){const d=await this.open();return new Promise((res,rej)=>{const q=d.transaction(st).objectStore(st).get(k);q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error);});},
+  async del(st,k){const d=await this.open();return new Promise((res,rej)=>{const t=d.transaction(st,'readwrite');t.objectStore(st).delete(k);t.oncomplete=res;t.onerror=()=>rej(t.error);});},
+  async clear(){const d=await this.open();return new Promise((res,rej)=>{const t=d.transaction(['files','state'],'readwrite');t.objectStore('files').clear();t.objectStore('state').clear();t.oncomplete=res;t.onerror=()=>rej(t.error);});}};
+async function thumbOf(f){try{const bm=await createImageBitmap(f);const k=Math.min(1,220/Math.max(bm.width,bm.height));const cv=document.createElement('canvas');cv.width=Math.max(1,Math.round(bm.width*k));cv.height=Math.max(1,Math.round(bm.height*k));cv.getContext('2d').drawImage(bm,0,0,cv.width,cv.height);bm.close&&bm.close();return await new Promise(r=>cv.toBlob(r,'image/jpeg',.7));}catch(e){return null;}}
+const SESSION_MS=24*36e5;
+function ser(r){return {id:r.id,side:r.side,amount:r.amount,ccy:r.ccy,rccy:r.rccy||null,ref:r.ref,who:r.who,bank:r.bank,date:r.date.getTime(),src:r.src||'',note:r.note||'',fp:r.fp||null,hasFile:!!(r.file||r.hasFile),isPdf:!!r.pdf,fail:!!r.fail,edit:!!r.edit,excl:!!r.excl,matchedId:r.matched?r.matched.id:null,how:r.how||'',name:r.name||''};}
+let _pt=null;function persist(){clearTimeout(_pt);_pt=setTimeout(async()=>{try{const st={ts:S.ts||Date.now(),seq:S.seq,rows:S.cust.concat(S.sup).map(ser),excl:(S.excl||[]).map(ser),tol:$('#tol').value};S.ts=st.ts;await IDB.put('state','session',st);
+  for(const r of S.cust.concat(S.sup,S.excl||[])){if(r.thumb&&!r.tSaved){await IDB.put('files',r.id+'_t',r.thumb);r.tSaved=true;}}
+  $('#tag').textContent='محفوظ محليًا · حتى '+new Date(st.ts+SESSION_MS).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});}catch(e){console.warn('persist',e);}},900);}
+async function restoreSession(){try{const st=await IDB.get('state','session');if(!st)return false;
+  if(Date.now()-st.ts>SESSION_MS){await IDB.clear();toast('انتهت صلاحية الجلسة السابقة (٢٤ ساعة) — بدأنا جلسة جديدة');return false;}
+  S.ts=st.ts;S.seq=st.seq||0;if(st.tol)$('#tol').value=st.tol;const all=[];
+  const mk=async o=>{const r={id:o.id,side:o.side,amount:o.amount,ccy:o.ccy||'AOA',rccy:o.rccy,ref:o.ref||'',who:o.who||'',bank:o.bank||'',date:new Date(o.date),src:o.src,note:o.note,fp:o.fp,hasFile:o.hasFile,pdf:o.isPdf,fail:o.fail,edit:o.edit,excl:o.excl,how:o.how,name:o.name,file:null,url:null,reading:false,matched:null,_mid:o.matchedId};
+    try{const t=await IDB.get('files',r.id+'_t');if(t){r.thumb=t;r.tSaved=true;r.url=URL.createObjectURL(t);}}catch(e){}return r;};
+  for(const o of st.rows){const r=await mk(o);all.push(r);(r.side==='sup'?S.sup:S.cust).push(r);}
+  S.excl=[];for(const o of st.excl||[]){S.excl.push(await mk(o));}
+  all.forEach(r=>{if(r._mid){const o=all.find(x=>x.id===r._mid);if(o){r.matched=o;}}delete r._mid;});
+  toast('استُعيدت الجلسة: '+S.cust.length+' زبائن · '+S.sup.length+' موردون');return true;}catch(e){console.warn('restore',e);return false;}}
+async function openFile(id){const r=find(id)||(S.excl||[]).find(x=>x.id===id);if(!r)return;let b=r.file;if(!b){try{b=await IDB.get('files',r.id);}catch(e){}}if(!b){toast('الملف الأصلي غير متاح (جلسة قديمة)');return;}const u=URL.createObjectURL(b);window.open(u,'_blank');setTimeout(()=>URL.revokeObjectURL(u),60000);}
 /* ───── الإدخال ───── */
 function pick(side){S.side=side;$('#fi').value='';$('#fi').click();}
 async function addFiles(side,list,tag){let dup=0;const arr=side==='sup'?S.sup:S.cust,added=[];
   for(const f of list){const fp=await fpOf(f);
     if(fp&&arr.some(x=>x.fp===fp)){dup++;continue;}
-    const r={id:'r'+(++S.seq),side,file:f,fp,url:URL.createObjectURL(f),amount:null,ccy:'AOA',ref:'',who:'',bank:tag||'',date:new Date(f.lastModified||Date.now()),reading:true,matched:null,how:'',src:tag?'wa-img':'file'};
+    const r={id:'r'+(++S.seq),side,file:f,fp,url:null,amount:null,ccy:'AOA',ref:'',who:'',bank:tag||'',date:new Date(f.lastModified||Date.now()),reading:true,matched:null,how:'',src:tag?'wa-img':'file',name:f.name,pdf:isPdf(f),hasFile:true};
     if(f._waDate)r.date=f._waDate;if(f._waWho)r.who=f._waWho;
-    arr.push(r);added.push(r);}
+    try{await IDB.put('files',r.id,f);}catch(e){}
+    if(!r.pdf){r.thumb=await thumbOf(f);if(r.thumb)r.url=URL.createObjectURL(r.thumb);}
+    arr.push(r);added.push(r);if(added.length%10===0)render();}
   if(dup)toast('رُفض '+dup+' ملف مكرر في نفس العمود');
   render();return added;}
 async function readPending(side){const pending=(side==='sup'?S.sup:S.cust).filter(r=>r.reading);
   let i=0;const worker=async()=>{while(i<pending.length){const r=pending[i++];try{
       const T=(f)=>Promise.race([ArkanRead.readAmount(f),new Promise((_,j)=>setTimeout(()=>j('timeout'),45000))]);
+      if(!r.file){try{r.file=await IDB.get('files',r.id);}catch(e){}}
+      if(!r.file)throw new Error('nofile');
       let p=window.ArkanRead?await T(r.file):null;
-      if(isPdf(r.file)){const png=await pdfPage(r.file);if(png){r.png=png;r.url=URL.createObjectURL(png);if(window.ArkanRead&&(!p||!p.amount)){try{const p2=await T(png);if(p2&&p2.amount)p=Object.assign({},p||{},p2,{eng:(p2.eng||'')+'+pdf-page'});}catch(e){}}}}
+      if(r.pdf){const png=await pdfPage(r.file);if(png){r.thumb=await thumbOf(png);if(r.thumb)r.url=URL.createObjectURL(r.thumb);if(window.ArkanRead&&(!p||!p.amount)){try{const p2=await T(png);if(p2&&p2.amount)p=Object.assign({},p||{},p2,{eng:(p2.eng||'')+'+pdf-page'});}catch(e){}}}}
       if(p){r.amount=p.amount||null;r.rccy=p.ccy?norm(p.ccy):null;r.ccy=r.rccy||'AOA';r.ref=p.txn||'';if(!r.who)r.who=p.name||p.receiver||'';r.bank=p.bank||r.bank;const d=p.date&&new Date(p.date);if(d&&!isNaN(d)&&r.src!=='wa-img')r.date=d;r.eng=p.eng;}
-    }catch(e){r.fail=true;}r.reading=false;if(!r.amount)r.edit=true;else if(r.src==='wa-img')r.edit=true;
+    }catch(e){r.fail=true;}r.reading=false;r.file=null;if(!r.amount)r.edit=true;else if(r.src==='wa-img')r.edit=true;
     if(isCrypto(r)){const arr=r.side==='sup'?S.sup:S.cust;arr.splice(arr.indexOf(r),1);r.excl=true;(S.excl=S.excl||[]).push(r);S.skipped=(S.skipped||0)+1;render();continue;}
-    const d0=dupOf(r);if(d0){const arr=r.side==='sup'?S.sup:S.cust;arr.splice(arr.indexOf(r),1);toast('مكرر: رقم العملية '+r.ref+' موجود في نفس العمود ('+fmt(d0.amount)+') — رُفض');}
-    render();}};
-  await Promise.all([worker(),worker(),worker()]);rematch();if(S.skipped){toast('استُبعد '+S.skipped+' إيصال غير أنغولي (USDT/USDC/EUR/أخرى)');S.skipped=0;}}
+    const d0=dupOf(r);if(d0){const arr=r.side==='sup'?S.sup:S.cust;arr.splice(arr.indexOf(r),1);IDB.del('files',r.id).catch(()=>{});toast('مكرر: رقم العملية '+r.ref+' موجود في نفس العمود ('+fmt(d0.amount)+') — رُفض');}
+    renderSoon();}};
+  await Promise.all([worker(),worker(),worker()]);rematch();persist();if(S.skipped){toast('استُبعد '+S.skipped+' إيصال غير أنغولي (USDT/USDC/EUR/أخرى)');S.skipped=0;}}
 $('#fi').addEventListener('change',async function(){const list=[...this.files];if(!list.length)return;await addFiles(S.side,list);await readPending(S.side);toast('اكتملت القراءة — راجع المبالغ ثم المطابقة');});
 
 /* ───── استيراد محادثة واتساب (ZIP أو _chat.txt) — لا يُحفظ شيء ───── */
@@ -194,10 +221,10 @@ async function fpOf(f){try{const h=await crypto.subtle.digest('SHA-256',await f.
 function dupOf(r){const k=key(r);if(!k)return null;const arr=r.side==='sup'?S.sup:S.cust;return arr.find(x=>x!==r&&key(x)===k)||null;}
 function manual(side){const r={id:'r'+(++S.seq),side,file:null,url:null,amount:null,ccy:'AOA',ref:'',who:'',bank:'يدوي',date:new Date(),reading:false,matched:null,how:'',edit:true};(side==='sup'?S.sup:S.cust).push(r);render();}
 function upd(id,k,v){const r=find(id);if(!r)return;if(k==='amount')r.amount=Number(String(v).replace(/[^\d.]/g,''))||null;else if(k==='date'){const d=new Date(v);if(!isNaN(d))r.date=d;}else if(k==='ccy')r.ccy=norm(v);else if(k==='ref'){const prev=r.ref;r.ref=v;const d0=dupOf(r);if(d0){r.ref=prev;toast('رقم العملية موجود في نفس العمود ('+fmt(d0.amount)+' '+d0.ccy+') — لا يُقبل التكرار');render();return;}}else r[k]=v;rematch(false);}
-function del(id){S.cust=S.cust.filter(r=>r.id!==id);S.sup=S.sup.filter(r=>r.id!==id);if(S.selC===id)S.selC=null;if(S.selS===id)S.selS=null;rematch();}
+function del(id){IDB.del('files',id).catch(()=>{});IDB.del('files',id+'_t').catch(()=>{});S.cust=S.cust.filter(r=>r.id!==id);S.sup=S.sup.filter(r=>r.id!==id);if(S.selC===id)S.selC=null;if(S.selS===id)S.selS=null;rematch();}
 function restore(id){const i=(S.excl||[]).findIndex(r=>r.id===id);if(i<0)return;const r=S.excl.splice(i,1)[0];r.excl=false;r.ccy='AOA';r.edit=true;(r.side==='sup'?S.sup:S.cust).push(r);toast('أُعيد الإيصال — اكتب مبلغه بالكوانزا');rematch();}
 function find(id){return S.cust.find(r=>r.id===id)||S.sup.find(r=>r.id===id);}
-function clearAll(){if(!confirm('مسح كل الإيصالات من هذه الجلسة؟ لم يُحفظ شيء أصلًا.'))return;S.cust=[];S.sup=[];S.excl=[];S.selC=S.selS=null;render();}
+function clearAll(){if(!confirm('مسح الجلسة كاملة من هذا الجهاز (كل الإيصالات المرفوعة)؟'))return;S.cust=[];S.sup=[];S.excl=[];S.selC=S.selS=null;S.ts=null;IDB.clear().catch(()=>{});$('#tag').textContent='حفظ محلي ٢٤ ساعة';render();}
 
 /* ───── المطابقة ───── */
 function rematch(reset){
@@ -222,8 +249,8 @@ function unlink(id){const r=find(id);if(!r||!r.matched)return;const o=r.matched;
 const HOW={ref:'رقم العملية',amount:'المبلغ مطابق',approx:'ضمن الهامش',manual:'ربط يدوي'};
 function card(r){const ok=!!r.matched,sel=r.id===S.selC||r.id===S.selS;
   return '<div class="r '+(ok?'ok':'pend')+(sel?' sel':'')+'" onclick="tap(\''+r.id+'\')">'+
-    '<button class="x" onclick="event.stopPropagation();del(\''+r.id+'\')">حذف</button>'+(r.url&&(r.png||!isPdf(r.file))?'<img src="'+r.url+'" onclick="event.stopPropagation();window.open(\''+(r.png?URL.createObjectURL(r.file):r.url)+'\',\'_blank\')">':isPdf(r.file)?'<span style="float:inline-end;margin-inline-start:10px;width:84px;height:84px;border:1px solid var(--line);display:grid;place-items:center;font:800 12px Inter,sans-serif;color:var(--red);cursor:pointer" onclick="event.stopPropagation();window.open(\''+r.url+'\',\'_blank\')">PDF</span>':'')+
-    (r.file?'<button class="x" style="color:var(--navy);float:inline-start" onclick="event.stopPropagation();window.open(\''+(r.png?URL.createObjectURL(r.file):r.url)+'\',\'_blank\')">'+(isPdf(r.file)?'فتح PDF':'فتح الصورة')+'</button>':'')+'<div class="t"><span class="st '+(ok?'ok':'pend')+'">'+(r.reading?'جارٍ القراءة…':ok?'مطابَق ✓':'بلا مقابل')+'</span><span class="a" style="'+(r.amount?'':'color:var(--red)')+'">'+(r.amount?fmt(r.amount)+' '+esc(r.ccy):'اكتب المبلغ')+'</span></div>'+
+    '<button class="x" onclick="event.stopPropagation();del(\''+r.id+'\')">حذف</button>'+(r.url?'<img src="'+r.url+'" loading="lazy" onclick="event.stopPropagation();openFile(\''+r.id+'\')">':r.pdf?'<span style="float:inline-end;margin-inline-start:10px;width:84px;height:84px;border:1px solid var(--line);display:grid;place-items:center;font:800 12px Inter,sans-serif;color:var(--red);cursor:pointer" onclick="event.stopPropagation();openFile(\''+r.id+'\')">PDF</span>':'')+
+    ((r.file||r.hasFile)?'<button class="x" style="color:var(--navy);float:inline-start" onclick="event.stopPropagation();openFile(\''+r.id+'\')">'+(r.pdf?'فتح PDF':'فتح الصورة')+'</button>':'')+'<div class="t"><span class="st '+(ok?'ok':'pend')+'">'+(r.reading?'جارٍ القراءة…':ok?'مطابَق ✓':'بلا مقابل')+'</span><span class="a" style="'+(r.amount?'':'color:var(--red)')+'">'+(r.amount?fmt(r.amount)+' '+esc(r.ccy):'اكتب المبلغ')+'</span></div>'+
     '<div class="m">'+esc(r.who||'—')+' · '+esc(r.ref||'بلا مرجع')+' · '+esc(r.bank||'—')+' · <span class="num">'+r.date.toLocaleDateString('en-GB')+'</span>'+(r.fail?' · <span style="color:var(--red)">تعذّرت القراءة — أدخل يدويًا</span>':'')+(r.note?'<div style="color:var(--muted);font-weight:600;margin-top:3px;white-space:pre-wrap">'+esc(r.note)+'</div>':'')+(!key(r)&&r.amount&&(r.side==='sup'?S.sup:S.cust).some(x=>x!==r&&!key(x)&&x.amount===r.amount&&x.date.toDateString()===r.date.toDateString())?' · <span style="color:var(--amber)">تنبيه: نفس المبلغ والتاريخ لإيصال آخر بلا مرجع</span>':'')+'</div>'+
     (ok?'<div class="m" style="color:var(--green)">'+(r.side==='cust'?'إيصال المورد: ':'يغطي: ')+esc(r.matched.who||'—')+' · '+fmt(r.matched.amount)+' · '+(HOW[r.side==='cust'?r.how:r.matched.how]||'')+(S.link?' <button class="x" style="position:static;color:var(--red)" onclick="event.stopPropagation();unlink(\''+r.id+'\')">فك الربط</button>':'')+'</div>':'')+
     (r.edit&&!r.reading?'<div class="f" onclick="event.stopPropagation()"><input placeholder="المبلغ" inputmode="decimal" value="'+(r.amount||'')+'" onchange="upd(\''+r.id+'\',\'amount\',this.value)"><input placeholder="العملة" value="'+esc(r.ccy)+'" onchange="upd(\''+r.id+'\',\'ccy\',this.value)"><input placeholder="رقم العملية" value="'+esc(r.ref)+'" onchange="upd(\''+r.id+'\',\'ref\',this.value)"><input class="ar" placeholder="'+(r.side==='cust'?'الزبون':'المورد')+'" value="'+esc(r.who)+'" onchange="upd(\''+r.id+'\',\'who\',this.value)"><input class="ar" placeholder="البنك" value="'+esc(r.bank)+'" onchange="upd(\''+r.id+'\',\'bank\',this.value)"><input type="date" value="'+r.date.toISOString().slice(0,10)+'" onchange="upd(\''+r.id+'\',\'date\',this.value)"></div>':'')+
@@ -231,7 +258,7 @@ function card(r){const ok=!!r.matched,sel=r.id===S.selC||r.id===S.selS;
 function col(side){const rows=side==='sup'?S.sup:S.cust,ok=rows.filter(r=>r.matched).length;
   return '<div class="col"><div class="ch"><span class="ic '+(side==='sup'?'g':'b')+'">'+(side==='sup'?'OUT':'IN')+'</span><div><b>'+(side==='sup'?'إيصالات الموردين':'إيصالات الزبائن')+'</b><span><span class="num">'+fmt(sum(rows))+'</span> AOA · '+rows.length+' إيصال · مطابَق '+ok+'</span></div></div>'+
     '<div class="up"><button onclick="pick(\''+side+'\')">رفع إيصالات</button><button class="ghost" onclick="pickWA(\''+side+'\')">محادثة واتساب</button><button class="ghost" onclick="manual(\''+side+'\')">يدوي</button></div>'+
-    (rows.length?rows.map(card).join(''):'<div class="empty">ارفع صور/PDF الإيصالات أو تصدير محادثة واتساب (ZIP / _chat.txt) — تُقرأ تلقائيًا ولا تُحفظ في أي مكان</div>')+(()=>{const ex=(S.excl||[]).filter(r=>r.side===side);if(!ex.length)return '';return '<details style="border-top:1px solid var(--line)"><summary style="padding:10px 12px;font-size:12px;font-weight:800;color:#6A5A8E;cursor:pointer">مستبعدة — ليست إيصالات كوانزا ('+ex.length+')</summary>'+ex.map(r=>'<div class="r" style="cursor:default">'+(r.url?'<img src="'+r.url+'" onclick="window.open(\''+(r.png?URL.createObjectURL(r.file):r.url)+'\',\'_blank\')">':'')+'<div class="t"><span class="st pend">'+esc(r.rccy||'?')+'</span><span class="a" style="font-size:13px">'+(r.amount?fmt(r.amount)+' '+esc(r.rccy||''):'—')+'</span></div><div class="m">'+esc(r.who||'—')+' · '+esc(r.bank||'—')+' · <span class="num">'+r.date.toLocaleDateString('en-GB')+'</span></div><div style="margin-top:6px"><button class="x" style="color:var(--navy);padding:0" onclick="restore(\''+r.id+'\')">هذا إيصال كوانزا — استرجاع</button></div></div>').join('')+'</details>';})()+'</div>';}
+    (rows.length?rows.slice(0,S.lim[side]||40).map(card).join('')+(rows.length>(S.lim[side]||40)?'<button class="x" style="width:100%;padding:12px;border-top:1px solid var(--line);color:var(--navy)" onclick="S.lim[\''+side+'\']=(S.lim[\''+side+'\']||40)+60;render()">عرض المزيد ('+(rows.length-(S.lim[side]||40))+' متبقٍ)</button>':''):'<div class="empty">ارفع صور/PDF الإيصالات أو تصدير محادثة واتساب (ZIP / _chat.txt) — تُقرأ تلقائيًا ولا تُحفظ في أي مكان</div>')+(()=>{const ex=(S.excl||[]).filter(r=>r.side===side);if(!ex.length)return '';return '<details style="border-top:1px solid var(--line)"><summary style="padding:10px 12px;font-size:12px;font-weight:800;color:#6A5A8E;cursor:pointer">مستبعدة — ليست إيصالات كوانزا ('+ex.length+')</summary>'+ex.map(r=>'<div class="r" style="cursor:default">'+(r.url?'<img src="'+r.url+'" onclick="openFile(\''+r.id+'\')">':'')+'<div class="t"><span class="st pend">'+esc(r.rccy||'?')+'</span><span class="a" style="font-size:13px">'+(r.amount?fmt(r.amount)+' '+esc(r.rccy||''):'—')+'</span></div><div class="m">'+esc(r.who||'—')+' · '+esc(r.bank||'—')+' · <span class="num">'+r.date.toLocaleDateString('en-GB')+'</span></div><div style="margin-top:6px"><button class="x" style="color:var(--navy);padding:0" onclick="restore(\''+r.id+'\')">هذا إيصال كوانزا — استرجاع</button></div></div>').join('')+'</details>';})()+'</div>';}
 function render(){
   const def=S.cust.filter(r=>!r.matched),exc=S.sup.filter(r=>!r.matched),ok=S.cust.filter(r=>r.matched);
   const vD=sum(def),vE=sum(exc),vO=sum(ok),tot=vD+vE+vO,net=vE-vD;
@@ -247,20 +274,39 @@ function render(){
   $('#lkb').className=S.link?'on':'';$('#lkb').textContent=S.link?'إنهاء الربط اليدوي':'ربط يدوي ١:١';
   $('#c-cust').innerHTML=col('cust');$('#c-sup').innerHTML=col('sup');
   const rows=def.map(r=>({r,side:'زبون',kind:'نقص',v:-AOA(r),c:'#B00020'})).concat(exc.map(r=>({r,side:'مورد',kind:'فائض',v:AOA(r),c:'#2E7D32'}))).sort((a,b)=>days(b.r.date)-days(a.r.date)||Math.abs(b.v)-Math.abs(a.v));
-  $('#rep').innerHTML='<h4><span>تقرير الفروقات</span><span class="num" style="font-size:11px;color:var(--muted)">'+new Date().toLocaleDateString('en-GB')+'</span></h4>'+
+  const tg='<span><button class="x" style="color:'+(S.rep==='period'?'#fff':'var(--navy)')+';background:'+(S.rep==='period'?'var(--navy)':'#fff')+';border:1px solid var(--navy);padding:5px 9px" onclick="S.rep=\'period\';render()">الفترة</button><button class="x" style="color:'+(S.rep==='month'?'#fff':'var(--navy)')+';background:'+(S.rep==='month'?'var(--navy)':'#fff')+';border:1px solid var(--navy);padding:5px 9px" onclick="S.rep=\'month\';render()">شهري مفصّل</button></span>';
+  if(S.rep==='month')$('#rep').innerHTML='<h4><span>التقرير الشهري المفصّل</span>'+tg+'</h4>'+monthlyHTML();
+  else $('#rep').innerHTML='<h4><span>تقرير الفروقات</span>'+tg+'</h4>'+
     '<div class="sum"><div><span>إجمالي النقص (موردون)</span><b style="color:var(--red)">'+fmt(vD)+'</b></div><div><span>إجمالي الفائض (موردون)</span><b style="color:var(--green)">'+fmt(vE)+'</b></div><div><span>صافي الرصيد</span><b style="color:'+(net>=0?'var(--green)':'var(--red)')+'">'+(net>=0?'+':'−')+fmt(Math.abs(net))+'</b></div></div>'+
-    (rows.length?'<div style="overflow:auto"><table><thead><tr><th>الحالة</th><th>التاريخ</th><th>النوع</th><th>الجهة</th><th>المبلغ</th><th>الفرق</th></tr></thead><tbody>'+rows.map(x=>{const n=days(x.r.date),c=x.kind==='نقص'?ageC(n):'#1E63D6';return '<tr><td><span class="d" style="background:'+c+'"></span><span style="font-size:10.5px;font-weight:800;color:'+c+'">'+(x.kind==='نقص'?ageL(n):'فائض')+'</span></td><td class="num">'+x.r.date.toLocaleDateString('en-GB')+'</td><td style="color:'+x.c+';font-weight:800">'+x.side+'</td><td style="font-weight:700">'+esc(x.r.who||'—')+'</td><td class="num">'+fmt(x.r.amount)+' '+esc(x.r.ccy)+'</td><td class="num" style="color:'+x.c+'">'+(x.v>0?'+':'−')+fmt(Math.abs(x.v))+'</td></tr>';}).join('')+'</tbody></table></div>':'<div class="empty">'+(tot?'كل الإيصالات متطابقة ✓':'لا بيانات بعد')+'</div>');
+    (rows.length?'<div style="overflow:auto"><table><thead><tr><th>الحالة</th><th>التاريخ</th><th>النوع</th><th>الجهة</th><th>المبلغ</th><th>الفرق</th></tr></thead><tbody>'+rows.slice(0,200).map(x=>{const n=days(x.r.date),c=x.kind==='نقص'?ageC(n):'#1E63D6';return '<tr><td><span class="d" style="background:'+c+'"></span><span style="font-size:10.5px;font-weight:800;color:'+c+'">'+(x.kind==='نقص'?ageL(n):'فائض')+'</span></td><td class="num">'+x.r.date.toLocaleDateString('en-GB')+'</td><td style="color:'+x.c+';font-weight:800">'+x.side+'</td><td style="font-weight:700">'+esc(x.r.who||'—')+'</td><td class="num">'+fmt(x.r.amount)+' '+esc(x.r.ccy)+'</td><td class="num" style="color:'+x.c+'">'+(x.v>0?'+':'−')+fmt(Math.abs(x.v))+'</td></tr>';}).join('')+'</tbody></table></div>':'<div class="empty">'+(tot?'كل الإيصالات متطابقة ✓':'لا بيانات بعد')+'</div>');
   const b=$('#bar');const c=find(S.selC),s=find(S.selS);
   if(S.link&&c&&s){const dA=AOA(s)-AOA(c),dD=Math.abs(days(s.date)-days(c.date)),pct=Math.max(0,100-Math.abs(dA)/Math.max(AOA(c),AOA(s),1)*100);
     b.style.display='';b.innerHTML='<div class="rr"><div><span>فرق المبلغ</span><b style="color:'+(Math.abs(dA)<1?'#5CE0A3':'#FF7A8A')+'">'+(dA>=0?'+':'−')+fmt(Math.abs(dA))+'</b></div><div><span>فرق الأيام</span><b>'+dD+'</b></div><div><span>نسبة التطابق</span><b style="color:#D4AF37">'+pct.toFixed(1)+'%</b></div></div><div class="aa"><button onclick="link()">ربط الإيصالين ✓</button><button class="g" onclick="S.selC=S.selS=null;render()">إلغاء</button></div>';}
   else b.style.display='none';
+  persist();
 }
+/* ───── التقرير الشهري: كل شهر، كل مورد وكل زبون على حدة، والمبالغ مجمّعة ───── */
+function monthly(){const M={};const mk=r=>{const k=r.date.getFullYear()+'-'+String(r.date.getMonth()+1).padStart(2,'0');return M[k]=M[k]||{k,cust:[],sup:[]};};
+  S.cust.forEach(r=>mk(r).cust.push(r));S.sup.forEach(r=>mk(r).sup.push(r));
+  return Object.values(M).sort((a,b)=>b.k.localeCompare(a.k)).map(m=>{const g=(arr)=>{const P={};arr.forEach(r=>{const n=(r.who||'بلا اسم').trim();const p=P[n]=P[n]||{name:n,n:0,tot:0,ok:0,okv:0,pend:0,pendv:0};p.n++;p.tot+=AOA(r);if(r.matched){p.ok++;p.okv+=AOA(r);}else{p.pend++;p.pendv+=AOA(r);}});return Object.values(P).sort((a,b)=>b.tot-a.tot);};
+    const def=m.cust.filter(r=>!r.matched),exc=m.sup.filter(r=>!r.matched),ok=m.cust.filter(r=>r.matched);
+    return {k:m.k,label:new Date(m.k+'-01').toLocaleDateString('ar',{month:'long',year:'numeric'}),nC:m.cust.length,nS:m.sup.length,vC:sum(m.cust),vS:sum(m.sup),vOk:sum(ok),vD:sum(def),vE:sum(exc),net:sum(exc)-sum(def),sups:g(m.sup),custs:g(m.cust)};});}
+function monthlyHTML(){const L=monthly();if(!L.length)return '<div class="empty">لا بيانات بعد</div>';
+  const tbl=(rows,lbl)=>'<div style="overflow:auto"><table><thead><tr><th>'+lbl+'</th><th>عدد</th><th>الإجمالي</th><th>مطابَق</th><th>بلا مقابل</th></tr></thead><tbody>'+rows.map(p=>'<tr><td style="font-weight:800">'+esc(p.name)+'</td><td class="num">'+p.n+'</td><td class="num">'+fmt(p.tot)+'</td><td class="num" style="color:var(--green)">'+fmt(p.okv)+'</td><td class="num" style="color:'+(p.pendv?'var(--red)':'var(--muted)')+'">'+fmt(p.pendv)+(p.pend?' ('+p.pend+')':'')+'</td></tr>').join('')+'<tr style="background:#F3F7FD;font-weight:800"><td>المجموع</td><td class="num">'+rows.reduce((a,p)=>a+p.n,0)+'</td><td class="num">'+fmt(rows.reduce((a,p)=>a+p.tot,0))+'</td><td class="num" style="color:var(--green)">'+fmt(rows.reduce((a,p)=>a+p.okv,0))+'</td><td class="num" style="color:var(--red)">'+fmt(rows.reduce((a,p)=>a+p.pendv,0))+'</td></tr></tbody></table></div>';
+  return L.map(m=>'<div style="border-top:4px solid var(--navy);margin-top:8px"><h4 style="padding:12px 12px 6px"><span>'+m.label+'</span><span class="num" style="font-size:11px;color:var(--muted)">'+m.nC+' زبون · '+m.nS+' مورد</span></h4>'+
+    '<div class="sum" style="grid-template-columns:repeat(3,1fr)"><div><span>إيصالات الزبائن</span><b style="color:var(--blue)">'+fmt(m.vC)+'</b></div><div><span>إيصالات الموردين</span><b style="color:var(--green)">'+fmt(m.vS)+'</b></div><div><span>مطابَق</span><b>'+fmt(m.vOk)+'</b></div><div><span>نقص (زبائن بلا مورد)</span><b style="color:var(--red)">'+fmt(m.vD)+'</b></div><div><span>فائض موردين</span><b style="color:var(--green)">'+fmt(m.vE)+'</b></div><div><span>صافي الشهر</span><b style="color:'+(m.net>=0?'var(--green)':'var(--red)')+'">'+(m.net>=0?'+':'−')+fmt(Math.abs(m.net))+'</b></div></div>'+
+    '<h4 style="font-size:12.5px;padding:10px 12px 4px">الموردون — كل مورد على حدة</h4>'+tbl(m.sups,'المورد')+
+    '<h4 style="font-size:12.5px;padding:10px 12px 4px">الزبائن — كل زبون على حدة</h4>'+tbl(m.custs,'الزبون')+'</div>').join('');}
+function monthlyLines(){const L=[];monthly().forEach(m=>{L.push('',('— '+m.label+' —'),'إيصالات الزبائن: '+m.nC+' · '+fmt(m.vC)+' AOA','إيصالات الموردين: '+m.nS+' · '+fmt(m.vS)+' AOA','مطابَق: '+fmt(m.vOk)+' · نقص: '+fmt(m.vD)+' · فائض: '+fmt(m.vE)+' · صافي: '+(m.net>=0?'+':'−')+fmt(Math.abs(m.net)));
+  L.push('الموردون:');m.sups.forEach(p=>L.push('• '+p.name+' · '+p.n+' إيصال · '+fmt(p.tot)+' · مطابَق '+fmt(p.okv)+' · بلا مقابل '+fmt(p.pendv)));
+  L.push('الزبائن:');m.custs.forEach(p=>L.push('• '+p.name+' · '+p.n+' إيصال · '+fmt(p.tot)+' · مطابَق '+fmt(p.okv)+' · بلا مقابل '+fmt(p.pendv)));});return L;}
 /* ───── التصدير ───── */
 function lines(){const def=S.cust.filter(r=>!r.matched),exc=S.sup.filter(r=>!r.matched),ok=S.cust.filter(r=>r.matched);const net=sum(exc)-sum(def);
   const L=['BDL — مقارنة الإيصالات · '+new Date().toLocaleDateString('en-GB'),'إيصالات الزبائن: '+S.cust.length+' · '+fmt(sum(S.cust))+' AOA','إيصالات الموردين: '+S.sup.length+' · '+fmt(sum(S.sup))+' AOA','مطابَق: '+ok.length+' · '+fmt(sum(ok))+' AOA','نقص (بلا مورد): '+def.length+' · '+fmt(sum(def))+' AOA','فائض موردين: '+exc.length+' · '+fmt(sum(exc))+' AOA','صافي الفرق: '+(net>=0?'+':'−')+fmt(Math.abs(net))+' AOA',''];
   if(def.length){L.push('— نقص (زبائن بلا إيصال مورد):');def.forEach(r=>L.push('• '+(r.who||'—')+' · '+fmt(r.amount)+' '+r.ccy+' · '+(r.ref||'بلا مرجع')+' · '+r.date.toLocaleDateString('en-GB')));L.push('');}
   if(exc.length){L.push('— فائض (موردون بلا زبون):');exc.forEach(r=>L.push('• '+(r.who||'—')+' · '+fmt(r.amount)+' '+r.ccy+' · '+(r.ref||'بلا مرجع')+' · '+r.date.toLocaleDateString('en-GB')));L.push('');}
   if(ok.length){L.push('— المطابَق:');ok.forEach(r=>L.push('• '+(r.who||'—')+' '+fmt(r.amount)+' / '+(r.matched.who||'—')+' '+fmt(r.matched.amount)+' · '+(HOW[r.how]||'')));}
+  if(S.rep==='month')return L.slice(0,8).concat(monthlyLines());
   return L;}
 async function shareText(){const t=lines().join('\n');try{await navigator.clipboard.writeText(t);toast('نُسخ التقرير — الصقه في واتساب');}catch(e){prompt('انسخ النص:',t);}}
 function exportPDF(){const JS=window.jspdf&&window.jspdf.jsPDF;if(!JS){toast('مكتبة PDF لم تُحمّل بعد');return;}
@@ -269,8 +315,8 @@ function exportPDF(){const JS=window.jspdf&&window.jspdf.jsPDF;if(!JS){toast('م
   x.fillStyle='#fff';x.font='800 30px Cairo, Inter, sans-serif';x.textAlign='right';x.direction='rtl';x.fillText('BDL · مقارنة الإيصالات — جلسة بلا حفظ',W-30,56);
   x.fillStyle='#0F1F3D';x.font='700 20px Cairo, Inter, sans-serif';
   L.forEach((s,i)=>{if(/^— /.test(s)){x.fillStyle='#0B2F70';x.font='800 22px Cairo, Inter, sans-serif';}else{x.fillStyle=/^نقص/.test(s)?'#B00020':/^فائض/.test(s)?'#2E7D32':'#0F1F3D';x.font='700 20px Cairo, Inter, sans-serif';}x.fillText(s,W-30,130+i*lh);});
-  const pdf=new JS({unit:'pt',format:[W*0.75,H*0.75]});pdf.addImage(cv.toDataURL('image/jpeg',.92),'JPEG',0,0,W*0.75,H*0.75);pdf.save('BDL-compare-'+new Date().toISOString().slice(0,10)+'.pdf');}
-render();
+  const pdf=new JS({unit:'pt',format:[W*0.75,Math.min(H,14400)*0.75]});pdf.addImage(cv.toDataURL('image/jpeg',.92),'JPEG',0,0,W*0.75,H*0.75);pdf.save('BDL-compare-'+new Date().toISOString().slice(0,10)+'.pdf');}
+(async()=>{await restoreSession();render();})();
 </script>
 </body>
 </html>
