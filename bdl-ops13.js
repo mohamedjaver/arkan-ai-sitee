@@ -138,7 +138,7 @@ const hdr=(t,x)=>'<h3><span>'+t+'</span><span>'+(x||'')+'<button onclick="closeO
 const short=v=>v>=1e6?(v/1e6).toFixed(1).replace(/\.0$/,'')+'M':v>=1e3?(v/1e3).toFixed(0)+'K':fmt(v,0);
 const norm=c=>{c=String(c||'AOA').toUpperCase();return /KZ|AKZ|AOA/.test(c)?'AOA':/UM|MRU/.test(c)?'MRU':c;};
 function bounds(){const d0=new Date();d0.setHours(0,0,0,0);let from=null;
-  if(M.range==='today')from=d0;else if(M.range==='2d'){from=new Date(d0);from.setDate(d0.getDate()-1);}else if(M.range==='7d'){from=new Date(d0);from.setDate(d0.getDate()-6);}
+  if(M.range==='today')from=d0;else if(M.range==='2d'){from=new Date(d0);from.setDate(d0.getDate()-1);}else if(M.range==='7d'){from=new Date(d0);from.setDate(d0.getDate()-6);}else if(M.range==='30d'){from=new Date(d0);from.setDate(d0.getDate()-29);}else if(M.range==='custom'&&M.cFrom){from=new Date(M.cFrom);from.setHours(0,0,0,0);}
   return from;}
 
 /* ───── التحميل من المصادر الثلاثة ───── */
@@ -205,6 +205,7 @@ async function load(){
       toast('قُرئ الوارد ✓');return load();
     }
   }catch(e){}
+  if(window.m17&&m17.pre)try{m17.pre(M);}catch(e){}
   matchAll();render();
 }
 /* ───── محرّك المطابقة ───── */
@@ -286,6 +287,7 @@ function render(){
     (pend.length?'<div class="m13status warn">لم تُطابَق جميع الإيصالات — <span class="num">'+pend.length+'</span> إيصال زبون بقيمة <span class="num">'+fmt(sPend,0)+'</span> AOA بلا إيصال مورد مقابل'+(unmatchedSup.length?' · و<span class="num">'+unmatchedSup.length+'</span> إيصال مورد ('+fmt(sUS,0)+' AOA) بلا زبون':'')+'</div>'
       :C.length?'<div class="m13status ok">✓ كل إيصالات الزبائن مطابَقة بإيصالات الموردين'+(unmatchedSup.length?' · يوجد '+unmatchedSup.length+' إيصال مورد فائض ('+fmt(sUS,0)+' AOA)':'')+'</div>':'')+
     '<div class="m13tol"><span>هامش التطابق %</span><input id="m13tol" inputmode="decimal" value="'+M.tol+'"><button onclick="m13.pairs()">تقرير الارتباطات</button><button onclick="m13.archiveOrphans()">أرشفة بلا تسوية</button><button onclick="m13.retol()">إعادة المطابقة</button><button class="pri" onclick="m13.commit()">تثبيت المطابقات</button></div></div>';
+  if(window.m17&&m17.post)try{m17.post(M);}catch(e){console.warn('m17',e);}
 }
 
 function archRow(r){
@@ -551,7 +553,7 @@ async function del(id){const r=(M.cust.concat(M.sup,M.arch||[])).find(x=>x.id===
   }catch(e){}
   if(ok){toast('حُذف ✓ — يمكن رفعه من جديد الآن');load();}else toast('تعذّر الحذف');}
 
-window.m13={toggle:id=>{M.open[id]=!M.open[id];render();},range:r=>{M.range=r;M.open={};load();},retol:async()=>{const b=q('#m13rng');M.tol=Number(q('#m13tol').value)||0;M.open={};toast('جارٍ إعادة المطابقة…');M.loaded=false;await load();toast('أعيدت المطابقة على هامش '+M.tol+'% ✓');},
+window.m13={_M:M,_load:()=>load(),_matchAll:matchAll,_render:render,toggle:id=>{M.open[id]=!M.open[id];render();},range:r=>{M.range=r;M.open={};load();},retol:async()=>{const b=q('#m13rng');M.tol=Number(q('#m13tol').value)||0;M.open={};toast('جارٍ إعادة المطابقة…');M.loaded=false;await load();toast('أعيدت المطابقة على هامش '+M.tol+'% ✓');},
   commit,upload:uploadSheet,manual:manualSheet,files,nameSup,fwdSet,bsup:v=>{if(M.up)M.up.bsup=v.trim();(M.up&&M.up.items||[]).forEach((it,i)=>{it.fwdSup=M.up.bsup;const el=document.querySelector('#m13qi'+i+' input.fs');if(el)el.value=M.up.bsup;});},pairs:pairsReport,edit:(i,k,v)=>{if(M.up&&M.up.items[i])M.up.items[i][k]=v;},bname:v=>{if(!M.up)return;M.up.bname=v.trim();M.up.items.forEach((it,i)=>{it.name=M.up.bname;const el=document.querySelector('#m13qi'+i+' input.nm');if(el)el.value=M.up.bname;});},save,manualSave,del,view:viewItem,arch:archOne,unarch:unarchOne,archiveOrphans,reload:()=>load()};
 /* التبويب + التحديث */
 const G=window.go;window.go=function(t){G.apply(this,arguments);if(t==='books'){ensure();if(!M.loaded)load();}};

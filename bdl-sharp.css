@@ -1,6 +1,6 @@
 /* bdl-sharp.css — Build 1152: هوية بنكية بزوايا حادة 90° في كل نوافذ التطبيق وبطاقاته وأزراره وشيتاته.
    الاستثناءات الوحيدة: أعلام العملات (صور دائرية بطبيعتها) ونقاط الحالة. */
 *,*::before,*::after{border-radius:0!important}
-.p10fw,.p10fw::before,.p10fw::after,.p10fw img,.p10dot,.sync i,.cflag,.oppipe .d{border-radius:50%!important}
+.p10fw,.p10fw::before,.p10fw::after,.p10fw img,.p10dot,.sync i,.cflag,.oppipe .d,.m17d{border-radius:50%!important}
 /* تبويب «مركز المطابقة» في سطر واحد */
 .tabs button{white-space:nowrap;font-size:12.5px;padding:11px 2px}
