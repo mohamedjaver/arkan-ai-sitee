@@ -28,6 +28,7 @@ create table if not exists bdl_cmp_receipts(
   created_at    timestamptz not null default now(),
   updated_at    timestamptz not null default now()
 );
+alter table bdl_cmp_receipts add column if not exists phone text;   -- هاتف الجهة (Build 1240)
 create unique index if not exists ux_cmp_owner_fp on bdl_cmp_receipts(owner_id, fp);
 create index if not exists ix_cmp_owner_side_ref on bdl_cmp_receipts(owner_id, side, ref) where ref <> '';
 create index if not exists ix_cmp_owner_msg on bdl_cmp_receipts(owner_id, msg_at desc);
