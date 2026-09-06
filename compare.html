@@ -108,7 +108,9 @@ table{width:100%;border-collapse:collapse;font-size:12px}th{background:#F3F7FD;c
 'use strict';
 const $=s=>document.querySelector(s);
 const S={cust:[],sup:[],excl:[],link:false,selC:null,selS:null,seq:0,side:null,lim:{},rep:'period'};
-let _rt=null;function renderSoon(){if(_rt)return;_rt=setTimeout(()=>{_rt=null;render();},350);}
+let _rt=null;function typing(){const a=document.activeElement;return a&&(a.tagName==='INPUT'||a.tagName==='TEXTAREA')&&a.closest('.r');}
+function renderSoon(){if(_rt)return;_rt=setTimeout(()=>{_rt=null;if(typing()){S.dirty=true;return;}render();},1200);}
+document.addEventListener('focusout',()=>{if(S.dirty){S.dirty=false;setTimeout(render,150);}});
 const fmt=(n,d)=>{n=Number(n);return isFinite(n)?n.toLocaleString('en-US',{maximumFractionDigits:d==null?0:d}):'—';};
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const toast=m=>{const t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(toast._t);toast._t=setTimeout(()=>t.classList.remove('on'),2200);};
@@ -283,7 +285,7 @@ function rematch(reset){
   render();
 }
 function linkMode(){S.link=!S.link;S.selC=S.selS=null;render();toast(S.link?'اختر إيصال زبون ثم إيصال مورد':'انتهى وضع الربط');}
-function tap(id){const r=find(id);if(!r)return;if(!S.link){r.edit=!r.edit;render();return;}
+function tap(id){const r=find(id);if(!r)return;if(!S.link){r.edit=!r.edit;render(true);return;}
   if(r.side==='cust')S.selC=S.selC===id?null:id;else S.selS=S.selS===id?null:id;render();}
 function link(){const c=find(S.selC),s=find(S.selS);if(!c||!s)return;
   if(c.matched){c.matched.matched=null;}if(s.matched){s.matched.matched=null;s.matched.how='';}
@@ -293,7 +295,7 @@ function unlink(id){const r=find(id);if(!r||!r.matched)return;const o=r.matched;
 /* ───── العرض ───── */
 const HOW={ref:'رقم العملية',amount:'المبلغ مطابق',approx:'ضمن الهامش',manual:'ربط يدوي'};
 function card(r){const ok=!!r.matched,sel=r.id===S.selC||r.id===S.selS;
-  return '<div class="r '+(ok?'ok':'pend')+(sel?' sel':'')+'" onclick="tap(\''+r.id+'\')">'+
+  return '<div class="r '+(ok?'ok':'pend')+(sel?' sel':'')+'" id="c-'+r.id+'" onclick="tap(\''+r.id+'\')">'+
     '<button class="x" onclick="event.stopPropagation();del(\''+r.id+'\')">حذف</button>'+(r.url?'<img src="'+r.url+'" loading="lazy" onclick="event.stopPropagation();openFile(\''+r.id+'\')">':(r.srv&&!r.pdf)?'<img src="'+r.srv+'" loading="lazy" onclick="event.stopPropagation();openFile(\''+r.id+'\')">':(r.pdf||r.srv)?'<span style="float:inline-end;margin-inline-start:10px;width:84px;height:84px;border:1px solid var(--line);display:grid;place-items:center;font:800 12px Inter,sans-serif;color:var(--red);cursor:pointer" onclick="event.stopPropagation();openFile(\''+r.id+'\')">'+(r.pdf?'PDF':'صورة')+'</span>':'')+
     ((r.file||r.hasFile)?'<button class="x" style="color:var(--navy);float:inline-start" onclick="event.stopPropagation();openFile(\''+r.id+'\')">'+(r.pdf?'فتح PDF':'فتح الصورة')+'</button>':'')+'<div class="t"><span class="st '+(ok?'ok':'pend')+'">'+(r.reading?(S.busy?'جارٍ القراءة…':'بانتظار القراءة'):ok?'مطابَق ✓':r.review?'يحتاج مراجعة':'بلا مقابل')+'</span><span class="a" style="'+(r.amount?'':'color:var(--red)')+'">'+(r.amount?fmt(r.amount)+' '+esc(r.ccy):'اكتب المبلغ')+'</span></div>'+
     '<div class="m">'+esc(r.who||'—')+' · '+esc(r.ref||'بلا مرجع')+' · '+esc(r.bank||'—')+' · <span class="num">'+r.date.toLocaleDateString('en-GB')+'</span>'+(r.fail?' · <span style="color:var(--red)">تعذّرت القراءة — أدخل يدويًا</span>':'')+(r.unsure?' · <span style="color:var(--amber)">غير مؤكد: لا عملة ولا مرجع ولا بنك — تحقق من الصورة</span>':'')+(r.src==='srv'?' · <span style="color:'+(r.verified?'var(--green)':'var(--amber)')+'">'+(r.verified?'Gemini: قراءتان متطابقتان ✓':'Gemini: القراءتان مختلفتان'+(r.alt&&r.alt.amount?' — الثانية: '+fmt(r.alt.amount):'')+' — راجع الصورة')+'</span>':'')+(r.note?'<div style="color:var(--muted);font-weight:600;margin-top:3px;white-space:pre-wrap">'+esc(r.note)+'</div>':'')+(!key(r)&&r.amount&&(r.side==='sup'?S.sup:S.cust).some(x=>x!==r&&!key(x)&&x.amount===r.amount&&x.date.toDateString()===r.date.toDateString())?' · <span style="color:var(--amber)">تنبيه: نفس المبلغ والتاريخ لإيصال آخر بلا مرجع</span>':'')+'</div>'+
@@ -304,7 +306,9 @@ function col(side){const rows=side==='sup'?S.sup:S.cust,ok=rows.filter(r=>r.matc
   return '<div class="col"><div class="ch"><span class="ic '+(side==='sup'?'g':'b')+'">'+(side==='sup'?'OUT':'IN')+'</span><div><b>'+(side==='sup'?'إيصالات الموردين':'إيصالات الزبائن')+'</b><span><span class="num">'+fmt(sum(rows))+'</span> AOA · '+rows.length+' إيصال · مطابَق '+ok+'</span></div></div>'+
     '<div class="up"><button onclick="pickSrv(\''+side+'\')">رفع كبير — الخادم + Gemini</button><button class="ghost" onclick="pick(\''+side+'\')">رفع محلي</button><button class="ghost" onclick="pickWA(\''+side+'\')">واتساب محلي</button><button class="ghost" onclick="manual(\''+side+'\')">يدوي</button></div>'+(S.jobs&&S.jobs.filter(j=>j.side===side&&j.status!=='done').length?'<div id="srvp-'+side+'" style="padding:8px 12px;border-bottom:1px solid var(--line);font-size:12px;font-weight:700;color:var(--navy)"></div>':'')+
     (rows.length?rows.slice(0,S.lim[side]||40).map(card).join('')+(rows.length>(S.lim[side]||40)?'<button class="x" style="width:100%;padding:12px;border-top:1px solid var(--line);color:var(--navy)" onclick="S.lim[\''+side+'\']=(S.lim[\''+side+'\']||40)+60;render()">عرض المزيد ('+(rows.length-(S.lim[side]||40))+' متبقٍ)</button>':''):'<div class="empty">ارفع صور/PDF الإيصالات أو تصدير محادثة واتساب (ZIP / _chat.txt) — تُقرأ تلقائيًا ولا تُحفظ في أي مكان</div>')+(()=>{const ex=(S.excl||[]).filter(r=>r.side===side);if(!ex.length)return '';return '<details style="border-top:1px solid var(--line)"><summary style="padding:10px 12px;font-size:12px;font-weight:800;color:#6A5A8E;cursor:pointer">مستبعدة — ليست إيصالات كوانزا ('+ex.length+')</summary>'+ex.map(r=>'<div class="r" style="cursor:default">'+(r.url?'<img src="'+r.url+'" onclick="openFile(\''+r.id+'\')">':'')+'<div class="t"><span class="st pend">'+esc(r.rccy||'?')+'</span><span class="a" style="font-size:13px">'+(r.amount?fmt(r.amount)+' '+esc(r.rccy||''):'—')+'</span></div><div class="m">'+esc(r.who||'—')+' · '+esc(r.bank||'—')+' · <span class="num">'+r.date.toLocaleDateString('en-GB')+'</span></div><div style="margin-top:6px"><button class="x" style="color:var(--navy);padding:0" onclick="restore(\''+r.id+'\')">هذا إيصال كوانزا — استرجاع</button></div></div>').join('')+'</details>';})()+'</div>';}
-function render(){
+function render(force){
+  if(!force&&typing()){S.dirty=true;return;}
+  const _sy=window.scrollY;
   const def=S.cust.filter(r=>!r.matched),exc=S.sup.filter(r=>!r.matched),ok=S.cust.filter(r=>r.matched);
   const vD=sum(def),vE=sum(exc),vO=sum(ok),tot=vD+vE+vO,net=vE-vD;
   const R=104,C=2*Math.PI*R;let off=0;const arc=(v,col)=>{if(!tot||!v)return '';const d=v/tot*C;const s='<circle cx="125" cy="125" r="'+R+'" fill="none" stroke="'+col+'" stroke-width="16" stroke-dasharray="'+Math.max(0,d-3)+' '+C+'" stroke-dashoffset="'+(-off)+'"/>';off+=d;return s;};
@@ -330,6 +334,7 @@ function render(){
   if(S.link&&c&&s){const dA=AOA(s)-AOA(c),dD=Math.abs(days(s.date)-days(c.date)),pct=Math.max(0,100-Math.abs(dA)/Math.max(AOA(c),AOA(s),1)*100);
     b.style.display='';b.innerHTML='<div class="rr"><div><span>فرق المبلغ</span><b style="color:'+(Math.abs(dA)<1?'#5CE0A3':'#FF7A8A')+'">'+(dA>=0?'+':'−')+fmt(Math.abs(dA))+'</b></div><div><span>فرق الأيام</span><b>'+dD+'</b></div><div><span>نسبة التطابق</span><b style="color:#D4AF37">'+pct.toFixed(1)+'%</b></div></div><div class="aa"><button onclick="link()">ربط الإيصالين ✓</button><button class="g" onclick="S.selC=S.selS=null;render()">إلغاء</button></div>';}
   else b.style.display='none';
+  if(Math.abs(window.scrollY-_sy)>2)window.scrollTo(0,_sy);
   persist();
 }
 /* ───── التقرير الشهري: كل شهر، كل مورد وكل زبون على حدة، والمبالغ مجمّعة ───── */
