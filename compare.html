@@ -236,6 +236,27 @@ async function verifyRead(file,p){const key=(localStorage.getItem('gemKey')||'')
   const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error((j.error&&j.error.message)||('HTTP '+r.status));
   let t=(((j.candidates||[])[0]||{}).content||{parts:[]}).parts.map(x=>x.text||'').join('').replace(/```json|```/g,'').trim();const o=JSON.parse(t.slice(t.indexOf('{'),t.lastIndexOf('}')+1));
   return {amount:KZ(o.amount)||KZ(o.amount_verbatim),verbatim:o.amount_verbatim||'',ref:String(o.reference||'').trim(),date:o.date||''};}
+/* ───── المحرك المدمج: قالب محلي أولًا (PDF بنص) → وإلا Gemini بنداء واحد يحمل النص الحرفي للمبلغ والمرجع
+   → تحقق محلي (تحليل النص الحرفي = المبلغ؟ المرجع ليس IBAN؟) → القراءة الثانية فقط عند الشك. أسرع بنصف النداءات وأدق. ───── */
+const PTNUM=v=>{if(v==null)return null;let x=String(v).replace(/[^\d.,\s]/g,'').trim().replace(/\s+/g,'');if(!x)return null;if(/,\d{1,2}$/.test(x))x=x.replace(/\./g,'').replace(',','.');else if(/\.\d{1,2}$/.test(x)&&!/\.\d{3}(\.|$)/.test(x))x=x.replace(/,/g,'');else x=x.replace(/[.,]/g,'');const n=Number(x);return isFinite(n)&&n>0?n:null;};
+async function gemRead(file){const key=(localStorage.getItem('gemKey')||'').trim();if(!key)return null;
+  const P='اقرأ إيصال التحويل البنكي وأعد JSON فقط:\n{"is_bank_receipt":true,"bank":"","amount":0,"amount_verbatim":"","currency":"","reference":"","reference_verbatim":"","date":"","sender":"","receiver":"","confidence":0}\n'+
+    'قواعد: amount = مبلغ التحويل فقط (Montante/Valor/Importância) كرقم؛ amount_verbatim = نفس السطر كما هو مكتوب حرفيًا مثل "Kz 7 500 000,00" أو "1.000.000,00 KZ".\n'+
+    'reference = رقم العملية (Transacção/Referência/N.º operação/Trs ID) وreference_verbatim نصه الحرفي؛ ليس IBAN (AO06…) ولا رقم حساب (21 رقمًا).\n'+
+    'currency: Kz/AKZ/AOA → "AOA"؛ وإن كان USDT/USDC/EUR/USD/MRU اكتبها كما هي.\n'+
+    'is_bank_receipt=false لرسائل المحادثة أو الصور برموز تعبيرية أو لقطات العملات الرقمية أو الإيصالات الموريتانية (Bankily/BPM/Masrvi). confidence 0–100.';
+  const mime=file.type||'image/jpeg';const b64=await b64Of(file);
+  const r=await Promise.race([fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key='+encodeURIComponent(key),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:P},{inline_data:{mime_type:mime,data:b64}}]}],generationConfig:{temperature:0,maxOutputTokens:320,responseMimeType:'application/json'}})}),new Promise((_,j)=>setTimeout(()=>j('timeout'),45000))]);
+  const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error((j.error&&j.error.message)||('HTTP '+r.status));
+  let t=(((j.candidates||[])[0]||{}).content||{parts:[]}).parts.map(x=>x.text||'').join('').replace(/```json|```/g,'').trim();const g=JSON.parse(t.slice(t.indexOf('{'),t.lastIndexOf('}')+1));
+  const amount=numV(g.amount),vb=PTNUM(g.amount_verbatim);let ref=String(g.reference||'').trim();if(/^AO\d{2}/i.test(ref)||ref.replace(/\D/g,'').length===21)ref='';
+  const consistent=amount!=null&&(vb==null||Math.abs(vb-amount)<0.5);
+  return {amount:consistent?amount:(vb!=null?vb:amount),ccy:g.currency||null,txn:ref||null,bank:g.bank||null,date:g.date||null,name:g.sender||'',receiver:g.receiver||'',conf:Number(g.confidence)||0,isReceipt:g.is_bank_receipt!==false,verbatim:g.amount_verbatim||'',consistent,eng:'gemini-merged'};}
+async function smartRead(r){/* PDF بنص: القالب المحلي أولًا (صفر نداءات) */
+  if(r.pdf&&window.ArkanRead&&ArkanRead.pdfText&&ArkanRead.liteParse){try{const txt=await ArkanRead.pdfText(r.file);const tp=txt&&ArkanRead.liteParse(txt);if(tp&&tp.amount&&tp.reference&&(tp.confidence||0)>=85)return {amount:+tp.amount,ccy:tp.currency||'AOA',txn:tp.reference,bank:tp.bank||null,date:tp.date||null,name:tp.name||'',conf:tp.confidence,isReceipt:true,consistent:true,eng:'template'};}catch(e){}}
+  let f=r.file;if(r.pdf){const png=await pdfPage(r.file);if(png){f=png;r.thumb=r.thumb||await thumbOf(png);if(r.thumb&&!r.url)r.url=URL.createObjectURL(r.thumb);}}
+  try{const g=await gemRead(f);if(g)return g;}catch(e){if(/API key|quota|429|403/i.test(String(e.message||e)))S.gemErr=String(e.message||e).slice(0,120);}
+  return window.ArkanRead?await Promise.race([ArkanRead.readAmount(r.file),new Promise((_,j)=>setTimeout(()=>j('timeout'),45000))]):null;}
 const BATCH=50;
 async function readPending(side){if(S.busy&&Date.now()-(S.lastTick||0)<120000){toast('القراءة جارية بالفعل… ('+(S.prog||0)+' في هذه الدفعة)');return;}S.busy=true;S.lastTick=Date.now();S.prog=0;S.miss=0;
   if(!(localStorage.getItem('gemKey')||'').trim())toast('لا يوجد مفتاح Gemini — القراءة ستعتمد على OCR البطيء. اضغط «مفتاح Gemini» لإدخاله');
@@ -244,11 +265,13 @@ async function readPending(side){if(S.busy&&Date.now()-(S.lastTick||0)<120000){t
       const T=(f)=>Promise.race([ArkanRead.readAmount(f),new Promise((_,j)=>setTimeout(()=>j('timeout'),45000))]);
       if(!r.file){try{r.file=await IDB.get('files',r.id);}catch(e){}}
       if(!r.file){S.miss++;(r.flags=r.flags||[]).push('الملف الأصلي مفقود من التخزين المحلي — احذف البطاقة وأعد رفع الإيصال');throw new Error('nofile');}
-      let p=window.ArkanRead?await T(r.file):null;
-      if(r.pdf){const png=await pdfPage(r.file);if(png){r.thumb=await thumbOf(png);if(r.thumb)r.url=URL.createObjectURL(r.thumb);if(window.ArkanRead&&(!p||!p.amount)){try{const p2=await T(png);if(p2&&p2.amount)p=Object.assign({},p||{},p2,{eng:(p2.eng||'')+'+pdf-page'});}catch(e){}}}}
+      let p=await smartRead(r);
+      if(p&&p.isReceipt===false)r.notReceipt=true;if(p&&p.receiver)r.receiver=p.receiver;
       if(p){r.amount=p.amount||null;r.rccy=p.ccy?norm(p.ccy):null;r.ccy=r.rccy||'AOA';r.ref=p.txn||'';if(!r.who&&!r.partySet)r.who=p.name||p.receiver||'';r.bank=p.bank||r.bank;const d=p.date&&new Date(p.date);if(d&&!isNaN(d)&&r.src!=='wa-img')r.date=d;r.eng=p.eng;
         /* القراءة الثانية المستقلة — كما في الخادم: المبلغ يُكتب فقط عند اتفاق القراءتين */
-        if(r.amount&&r.ccy==='AOA'&&!isCrypto(r)){let v=null;try{v=await Promise.race([verifyRead(r.file,p),new Promise((_,j)=>setTimeout(()=>j('timeout'),30000))]);}catch(e){v=null;}
+        /* القراءة الثانية فقط عند الشك: النص الحرفي لا يطابق الرقم، أو ثقة < 90، أو لا مرجع */
+        if(p.eng==='template'||(p.consistent&&(p.conf||0)>=90&&r.ref)){r.verified=true;}
+        else if(r.amount&&r.ccy==='AOA'&&!isCrypto(r)){let v=null;try{v=await Promise.race([verifyRead(r.file,p),new Promise((_,j)=>setTimeout(()=>j('timeout'),30000))]);}catch(e){v=null;}
           if(v){const same=v.amount!=null&&Math.abs(v.amount-r.amount)<0.5;const refA=String(r.ref||'').replace(/\s+/g,'').toLowerCase(),refB=String(v.ref||'').replace(/\s+/g,'').toLowerCase();
             if(same){r.verified=true;if(!r.ref&&v.ref&&!/^AO\d{2}/i.test(v.ref))r.ref=v.ref.slice(0,64);}
             else{r.alt={amount:v.amount,verbatim:v.verbatim};r.amountRead=r.amount;r.amount=null;r.review=true;r.edit=true;(r.flags=r.flags||[]).push('قراءتان مختلفتان: '+fmt(r.amountRead)+' / '+(v.amount!=null?fmt(v.amount):'؟')+(v.verbatim?' («'+v.verbatim+'»)':'')+' — اكتب المبلغ من الصورة');r.dualFlag=true;}
