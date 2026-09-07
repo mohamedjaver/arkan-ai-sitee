@@ -317,7 +317,7 @@ $('#fi').addEventListener('change',async function(){const list=[...this.files];i
 const SRV='https://arkan-ai-site-production.up.railway.app';
 function tokenOf(){try{const j=JSON.parse(localStorage.getItem('arkan_sb_jwt')||'null');if(j&&j.token&&j.exp>Math.floor(Date.now()/1000)+60)return j.token;}catch(e){}return null;}
 function pickSrv(side){if(needParty(side))return;S.side=side;$('#fs').value='';$('#fs').click();}
-async function srvUpload(side0,f){S.side=side0;const tok=tokenOf();if(!tok){toast('سجّل الدخول في «حسابي» أولًا ثم عد لهذه الصفحة');return;}
+async function srvUpload(side0,f){S.side=side0;if(!await zipSeen(f,side0))return;const tok=tokenOf();if(!tok){toast('سجّل الدخول في «حسابي» أولًا ثم عد لهذه الصفحة');return;}
   const key=(localStorage.getItem('gemKey')||'').trim();if(!key){const k=prompt('مفتاح Gemini (يُحفظ على هذا الجهاز فقط):');if(!k)return;localStorage.setItem('gemKey',k.trim());}
   const side=S.side;toast('جارٍ رفع '+f.name+' ('+(f.size/1048576).toFixed(1)+' MB)…');
   try{const r=await new Promise((res,rej)=>{const x=new XMLHttpRequest();x.open('POST',SRV+'/compare/job');x.setRequestHeader('Authorization','Bearer '+tokenOf());x.setRequestHeader('x-gemini-key',(localStorage.getItem('gemKey')||'').trim());x.setRequestHeader('x-file-name',f.name);x.setRequestHeader('x-side',side);x.setRequestHeader('Content-Type','application/octet-stream');
@@ -344,17 +344,34 @@ async function pollJobs(){clearTimeout(_pj);const open=(S.jobs||[]).filter(j=>j.
     if(d.results.length)rematch(false);}catch(e){}}
   render();if((S.jobs||[]).some(j=>j.status!=='done'&&j.status!=='error'&&j.status!=='cancelled'))_pj=setTimeout(pollJobs,3000);else toast('اكتملت قراءة الخادم — راجع «يحتاج مراجعة» ثم المطابقة');}
 async function feedback(r){if(r.src!=='srv'||!r.amount||!tokenOf())return;try{await fetch(SRV+'/compare/feedback',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+tokenOf()},body:JSON.stringify({bank:r.bank,amount:r.amount,ccy:r.ccy,ref:r.ref,date:r.date.toISOString().slice(0,16),hint:'corrected by owner · '+(r.name||'')})});r.verified=true;r.review=false;}catch(e){}}
+/* ───── سجل ملفات ZIP المرفوعة: نفس الملف لا يُرفع مرتين إلا بموافقة ومسح كامل لبقاياه ───── */
+async function zipSeen(f,side){const key=f.name+'|'+f.size;let reg={};try{reg=(await IDB.get('state','zips'))||{};}catch(e){}const prev=reg[key];
+  if(prev){const n=(prev.fps||[]).length;const ok=confirm('هذا الملف رُفع سابقًا ('+prev.name+' · '+new Date(prev.when).toLocaleString('en-GB')+' · '+n+' إيصال). رفعه مجددًا سيمسح كل بقاياه أولًا: من الجلسة، ومن الدفتر الدائم، وقيود الدفاتر المرتبطة به. متابعة؟');
+    if(!ok)return false;await wipeFps(prev.fps||[]);}
+  S._zipKey=key;S._zipSide=side;return true;}
+async function zipDone(fps){try{const reg=(await IDB.get('state','zips'))||{};reg[S._zipKey]={name:S.party[S._zipSide]&&S.party[S._zipSide].who||'',side:S._zipSide,when:Date.now(),fps};await IDB.put('state','zips',reg);}catch(e){}}
+async function wipeFps(fps){if(!fps.length)return;const set=new Set(fps);
+  /* قيود الدفاتر: احذف القيد إن كانت كل إيصالاته من هذا الملف، وإلا اخصم مبلغها */
+  try{const rows=[];for(let i=0;i<fps.length;i+=150){rows.push(...await sbq('/bdl_cmp_receipts?select=fp,amount,book_entry_id&fp=in.('+fps.slice(i,i+150).map(x=>'"'+x+'"').join(',')+')'));}
+    const byE={};rows.forEach(x=>{if(x.book_entry_id)(byE[x.book_entry_id]=byE[x.book_entry_id]||[]).push(x);});
+    for(const eid in byE){try{const all=await sbq('/bdl_cmp_receipts?select=fp,amount&book_entry_id=eq.'+eid);if(all.every(x=>set.has(x.fp))){await sbq('/bdl_book_entries?id=eq.'+eid,{method:'DELETE',headers:{Prefer:'return=minimal'}});}
+      else{const cur=(await sbq('/bdl_book_entries?select=amount&id=eq.'+eid))[0];if(cur){const na=Math.max(0,Number(cur.amount)-byE[eid].reduce((a,x)=>a+Number(x.amount||0),0));await sbq('/bdl_book_entries?id=eq.'+eid,{method:'PATCH',headers:{Prefer:'return=minimal'},body:{amount:na}});}}}catch(e){}}
+    for(let i=0;i<fps.length;i+=150){await sbq('/bdl_cmp_receipts?fp=in.('+fps.slice(i,i+150).map(x=>'"'+x+'"').join(',')+')',{method:'DELETE',headers:{Prefer:'return=minimal'}});}
+  }catch(e){console.warn('wipeFps',e);}
+  const drop=r=>set.has(r.fp);S.cust.concat(S.sup).filter(drop).forEach(r=>{if(r.matched){r.matched.matched=null;r.matched.how='';}IDB.del('files',r.id).catch(()=>{});IDB.del('files',r.id+'_t').catch(()=>{});});
+  S.cust=S.cust.filter(r=>!drop(r));S.sup=S.sup.filter(r=>!drop(r));S.excl=(S.excl||[]).filter(r=>!drop(r));fps.forEach(fp=>{delete LED.idx[fp];});
+  toast('مُسحت بقايا الملف السابق: '+fps.length+' إيصال');render(true);persist();}
 /* ───── استيراد محادثة واتساب (ZIP أو _chat.txt) — لا يُحفظ شيء ───── */
 function pickWA(side){S.side=side;$('#fw').value='';$('#fw').click();}
 const OWNER_RX=/javer|mstr|arkan|bdl|لبدال|36295050/i;
 function nameFromZip(fn){let m=String(fn||'').replace(/\.zip$|\.txt$/i,'').match(/whatsapp chat (?:with|-|—)\s*(.+)$/i)||String(fn||'').match(/محادثة واتساب مع\s*(.+?)(?:\.zip|\.txt)?$/i)||String(fn||'').match(/chat[_ -]?(?:with)?[_ -]?(.+?)(?:\.zip|\.txt)?$/i);return m?m[1].trim().replace(/[_]+/g,' '):'';}
 function nameFromMsgs(msgs){const c={};msgs.forEach(m=>{const w=(m.who||'').trim();if(!w||OWNER_RX.test(w))return;c[w]=(c[w]||0)+1;});return Object.keys(c).sort((a,b)=>c[b]-c[a])[0]||'';}
 async function ensurePartyWA(side,name){const P=S.party[side]||(S.party[side]={who:'',phone:''});
-  if(!(P.who||'').trim()&&name){P.who=name;}
+  if(name&&name.toLowerCase()!==(P.who||'').trim().toLowerCase()){P.who=name;P.phone='';}
   if(!(P.who||'').trim()){const n=prompt(side==='sup'?'اسم المورد لهذه المحادثة:':'اسم الزبون لهذه المحادثة:');if(!n)return false;P.who=n.trim();}
   if((P.phone||'').replace(/\D/g,'').length<8){const ph=prompt('رقم هاتف «'+P.who+'»:');if(!ph)return false;P.phone=ph.replace(/[^\d+]/g,'');}
   render(true);return true;}
-$('#fw').addEventListener('change',async function(){const f=this.files[0];if(!f)return;if(!await ensurePartyWA(S.side,nameFromZip(f.name)))return;if(f.size>400*1048576){toast('الملف '+(f.size/1048576).toFixed(0)+' MB — يُرفع تلقائيًا عبر الخادم');this.value='';srvUpload(S.side,f);return;}if(f.size>120*1048576)toast('ملف كبير ('+(f.size/1048576).toFixed(0)+' MB) — القراءة محليًا ستستغرق وقتًا؛ إن سقطت الصفحة استخدم رفع الخادم');try{await importWA(S.side,f);}catch(e){console.error(e);toast('تعذّر قراءة الملف: '+(e.message||e));}});
+$('#fw').addEventListener('change',async function(){const f=this.files[0];if(!f)return;if(!await zipSeen(f,S.side))return;if(!await ensurePartyWA(S.side,nameFromZip(f.name)))return;if(f.size>400*1048576){toast('الملف '+(f.size/1048576).toFixed(0)+' MB — يُرفع تلقائيًا عبر الخادم');this.value='';srvUpload(S.side,f);return;}if(f.size>120*1048576)toast('ملف كبير ('+(f.size/1048576).toFixed(0)+' MB) — القراءة محليًا ستستغرق وقتًا؛ إن سقطت الصفحة استخدم رفع الخادم');try{await importWA(S.side,f);}catch(e){console.error(e);toast('تعذّر قراءة الملف: '+(e.message||e));}});
 const WA_LINE=/^\u200e?\[?(\d{1,2})[\/.](\d{1,2})[\/.](\d{2,4}),?\s+(\d{1,2}):(\d{2})(?::(\d{2}))?\s*([AP]M)?\]?\s*(?:-\s*)?([^:]{1,60}?):\s(.*)$/;
 function waDate(d,m,y,h,mi,ap){y=+y;if(y<100)y+=2000;h=+h;if(ap){if(/P/i.test(ap)&&h<12)h+=12;if(/A/i.test(ap)&&h===12)h=0;}return new Date(y,+m-1,+d,h,+mi);}
 function waAmount(t){const s=t.replace(/[\u200e\u200f]/g,'').replace(/\+\d[\d\s-]{6,}\d/g,' ');if(/^\+?\d[\d\s-]{7,}$/.test(s.trim()))return null;
@@ -394,7 +411,7 @@ async function importWA(side,file){
   /* صور لم تُذكر في النص (تصدير أندرويد بلا أسماء) */
   for(const k in media){if(!media[k].used){const blob=await media[k].entry.async('blob');imgs.push(new File([blob],k,{type:/pdf$/i.test(k)?'application/pdf':'image/jpeg'}));}}
   render();
-  if(imgs.length){const added=await addFiles(side,imgs,'واتساب · صورة');nI=added.length;S.stop=false;readPending(side);}
+  if(imgs.length){const added=await addFiles(side,imgs,'واتساب · صورة');nI=added.length;zipDone(added.map(r=>r.fp).filter(Boolean));S.stop=false;readPending(side);}
   rematch();
   toast('واتساب: '+nI+' إيصال صورة قُرئ'+(nT?' · '+nT+' مبلغ كوانزا من النص':'')+(nDup?' · '+nDup+' مكرر رُفض':'')+' — راجع الحقول الحمراء');}
 async function pdfPage(f){try{if(!window.pdfjsLib){await new Promise((res,rej)=>{const sc=document.createElement('script');sc.src='vendor/pdf.min.js';sc.onload=res;sc.onerror=rej;document.head.appendChild(sc);});}
@@ -520,7 +537,7 @@ async function postParty(){if(PP.busy){toast('جارٍ الحفظ… انتظر'
       }catch(e){console.warn('move',oid,e);}}
     /* التسمية بعد نجاح القيد — المبالغ والمراجع والتنقيح تبقى كما هي */
     for(const r of rows){r.srcWho=r.srcWho||r.who;r.who=who;if(phone)r.phone=phone;r.manual=true;r.book_entry_id=eid;}
-    S.party[PP.side]={who,phone};$('#pp').style.display='none';render(true);toast('حُفظ '+rows.length+' إيصال · '+fmt(tot)+' AOA في دفتر «'+bk.name+'» ✓ — تبقى في المطابقة');
+    S.party[PP.side]={who:'',phone:''};$('#pp').style.display='none';render(true);toast('حُفظ '+rows.length+' إيصال · '+fmt(tot)+' AOA في دفتر «'+bk.name+'» ✓ — وصُفّرت خانة الطرف للدفعة التالية');
     for(const r of rows){await LED.patch(r,Object.assign({who,manual:true,book_entry_id:eid},phone?{phone}:{}));}
   }catch(e){toast('تعذّر الحفظ: '+e.message);}finally{PP.busy=false;}}
 /* ───── تفتيش شامل: صفحة المطابقة ↔ الدفاتر ───── */
