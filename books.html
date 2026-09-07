@@ -258,6 +258,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
   </div>
 </header>
 <main class="wrap">
+<a id="duesBar" href="dues.html" style="display:none;margin:10px 0;padding:12px 14px;background:#FFF1F1;border:1px solid #F1C4CA;border-radius:14px;color:#B00020;font-weight:800;font-size:13px;text-decoration:none;justify-content:space-between;align-items:center"><span id="duesTxt">ذمم مفتوحة</span><span>صفحة الذمم ↗</span></a>
   <div class="search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="q" placeholder="ابحث بالاسم أو رقم الهاتف" autocomplete="off"></div>
   <div class="chips" id="kindChips"><button data-k="all" class="on">الكل</button><button data-k="customer">الزبائن</button><button data-k="supplier">الموردون</button><button data-k="cash">الصندوق</button><button data-k="shared">مشتركة معي</button></div>
   <div class="sec"><b>الدفاتر</b><small id="secN"></small></div>
@@ -955,5 +956,6 @@ function pinSheet(){var has=!!localStorage.getItem('bdl_pin');
 
 if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').catch(function(){});}
 </script>
+<script>/* شريط الذمم: إيصالات زبائن بلا مورد من دفتر المقارنة */(async function(){try{const j=JSON.parse(localStorage.getItem('arkan_sb_jwt')||'null');if(!j||!j.token)return;const r=await fetch('https://vyxzlazwpbstigcqvizb.supabase.co/rest/v1/bdl_cmp_receipts?select=amount,who&side=eq.cust&matched_fp=is.null&amount=not.is.null&limit=5000',{headers:{apikey:'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ5eHpsYXp3cGJzdGlnY3F2aXpiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU5MTU5OTcsImV4cCI6MjEwMTQ5MTk5N30.fxMt_jH4z8t7uVnFLLHyNobu6zsgu_ZwVGLibuqWj38',Authorization:'Bearer '+j.token}});if(!r.ok)return;const rows=await r.json();if(!rows.length)return;const tot=rows.reduce((a,x)=>a+Number(x.amount||0),0),who=new Set(rows.map(x=>x.who)).size;const el=document.getElementById('duesBar');document.getElementById('duesTxt').textContent='ذمم مفتوحة: '+rows.length+' إيصال زبائن بلا مورد · '+tot.toLocaleString('en-US',{maximumFractionDigits:0})+' AOA · '+who+' جهة';el.style.display='flex';}catch(e){}})();</script>
 </body>
 </html>

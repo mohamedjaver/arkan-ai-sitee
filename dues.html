@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover"><meta name="theme-color" content="#0B2F70">
+<title>BDL — ذمم الإيصالات (زبائن بلا مورد)</title>
+<link rel="icon" href="favicon.svg?v=bdl7"><link rel="apple-touch-icon" href="apple-touch-icon.png?v=bdl7">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;700;800&family=Inter:wght@600;700;800&display=swap" rel="stylesheet">
+<script src="arkan-gate.js?v=5"></script>
+<script>(function(){try{var s=JSON.parse(localStorage.getItem('arkan_session')||'null');var ph=String(s&&s.phone||'').replace(/\D/g,'');if(!/36295050$/.test(ph)&&localStorage.getItem('arkan_admin_dev')!=='1')location.replace('account.html?next=dues.html');}catch(e){location.replace('index.html');}})();</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+<script src="arkan-nav.js?v=14" defer></script>
+<style>
+:root{--navy:#0B2F70;--blue:#1E63D6;--gold:#D4AF37;--ink:#0F1F3D;--muted:#5A6E92;--line:#D6E4F7;--bg:#EEF3FB;--red:#B00020;--green:#2E7D32;--amber:#ED6C02}
+*{box-sizing:border-box}html,body{overflow-x:hidden;max-width:100vw}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Cairo","Inter",sans-serif;padding-bottom:90px}
+.num{font-family:"Inter",sans-serif;font-weight:700}
+header{background:var(--navy);color:#fff;padding:calc(env(safe-area-inset-top) + 12px) 14px 12px;display:flex;align-items:center;gap:10px}
+header img{width:36px;height:36px}header h1{margin:0;font-size:16px;font-weight:800;flex:1}header small{font-size:10.5px;opacity:.85;display:block;font-weight:700}
+main{padding:12px}
+.hero{background:linear-gradient(135deg,#123B85 0%,#0B2F70 55%,#071E4A 100%);color:#fff;border-radius:22px;padding:18px;position:relative;overflow:hidden;box-shadow:0 16px 34px rgba(7,30,74,.25)}
+.hero:after{content:"";position:absolute;width:300px;height:300px;border-radius:50%;background:rgba(255,255,255,.07);top:-110px;left:-60px}
+.hero .t{font-size:14px;font-weight:800;opacity:.9}.hero .n{font:800 40px/1 Inter,sans-serif;margin-top:6px;color:#FF7A8A}.hero .n small{font-size:16px;margin-inline-start:6px;color:#fff;opacity:.9}
+.hero .row{display:grid;grid-template-columns:1fr 1fr 1fr;border-top:1px solid rgba(255,255,255,.25);padding-top:10px;margin-top:12px;text-align:center}.hero .row span{display:block;font-size:11px;opacity:.85;font-weight:700}.hero .row b{display:block;font:800 18px Inter,sans-serif;margin-top:3px}
+.tools{display:flex;gap:6px;margin:10px 0;flex-wrap:wrap;align-items:center}
+.tools button,.tools a{border:1px solid var(--line);background:#fff;color:var(--navy);font:800 12px inherit;font-family:inherit;padding:10px 12px;border-radius:12px;text-decoration:none;cursor:pointer}
+.tools button.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+.tools input{flex:1;min-width:120px;border:1px solid var(--line);padding:10px;border-radius:12px;font:700 13px inherit;font-family:inherit}
+.p{background:#fff;border:1px solid var(--line);border-radius:18px;margin-bottom:12px;overflow:hidden}
+.ph{padding:12px 14px;display:flex;justify-content:space-between;align-items:center;gap:8px;background:#FFF1F1;border-bottom:1px solid #F1C4CA}
+.ph b{font-size:15px}.ph .num{color:var(--red);font-size:16px}.ph small{display:block;font-size:11px;color:var(--muted);font-weight:700}
+.ph .wa{background:#25D366;color:#fff;border:0;border-radius:10px;font:800 12px inherit;font-family:inherit;padding:9px 12px;white-space:nowrap}
+.r{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;padding:10px 14px;border-bottom:1px solid var(--line);font-size:12.5px}
+.r img{width:48px;height:48px;object-fit:cover;border-radius:8px;border:1px solid var(--line);background:#fff}
+.r .a{font:800 15px Inter,sans-serif;color:var(--red)}.r .m{color:var(--muted);font-weight:700;font-size:11.5px;margin-top:3px}
+.age{font:800 10.5px Inter,sans-serif;padding:4px 8px;border-radius:999px;color:#fff;white-space:nowrap}
+.empty{padding:22px;text-align:center;color:var(--muted);font-weight:700}
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:90px;background:var(--ink);color:#fff;padding:10px 14px;border-radius:12px;font-size:12.5px;font-weight:700;opacity:0;transition:.2s;z-index:99}#toast.on{opacity:1}
+</style></head>
+<body>
+<header><img src="favicon.svg?v=bdl7" alt=""><div><h1>ذمم الإيصالات</h1><small>إيصالات زبائن لم يصل مقابلها من الموردين — تُطالَب حتى تُغلق</small></div></header>
+<main>
+<div class="hero" id="hero"></div>
+<div class="tools"><input id="q" placeholder="بحث: اسم / هاتف / مرجع / مبلغ" oninput="render()"><button id="fAll" class="on" onclick="setAge(0)">الكل</button><button onclick="setAge(1)">منذ يوم</button><button onclick="setAge(7)">منذ أسبوع</button><button onclick="setAge(30)">منذ شهر</button><button onclick="exportPDF()">تقرير PDF</button><a href="compare.html">صفحة المطابقة</a><a href="books.html">الدفاتر</a></div>
+<div id="list"></div>
+</main>
+<div id="toast"></div>
+<script>
+'use strict';
+const SBU='https://vyxzlazwpbstigcqvizb.supabase.co',SBR=SBU+'/rest/v1',ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ5eHpsYXp3cGJzdGlnY3F2aXpiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU5MTU5OTcsImV4cCI6MjEwMTQ5MTk5N30.fxMt_jH4z8t7uVnFLLHyNobu6zsgu_ZwVGLibuqWj38';
+const $=s=>document.querySelector(s);const fmt=n=>{n=Number(n);return isFinite(n)?n.toLocaleString('en-US',{maximumFractionDigits:0}):'—';};
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const toast=m=>{const t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(toast._t);toast._t=setTimeout(()=>t.classList.remove('on'),2200);};
+function tokenOf(){try{const j=JSON.parse(localStorage.getItem('arkan_sb_jwt')||'null');if(j&&j.token&&j.exp>Math.floor(Date.now()/1000)+60)return j.token;}catch(e){}return null;}
+async function sbq(path,opt){opt=opt||{};const t=tokenOf();if(!t)throw new Error('session');const r=await fetch(SBR+path,Object.assign({},opt,{headers:Object.assign({apikey:ANON,Authorization:'Bearer '+t,'Content-Type':'application/json'},opt.headers||{}),body:opt.body?JSON.stringify(opt.body):undefined}));if(!r.ok)throw new Error((await r.text()).slice(0,140));const tx=await r.text();return tx?JSON.parse(tx):null;}
+const days=d=>Math.max(0,Math.floor((Date.now()-new Date(d).getTime())/864e5));const ageC=n=>n<=1?'#B00020':n<=7?'#ED6C02':n<=30?'#E6B800':'#1E63D6';
+let ROWS=[],AGE=0,URLS={};
+async function load(){if(!tokenOf()){toast('سجّل الدخول في «حسابي» أولًا');return;}
+  try{ROWS=await sbq('/bdl_cmp_receipts?select=id,fp,amount,ccy,ref,who,phone,bank,msg_at,receipt_url,review&side=eq.cust&matched_fp=is.null&amount=not.is.null&order=msg_at.asc&limit=20000');}catch(e){toast('تعذّر التحميل: '+e.message);ROWS=[];}
+  render();}
+function setAge(n){AGE=n;document.querySelectorAll('.tools button').forEach(b=>b.classList.remove('on'));(event&&event.target||$('#fAll')).classList.add('on');render();}
+function groups(){const q=($('#q').value||'').trim().toLowerCase();const G={};
+  ROWS.filter(r=>days(r.msg_at)>=AGE).filter(r=>!q||[r.who,r.phone,r.ref,r.bank,String(r.amount)].join(' ').toLowerCase().includes(q)).forEach(r=>{const k=(r.who||'بلا اسم')+(r.phone?' · '+r.phone:'');(G[k]=G[k]||{k,who:r.who||'بلا اسم',phone:r.phone||'',rows:[]}).rows.push(r);});
+  return Object.values(G).map(g=>Object.assign(g,{tot:g.rows.reduce((a,r)=>a+Number(r.amount||0),0),oldest:Math.max(...g.rows.map(r=>days(r.msg_at)))})).sort((a,b)=>b.tot-a.tot);}
+function waMsg(g){const L=['السلام عليكم '+g.who+'،','بخصوص التحويلات التالية لم يصل لنا مقابلها من المورد حتى الآن:',...g.rows.slice(0,40).map(r=>'• '+new Date(r.msg_at).toLocaleDateString('en-GB')+' — '+fmt(r.amount)+' Kz'+(r.ref?' — #'+r.ref:'')),'الإجمالي: '+fmt(g.tot)+' Kz ('+g.rows.length+' إيصال).','نرجو إرسال إيصالات المورد المقابلة أو تأكيد الحالة. شكرًا — BDL Exchange'];return L.join('\n');}
+async function thumb(r){if(!r.receipt_url||URLS[r.id]!==undefined)return;URLS[r.id]=null;try{const rs=await fetch(SBU+'/storage/v1/object/authenticated/receipts/'+r.receipt_url,{headers:{apikey:ANON,Authorization:'Bearer '+tokenOf()}});if(rs.ok){URLS[r.id]=URL.createObjectURL(await rs.blob());const im=document.querySelector('img[data-id="'+r.id+'"]');if(im)im.src=URLS[r.id];}}catch(e){}}
+function render(){const G=groups();const all=G.reduce((a,g)=>a.concat(g.rows),[]);const tot=all.reduce((a,r)=>a+Number(r.amount||0),0);
+  $('#hero').innerHTML='<div class="t">إجمالي الذمم المفتوحة — إيصالات زبائن بلا مورد</div><div class="n">'+fmt(tot)+'<small>AOA</small></div><div class="row"><div><span>إيصالات</span><b>'+all.length+'</b></div><div><span>جهات</span><b>'+G.length+'</b></div><div><span>أقدم إيصال</span><b>'+(all.length?Math.max(...all.map(r=>days(r.msg_at)))+' يوم':'—')+'</b></div></div>';
+  $('#list').innerHTML=G.length?G.map(g=>'<div class="p"><div class="ph"><div><b>'+esc(g.who)+'</b><small class="num">'+esc(g.phone||'بلا رقم')+' · '+g.rows.length+' إيصال · أقدمها منذ '+g.oldest+' يوم</small></div><span class="num">'+fmt(g.tot)+' AOA</span>'+(g.phone?'<a class="wa" href="https://wa.me/'+g.phone.replace(/\D/g,'')+'?text='+encodeURIComponent(waMsg(g))+'" target="_blank" rel="noopener">طالب بالواتساب</a>':'')+'</div>'+
+    g.rows.map(r=>'<div class="r">'+(r.receipt_url?'<img data-id="'+r.id+'" src="'+(URLS[r.id]||'')+'" alt="" onclick="open_(\''+r.id+'\')">':'<span></span>')+'<div><div class="a">'+fmt(r.amount)+' AOA</div><div class="m">'+esc(r.bank||'—')+' · '+(r.ref?'#'+esc(r.ref):'بلا مرجع')+' · <span class="num">'+new Date(r.msg_at).toLocaleDateString('en-GB')+'</span>'+(r.review?' · <span style="color:var(--amber)">يحتاج مراجعة</span>':'')+'</div></div><span class="age" style="background:'+ageC(days(r.msg_at))+'">'+days(r.msg_at)+' يوم</span></div>').join('')+'</div>').join(''):'<div class="empty">لا ذمم مفتوحة — كل إيصالات الزبائن وصل مقابلها ✓</div>';
+  all.slice(0,60).forEach(thumb);}
+async function open_(id){const r=ROWS.find(x=>x.id===id);if(!r)return;let u=URLS[id];if(!u){await thumb(r);u=URLS[id];}if(u)window.open(u,'_blank');}
+function exportPDF(){const JS=window.jspdf&&window.jspdf.jsPDF;if(!JS){toast('مكتبة PDF لم تُحمّل بعد');return;}const G=groups();const lines=[];const push=(t,st)=>lines.push({t,st});
+  const tot=G.reduce((a,g)=>a+g.tot,0);push('ذمم الإيصالات — زبائن بلا مورد · '+new Date().toLocaleDateString('en-GB'),'h');push('الإجمالي: '+fmt(tot)+' AOA · '+G.reduce((a,g)=>a+g.rows.length,0)+' إيصال · '+G.length+' جهة','r');push('','');
+  G.forEach(g=>{push(g.who+(g.phone?' · '+g.phone:'')+' — '+g.rows.length+' إيصال · '+fmt(g.tot)+' AOA','sub');g.rows.forEach(r=>push(new Date(r.msg_at).toLocaleDateString('en-GB')+'   '+fmt(r.amount)+' AOA   '+(r.ref?'#'+r.ref:'بلا مرجع')+'   '+(r.bank||'')+'   منذ '+days(r.msg_at)+' يوم','r'));push('','');});
+  const W=1000,H=1414,per=34;const pages=[];for(let i=0;i<lines.length;i+=per)pages.push(lines.slice(i,i+per));const pdf=new JS({unit:'pt',format:[W*0.75,H*0.75]});
+  pages.forEach((pg,pi)=>{const cv=document.createElement('canvas');cv.width=W*2;cv.height=H*2;const x=cv.getContext('2d');x.scale(2,2);x.fillStyle='#fff';x.fillRect(0,0,W,H);x.fillStyle='#0B2F70';x.fillRect(0,0,W,80);x.fillStyle='#D4AF37';x.fillRect(0,80,W,2);x.fillStyle='#fff';x.font='800 24px Cairo,Inter,sans-serif';x.textAlign='right';x.direction='rtl';x.fillText('BDL · ذمم الإيصالات',W-30,50);x.textAlign='left';x.font='700 14px Inter,sans-serif';x.fillText('page '+(pi+1)+'/'+pages.length,30,50);x.textAlign='right';let y=120;
+    pg.forEach(l=>{if(l.st==='h'){x.fillStyle='#0B2F70';x.font='800 22px Cairo,Inter,sans-serif';}else if(l.st==='sub'){x.fillStyle='#EEF3FB';x.fillRect(30,y-24,W-60,34);x.fillStyle='#123B85';x.font='800 18px Cairo,Inter,sans-serif';}else{x.fillStyle=l.st==='r'?'#B00020':'#0F1F3D';x.font='700 17px Cairo,Inter,sans-serif';}x.fillText(l.t,W-40,y);y+=36;});
+    if(pi)pdf.addPage([W*0.75,H*0.75]);pdf.addImage(cv.toDataURL('image/jpeg',.9),'JPEG',0,0,W*0.75,H*0.75);});
+  pdf.save('BDL-dues-'+new Date().toISOString().slice(0,10)+'.pdf');}
+load();
+</script>
+</body></html>

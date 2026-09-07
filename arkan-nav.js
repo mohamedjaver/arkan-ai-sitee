@@ -21,7 +21,7 @@
   isOwner = !!localStorage.getItem('arkan_owner_auth') || !!localStorage.getItem('arkan_admin_dev');
   try { var ses = JSON.parse(localStorage.getItem('arkan_session') || 'null');
         if (ses && /36295050$/.test(String(ses.phone || '').replace(/\D/g, ''))) isOwner = true; } catch (e) {}
-  if (path === 'settle-v2.html' || path === 'settlement.html' || path === 'compare.html' || path === 'admin.html' || path === 'rates-admin.html') isOwner = true; /* صفحات مالك مغلقة أصلًا بالبوابة */
+  if (path === 'settle-v2.html' || path === 'settlement.html' || path === 'compare.html' || path === 'dues.html' || path === 'admin.html' || path === 'rates-admin.html') isOwner = true; /* صفحات مالك مغلقة أصلًا بالبوابة */
 
   // روابط القائمة — الأساسية للجميع
   var LINKS = [
