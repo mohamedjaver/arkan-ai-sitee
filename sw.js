@@ -1,7 +1,7 @@
 /* BDL — Service Worker v2.0
    إستراتيجية: الشبكة أولًا لصفحات HTML والبيانات (لا محتوى قديم أبدًا)
               الكاش أولًا للأصول الثابتة فقط (صور، أيقونات، شعار) */
-const V='arkan-v184-1254'; /* compare: auto-continuous reading, PDF thumbs */
+const V='arkan-v185-1254b'; /* compare: continuous reading (applied) */
 const STATIC=['./favicon.svg','./arkan-icon-512.png','./arkan-touch-180.png','./site-manifest.json'];
 
 self.addEventListener('install',e=>{
