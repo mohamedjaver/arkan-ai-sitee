@@ -245,8 +245,7 @@ async function addFiles(side,list,tag){let dup=0;const arr=side==='sup'?S.sup:S.
     r.fileDate=r.date.getTime();if(f._waDate){r.date=f._waDate;r.waDate=f._waDate.getTime();}if(f._waWho)r.who=f._waWho;if(S.party[side].who){r.who=S.party[side].who;r.phone=S.party[side].phone||'';r.partySet=true;}
     if(kn){r.amount=kn.amount==null?null:Number(kn.amount);r.ref=kn.ref||'';r.who=kn.who||r.who;r.phone=kn.phone||r.phone||'';r.date=new Date(kn.msg_at);r.manual=!!kn.manual;r.receipt_url=kn.receipt_url||null;r.book_entry_id=kn.book_entry_id||null;r.src='ledger';r.led=true;r.edit=r.amount==null;r.bank=r.bank||'الدفتر';S.fromLed=(S.fromLed||0)+1;}
     try{await IDB.put('files',r.id,f);}catch(e){}
-    if(!r.pdf){r.thumb=await thumbOf(f);if(r.thumb)r.url=URL.createObjectURL(r.thumb);}else{try{const png=await pdfPage(f);if(png){r.thumb=await thumbOf(png);if(r.thumb)r.url=URL.createObjectURL(r.thumb);}}catch(e){}}
-    arr.push(r);added.push(r);if(added.length%10===0)render();}
+    arr.push(r);added.push(r);if(added.length%25===0){render();if(added.length===25&&!S.busy&&added.some(x=>x.reading)){S.stop=false;readPending(side);}}}
   if(dup||S.fromLed)toast((dup?'تُخطّي '+dup+' إيصال مكرر':'')+(dup&&S.fromLed?' · ':'')+(S.fromLed?S.fromLed+' إيصال مسجّل في الدفتر — أُخذت قيمه بلا قراءة':''));S.fromLed=0;
   render();return added;}
 /* ── قراءة تحقّق مستقلة على الجهاز: لا يُكتب المبلغ إلا إذا اتفقت القراءتان ── */
@@ -265,7 +264,7 @@ async function verifyRead(file,p){const key=(localStorage.getItem('gemKey')||'')
 /* ───── المحرك المدمج: قالب محلي أولًا (PDF بنص) → وإلا Gemini بنداء واحد يحمل النص الحرفي للمبلغ والمرجع
    → تحقق محلي (تحليل النص الحرفي = المبلغ؟ المرجع ليس IBAN؟) → القراءة الثانية فقط عند الشك. أسرع بنصف النداءات وأدق. ───── */
 const PTNUM=v=>{if(v==null)return null;let x=String(v).replace(/[^\d.,\s]/g,'').trim().replace(/\s+/g,'');if(!x)return null;if(/,\d{1,2}$/.test(x))x=x.replace(/\./g,'').replace(',','.');else if(/\.\d{1,2}$/.test(x)&&!/\.\d{3}(\.|$)/.test(x))x=x.replace(/,/g,'');else x=x.replace(/[.,]/g,'');const n=Number(x);return isFinite(n)&&n>0?n:null;};
-async function gemRead(file){const key=(localStorage.getItem('gemKey')||'').trim();if(!key)return null;
+async function gemRead(file,pre){const key=(localStorage.getItem('gemKey')||'').trim();if(!key)return null;if(pre)file=pre;
   const P='اقرأ إيصال التحويل البنكي وأعد JSON فقط:\n{"is_bank_receipt":true,"bank":"","amount":0,"amount_verbatim":"","currency":"","reference":"","reference_verbatim":"","date":"","sender":"","receiver":"","confidence":0}\n'+
     'قواعد: amount = مبلغ التحويل فقط (Montante/Valor/Importância) كرقم؛ amount_verbatim = نفس السطر كما هو مكتوب حرفيًا مثل "Kz 7 500 000,00" أو "1.000.000,00 KZ".\n'+
     'reference = رقم العملية (Transacção/Referência/N.º operação/Trs ID) وreference_verbatim نصه الحرفي؛ ليس IBAN (AO06…) ولا رقم حساب (21 رقمًا).\n'+
@@ -279,10 +278,11 @@ async function gemRead(file){const key=(localStorage.getItem('gemKey')||'').trim
   const consistent=amount!=null&&(vb==null||Math.abs(vb-amount)<0.5);
   return {amount:consistent?amount:(vb!=null?vb:amount),ccy:g.currency||null,txn:ref||null,bank:g.bank||null,date:g.date||null,name:g.sender||'',receiver:g.receiver||'',conf:Number(g.confidence)||0,isReceipt:g.is_bank_receipt!==false,verbatim:g.amount_verbatim||'',consistent,eng:'gemini-merged'};}
 async function smartRead(r){/* PDF بنص: القالب المحلي أولًا (صفر نداءات) */
+  if(!r.pdf&&!r.url&&r.file){try{const sm=await shrink(r.file);r._sm=sm;r.thumb=await thumbOf(sm);if(r.thumb){r.url=URL.createObjectURL(r.thumb);r.tSaved=false;}}catch(e){}}
   if(r.pdf&&!r.url){try{const png0=await pdfPage(r.file);if(png0){r.thumb=await thumbOf(png0);if(r.thumb){r.url=URL.createObjectURL(r.thumb);r.tSaved=false;}}}catch(e){}}
   if(r.pdf&&window.ArkanRead&&ArkanRead.pdfText&&ArkanRead.liteParse){try{const txt=await ArkanRead.pdfText(r.file);const tp=txt&&ArkanRead.liteParse(txt);if(tp&&tp.amount&&tp.reference&&(tp.confidence||0)>=85)return {amount:+tp.amount,ccy:tp.currency||'AOA',txn:tp.reference,bank:tp.bank||null,date:tp.date||null,name:tp.name||'',conf:tp.confidence,isReceipt:true,consistent:true,eng:'template'};}catch(e){}}
   let f=r.file;if(r.pdf){const png=await pdfPage(r.file);if(png){f=png;r.thumb=r.thumb||await thumbOf(png);if(r.thumb&&!r.url)r.url=URL.createObjectURL(r.thumb);}}
-  try{const g=await gemRead(f);if(g)return g;}catch(e){if(/API key|quota|429|403/i.test(String(e.message||e)))S.gemErr=String(e.message||e).slice(0,120);}
+  try{const g=await gemRead(f,r._sm&&!r.pdf?r._sm:null);r._sm=null;if(g)return g;}catch(e){if(/API key|quota|429|403/i.test(String(e.message||e)))S.gemErr=String(e.message||e).slice(0,120);}
   return window.ArkanRead?await Promise.race([ArkanRead.readAmount(r.file),new Promise((_,j)=>setTimeout(()=>j('timeout'),45000))]):null;}
 /* ───── المدقّق: قواعد تكشف الأخطاء الشائعة ثم نداء Gemini موجَّه لتصحيحها ───── */
 function auditRules(r){const f=[];if(!r.amount)return f;const a=Math.round(r.amount),ad=String(a),rd=(r.ref||'').replace(/\D/g,'');
@@ -344,7 +344,7 @@ async function readPending(side){if(S.busy&&Date.now()-(S.lastTick||0)<120000){t
     renderSoon();}};
   const tick=setInterval(()=>{if(S.busy)render();},1500);S._tick=tick;
   const PAR=Math.max(2,Math.min(8,parseInt(localStorage.getItem('gemPar')||'4')));await Promise.all(Array.from({length:PAR},worker));clearInterval(S._tick);rematch();persist();try{await auditBatch(pending);}catch(e){}if(S.miss)toast(S.miss+' إيصال ملفه مفقود محليًا (ربما امتلأت ذاكرة الجهاز) — استخدم «رفع كبير — الخادم» للدفعات الكبيرة');if(S.gemErr){toast('Gemini: '+S.gemErr);S.gemErr=null;}if(S.skipped){toast('استُبعد '+S.skipped+' ملف (MRU/عملات رقمية/ليست إيصالات) — في قائمة «مستبعدة» مع زر استرجاع');S.skipped=0;}}finally{S.busy=false;render();}
-  if(S.left>0&&!S.stop){toast('قُرئت دفعة وحُفظت — بقي '+S.left+'، تُكمل تلقائيًا');setTimeout(()=>readPending(side),800);}}
+  const more=(side==='sup'?S.sup:S.cust).filter(r=>r.reading).length;if(more>0&&!S.stop){toast('قُرئت دفعة وحُفظت — بقي '+more+'، تُكمل تلقائيًا');setTimeout(()=>readPending(side),600);}}
 async function resume(){S.stop=false;const n=S.cust.concat(S.sup).filter(r=>r.reading).length;if(!n){toast('لا إيصالات بانتظار القراءة');return;}if(S.cust.some(r=>r.reading))await readPending('cust');if(S.sup.some(r=>r.reading))await readPending('sup');}
 $('#fi').addEventListener('change',async function(){const list=[...this.files];if(!list.length)return;await addFiles(S.side,list);await readPending(S.side);toast('اكتملت القراءة — راجع المبالغ ثم المطابقة');});
 
@@ -687,9 +687,9 @@ function col(side){const rows=(side==='sup'?VS():VC()).filter(r=>hit(r)&&inView(
       '<div style="display:flex;gap:6px;flex-wrap:wrap;padding:8px 12px;border-bottom:1px solid var(--line)"><button class="x" style="position:static;border:1px solid var(--line);padding:8px 10px;color:var(--navy)" onclick="exSel(\''+side+'\',true)">تحديد الكل</button><button class="x" style="position:static;border:1px solid var(--line);padding:8px 10px;color:var(--navy)" onclick="exSel(\''+side+'\',false)">إلغاء التحديد</button><button class="x" style="position:static;background:var(--navy);color:#fff;padding:8px 12px" data-rs="1" onclick="restoreSel(\''+side+'\')">استرجاع المحدد ('+ex.filter(r=>S.exs[r.id]).length+')</button><button class="x" style="position:static;border:1px solid #F1C4CA;color:var(--red);padding:8px 10px" onclick="delSel(\''+side+'\')">حذف المحدد</button></div>'+
       ex.map(r=>'<div class="r" style="cursor:default;'+(S.exs[r.id]?'outline:3px solid var(--gold);outline-offset:-3px':'')+'">'+'<label style="float:inline-start;margin-inline-end:8px;display:flex;align-items:center;gap:6px;font-size:12px;font-weight:800;color:var(--navy)"><input type="checkbox" style="width:20px;height:20px" '+(S.exs[r.id]?'checked':'')+' onchange="S.exs[\''+r.id+'\']=this.checked;this.closest(\'.r\').style.outline=this.checked?\'3px solid var(--gold)\':\'\';const b=this.closest(\'details\').querySelector(\'[data-rs]\');if(b)b.textContent=\'استرجاع المحدد (\'+Object.keys(S.exs).filter(k=>S.exs[k]).length+\')\'"> تحديد</label>'+(r.url?'<img src="'+r.url+'" onclick="openFile(\''+r.id+'\')">':'')+'<div class="t"><span class="st pend">'+esc(r.rccy||r.why||'?')+'</span><span class="a" style="font-size:13px">'+(r.amount?fmt(r.amount)+' '+esc(r.rccy||''):'—')+'</span></div><div class="m">'+esc(r.who||'—')+' · '+esc(r.bank||'—')+' · <span class="num">'+r.date.toLocaleDateString('en-GB')+'</span>'+(r.why?' · <span style="color:#6A5A8E">'+esc(r.why)+'</span>':'')+'</div><div style="margin-top:6px"><button class="x" style="color:var(--navy);padding:0" onclick="restore(\''+r.id+'\')">هذا إيصال كوانزا — استرجاع</button></div></div>').join('')+'</details>';})()+'</div>';}
 /* توليد مصغّر PDF للبطاقات القديمة التي بلا صورة (من التخزين المحلي، واحدة تلو الأخرى) */
-async function backfillThumbs(){if(S.bf)return;S.bf=true;try{const rows=S.cust.concat(S.sup).filter(r=>r.pdf&&!r.url&&r.hasFile&&!r.srv&&!r.noThumb).slice(0,6);
-  for(const r of rows){try{const f=await IDB.get('files',r.id);if(!f){r.noThumb=true;continue;}const png=await pdfPage(f);if(!png){r.noThumb=true;continue;}r.thumb=await thumbOf(png);if(r.thumb){r.url=URL.createObjectURL(r.thumb);r.tSaved=false;}else r.noThumb=true;}catch(e){r.noThumb=true;}}
-  if(rows.length){render();persist();if(S.cust.concat(S.sup).some(r=>r.pdf&&!r.url&&r.hasFile&&!r.srv&&!r.noThumb))setTimeout(backfillThumbs,300);}}finally{S.bf=false;}}
+async function backfillThumbs(){if(S.bf)return;S.bf=true;try{const rows=S.cust.concat(S.sup).filter(r=>!r.url&&r.hasFile&&!r.srv&&!r.noThumb&&!r.reading).slice(0,6);
+  for(const r of rows){try{const f=await IDB.get('files',r.id);if(!f){r.noThumb=true;continue;}const png=r.pdf?await pdfPage(f):f;if(!png){r.noThumb=true;continue;}r.thumb=await thumbOf(png);if(r.thumb){r.url=URL.createObjectURL(r.thumb);r.tSaved=false;}else r.noThumb=true;}catch(e){r.noThumb=true;}}
+  if(rows.length){render();persist();if(S.cust.concat(S.sup).some(r=>!r.url&&r.hasFile&&!r.srv&&!r.noThumb&&!r.reading))setTimeout(backfillThumbs,300);}}finally{S.bf=false;}}
 function render(force){
   if(!force&&typing()){S.dirty=true;return;}
   const _sy=window.scrollY;
