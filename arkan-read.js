@@ -68,10 +68,10 @@ async function worker(){
 }
 async function pdfText(f){
   if(!window.pdfjsLib){
-    await new Promise((res,rej)=>{const sc=document.createElement('script');
-      sc.src='vendor/pdf.min.js';sc.onload=res;sc.onerror=rej;document.head.appendChild(sc);});
-  }
-  try{pdfjsLib.GlobalWorkerOptions.workerSrc=new URL('vendor/pdf.worker.min.js',location.href).href;}catch(e){}
+    const inj=u=>new Promise((res,rej)=>{const sc=document.createElement('script');sc.src=u;sc.onload=res;sc.onerror=rej;document.head.appendChild(sc);});
+    try{await inj('vendor/pdf.min.js');pdfjsLib.GlobalWorkerOptions.workerSrc=new URL('vendor/pdf.worker.min.js',location.href).href;}
+    catch(e){const C='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/';await inj(C+'pdf.min.js');pdfjsLib.GlobalWorkerOptions.workerSrc=C+'pdf.worker.min.js';}
+  }else if(!pdfjsLib.GlobalWorkerOptions.workerSrc){try{pdfjsLib.GlobalWorkerOptions.workerSrc=new URL('vendor/pdf.worker.min.js',location.href).href;}catch(e){}}
   const buf=await f.arrayBuffer();
   const doc=await pdfjsLib.getDocument({data:buf}).promise;
   let out='';
