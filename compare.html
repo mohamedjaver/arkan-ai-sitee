@@ -133,6 +133,7 @@ table{width:100%;border-collapse:collapse;font-size:12px}th{background:#F3F7FD;c
 <div class="tools">
   <button class="pri" onclick="rematch()">إعادة المطابقة</button>
   <button id="rsm" style="display:none;background:#ED6C02;color:#fff;border-color:#ED6C02" onclick="resume()">متابعة القراءة</button>
+  <button onclick="freeLocal()">تحرير مساحة الجهاز</button>
   <button onclick="const k=prompt('مفتاح Gemini (يُحفظ على هذا الجهاز فقط):',localStorage.getItem('gemKey')||'');if(k!=null&&k.trim()){localStorage.setItem('gemKey',k.trim());toast('حُفظ المفتاح');}">مفتاح Gemini</button>
   <button id="lkb" onclick="linkMode()">ربط يدوي ١:١</button>
   <span style="font-size:11px;color:var(--muted);font-weight:700">هامش %</span><input id="tol" inputmode="decimal" value="0.5" onchange="rematch()">
@@ -186,9 +187,13 @@ const IDB={db:null,open(){if(this.db)return Promise.resolve(this.db);return new 
 async function thumbOf(f){try{const bm=await createImageBitmap(f);const k=Math.min(1,220/Math.max(bm.width,bm.height));const cv=document.createElement('canvas');cv.width=Math.max(1,Math.round(bm.width*k));cv.height=Math.max(1,Math.round(bm.height*k));cv.getContext('2d').drawImage(bm,0,0,cv.width,cv.height);bm.close&&bm.close();return await new Promise(r=>cv.toBlob(r,'image/jpeg',.7));}catch(e){return null;}}
 const SESSION_MS=24*36e5;
 function ser(r){return {id:r.id,side:r.side,amount:r.amount,ccy:r.ccy,rccy:r.rccy||null,amountRead:r.amountRead||null,flags:r.flags||[],why:r.why||'',waDate:r.waDate||null,fileDate:r.fileDate||null,manual:!!r.manual,led:!!r.led,phone:r.phone||'',receipt_url:r.receipt_url||null,book_entry_id:r.book_entry_id||null,ref:r.ref,who:r.who,bank:r.bank,date:r.date.getTime(),src:r.src||'',note:r.note||'',fp:r.fp||null,hasFile:!!(r.file||r.hasFile),isPdf:!!r.pdf,reading:!!r.reading,fail:!!r.fail,unsure:!!r.unsure,edit:!!r.edit,excl:!!r.excl,srv:r.srv||null,verified:!!r.verified,review:!!r.review,alt:r.alt||null,matchedId:r.matched?r.matched.id:null,how:r.how||'',name:r.name||''};}
-let _pt=null;function persist(){clearTimeout(_pt);_pt=setTimeout(async()=>{try{const st={ts:S.ts||Date.now(),seq:S.seq,rows:S.cust.concat(S.sup).map(ser),excl:(S.excl||[]).map(ser),tol:$('#tol').value,range:S.range,party:S.party,jobs:(S.jobs||[]).map(j=>({id:j.id,side:j.side,total:j.total,done:j.done,next:j.next,status:j.status,name:j.name}))};S.ts=st.ts;await IDB.put('state','session',st);
+/* ───── سعة التخزين: طلب تخزين دائم من النظام + عرض الاستهلاك + تحرير الأصول المرفوعة للدفتر ───── */
+async function storageInfo(){try{if(navigator.storage&&navigator.storage.persist&&!S.persisted){S.persisted=await navigator.storage.persist();}
+  if(navigator.storage&&navigator.storage.estimate){const e=await navigator.storage.estimate();S.quota={used:e.usage||0,total:e.quota||0};}}catch(e){}}
+async function freeLocal(){let n=0;for(const r of S.cust.concat(S.sup)){if(r.receipt_url&&!r.reading&&r.hasFile){try{const f=await IDB.get('files',r.id);if(f){await IDB.del('files',r.id);n++;}}catch(e){}}}if(n){toast('حُرّرت مساحة: '+n+' أصل محفوظ في Supabase');storageInfo();}}
+let _pt=null;function persist(){clearTimeout(_pt);_pt=setTimeout(async()=>{try{if(S.busy&&S.cust.length+S.sup.length>3000)return;const st={ts:S.ts||Date.now(),seq:S.seq,rows:S.cust.concat(S.sup).map(ser),excl:(S.excl||[]).map(ser),tol:$('#tol').value,range:S.range,party:S.party,jobs:(S.jobs||[]).map(j=>({id:j.id,side:j.side,total:j.total,done:j.done,next:j.next,status:j.status,name:j.name}))};S.ts=st.ts;await IDB.put('state','session',st);
   for(const r of S.cust.concat(S.sup,S.excl||[])){if(r.thumb&&!r.tSaved){await IDB.put('files',r.id+'_t',r.thumb);r.tSaved=true;}}
-  $('#tag').textContent='محفوظ محليًا · حتى '+new Date(st.ts+SESSION_MS).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});}catch(e){console.warn('persist',e);}},900);}
+  $('#tag').textContent='محفوظ محليًا · حتى '+new Date(st.ts+SESSION_MS).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})+(S.quota&&S.quota.total?' · '+(S.quota.used/1048576).toFixed(0)+'/'+(S.quota.total/1048576).toFixed(0)+' MB':'')+(S.persisted?' · دائم':'');}catch(e){console.warn('persist',e);}},900);}
 async function restoreSession(){try{const st=await IDB.get('state','session');if(!st)return false;
   if(Date.now()-st.ts>SESSION_MS){await IDB.clear();toast('انتهت صلاحية الجلسة السابقة (٢٤ ساعة) — بدأنا جلسة جديدة');return false;}
   S.ts=st.ts;S.seq=st.seq||0;if(st.tol)$('#tol').value=st.tol;if(st.party&&st.party.cust&&st.party.sup)S.party=st.party;if(st.range){S.range=st.range;$('#rf').value=st.range.from?new Date(st.range.from).toISOString().slice(0,10):'';$('#rt').value=st.range.to?new Date(st.range.to).toISOString().slice(0,10):'';}S.jobs=st.jobs||[];const all=[];
@@ -339,7 +344,7 @@ async function pollJobs(){clearTimeout(_pj);const open=(S.jobs||[]).filter(j=>j.
 async function feedback(r){if(r.src!=='srv'||!r.amount||!tokenOf())return;try{await fetch(SRV+'/compare/feedback',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+tokenOf()},body:JSON.stringify({bank:r.bank,amount:r.amount,ccy:r.ccy,ref:r.ref,date:r.date.toISOString().slice(0,16),hint:'corrected by owner · '+(r.name||'')})});r.verified=true;r.review=false;}catch(e){}}
 /* ───── استيراد محادثة واتساب (ZIP أو _chat.txt) — لا يُحفظ شيء ───── */
 function pickWA(side){if(needParty(side))return;S.side=side;$('#fw').value='';$('#fw').click();}
-$('#fw').addEventListener('change',async function(){const f=this.files[0];if(!f)return;try{await importWA(S.side,f);}catch(e){console.error(e);toast('تعذّر قراءة الملف: '+(e.message||e));}});
+$('#fw').addEventListener('change',async function(){const f=this.files[0];if(!f)return;if(f.size>120*1048576){toast('الملف '+(f.size/1048576).toFixed(0)+' MB — أكبر من طاقة الهاتف. استخدم «رفع كبير — الخادم + Gemini» لهذا الملف');this.value='';return;}try{await importWA(S.side,f);}catch(e){console.error(e);toast('تعذّر قراءة الملف: '+(e.message||e));}});
 const WA_LINE=/^\u200e?\[?(\d{1,2})[\/.](\d{1,2})[\/.](\d{2,4}),?\s+(\d{1,2}):(\d{2})(?::(\d{2}))?\s*([AP]M)?\]?\s*(?:-\s*)?([^:]{1,60}?):\s(.*)$/;
 function waDate(d,m,y,h,mi,ap){y=+y;if(y<100)y+=2000;h=+h;if(ap){if(/P/i.test(ap)&&h<12)h+=12;if(/A/i.test(ap)&&h===12)h=0;}return new Date(y,+m-1,+d,h,+mi);}
 function waAmount(t){const s=t.replace(/[\u200e\u200f]/g,'').replace(/\+\d[\d\s-]{6,}\d/g,' ');if(/^\+?\d[\d\s-]{7,}$/.test(s.trim()))return null;
@@ -424,7 +429,7 @@ const LED={idx:{},refs:{},ready:false,q:[],busy:0,
   async upload(r){if(!tokenOf()||r.receipt_url||!r.fp)return;const u=uid();if(!u)return;let b=r.file;if(!b){try{b=await IDB.get('files',r.id);}catch(e){}}
     if(!b&&r.srv){try{const rs=await fetch(r.srv);if(rs.ok)b=await rs.blob();}catch(e){}}if(!b)return;
     const ext=r.pdf||/pdf$/i.test(b.type||'')?'pdf':/png/.test(b.type||'')?'png':'jpg';const path='books/'+u+'/cmp/'+r.fp+'.'+ext;
-    try{const rs=await fetch(SBU+'/storage/v1/object/receipts/'+path,{method:'POST',headers:{apikey:ANON,Authorization:'Bearer '+tokenOf(),'Content-Type':b.type||(ext==='pdf'?'application/pdf':'image/jpeg'),'x-upsert':'true'},body:b});if(rs.ok||rs.status===409){r.receipt_url=path;await LED.patch(r,{receipt_url:path});}}catch(e){}},
+    try{const rs=await fetch(SBU+'/storage/v1/object/receipts/'+path,{method:'POST',headers:{apikey:ANON,Authorization:'Bearer '+tokenOf(),'Content-Type':b.type||(ext==='pdf'?'application/pdf':'image/jpeg'),'x-upsert':'true'},body:b});if(rs.ok||rs.status===409){r.receipt_url=path;await LED.patch(r,{receipt_url:path});if(!r.reading){r.file=null;IDB.del('files',r.id).catch(()=>{});}}}catch(e){}},
   enqueue(r){LED.q.push(r);LED.pump();},
   async pump(){while(LED.busy<2&&LED.q.length){const r=LED.q.shift();LED.busy++;(async()=>{try{await LED.add(r);await LED.upload(r);}finally{LED.busy--;LED.pump();}})();}},
   async fileOf(r){if(!r.receipt_url||!tokenOf())return null;try{const rs=await fetch(SBU+'/storage/v1/object/authenticated/receipts/'+r.receipt_url,{headers:{apikey:ANON,Authorization:'Bearer '+tokenOf()}});if(!rs.ok)return null;return await rs.blob();}catch(e){return null;}},
@@ -699,7 +704,7 @@ function exportPDF(){const JS=window.jspdf&&window.jspdf.jsPDF;if(!JS){toast('م
   x.fillStyle='#0F1F3D';x.font='700 20px Cairo, Inter, sans-serif';
   L.forEach((s,i)=>{if(/^— /.test(s)){x.fillStyle='#0B2F70';x.font='800 22px Cairo, Inter, sans-serif';}else{x.fillStyle=/^نقص/.test(s)?'#B00020':/^فائض/.test(s)?'#2E7D32':'#0F1F3D';x.font='700 20px Cairo, Inter, sans-serif';}x.fillText(s,W-30,130+i*lh);});
   const pdf=new JS({unit:'pt',format:[W*0.75,Math.min(H,14400)*0.75]});pdf.addImage(cv.toDataURL('image/jpeg',.92),'JPEG',0,0,W*0.75,H*0.75);pdf.save('BDL-compare-'+new Date().toISOString().slice(0,10)+'.pdf');}
-(async()=>{await restoreSession();render();pollJobs();await LED.index();render(true);if(S.cust.concat(S.sup).some(r=>r.reading))setTimeout(resume,1200);})();
+(async()=>{await storageInfo();await restoreSession();render();pollJobs();await LED.index();render(true);setTimeout(freeLocal,4000);if(S.cust.concat(S.sup).some(r=>r.reading))setTimeout(resume,1200);})();
 </script>
 </body>
 </html>
