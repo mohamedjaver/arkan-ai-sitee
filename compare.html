@@ -466,7 +466,9 @@ function find(id){return S.cust.find(r=>r.id===id)||S.sup.find(r=>r.id===id);}
 /* ───── مسح كامل: الجلسة المحلية + دفتر الإيصالات الدائم + قيود الدفاتر التي أنشأتها هذه الصفحة ───── */
 async function wipeAll(){if(!tokenOf()){toast('سجّل الدخول أولًا');return;}
   if(!confirm('مسح كامل؟ سيُحذف من هذا الجهاز ومن الدفتر الدائم كل إيصال سُجّل عبر صفحة المقارنة (زبائن وموردون) وكل قيد دفتر أنشأته هذه الصفحة. لا يمكن التراجع.'))return;
-  const word=prompt('اكتب: مسح الكل');if(word!=='مسح الكل'){toast('أُلغي');return;}
+  if(!confirm('تأكيد أخير: حذف كل الإيصالات (زبائن + موردون) من الجهاز ومن الدفتر الدائم الآن؟'))return;
+  toast('جارٍ المسح…');
+  clearTimeout(_pj);S.cust=[];S.sup=[];S.excl=[];S.jobs=[];S.selC=S.selS=null;S.ts=null;render(true);
   let n=0,b=0;try{const rows=await sbq('/bdl_cmp_receipts?select=fp,book_entry_id');n=rows.length;const oids=[...new Set(rows.map(x=>x.book_entry_id).filter(Boolean))];
     for(let i=0;i<oids.length;i+=50){const part=oids.slice(i,i+50);try{await sbq('/bdl_book_entries?id=in.('+part.join(',')+')',{method:'DELETE',headers:{Prefer:'return=minimal'}});b+=part.length;}catch(e){}}
     await sbq('/bdl_cmp_receipts?fp=not.is.null',{method:'DELETE',headers:{Prefer:'return=minimal'}});}catch(e){toast('تعذّر مسح الدفتر: '+(e.message||e));}
