@@ -136,6 +136,7 @@ table{width:100%;border-collapse:collapse;font-size:12px}th{background:#F3F7FD;c
   <button onclick="freeLocal()">تحرير مساحة الجهاز</button>
   <button onclick="const v=prompt('التوازي (2–8) — 4 للحساب المجاني، 8 للحساب المدفوع:',localStorage.getItem('gemPar')||'4');if(v)localStorage.setItem('gemPar',String(Math.max(2,Math.min(8,parseInt(v)||4))));const m=prompt('نموذج Gemini:\ngemini-2.5-flash (دقيق)\ngemini-2.5-flash-lite (أسرع)',GEM_MODEL());if(m)localStorage.setItem('gemModel',m.trim());toast('حُفظت إعدادات السرعة');">سرعة القراءة</button>
   <button style="border-color:var(--red);color:var(--red)" onclick="audit()">تفتيش الدفاتر</button>
+  <button style="border-color:var(--green);color:var(--green)" onclick="agentRun()">تقرير المحاسب الآن</button>
   <button onclick="const k=prompt('مفتاح Gemini (يُحفظ على هذا الجهاز فقط):',localStorage.getItem('gemKey')||'');if(k!=null&&k.trim()){localStorage.setItem('gemKey',k.trim());toast('حُفظ المفتاح');}">مفتاح Gemini</button>
   <button id="lkb" onclick="linkMode()">ربط يدوي ١:١</button>
   <span style="font-size:11px;color:var(--muted);font-weight:700">هامش %</span><input id="tol" inputmode="decimal" value="0.5" onchange="rematch()">
@@ -653,6 +654,12 @@ async function postParty(){if(PP.busy){toast('جارٍ الحفظ… انتظر'
     for(const r of rows){await LED.patch(r,Object.assign({who,manual:true,book_entry_id:eid},phone?{phone}:{}));}
   }catch(e){toast('تعذّر الحفظ: '+e.message);}finally{PP.busy=false;}}
 /* ───── تفتيش شامل: صفحة المطابقة ↔ الدفاتر ───── */
+async function agentRun(){if(!tokenOf()){toast('سجّل الدخول أولًا');return;}toast('المحاسب يعمل… التقرير يصل على تيليجرام');
+  try{const r=await fetch(SRV+'/agent/run',{method:'POST',headers:{Authorization:'Bearer '+tokenOf(),'Content-Type':'application/json'},body:'{}'});const d=await r.json();
+    if(!d.ok){toast('تعذّر: '+(d.err||r.status));return;}const st=d.state||{};
+    if(st.lastError){toast('خطأ: '+st.lastError);return;}
+    toast('تم — '+(st.tg||'أُرسل التقرير')); if(st.lastReport)alert(st.lastReport);}
+  catch(e){toast('تعذّر الاتصال بالخادم: '+(e.message||e));}}
 async function audit(){if(!tokenOf()){toast('سجّل الدخول أولًا');return;}toast('جارٍ التفتيش…');
   const out=[];const fix=[];
   let ents=[];try{ents=await sbq('/bdl_books?select=id,name,phone,kind');}catch(e){toast('تعذّر قراءة الدفاتر');return;}const bookName={};ents.forEach(b=>bookName[b.id]=b.name);

@@ -16,7 +16,13 @@ module.exports = function (app, ctx) {
   async function sb(path, opt) { opt = opt || {}; const r = await fetch(SB_REST + path, Object.assign({}, opt, { headers: Object.assign(H(), opt.headers || {}), body: opt.body ? JSON.stringify(opt.body) : undefined })); const t = await r.text(); if (!r.ok) throw new Error(path.slice(0, 60) + ' → ' + t.slice(0, 160)); return t ? JSON.parse(t) : null; }
   const fmt = n => Number(n || 0).toLocaleString('en-US', { maximumFractionDigits: 0 });
   const LOG = []; const log = (kind, msg, data) => { const e = { at: new Date().toISOString(), kind, msg, data: data || null }; LOG.push(e); if (LOG.length > 500) LOG.shift(); sb('/bdl_agent_log', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: e }).catch(() => {}); };
-  let STATE = { running: false, last: null, lastReport: null, lastError: null };
+  let STATE = { running: false, last: null, lastReport: null, lastError: null, tg: null };
+  /* إرسال تيليجرام مع تقسيم الرسائل الطويلة */
+  async function tgSend(txt) { if (!notifyAdmin) { STATE.tg = 'notifyAdmin غير متاح'; return; }
+    const esc = String(txt).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const parts = []; let cur = ''; for (const line of esc.split('\n')) { if ((cur + line).length > 3500) { parts.push(cur); cur = ''; } cur += line + '\n'; } if (cur.trim()) parts.push(cur);
+    try { for (const p of parts) { await notifyAdmin(p); await new Promise(r => setTimeout(r, 400)); } STATE.tg = 'أُرسل ' + parts.length + ' رسالة'; }
+    catch (e) { STATE.tg = 'فشل: ' + String(e.message).slice(0, 120); log('tg-error', STATE.tg); } }
   function auth(req) { try { const t = String(req.headers.authorization || '').replace(/^Bearer\s+/i, ''); jwt.verify(t, JWT_SECRET); return true; } catch (e) { return false; } }
 
   /* ── 1) المطابقة على الدفتر الدائم ── */
@@ -72,7 +78,9 @@ module.exports = function (app, ctx) {
     if (STATE.running) return STATE; STATE.running = true;
     try { const st = { reason, at: new Date().toISOString() }; st.match = await matchLedger(); st.audit = await auditBooks(); st.dues = await dues(); const text = await writeReport(st);
       STATE.last = st.at; STATE.lastReport = text; STATE.lastError = null;
-      if (reason !== 'hourly' || st.audit.applied || st.match.pairs) { try { if (notifyAdmin) await notifyAdmin('<b>المحاسب — BDL</b>\n' + text.replace(/</g, '&lt;').slice(0, 3500)); } catch (e) {} try { if (pushOwner) await pushOwner('المحاسب: ' + (st.dues.n ? st.dues.n + ' إيصال بلا مورد · ' + fmt(st.dues.tot) + ' AOA' : 'لا ذمم مفتوحة'), text.slice(0, 120)); } catch (e) {} }
+      const worth = reason !== 'hourly' || st.audit.applied || st.match.pairs;
+      if (worth) { await tgSend('<b>المحاسب — BDL</b> · ' + new Date().toLocaleDateString('en-GB') + '\n\n' + text);
+        try { if (pushOwner) await pushOwner('المحاسب: ' + (st.dues.n ? st.dues.n + ' إيصال بلا مورد · ' + fmt(st.dues.tot) + ' AOA' : 'لا ذمم مفتوحة'), String(text).slice(0, 120)); } catch (e) {} }
       log('run', reason + ' ✓', { match: st.match, audit: { applied: st.audit.applied, fixes: st.audit.fixes.length }, dues: { n: st.dues.n, tot: st.dues.tot } });
     } catch (e) { STATE.lastError = String(e.message).slice(0, 200); log('error', STATE.lastError); }
     STATE.running = false; return STATE;
@@ -84,5 +92,8 @@ module.exports = function (app, ctx) {
   /* ── واجهة ── */
   app.post('/agent/run', express.json(), async (req, res) => { if (!auth(req)) return res.status(401).json({ ok: false }); const st = await run('manual'); res.json({ ok: true, state: st }); });
   app.get('/agent/status', (req, res) => { if (!auth(req)) return res.status(401).json({ ok: false }); res.json({ ok: true, state: STATE, claude: !!AKEY, hour: HOUR, log: LOG.slice(-30) }); });
+  /* نبضة بدء: تخبرك أن الوكيل حيّ ومفاتيحه سليمة */
+  setTimeout(() => { tgSend('المحاسب يعمل الآن على الخادم.\nالتقرير اليومي: ' + HOUR + ':00 بتوقيت لواندا · Claude: ' + (AKEY ? 'مفعّل' : 'غير مفعّل') + ' · Gemini: ' + (process.env.GEMINI_KEY ? 'مفعّل' : 'غير مفعّل') + '\nللتقرير الفوري: زر «تقرير المحاسب» في صفحة المطابقة.'); }, 8000);
+  app.get('/agent/ping', async (req, res) => { if (!auth(req)) return res.status(401).json({ ok: false }); await tgSend('اختبار: المحاسب متصل بتيليجرام ✓'); res.json({ ok: true, tg: STATE.tg }); });
   console.log('▲ accountant agent ready (daily ' + HOUR + ':00 UTC' + (TZ >= 0 ? '+' : '') + TZ + (AKEY ? ', Claude on' : ', Claude off') + ')');
 };
