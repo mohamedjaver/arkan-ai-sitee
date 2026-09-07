@@ -139,6 +139,27 @@ module.exports = function (app, ctx) {
     return r;
   }
 
+  /* ── المدقّق (قواعد + نداء موجَّه) ── */
+  const ptnum = v => { if (v == null) return null; let x = String(v).replace(/[^\d.,\s]/g, '').trim().replace(/\s+/g, ''); if (!x) return null; if (/,\d{1,2}$/.test(x)) x = x.replace(/\./g, '').replace(',', '.'); else if (/\.\d{1,2}$/.test(x) && !/\.\d{3}(\.|$)/.test(x)) x = x.replace(/,/g, ''); else x = x.replace(/[.,]/g, ''); const n = Number(x); return isFinite(n) && n > 0 ? n : null; };
+  function auditRules(r) { const f = []; if (!r.amount) return f; const a = Math.round(r.amount), ad = String(a), rd = (r.ref || '').replace(/\D/g, '');
+    if (rd && (ad === rd || (rd.length >= 8 && ad.length >= 6 && rd.includes(ad)))) f.push('المبلغ يبدو رقم عملية/حساب');
+    if (a < 500) f.push('مبلغ صغير جدًا للكوانزا'); if (a > 800000000) f.push('مبلغ ضخم غير معتاد'); if (ad.length >= 13) f.push('المبلغ بطول IBAN/حساب');
+    if (!r.ref && /BAI|BFA|ATLANTICO|SOL|BIC|KEVE|BCI|STANDARD|YETU/i.test(r.bank || '')) f.push('بنك معروف بلا رقم عملية');
+    if (r.ccy && r.ccy !== 'AOA') f.push('العملة المقروءة ' + r.ccy); return f; }
+  const PA = (r, why) => `أنت مدقق حسابات محترف. هذا إيصال بنكي أنغولي قُرئ كالتالي: amount=${r.amount || ''} reference=${r.ref || ''} bank=${r.bank || ''}.
+شكوك المدقق: ${why.join('؛ ')}.
+افحص الإيصال بتمعّن وأعد JSON فقط: {"amount":0,"amount_verbatim":"","reference":"","currency":"","date":"","is_bank_receipt":true,"verdict":"ok|fixed|reject","note":""}
+verdict=ok إن كانت القراءة صحيحة، fixed إن صحّحت شيئًا، reject إن لم يكن إيصال تحويل كوانزا. المبلغ = Montante/Valor/Importância فقط، ليس رقم العملية ولا الحساب ولا IBAN ولا الرسوم.`;
+  async function auditOne(job, it, r, txt) {
+    const why = auditRules(r); if (!why.length) return r;
+    try { const isPdf = mimeOf(it.name) === 'application/pdf'; const v = await gem(job.key, PA(r, why), isPdf && txt ? null : it.data.toString('base64'), isPdf && txt ? null : mimeOf(it.name), 300, isPdf && txt ? txt : null);
+      if (v.is_bank_receipt === false || v.verdict === 'reject') { r.isReceipt = false; r.auditNote = 'المدقق: ليس إيصال تحويل كوانزا' + (v.note ? ' — ' + v.note : ''); return r; }
+      const a2 = num(v.amount), vb = ptnum(v.amount_verbatim); const good = a2 != null && (vb == null || Math.abs(vb - a2) < 0.5);
+      if (v.verdict === 'fixed' && good) { if (Math.abs(a2 - (r.amount || 0)) > 0.5) { r.amountRead = r.amount; r.amount = a2; } const ref2 = String(v.reference || '').trim(); if (ref2 && !/^AO\d{2}/i.test(ref2) && ref2.replace(/\D/g, '').length !== 21) r.ref = ref2.slice(0, 64); if (v.date) r.date = v.date; r.review = false; r.verified = true; r.auditNote = 'صحّح المدقق: ' + why.join('، '); }
+      else if (v.verdict === 'ok' && good && Math.abs(a2 - (r.amount || 0)) < 0.5) { r.review = false; r.verified = true; r.auditNote = 'أكّد المدقق القراءة'; }
+      else { r.review = true; r.auditNote = 'المدقق غير متأكد — راجع الصورة'; }
+    } catch (e) {}
+    return r; }
   async function readOne(job, it) {
     const b64 = it.data.toString('base64'), mime = mimeOf(it.name), isPdf = mime === 'application/pdf';
     let p1 = null, txt = null, eng = 'gemini-image', err1 = '';
@@ -165,6 +186,7 @@ module.exports = function (app, ctx) {
         else { r.review = true; r.alt = { amount: a2, ref: ref2 }; if (!sameA && (p2.agree_amount === false)) { /* تعارض حقيقي: لا نكتب مبلغًا */ r.amountRead = r.amount; r.amount = null; } }
       } catch (e) { r.review = r.conf < 85; }
     } else if (r.isReceipt) r.review = true;
+    await auditOne(job, it, r, txt);
     r.eng = eng; if (err1) r.err = err1;
     return gate(r);
   }
