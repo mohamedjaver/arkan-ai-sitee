@@ -120,6 +120,7 @@ table{width:100%;border-collapse:collapse;font-size:12px}th{background:#F3F7FD;c
 <div class="tools">
   <button class="pri" onclick="rematch()">إعادة المطابقة</button>
   <button id="rsm" style="display:none;background:#ED6C02;color:#fff;border-color:#ED6C02" onclick="resume()">متابعة القراءة</button>
+  <button onclick="const k=prompt('مفتاح Gemini (يُحفظ على هذا الجهاز فقط):',localStorage.getItem('gemKey')||'');if(k!=null&&k.trim()){localStorage.setItem('gemKey',k.trim());toast('حُفظ المفتاح');}">مفتاح Gemini</button>
   <button id="lkb" onclick="linkMode()">ربط يدوي ١:١</button>
   <span style="font-size:11px;color:var(--muted);font-weight:700">هامش %</span><input id="tol" inputmode="decimal" value="0.5" onchange="rematch()">
   <button onclick="exportPDF()">تقرير PDF</button>
@@ -236,11 +237,13 @@ async function verifyRead(file,p){const key=(localStorage.getItem('gemKey')||'')
   let t=(((j.candidates||[])[0]||{}).content||{parts:[]}).parts.map(x=>x.text||'').join('').replace(/```json|```/g,'').trim();const o=JSON.parse(t.slice(t.indexOf('{'),t.lastIndexOf('}')+1));
   return {amount:KZ(o.amount)||KZ(o.amount_verbatim),verbatim:o.amount_verbatim||'',ref:String(o.reference||'').trim(),date:o.date||''};}
 const BATCH=50;
-async function readPending(side){if(S.busy)return;S.busy=true;try{const all=(side==='sup'?S.sup:S.cust).filter(r=>r.reading);const pending=all.slice(0,BATCH);S.left=all.length-pending.length;
-  let i=0;const worker=async()=>{while(i<pending.length){const r=pending[i++];try{
+async function readPending(side){if(S.busy&&Date.now()-(S.lastTick||0)<120000){toast('القراءة جارية بالفعل… ('+(S.prog||0)+' في هذه الدفعة)');return;}S.busy=true;S.lastTick=Date.now();S.prog=0;S.miss=0;
+  if(!(localStorage.getItem('gemKey')||'').trim())toast('لا يوجد مفتاح Gemini — القراءة ستعتمد على OCR البطيء. اضغط «مفتاح Gemini» لإدخاله');
+  try{const all=(side==='sup'?S.sup:S.cust).filter(r=>r.reading);const pending=all.slice(0,BATCH);S.left=all.length-pending.length;toast('بدأت قراءة '+pending.length+' إيصال ('+(side==='sup'?'موردون':'زبائن')+') — 3 بالتوازي');render(true);
+  let i=0;const worker=async()=>{while(i<pending.length){const r=pending[i++];S.lastTick=Date.now();try{
       const T=(f)=>Promise.race([ArkanRead.readAmount(f),new Promise((_,j)=>setTimeout(()=>j('timeout'),45000))]);
       if(!r.file){try{r.file=await IDB.get('files',r.id);}catch(e){}}
-      if(!r.file)throw new Error('nofile');
+      if(!r.file){S.miss++;(r.flags=r.flags||[]).push('الملف الأصلي مفقود من التخزين المحلي — احذف البطاقة وأعد رفع الإيصال');throw new Error('nofile');}
       let p=window.ArkanRead?await T(r.file):null;
       if(r.pdf){const png=await pdfPage(r.file);if(png){r.thumb=await thumbOf(png);if(r.thumb)r.url=URL.createObjectURL(r.thumb);if(window.ArkanRead&&(!p||!p.amount)){try{const p2=await T(png);if(p2&&p2.amount)p=Object.assign({},p||{},p2,{eng:(p2.eng||'')+'+pdf-page'});}catch(e){}}}}
       if(p){r.amount=p.amount||null;r.rccy=p.ccy?norm(p.ccy):null;r.ccy=r.rccy||'AOA';r.ref=p.txn||'';if(!r.who&&!r.partySet)r.who=p.name||p.receiver||'';r.bank=p.bank||r.bank;const d=p.date&&new Date(p.date);if(d&&!isNaN(d)&&r.src!=='wa-img')r.date=d;r.eng=p.eng;
@@ -251,7 +254,7 @@ async function readPending(side){if(S.busy)return;S.busy=true;try{const all=(sid
             else{r.alt={amount:v.amount,verbatim:v.verbatim};r.amountRead=r.amount;r.amount=null;r.review=true;r.edit=true;(r.flags=r.flags||[]).push('قراءتان مختلفتان: '+fmt(r.amountRead)+' / '+(v.amount!=null?fmt(v.amount):'؟')+(v.verbatim?' («'+v.verbatim+'»)':'')+' — اكتب المبلغ من الصورة');r.dualFlag=true;}
             if(refA&&refB&&refA!==refB&&!/^ao\d{2}/.test(refB)){(r.flags=r.flags||[]).push('رقم العملية مختلف بين القراءتين: '+r.ref+' / '+v.ref+' — تحقق');}}
           else r.unverified=true;}}
-    }catch(e){r.fail=true;}r.reading=false;r.file=null;if(!r.amount)r.edit=true;else if(r.src==='wa-img')r.edit=true;
+    }catch(e){r.fail=true;if(e&&/API key|quota|429|403/i.test(String(e.message||e)))S.gemErr=String(e.message||e).slice(0,120);}r.reading=false;r.file=null;S.prog=(S.prog||0)+1;if(!r.amount)r.edit=true;else if(r.src==='wa-img')r.edit=true;
     sane(r);if(r.amount&&!r.rccy&&!r.ref&&!r.bank)r.unsure=true;
     if(isCrypto(r)||r.ccy==='MRU'){exclude(r,r.ccy==='MRU'?'أوقية موريتانية (MRU)':'عملة رقمية/غير كوانزا');render();continue;}
     if(notReceipt(r)){exclude(r,'ليست إيصالاً بنكيًا (لا مبلغ ولا مرجع ولا بنك)');render();continue;}
@@ -259,7 +262,8 @@ async function readPending(side){if(S.busy)return;S.busy=true;try{const all=(sid
     LED.enqueue(r);
     const d0=dupOf(r);if(d0){const arr=r.side==='sup'?S.sup:S.cust;arr.splice(arr.indexOf(r),1);IDB.del('files',r.id).catch(()=>{});toast('مكرر: رقم العملية '+r.ref+' موجود في نفس العمود ('+fmt(d0.amount)+') — رُفض');}
     renderSoon();}};
-  await Promise.all([worker(),worker(),worker()]);rematch();persist();if(S.skipped){toast('استُبعد '+S.skipped+' ملف (MRU/عملات رقمية/ليست إيصالات) — في قائمة «مستبعدة» مع زر استرجاع');S.skipped=0;}}finally{S.busy=false;render();}
+  const tick=setInterval(()=>{if(S.busy)render();},1500);S._tick=tick;
+  await Promise.all([worker(),worker(),worker()]);clearInterval(S._tick);rematch();persist();if(S.miss)toast(S.miss+' إيصال ملفه مفقود محليًا (ربما امتلأت ذاكرة الجهاز) — استخدم «رفع كبير — الخادم» للدفعات الكبيرة');if(S.gemErr){toast('Gemini: '+S.gemErr);S.gemErr=null;}if(S.skipped){toast('استُبعد '+S.skipped+' ملف (MRU/عملات رقمية/ليست إيصالات) — في قائمة «مستبعدة» مع زر استرجاع');S.skipped=0;}}finally{S.busy=false;render();}
   if(S.left>0)toast('قُرئت دفعة '+BATCH+' وحُفظت — بقي '+S.left+'. اضغط «متابعة القراءة»');}
 async function resume(){const n=S.cust.concat(S.sup).filter(r=>r.reading).length;if(!n){toast('لا إيصالات بانتظار القراءة');return;}if(S.cust.some(r=>r.reading))await readPending('cust');else await readPending('sup');}
 $('#fi').addEventListener('change',async function(){const list=[...this.files];if(!list.length)return;await addFiles(S.side,list);await readPending(S.side);toast('اكتملت القراءة — راجع المبالغ ثم المطابقة');});
@@ -532,7 +536,7 @@ function render(force){
     '<div style="--c:#fff"><span><i></i>الإجمالي</span><b>'+fx(sum(cc))+'</b><u>'+cc.length+' زبون · '+ss.length+' مورد'+(S.range.from||S.range.to?' · فترة':'')+'</u></div>'+
     '<div class="net"><span><i></i>صافي الفرق · AOA</span><b>'+(net>=0?'+':'−')+fx(Math.abs(net))+'</b></div></div>';
   (S.jobs||[]).forEach(j=>{const el=$('#srvp-'+j.side);if(el)el.textContent='الخادم يقرأ '+j.name+': '+j.done+' / '+j.total+(j.warn?' — '+j.warn:'');});
-  {const n=S.cust.concat(S.sup).filter(r=>r.reading).length;const b=$('#rsm');b.style.display=n&&!S.busy?'':'none';b.textContent='متابعة القراءة ('+n+' متبقٍ)';}
+  {const n=S.cust.concat(S.sup).filter(r=>r.reading).length;const b=$('#rsm');b.style.display=n?'':'none';b.textContent=S.busy?'جارٍ القراءة… '+(S.prog||0)+' / '+Math.min(BATCH,n+(S.prog||0))+' — '+n+' متبقٍ':'متابعة القراءة ('+n+' متبقٍ)';b.disabled=!!S.busy;}
   $('#lkb').className=S.link?'on':'';$('#lkb').textContent=S.link?'إنهاء الربط اليدوي':'ربط يدوي ١:١';
   bigCards();$('#c-cust').innerHTML=col('cust');$('#c-sup').innerHTML=col('sup');
   const rows=def.map(r=>({r,side:'زبون',kind:'نقص',v:-AOA(r),c:'#B00020'})).concat(exc.map(r=>({r,side:'مورد',kind:'فائض',v:AOA(r),c:'#2E7D32'}))).sort((a,b)=>days(b.r.date)-days(a.r.date)||Math.abs(b.v)-Math.abs(a.v));
