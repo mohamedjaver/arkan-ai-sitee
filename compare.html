@@ -233,11 +233,17 @@ function moveParty(side){const rows=side==='sup'?S.sup:S.cust;const names=[...ne
   const nm=/^\d+$/.test(pick.trim())?names[+pick.trim()-1]:names.find(n=>n.toLowerCase()===pick.trim().toLowerCase())||names.find(n=>n.toLowerCase().includes(pick.trim().toLowerCase()));if(!nm){toast('لم أجد هذا الاسم');return;}
   const sel=rows.filter(r=>(r.who||'').trim()===nm);if(!confirm('نقل '+sel.length+' إيصال لـ «'+nm+'» إلى عمود '+(side==='sup'?'الزبائن':'الموردين')+'؟ ستُفكّ مطابقاتها وتُعاد المطابقة.'))return;
   sel.forEach(flipRow);toast('نُقل '+sel.length+' إيصال — أُعيدت المطابقة');rematch();}
-function pickParty(side,title,extra){const rows=(side==='sup'?S.sup:S.cust).concat((S.excl||[]).filter(r=>r.side===side));const names=[...new Set(rows.map(r=>(r.who||'').trim()).filter(Boolean))];if(!names.length&&!extra){toast('لا إيصالات في هذا العمود');return null;}
-  const lines=names.map((n,i)=>(i+1)+'. '+n+' ('+rows.filter(r=>(r.who||'').trim()===n).length+')');if(extra)lines.push('0. '+extra);
-  const pick=prompt(title+'\n'+lines.join('\n')+'\n\nاكتب الرقم أو الاسم:');if(!pick)return null;const t=pick.trim();if(extra&&(t==='0'||t===extra))return {all:true,rows};
-  const nm=/^\d+$/.test(t)?names[+t-1]:names.find(n=>n.toLowerCase()===t.toLowerCase())||names.find(n=>n.toLowerCase().includes(t.toLowerCase()));if(!nm){toast('لم أجد هذا الاسم');return null;}
-  return {name:nm,rows:rows.filter(r=>(r.who||'').trim()===nm)};}
+function pickParty(side,title,extra){const rows=(side==='sup'?S.sup:S.cust).concat((S.excl||[]).filter(r=>r.side===side));if(!rows.length){toast('لا إيصالات في هذا العمود');return null;}
+  /* التجميع بالهاتف أولًا (اسم الجهة المقروء من الإيصال قد يكون اسم المستفيد لا المورد) */
+  const kOf=r=>{const p=String(r.phone||'').replace(/\D/g,'');return p.length>=8?'p:'+p:'n:'+(r.who||'').trim().toLowerCase();};
+  const G={};rows.forEach(r=>{const k=kOf(r);(G[k]=G[k]||{k,rows:[],names:{}}).rows.push(r);const n=(r.who||'').trim()||'—';G[k].names[n]=(G[k].names[n]||0)+1;});
+  const groups=Object.values(G).sort((a,b)=>b.rows.length-a.rows.length).map(g=>{g.label=Object.entries(g.names).sort((a,b)=>b[1]-a[1])[0][0];g.phone=g.k.startsWith('p:')?'+'+g.k.slice(2):'';return g;});
+  const lines=groups.map((g,i)=>(i+1)+'. '+g.label+(g.phone?' · '+g.phone:'')+' ('+g.rows.length+' إيصال)');lines.push('0. كل إيصالات هذا العمود ('+rows.length+')'+(extra?' / '+extra:''));
+  const pick=prompt(title+'\n'+lines.join('\n')+'\n\nاكتب الرقم أو الاسم أو الهاتف:');if(!pick)return null;const t=pick.trim(),td=t.replace(/\D/g,'');
+  if(t==='0')return {all:true,name:'كل العمود',rows};
+  let g=/^\d{1,3}$/.test(t)?groups[+t-1]:null;if(!g&&td.length>=8)g=groups.find(x=>x.k==='p:'+td)||groups.find(x=>x.k.startsWith('p:')&&x.k.endsWith(td.slice(-8)));
+  if(!g)g=groups.find(x=>x.label.toLowerCase()===t.toLowerCase())||groups.find(x=>x.label.toLowerCase().includes(t.toLowerCase()));if(!g){toast('لم أجد هذه الجهة');return null;}
+  return {name:g.label+(g.phone?' '+g.phone:''),rows:g.rows};}
 /* حذف جهة كاملة: الجهاز + الدفتر الدائم + الأصول في Storage + فكّ المطابقات (قيود الدفاتر تُحذف فقط إذا كانت كل إيصالاتها ضمن المحذوف) */
 async function delParty(side){const P=pickParty(side,'حذف جهة نهائيًا من عمود '+(side==='sup'?'الموردين':'الزبائن')+':');if(!P)return;const sel=P.rows;const booked=sel.filter(r=>r.book_entry_id).length;
   if(!confirm('حذف «'+P.name+'» — '+sel.length+' إيصال من هذا الجهاز ومن الدفتر الدائم ومن التخزين؟'+(booked?'\n\n'+booked+' منها مرحّل إلى دفتر — سيُحذف القيد إن كانت كل إيصالاته هنا، وإلا يُترك ويظهر في «تفتيش الدفاتر».':'')+'\n\nلا يمكن التراجع.'))return;
@@ -252,10 +258,10 @@ async function delParty(side){const P=pickParty(side,'حذف جهة نهائيً
       LED.refs={};Object.values(LED.idx).forEach(x=>{if(x.ref)LED.refs[x.side+'|'+x.ref.replace(/\s+/g,'').toLowerCase()]=x;});}catch(e){err=String(e.message||e).slice(0,100);}}
   else err='غير مسجّل الدخول — حُذف من الجهاز فقط';
   const P0=S.party[side]||{};if((P0.who||'').trim()===P.name){S.party[side]={who:'',phone:''};}
-  rematch();persist();toast('حُذفت «'+P.name+'»: '+sel.length+' من الجهاز · '+n+' من الدفتر · '+st+' ملف من التخزين'+(b?' · '+b+' قيد':'')+(err?' — '+err:''));}
+  rematch(true);render(true);persist();toast('حُذفت «'+P.name+'»: '+sel.length+' من الجهاز · '+n+' من الدفتر · '+st+' ملف من التخزين'+(b?' · '+b+' قيد':'')+(err?' — '+err:''));}
 /* إعادة قراءة جهة (أو كل بطاقات المراجعة) من الأصل: الجهاز أولًا ثم Supabase Storage — بلا حذف ولا إعادة رفع */
 async function rereadParty(side){const P=pickParty(side,'إعادة قراءة إيصالات جهة في عمود '+(side==='sup'?'الموردين':'الزبائن')+':','كل بطاقات «يحتاج مراجعة» في هذا العمود');if(!P)return;
-  let rows=P.all?(side==='sup'?S.sup:S.cust).filter(r=>(r.review||r.fail||!r.amount)&&!r.manual&&!r.matched&&!r.reading):P.rows.filter(r=>!r.excl&&!r.reading&&!r.book_entry_id);
+  let rows=P.rows.filter(r=>!r.excl&&!r.reading&&!r.book_entry_id&&!r.manual);if(P.all){const rev=rows.filter(r=>(r.review||r.fail||!r.amount)&&!r.matched);if(rev.length&&confirm('العمود كامل: إعادة قراءة بطاقات «يحتاج مراجعة» فقط ('+rev.length+')؟\nإلغاء = إعادة قراءة كل الإيصالات ('+rows.length+')'))rows=rev;}
   if(!rows.length){toast('لا بطاقات صالحة لإعادة القراءة (المرحّلة إلى دفتر أو المطابَقة تُستثنى)');return;}
   if(!confirm('إعادة قراءة '+rows.length+' إيصال'+(P.name?' لـ «'+P.name+'»':'')+'؟ تُمحى القراءة السابقة وتُفكّ المطابقة ثم يقرأها المحرك من الأصل.'))return;
   let ok=0,miss=0;for(const r of rows){let f=null;try{f=await IDB.get('files',r.id);}catch(e){}if(!f&&r.receipt_url){const b=await LED.fileOf(r);if(b){const pdf=r.pdf||/pdf/i.test(b.type||'');f=new File([b],(r.fp||r.id)+(pdf?'.pdf':'.jpg'),{type:b.type||(pdf?'application/pdf':'image/jpeg')});r.pdf=pdf;try{await IDB.put('files',r.id,f);}catch(e){}}}
