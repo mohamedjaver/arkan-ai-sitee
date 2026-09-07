@@ -76,7 +76,7 @@ module.exports = function (app, ctx) {
 - currency: Kz/AKZ/AOA → "AOA". إن كان الإيصال USDT/USDC/EUR/USD اكتب العملة الحقيقية.
 - reference: رقم العملية/Referência/Transacção/N.º da operação/Trs ID. لا تأخذ أبدًا رقم الحساب أو IBAN (يبدأ بـ AO06 أو طويل 21 رقمًا) كمرجع.
 - date: بصيغة YYYY-MM-DD HH:MM إن وُجدت.
-- is_bank_receipt=false إن لم يكن إيصال تحويل (محادثة، لقطة تطبيق عملات رقمية، صورة عادية).
+- is_bank_receipt=false إن لم يكن إيصال تحويل بنكي أنغولي: محادثة أو رسالة فيها رموز تعبيرية، لقطة تطبيق عملات رقمية، صورة عادية، أو إيصال موريتاني (Bankily/BPM/Masrvi/Sedad/BIM/BMCI — بالأوقية MRU/UM).
 - confidence: 0–100 لثقتك في amount وreference معًا.
 - التاريخ في الإيصالات الأنغولية بصيغة يوم/شهر/سنة (DD/MM/YYYY). لا تخترع سنة؛ إن لم يظهر التاريخ اترك date فارغًا. التاريخ لا يكون في المستقبل أبدًا.
 - تطبيقات موريتانيا (SEDAD, Bankily, Masrvi, Click, BimBank, Moov, BCI, BMCI, BNM, BPM) → currency="MRU" حتى لو لم تُكتب العملة. amount بالأوقية كما هو.

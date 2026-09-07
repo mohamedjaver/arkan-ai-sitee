@@ -256,6 +256,8 @@ async function readPending(side){if(S.busy&&Date.now()-(S.lastTick||0)<120000){t
           else r.unverified=true;}}
     }catch(e){r.fail=true;if(e&&/API key|quota|429|403/i.test(String(e.message||e)))S.gemErr=String(e.message||e).slice(0,120);}r.reading=false;r.file=null;S.prog=(S.prog||0)+1;if(!r.amount)r.edit=true;else if(r.src==='wa-img')r.edit=true;
     sane(r);if(r.amount&&!r.rccy&&!r.ref&&!r.bank)r.unsure=true;
+    if(isMauri(r)){exclude(r,'إيصال بنكيلي / بنك موريتاني — خارج المطابقة');render();continue;}
+    if(hasEmoji(r)){exclude(r,'رسالة محادثة برموز تعبيرية — ليست إيصالًا');render();continue;}
     if(isCrypto(r)||r.ccy==='MRU'){exclude(r,r.ccy==='MRU'?'أوقية موريتانية (MRU)':'عملة رقمية/غير كوانزا');render();continue;}
     if(notReceipt(r)){exclude(r,'ليست إيصالاً بنكيًا (لا مبلغ ولا مرجع ولا بنك)');render();continue;}
     {const kr=LED.knownRef(r.side,r.ref);if(kr&&kr.fp!==r.fp){exclude(r,'مكرر: رقم العملية مسجّل في الدفتر ('+fmt(kr.amount)+')');render();continue;}}
@@ -287,7 +289,7 @@ async function pollJobs(){clearTimeout(_pj);const open=(S.jobs||[]).filter(j=>j.
     j.status=d.status;j.done=d.done;j.total=d.total;j.warn=d.warn;j.next=d.next;
     const arr=j.side==='sup'?S.sup:S.cust;
     for(const x of d.results){ if(x.fail){arr.push({id:'r'+(++S.seq),side:j.side,file:null,url:null,amount:null,ccy:'AOA',ref:'',who:'',bank:'',date:new Date(),reading:false,matched:null,how:'',src:'srv',srv:SRV+'/compare/job/'+j.id+'/file/'+x.fid,pdf:!!x.pdf,hasFile:true,fail:true,edit:true,name:x.name,fp:x.fp,job:j.id,fid:x.fid,err:x.err||''});continue;}
-      if(x.isReceipt===false||/USDT|USDC|BTC|ETH/i.test(x.ccy||'')||(x.amount&&x.ccy&&x.ccy!=='AOA')){(S.excl=S.excl||[]).push({id:'r'+(++S.seq),side:j.side,excl:true,amount:x.amount,ccy:x.ccy||'',rccy:x.ccy||'',ref:x.ref||'',who:x.who||'',bank:x.bank||x.docType||'',date:x.date?new Date(x.date):new Date(),src:'srv',srv:SRV+'/compare/job/'+j.id+'/file/'+x.fid,pdf:!!x.pdf,hasFile:true,name:x.name,fp:x.fp,file:null,url:null,reading:false,matched:null,how:''});continue;}
+      if(x.isReceipt===false||MAURI.test((x.bank||'')+' '+(x.receiver||'')+' '+(x.who||''))||EMOJI.test((x.who||'')+' '+(x.bank||'')+' '+(x.ref||''))||/USDT|USDC|BTC|ETH/i.test(x.ccy||'')||(x.amount&&x.ccy&&x.ccy!=='AOA')){(S.excl=S.excl||[]).push({id:'r'+(++S.seq),side:j.side,excl:true,amount:x.amount,ccy:x.ccy||'',rccy:x.ccy||'',ref:x.ref||'',who:x.who||'',bank:x.bank||x.docType||'',date:x.date?new Date(x.date):new Date(),src:'srv',srv:SRV+'/compare/job/'+j.id+'/file/'+x.fid,pdf:!!x.pdf,hasFile:true,name:x.name,fp:x.fp,file:null,url:null,reading:false,matched:null,how:''});continue;}
       if(x.fp&&arr.some(y=>y.fp===x.fp))continue;
       if(MRU_APP.test((x.bank||'')+' '+(x.who||''))||x.ccy==='MRU'){(S.excl=S.excl||[]).push({id:'r'+(++S.seq),side:j.side,excl:true,why:'أوقية موريتانية (MRU)',amount:x.amount,ccy:'MRU',rccy:'MRU',ref:x.ref||'',who:x.who||'',bank:x.bank||'',date:x.date&&!isNaN(new Date(x.date))?new Date(x.date):new Date(),src:'srv',srv:SRV+'/compare/job/'+j.id+'/file/'+x.fid,pdf:!!x.pdf,hasFile:true,name:x.name,fp:x.fp,file:null,url:null,reading:false,matched:null,how:''});continue;}
       const rr={id:'r'+(++S.seq),side:j.side,file:null,url:null,amount:x.amount||null,ccy:'AOA',rccy:x.ccy||null,ref:x.ref||'',who:S.party[j.side].who||x.who||'',phone:S.party[j.side].who?S.party[j.side].phone||'':'',bank:x.bank||'',date:x.date&&!isNaN(new Date(x.date))?new Date(x.date):new Date(),reading:false,matched:null,how:'',src:'srv',srv:SRV+'/compare/job/'+j.id+'/file/'+x.fid,pdf:!!x.pdf,hasFile:true,name:x.name,fp:x.fp,job:j.id,fid:x.fid,verified:!!x.verified,review:!!x.review,alt:x.alt||null,conf:x.conf||0,edit:!x.verified||!x.amount,amountRead:x.amountRead||null,eng:x.eng||'',err:x.err||''};
@@ -357,6 +359,11 @@ function sane(r){r.flags=(r.flags||[]).filter(f=>/قراءتان|رقم العم
   return r;}
 /* ليست إيصالاً: قراءة نجحت لكن بلا مبلغ ولا مرجع ولا بنك ولا عملة (صورة عادية / كتالوج / محادثة) */
 const notReceipt=r=>!r.fail&&!r.amount&&!r.amountRead&&!r.ref&&!r.rccy&&!(r.bank&&!/واتساب|يدوي/.test(r.bank));
+/* بنكيلي وباقي التطبيقات الموريتانية + الرموز التعبيرية: خارج المطابقة */
+const MAURI=/bankily|bpm|masrvi|sedad|\bbim\b|gaza|amanty|bnm|bmci|attijari|banque\s*populaire|mauritan|nouakchott|ouguiya|\bum\b|mru/i;
+const EMOJI=/[\u{1F300}-\u{1FAFF}\u{1F600}-\u{1F64F}\u{2600}-\u{27BF}\u{1F900}-\u{1F9FF}]/u;
+function isMauri(r){return MAURI.test((r.bank||'')+' '+(r.receiver||'')+' '+(r.bankName||''))||r.rccy==='MRU'||r.ccy==='MRU';}
+function hasEmoji(r){return EMOJI.test((r.who||'')+' '+(r.bank||'')+' '+(r.ref||'')+' '+(r.receiver||'')+' '+(r.note||''));}
 function exclude(r,why){const arr=r.side==='sup'?S.sup:S.cust;const i=arr.indexOf(r);if(i>=0)arr.splice(i,1);r.excl=true;r.why=why||'';(S.excl=S.excl||[]).push(r);S.skipped=(S.skipped||0)+1;}
 const isCrypto=r=>/USDT|USDC|BTC|ETH|TRX|BNB/i.test(r.rccy||'')||(r.amount&&/^(EUR|USD|MRU|AED|CNY)$/i.test(r.rccy||''))||/binance|okx|bybit|trust|coinbase|kucoin|wallet|crypto|tron|bep20|erc20|trc20/i.test(r.bank||'')||/^0x[0-9a-f]{8,}|^T[1-9A-Za-z]{33}$/i.test(r.ref||'');
 const isPdf=f=>f&&(/pdf/i.test(f.type||'')||/\.pdf$/i.test(f.name||''));
