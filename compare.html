@@ -148,7 +148,7 @@ table{width:100%;border-collapse:collapse;font-size:12px}th{background:#F3F7FD;c
 <div class="tools" id="rng" style="margin-top:0">
   <span style="font-size:11px;color:var(--muted);font-weight:700">الفترة</span><input type="date" id="rf" onchange="setRange(this.value,$('#rt').value)"><span style="font-size:11px;color:var(--muted)">→</span><input type="date" id="rt" onchange="setRange($('#rf').value,this.value)">
   <button onclick="quick(0)">هذا الشهر</button><button onclick="quick(2)">٣ أشهر</button><button onclick="quick(5)">٦ أشهر</button><button onclick="quick(-1)">الكل</button>
-  <button class="pri" onclick="loadLedger()">تحميل من الدفتر</button>
+  <button class="pri" onclick="syncLedger(false)">مزامنة مع الدفتر</button>
 </div>
 <div class="tools" style="margin:6px 0 4px"><input id="q" placeholder="بحث: اسم / هاتف / مرجع / مبلغ / بنك" style="flex:1;min-width:160px;width:auto;text-align:right" oninput="S.q=this.value;render(true)"></div>
 <div id="views" class="tools" style="margin:0 0 8px"></div>
@@ -258,7 +258,7 @@ async function delParty(side){const P=pickParty(side,'حذف جهة نهائيً
       LED.refs={};Object.values(LED.idx).forEach(x=>{if(x.ref)LED.refs[x.side+'|'+x.ref.replace(/\s+/g,'').toLowerCase()]=x;});}catch(e){err=String(e.message||e).slice(0,100);}}
   else err='غير مسجّل الدخول — حُذف من الجهاز فقط';
   const P0=S.party[side]||{};if((P0.who||'').trim()===P.name){S.party[side]={who:'',phone:''};}
-  rematch(true);render(true);persist();toast('حُذفت «'+P.name+'»: '+sel.length+' من الجهاز · '+n+' من الدفتر · '+st+' ملف من التخزين'+(b?' · '+b+' قيد':'')+(err?' — '+err:''));}
+  rematch(true);render(true);persist();setTimeout(()=>syncLedger(true),800);toast('حُذفت «'+P.name+'»: '+sel.length+' من الجهاز · '+n+' من الدفتر · '+st+' ملف من التخزين'+(b?' · '+b+' قيد':'')+(err?' — '+err:''));}
 /* إعادة قراءة جهة (أو كل بطاقات المراجعة) من الأصل: الجهاز أولًا ثم Supabase Storage — بلا حذف ولا إعادة رفع */
 async function rereadParty(side){const P=pickParty(side,'إعادة قراءة إيصالات جهة في عمود '+(side==='sup'?'الموردين':'الزبائن')+':','كل بطاقات «يحتاج مراجعة» في هذا العمود');if(!P)return;
   let rows=P.rows.filter(r=>!r.excl&&!r.reading&&!r.book_entry_id&&!r.manual);if(P.all){const rev=rows.filter(r=>(r.review||r.fail||!r.amount)&&!r.matched);if(rev.length&&confirm('العمود كامل: إعادة قراءة بطاقات «يحتاج مراجعة» فقط ('+rev.length+')؟\nإلغاء = إعادة قراءة كل الإيصالات ('+rows.length+')'))rows=rev;}
@@ -384,7 +384,7 @@ async function readPending(side){if(S.busy&&Date.now()-(S.lastTick||0)<120000){t
     renderSoon();}};
   const tick=setInterval(()=>{if(S.busy)render();},1500);S._tick=tick;
   const PAR=Math.max(2,Math.min(8,parseInt(localStorage.getItem('gemPar')||'4')));await Promise.all(Array.from({length:PAR},worker));clearInterval(S._tick);rematch();persist();try{await auditBatch(pending);}catch(e){}if(S.miss)toast(S.miss+' إيصال ملفه مفقود محليًا (ربما امتلأت ذاكرة الجهاز) — استخدم «رفع كبير — الخادم» للدفعات الكبيرة');if(S.gemErr){toast('Gemini: '+S.gemErr);S.gemErr=null;}if(S.skipped){toast('استُبعد '+S.skipped+' ملف (MRU/عملات رقمية/ليست إيصالات) — في قائمة «مستبعدة» مع زر استرجاع');S.skipped=0;}}finally{S.busy=false;render();}
-  const more=(side==='sup'?S.sup:S.cust).filter(r=>r.reading).length;if(more>0&&!S.stop){toast('قُرئت دفعة وحُفظت — بقي '+more+'، تُكمل تلقائيًا');setTimeout(()=>readPending(side),600);}}
+  const more=(side==='sup'?S.sup:S.cust).filter(r=>r.reading).length;if(more>0&&!S.stop){toast('قُرئت دفعة وحُفظت — بقي '+more+'، تُكمل تلقائيًا');setTimeout(()=>readPending(side),600);}else if(!S.cust.concat(S.sup).some(r=>r.reading)){setTimeout(async()=>{while(LED.q.length||LED.busy)await new Promise(r=>setTimeout(r,400));syncLedger(true);},1500);}}
 async function resume(){S.stop=false;const n=S.cust.concat(S.sup).filter(r=>r.reading).length;if(!n){toast('لا إيصالات بانتظار القراءة');return;}if(S.cust.some(r=>r.reading))await readPending('cust');if(S.sup.some(r=>r.reading))await readPending('sup');}
 $('#fi').addEventListener('change',async function(){const list=[...this.files];if(!list.length)return;await addFiles(S.side,list);await readPending(S.side);toast('اكتملت القراءة — راجع المبالغ ثم المطابقة');});
 
@@ -549,8 +549,42 @@ const LED={idx:{},refs:{},ready:false,q:[],busy:0,
     Object.values(byFp).forEach(r=>{if(r._mfp&&!r.matched){const o=byFp[r._mfp]||S.cust.concat(S.sup).find(y=>y.fp===r._mfp);if(o&&!o.matched){r.matched=o;o.matched=r;if(r.side==='cust')r.how=r.how||'manual';else o.how=o.how||'manual';}}delete r._mfp;});
     rematch(false);toast('حُمّل '+n+' إيصال من الدفتر'+(rows.length-n?' · '+(rows.length-n)+' موجود في الجلسة':''));}
 };
+/* ───── تزامن حقيقي: الدفتر الدائم (Supabase) هو المرجع الوحيد للأرقام ─────
+   يُنفَّذ عند الفتح، بعد كل دفعة قراءة، بعد حذف جهة، وبالزر «مزامنة». يوفّق الجهاز مع الدفتر في الاتجاهين:
+   حُذف في الدفتر → يُزال من الجهاز · موجود في الدفتر فقط → يُضاف · تعديل يدوي في الدفتر → يُطبَّق · موجود محليًا فقط (مقروء) → يُسجَّل. */
+const SYNC={busy:false,at:0,led:null};
+async function syncLedger(silent){if(SYNC.busy||!tokenOf())return;if(S.busy&&!silent){toast('القراءة جارية — المزامنة بعدها تلقائيًا');return;}SYNC.busy=true;const t0=Date.now();
+  try{let rows;const sel='fp,side,amount,amount_read,ccy,ref,who,phone,bank,msg_at,manual,verified,review,flags,matched_fp,how,receipt_url,book_entry_id,updated_at';
+    try{rows=await sbq('/bdl_cmp_receipts?select='+sel+'&order=msg_at.desc&limit=50000');}catch(e){if(!colMissing(e))throw e;LED.noPhone=true;rows=await sbq('/bdl_cmp_receipts?select='+sel.replace('phone,','')+'&order=msg_at.desc&limit=50000');}
+    const L={};rows.forEach(x=>{L[x.fp]=x;});LED.idx=L;LED.refs={};rows.forEach(x=>{if(x.ref)LED.refs[x.side+'|'+x.ref.replace(/\s+/g,'').toLowerCase()]=x;});LED.ready=true;
+    let removed=0,added=0,updated=0,pushed=0,moved=0;const seen=new Set();
+    const all=S.cust.concat(S.sup);
+    for(const r of all){if(!r.fp||r.reading)continue;const x=L[r.fp];
+      if(!x){if(r.led){/* حُذف من الدفتر (جهاز آخر / حذف جهة) → يُزال هنا */if(r.matched){r.matched.matched=null;r.matched.how='';r.matched=null;}r._gone=true;removed++;IDB.del('files',r.id).catch(()=>{});IDB.del('files',r.id+'_t').catch(()=>{});}
+        else if(r.amount!=null&&!r.excl){LED.enqueue(r);pushed++;}continue;}
+      seen.add(r.fp);r.led=true;
+      if(x.side!==r.side){flipRow(r);moved++;}
+      const la=x.amount==null?null:Number(x.amount);const differs=(la!==(r.amount==null?null:Number(r.amount)))||(x.ref||'')!==(r.ref||'')||((x.who||'')!==(r.who||''))||((x.phone||'')!==(r.phone||''));
+      if(differs&&(x.manual||!r.manual)){r.amount=la;r.amountRead=x.amount_read==null?null:Number(x.amount_read);r.ref=x.ref||'';r.who=x.who||r.who;r.phone=x.phone||r.phone;r.bank=x.bank||r.bank;r.ccy=x.ccy||'AOA';r.manual=!!x.manual;r.verified=!!x.verified;r.review=!!x.review;r.flags=x.flags||r.flags||[];r.edit=r.amount==null;updated++;}
+      if(x.receipt_url&&!r.receipt_url){r.receipt_url=x.receipt_url;r.hasFile=true;}if(x.book_entry_id&&!r.book_entry_id)r.book_entry_id=x.book_entry_id;if(!x.book_entry_id&&r.book_entry_id)r.book_entry_id=null;r._mfp=x.matched_fp||null;}
+    if(removed){S.cust=S.cust.filter(r=>!r._gone);S.sup=S.sup.filter(r=>!r._gone);}
+    /* في الدفتر وليس على الجهاز */
+    const byFp={};S.cust.concat(S.sup).forEach(r=>{if(r.fp)byFp[r.fp]=r;});
+    rows.forEach(x=>{if(byFp[x.fp]||(S.excl||[]).some(e=>e.fp===x.fp))return;const r={id:'r'+(++S.seq),side:x.side,file:null,url:null,amount:x.amount==null?null:Number(x.amount),amountRead:x.amount_read==null?null:Number(x.amount_read),ccy:x.ccy||'AOA',rccy:x.ccy||'AOA',ref:x.ref||'',who:x.who||'',phone:x.phone||'',bank:x.bank||'',date:new Date(x.msg_at),reading:false,matched:null,how:x.how||'',src:'ledger',fp:x.fp,hasFile:!!x.receipt_url,receipt_url:x.receipt_url||null,pdf:/\.pdf$/i.test(x.receipt_url||''),manual:!!x.manual,verified:!!x.verified,review:!!x.review,flags:x.flags||[],book_entry_id:x.book_entry_id||null,led:true,edit:x.amount==null,_mfp:x.matched_fp||null};(x.side==='sup'?S.sup:S.cust).push(r);byFp[x.fp]=r;added++;});
+    /* الروابط كما في الدفتر */
+    Object.values(byFp).forEach(r=>{if(r._mfp&&!r.matched){const o=byFp[r._mfp];if(o&&!o.matched){r.matched=o;o.matched=r;if(r.side==='cust')r.how=r.how||'manual';else o.how=o.how||'manual';}}delete r._mfp;});
+    SYNC.at=Date.now();SYNC.led={n:rows.length,c:rows.filter(x=>x.side==='cust').length,s:rows.filter(x=>x.side==='sup').length,sc:rows.filter(x=>x.side==='cust').reduce((a,x)=>a+(+x.amount||0),0),ss:rows.filter(x=>x.side==='sup').reduce((a,x)=>a+(+x.amount||0),0)};
+    rematch(false);persist();syncTag();
+    const msg='متزامن مع الدفتر ('+((Date.now()-t0)/1000).toFixed(1)+'ث): '+rows.length+' إيصال'+(added?' · +'+added+' من الدفتر':'')+(removed?' · −'+removed+' محذوف':'')+(updated?' · '+updated+' محدَّث':'')+(pushed?' · '+pushed+' سُجّل':'')+(moved?' · '+moved+' نُقل':'');
+    if(!silent||added||removed||updated||moved)toast(msg);}
+  catch(e){SYNC.err=String(e.message||e).slice(0,80);syncTag();if(!silent)toast('تعذّرت المزامنة: '+SYNC.err);}
+  finally{SYNC.busy=false;}}
+function syncTag(){const el=$('#tag');if(!el)return;if(SYNC.err&&!SYNC.led){el.textContent='الدفتر غير متصل';el.style.color='';return;}const d=SYNC.led;if(!d){el.textContent='الدفتر';return;}
+  const ago=Math.round((Date.now()-SYNC.at)/60000);el.textContent='الدفتر · '+d.n+' إيصال · '+(ago<1?'الآن':ago+' د');el.title='الدفتر الدائم: '+d.c+' زبون ('+fmt(d.sc)+') · '+d.s+' مورد ('+fmt(d.ss)+')';el.style.cursor='pointer';el.onclick=()=>syncLedger(false);
+  const lc=S.cust.filter(r=>r.fp&&!r.reading).length,ls=S.sup.filter(r=>r.fp&&!r.reading).length;el.style.color=(lc===d.c&&ls===d.s)?'':'var(--red)';}
+setInterval(syncTag,60000);document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&Date.now()-SYNC.at>120000&&!S.busy)syncLedger(true);});
 function tableMissing(e){return e&&(e.status===404||/PGRST205|does not exist/.test(e.body||''));}
-function loadLedger(){LED.load();}
+function loadLedger(){syncLedger(false);}
 function setParty(side,k,v){S.party[side][k]=String(v||'').trim();persist();render(true);}
 function setRange(f,t){S.range.from=f?new Date(f+'T00:00:00').getTime():null;S.range.to=t?new Date(t+'T00:00:00').getTime():null;$('#rf').value=f||'';$('#rt').value=t||'';S.lim={};render(true);}
 function quick(m){if(m<0){setRange('','');return;}const d=new Date();const f=new Date(d.getFullYear(),d.getMonth()-m,1);setRange(f.toISOString().slice(0,10),'');}
@@ -876,7 +910,7 @@ function exportPDF(){const JS=window.jspdf&&window.jspdf.jsPDF;if(!JS){toast('م
     x.fillStyle='#5A6E92';x.font='700 12px Inter, sans-serif';x.textAlign='center';x.fillText('lbdal.com · BDL Exchange · '+new Date().toISOString().slice(0,16).replace('T',' '),W/2,H-24);
     if(pi)pdf.addPage([W*0.75,H*0.75]);pdf.addImage(cv.toDataURL('image/jpeg',.9),'JPEG',0,0,W*0.75,H*0.75);});
   pdf.save('BDL-matching-'+new Date().toISOString().slice(0,10)+'.pdf');}
-(async()=>{await storageInfo();await restoreSession();render();pollJobs();await LED.index();render(true);setTimeout(freeLocal,4000);if(S.cust.concat(S.sup).some(r=>r.reading))setTimeout(resume,1200);})();
+(async()=>{await storageInfo();await restoreSession();render();pollJobs();await syncLedger(true);render(true);setTimeout(freeLocal,4000);if(S.cust.concat(S.sup).some(r=>r.reading))setTimeout(resume,1200);})();
 </script>
 </body>
 </html>
