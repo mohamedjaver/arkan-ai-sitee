@@ -134,6 +134,7 @@ table{width:100%;border-collapse:collapse;font-size:12px}th{background:#F3F7FD;c
   <button class="pri" onclick="rematch()">إعادة المطابقة</button>
   <button id="rsm" style="display:none;background:#ED6C02;color:#fff;border-color:#ED6C02" onclick="resume()">متابعة القراءة</button>
   <button onclick="freeLocal()">تحرير مساحة الجهاز</button>
+  <button style="border-color:var(--red);color:var(--red)" onclick="audit()">تفتيش الدفاتر</button>
   <button onclick="const k=prompt('مفتاح Gemini (يُحفظ على هذا الجهاز فقط):',localStorage.getItem('gemKey')||'');if(k!=null&&k.trim()){localStorage.setItem('gemKey',k.trim());toast('حُفظ المفتاح');}">مفتاح Gemini</button>
   <button id="lkb" onclick="linkMode()">ربط يدوي ١:١</button>
   <span style="font-size:11px;color:var(--muted);font-weight:700">هامش %</span><input id="tol" inputmode="decimal" value="0.5" onchange="rematch()">
@@ -480,16 +481,26 @@ function renderParty(){let v=$('#pp');if(!v){v=document.createElement('div');v.i
     '<button style="width:100%;padding:13px;margin-top:10px;background:var(--navy);color:#fff;border:0;font:800 14px Cairo,sans-serif;cursor:pointer" '+(pick.length&&PP.who.trim()?'':'disabled')+' onclick="postParty()">حفظ '+pick.length+' إيصال · '+fmt(tot)+' AOA باسم «'+esc(PP.who||'…')+'»'+(PP.phone?' · '+esc(PP.phone):'')+'</button>'+
     '<div style="font-size:11.5px;color:var(--muted);font-weight:700;margin-top:6px">تُسمّى الإيصالات المختارة بهذا الاسم والرقم (بلا حذف أي تنقيح)، ويُقيَّد المجموع مرة واحدة في دفتره، وتبقى الإيصالات هنا في المطابقة.</div>'+
   '</div>';}
-async function postParty(){const who=String(PP.who||'').trim(),phone=String(PP.phone||'').trim();if(!who){toast('اكتب اسم الجهة');return;}
-  const rows=partyRows().filter(r=>PP.sel[r.id]&&r.amount);if(!rows.length)return;const tot=rows.reduce((a,r)=>a+Number(r.amount),0);
+function batchKey(bookId,rows){const fps=rows.map(r=>r.fp||r.id).sort().join('|');let h=0x811c9dc5;for(let i=0;i<fps.length;i++){h^=fps.charCodeAt(i);h=Math.imul(h,16777619)>>>0;}return rows.length+' إيصالات · CMP:'+bookId+':'+h.toString(16);}
+async function postParty(){if(PP.busy){toast('جارٍ الحفظ… انتظر');return;}const who=String(PP.who||'').trim(),phone=String(PP.phone||'').trim();if(!who){toast('اكتب اسم الجهة');return;}
+  let rows=partyRows().filter(r=>PP.sel[r.id]&&r.amount);if(!rows.length)return;
+  /* القاعدة الذهبية: لا يُحفظ إيصال مرتين — تحقق من الدفتر الدائم قبل القيد */
+  PP.busy=true;const btn=document.querySelector('#pp button[onclick="postParty()"]');if(btn){btn.disabled=true;btn.textContent='جارٍ التحقق من التكرار…';}
+  try{const fps=rows.map(r=>r.fp).filter(Boolean);const already={};for(let i=0;i<fps.length;i+=150){const part=fps.slice(i,i+150);try{const got=await sbq('/bdl_cmp_receipts?select=fp,book_entry_id&book_entry_id=not.is.null&fp=in.('+part.map(x=>'"'+x+'"').join(',')+')');got.forEach(x=>{already[x.fp]=x.book_entry_id;});}catch(e){}}
+    if(!PP.move){const skip=rows.filter(r=>already[r.fp]);if(skip.length){skip.forEach(r=>{r.book_entry_id=already[r.fp];});rows=rows.filter(r=>!already[r.fp]);toast(skip.length+' إيصال محفوظ سابقًا في الدفتر — استُبعد من هذا القيد');if(!rows.length){PP.busy=false;render(true);renderParty();return;}}}
+  }catch(e){}
+  const tot=rows.reduce((a,r)=>a+Number(r.amount),0);
   let bk=bookFor(who,phone);
   try{
     if(!bk){const out=await sbq('/bdl_books?select=id,name,kind,currency,phone',{method:'POST',headers:{Prefer:'return=representation'},body:{name:who,kind:PP.side==='sup'?'supplier':'customer',currency:'AOA',phone:phone||null}});bk=out&&out[0];if(!bk)throw new Error('لم يُنشأ الدفتر');BOOKS.unshift(bk);}
     else if(phone&&normP(bk.phone)!==normP(phone)){try{await sbq('/bdl_books?id=eq.'+bk.id,{method:'PATCH',headers:{Prefer:'return=minimal'},body:{phone}});bk.phone=phone;}catch(e){}}
     const sorted=rows.slice().sort((a,b)=>a.date-b.date);const first=sorted[0],last=sorted[sorted.length-1];
     const note='مقارنة الإيصالات · '+rows.length+' إيصال · '+dGB(first.date)+' → '+dGB(last.date)+'\n'+sorted.map(r=>dGB(r.date)+' '+fmt(r.amount)+(r.ref?' #'+r.ref:'')).join(' | ').slice(0,900);
-    const body={book_id:bk.id,side:PP.side==='cust'?'in':'out',amount:tot,ccy:'AOA',ref:rows.length+' إيصالات',party:who+(phone?' · '+phone:''),entry_date:new Date().toISOString().slice(0,10),entry_time:new Date().toTimeString().slice(0,5),method:'transfer',source:'ops',note,receipt_url:(rows.find(r=>r.receipt_url)||{}).receipt_url||null};
-    let out;try{out=await sbq('/bdl_book_entries?select=id',{method:'POST',headers:{Prefer:'return=representation'},body});}
+    const key=batchKey(bk.id,rows);
+    /* نفس الدفعة قُيّدت من قبل؟ أعد استخدام قيدها بدل إنشاء قيد ثانٍ */
+    let dupE=null;try{const ex=await sbq('/bdl_book_entries?select=id,amount&book_id=eq.'+bk.id+'&ref=eq.'+encodeURIComponent(key)+'&limit=1');dupE=ex&&ex[0];}catch(e){}
+    const body={book_id:bk.id,side:PP.side==='cust'?'in':'out',amount:tot,ccy:'AOA',ref:key,party:who+(phone?' · '+phone:''),entry_date:new Date().toISOString().slice(0,10),entry_time:new Date().toTimeString().slice(0,5),method:'transfer',source:'ops',note,receipt_url:(rows.find(r=>r.receipt_url)||{}).receipt_url||null};
+    let out;if(dupE){out=[dupE];toast('هذه الدفعة مقيّدة سابقًا — أُعيد ربطها بقيدها دون تكرار');}else try{out=await sbq('/bdl_book_entries?select=id',{method:'POST',headers:{Prefer:'return=representation'},body});}
     catch(e){if(!colMissing(e))throw e;out=await sbq('/bdl_book_entries?select=id',{method:'POST',headers:{Prefer:'return=representation'},body:{book_id:body.book_id,side:body.side,amount:body.amount,ccy:body.ccy,note:body.note,entry_date:body.entry_date}});}
     const eid=out&&out[0]&&out[0].id;if(!eid)throw new Error('لم يُنشأ القيد');
     /* نقل إيصالات محفوظة سابقًا: يُخصم مبلغها من قيدها القديم (أو يُحذف القيد إن انتقلت كل إيصالاته) */
@@ -502,7 +513,36 @@ async function postParty(){const who=String(PP.who||'').trim(),phone=String(PP.p
     for(const r of rows){r.srcWho=r.srcWho||r.who;r.who=who;if(phone)r.phone=phone;r.manual=true;r.book_entry_id=eid;}
     S.party[PP.side]={who,phone};$('#pp').style.display='none';render(true);toast('حُفظ '+rows.length+' إيصال · '+fmt(tot)+' AOA في دفتر «'+bk.name+'» ✓ — تبقى في المطابقة');
     for(const r of rows){await LED.patch(r,Object.assign({who,manual:true,book_entry_id:eid},phone?{phone}:{}));}
-  }catch(e){toast('تعذّر الحفظ: '+e.message);}}
+  }catch(e){toast('تعذّر الحفظ: '+e.message);}finally{PP.busy=false;}}
+/* ───── تفتيش شامل: صفحة المطابقة ↔ الدفاتر ───── */
+async function audit(){if(!tokenOf()){toast('سجّل الدخول أولًا');return;}toast('جارٍ التفتيش…');
+  const out=[];const fix=[];
+  let ents=[];try{ents=await sbq('/bdl_books?select=id,name,phone,kind');}catch(e){toast('تعذّر قراءة الدفاتر');return;}const bookName={};ents.forEach(b=>bookName[b.id]=b.name);
+  let E=[];try{E=await sbq('/bdl_book_entries?select=id,book_id,side,amount,ref,note,entry_date,created_at&or=(ref.like.*CMP:*,note.like.مقارنة الإيصالات*)&order=created_at.asc&limit=5000');}catch(e){E=[];}
+  let L=[];try{L=await sbq('/bdl_cmp_receipts?select=fp,side,amount,who,phone,book_entry_id,ref&book_entry_id=not.is.null&limit=50000');}catch(e){}
+  const byE={};L.forEach(x=>{(byE[x.book_entry_id]=byE[x.book_entry_id]||[]).push(x);});
+  /* أ) قيود مكررة: نفس الدفتر ونفس المفتاح أو نفس المبلغ+نفس عدد الإيصالات+نفس اليوم */
+  const seen={};E.forEach(e=>{const k=e.ref&&/CMP:/.test(e.ref)?e.ref:(e.book_id+'|'+e.side+'|'+Number(e.amount)+'|'+String(e.note||'').split('\n')[0]);if(seen[k]){out.push({t:'dup',e,orig:seen[k]});fix.push({type:'del',id:e.id,label:'حذف القيد المكرر #'+e.id+' ('+fmt(e.amount)+') في دفتر '+(bookName[e.book_id]||e.book_id)+' — الأصل #'+seen[k].id});}else seen[k]=e;});
+  /* ب) مجموع الإيصالات ≠ مبلغ القيد */
+  E.forEach(e=>{const rs=byE[e.id]||[];if(!rs.length)return;const sum=rs.reduce((a,x)=>a+Number(x.amount||0),0);if(Math.abs(sum-Number(e.amount))>1){out.push({t:'sum',e,sum,n:rs.length});fix.push({type:'patch',id:e.id,amount:sum,label:'تصحيح مبلغ القيد #'+e.id+' من '+fmt(e.amount)+' إلى مجموع إيصالاته '+fmt(sum)+' ('+rs.length+')'});}});
+  /* ج) إيصال مرتبط بقيد غير موجود */
+  const eids=new Set(E.map(e=>e.id));const orphan=L.filter(x=>!eids.has(x.book_entry_id));if(orphan.length){out.push({t:'orphan',n:orphan.length});fix.push({type:'unlink',fps:orphan.map(x=>x.fp),label:'فك ربط '+orphan.length+' إيصال بقيد محذوف (تعود قابلة للحفظ)'});}
+  /* د) نفس الإيصال في قيدين */
+  const cnt={};L.forEach(x=>{cnt[x.fp]=(cnt[x.fp]||0)+1;});const multi=Object.keys(cnt).filter(k=>cnt[k]>1);if(multi.length)out.push({t:'multi',n:multi.length});
+  /* هـ) الجلسة الحالية: إيصال بمبلغ محفوظ في دفتر لكن الدفتر يخالف الاتجاه */
+  const wrong=S.cust.concat(S.sup).filter(r=>r.book_entry_id&&E.find(e=>e.id===r.book_entry_id&&((e.side==='in')!==(r.side==='cust'))));if(wrong.length)out.push({t:'side',n:wrong.length});
+  let v=$('#au');if(!v){v=document.createElement('div');v.id='au';v.style.cssText='position:fixed;inset:0;background:rgba(11,47,112,.55);z-index:70;display:grid;place-items:end center';document.body.appendChild(v);v.onclick=()=>{v.style.display='none';};}
+  v.style.display='';S.fix=fix;
+  v.innerHTML='<div style="background:#fff;width:min(640px,100%);max-height:88vh;overflow:auto;padding:14px" onclick="event.stopPropagation()"><h4 style="margin:0 0 8px;color:var(--navy);display:flex;justify-content:space-between"><span>تفتيش المطابقة ↔ الدفاتر</span><button class="x" style="position:static;color:var(--red)" onclick="$(\'#au\').style.display=\'none\'">إغلاق</button></h4>'+
+    '<div style="font-size:12px;color:var(--muted);font-weight:700;margin-bottom:8px">'+E.length+' قيد من المقارنة · '+L.length+' إيصال محفوظ في الدفاتر</div>'+
+    (out.length?out.map(o=>'<div style="padding:9px 10px;border:1px solid #F1C4CA;background:#FFF1F1;margin-bottom:6px;font-size:12.5px;font-weight:700;color:var(--red)">'+(o.t==='dup'?'قيد مكرر #'+o.e.id+' ('+fmt(o.e.amount)+' · '+(bookName[o.e.book_id]||'')+') — نسخة من #'+o.orig.id+' بتاريخ '+String(o.e.created_at||'').slice(0,16).replace('T',' '):o.t==='sum'?'القيد #'+o.e.id+' مبلغه '+fmt(o.e.amount)+' لكن إيصالاته ('+o.n+') مجموعها '+fmt(o.sum):o.t==='orphan'?o.n+' إيصال مرتبط بقيد محذوف':o.t==='multi'?o.n+' إيصال ظاهر في أكثر من قيد (راجع الحذف بعد التصحيح)':o.n+' إيصال في الجلسة اتجاهه يخالف قيده')+'</div>').join(''):'<div class="empty" style="color:var(--green)">لا مخالفات — الدفاتر مطابقة لصفحة المقارنة ✓</div>')+
+    (fix.length?'<div style="margin-top:10px;font-size:12.5px;font-weight:800;color:var(--navy)">إصلاحات مقترحة:</div>'+fix.map((f,i)=>'<label style="display:flex;gap:8px;align-items:flex-start;padding:7px 0;font-size:12px;font-weight:700"><input type="checkbox" checked data-i="'+i+'"> '+esc(f.label)+'</label>').join('')+'<button style="width:100%;padding:13px;margin-top:8px;background:var(--red);color:#fff;border:0;font:800 14px Cairo,sans-serif" onclick="applyFix()">تطبيق الإصلاحات المحددة</button>':'')+'</div>';}
+async function applyFix(){const boxes=[...document.querySelectorAll('#au input[type=checkbox]')];const sel=boxes.filter(b=>b.checked).map(b=>S.fix[+b.dataset.i]);if(!sel.length)return;if(!confirm('تطبيق '+sel.length+' إصلاح على الدفاتر؟'))return;let n=0;
+  for(const f of sel){try{if(f.type==='del'){await sbq('/bdl_book_entries?id=eq.'+f.id,{method:'DELETE',headers:{Prefer:'return=minimal'}});try{await sbq('/bdl_cmp_receipts?book_entry_id=eq.'+f.id,{method:'PATCH',headers:{Prefer:'return=minimal'},body:{book_entry_id:null}});}catch(e){}S.cust.concat(S.sup).forEach(r=>{if(r.book_entry_id===f.id)r.book_entry_id=null;});}
+    else if(f.type==='patch'){await sbq('/bdl_book_entries?id=eq.'+f.id,{method:'PATCH',headers:{Prefer:'return=minimal'},body:{amount:f.amount}});}
+    else if(f.type==='unlink'){for(let i=0;i<f.fps.length;i+=150){await sbq('/bdl_cmp_receipts?fp=in.('+f.fps.slice(i,i+150).map(x=>'"'+x+'"').join(',')+')',{method:'PATCH',headers:{Prefer:'return=minimal'},body:{book_entry_id:null}});}S.cust.concat(S.sup).forEach(r=>{if(f.fps.includes(r.fp))r.book_entry_id=null;});}
+    n++;}catch(e){console.warn('fix',f,e);}}
+  toast('طُبّق '+n+' إصلاح');render(true);audit();}
 /* تسمية دفعة بلا ترحيل (للاستخدام من رأس العمود لاحقًا) */
 async function renameBatch(side,from,who,phone){who=String(who||'').trim();phone=String(phone||'').trim();if(!who){toast('اكتب اسم الجهة');return 0;}
   const rows=(side==='sup'?VS():VC()).filter(r=>!from||nm(r)===from);let n=0;
@@ -700,12 +740,25 @@ function lines(){const cc=VC(),ss=VS();const def=cc.filter(r=>!r.matched),exc=ss
   return L;}
 async function shareText(){const t=lines().join('\n');try{await navigator.clipboard.writeText(t);toast('نُسخ التقرير — الصقه في واتساب');}catch(e){prompt('انسخ النص:',t);}}
 function exportPDF(){const JS=window.jspdf&&window.jspdf.jsPDF;if(!JS){toast('مكتبة PDF لم تُحمّل بعد');return;}
-  const L=lines(),W=1000,lh=34,H=140+L.length*lh;const cv=document.createElement('canvas');cv.width=W*2;cv.height=H*2;const x=cv.getContext('2d');x.scale(2,2);
-  x.fillStyle='#fff';x.fillRect(0,0,W,H);x.fillStyle='#0B2F70';x.fillRect(0,0,W,90);x.fillStyle='#D4AF37';x.fillRect(0,90,W,2);
-  x.fillStyle='#fff';x.font='800 30px Cairo, Inter, sans-serif';x.textAlign='right';x.direction='rtl';x.fillText('BDL · مقارنة الإيصالات — جلسة بلا حفظ',W-30,56);
-  x.fillStyle='#0F1F3D';x.font='700 20px Cairo, Inter, sans-serif';
-  L.forEach((s,i)=>{if(/^— /.test(s)){x.fillStyle='#0B2F70';x.font='800 22px Cairo, Inter, sans-serif';}else{x.fillStyle=/^نقص/.test(s)?'#B00020':/^فائض/.test(s)?'#2E7D32':'#0F1F3D';x.font='700 20px Cairo, Inter, sans-serif';}x.fillText(s,W-30,130+i*lh);});
-  const pdf=new JS({unit:'pt',format:[W*0.75,Math.min(H,14400)*0.75]});pdf.addImage(cv.toDataURL('image/jpeg',.92),'JPEG',0,0,W*0.75,H*0.75);pdf.save('BDL-compare-'+new Date().toISOString().slice(0,10)+'.pdf');}
+  const cc=VC(),ss=VS();const def=cc.filter(r=>!r.matched&&r.amount),exc=ss.filter(r=>!r.matched&&r.amount),ok=cc.filter(r=>r.matched);
+  const grp=arr=>{const g={};arr.forEach(r=>{const k=(r.who||'—')+(r.phone?' · '+r.phone:'');(g[k]=g[k]||[]).push(r);});return Object.entries(g).sort((a,b)=>sum(b[1])-sum(a[1]));};
+  const pages=[];let cur=[];const push=(t,st)=>{cur.push({t,st});if(cur.length>=34){pages.push(cur);cur=[];}};
+  const title='BDL · تقرير المطابقة — '+({today:'اليوم','7d':'٧ أيام','30d':'٣٠ يومًا',all:'كل الفترة'}[S.range&&S.range.k]||((S.range&&S.range.from)||'')+' → '+((S.range&&S.range.to)||''))+' · '+new Date().toLocaleDateString('en-GB');
+  push('الملخص','h');push('إيصالات الزبائن: '+cc.length+' · '+fmt(sum(cc))+' AOA','');push('إيصالات الموردين: '+ss.length+' · '+fmt(sum(ss))+' AOA','');push('مطابَق: '+ok.length+' · '+fmt(sum(ok))+' AOA','');
+  push('نقص — إيصالات زبائن لم تصل الموردين: '+def.length+' · '+fmt(sum(def))+' AOA','r');push('فائض — إيصالات موردين بلا زبون: '+exc.length+' · '+fmt(sum(exc))+' AOA','g');const net=sum(exc)-sum(def);push('صافي الفرق: '+(net>=0?'+':'−')+fmt(Math.abs(net))+' AOA',net>=0?'g':'r');push('','');
+  push('١) إيصالات الزبائن التي لم تصل الموردين — الأهم','h');
+  if(!def.length)push('لا يوجد ✓','g');grp(def).forEach(([k,rs])=>{push(k+' — '+rs.length+' إيصال · '+fmt(sum(rs))+' AOA','sub');rs.sort((a,b)=>a.date-b.date).forEach(r=>push(dGB(r.date)+'   '+fmt(r.amount)+' AOA   '+(r.ref?'#'+r.ref:'بلا مرجع')+'   '+(r.bank||'')+'   منذ '+days(r.date)+' يوم','r'));});
+  push('','');push('٢) إيصالات الموردين بلا زبون (فائض)','h');
+  if(!exc.length)push('لا يوجد ✓','g');grp(exc).forEach(([k,rs])=>{push(k+' — '+rs.length+' إيصال · '+fmt(sum(rs))+' AOA','sub');rs.sort((a,b)=>a.date-b.date).forEach(r=>push(dGB(r.date)+'   '+fmt(r.amount)+' AOA   '+(r.ref?'#'+r.ref:'بلا مرجع')+'   '+(r.bank||''),'g'));});
+  push('','');push('٣) المطابَق — زبون / مورد','h');grp(ok).forEach(([k,rs])=>{push(k+' — '+rs.length+' · '+fmt(sum(rs))+' AOA','sub');rs.sort((a,b)=>a.date-b.date).forEach(r=>push(dGB(r.date)+'   '+fmt(r.amount)+'   '+(r.ref?'#'+r.ref:'')+'   ⇐   '+(r.matched.who||'—')+' '+fmt(r.matched.amount)+' '+(r.matched.ref?'#'+r.matched.ref:''),''));});
+  if(cur.length)pages.push(cur);
+  const W=1000,H=1414;const pdf=new JS({unit:'pt',format:[W*0.75,H*0.75]});
+  pages.forEach((pg,pi)=>{const cv=document.createElement('canvas');cv.width=W*2;cv.height=H*2;const x=cv.getContext('2d');x.scale(2,2);x.fillStyle='#fff';x.fillRect(0,0,W,H);
+    x.fillStyle='#0B2F70';x.fillRect(0,0,W,80);x.fillStyle='#D4AF37';x.fillRect(0,80,W,2);x.fillStyle='#fff';x.font='800 24px Cairo, Inter, sans-serif';x.textAlign='right';x.direction='rtl';x.fillText(title,W-30,50);x.textAlign='left';x.font='700 14px Inter, sans-serif';x.fillText('page '+(pi+1)+' / '+pages.length,30,50);x.textAlign='right';
+    let y=120;pg.forEach(l=>{if(l.st==='h'){x.fillStyle='#0B2F70';x.font='800 22px Cairo, Inter, sans-serif';}else if(l.st==='sub'){x.fillStyle='#123B85';x.font='800 18px Cairo, Inter, sans-serif';x.fillStyle='#EEF3FB';x.fillRect(30,y-24,W-60,34);x.fillStyle='#123B85';}else{x.fillStyle=l.st==='r'?'#B00020':l.st==='g'?'#2E7D32':'#0F1F3D';x.font='700 17px Cairo, Inter, sans-serif';}x.fillText(l.t,W-40,y);y+=36;});
+    x.fillStyle='#5A6E92';x.font='700 12px Inter, sans-serif';x.textAlign='center';x.fillText('lbdal.com · BDL Exchange · '+new Date().toISOString().slice(0,16).replace('T',' '),W/2,H-24);
+    if(pi)pdf.addPage([W*0.75,H*0.75]);pdf.addImage(cv.toDataURL('image/jpeg',.9),'JPEG',0,0,W*0.75,H*0.75);});
+  pdf.save('BDL-matching-'+new Date().toISOString().slice(0,10)+'.pdf');}
 (async()=>{await storageInfo();await restoreSession();render();pollJobs();await LED.index();render(true);setTimeout(freeLocal,4000);if(S.cust.concat(S.sup).some(r=>r.reading))setTimeout(resume,1200);})();
 </script>
 </body>
