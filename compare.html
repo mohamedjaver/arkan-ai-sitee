@@ -120,7 +120,7 @@ table{width:100%;border-collapse:collapse;font-size:12px}th{background:#F3F7FD;c
 .bc button.p{background:#fff;color:var(--navy)}.bc.sup button.p{color:#0F4A25}
 .bc .bb{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
 .bc .bb button{background:rgba(255,255,255,.16);color:#fff;border:1px solid rgba(255,255,255,.35);padding:10px 4px;font-size:11.5px}
-.bc button.mv{background:transparent;color:rgba(255,255,255,.85);border:1px dashed rgba(255,255,255,.45);font-size:11px;padding:9px 6px;margin-top:auto}
+.bc button.mv{background:transparent;color:rgba(255,255,255,.85);border:1px dashed rgba(255,255,255,.45);font-size:11px;padding:9px 6px;margin-top:auto}.bc .pa{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px}.bc .pa button{background:transparent;color:rgba(255,255,255,.75);border:1px solid rgba(255,255,255,.28);font-size:11px;font-weight:700;padding:9px 6px}.bc .pa button.dl{color:#ffd6d6;border-color:rgba(255,120,120,.5)}
 @media(max-width:380px){.bc{padding:12px 10px}.bc .ttl{font-size:15px}.bc .bb{grid-template-columns:1fr}}
 #toast{position:fixed;left:50%;transform:translateX(-50%);bottom:90px;background:var(--ink);color:#fff;padding:10px 14px;font-size:12.5px;font-weight:700;opacity:0;transition:.2s;z-index:99;pointer-events:none}#toast.on{opacity:1}
 .prog{height:3px;background:var(--line)}.prog i{display:block;height:3px;background:var(--gold);width:0;transition:.3s}
@@ -711,7 +711,7 @@ function bigCards(){const one=side=>{const sup=side==='sup',P=S.party[side]||{wh
     '<input id="pw-'+side+'" placeholder="'+(sup?'اسم المورد':'اسم الزبون')+'" value="'+esc(P.who)+'" onchange="setParty(\''+side+'\',\'who\',this.value)"><input id="pp-'+side+'" placeholder="رقم الهاتف" inputmode="tel" value="'+esc(P.phone)+'" style="direction:ltr;font-family:Inter,sans-serif" onchange="setParty(\''+side+'\',\'phone\',this.value)">'+
     '<button class="p" onclick="pickSrv(\''+side+'\')">رفع كبير — الخادم + Gemini</button><div class="bb"><button onclick="pick(\''+side+'\')">رفع محلي</button><button onclick="pickWA(\''+side+'\')">واتساب</button><button onclick="manual(\''+side+'\')">يدوي</button></div>'+
     '<button class="mv" onclick="moveParty(\''+side+'\')">نقل جهة إلى عمود '+(sup?'الزبائن':'الموردين')+'</button>'+
-    '<div class="bb"><button onclick="rereadParty(\''+side+'\')" style="color:var(--navy)">إعادة قراءة جهة</button><button onclick="delParty(\''+side+'\')" style="color:var(--red);border-color:var(--red)">حذف جهة نهائيًا</button></div></div>';};
+    '<div class="pa"><button onclick="rereadParty(\''+side+'\')">إعادة قراءة جهة</button><button class="dl" onclick="delParty(\''+side+'\')">حذف جهة نهائيًا</button></div></div>';};
   $('#big').innerHTML=one('cust')+one('sup');}
 /* ───── التقسيم: الكل / زبائن بلا مورد / موردون بلا زبون / مطابَق (للمراجعة) / يحتاج مراجعة + بحث ───── */
 function hit(r){const q=(S.q||'').trim().toLowerCase();if(!q)return true;return [r.who,r.phone,r.ref,r.bank,r.bankName,r.receiver,String(r.amount||'')].join(' ').toLowerCase().includes(q)||String(r.amount||'').replace(/\D/g,'').includes(q.replace(/\D/g,'')||'§');}
