@@ -316,7 +316,7 @@ $('#fi').addEventListener('change',async function(){const list=[...this.files];i
 const SRV='https://arkan-ai-site-production.up.railway.app';
 function tokenOf(){try{const j=JSON.parse(localStorage.getItem('arkan_sb_jwt')||'null');if(j&&j.token&&j.exp>Math.floor(Date.now()/1000)+60)return j.token;}catch(e){}return null;}
 function pickSrv(side){if(needParty(side))return;S.side=side;$('#fs').value='';$('#fs').click();}
-$('#fs').addEventListener('change',async function(){const f=this.files[0];if(!f)return;const tok=tokenOf();if(!tok){toast('سجّل الدخول في «حسابي» أولًا ثم عد لهذه الصفحة');return;}
+async function srvUpload(side0,f){S.side=side0;const tok=tokenOf();if(!tok){toast('سجّل الدخول في «حسابي» أولًا ثم عد لهذه الصفحة');return;}
   const key=(localStorage.getItem('gemKey')||'').trim();if(!key){const k=prompt('مفتاح Gemini (يُحفظ على هذا الجهاز فقط):');if(!k)return;localStorage.setItem('gemKey',k.trim());}
   const side=S.side;toast('جارٍ رفع '+f.name+' ('+(f.size/1048576).toFixed(1)+' MB)…');
   try{const r=await new Promise((res,rej)=>{const x=new XMLHttpRequest();x.open('POST',SRV+'/compare/job');x.setRequestHeader('Authorization','Bearer '+tokenOf());x.setRequestHeader('x-gemini-key',(localStorage.getItem('gemKey')||'').trim());x.setRequestHeader('x-file-name',f.name);x.setRequestHeader('x-side',side);x.setRequestHeader('Content-Type','application/octet-stream');
@@ -324,7 +324,8 @@ $('#fs').addEventListener('change',async function(){const f=this.files[0];if(!f)
     if(!r.ok)throw new Error(r.err||'فشل');
     (S.jobs=S.jobs||[]).push({id:r.id,side,total:r.total,done:0,next:0,status:'queued',name:f.name});
     toast('استُلم على الخادم: '+r.total+' إيصال'+(r.dup?' · '+r.dup+' مكرر':'')+' — تُقرأ الآن، وتصلك تباعًا');render();pollJobs();
-  }catch(e){toast('تعذّر الرفع: '+(e.message||e));}});
+  }catch(e){toast('تعذّر الرفع: '+(e.message||e));}}
+$('#fs').addEventListener('change',function(){const f=this.files[0];if(f)srvUpload(S.side,f);});
 let _pj=null;
 async function pollJobs(){clearTimeout(_pj);const open=(S.jobs||[]).filter(j=>j.status!=='done'&&j.status!=='error'&&j.status!=='cancelled');if(!open.length)return;
   for(const j of open){try{const r=await fetch(SRV+'/compare/job/'+j.id+'?since='+j.next,{headers:{Authorization:'Bearer '+tokenOf()}});const d=await r.json();if(!d.ok){if(r.status===404){j.status='error';}continue;}
@@ -344,7 +345,7 @@ async function pollJobs(){clearTimeout(_pj);const open=(S.jobs||[]).filter(j=>j.
 async function feedback(r){if(r.src!=='srv'||!r.amount||!tokenOf())return;try{await fetch(SRV+'/compare/feedback',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+tokenOf()},body:JSON.stringify({bank:r.bank,amount:r.amount,ccy:r.ccy,ref:r.ref,date:r.date.toISOString().slice(0,16),hint:'corrected by owner · '+(r.name||'')})});r.verified=true;r.review=false;}catch(e){}}
 /* ───── استيراد محادثة واتساب (ZIP أو _chat.txt) — لا يُحفظ شيء ───── */
 function pickWA(side){if(needParty(side))return;S.side=side;$('#fw').value='';$('#fw').click();}
-$('#fw').addEventListener('change',async function(){const f=this.files[0];if(!f)return;if(f.size>120*1048576){toast('الملف '+(f.size/1048576).toFixed(0)+' MB — أكبر من طاقة الهاتف. استخدم «رفع كبير — الخادم + Gemini» لهذا الملف');this.value='';return;}try{await importWA(S.side,f);}catch(e){console.error(e);toast('تعذّر قراءة الملف: '+(e.message||e));}});
+$('#fw').addEventListener('change',async function(){const f=this.files[0];if(!f)return;if(f.size>400*1048576){toast('الملف '+(f.size/1048576).toFixed(0)+' MB — يُرفع تلقائيًا عبر الخادم');this.value='';srvUpload(S.side,f);return;}if(f.size>120*1048576)toast('ملف كبير ('+(f.size/1048576).toFixed(0)+' MB) — القراءة محليًا ستستغرق وقتًا؛ إن سقطت الصفحة استخدم رفع الخادم');try{await importWA(S.side,f);}catch(e){console.error(e);toast('تعذّر قراءة الملف: '+(e.message||e));}});
 const WA_LINE=/^\u200e?\[?(\d{1,2})[\/.](\d{1,2})[\/.](\d{2,4}),?\s+(\d{1,2}):(\d{2})(?::(\d{2}))?\s*([AP]M)?\]?\s*(?:-\s*)?([^:]{1,60}?):\s(.*)$/;
 function waDate(d,m,y,h,mi,ap){y=+y;if(y<100)y+=2000;h=+h;if(ap){if(/P/i.test(ap)&&h<12)h+=12;if(/A/i.test(ap)&&h===12)h=0;}return new Date(y,+m-1,+d,h,+mi);}
 function waAmount(t){const s=t.replace(/[\u200e\u200f]/g,'').replace(/\+\d[\d\s-]{6,}\d/g,' ');if(/^\+?\d[\d\s-]{7,}$/.test(s.trim()))return null;
