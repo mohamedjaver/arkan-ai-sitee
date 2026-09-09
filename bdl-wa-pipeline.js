@@ -13,8 +13,8 @@ module.exports = function (app, ctx) {
   const esc = s => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   const sideAr = s => s === 'cust' ? 'زبون' : 'مورد';
 
-  async function partyOf(phone) { try { const r = await sb('/bdl_wa_parties?select=phone,name,side&phone=eq.' + norm(phone) + '&limit=1'); return r && r[0] || null; } catch (e) { return null; } }
-  async function saveParty(phone, name, side) { try { await sb('/bdl_wa_parties?on_conflict=phone', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates,return=minimal' }, body: { phone: norm(phone), name: String(name || '').slice(0, 80), side } }); } catch (e) {} }
+  async function partyOf(phone) { try { if (app.locals.parties) { const p = await app.locals.parties.find(phone); if (p) return { phone: p.phone, name: p.name, side: p.side === 'both' ? null : p.side }; } const r = await sb('/bdl_wa_parties?select=phone,name,side&phone=eq.' + norm(phone) + '&limit=1'); return r && r[0] || null; } catch (e) { return null; } }
+  async function saveParty(phone, name, side) { try { if (app.locals.parties) await app.locals.parties.upsert([{ phone, name, side }]); } catch (e) {} try { await sb('/bdl_wa_parties?on_conflict=phone', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates,return=minimal' }, body: { phone: norm(phone), name: String(name || '').slice(0, 80), side } }); } catch (e) {} }
 
   async function read(buf, mime) {
     const readOne = app.locals.cmpReadOne; if (!readOne) throw new Error('محرك القراءة غير جاهز');

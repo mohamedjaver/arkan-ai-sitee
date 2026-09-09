@@ -235,6 +235,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 .bk{padding:14px}
 .card,.sum{box-shadow:0 2px 14px rgba(11,36,71,.06)}
 </style>
+<script src="bdl-core.js"></script>
 <script src="arkan-nav.js" defer></script>
 </head>
 <body>
@@ -485,6 +486,7 @@ function bookForm(b){
     '<div class="f"><label>ملاحظة (اختياري)</label><input id="bNote" value="'+esc(m.note)+'" maxlength="120"></div>'+
     '<button class="cta" id="bSave">'+(b?'حفظ التعديل':'إنشاء الدفتر')+'</button>');
   bindCurPick('bCur');var kind=m.kind;
+  try{if(window.BDL)BDL.parties.bind($('#bName'),$('#bPhone'),'cust');}catch(e){}
   $('#kSeg').onclick=function(e){var x=e.target.closest('button');if(!x)return;kind=x.dataset.k;[].forEach.call(this.children,function(y){y.classList.toggle('on',y===x);});$('#bPhoneF').style.display=kind==='cash'?'none':'';};
   $('#bPhoneF').style.display=kind==='cash'?'none':'';
   if(!b)setTimeout(function(){$('#bName').focus();},60);

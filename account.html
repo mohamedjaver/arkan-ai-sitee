@@ -1520,6 +1520,8 @@ function apply(){
     pb.innerHTML='حساب المالك — فتح الكونسول <span style="font-size:16px">←</span>';
     pb.onclick=()=>location.href='settle-v2.html';}
   /* 3) بوابة العملاء في الشريط السفلي — تظهر للمالك فقط */
+  /* Build 1297: شريط BDL الموحّد يحل محل شريط الصفحة وزر الكونسول للمالك */
+  try{const st2=document.createElement('style');st2.textContent='#nav{display:none!important}#pendBox{display:none!important}';document.head.appendChild(st2);}catch(e){}
   const nav=document.getElementById('nav');
   if(nav&&!document.getElementById('navClients')){
     const it=document.createElement('div');

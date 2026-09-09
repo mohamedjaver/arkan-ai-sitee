@@ -106,6 +106,8 @@
       ['arkan_session', 'arkan_sb_jwt', 'arkanClient', 'arkan_admin_dev', 'arkan_owner_auth'].forEach(function (k) { try { localStorage.removeItem(k); } catch (e) {} });
       location.href = 'account.html';
     };
+    /* في صفحة الحساب: أيقونة المستخدم تفتح قسم «حسابي» داخل الصفحة، والجرس يفتح إشعارات الصفحة */
+    if (path === 'account.html') { var ua = top.querySelector('a[href="account.html"]'); var acct = document.querySelector('.nav-it[data-s="s-acct"]'); if (ua && acct) ua.onclick = function (e) { e.preventDefault(); acct.click(); }; var bl = document.getElementById('bell'); var ub = top.querySelector('a[href="chat-v2.html"]'); if (bl && ub) ub.onclick = function (e) { e.preventDefault(); bl.click(); }; }
     /* مبدّل اللغة (إن وُجد في الصفحة) ينتقل إلى الورقة بدل الرأس */
     var seg = document.getElementById('langSeg'); if (seg) { var box = document.getElementById('akLang'); box.appendChild(seg); seg.style.cssText = 'display:flex;gap:6px;width:100%'; seg.querySelectorAll('button').forEach(function (b) { b.style.cssText = 'flex:1;padding:10px;border:1.5px solid #D5D8E0;border-radius:99px;background:#fff;font:inherit;font-weight:700;color:#0A0A0A'; }); }
     /* توافق مع الأزرار القديمة التي تستدعي قائمة الهامبرغر */

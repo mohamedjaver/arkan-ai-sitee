@@ -1499,6 +1499,11 @@ try {
     ownerToken: () => { const ts = Math.floor(Date.now() / 1000); return jwt.sign({ sub: phoneToUuid(OWNER_PHONES[0]), role: 'authenticated', aud: 'authenticated', arkan_role: 'owner', iat: ts, exp: ts + 300 }, JWT_SECRET); },
     notifyAdmin: typeof notifyAdmin === 'function' ? notifyAdmin : null });
 } catch (e) { console.warn('accountant routes off:', e.message); }
+/* دليل الجهات الموحّد (إضافي) */
+try {
+  require('./bdl-parties')(app, { express, jwt, JWT_SECRET, SB_REST, SB_PUB,
+    ownerToken: () => { const ts = Math.floor(Date.now() / 1000); return jwt.sign({ sub: phoneToUuid(OWNER_PHONES[0]), role: 'authenticated', aud: 'authenticated', arkan_role: 'owner', iat: ts, exp: ts + 300 }, JWT_SECRET); } });
+} catch (e) { console.warn('parties off:', e.message); }
 /* أنبوب واتساب → Claude → الدفتر → المطابقة (إضافي) */
 try {
   require('./bdl-wa-pipeline')(app, { SB_REST, SB_PUB, tg, ADMIN_ID: ENV.ADMIN_ID, WA_TOKEN,
