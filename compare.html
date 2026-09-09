@@ -24,11 +24,13 @@ main,.big,.cols,.col,.bc,.hero,.rep,.tools{max-width:100%;min-width:0}
 .rep>div[style*='overflow']{max-width:100%}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:"Cairo","Inter",-apple-system,sans-serif;padding-bottom:110px}
 .num{font-family:"Inter",sans-serif;font-weight:700}
-header{background:var(--navy);color:#fff;padding:calc(env(safe-area-inset-top) + 12px) 14px 12px;display:flex;align-items:center;gap:10px}
+header{background:var(--navy);color:#fff;padding:calc(env(safe-area-inset-top) + 12px) 14px 10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+header .nav{flex-basis:100%;display:flex;gap:6px;margin-top:8px}header .nav .tag{flex:1;text-align:center;padding:7px 4px;text-decoration:none;white-space:nowrap}
 header img{width:36px;height:36px}
-header h1{margin:0;font-size:16px;font-weight:800;flex:1}
+header h1{margin:0;font-size:16px;font-weight:800;flex:1;min-width:0}
 header small{font-size:10.5px;opacity:.85;display:block;font-weight:700}
-.tag{border:1px solid var(--gold);color:var(--gold);font-size:10.5px;font-weight:800;padding:5px 8px}
+.tag{border:1px solid var(--gold);color:var(--gold);font-size:10.5px;font-weight:800;padding:5px 8px;white-space:nowrap;border-radius:99px}
+#tag{max-width:46%;overflow:hidden;text-overflow:ellipsis}
 main{padding:12px}
 .hero{background:radial-gradient(120% 90% at 85% 0%,#1A4A9C 0%,#0B2F70 45%,#071E4A 100%);color:#fff;padding:24px 16px 18px;position:relative;overflow:hidden}
 .hero:before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent 0 39px,rgba(255,255,255,.035) 39px 40px),repeating-linear-gradient(90deg,transparent 0 39px,rgba(255,255,255,.035) 39px 40px)}
@@ -132,7 +134,7 @@ table{width:100%;border-collapse:collapse;font-size:12px}th{background:#F3F7FD;c
 </style>
 </head>
 <body>
-<header><img src="favicon.svg?v=bdl7" alt=""><div><h1>مقارنة الإيصالات</h1><small>الزبائن مقابل الموردين — دفتر دائم</small></div><span class="tag" id="tag">الدفتر</span><a class="tag" href="settle-v2.html" style="text-decoration:none;margin-inline-start:6px">مركز المطابقة</a><a class="tag" href="books.html" style="text-decoration:none;margin-inline-start:6px">دفاتري</a><a class="tag" href="accountant.html" style="text-decoration:none;margin-inline-start:6px;border-color:var(--gold);color:var(--gold)">المحاسب</a></header>
+<header><img src="favicon.svg?v=bdl7" alt=""><div><h1>مقارنة الإيصالات</h1><small>الزبائن مقابل الموردين — دفتر دائم</small></div><span class="tag" id="tag">الدفتر</span><div class="nav"><a class="tag" href="accountant.html" style="background:var(--gold);color:var(--navy)">المحاسب</a><a class="tag" href="settle-v2.html">مركز المطابقة</a><a class="tag" href="books.html">دفاتري</a></div></header>
 <main>
 <div class="hero" id="hero"></div>
 <div class="tools" id="prim">
@@ -211,7 +213,7 @@ async function storageInfo(){try{if(navigator.storage&&navigator.storage.persist
 async function freeLocal(){let n=0;for(const r of S.cust.concat(S.sup)){if(r.receipt_url&&!r.reading&&r.hasFile){try{const f=await IDB.get('files',r.id);if(f){await IDB.del('files',r.id);n++;}}catch(e){}}}if(n){toast('حُرّرت مساحة: '+n+' أصل محفوظ في Supabase');storageInfo();}}
 let _pt=null;function persist(){clearTimeout(_pt);_pt=setTimeout(async()=>{try{if(S.busy&&S.cust.length+S.sup.length>3000)return;const st={ts:S.ts||Date.now(),seq:S.seq,rows:S.cust.concat(S.sup).map(ser),excl:(S.excl||[]).map(ser),tol:$('#tol').value,range:S.range,party:S.party,jobs:(S.jobs||[]).map(j=>({id:j.id,side:j.side,total:j.total,done:j.done,next:j.next,status:j.status,name:j.name}))};S.ts=st.ts;await IDB.put('state','session',st);
   for(const r of S.cust.concat(S.sup,S.excl||[])){if(r.thumb&&!r.tSaved){await IDB.put('files',r.id+'_t',r.thumb);r.tSaved=true;}}
-  $('#tag').textContent='محفوظ محليًا · حتى '+new Date(st.ts+SESSION_MS).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})+(S.quota&&S.quota.total?' · '+(S.quota.used/1048576).toFixed(0)+'/'+(S.quota.total/1048576).toFixed(0)+' MB':'')+(S.persisted?' · دائم':'');}catch(e){console.warn('persist',e);}},900);}
+  $('#tag').textContent='محلي حتى '+new Date(st.ts+SESSION_MS).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});$('#tag').title=(S.quota&&S.quota.total?(S.quota.used/1048576).toFixed(0)+'/'+(S.quota.total/1048576).toFixed(0)+' MB':'')+(S.persisted?' · دائم':'');}catch(e){console.warn('persist',e);}},900);}
 async function restoreSession(){try{const st=await IDB.get('state','session');if(!st)return false;
   if(Date.now()-st.ts>SESSION_MS){await IDB.clear();toast('انتهت صلاحية الجلسة السابقة (٢٤ ساعة) — بدأنا جلسة جديدة');return false;}
   S.ts=st.ts;S.seq=st.seq||0;if(st.tol)$('#tol').value=st.tol;if(st.party&&st.party.cust&&st.party.sup)S.party=st.party;if(st.range){S.range=st.range;$('#rf').value=st.range.from?new Date(st.range.from).toISOString().slice(0,10):'';$('#rt').value=st.range.to?new Date(st.range.to).toISOString().slice(0,10):'';}S.jobs=st.jobs||[];const all=[];
