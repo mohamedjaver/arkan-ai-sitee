@@ -139,6 +139,7 @@ table{width:100%;border-collapse:collapse;font-size:12px}th{background:#F3F7FD;c
   <button class="pri" style="background:var(--green);border-color:var(--green)" onclick="partyPanel()">حفظ الإيصالات إلى الدفتر</button>
   <button class="pri" onclick="syncLedger(false)">مزامنة مع الدفتر</button>
   <button style="border-color:var(--gold);color:var(--gold)" onclick="location.href='accountant.html'">المحاسب</button>
+  <button style="border-color:var(--navy)" onclick="aiMatch()">مطابقة Claude</button>
   <button onclick="exportPDF()">تقرير PDF</button>
   <button id="rsm" style="display:none;background:#ED6C02;color:#fff;border-color:#ED6C02" onclick="resume()">متابعة القراءة</button>
   <span style="flex:1"></span>
@@ -149,7 +150,8 @@ table{width:100%;border-collapse:collapse;font-size:12px}th{background:#F3F7FD;c
   <button class="pri" onclick="rematch()">إعادة المطابقة</button>
   <button onclick="freeLocal()">تحرير مساحة الجهاز</button>
   <button onclick="const v=prompt('التوازي (2–8) — 4 للحساب المجاني، 8 للحساب المدفوع:',localStorage.getItem('gemPar')||'4');if(v)localStorage.setItem('gemPar',String(Math.max(2,Math.min(8,parseInt(v)||4))));const m=prompt('نموذج Gemini:\ngemini-2.5-flash (دقيق)\ngemini-2.5-flash-lite (أسرع)',GEM_MODEL());if(m)localStorage.setItem('gemModel',m.trim());toast('حُفظت إعدادات السرعة');">سرعة القراءة</button>
-  <button style="border-color:var(--red);color:var(--red)" onclick="audit()">تفتيش الدفاتر</button>
+  <button style="border-color:var(--red);color:var(--red)" onclick="aiAudit()">تفتيش Claude</button>
+  <button onclick="audit()">تفتيش بالقواعد</button>
   <button onclick="const k=prompt('مفتاح Gemini (يُحفظ على هذا الجهاز فقط):',localStorage.getItem('gemKey')||'');if(k!=null&&k.trim()){localStorage.setItem('gemKey',k.trim());toast('حُفظ المفتاح');}">مفتاح Gemini</button>
   <button id="lkb" onclick="linkMode()">ربط يدوي ١:١</button>
   <span style="font-size:11px;color:var(--muted);font-weight:700">هامش %</span><input id="tol" inputmode="decimal" value="0.5" onchange="rematch()">
@@ -734,6 +736,33 @@ async function wipeAll(){if(!tokenOf()){toast('سجّل الدخول أولًا'
 function clearAll(){if(!confirm('مسح الجلسة من هذا الجهاز فقط — الإيصالات المسجّلة تبقى في الدفتر ويمكن تحميلها من «تحميل من الدفتر». متابعة؟'))return;S.cust=[];S.sup=[];S.excl=[];S.selC=S.selS=null;S.ts=null;IDB.clear().catch(()=>{});LED.index();render();}
 
 /* ───── المطابقة ───── */
+/* ── مطابقة وتفتيش بـ Claude (الخادم) — اقتراحات يعتمدها المالك ── */
+function aiBox(){let v=$('#ai');if(!v){v=document.createElement('div');v.id='ai';v.style.cssText='position:fixed;inset:0;background:rgba(11,47,112,.55);z-index:70;display:grid;place-items:end center';document.body.appendChild(v);v.onclick=()=>{v.style.display='none';};}v.style.display='';return v;}
+function aiWrap(title,body){return '<div style="background:#fff;width:min(640px,100%);max-height:88vh;overflow:auto;padding:14px;border-radius:18px 18px 0 0" onclick="event.stopPropagation()"><h4 style="margin:0 0 8px;color:var(--navy);display:flex;justify-content:space-between;align-items:center"><span>'+title+'</span><button class="x" style="position:static;color:var(--red)" onclick="$(\'#ai\').style.display=\'none\'">✕</button></h4>'+body+'</div>';}
+async function aiPost(path,body){const r=await fetch(SRV+path,{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+tokenOf()},body:JSON.stringify(body||{})});const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error||('HTTP '+r.status));return d;}
+async function aiMatch(){if(!tokenOf()){toast('سجّل الدخول أولًا');return;}toast('Claude يطابق…');
+  try{const d=await aiPost('/accountant/ai-match',{from:S.range.from||null,to:S.range.to||null});S.aiPairs=d.pairs||[];const v=aiBox();
+    const row=r=>'<div style="display:flex;justify-content:space-between;gap:8px;font-size:12px"><span>'+esc(r.who||'—')+' · '+esc(r.date||'')+(r.ref?' · '+esc(r.ref):'')+'</span><b style="font-variant-numeric:tabular-nums">'+fmt(r.amount)+'</b></div>';
+    v.innerHTML=aiWrap('مطابقة Claude — '+S.aiPairs.length+' اقتراح','<div style="font-size:12px;color:var(--muted);font-weight:700;margin-bottom:8px">فُحص '+d.cust+' إيصال زبون × '+d.sup+' إيصال مورد بلا مقابل'+(d.note?' — '+esc(d.note):'')+'</div>'+
+      (S.aiPairs.length?S.aiPairs.map((p,i)=>'<div id="aip'+i+'" style="border:1px solid var(--line);border-radius:12px;padding:10px;margin-bottom:8px"><div style="color:var(--blue);font-weight:800;font-size:11px;margin-bottom:4px">زبون'+(p.cust.length>1?' ('+p.cust.length+' إيصالات)':'')+'</div>'+p.cust.map(row).join('')+'<div style="color:var(--green);font-weight:800;font-size:11px;margin:6px 0 4px">مورد</div>'+row(p.sup)+
+        '<div style="font-size:11.5px;color:var(--muted);margin-top:6px">ثقة '+p.confidence+'% — '+esc(p.reason)+'</div>'+
+        (p.cust.length===1?'<button style="width:100%;margin-top:8px;padding:11px;background:var(--navy);color:#fff;border:0;border-radius:10px;font:800 13px inherit" onclick="aiAccept('+i+')">اعتمد الربط</button>':'<div style="font-size:11px;color:#B7791F;font-weight:700;margin-top:6px">تجميع عدة زبائن — اربطه يدويًا بعد التحقق</div>')+'</div>').join(''):'<div style="padding:20px;text-align:center;color:var(--muted);font-weight:700">لم يجد Claude أزواجًا مؤكدة في هذه الفترة</div>'));
+  }catch(e){toast('مطابقة Claude: '+e.message);}}
+function aiAccept(i){const p=S.aiPairs[i];if(!p)return;const c=S.cust.find(r=>r.fp===p.cust[0].fp),s=S.sup.find(r=>r.fp===p.sup.fp);
+  if(!c||!s){toast('الإيصال ليس في الجلسة — اضغط «مزامنة مع الدفتر» ثم أعد المحاولة');return;}
+  S.selC=c.id;S.selS=s.id;link();const el=$('#aip'+i);if(el){el.style.opacity='.45';el.querySelector('button').disabled=true;el.querySelector('button').textContent='رُبط ✓';}}
+async function aiAudit(){if(!tokenOf()){toast('سجّل الدخول أولًا');return;}toast('Claude يفتّش الدفاتر…');
+  try{const d=await aiPost('/accountant/ai-audit');const v=aiBox();S.fix=[];const col={critical:'var(--red)',warning:'#B7791F',info:'var(--navy)'};
+    const items=(d.findings||[]).map((f,i)=>{let fx='';if(f.fix&&f.fix.type==='del'){S.fix.push({type:'del',id:f.entry_id,label:'حذف القيد #'+f.entry_id});fx='<label style="display:flex;gap:8px;font-size:12px;font-weight:700;margin-top:6px"><input type="checkbox" checked data-i="'+(S.fix.length-1)+'"> حذف القيد المكرر #'+f.entry_id+'</label>';}
+      else if(f.fix&&f.fix.type==='patch'){S.fix.push({type:'patch',id:f.entry_id,amount:f.fix.amount,label:'تصحيح #'+f.entry_id});fx='<label style="display:flex;gap:8px;font-size:12px;font-weight:700;margin-top:6px"><input type="checkbox" checked data-i="'+(S.fix.length-1)+'"> تصحيح مبلغ القيد #'+f.entry_id+' إلى '+fmt(f.fix.amount)+'</label>';}
+      return '<div style="padding:9px 10px;border:1px solid var(--line);border-right:4px solid '+(col[f.severity]||col.info)+';border-radius:10px;margin-bottom:6px;font-size:12.5px"><b style="color:'+(col[f.severity]||col.info)+'">'+(f.entry_id?'قيد #'+f.entry_id+' — ':'')+esc(f.book||'')+'</b><div style="margin-top:3px">'+esc(f.message)+'</div>'+fx+'</div>';}).join('');
+    v.innerHTML=aiWrap('تفتيش Claude','<div style="font-size:12px;color:var(--muted);font-weight:700;margin-bottom:8px">'+d.entries+' قيد · '+d.linked+' إيصال مرتبط'+(d.summary?' — '+esc(d.summary):'')+'</div>'+(items||'<div style="padding:20px;text-align:center;color:var(--green);font-weight:800">✓ لم يجد Claude مشاكل في القيود</div>')+
+      (S.fix.length?'<button style="width:100%;padding:13px;margin-top:8px;background:var(--red);color:#fff;border:0;border-radius:10px;font:800 13px inherit" onclick="aiApply()">تطبيق الإصلاحات المحددة</button>':''));
+  }catch(e){toast('تفتيش Claude: '+e.message);}}
+async function aiApply(){const sel=[...document.querySelectorAll('#ai input[type=checkbox]')].filter(b=>b.checked).map(b=>S.fix[+b.dataset.i]);if(!sel.length)return;if(!confirm('تطبيق '+sel.length+' إصلاحًا في الدفاتر؟'))return;let n=0;
+  for(const f of sel){try{if(f.type==='del'){await sbq('/bdl_book_entries?id=eq.'+f.id,{method:'DELETE',headers:{Prefer:'return=minimal'}});try{await sbq('/bdl_cmp_receipts?book_entry_id=eq.'+f.id,{method:'PATCH',headers:{Prefer:'return=minimal'},body:{book_entry_id:null}});}catch(e){}S.cust.concat(S.sup).forEach(r=>{if(r.book_entry_id===f.id)r.book_entry_id=null;});}
+    else if(f.type==='patch'){await sbq('/bdl_book_entries?id=eq.'+f.id,{method:'PATCH',headers:{Prefer:'return=minimal'},body:{amount:f.amount}});}n++;}catch(e){toast('فشل: '+f.label);}}
+  toast('طُبّق '+n+' إصلاحًا');$('#ai').style.display='none';persist();render();}
 function rematch(reset){
   if(reset!==false){S.cust.forEach(c=>{if(c.how!=='manual'){c.matched=null;c.how='';}});S.sup.forEach(s=>{if(!(s.matched&&s.matched.how==='manual'))s.matched=null;});}
   else{S.cust.forEach(c=>{if(c.how!=='manual'){c.matched=null;c.how='';}});S.sup.forEach(s=>{if(!(s.matched&&s.matched.how==='manual'))s.matched=null;});}

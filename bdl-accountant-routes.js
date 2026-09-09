@@ -65,6 +65,58 @@ module.exports = function (app, ctx) {
     out.ok = !/ناقص|فشل/.test(out.checks.anthropic_key + out.checks.claude_call + out.checks.ledger);
     return out;
   }));
+  /* ── مطابقة Claude: اقتراحات للإيصالات التي لم تُطابق بالقواعد — لا تُربط تلقائيًا، المالك يعتمد ── */
+  async function aiMatch(req) {
+    const b = req.body || {}; const q = [];
+    if (b.from) q.push('msg_at=gte.' + b.from); if (b.to) q.push('msg_at=lte.' + b.to + 'T23:59:59');
+    const rows = await sb('/bdl_cmp_receipts?select=fp,side,amount,who,phone,msg_at,ref,bank&matched_fp=is.null&amount=not.is.null&ccy=eq.AOA&order=msg_at.desc&limit=800' + (q.length ? '&' + q.join('&') : ''));
+    const C = rows.filter(r => r.side === 'cust').slice(0, 300), Sp = rows.filter(r => r.side === 'sup').slice(0, 300);
+    if (!C.length || !Sp.length) return { pairs: [], cust: C.length, sup: Sp.length, note: 'لا يوجد ما يُطابَق: أحد العمودين فارغ في هذه الفترة' };
+    const line = (r, i) => `${i}|${Math.round(r.amount)}|${String(r.msg_at || '').slice(0, 10)}|${(r.who || '').slice(0, 30)}|${(r.ref || '').slice(0, 20)}|${r.bank || ''}`;
+    const text = await claude(
+      'أنت محاسب مطابقة لصرافة BDL. الزبائن يرسلون إيصالات AOA، والمالك يحوّل المقابل لموردين. إيصال مورد واحد قد يغطي إيصال زبون واحد أو مجموع 2–4 إيصالات زبائن. أعد JSON فقط بلا أي نص آخر.',
+      `إيصالات الزبائن (idx|amount|date|name|ref|bank):\n${C.map(line).join('\n')}\n\nإيصالات الموردين (idx|amount|date|name|ref|bank):\n${Sp.map(line).join('\n')}\n\n` +
+      'اقترح أزواجًا: {"pairs":[{"cust":[idx...],"sup":idx,"confidence":0-100,"reason":"سبب مختصر"}]}\n' +
+      'قواعد: مجموع مبالغ الزبائن = مبلغ المورد بفارق ≤0.5%؛ تاريخ المورد بعد الزبون أو في نفس اليوم وضمن 10 أيام؛ لا تكرر idx في أكثر من زوج؛ لا تقترح ما ثقته أقل من 70؛ المرجع المتطابق أقوى دليل، ثم المبلغ+التاريخ، ثم الاسم. إن لم تجد شيئًا أعد {"pairs":[]}.', 3000);
+    let j; try { j = JSON.parse(text.replace(/```json|```/g, '').trim()); } catch (e) { throw new Error('Claude JSON: ' + text.slice(0, 100)); }
+    const used = new Set(); const pairs = [];
+    for (const p of (j.pairs || [])) {
+      const cs = (Array.isArray(p.cust) ? p.cust : [p.cust]).map(i => C[i]).filter(Boolean); const sp = Sp[p.sup]; if (!cs.length || !sp) continue;
+      const fps = cs.map(c => c.fp).concat(sp.fp); if (fps.some(f => used.has(f))) continue;
+      const sum = cs.reduce((a, c) => a + Number(c.amount), 0); if (Math.abs(sum - Number(sp.amount)) / Number(sp.amount) > 0.005) continue;   // تحقق حسابي مستقل
+      if ((Number(p.confidence) || 0) < 70) continue;
+      fps.forEach(f => used.add(f));
+      pairs.push({ cust: cs.map(c => ({ fp: c.fp, amount: c.amount, who: c.who, date: String(c.msg_at || '').slice(0, 10), ref: c.ref })), sup: { fp: sp.fp, amount: sp.amount, who: sp.who, date: String(sp.msg_at || '').slice(0, 10), ref: sp.ref }, confidence: Number(p.confidence) || 0, reason: String(p.reason || '').slice(0, 160) });
+    }
+    pairs.sort((a, b) => b.confidence - a.confidence);
+    try { await sb('/bdl_agent_log', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: { at: new Date().toISOString(), kind: 'ai-match', msg: 'اقترح ' + pairs.length + ' زوجًا من ' + C.length + '×' + Sp.length, data: pairs.slice(0, 30) } }); } catch (e) {}
+    return { pairs, cust: C.length, sup: Sp.length, model: MODEL() };
+  }
+  /* ── تفتيش Claude: يقرأ القيود والإيصالات المرتبطة ويعطي نتائج بأسباب وإصلاحات مقترحة ── */
+  async function aiAudit() {
+    const books = await sb('/bdl_books?select=id,name,phone,kind');
+    const E = await sb('/bdl_book_entries?select=id,book_id,side,amount,ref,note,entry_date,created_at&or=(ref.like.*CMP:*,note.like.مقارنة الإيصالات*)&order=created_at.asc&limit=3000');
+    const L = await sb('/bdl_cmp_receipts?select=fp,side,amount,who,phone,book_entry_id,ref,msg_at&book_entry_id=not.is.null&limit=50000');
+    const bn = {}; books.forEach(b => bn[b.id] = (b.name || '') + (b.phone ? ' ' + b.phone : '') + ' [' + (b.kind || '') + ']');
+    const byE = {}; L.forEach(x => (byE[x.book_entry_id] = byE[x.book_entry_id] || []).push(x));
+    const ents = E.map(e => { const rs = byE[e.id] || []; return `${e.id}|${bn[e.book_id] || e.book_id}|${e.side}|${Math.round(e.amount)}|${rs.length}|${Math.round(rs.reduce((a, x) => a + Number(x.amount || 0), 0))}|${String(e.entry_date || e.created_at || '').slice(0, 10)}|${String(e.ref || '').slice(0, 40)}`; });
+    const eids = new Set(E.map(e => e.id)); const orphans = L.filter(x => !eids.has(x.book_entry_id)).length;
+    const cnt = {}; L.forEach(x => cnt[x.fp] = (cnt[x.fp] || 0) + 1); const multi = Object.keys(cnt).filter(k => cnt[k] > 1).length;
+    const text = await claude(
+      'أنت مدقق دفاتر لصرافة BDL. كل قيد في الدفتر يجب أن يساوي مجموع إيصالاته، ولا يُقيَّد إيصال مرتين، ولا قيد بنفس مفتاح CMP مرتين، وجانب القيد in للزبائن وout للموردين. أعد JSON فقط.',
+      `القيود (id|book|side|amount|receipts_count|receipts_sum|date|ref):\n${ents.join('\n')}\n\nإيصالات مرتبطة بقيد محذوف: ${orphans}\nإيصالات مرتبطة بأكثر من قيد: ${multi}\n\n` +
+      'أعد: {"findings":[{"severity":"critical|warning|info","entry_id":123,"message":"ما المشكلة بالأرقام","fix":{"type":"del|patch|none","amount":0}}],"summary":"سطر واحد"}\n' +
+      'قواعد: del فقط للقيد المكرر الأحدث (اذكر الأصل في message)؛ patch عندما amount ≠ receipts_sum (amount = receipts_sum)؛ none لما يحتاج قرار المالك (side خاطئ، دفتر ظاهره غير مناسب، مبالغ شاذة، تواريخ غريبة). لا تخترع أرقامًا.', 3000);
+    let j; try { j = JSON.parse(text.replace(/```json|```/g, '').trim()); } catch (e) { throw new Error('Claude JSON: ' + text.slice(0, 100)); }
+    const byId = {}; E.forEach(e => byId[e.id] = e);
+    const findings = (j.findings || []).map(f => { const e = byId[f.entry_id]; const fix = f.fix && f.fix.type !== 'none' && e ? f.fix : null;
+      if (fix && fix.type === 'patch') { const rs = byE[e.id] || []; fix.amount = Math.round(rs.reduce((a, x) => a + Number(x.amount || 0), 0)); if (!rs.length || Math.abs(fix.amount - Number(e.amount)) <= 1) return null; }   // تحقق مستقل
+      return { severity: f.severity || 'info', entry_id: e ? e.id : null, book: e ? (bn[e.book_id] || '') : '', message: String(f.message || '').slice(0, 240), fix }; }).filter(Boolean);
+    try { await sb('/bdl_agent_log', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: { at: new Date().toISOString(), kind: 'ai-audit', msg: String(j.summary || '').slice(0, 200), data: findings.slice(0, 30) } }); } catch (e) {}
+    return { findings, summary: String(j.summary || ''), entries: E.length, linked: L.length, model: MODEL() };
+  }
+  app.post('/accountant/ai-match', express.json(), wrap(aiMatch));
+  app.post('/accountant/ai-audit', express.json(), wrap(aiAudit));
   app.get('/accountant/summary', wrap(summary));
   app.post('/accountant/run', express.json(), wrap(writeReport));
   app.get('/accountant/report', wrap(async () => { const r = await sb('/bdl_agent_reports?select=report,created_at&order=created_at.desc&limit=1'); return r && r[0] ? { text: r[0].report, date: String(r[0].created_at).slice(0, 10) } : { text: '' }; }));
