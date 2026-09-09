@@ -12,8 +12,8 @@ const path = require('path');
 const ENV = {
   PORT:            process.env.PORT || 3000,
   WALLET:          process.env.WALLET_ADDRESS    || 'TXxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
-  BOT_TOKEN:       process.env.TELEGRAM_BOT_TOKEN || '',          // من BotFather
-  BOT_USERNAME:    process.env.TELEGRAM_BOT_USERNAME || 'BDL AI_Access_Bot', // بدون @
+  BOT_TOKEN:       ((String(process.env.TELEGRAM_BOT_TOKEN || '').match(/\d{6,}:[A-Za-z0-9_-]{30,}/) || [''])[0]),   // يستخرج التوكن حتى لو لُصقت رسالة BotFather كاملة
+  BOT_USERNAME:    (process.env.TELEGRAM_BOT_USERNAME || (String(process.env.TELEGRAM_BOT_TOKEN || '').match(/t\.me\/([A-Za-z0-9_]+)/) || [])[1] || 'BDL AI_Access_Bot').replace(/^@/, ''), // بدون @
   ADMIN_ID:        process.env.TELEGRAM_ADMIN_ID  || '',          // معرّفك الرقمي (من @userinfobot)
   CHANNEL_ID:      process.env.MEMBERS_CHANNEL_ID || '',          // مثل -1001234567890 (البوت Admin فيها)
   TRONGRID_KEY:    process.env.TRONGRID_API_KEY   || '',          // اختياري — يرفع حد الطلبات
