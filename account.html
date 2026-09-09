@@ -493,9 +493,24 @@
       <input id="gPhone" type="tel" inputmode="tel">
       <label>الرمز الشخصي</label>
       <input id="gPin" class="pin" type="tel" inputmode="numeric" maxlength="4">
-      <script>/* ضمان ظهور لوحة الأرقام: بوابة الدخول فوق كل الطبقات، واللمس يفتح الحقل مباشرة */
-      (function(){try{var st=document.createElement('style');st.textContent='#gate{z-index:2147483000!important}#gate input{position:relative;z-index:2;pointer-events:auto!important;-webkit-user-select:text!important;user-select:text!important;font-size:16px!important}';document.head.appendChild(st);
-      ['gPhone','gPin'].forEach(function(id){var el=document.getElementById(id);if(!el)return;el.addEventListener('touchend',function(ev){if(document.activeElement!==el){ev.preventDefault();el.focus();try{el.click();}catch(e){}}},{passive:false});});}catch(e){}})();</script>
+      <script>/* لوحة أرقام مدمجة في بوابة الدخول (لا تعتمد على لوحة iOS): تظهر عند لمس الحقل، 0–9 ومسح وتأكيد */
+      (function(){try{
+        var st=document.createElement('style');st.textContent='#gate{z-index:2147483000!important}#gate input{position:relative;z-index:2;pointer-events:auto!important;font-size:18px!important;letter-spacing:1px;caret-color:#fff}'+
+          '#gKp{display:none;grid-template-columns:repeat(3,1fr);gap:8px;margin:14px 0 4px;direction:ltr}#gKp.on{display:grid}#gKp button{height:54px;border:0;border-radius:14px;background:rgba(255,255,255,.14);color:#fff;font:700 22px/1 Inter,system-ui,sans-serif;-webkit-tap-highlight-color:transparent;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}#gKp button:active{background:rgba(255,255,255,.32)}#gKp button.fn{font-size:15px;font-family:inherit;background:rgba(255,255,255,.08)}#gKp button.ok{background:#1F5FE0}';
+        document.head.appendChild(st);
+        var ph=document.getElementById('gPhone'),pin=document.getElementById('gPin'),cur=null;
+        var kp=document.createElement('div');kp.id='gKp';kp.innerHTML=['1','2','3','4','5','6','7','8','9','⌫','0','التالي'].map(function(k){return '<button type="button" data-k="'+k+'" class="'+(k==='⌫'?'fn':k==='التالي'?'fn ok':'')+'">'+k+'</button>';}).join('');
+        pin.parentNode.insertBefore(kp,pin.nextSibling);
+        [ph,pin].forEach(function(el){el.setAttribute('inputmode','none');el.setAttribute('autocomplete','off');
+          var act=function(ev){cur=el;kp.classList.add('on');ph.classList.toggle('kp-on',el===ph);pin.classList.toggle('kp-on',el===pin);try{el.focus({preventScroll:true});}catch(e){el.focus();}};
+          el.addEventListener('touchend',function(ev){ev.preventDefault();act();},{passive:false});el.addEventListener('click',act);el.addEventListener('focus',act);});
+        kp.addEventListener('click',function(e){var b=e.target.closest('button');if(!b||!cur)return;var k=b.dataset.k;
+          if(k==='⌫'){cur.value=cur.value.slice(0,-1);}
+          else if(k==='التالي'){if(cur===ph){cur=pin;pin.classList.add('kp-on');ph.classList.remove('kp-on');b.textContent='دخول';}else{var en=document.getElementById('gEnter');if(en)en.click();}return;}
+          else{if(cur===pin&&cur.value.length>=4)return;cur.value+=k;if(cur===ph&&cur.value.length===1&&k!=='+'){/* بادئة الدولة تُضاف تلقائيًا في التحقق */}}
+          cur.dispatchEvent(new Event('input',{bubbles:true}));});
+        kp.querySelector('[data-k="التالي"]').textContent='التالي';
+      }catch(e){}})();</script>
       <button class="enter" id="gEnter">دخول</button>
       <div class="err" id="gErr"></div>
       <p class="hint" style="margin-top:10px">
