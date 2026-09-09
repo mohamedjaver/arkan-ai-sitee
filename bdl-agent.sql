@@ -66,3 +66,9 @@ create table if not exists bdl_parties (
 alter table bdl_parties enable row level security;
 drop policy if exists "owner rw" on bdl_parties;
 create policy "owner rw" on bdl_parties for all using (coalesce(auth.jwt()->>'arkan_role','')='owner') with check (coalesce(auth.jwt()->>'arkan_role','')='owner');
+
+-- Build 1307: النشرة الحيّة للأسعار (مستقلة عن GitHub)
+create table if not exists bdl_rates_live (id int primary key, data jsonb, updated_at timestamptz default now());
+alter table bdl_rates_live enable row level security;
+drop policy if exists "owner rw" on bdl_rates_live;
+create policy "owner rw" on bdl_rates_live for all using (coalesce(auth.jwt()->>'arkan_role','')='owner') with check (coalesce(auth.jwt()->>'arkan_role','')='owner');

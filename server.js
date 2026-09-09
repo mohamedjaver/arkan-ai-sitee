@@ -1419,8 +1419,13 @@ function arCross(rates, ccy){
   const per=rates[ccy]; if(!per) return null;
   return mru/per;
 }
-let AR_LAST_OFFICIAL=null, AR_NOTIFIED_TODAY='';
+let AR_LAST_OFFICIAL=null, AR_NOTIFIED_TODAY='', AR_LIVE=null;
 app.get('/rates/official', (req,res)=>res.json(AR_LAST_OFFICIAL||{}));
+/* النشرة الحيّة: تُقرأ من هنا أولًا (لا تعتمد على نشر GitHub) وتُحفظ في Supabase لتبقى بعد إعادة التشغيل */
+app.get('/rates/data', (req,res)=>{ res.setHeader('Cache-Control','no-store'); res.json(AR_LIVE||{}); });
+function arOwnerTok(){ const ts=Math.floor(Date.now()/1000); return jwt.sign({ sub: phoneToUuid(OWNER_PHONES[0]), role:'authenticated', aud:'authenticated', arkan_role:'owner', iat:ts, exp:ts+300 }, JWT_SECRET); }
+async function arPersistLive(cur){ try{ AR_LIVE=cur; await fetch(SB_REST+'/bdl_rates_live?on_conflict=id',{method:'POST',headers:{apikey:SB_PUB,Authorization:'Bearer '+arOwnerTok(),'Content-Type':'application/json',Prefer:'resolution=merge-duplicates,return=minimal'},body:JSON.stringify({id:1,data:cur,updated_at:new Date().toISOString()})}); }catch(e){ console.warn('rates-live persist:', e.message); } }
+(async function(){ try{ const r=await fetch(SB_REST+'/bdl_rates_live?select=data&id=eq.1',{headers:{apikey:SB_PUB,Authorization:'Bearer '+arOwnerTok()}}); const j=await r.json(); if(Array.isArray(j)&&j[0]&&j[0].data) AR_LIVE=j[0].data; }catch(e){} })();
 async function arRun(){
   try{
     if(!process.env.GH_TOKEN){ console.log('AUTO-RATES: GH_TOKEN غير مضبوط — تخطٍ'); return; }
@@ -1453,7 +1458,7 @@ async function arRun(){
       if(row.r!==nr||row.m!==nm||row.w!==nw||row.src!==src){ changed=true; }
       row.r=nr; row.m=nm; row.w=nw; row.src=src;
     }
-    if(!changed){ console.log('AUTO-RATES: لا تغيير'); return; }
+    if(!changed){ console.log('AUTO-RATES: لا تغيير'); if(!AR_LIVE) await arPersistLive(cur); return; }
     cur.d=new Date().toLocaleDateString('fr-FR');
     cur.autoTs=Date.now();
     { const _n=new Date(); const _dd=String(_n.getUTCDate()).padStart(2,'0')+'/'+String(_n.getUTCMonth()+1).padStart(2,'0')+'/'+_n.getUTCFullYear();
@@ -1463,8 +1468,10 @@ async function arRun(){
     const meta=await (await fetch(AR_API,{headers:gh})).json();
     const body={message:'auto-rates: market refresh '+cur.d,
       content:Buffer.from(JSON.stringify(cur,null,1)).toString('base64'), sha:meta.sha, branch:'main'};
+    await arPersistLive(cur);   /* النشرة الحيّة أولًا — تعمل حتى لو فشل GitHub */
     const pr=await fetch(AR_API,{method:'PUT',headers:{...gh,'Content-Type':'application/json'},body:JSON.stringify(body)});
-    console.log('AUTO-RATES:', pr.ok?'نُشرت نشرة جديدة':'فشل النشر '+pr.status);
+    console.log('AUTO-RATES github:', pr.ok?'ok':'fail '+pr.status);
+    if(!pr.ok){ try{ await notifyAdmin('⚠️ نشر الأسعار إلى GitHub فشل ('+pr.status+') — الموقع يقرأ النشرة الحيّة من الخادم؛ حدّث GH_TOKEN في Railway (صلاحية contents:write).'); }catch(e){} }
   }catch(e){ console.error('AUTO-RATES err:', e.message); }
 }
 setInterval(arRun, 6*60*60*1000);

@@ -858,7 +858,9 @@ let TIERS={}, TIER_TS=null;
 async function loadTiers(){
   let d=null;
   /* 1) الملف المنشور من محرك الأسعار — المصدر الأول دائمًا */
-  try{
+  /* 0) النشرة الحيّة من الخادم (تُحدَّث يوميًا من BCM/BNA) — ثم الملف الثابت احتياطًا */
+  try{const ac=new AbortController();setTimeout(()=>ac.abort(),2500);const r0=await fetch('https://arkan-ai-site-production.up.railway.app/rates/data?t='+Date.now(),{cache:'no-store',signal:ac.signal});if(r0.ok){const j0=await r0.json();if(j0&&Array.isArray(j0.r)&&j0.r.length)d=j0;}}catch(e){}
+  if(!d)try{
     const r=await fetch('rates-data.json?t='+Date.now(),{cache:'no-store'});
     if(r.ok) d=await r.json();
   }catch(e){}
