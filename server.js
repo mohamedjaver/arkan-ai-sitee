@@ -1419,12 +1419,20 @@ function arCross(rates, ccy){
   const per=rates[ccy]; if(!per) return null;
   return mru/per;
 }
+let AR_LAST_OFFICIAL=null, AR_NOTIFIED_TODAY='';
+app.get('/rates/official', (req,res)=>res.json(AR_LAST_OFFICIAL||{}));
 async function arRun(){
   try{
     if(!process.env.GH_TOKEN){ console.log('AUTO-RATES: GH_TOKEN غير مضبوط — تخطٍ'); return; }
     const cur=await (await fetch(AR_RAW+'?t='+Date.now())).json();
     const mkt=await arMarketUSD();
     let changed=false;
+    /* المراجع الرسمية اليومية: BCM → MRU · BNA → AOA (Build 1290) */
+    try { const off = await require('./bdl-official-rates').fetchAll(); const diff = require('./bdl-official-rates').applyTo(cur, off);
+      AR_LAST_OFFICIAL = off; if (diff.length) { changed = true; console.log('OFFICIAL-RATES:', diff.join(' · ')); }
+      if (!AR_NOTIFIED_TODAY || AR_NOTIFIED_TODAY !== new Date().toISOString().slice(0, 10)) { AR_NOTIFIED_TODAY = new Date().toISOString().slice(0, 10);
+        try { await notifyAdmin('💱 <b>المراجع الرسمية</b> ' + AR_NOTIFIED_TODAY + '\nMRU (' + (off.sources.MRU || '—') + '): USD ' + (off.MRU.USD || '—') + ' · EUR ' + (off.MRU.EUR || '—') + ' · CNY ' + (off.MRU.CNY || '—') + ' · AED ' + (off.MRU.AED || '—') + '\nAOA (' + (off.sources.AOA || '—') + '): USD ' + (off.AOA.USD || '—') + ' · EUR ' + (off.AOA.EUR || '—') + (diff.length ? '\n' + diff.join('\n') : '\nلا تغيير') + (/Market/.test(String(off.sources.MRU) + off.sources.AOA) ? '\n⚠️ تعذّر الوصول لمصدر رسمي — استُخدم سعر السوق' : '')); } catch (e) {} }
+    } catch (e) { console.warn('OFFICIAL-RATES err:', e.message); }
     const anchorRow=(cur.r||[]).find(x=>x.ccy==='USDT'||x.ccy==='USD');
     const anchorMRO=((+((anchorRow||{}).bank)||0)>0? +anchorRow.bank : ((mkt&&mkt.MRU)||0))*10;
     for(const row of (cur.r||[])){
@@ -1461,6 +1469,8 @@ async function arRun(){
 }
 setInterval(arRun, 6*60*60*1000);
 setTimeout(arRun, 20*1000);
+/* تشغيل ثابت عند ساعة نشر البنوك المركزية (RATES_HOUR بالتوقيت العالمي، افتراضي 08) */
+setInterval(()=>{ const n=new Date(); if(n.getUTCHours()===(parseInt(process.env.RATES_HOUR||'8',10)) && n.getUTCMinutes()<10) arRun(); }, 10*60*1000);
 /* تشغيل يدوي فوري من المالك */
 app.post('/admin/refresh-rates', async (req,res)=>{
   try{
