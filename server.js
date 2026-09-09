@@ -1481,6 +1481,12 @@ try {
     notifyAdmin: typeof notifyAdmin === 'function' ? notifyAdmin : null,
     pushOwner: async (title, body) => { try { if (!webpush) return; const fs2 = admin.firestore(); const q = await fs2.collection('push_subs').where('role', '==', 'owner').get(); const payload = JSON.stringify({ title, body, url: '/dues.html' }); for (const doc of q.docs) { for (const sub of (doc.data().subs || [])) { try { await webpush.sendNotification(sub, payload, { TTL: 3600 }); } catch (e) {} } } } catch (e) {} } });
 } catch (e) { console.warn('accountant off:', e.message); }
+/* واجهة المحاسب المبسطة (accountant.html) — إضافي */
+try {
+  require('./bdl-accountant-routes')(app, { express, jwt, JWT_SECRET, SB_REST, SB_PUB,
+    ownerToken: () => { const ts = Math.floor(Date.now() / 1000); return jwt.sign({ sub: phoneToUuid(OWNER_PHONES[0]), role: 'authenticated', aud: 'authenticated', arkan_role: 'owner', iat: ts, exp: ts + 300 }, JWT_SECRET); },
+    notifyAdmin: typeof notifyAdmin === 'function' ? notifyAdmin : null });
+} catch (e) { console.warn('accountant routes off:', e.message); }
 app.listen(ENV.PORT, () => {
   console.log(`▲ BDL STORE on :${ENV.PORT}`);
   console.log(`  Wallet: ${ENV.WALLET}`);
