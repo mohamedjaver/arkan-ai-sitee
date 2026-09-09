@@ -75,7 +75,7 @@
     '#akTabs a{flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;padding:9px 2px 8px;color:#6B7280;text-decoration:none;font-size:11px;font-weight:500;-webkit-tap-highlight-color:transparent;transition:color .15s;user-select:none}' +
     '#akTabs a svg{width:27px;height:27px;stroke-width:1.5;transition:stroke .15s,transform .12s}' +
     '#akTabs a.on{color:#0A0A0A;font-weight:700}#akTabs a.on svg{stroke:#0A0A0A;stroke-width:2.1}' +
-    '#akTabs a:active,#akTabs a.tap{color:#1F5FE0}#akTabs a:active svg,#akTabs a.tap svg{stroke:#1F5FE0;transform:scale(.9)}' +
+    '#akTabs a:active svg{transform:scale(.9)}' +
     '#akMore{position:fixed;inset:0;z-index:99999;display:none;background:rgba(10,10,10,.5);backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px)}#akMore.on{display:grid;place-items:end center}' +
     'body.ak-more-open #arkChatFab,body.ak-more-open #akTop,body.ak-more-open #akTabs{visibility:hidden}' +
     '#akMore .sh{background:#fff;width:min(560px,100%);border-radius:28px 28px 0 0;padding:10px 18px calc(22px + env(safe-area-inset-bottom,0px));box-shadow:0 -12px 40px rgba(10,10,10,.18)}' +
@@ -108,9 +108,7 @@
     more.filter(function (m) { return m.href !== path; }).map(function (m) { return '<a href="' + m.href + '"><i>' + svg(m.icon, 20) + '</i>' + m.label + '</a>'; }).join('') +
     '</div><div class="lbl" id="akLangLbl" style="display:none">اللغة</div><div id="akLang" style="display:none"></div><button class="lo" id="akLogout">تسجيل الخروج</button></div>';
   function mount() { document.body.appendChild(bar); document.body.appendChild(sheet); document.body.appendChild(top);
-    var clearTap = function () { bar.querySelectorAll('a.tap').forEach(function (x) { x.classList.remove('tap'); }); };
-    bar.querySelectorAll('a').forEach(function (a) { a.addEventListener('touchstart', function () { clearTap(); a.classList.add('tap'); }, { passive: true }); a.addEventListener('click', function () { clearTap(); a.classList.add('tap'); setTimeout(clearTap, 1500); }); });
-    window.addEventListener('pageshow', clearTap); document.addEventListener('visibilitychange', function () { if (!document.hidden) clearTap(); });
+
     var open = function () { sheet.classList.add('on'); document.body.classList.add('ak-more-open'); }, close = function () { sheet.classList.remove('on'); document.body.classList.remove('ak-more-open'); };
     document.getElementById('akMoreBtn').onclick = function (e) { e.preventDefault(); open(); };
     document.getElementById('akClose').onclick = function (e) { e.preventDefault(); close(); };
