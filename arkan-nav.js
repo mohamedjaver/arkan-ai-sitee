@@ -37,12 +37,6 @@
     { href: 'chat-v2.html',    icon: 'message', label: 'الدردشة' },
     { href: 'request.html',    icon: 'send',    label: 'طلب تحويل' }
   ];
-  /* أدوات قديمة — مطوية، تبقى للوصول فقط (ستُدمج أو تُحذف في الدفعة B) */
-  var LEGACY_OWNER = [
-    { href: 'archive.html', label: 'الأرشيف القديم (Gemini)' },
-    { href: 'admin.html',   label: 'لوحة الأدمن' },
-    { href: 'invoice.html', label: 'مولّد الفواتير' }
-  ];
   var MORE_CLIENT = [
     { href: 'rates.html',  icon: 'rate',   label: 'الأسعار' },
     { href: 'wallet.html', icon: 'wallet', label: 'المحفظة' }
@@ -89,8 +83,7 @@
   var sheet = document.createElement('div'); sheet.id = 'akMore';
   sheet.innerHTML = '<div class="sh"><h4><span>المزيد</span><a href="#" id="akClose" style="color:#C62828">' + svg('close', 18) + '</a></h4><div class="g">' +
     more.filter(function (m) { return m.href !== path; }).map(function (m) { return '<a href="' + m.href + '">' + svg(m.icon, 20) + m.label + '</a>'; }).join('') +
-    '</div>' + (isOwner ? '<details style="margin-top:10px"><summary style="font-size:11px;color:#6B7280;font-weight:700;cursor:pointer">أدوات قديمة</summary><div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">' + LEGACY_OWNER.map(function (m) { return '<a href="' + m.href + '" style="font-size:11px;color:#6B7280;border:1px dashed rgba(11,47,112,.25);border-radius:8px;padding:6px 8px;text-decoration:none">' + m.label + '</a>'; }).join('') + '</div></details>' : '') +
-    '<button class="lo" id="akLogout">تسجيل الخروج</button></div>';
+    '</div><button class="lo" id="akLogout">تسجيل الخروج</button></div>';
   function mount() { document.body.appendChild(bar); document.body.appendChild(sheet);
     document.getElementById('akMoreBtn').onclick = function (e) { e.preventDefault(); sheet.classList.add('on'); };
     document.getElementById('akClose').onclick = function (e) { e.preventDefault(); sheet.classList.remove('on'); };
