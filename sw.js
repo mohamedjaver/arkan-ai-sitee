@@ -2,10 +2,13 @@
    إستراتيجية: الشبكة أولًا لصفحات HTML والبيانات (لا محتوى قديم أبدًا)
               الكاش أولًا للأصول الثابتة فقط (صور، أيقونات، شعار) */
 
-const V='arkan-v228-1302'; /* tabs: black only */
+const V='arkan-v229-1303'; /* instant navigation: precache + cache-first docs + touch-start nav */
 
 
-const STATIC=['./favicon.svg','./arkan-icon-512.png','./arkan-touch-180.png','./site-manifest.json'];
+const STATIC=['./favicon.svg','./arkan-icon-512.png','./arkan-touch-180.png','./site-manifest.json',
+  /* صفحات التشغيل اليومي + الملفات المشتركة: تُخزَّن مسبقًا فيفتح التبويب فورًا (الإصدار V يضمن حداثتها) */
+  './index.html','./account.html','./settle-v2.html','./compare.html','./accountant.html','./books.html','./chat-v2.html','./request.html',
+  './arkan-nav.js','./bdl-core.js','./bdl.css','./arkan-gate.js','./routes.config.js'];
 
 self.addEventListener('install',e=>{
   e.waitUntil(
@@ -92,10 +95,11 @@ self.addEventListener('fetch',e=>{
         if(res&&res.ok){const c=res.clone();caches.open(V).then(x=>x.put(r,c));}
         return res;
       }).catch(()=>null);
+      /* سرعة التنقل: المخزَّن في هذا الإصدار يُعرض فورًا ويُحدَّث في الخلفية (كل نشر يغيّر V فيُفرَّغ القديم) */
+      const cached=await caches.match(r,{ignoreSearch:true});
+      if(cached){e.waitUntil(net);return cached;}
       const first=await Promise.race([net,new Promise(res=>setTimeout(()=>res(null),3500))]);
       if(first)return first;
-      const cached=await caches.match(r);
-      if(cached){e.waitUntil(net);return cached;}
       const res=await net;
       return res||new Response('<!doctype html><meta charset=utf-8><title>BDL</title><body style="font-family:system-ui;display:grid;place-items:center;height:100vh"><div>لا اتصال — أعد المحاولة</div>',{headers:{'Content-Type':'text/html; charset=utf-8'}});
     })());

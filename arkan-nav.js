@@ -108,6 +108,7 @@
     more.filter(function (m) { return m.href !== path; }).map(function (m) { return '<a href="' + m.href + '"><i>' + svg(m.icon, 20) + '</i>' + m.label + '</a>'; }).join('') +
     '</div><div class="lbl" id="akLangLbl" style="display:none">اللغة</div><div id="akLang" style="display:none"></div><button class="lo" id="akLogout">تسجيل الخروج</button></div>';
   function mount() { document.body.appendChild(bar); document.body.appendChild(sheet); document.body.appendChild(top);
+    bar.querySelectorAll('a').forEach(fastNav);
 
     var open = function () { sheet.classList.add('on'); document.body.classList.add('ak-more-open'); }, close = function () { sheet.classList.remove('on'); document.body.classList.remove('ak-more-open'); };
     document.getElementById('akMoreBtn').onclick = function (e) { e.preventDefault(); open(); };
@@ -124,5 +125,9 @@
     /* توافق مع الأزرار القديمة التي تستدعي قائمة الهامبرغر */
     window.akOpenMenu = open;
   }
+  /* سرعة: جلب مسبق لصفحات التبويبات عند الخمول، وبدء الانتقال عند لمس التبويب (قبل رفع الإصبع) */
+  function prefetchAll() { try { tabs.concat(more).map(function (t) { return t.href.split('#')[0]; }).filter(function (h, i, a) { return a.indexOf(h) === i && h !== path; }).forEach(function (h) { var l = document.createElement('link'); l.rel = 'prefetch'; l.href = h; l.as = 'document'; document.head.appendChild(l); }); } catch (e) {} }
+  if ('requestIdleCallback' in window) requestIdleCallback(prefetchAll, { timeout: 3000 }); else setTimeout(prefetchAll, 1500);
+  function fastNav(a) { a.addEventListener('touchstart', function () { if (a.getAttribute('href') && a.getAttribute('href').indexOf('#') !== 0 && !a.classList.contains('on')) { a.__go = setTimeout(function () { location.href = a.href; }, 60); } }, { passive: true }); a.addEventListener('touchmove', function () { clearTimeout(a.__go); }, { passive: true }); a.addEventListener('touchcancel', function () { clearTimeout(a.__go); }, { passive: true }); }
   if (document.body) mount(); else document.addEventListener('DOMContentLoaded', mount);
 })();
