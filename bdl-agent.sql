@@ -43,3 +43,18 @@ drop policy if exists "owner rw" on bdl_deals;
 create policy "owner rw" on bdl_deals for all using (coalesce(auth.jwt()->>'arkan_role','')='owner') with check (coalesce(auth.jwt()->>'arkan_role','')='owner');
 drop policy if exists "owner rw" on bdl_rates_daily;
 create policy "owner rw" on bdl_rates_daily for all using (coalesce(auth.jwt()->>'arkan_role','')='owner') with check (coalesce(auth.jwt()->>'arkan_role','')='owner');
+
+-- Build 1289: المعايير المالية — سجل التدقيق والسلة
+create table if not exists bdl_audit (
+  id bigserial primary key, at timestamptz default now(),
+  actor text, action text, tbl text, row_id text, before jsonb, after jsonb, source text);
+create table if not exists bdl_trash (
+  id bigserial primary key, at timestamptz default now(),
+  tbl text, row_id text, row jsonb, reason text, restored_at timestamptz);
+create index if not exists bdl_audit_at on bdl_audit(at desc);
+alter table bdl_audit enable row level security;
+alter table bdl_trash enable row level security;
+drop policy if exists "owner rw" on bdl_audit;
+create policy "owner rw" on bdl_audit for all using (coalesce(auth.jwt()->>'arkan_role','')='owner') with check (coalesce(auth.jwt()->>'arkan_role','')='owner');
+drop policy if exists "owner rw" on bdl_trash;
+create policy "owner rw" on bdl_trash for all using (coalesce(auth.jwt()->>'arkan_role','')='owner') with check (coalesce(auth.jwt()->>'arkan_role','')='owner');

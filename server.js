@@ -1494,6 +1494,11 @@ try {
   require('./bdl-wa-pipeline')(app, { SB_REST, SB_PUB, tg, ADMIN_ID: ENV.ADMIN_ID, WA_TOKEN,
     ownerToken: () => { const ts = Math.floor(Date.now() / 1000); return jwt.sign({ sub: phoneToUuid(OWNER_PHONES[0]), role: 'authenticated', aud: 'authenticated', arkan_role: 'owner', iat: ts, exp: ts + 300 }, JWT_SECRET); } });
 } catch (e) { console.warn('wa pipeline off:', e.message); }
+/* المعايير المالية: سجل تدقيق، سلة 30 يومًا، PIN، تصدير شهري (إضافي) */
+try {
+  require('./bdl-vault')(app, { express, jwt, JWT_SECRET, SB_REST, SB_PUB,
+    ownerToken: () => { const ts = Math.floor(Date.now() / 1000); return jwt.sign({ sub: phoneToUuid(OWNER_PHONES[0]), role: 'authenticated', aud: 'authenticated', arkan_role: 'owner', iat: ts, exp: ts + 300 }, JWT_SECRET); } });
+} catch (e) { console.warn('vault off:', e.message); }
 app.listen(ENV.PORT, () => {
   console.log(`▲ BDL STORE on :${ENV.PORT}`);
   console.log(`  Wallet: ${ENV.WALLET}`);

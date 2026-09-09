@@ -268,9 +268,7 @@ async function delParty(side){const P=pickParty(side,'حذف جهة نهائيً
   sel.forEach(r=>{if(r.matched){r.matched.matched=null;r.matched.how='';if(r.matched.led)LED.patch(r.matched,{matched_fp:null,how:''});r.matched=null;}IDB.del('files',r.id).catch(()=>{});IDB.del('files',r.id+'_t').catch(()=>{});});
   S.cust=S.cust.filter(r=>!ids.has(r.id));S.sup=S.sup.filter(r=>!ids.has(r.id));S.excl=(S.excl||[]).filter(r=>!ids.has(r.id));if(ids.has(S.selC))S.selC=null;if(ids.has(S.selS))S.selS=null;render(true);
   let n=0,b=0,st=0,err='';if(tokenOf()){try{const eids=[...new Set(sel.map(r=>r.book_entry_id).filter(Boolean))];const fpSet=new Set(fps);
-      for(const eid of eids){try{const others=await sbq('/bdl_cmp_receipts?select=fp&book_entry_id=eq.'+eid);if(others.every(x=>fpSet.has(x.fp))){await sbq('/bdl_book_entries?id=eq.'+eid,{method:'DELETE',headers:{Prefer:'return=minimal'}});b++;}}catch(e){}}
-      for(let i=0;i<fps.length;i+=80){const part=fps.slice(i,i+80);await sbq('/bdl_cmp_receipts?fp=in.('+part.map(x=>'"'+x.replace(/"/g,'')+'"').join(',')+')',{method:'DELETE',headers:{Prefer:'return=minimal'}});n+=part.length;part.forEach(fp=>{delete LED.idx[fp];});}
-      for(let i=0;i<paths.length;i+=100){const part=paths.slice(i,i+100);try{const rs=await fetch(SBU+'/storage/v1/object/receipts',{method:'DELETE',headers:{apikey:ANON,Authorization:'Bearer '+tokenOf(),'Content-Type':'application/json'},body:JSON.stringify({prefixes:part})});if(rs.ok)st+=part.length;}catch(e){}}
+      await wipeFps(fps);n=fps.length;b=eids.length;st=0; /* السلة 30 يومًا + سجل تدقيق — الصور تبقى في Storage للاستعادة */
       LED.refs={};Object.values(LED.idx).forEach(x=>{if(x.ref)LED.refs[x.side+'|'+x.ref.replace(/\s+/g,'').toLowerCase()]=x;});}catch(e){err=String(e.message||e).slice(0,100);}}
   else err='غير مسجّل الدخول — حُذف من الجهاز فقط';
   const P0=S.party[side]||{};if((P0.who||'').trim()===P.name){S.party[side]={who:'',phone:''};}
@@ -442,14 +440,12 @@ async function zipSeen(f,side){const key=f.name+'|'+f.size;let reg={};try{reg=(a
   if(prev){toast('هذا الملف رُفع سابقًا ('+new Date(prev.when).toLocaleDateString('en-GB')+' · '+(prev.fps||[]).length+' إيصال) — كل إيصال مكرر سيُتخطى تلقائيًا ولن يُسجَّل مرتين');S._reupload=true;}
   S._zipKey=key;S._zipSide=side;return true;}
 async function zipDone(fps){try{const reg=(await IDB.get('state','zips'))||{};reg[S._zipKey]={name:S.party[S._zipSide]&&S.party[S._zipSide].who||'',side:S._zipSide,when:Date.now(),fps};await IDB.put('state','zips',reg);}catch(e){}}
-async function wipeFps(fps){if(!fps.length)return;const set=new Set(fps);
-  /* قيود الدفاتر: احذف القيد إن كانت كل إيصالاته من هذا الملف، وإلا اخصم مبلغها */
-  try{const rows=[];for(let i=0;i<fps.length;i+=150){rows.push(...await sbq('/bdl_cmp_receipts?select=fp,amount,book_entry_id&fp=in.('+fps.slice(i,i+150).map(x=>'"'+x+'"').join(',')+')'));}
-    const byE={};rows.forEach(x=>{if(x.book_entry_id)(byE[x.book_entry_id]=byE[x.book_entry_id]||[]).push(x);});
-    for(const eid in byE){try{const all=await sbq('/bdl_cmp_receipts?select=fp,amount&book_entry_id=eq.'+eid);if(all.every(x=>set.has(x.fp))){await sbq('/bdl_book_entries?id=eq.'+eid,{method:'DELETE',headers:{Prefer:'return=minimal'}});}
-      else{const cur=(await sbq('/bdl_book_entries?select=amount&id=eq.'+eid))[0];if(cur){const na=Math.max(0,Number(cur.amount)-byE[eid].reduce((a,x)=>a+Number(x.amount||0),0));await sbq('/bdl_book_entries?id=eq.'+eid,{method:'PATCH',headers:{Prefer:'return=minimal'},body:{amount:na}});}}}catch(e){}}
-    for(let i=0;i<fps.length;i+=150){await sbq('/bdl_cmp_receipts?fp=in.('+fps.slice(i,i+150).map(x=>'"'+x+'"').join(',')+')',{method:'DELETE',headers:{Prefer:'return=minimal'}});}
-  }catch(e){console.warn('wipeFps',e);}
+async function pinOf(){let p=sessionStorage.getItem('bdl_pin');if(!p){p=prompt('رمز PIN للعمليات الحساسة (6 أرقام):')||'';sessionStorage.setItem('bdl_pin',p);}return p;}
+async function wipeFps(fps){if(!fps.length)return;if(!tokenOf())return;
+  /* الحذف يمر بالخادم: نسخة في السلة 30 يومًا + سجل تدقيق + تصحيح القيود المرتبطة — لا حذف نهائي من الواجهة */
+  for(let a=0;a<2;a++){const r=await fetch(SRV+'/vault/trash',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+tokenOf(),'x-bdl-pin':await pinOf()},body:JSON.stringify({fps,reason:'compare'})});
+    const d=await r.json().catch(()=>({}));if(r.ok){toast('نُقل '+(d.moved||fps.length)+' إيصالًا إلى السلة (30 يومًا)');return;}
+    if(d.pin){sessionStorage.removeItem('bdl_pin');toast('PIN غير صحيح');continue;}toast('تعذر الحذف: '+(d.error||r.status));return;}
   const drop=r=>set.has(r.fp);S.cust.concat(S.sup).filter(drop).forEach(r=>{if(r.matched){r.matched.matched=null;r.matched.how='';}IDB.del('files',r.id).catch(()=>{});IDB.del('files',r.id+'_t').catch(()=>{});});
   S.cust=S.cust.filter(r=>!drop(r));S.sup=S.sup.filter(r=>!drop(r));S.excl=(S.excl||[]).filter(r=>!drop(r));fps.forEach(fp=>{delete LED.idx[fp];});
   toast('مُسحت بقايا الملف السابق: '+fps.length+' إيصال');render(true);persist();}

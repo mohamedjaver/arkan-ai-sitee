@@ -99,6 +99,13 @@ h2{font-size:20px;font-weight:700;margin:22px 0 10px;display:flex;justify-conten
 <h2>تقرير المحاسب <span id="repAt"></span></h2>
 <div id="report" class="card empty">لا يوجد تقرير بعد. اضغط «اكتب تقرير اليوم».</div>
 
+<h2>الأمان والتدقيق <span id="vaultSt"></span></h2>
+<div class="card">
+  <div class="row" style="margin-top:0"><button class="btn o" onclick="showTrash()">سلة المحذوفات</button><button class="btn o" onclick="showAudit()">سجل التدقيق</button></div>
+  <div class="row"><button class="btn" onclick="exportMonth()">تصدير الشهر (CSV مجمّد)</button></div>
+  <div id="vaultBox" style="margin-top:12px"></div>
+</div>
+
 <h2>حالة الاتصال</h2>
 <div class="card diag" id="diag"></div>
 
@@ -183,10 +190,17 @@ function wa(i){ const p = window._parties[i];
   const msg = `السلام عليكم ${p.party}،\nلدينا ${p.count} إيصال بقيمة ${fmt(p.sum)} AOA لم يصل مقابلها بعد (منذ ${p.days} يوم). نرجو التأكيد أو الإفادة.\n\n` + p.receipts.slice(0,10).map(r => `- ${fmt(r.amount)} AOA · ${dt(r.date)}`).join('\n') + '\n\nBDL — لبدال';
   location.href = `https://wa.me/${(p.phone||'').replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`; }
 async function copy(i){ await navigator.clipboard.writeText(partyText(window._parties[i])); toast('تم النسخ'); }
+async function pinOf(){let p=sessionStorage.getItem('bdl_pin');if(!p){p=prompt('رمز PIN (6 أرقام):')||'';sessionStorage.setItem('bdl_pin',p);}return p;}
+async function vapi(p,body){for(let a=0;a<2;a++){const r=await fetch(API+p,{method:body?'POST':'GET',headers:{...H(),'x-bdl-pin':body?await pinOf():''},body:body?JSON.stringify(body):undefined});const j=await r.json().catch(()=>({}));if(r.ok)return j;if(j.pin){sessionStorage.removeItem('bdl_pin');toast('PIN غير صحيح');continue;}throw new Error(j.error||('HTTP '+r.status));}}
+async function showTrash(){try{const t=await vapi('/vault/trash');$('vaultBox').innerHTML=t.length?t.map(x=>'<div class="deal"><span>'+dt(x.at)+' · '+(x.tbl==='bdl_cmp_receipts'?'إيصال':'قيد')+' · '+esc(x.who||'')+' <b>'+fmt(x.amount)+'</b>'+(x.restored_at?' · <span class="p">استُعيد</span>':'')+'</span>'+(x.restored_at?'':'<button style="color:var(--blue);font-weight:700" onclick="restoreT('+x.id+')">استعادة</button>')+'</div>').join(''):'<div class="empty">السلة فارغة</div>';}catch(e){toast(e.message);}}
+async function restoreT(id){try{await vapi('/vault/restore',{id});toast('استُعيد');showTrash();loadDues();}catch(e){toast(e.message);}}
+async function showAudit(){try{const t=await vapi('/vault/audit');const A={trash:'حذف إلى السلة',restore:'استعادة',patch:'تعديل',export:'تصدير',link:'ربط',unlink:'فك ربط'};$('vaultBox').innerHTML=t.length?t.map(x=>'<div class="deal"><span>'+dt(x.at)+' · <b>'+(A[x.action]||esc(x.action))+'</b> · '+esc(x.tbl)+' '+esc(x.row_id)+(x.before&&x.before.amount!=null?' · '+fmt(x.before.amount)+' → '+fmt(x.after&&x.after.amount):'')+'</span><span style="color:var(--mute)">'+esc(x.source||'')+'</span></div>').join(''):'<div class="empty">لا سجلات بعد</div>';}catch(e){toast(e.message);}}
+async function exportMonth(){const m=prompt('الشهر (YYYY-MM):',new Date().toISOString().slice(0,7));if(!m)return;toast('يُصدَّر…');try{const r=await vapi('/vault/export',{month:m});$('vaultBox').innerHTML='<div class="deal"><span>'+esc(r.month)+' · '+r.receipts+' إيصال · '+r.entries+' قيد · '+r.deals+' صفقة</span></div>'+Object.entries(r.urls).map(([n,u])=>'<div class="deal"><a href="'+u+'" style="color:var(--blue);font-weight:700">'+n+'</a></div>').join('');toast('تم التصدير');}catch(e){toast(e.message);}}
 async function loadAll(refresh){ await Promise.all([loadDues(), loadDeals(), showReport()]); if (refresh) toast('تم التحديث'); }
 (async () => {
   if (!tokenOf()) { location.replace('account.html?next=accountant.html'); return; }
   try { const ok = await status(); if (ok) await loadAll(); } catch(e) { setChip('bad', e.message); }
+  try { const v = await api('/vault/status'); $('vaultSt').textContent = 'PIN: ' + v.pin; } catch(e) {}
 })();
 </script>
 </body>

@@ -76,6 +76,7 @@ module.exports = function (app, ctx) {
     if (STATE.running) return STATE; STATE.running = true;
     try { const st = { reason, at: new Date().toISOString() }; st.match = await matchLedger(); st.audit = await auditBooks(); st.dues = await dues(); const text = await writeReport(st);
       STATE.last = st.at; STATE.lastReport = text; STATE.lastError = null;
+      try { if (new Date().getDate() === 1 && app.locals.vault) { const prev = new Date(); prev.setDate(0); const m = prev.toISOString().slice(0, 7); const ex = await app.locals.vault.exportMonth(m); await tgSend('📦 تصدير شهر ' + m + ' مجمّد: ' + ex.receipts + ' إيصال · ' + ex.entries + ' قيد · ' + ex.deals + ' صفقة'); } } catch (e) { log('export-error', String(e.message).slice(0, 120)); }
       const worth = reason !== 'hourly' || st.audit.applied || st.match.pairs;
       if (worth) { await tgSend(STATE.lastRep ? require('./bdl-report-skill').toTelegram(STATE.lastRep) : ('<b>المحاسب BDL</b> — ' + new Date().toLocaleDateString('en-GB') + '\n\n' + text), !!STATE.lastRep);
         try { if (pushOwner) await pushOwner('المحاسب: ' + (st.dues.n ? st.dues.n + ' إيصال بلا مورد · ' + fmt(st.dues.tot) + ' AOA' : 'لا ذمم مفتوحة'), String(text).slice(0, 120)); } catch (e) {} }
