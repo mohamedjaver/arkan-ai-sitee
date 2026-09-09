@@ -269,9 +269,6 @@ section{padding:88px 0}
 .bal .bsub{font-size:11.5px;color:#5A7396;margin-top:6px;font-weight:600}
 [dir=rtl] .bal .bsub{text-align:right}
 
-/* visa */
-.visa{background:#EEF7FF}
-.visa .grid{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:center}
 .card3d{perspective:1200px}
 .vcard{position:relative;aspect-ratio:1.586;border-radius:0;padding:28px;color:#fff;direction:ltr;text-align:left;
   background:
@@ -443,7 +440,6 @@ body::after{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;opac
     <div class="links">
       <a href="#network" data-i="nav_network"></a>
       <a href="#wallet" data-i="nav_wallet"></a>
-      <a href="#visa" data-i="nav_visa"></a>
       <a href="#markets" data-i="nav_markets"></a>
       <a href="#exchange" data-i="nav_exchange"></a>
       <a href="chat-v2.html" data-i="nav_chat"></a>
@@ -464,7 +460,7 @@ body::after{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;opac
 </nav>
 <div class="mmenu" id="mmenu">
   <a href="#network" data-i="nav_network"></a><a href="#wallet" data-i="nav_wallet"></a>
-  <a href="#visa" data-i="nav_visa"></a><a href="#markets" data-i="nav_markets"></a>
+  <a href="#markets" data-i="nav_markets"></a>
   <a href="#exchange" data-i="nav_exchange"></a><a href="chat-v2.html" data-i="nav_chat"></a><a href="#settle" data-i="nav_settle"></a><a href="arkan/ai.html">AI</a>
   <a href="books.html" class="akUserLink" hidden style="font-weight:800">دفاتري</a>
   <a href="settle-v2.html" class="akOwnerLink" hidden style="color:#7FD0FF;font-weight:800">كونسول التسوية ←</a>
@@ -604,39 +600,7 @@ fetch(API+'/accountant/deals',{headers:H}).then(function(r){return r.json()}).th
 </section>
 
 <!-- ================= VISA ================= -->
-<section class="visa" id="visa">
-  <div class="wrap">
-    <div class="grid">
-      <div class="card3d">
-        <div class="vcard">
-          <div class="row1">
-            <span style="font-family:'Archivo',sans-serif;font-weight:800;letter-spacing:.16em;font-size:12px;color:#9FE3FF">BDL · PREPAID</span>
-            <span class="chip"></span>
-          </div>
-          <div class="num">4023&nbsp;&nbsp;••••&nbsp;&nbsp;••••&nbsp;&nbsp;7714</div>
-          <div class="meta">
-            <div><div class="l">CARD HOLDER</div><b>MOHAMED · A</b></div>
-            <div><div class="l">VALID THRU</div><b>12/29</b></div>
-            <span class="visa-w">VISA</span>
-          </div>
-        </div>
-      </div>
-      <div>
-        <span class="eyebrow" data-i="v_eye"></span>
-        <h2 class="sec-h2" data-i="v_h2"></h2>
-        <p class="sec-sub" data-i="v_sub"></p>
-        <ul class="vfeat">
-          <li><span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></span><span data-i="v_f1"></span></li>
-          <li><span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></span><span data-i="v_f2"></span></li>
-          <li><span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></span><span data-i="v_f3"></span></li>
-          <li><span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></span><span data-i="v_f4"></span></li>
-        </ul>
-        <div class="vprice" id="vprice"></div>
-        <a class="btn btn-gold" id="waBtn" href="https://wa.me/22236295050" data-i="v_cta"></a>
-      </div>
-    </div>
-  </div>
-</section>
+
 
 <!-- ================= BDL OFFICIAL RATES ================= -->
 <section id="markets">
@@ -735,23 +699,23 @@ const I18N={
 ar:{
   nav_network:"الشبكة",nav_markets:"الأسعار",nav_exchange:"التحويل",nav_settle:"التسوية",nav_visa:"بطاقة فيزا",
   nav_chat:"المحادثة",nav_signin:"دخول",nav_signout:"خروج",nav_start:"ابدأ الآن",
-  pill:"ممرات إفريقيا × الصين × الخليج · مباشر",
-  h1:"حوّل أموالك عبر إفريقيا <em>فورًا.</em>",
-  lede:"الصرف والتسويات الدولية بين موريتانيا وأنغولا والصين والخليج — أسعار لبدال الرسمية، ثقة مؤسسية، وتنفيذ في دقائق.",
+  pill:"موريتانيا × أنغولا × الصين × الخليج · تسويات يومية",
+  h1:"صرف وتسويات عبر الحدود <em>بإيصال لكل عملية.</em>",
+  lede:"لبدال تصرف وتسوّي بين موريتانيا وأنغولا والصين والخليج: مرجع البنك المركزي يُنشر يوميًا، العمولة معلنة قبل التنفيذ، وكل عملية موثقة بإيصال بنكي يُقرأ ويُطابَق آليًا.",
   cta1:"ابدأ التحويل",cta2:"افتح حساب أعمال",
-  trust1:"مرخّصة ومنظّمة",trust2:"تشفير 256-بت",trust3:"تسوية في دقائق",trust4:"تحقق KYC",
-  x_title:"كم يستلم المستفيد؟",x_tag:"لبدال",x_send:"ترسل",x_get:"يستلم المستفيد",x_rate:"المرجع الرسمي",x_fee:"",x_go:"متابعة ←",
-  net_h:"شبكة المدفوعات العالمية",net_live:"نشاط الممرات مباشر",
+  trust1:"شركات مسجّلة في موريتانيا وأنغولا",trust2:"إيصال بنكي لكل عملية",trust3:"تسوية في نفس يوم العمل",trust4:"تحقق من هوية العميل",
+  x_title:"كم يستلم المستفيد؟",x_tag:"لبدال",x_send:"ترسل",x_get:"يستلم المستفيد",x_rate:"مرجع البنك المركزي",x_fee:"",x_go:"متابعة ←",
+  net_h:"الممرات التي نعمل عليها",net_live:"نواكشوط · لواندا · قوانغتشو · دبي",
   st1:"حجم التداول · 24س",st2:"أسواق مرتبطة",st3:"متوسط التسوية",st4:"نسبة النجاح",
-  mk_eye:"أسعار لبدال",mk_h2:"أسعار لبدال الرسمية",
-  mk_sub:"الأسعار المعتمدة للتعامل — تُحدَّث مباشرة من إدارة لبدال، لا أسعار آلية.",mk_upd:"آخر تحديث",
+  mk_eye:"أسعار لبدال",mk_h2:"المراجع الرسمية اليومية",
+  mk_sub:"المرجع الرسمي للبنك المركزي الموريتاني (BCM) وبنك أنغولا (BNA) يُحدَّث كل يوم عمل. سعر لبدال = المرجع + عمولة معلنة تظهر قبل تأكيد أي تحويل.",mk_upd:"آخر تحديث",
   mk_pair:"العملة",mk_rate:"المرجع الرسمي",mk_old:"بالأوقية القديمة",
-  sp_eye:"التسوية",sp_h2:"من الطلب إلى التسوية — أربع خطوات",sp_sub:"كل تحويل يمر بنفس المسار المدقَّق. لا مفاجآت، لا صندوق أسود.",
+  sp_eye:"التسوية",sp_h2:"من الطلب إلى التسوية — أربع خطوات",sp_sub:"كل تحويل يمر بالمسار نفسه، وتستطيع تتبّع حالته في حسابك في أي لحظة.",
   s1h:"اختر الممر",s1p:"حدد عملة المصدر والوجهة والمبلغ.",
-  s2h:"ارفع الإيصال",s2p:"إثبات الدفع البنكي يُقرأ آليًا بتقنية OCR.",
-  s3h:"التحقق",s3p:"فحص الاحتيال والمطابقة مع الدفعة.",
-  s4h:"التسوية",s4p:"صرف USDT أو العملة المحلية وتأكيد الطرفين.",
-  db_eye:"لوحة التحكم",db_h2:"أرصدتك في شاشة واحدة",db_sub:"كل عملة تعمل بها، مُسوّاة ومباشرة.",
+  s2h:"ارفع الإيصال",s2p:"ترفع إيصال الدفع البنكي، فيُقرأ رقمه ومبلغه ومرجعه آليًا.",
+  s3h:"التحقق",s3p:"يُطابَق الإيصال مع الدفعة والمرجع البنكي، ويُرفض المكرر.",
+  s4h:"التسوية",s4p:"يُحوَّل المبلغ للمستفيد ويصلك إيصال التسوية وتأكيده.",
+  db_eye:"لوحة التحكم",db_h2:"أرصدتك في شاشة واحدة",db_sub:"الكوانزا والأوقية وUSDT في شاشة واحدة، مع سجل كامل لكل عملية.",
   c_aoa:"كوانزا",c_mru:"أوقية",
   v_eye:"بطاقة لبدال",v_h2:"بطاقة واحدة. لكل الحدود.",
   v_sub:"بطاقة فيزا دولية مسبقة الدفع، تُسلَّم في نواكشوط — ادفع أونلاين، الاشتراكات والسفر بثقة.",
@@ -770,10 +734,10 @@ ar:{
   w_bank:"حوالة بنكية دولية",w_bankt:"2–5 أيام عمل",
   w_ark:"محفظة BDL",w_arkt:"أقل من دقيقة",
   wa:"أريد طلب بطاقة فيزا لبدال",
-  ai_eye:"بالذكاء الاصطناعي",ai_h2:"ذكاء مالي متقدم",ai_sub:"الذكاء الاصطناعي يعمل على كل معاملة، حتى لا تضطر أنت لذلك.",
-  ai1h:"أفضل سعر",ai1p:"يفحص الذكاء الاصطناعي كل الممرات لإيجاد أفضل سعر لمعاملتك فورًا.",
-  ai2h:"منع الاحتيال",ai2p:"نماذج تعلم آلي تكشف الأنماط المشبوهة وتحمي الأموال على مدار الساعة.",
-  ai3h:"توجيه ذكي",ai3p:"تُوجَّه المدفوعات آليًا عبر أسرع وأرخص ممر متاح.",
+  ai_eye:"كيف نضمن الدقة",ai_h2:"تشغيل آلي، ومراجعة بشرية عند الشك",ai_sub:"ما يفعله النظام فعليًا في كل عملية.",
+  ai1h:"قراءة الإيصالات",ai1p:"كل إيصال يُقرأ مرتين بشكل مستقل؛ إن اختلفت القراءتان يذهب للمراجعة اليدوية بدل أن يُسجَّل خطأ.",
+  ai2h:"منع التكرار",ai2p:"لكل إيصال بصمة رقمية؛ الإيصال المكرر أو المعدّل يُرفض تلقائيًا.",
+  ai3h:"تقرير يومي",ai3p:"كل صباح يُراجَع الدفتر كاملًا: ما سُوّي، وما لم يُسوَّ بعد، وما يحتاج قرارًا.",
   f_rates:"الأسعار",f_transfer:"تحويل",f_settle:"التسوية",f_archive:"الأرشيف"
 },
 fr:{
@@ -781,14 +745,14 @@ fr:{
   nav_chat:"Messagerie",nav_signin:"Connexion",nav_signout:"Déconnexion",nav_start:"Commencer →",
   pill:"Corridors Afrique × Chine × Golfe · En direct",
   h1:"Transférez votre argent en Afrique, <em>instantanément.</em>",
-  lede:"Change et règlement transfrontalier entre la Mauritanie, l'Angola, la Chine et le Golfe — taux officiels BDL, confiance institutionnelle, exécution en quelques minutes.",
+  lede:"Change et règlements entre la Mauritanie, l’Angola, la Chine et le Golfe : référence de la banque centrale publiée chaque jour, commission annoncée avant exécution, chaque opération justifiée par un reçu bancaire lu et rapproché automatiquement.",
   cta1:"Démarrer un change",cta2:"Ouvrir un compte business",
-  trust1:"Agréé & réglementé",trust2:"Chiffrement 256 bits",trust3:"Règlement en minutes",trust4:"Vérifié KYC",
+  trust1:"Sociétés enregistrées en Mauritanie et en Angola",trust2:"Un reçu bancaire pour chaque opération",trust3:"Règlement le jour même",trust4:"Vérification d’identité",
   x_title:"Combien reçoit le bénéficiaire ?",x_tag:"BDL",x_send:"Vous envoyez",x_get:"Le bénéficiaire reçoit",x_rate:"Référence officielle",x_fee:"",x_go:"Continuer →",
   net_h:"Réseau de paiement mondial",net_live:"Activité en direct",
   st1:"Volume · 24h",st2:"Marchés connectés",st3:"Règlement moyen",st4:"Taux de réussite",
   mk_eye:"Taux BDL",mk_h2:"Les taux officiels BDL",
-  mk_sub:"Les taux appliqués — mis à jour directement par BDL, aucun flux automatique.",mk_upd:"Mis à jour",
+  mk_sub:"Référence officielle BCM et BNA mise à jour chaque jour ouvré. Taux BDL = référence + commission affichée avant confirmation.",mk_upd:"Mis à jour",
   mk_pair:"Paire",mk_rate:"Référence officielle",mk_old:"Ancienne ouguiya",
   sp_eye:"Règlement",sp_h2:"De la demande au règlement — quatre étapes",sp_sub:"Chaque transfert suit le même parcours audité. Aucune surprise.",
   s1h:"Choisissez le corridor",s1p:"Devise source, destination et montant.",
@@ -814,10 +778,10 @@ fr:{
   w_bank:"Virement bancaire international",w_bankt:"2–5 jours ouvrés",
   w_ark:"Portefeuille BDL",w_arkt:"Moins d'une minute",
   wa:"Je souhaite commander la carte Visa BDL",
-  ai_eye:"Propulsé par l'IA",ai_h2:"Intelligence financière avancée",ai_sub:"L'IA travaille sur chaque transaction, pour que vous n'ayez pas à le faire.",
-  ai1h:"Meilleur taux",ai1p:"L'IA analyse chaque corridor pour trouver le taux optimal en temps réel.",
-  ai2h:"Prévention de la fraude",ai2p:"Des modèles de ML détectent les schémas suspects et protègent les fonds 24/7.",
-  ai3h:"Routage intelligent",ai3p:"Les paiements sont routés via le corridor le plus rapide et le moins cher.",
+  ai_eye:"Comment nous garantissons l’exactitude",ai_h2:"Automatisation, revue humaine en cas de doute",ai_sub:"Ce que le système fait réellement à chaque opération.",
+  ai1h:"Lecture des reçus",ai1p:"Chaque reçu est lu deux fois indépendamment ; en cas d’écart, il part en revue manuelle.",
+  ai2h:"Anti-doublon",ai2p:"Chaque reçu a une empreinte numérique ; un doublon ou un reçu modifié est refusé.",
+  ai3h:"Rapport quotidien",ai3p:"Chaque matin, le grand livre est revu : réglé, en attente, à décider.",
   f_rates:"Taux",f_transfer:"Transfert",f_settle:"Règlement",f_archive:"Archives"
 },
 en:{
@@ -825,14 +789,14 @@ en:{
   nav_chat:"Chat",nav_signin:"Sign in",nav_signout:"Sign out",nav_start:"Get started →",
   pill:"Africa × China × Gulf corridors · Live",
   h1:"Move money across Africa, <em>instantly.</em>",
-  lede:"Currency exchange and cross-border settlement between Mauritania, Angola, China and the Gulf — official BDL, institutional trust, executed in minutes.",
+  lede:"Exchange and settlements between Mauritania, Angola, China and the Gulf: central-bank reference published daily, commission shown before execution, every transaction backed by a bank receipt that is read and matched automatically.",
   cta1:"Start exchange",cta2:"Open business account",
-  trust1:"Licensed & regulated",trust2:"256-bit encryption",trust3:"Settlement in minutes",trust4:"KYC verified",
+  trust1:"Registered companies in Mauritania and Angola",trust2:"A bank receipt for every transaction",trust3:"Same-business-day settlement",trust4:"Customer identity verification",
   x_title:"How much does the recipient get?",x_tag:"BDL",x_send:"You send",x_get:"Recipient gets",x_rate:"Official reference",x_fee:"",x_go:"Continue →",
   net_h:"Global Payment Network",net_live:"Live corridor activity",
   st1:"Volume · 24h",st2:"Connected markets",st3:"Avg. settlement",st4:"Success rate",
   mk_eye:"BDL",mk_h2:"Official BDL",
-  mk_sub:"The applied rates — updated directly by BDL, no automated feeds.",mk_upd:"Updated",
+  mk_sub:"Official BCM and BNA references updated every business day. BDL rate = reference + a commission shown before you confirm.",mk_upd:"Updated",
   mk_pair:"Pair",mk_rate:"Official reference",mk_old:"Old ouguiya",
   sp_eye:"Settlement",sp_h2:"From request to settled — four steps",sp_sub:"Every transfer follows the same audited path. No surprises, no black box.",
   s1h:"Choose corridor",s1p:"Pick source & destination currency and amount.",
@@ -858,10 +822,10 @@ en:{
   w_bank:"International bank transfer",w_bankt:"2–5 business days",
   w_ark:"BDL",w_arkt:"Under a minute",
   wa:"I would like to order the BDL Visa card",
-  ai_eye:"AI-powered",ai_h2:"Smart financial intelligence",ai_sub:"Machine intelligence works on every transaction, so you don't have to.",
-  ai1h:"Best rate detection",ai1p:"AI scans every corridor to find the optimal rate for your transaction in real-time.",
-  ai2h:"Fraud prevention",ai2p:"Machine-learning models detect suspicious patterns and protect funds 24/7.",
-  ai3h:"Smart routing",ai3p:"Payments are automatically routed through the fastest, cheapest available corridor.",
+  ai_eye:"How we ensure accuracy",ai_h2:"Automated, with human review when in doubt",ai_sub:"What the system actually does on every transaction.",
+  ai1h:"Receipt reading",ai1p:"Every receipt is read twice independently; any mismatch goes to manual review.",
+  ai2h:"Duplicate protection",ai2p:"Every receipt gets a digital fingerprint; duplicates and edited receipts are rejected.",
+  ai3h:"Daily report",ai3p:"Every morning the ledger is reviewed: settled, pending, and items needing a decision.",
   f_rates:"Rates",f_transfer:"Transfer",f_settle:"Settlement",f_archive:"Archive"
 },
 pt:{
@@ -869,14 +833,14 @@ pt:{
   nav_chat:"Conversa",nav_signin:"Entrar",nav_signout:"Sair",nav_start:"Começar →",
   pill:"Corredores África × China × Golfo · Ao vivo",
   h1:"Envie dinheiro pela África, <em>instantaneamente.</em>",
-  lede:"Câmbio e liquidação internacional entre Mauritânia, Angola, China e o Golfo — taxas oficiais BDL, confiança institucional, executado em minutos.",
+  lede:"Câmbio e liquidações entre Mauritânia, Angola, China e Golfo: referência do banco central publicada diariamente, comissão mostrada antes da execução, cada operação comprovada por recibo bancário lido e conciliado automaticamente.",
   cta1:"Iniciar câmbio",cta2:"Abrir conta empresarial",
-  trust1:"Licenciado e regulado",trust2:"Criptografia de 256 bits",trust3:"Liquidação em minutos",trust4:"Verificado KYC",
+  trust1:"Empresas registadas na Mauritânia e em Angola",trust2:"Um recibo bancário por cada operação",trust3:"Liquidação no mesmo dia útil",trust4:"Verificação de identidade",
   x_title:"Quanto recebe o destinatário?",x_tag:"BDL",x_send:"Você envia",x_get:"O destinatário recebe",x_rate:"Referência oficial",x_fee:"",x_go:"Continuar →",
   net_h:"Rede global de pagamentos",net_live:"Atividade ao vivo",
   st1:"Volume · 24h",st2:"Mercados conectados",st3:"Liquidação média",st4:"Taxa de sucesso",
   mk_eye:"Taxas BDL",mk_h2:"Taxas oficiais BDL",
-  mk_sub:"As taxas aplicadas — atualizadas diretamente pela BDL, sem feeds automáticos.",mk_upd:"Atualizado",
+  mk_sub:"Referência oficial BCM e BNA actualizada em cada dia útil. Taxa BDL = referência + comissão mostrada antes de confirmar.",mk_upd:"Atualizado",
   mk_pair:"Par",mk_rate:"Referência oficial",mk_old:"Ouguiya antiga",
   sp_eye:"Liquidação",sp_h2:"Do pedido à liquidação — quatro passos",sp_sub:"Cada transferência segue o mesmo caminho auditado. Sem surpresas.",
   s1h:"Escolha o corredor",s1p:"Moeda de origem, destino e valor.",
@@ -902,10 +866,10 @@ pt:{
   w_bank:"Transferência bancária internacional",w_bankt:"2–5 dias úteis",
   w_ark:"Carteira BDL",w_arkt:"Menos de um minuto",
   wa:"Quero pedir o cartão Visa BDL",
-  ai_eye:"Com IA",ai_h2:"Inteligência financeira avançada",ai_sub:"A IA trabalha em cada transação, para que você não precise.",
-  ai1h:"Melhor taxa",ai1p:"A IA analisa cada corredor para encontrar a taxa ideal em tempo real.",
-  ai2h:"Prevenção de fraude",ai2p:"Modelos de ML detetam padrões suspeitos e protegem os fundos 24/7.",
-  ai3h:"Roteamento inteligente",ai3p:"Os pagamentos são encaminhados pelo corredor mais rápido e barato.",
+  ai_eye:"Como garantimos a exactidão",ai_h2:"Automático, com revisão humana em caso de dúvida",ai_sub:"O que o sistema faz realmente em cada operação.",
+  ai1h:"Leitura de recibos",ai1p:"Cada recibo é lido duas vezes de forma independente; qualquer divergência vai para revisão manual.",
+  ai2h:"Sem duplicados",ai2p:"Cada recibo tem uma impressão digital; duplicados ou recibos alterados são rejeitados.",
+  ai3h:"Relatório diário",ai3p:"Todas as manhãs o livro é revisto: liquidado, pendente e o que precisa de decisão.",
   f_rates:"Taxas",f_transfer:"Transferência",f_settle:"Liquidação",f_archive:"Arquivo"
 }};
 
