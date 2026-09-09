@@ -48,6 +48,11 @@ main{padding:12px}
 .lg .net b{margin:0;font-size:28px;color:var(--gold)}
 @media(min-width:760px){.hero{display:grid;grid-template-columns:270px 1fr;gap:20px;align-items:center}.g{margin:0}}
 .tools{display:flex;gap:6px;margin:10px 0;flex-wrap:wrap;align-items:center}
+.hk{text-align:center;padding:6px 0 14px}.hk small{display:block;font-size:12px;color:#B9C7E6;font-weight:700}.hk b{display:block;font:800 clamp(30px,8.5vw,44px)/1.15 "Inter",sans-serif;letter-spacing:-.5px;font-variant-numeric:tabular-nums;margin:4px 0}.hk b span{font-size:14px;color:#B9C7E6;font-weight:600;margin-inline-start:6px}.hk u{text-decoration:none;font-size:11px;color:#B9C7E6;font-weight:600}
+.hc{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.hc>div{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-top:3px solid var(--c);border-radius:14px;padding:10px 6px;text-align:center}.hc b{display:block;font:800 22px/1.2 "Inter",sans-serif;color:var(--c)}.hc span{display:block;font-size:11px;font-weight:700;color:#fff;margin-top:2px}.hc u{display:block;text-decoration:none;font-size:10px;color:#B9C7E6;font-variant-numeric:tabular-nums;margin-top:2px}
+.more{margin:4px 0}.more summary{cursor:pointer;font-size:12px;font-weight:800;color:var(--muted);padding:6px 4px;list-style:none;display:flex;align-items:center;gap:6px}.more summary::-webkit-details-marker{display:none}.more summary:before{content:"▸";transition:transform .15s}.more[open] summary:before{transform:rotate(90deg)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}.seg button{border:0!important;border-radius:0!important;padding:8px 10px!important;font-size:12px!important;background:#fff}.seg button.on{background:var(--navy);color:#fff}
+html[data-btn=s] .tools button,html[data-btn=s] .btn{font-size:11px;padding:7px 9px}html[data-btn=l] .tools button,html[data-btn=l] .btn{font-size:14px;padding:13px 16px}
 .tools button,.btn{border:1px solid var(--line);background:#fff;color:var(--navy);font:800 12px inherit;font-family:inherit;padding:10px 12px;cursor:pointer}
 .tools button.pri,.btn.pri{background:var(--navy);color:#fff;border-color:var(--navy)}
 .tools button.on{background:var(--navy);color:#fff}
@@ -130,26 +135,32 @@ table{width:100%;border-collapse:collapse;font-size:12px}th{background:#F3F7FD;c
 <header><img src="favicon.svg?v=bdl7" alt=""><div><h1>مقارنة الإيصالات</h1><small>الزبائن مقابل الموردين — دفتر دائم</small></div><span class="tag" id="tag">الدفتر</span><a class="tag" href="settle-v2.html" style="text-decoration:none;margin-inline-start:6px">مركز المطابقة</a><a class="tag" href="books.html" style="text-decoration:none;margin-inline-start:6px">دفاتري</a><a class="tag" href="accountant.html" style="text-decoration:none;margin-inline-start:6px;border-color:var(--gold);color:var(--gold)">المحاسب</a></header>
 <main>
 <div class="hero" id="hero"></div>
+<div class="tools" id="prim">
+  <button class="pri" style="background:var(--green);border-color:var(--green)" onclick="partyPanel()">حفظ الإيصالات إلى الدفتر</button>
+  <button class="pri" onclick="syncLedger(false)">مزامنة مع الدفتر</button>
+  <button style="border-color:var(--gold);color:var(--gold)" onclick="location.href='accountant.html'">المحاسب</button>
+  <button onclick="exportPDF()">تقرير PDF</button>
+  <button id="rsm" style="display:none;background:#ED6C02;color:#fff;border-color:#ED6C02" onclick="resume()">متابعة القراءة</button>
+  <span style="flex:1"></span>
+  <span class="seg" title="حجم الأزرار"><button onclick="setBtn('s')" data-b="s">ص</button><button onclick="setBtn('m')" data-b="m">م</button><button onclick="setBtn('l')" data-b="l">ك</button></span>
+</div>
+<details class="more" id="more"><summary>المزيد من الأدوات</summary>
 <div class="tools">
   <button class="pri" onclick="rematch()">إعادة المطابقة</button>
-  <button id="rsm" style="display:none;background:#ED6C02;color:#fff;border-color:#ED6C02" onclick="resume()">متابعة القراءة</button>
   <button onclick="freeLocal()">تحرير مساحة الجهاز</button>
   <button onclick="const v=prompt('التوازي (2–8) — 4 للحساب المجاني، 8 للحساب المدفوع:',localStorage.getItem('gemPar')||'4');if(v)localStorage.setItem('gemPar',String(Math.max(2,Math.min(8,parseInt(v)||4))));const m=prompt('نموذج Gemini:\ngemini-2.5-flash (دقيق)\ngemini-2.5-flash-lite (أسرع)',GEM_MODEL());if(m)localStorage.setItem('gemModel',m.trim());toast('حُفظت إعدادات السرعة');">سرعة القراءة</button>
   <button style="border-color:var(--red);color:var(--red)" onclick="audit()">تفتيش الدفاتر</button>
-  <button style="border-color:var(--green);color:var(--green)" onclick="location.href='accountant.html'">المحاسب — التقرير والذمم</button>
   <button onclick="const k=prompt('مفتاح Gemini (يُحفظ على هذا الجهاز فقط):',localStorage.getItem('gemKey')||'');if(k!=null&&k.trim()){localStorage.setItem('gemKey',k.trim());toast('حُفظ المفتاح');}">مفتاح Gemini</button>
   <button id="lkb" onclick="linkMode()">ربط يدوي ١:١</button>
   <span style="font-size:11px;color:var(--muted);font-weight:700">هامش %</span><input id="tol" inputmode="decimal" value="0.5" onchange="rematch()">
-  <button onclick="exportPDF()">تقرير PDF</button>
   <button onclick="shareText()">نسخ للواتساب</button>
-  <button style="color:var(--green);border-color:var(--green)" onclick="partyPanel()">حفظ الإيصالات إلى الدفتر</button>
   <button class="danger" onclick="clearAll()">مسح الجلسة (الجهاز)</button>
   <button class="danger" style="background:var(--red);color:#fff;border-color:var(--red)" onclick="wipeAll()">مسح كامل — الجهاز والدفتر</button>
 </div>
+</details>
 <div class="tools" id="rng" style="margin-top:0">
   <span style="font-size:11px;color:var(--muted);font-weight:700">الفترة</span><input type="date" id="rf" onchange="setRange(this.value,$('#rt').value)"><span style="font-size:11px;color:var(--muted)">→</span><input type="date" id="rt" onchange="setRange($('#rf').value,this.value)">
   <button onclick="quick(0)">هذا الشهر</button><button onclick="quick(2)">٣ أشهر</button><button onclick="quick(5)">٦ أشهر</button><button onclick="quick(-1)">الكل</button>
-  <button class="pri" onclick="syncLedger(false)">مزامنة مع الدفتر</button>
 </div>
 <div class="tools" style="margin:6px 0 4px"><input id="q" placeholder="بحث: اسم / هاتف / مرجع / مبلغ / بنك" style="flex:1;min-width:160px;width:auto;text-align:right" oninput="S.q=this.value;render(true)"></div>
 <div id="views" class="tools" style="margin:0 0 8px"></div>
@@ -391,6 +402,8 @@ $('#fi').addEventListener('change',async function(){const list=[...this.files];i
 
 /* ───── الرفع الكبير عبر الخادم (ZIP حتى 10,000 إيصال) — Gemini بقراءتين وتدقيق ───── */
 const SRV='https://arkan-ai-site-production.up.railway.app';
+function setBtn(v){localStorage.setItem('cmpBtn',v);document.documentElement.setAttribute('data-btn',v);document.querySelectorAll('.seg button').forEach(b=>b.classList.toggle('on',b.dataset.b===v));}
+setBtn(localStorage.getItem('cmpBtn')||'m');
 function tokenOf(){try{const j=JSON.parse(localStorage.getItem('arkan_sb_jwt')||'null');if(j&&j.token&&j.exp>Math.floor(Date.now()/1000)+60)return j.token;}catch(e){}return null;}
 function pickSrv(side){if(needParty(side))return;S.side=side;$('#fs').value='';$('#fs').click();}
 async function srvUpload(side0,f){S.side=side0;if(!await zipSeen(f,side0))return;const tok=tokenOf();if(!tok){toast('سجّل الدخول في «حسابي» أولًا ثم عد لهذه الصفحة');return;}
@@ -781,15 +794,12 @@ function render(force){
   const _sy=window.scrollY;
   const cc=VC(),ss=VS();const def=cc.filter(r=>!r.matched),exc=ss.filter(r=>!r.matched),ok=cc.filter(r=>r.matched);
   const vD=sum(def),vE=sum(exc),vO=sum(ok),tot=vD+vE+vO,net=vE-vD;
-  const R=104,C=2*Math.PI*R;let off=0;const arc=(v,col)=>{if(!tot||!v)return '';const d=v/tot*C;const s='<circle cx="125" cy="125" r="'+R+'" fill="none" stroke="'+col+'" stroke-width="16" stroke-dasharray="'+Math.max(0,d-3)+' '+C+'" stroke-dashoffset="'+(-off)+'"/>';off+=d;return s;};
-  const pct=tot?Math.round(vO/tot*100):0;
-  const center=!tot?'<em>BDL</em><b>—</b><small>ارفع الإيصالات للمقارنة</small>':Math.abs(net)<1?'<em>BALANCED</em><b style="color:#7FD0FF">✓ متوازن</b><small>مطابَق '+pct+'%</small>':'<em>'+(net>0?'SURPLUS':'DEFICIT')+'</em><b style="color:'+(net>0?'#5CE0A3':'#FF7A8A')+'">'+(net>0?'+':'−')+fx(Math.abs(net))+'</b><small>'+(net>0?'فائض من الموردين':'نقص — بانتظار الموردين')+'<br>AOA · مطابَق '+pct+'%</small>';
-  $('#hero').innerHTML='<div class="g"><svg viewBox="0 0 250 250"><circle cx="125" cy="125" r="'+R+'" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="16"/><circle cx="125" cy="125" r="86" fill="rgba(255,255,255,.04)"/>'+arc(vD,'#FF4D6D')+arc(vE,'#2ECC8A')+arc(vO,'#4F8BFF')+'</svg><div class="gc">'+center+'</div></div>'+
-    '<div class="lg"><div style="--c:#FF4D6D"><span><i></i>نقص من الموردين</span><b>'+fx(vD)+'</b><u>'+def.length+' إيصال زبون بلا مقابل</u></div>'+
-    '<div style="--c:#2ECC8A"><span><i></i>فائض إيصالات موردين</span><b>'+fx(vE)+'</b><u>'+exc.length+' إيصال مورد بلا زبون</u></div>'+
-    '<div style="--c:#4F8BFF"><span><i></i>مطابَق</span><b>'+fx(vO)+'</b><u>'+ok.length+' زوج · '+pct+'%</u></div>'+
-    '<div style="--c:#fff"><span><i></i>الإجمالي</span><b>'+fx(sum(cc))+'</b><u>'+cc.length+' زبون · '+ss.length+' مورد'+(S.range.from||S.range.to?' · فترة':'')+'</u></div>'+
-    '<div class="net"><span><i></i>صافي الفرق · AOA</span><b>'+(net>=0?'+':'−')+fx(Math.abs(net))+'</b></div></div>';
+  const pct=tot?Math.round(vO/tot*100):0;const rev=cc.concat(ss).filter(r=>r.review&&!r.matched).length;
+  $('#hero').innerHTML='<div class="hk"><small>'+(!tot?'ارفع الإيصالات للمقارنة':net>0?'فائض من الموردين':Math.abs(net)<1?'متوازن':'نقص — بانتظار الموردين')+'</small><b style="color:'+(!tot?'#fff':net>0?'#5CE0A3':Math.abs(net)<1?'#7FD0FF':'#FF7A8A')+'">'+(tot?(net>=0?'+':'−'):'')+fmt(Math.abs(net))+'<span>AOA</span></b>'+
+    '<u>الزبائن '+fmt(sum(cc))+' · الموردون '+fmt(sum(ss))+' · مطابَق '+pct+'%'+(S.range.from||S.range.to?' · فترة':'')+'</u></div>'+
+    '<div class="hc"><div style="--c:#FF4D6D"><b>'+def.length+'</b><span>بلا مقابل</span><u>'+fmt(vD)+'</u></div>'+
+    '<div style="--c:#F5B301"><b>'+rev+'</b><span>مراجعة</span><u>'+(exc.length?fmt(vE)+' فائض':'—')+'</u></div>'+
+    '<div style="--c:#2ECC8A"><b>'+ok.length+'</b><span>مطابق</span><u>'+fmt(vO)+'</u></div></div>';
   (S.jobs||[]).forEach(j=>{const el=$('#srvp-'+j.side);if(el)el.textContent='الخادم يقرأ '+j.name+': '+j.done+' / '+j.total+(j.warn?' — '+j.warn:'');});
   {const n=S.cust.concat(S.sup).filter(r=>r.reading).length;const b=$('#rsm');b.style.display=n?'':'none';b.textContent=S.busy?'جارٍ القراءة… '+(S.prog||0)+' / '+Math.min(BATCH,n+(S.prog||0))+' — '+n+' متبقٍ':'متابعة القراءة ('+n+' متبقٍ)';b.disabled=!!S.busy;}
   $('#lkb').className=S.link?'on':'';$('#lkb').textContent=S.link?'إنهاء الربط اليدوي':'ربط يدوي ١:١';
