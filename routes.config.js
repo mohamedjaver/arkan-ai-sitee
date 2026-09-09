@@ -15,7 +15,7 @@
     SETTINGS:   'settings.html',     // الملف الشخصي + المفاتيح
     RATES:      'rates.html',        // الأسعار
     WALLET:     'wallet.html',       // USDT TRC20
-    TRADING:    'trading.html',      // المؤشرات
+    TRADING:    'arkan/trading.html',      // المؤشرات
     /* أدوات المالك فقط: */
     SETTLEMENT: 'settle-v2.html',    // مركز المطابقة (بديل settlement.html)
     COMPARE:    'compare.html',      // الإيصالات — الدفتر الدائم

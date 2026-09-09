@@ -6,7 +6,7 @@
    ============================================================ */
 (function () {
   'use strict';
-  var HIDE_ON = ['account.html', 'login.html', 'offline.html', 'confirm.html', 'receipt.html', 'verify.html', 'install.html', ''];
+  var HIDE_ON = ['login.html', 'offline.html', 'confirm.html', 'receipt.html', 'verify.html', 'install.html', ''];
   var path = location.pathname.split('/').pop() || 'index.html';
   if (HIDE_ON.indexOf(path) !== -1) return;
 
@@ -16,10 +16,12 @@
         if (ses && /36295050$/.test(String(ses.phone || '').replace(/\D/g, ''))) isOwner = true; } catch (e) {}
   if (/^(compare|settle-v2|settlement|dues|accountant|books|admin|rates-admin|archive)\.html$/.test(path)) isOwner = true;
 
+  /* ترتيب التشغيل اليومي للمالك (من اليمين): 1 رفع إيصالات الزبائن (الحساب) → 2 التسويات → 3 المطابقة → 4 المحاسب */
   var TABS_OWNER = [
-    { href: 'index.html',      icon: 'home',  label: 'الرئيسية' },
-    { href: 'compare.html',    icon: 'match', label: 'الإيصالات' },
-    { href: 'accountant.html', icon: 'calc',  label: 'المحاسب' }
+    { href: 'account.html',    icon: 'upload', label: '1 الرفع' },
+    { href: 'settle-v2.html',  icon: 'layers', label: '2 التسوية' },
+    { href: 'compare.html',    icon: 'match',  label: '3 المطابقة' },
+    { href: 'accountant.html', icon: 'calc',   label: '4 المحاسب' }
   ];
   var TABS_CLIENT = [
     { href: 'index.html',   icon: 'home',    label: 'الرئيسية' },
@@ -28,13 +30,12 @@
   ];
   /* ورقة «المزيد» — الصفحات الثانوية الحيّة فقط */
   var MORE_OWNER = [
+    { href: 'index.html',      icon: 'home',    label: 'الرئيسية' },
     { href: 'books.html',      icon: 'book',    label: 'الدفاتر' },
-    { href: 'settle-v2.html',  icon: 'layers',  label: 'مركز المطابقة' },
     { href: 'rates-admin.html',icon: 'rate',    label: 'الأسعار' },
     { href: 'wallet.html',     icon: 'wallet',  label: 'المحفظة' },
     { href: 'chat-v2.html',    icon: 'message', label: 'الدردشة' },
-    { href: 'request.html',    icon: 'send',    label: 'طلب تحويل' },
-    { href: 'account.html',    icon: 'user',    label: 'الحساب' }
+    { href: 'request.html',    icon: 'send',    label: 'طلب تحويل' }
   ];
   var MORE_CLIENT = [
     { href: 'rates.html',   icon: 'rate',   label: 'الأسعار' },
@@ -56,12 +57,14 @@
     doc:'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zM14 2v6h6M16 13H8M16 17H8',
     wallet:'M20 7H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2zM16 7V5a2 2 0 0 0-2-2H10a2 2 0 0 0-2 2v2M16 14h.01',
     more:'M5 12h.01M12 12h.01M19 12h.01',
+    upload:'M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12',
     menu:'M3 12h18M3 6h18M3 18h18',
     bell:'M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0',
     logout:'M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9',
     close:'M18 6L6 18M6 6l12 12'
   };
   function svg(n, s) { s = s || 22; return '<svg width="' + s + '" height="' + s + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="' + (ICONS[n] || '') + '"/></svg>'; }
+  if (!isOwner && path === 'account.html') return;
   var tabs = isOwner ? TABS_OWNER : TABS_CLIENT, more = isOwner ? MORE_OWNER : MORE_CLIENT;
   var active = function (h) { return h.split('#')[0] === path || (path === 'dues.html' && h === 'accountant.html') || (path === 'settlement.html' && h === 'compare.html'); };
 

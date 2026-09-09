@@ -28,8 +28,8 @@
     setTimeout(allow, 900);
   }
   function allow(){ var e=document.getElementById('ark-gate-style'); if(e)e.remove(); }
-  function denyLogin(){ location.replace((needClient?'account.html':'account.html')+'?next='+encodeURIComponent(here)); }
-  function denyHome(){ location.replace('index.html'); }
+  function denyLogin(){ location.replace('/account.html?next='+encodeURIComponent(here)); }
+  function denyHome(){ location.replace('/index.html'); }
   window.ARKAN_MARK_ADMIN=function(){ localStorage.setItem('arkan_admin_dev','1'); };
 
   document.addEventListener('DOMContentLoaded',function(){
