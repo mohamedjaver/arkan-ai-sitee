@@ -493,6 +493,9 @@
       <input id="gPhone" type="tel" inputmode="tel">
       <label>الرمز الشخصي</label>
       <input id="gPin" class="pin" type="tel" inputmode="numeric" maxlength="4">
+      <script>/* ضمان ظهور لوحة الأرقام: بوابة الدخول فوق كل الطبقات، واللمس يفتح الحقل مباشرة */
+      (function(){try{var st=document.createElement('style');st.textContent='#gate{z-index:2147483000!important}#gate input{position:relative;z-index:2;pointer-events:auto!important;-webkit-user-select:text!important;user-select:text!important;font-size:16px!important}';document.head.appendChild(st);
+      ['gPhone','gPin'].forEach(function(id){var el=document.getElementById(id);if(!el)return;el.addEventListener('touchend',function(ev){if(document.activeElement!==el){ev.preventDefault();el.focus();try{el.click();}catch(e){}}},{passive:false});});}catch(e){}})();</script>
       <button class="enter" id="gEnter">دخول</button>
       <div class="err" id="gErr"></div>
       <p class="hint" style="margin-top:10px">
