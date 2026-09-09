@@ -74,11 +74,16 @@
     '#akTabs{position:fixed;left:0;right:0;bottom:0;z-index:9000;display:flex;background:#fff;border-top:1px solid #E6E8EE;padding:2px 6px 0;padding-bottom:env(safe-area-inset-bottom,0px);font-family:inherit;box-shadow:0 -6px 20px rgba(10,10,10,.04)}' +
     '#akTabs a{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 2px 8px;color:#6B7280;text-decoration:none;font-size:11px;font-weight:500;-webkit-tap-highlight-color:transparent}' +
     '#akTabs a svg{width:26px;height:26px;stroke-width:1.8}#akTabs a.on{color:#0A0A0A;font-weight:700}#akTabs a.on svg{stroke:#0A0A0A;stroke-width:2.2}#akTabs a:active{opacity:.6}' +
-    '#akMore{position:fixed;inset:0;z-index:9500;display:none;background:rgba(11,47,112,.45)}#akMore.on{display:grid;place-items:end center}' +
-    '#akMore .sh{background:#fff;width:min(560px,100%);border-radius:24px 24px 0 0;padding:14px 14px calc(18px + env(safe-area-inset-bottom,0px))}' +
-    '#akMore h4{margin:0 0 10px;font-size:14px;color:#0B2F70;display:flex;justify-content:space-between;align-items:center}' +
-    '#akMore .g{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}#akMore .g a{display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 4px;border:1px solid rgba(11,47,112,.12);border-radius:12px;color:#0B2F70;text-decoration:none;font-size:11px;font-weight:700;text-align:center}' +
-    '#akMore .lo{margin-top:12px;width:100%;padding:14px;border:1.5px solid #D5D8E0;color:#D0342C;background:#fff;border-radius:99px;font:inherit;font-weight:700}' +
+    '#akMore{position:fixed;inset:0;z-index:99999;display:none;background:rgba(10,10,10,.5);backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px)}#akMore.on{display:grid;place-items:end center}' +
+    'body.ak-more-open #arkChatFab,body.ak-more-open #akTop,body.ak-more-open #akTabs{visibility:hidden}' +
+    '#akMore .sh{background:#fff;width:min(560px,100%);border-radius:28px 28px 0 0;padding:10px 18px calc(22px + env(safe-area-inset-bottom,0px));box-shadow:0 -12px 40px rgba(10,10,10,.18)}' +
+    '#akMore .hb{width:40px;height:5px;border-radius:99px;background:#D5D8E0;margin:2px auto 14px}' +
+    '#akMore h4{margin:0 0 4px;font-size:20px;font-weight:700;color:#0A0A0A;display:flex;justify-content:space-between;align-items:center}#akMore h4 a{width:36px;height:36px;border-radius:50%;background:#F0F2F7;display:grid;place-items:center;color:#0A0A0A}' +
+    '#akMore .lbl{font-size:12px;font-weight:600;color:#6B7280;margin:14px 2px 8px}' +
+    '#akMore .g{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}#akMore .g a{display:flex;flex-direction:column;align-items:center;gap:8px;padding:14px 6px 12px;background:#F0F2F7;border-radius:18px;color:#0A0A0A;text-decoration:none;font-size:12.5px;font-weight:600;text-align:center}' +
+    '#akMore .g a i{width:44px;height:44px;border-radius:50%;background:#fff;display:grid;place-items:center;color:#0B2F70;font-style:normal;box-shadow:0 1px 3px rgba(10,10,10,.06)}#akMore .g a:active{background:#E6E8EE}' +
+    '#akLang{display:flex;gap:0;background:#F0F2F7;border-radius:99px;padding:4px}#akLang #langSeg{display:flex;width:100%;gap:0}#akLang button{flex:1;padding:10px;border:0;border-radius:99px;background:transparent;font:inherit;font-weight:700;color:#6B7280}#akLang button.on{background:#fff;color:#0A0A0A;box-shadow:0 1px 3px rgba(10,10,10,.08)}' +
+    '#akMore .lo{margin-top:18px;width:100%;padding:12px;border:0;color:#D0342C;background:transparent;border-radius:99px;font:inherit;font-weight:700;font-size:14px}' +
     'body{padding-top:calc(56px + env(safe-area-inset-top,0px))!important}' +
     '#akTop{position:fixed;top:0;left:0;right:0;z-index:9000;height:calc(56px + env(safe-area-inset-top,0px));padding:env(safe-area-inset-top,0px) 10px 0 10px;display:flex;align-items:center;gap:4px;background:#fff;border-bottom:1px solid #E6E8EE;font-family:inherit}' +
     '#akTop span{flex:1}#akTop a{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;color:#0A0A0A;text-decoration:none}#akTop a:active{background:#F0F2F7}' +
@@ -97,13 +102,14 @@
   top.innerHTML = '<a href="index.html" class="lg" aria-label="BDL"><img src="favicon.svg?v=bdl7" alt="BDL"><b>BDL</b></a><span></span>' +
     '<a href="chat-v2.html" aria-label="الرسائل">' + svg('bell', 20) + '</a><a href="account.html" aria-label="الحساب">' + svg('user', 20) + '</a><a href="#" id="akMoreBtn" aria-label="القائمة">' + svg('menu', 20) + '</a>';
   var sheet = document.createElement('div'); sheet.id = 'akMore';
-  sheet.innerHTML = '<div class="sh"><h4><span>المزيد</span><a href="#" id="akClose" style="color:#C62828">' + svg('close', 18) + '</a></h4><div class="g">' +
-    more.filter(function (m) { return m.href !== path; }).map(function (m) { return '<a href="' + m.href + '">' + svg(m.icon, 20) + m.label + '</a>'; }).join('') +
-    '</div><div id="akLang" style="display:flex;gap:6px;margin-top:12px"></div><button class="lo" id="akLogout">تسجيل الخروج</button></div>';
+  sheet.innerHTML = '<div class="sh"><div class="hb"></div><h4><span>المزيد</span><a href="#" id="akClose" aria-label="إغلاق">' + svg('close', 18) + '</a></h4><div class="lbl">الصفحات</div><div class="g">' +
+    more.filter(function (m) { return m.href !== path; }).map(function (m) { return '<a href="' + m.href + '"><i>' + svg(m.icon, 20) + '</i>' + m.label + '</a>'; }).join('') +
+    '</div><div class="lbl" id="akLangLbl" style="display:none">اللغة</div><div id="akLang" style="display:none"></div><button class="lo" id="akLogout">تسجيل الخروج</button></div>';
   function mount() { document.body.appendChild(bar); document.body.appendChild(sheet); document.body.appendChild(top);
-    document.getElementById('akMoreBtn').onclick = function (e) { e.preventDefault(); sheet.classList.add('on'); };
-    document.getElementById('akClose').onclick = function (e) { e.preventDefault(); sheet.classList.remove('on'); };
-    sheet.onclick = function (e) { if (e.target === sheet) sheet.classList.remove('on'); };
+    var open = function () { sheet.classList.add('on'); document.body.classList.add('ak-more-open'); }, close = function () { sheet.classList.remove('on'); document.body.classList.remove('ak-more-open'); };
+    document.getElementById('akMoreBtn').onclick = function (e) { e.preventDefault(); open(); };
+    document.getElementById('akClose').onclick = function (e) { e.preventDefault(); close(); };
+    sheet.onclick = function (e) { if (e.target === sheet) close(); };
     document.getElementById('akLogout').onclick = function () {
       ['arkan_session', 'arkan_sb_jwt', 'arkanClient', 'arkan_admin_dev', 'arkan_owner_auth'].forEach(function (k) { try { localStorage.removeItem(k); } catch (e) {} });
       location.href = 'account.html';
@@ -111,9 +117,9 @@
     /* في صفحة الحساب: أيقونة المستخدم تفتح قسم «حسابي» داخل الصفحة، والجرس يفتح إشعارات الصفحة */
     if (path === 'account.html') { var ua = top.querySelector('a[href="account.html"]'); var acct = document.querySelector('.nav-it[data-s="s-acct"]'); if (ua && acct) ua.onclick = function (e) { e.preventDefault(); acct.click(); }; var bl = document.getElementById('bell'); var ub = top.querySelector('a[href="chat-v2.html"]'); if (bl && ub) ub.onclick = function (e) { e.preventDefault(); bl.click(); }; }
     /* مبدّل اللغة (إن وُجد في الصفحة) ينتقل إلى الورقة بدل الرأس */
-    var seg = document.getElementById('langSeg'); if (seg) { var box = document.getElementById('akLang'); box.appendChild(seg); seg.style.cssText = 'display:flex;gap:6px;width:100%'; seg.querySelectorAll('button').forEach(function (b) { b.style.cssText = 'flex:1;padding:10px;border:1.5px solid #D5D8E0;border-radius:99px;background:#fff;font:inherit;font-weight:700;color:#0A0A0A'; }); }
+    var seg = document.getElementById('langSeg'); if (seg) { var box = document.getElementById('akLang'); box.appendChild(seg); box.style.display = 'flex'; document.getElementById('akLangLbl').style.display = 'block'; seg.removeAttribute('style'); seg.querySelectorAll('button').forEach(function (b) { b.removeAttribute('style'); }); }
     /* توافق مع الأزرار القديمة التي تستدعي قائمة الهامبرغر */
-    window.akOpenMenu = function () { sheet.classList.add('on'); };
+    window.akOpenMenu = open;
   }
   if (document.body) mount(); else document.addEventListener('DOMContentLoaded', mount);
 })();
