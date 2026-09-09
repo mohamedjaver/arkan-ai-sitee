@@ -119,6 +119,6 @@ module.exports = function (app, ctx) {
   app.post('/accountant/ai-audit', express.json(), wrap(aiAudit));
   app.get('/accountant/summary', wrap(summary));
   app.post('/accountant/run', express.json(), wrap(writeReport));
-  app.get('/accountant/report', wrap(async () => { const r = await sb('/bdl_agent_reports?select=report,created_at&order=created_at.desc&limit=1'); return r && r[0] ? { text: r[0].report, date: String(r[0].created_at).slice(0, 10) } : { text: '' }; }));
+  app.get('/accountant/report', wrap(async () => { let r; try { r = await sb('/bdl_agent_reports?select=report,created_at&order=created_at.desc&limit=1'); } catch (e) { return { text: '', note: /PGRST205|Could not find/.test(e.message) ? 'جدول التقارير غير موجود — الصق bdl-agent.sql في Supabase (SQL Editor)' : e.message }; } return r && r[0] ? { text: r[0].report, date: String(r[0].created_at).slice(0, 10) } : { text: '' }; }));
   console.log('▲ accountant routes ready (' + MODEL() + (KEY() ? ', key on' : ', key off') + ')');
 };
