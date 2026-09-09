@@ -17,29 +17,29 @@
   if (/^(compare|settle-v2|settlement|dues|accountant|books|admin|rates-admin|archive)\.html$/.test(path)) isOwner = true;
 
   var TABS_OWNER = [
-    { href: 'index.html',      icon: 'home',   label: 'الرئيسية' },
-    { href: 'compare.html',    icon: 'match',  label: 'الإيصالات' },
-    { href: 'books.html',      icon: 'book',   label: 'الدفاتر' },
-    { href: 'accountant.html', icon: 'calc',   label: 'المحاسب' },
-    { href: 'account.html',    icon: 'user',   label: 'الحساب' }
+    { href: 'index.html',      icon: 'home',  label: 'الرئيسية' },
+    { href: 'compare.html',    icon: 'match', label: 'الإيصالات' },
+    { href: 'accountant.html', icon: 'calc',  label: 'المحاسب' }
   ];
   var TABS_CLIENT = [
     { href: 'index.html',   icon: 'home',    label: 'الرئيسية' },
     { href: 'request.html', icon: 'send',    label: 'تحويل' },
-    { href: 'chat-v2.html', icon: 'message', label: 'الدردشة' },
-    { href: 'account.html', icon: 'user',    label: 'الحساب' }
+    { href: 'chat-v2.html', icon: 'message', label: 'الدردشة' }
   ];
   /* ورقة «المزيد» — الصفحات الثانوية الحيّة فقط */
   var MORE_OWNER = [
+    { href: 'books.html',      icon: 'book',    label: 'الدفاتر' },
     { href: 'settle-v2.html',  icon: 'layers',  label: 'مركز المطابقة' },
     { href: 'rates-admin.html',icon: 'rate',    label: 'الأسعار' },
     { href: 'wallet.html',     icon: 'wallet',  label: 'المحفظة' },
     { href: 'chat-v2.html',    icon: 'message', label: 'الدردشة' },
-    { href: 'request.html',    icon: 'send',    label: 'طلب تحويل' }
+    { href: 'request.html',    icon: 'send',    label: 'طلب تحويل' },
+    { href: 'account.html',    icon: 'user',    label: 'الحساب' }
   ];
   var MORE_CLIENT = [
-    { href: 'rates.html',  icon: 'rate',   label: 'الأسعار' },
-    { href: 'wallet.html', icon: 'wallet', label: 'المحفظة' }
+    { href: 'rates.html',   icon: 'rate',   label: 'الأسعار' },
+    { href: 'wallet.html',  icon: 'wallet', label: 'المحفظة' },
+    { href: 'account.html', icon: 'user',   label: 'الحساب' }
   ];
   var ICONS = {
     home:'M3 12l9-9 9 9M5 10v10h14V10',
@@ -76,10 +76,11 @@
     '#akMore h4{margin:0 0 10px;font-size:14px;color:#0B2F70;display:flex;justify-content:space-between;align-items:center}' +
     '#akMore .g{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}#akMore .g a{display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 4px;border:1px solid rgba(11,47,112,.12);border-radius:12px;color:#0B2F70;text-decoration:none;font-size:11px;font-weight:700;text-align:center}' +
     '#akMore .lo{margin-top:12px;width:100%;padding:14px;border:1.5px solid #D5D8E0;color:#D0342C;background:#fff;border-radius:99px;font:inherit;font-weight:700}' +
-    '#akTop{position:fixed;top:calc(env(safe-area-inset-top,0px) + 8px);left:10px;right:10px;z-index:9000;display:flex;gap:8px;pointer-events:none}' +
-    '#akTop span{flex:1}#akTop a{pointer-events:auto;width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,.92);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);display:grid;place-items:center;color:#0B2F70;box-shadow:0 2px 10px rgba(10,10,10,.08);text-decoration:none}' +
-    '#akTop a:active{opacity:.6}' +
-    '/* تعطيل قوائم الصفحات القديمة التي كان يحلّ محلّها الشريط */.nav-toggle,#navToggle,#akNavBtns{display:none!important}' +
+    'body{padding-top:calc(56px + env(safe-area-inset-top,0px))!important}' +
+    '#akTop{position:fixed;top:0;left:0;right:0;z-index:9000;height:calc(56px + env(safe-area-inset-top,0px));padding:env(safe-area-inset-top,0px) 10px 0 10px;display:flex;align-items:center;gap:4px;background:#fff;border-bottom:1px solid #E6E8EE;font-family:inherit}' +
+    '#akTop span{flex:1}#akTop a{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;color:#0A0A0A;text-decoration:none}#akTop a:active{background:#F0F2F7}' +
+    '#akTop a.lg{width:auto;border-radius:0;display:flex;gap:8px;align-items:center;padding:0 4px}#akTop a.lg img{width:32px;height:32px;border-radius:8px}#akTop a.lg b{font:800 15px/1 Inter,system-ui,sans-serif;letter-spacing:.5px;color:#0B2F70}' +
+    '/* رؤوس الصفحات القديمة تُخفى لأن الشريط العلوي حلّ محلّها */nav.nav,.nav-toggle,#navToggle,#akNavBtns,#mmenu{display:none!important}' +
     '#arkChatFab{bottom:calc(84px + env(safe-area-inset-bottom,0px))!important}' +
     '@media print{#akTabs,#akMore,#akTop{display:none!important}}';
   document.head.appendChild(css);
@@ -88,11 +89,12 @@
   bar.innerHTML = tabs.map(function (t) { return '<a href="' + t.href + '" class="' + (active(t.href) ? 'on' : '') + '">' + svg(t.icon) + '<span>' + t.label + '</span></a>'; }).join('');
   /* شريط علوي خفيف على نمط PayPal: ☰ يسارًا (يفتح «المزيد»)، جرس + حساب يمينًا — لا يزاحم رأس الصفحة */
   var top = document.createElement('div'); top.id = 'akTop';
-  top.innerHTML = '<a href="#" id="akMoreBtn" aria-label="القائمة">' + svg('menu', 20) + '</a><span></span><a href="chat-v2.html" aria-label="الرسائل">' + svg('bell', 20) + '</a><a href="account.html" aria-label="الحساب">' + svg('user', 20) + '</a>';
+  top.innerHTML = '<a href="index.html" class="lg" aria-label="BDL"><img src="favicon.svg?v=bdl7" alt="BDL"><b>BDL</b></a><span></span>' +
+    '<a href="chat-v2.html" aria-label="الرسائل">' + svg('bell', 20) + '</a><a href="account.html" aria-label="الحساب">' + svg('user', 20) + '</a><a href="#" id="akMoreBtn" aria-label="القائمة">' + svg('menu', 20) + '</a>';
   var sheet = document.createElement('div'); sheet.id = 'akMore';
   sheet.innerHTML = '<div class="sh"><h4><span>المزيد</span><a href="#" id="akClose" style="color:#C62828">' + svg('close', 18) + '</a></h4><div class="g">' +
     more.filter(function (m) { return m.href !== path; }).map(function (m) { return '<a href="' + m.href + '">' + svg(m.icon, 20) + m.label + '</a>'; }).join('') +
-    '</div><button class="lo" id="akLogout">تسجيل الخروج</button></div>';
+    '</div><div id="akLang" style="display:flex;gap:6px;margin-top:12px"></div><button class="lo" id="akLogout">تسجيل الخروج</button></div>';
   function mount() { document.body.appendChild(bar); document.body.appendChild(sheet); document.body.appendChild(top);
     document.getElementById('akMoreBtn').onclick = function (e) { e.preventDefault(); sheet.classList.add('on'); };
     document.getElementById('akClose').onclick = function (e) { e.preventDefault(); sheet.classList.remove('on'); };
@@ -101,6 +103,8 @@
       ['arkan_session', 'arkan_sb_jwt', 'arkanClient', 'arkan_admin_dev', 'arkan_owner_auth'].forEach(function (k) { try { localStorage.removeItem(k); } catch (e) {} });
       location.href = 'account.html';
     };
+    /* مبدّل اللغة (إن وُجد في الصفحة) ينتقل إلى الورقة بدل الرأس */
+    var seg = document.getElementById('langSeg'); if (seg) { var box = document.getElementById('akLang'); box.appendChild(seg); seg.style.cssText = 'display:flex;gap:6px;width:100%'; seg.querySelectorAll('button').forEach(function (b) { b.style.cssText = 'flex:1;padding:10px;border:1.5px solid #D5D8E0;border-radius:99px;background:#fff;font:inherit;font-weight:700;color:#0A0A0A'; }); }
     /* توافق مع الأزرار القديمة التي تستدعي قائمة الهامبرغر */
     window.akOpenMenu = function () { sheet.classList.add('on'); };
   }
