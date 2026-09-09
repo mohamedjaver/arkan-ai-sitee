@@ -60,6 +60,16 @@ section h2 span{color:var(--mute);font-weight:400;font-size:13px}
 
 .report{background:var(--card);border:1px solid var(--line);border-right:4px solid var(--gold);border-radius:14px;padding:14px 16px;white-space:pre-wrap;line-height:1.75}
 .report.empty{color:var(--mute);border-right-color:var(--line)}
+.rp{background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.rp .top{padding:14px 16px;background:var(--ink);color:#fff}.rp .top h3{font-size:17px;font-weight:600;margin:0}.rp .top small{color:#c9cfdd;font-size:12px}
+.rp .st{display:flex;gap:8px;align-items:flex-start;padding:12px 16px;font-weight:500;line-height:1.55;border-bottom:1px solid var(--line)}.rp .st i{flex:none;width:10px;height:10px;border-radius:50%;margin-top:7px}
+.rp .k{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;padding:12px 16px;border-bottom:1px solid var(--line)}.rp .k div{border-top:3px solid var(--c);background:#faf9f5;border-radius:10px;padding:8px 10px}.rp .k b{display:block;font-size:17px;font-variant-numeric:tabular-nums;color:var(--c)}.rp .k small{color:var(--mute);font-size:11px}
+.rp h4{margin:0;padding:12px 16px 6px;font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px}.rp h4:before{content:"";width:4px;height:16px;border-radius:2px;background:var(--c)}
+.rp ul{margin:0;padding:0 16px 10px;list-style:none}.rp li{padding:5px 0 5px 0;border-bottom:1px dashed var(--line);font-size:14px;line-height:1.6}.rp li:last-child{border:0}
+.rp table{width:100%;border-collapse:collapse;font-size:13px;margin:0 0 6px}.rp th{font-weight:500;color:var(--mute);text-align:right;padding:6px 16px;font-size:11.5px}.rp td{padding:8px 16px;border-top:1px solid var(--line)}.rp td.n{font-variant-numeric:tabular-nums;color:var(--red);font-weight:600;white-space:nowrap}
+.rp .act li{padding-inline-start:14px;position:relative}.rp .act li:before{content:"";position:absolute;right:0;top:12px;width:8px;height:8px;border-radius:50%;background:var(--c)}
+.rp .wa{margin:8px 16px 14px;background:#f1f7f2;border:1px solid #cfe5d5;border-radius:12px;padding:12px;white-space:pre-wrap;font-size:13.5px;line-height:1.7}.rp .wa button{margin-top:8px;padding:8px 12px;border-radius:9px;background:var(--green);color:#fff;font-size:13px;font-weight:600}
+.tone-red{--c:var(--red)}.tone-amber{--c:var(--amber)}.tone-green{--c:var(--green)}.tone-navy{--c:var(--ink)}.tone-gold{--c:var(--gold)}
 
 /* التشخيص */
 .diag{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px;font-size:13px}
@@ -167,8 +177,19 @@ async function load(refresh){
   if (refresh) toast('تم التحديث');
 }
 
+function renderReport(j){const T=t=>'tone-'+({red:'red',amber:'amber',green:'green',navy:'navy',gold:'gold',high:'red',medium:'amber',low:'green',ok:'green',warn:'amber',critical:'red'}[t]||'navy');
+  let h='<div class="rp"><div class="top"><h3>'+esc(j.title)+'</h3><small>'+esc(j.date)+'</small></div>';
+  if(j.status)h+='<div class="st '+T(j.status.level)+'"><i style="background:var(--c)"></i><span>'+esc(j.status.line)+'</span></div>';
+  if(j.kpis&&j.kpis.length)h+='<div class="k">'+j.kpis.map(k=>'<div class="'+T(k.tone)+'"><b>'+esc(k.value)+'</b><small>'+esc(k.label)+'</small></div>').join('')+'</div>';
+  (j.sections||[]).forEach(s=>{h+='<h4 class="'+T(s.tone)+'">'+esc(s.heading)+'</h4><ul>'+(s.bullets||[]).map(b=>'<li>'+esc(b)+'</li>').join('')+'</ul>';});
+  if(j.dues&&j.dues.length)h+='<h4 class="tone-red">الذمم — زبائن بلا مقابل</h4><table><tr><th>الجهة</th><th>إيصالات</th><th>أقدم</th><th style="text-align:left">المبلغ</th></tr>'+j.dues.map(d=>'<tr><td>'+esc(d.party)+(d.phone?'<div style="color:var(--mute);font-size:11px;direction:ltr;text-align:right">'+esc(d.phone)+'</div>':'')+'</td><td>'+d.count+'</td><td>'+d.days+' يوم</td><td class="n" style="text-align:left">'+fmt(d.amount)+'</td></tr>').join('')+'</table>';
+  if(j.actions&&j.actions.length)h+='<h4 class="tone-gold">الإجراءات بالأولوية</h4><ul class="act">'+j.actions.map(a=>'<li class="'+T(a.priority)+'">'+esc(a.text)+'</li>').join('')+'</ul>';
+  if(j.risks&&j.risks.length)h+='<h4 class="tone-amber">يحتاج قرارك</h4><ul>'+j.risks.map(r=>'<li>'+esc(r)+'</li>').join('')+'</ul>';
+  if(j.whatsapp&&j.whatsapp.text)h+='<h4 class="tone-green">رسالة واتساب'+(j.whatsapp.to?' — '+esc(j.whatsapp.to):'')+'</h4><div class="wa">'+esc(j.whatsapp.text)+'<br><button onclick="navigator.clipboard.writeText(this.parentNode.innerText.replace(/\n?نسخ الرسالة$/,\'\'));toast(\'تم النسخ\')">نسخ الرسالة</button></div>';
+  return h+'</div>';}
 async function showReport(){
   const r = await api('/accountant/report');
+  if (r.structured) { $('report').outerHTML = '<div id="report">' + renderReport(r.structured) + '</div>'; $('repAt').textContent = r.date || ''; return; }
   if (r.text) { $('report').textContent = r.text.replace(/\*\*/g, '').replace(/^#+\s*/gm, ''); $('report').classList.remove('empty'); $('repAt').textContent = r.date || ''; }
   else if (r.note) { $('report').textContent = r.note; }
 }

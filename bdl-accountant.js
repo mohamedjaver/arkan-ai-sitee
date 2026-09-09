@@ -18,8 +18,8 @@ module.exports = function (app, ctx) {
   const LOG = []; const log = (kind, msg, data) => { const e = { at: new Date().toISOString(), kind, msg, data: data || null }; LOG.push(e); if (LOG.length > 500) LOG.shift(); sb('/bdl_agent_log', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: e }).catch(() => {}); };
   let STATE = { running: false, last: null, lastReport: null, lastError: null, tg: null };
   /* إرسال تيليجرام مع تقسيم الرسائل الطويلة */
-  async function tgSend(txt) { if (!notifyAdmin) { STATE.tg = 'notifyAdmin غير متاح'; return; }
-    const esc = String(txt).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  async function tgSend(txt, html) { if (!notifyAdmin) { STATE.tg = 'notifyAdmin غير متاح'; return; }
+    const esc = html ? String(txt) : String(txt).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     const parts = []; let cur = ''; for (const line of esc.split('\n')) { if ((cur + line).length > 3500) { parts.push(cur); cur = ''; } cur += line + '\n'; } if (cur.trim()) parts.push(cur);
     try { for (const p of parts) { await notifyAdmin(p); await new Promise(r => setTimeout(r, 400)); } STATE.tg = 'أُرسل ' + parts.length + ' رسالة'; }
     catch (e) { STATE.tg = 'فشل: ' + String(e.message).slice(0, 120); log('tg-error', STATE.tg); } }
@@ -46,7 +46,7 @@ module.exports = function (app, ctx) {
     const byE = {}; L.forEach(x => { (byE[x.book_entry_id] = byE[x.book_entry_id] || []).push(x); });
     const fixes = []; const seen = {};
     E.forEach(e => { const k = e.ref && /CMP:/.test(e.ref) ? e.book_id + '|' + e.ref : null; if (!k) return; if (seen[k]) fixes.push({ type: 'dup', id: e.id, orig: seen[k].id, amount: e.amount }); else seen[k] = e; });
-    E.forEach(e => { const rs = byE[e.id] || []; if (!rs.length) return; const sum = rs.reduce((a, x) => a + Number(x.amount || 0), 0); if (Math.abs(sum - Number(e.amount)) > 1) fixes.push({ type: 'sum', id: e.id, from: e.amount, to: sum, n: rs.length }); });
+    E.forEach(e => { const rs = byE[e.id] || []; if (!rs.length) return; const sum = rs.reduce((a, x) => a + Number(x.amount || 0), 0); const declared = parseInt(String(e.ref || ''), 10); if (Math.abs(sum - Number(e.amount)) > 1 && (!declared || declared === rs.length) && Math.abs(sum - Number(e.amount)) / Math.max(1, Number(e.amount)) <= 0.05) fixes.push({ type: 'sum', id: e.id, from: e.amount, to: sum, n: rs.length }); else if (Math.abs(sum - Number(e.amount)) > 1) fixes.push({ type: 'sum-review', id: e.id, from: e.amount, to: sum, n: rs.length, declared }); });
     const eids = new Set(E.map(e => e.id)); const orphan = L.filter(x => !eids.has(x.book_entry_id)); if (orphan.length) fixes.push({ type: 'orphan', fps: orphan.map(x => x.fp) });
     let applied = 0;
     for (const f of fixes) { try {
@@ -66,20 +66,18 @@ module.exports = function (app, ctx) {
   /* ── 4) التقرير ── */
   async function writeReport(st) {
     const facts = JSON.stringify(st, null, 0).slice(0, 12000);
-    let text = null;
-    if (AKEY) { try {
-      const r = await fetch('https://api.anthropic.com/v1/messages', { method: 'POST', headers: { 'content-type': 'application/json', 'x-api-key': AKEY, 'anthropic-version': '2023-06-01' }, body: JSON.stringify({ model: process.env.ANTHROPIC_MODEL || 'claude-sonnet-5', max_tokens: 900, system: 'أنت محاسب BDL Exchange (صرافة كوانزا/أوقية/USDT). اكتب تقريرًا يوميًا عربيًا مختصرًا وعمليًا للمالك محمد: 1) ما تم اليوم (مطابقات، إصلاحات) 2) الذمم: من يجب مطالبته اليوم بالمبالغ والأقدمية 3) مخاطر أو أخطاء تحتاج قراره. أرقام بالكوانزا مع فواصل الآلاف. بلا مقدمات ولا رموز تعبيرية. لا تخترع أرقامًا غير الواردة.', messages: [{ role: 'user', content: 'الحقائق (JSON): ' + facts }] }) });
-      const j = await r.json(); if (r.ok) text = (j.content || []).map(c => c.text || '').join('').trim(); else log('claude-error', String((j.error && j.error.message) || r.status)); } catch (e) { log('claude-error', String(e.message).slice(0, 120)); } }
+    let text = null, rep = null;
+    if (AKEY) { try { rep = await require('./bdl-report-skill').ask(facts, { extra: 'اكتب تقرير اليوم كاملًا: ما تم (المطابقة/التدقيق/الإصلاحات)، المؤشرات، الذمم، الإجراءات، المخاطر، ورسالة واتساب لأكبر ذمة.' }); text = require('./bdl-report-skill').toPlain(rep); } catch (e) { log('claude-error', String(e.message).slice(0, 120)); } }
     if (!text) { const d = st.dues; text = 'تقرير المحاسب — ' + new Date().toLocaleDateString('en-GB') + '\nمطابقات جديدة: ' + st.match.pairs + ' · زبائن بلا مورد: ' + st.match.custOpen + ' · موردون بلا زبون: ' + st.match.supOpen + '\nتدقيق الدفاتر: ' + st.audit.entries + ' قيد · إصلاحات مطبّقة: ' + st.audit.applied + '\nالذمم المفتوحة: ' + d.n + ' إيصال · ' + fmt(d.tot) + ' AOA · ' + d.partiesN + ' جهة\n' + d.parties.slice(0, 8).map(p => '• ' + p.who + ': ' + fmt(p.tot) + ' AOA (' + p.n + ' · أقدمها ' + p.oldest + ' يوم)').join('\n'); }
-    try { await sb('/bdl_agent_reports', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: { report: text, facts: st } }); } catch (e) {}
-    return text;
+    try { await sb('/bdl_agent_reports', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: { report: text, facts: Object.assign({}, st, { structured: rep }) } }); } catch (e) {}
+    STATE.lastRep = rep; return text;
   }
   async function run(reason) {
     if (STATE.running) return STATE; STATE.running = true;
     try { const st = { reason, at: new Date().toISOString() }; st.match = await matchLedger(); st.audit = await auditBooks(); st.dues = await dues(); const text = await writeReport(st);
       STATE.last = st.at; STATE.lastReport = text; STATE.lastError = null;
       const worth = reason !== 'hourly' || st.audit.applied || st.match.pairs;
-      if (worth) { await tgSend('<b>المحاسب — BDL</b> · ' + new Date().toLocaleDateString('en-GB') + '\n\n' + text);
+      if (worth) { await tgSend(STATE.lastRep ? require('./bdl-report-skill').toTelegram(STATE.lastRep) : ('<b>المحاسب BDL</b> — ' + new Date().toLocaleDateString('en-GB') + '\n\n' + text), !!STATE.lastRep);
         try { if (pushOwner) await pushOwner('المحاسب: ' + (st.dues.n ? st.dues.n + ' إيصال بلا مورد · ' + fmt(st.dues.tot) + ' AOA' : 'لا ذمم مفتوحة'), String(text).slice(0, 120)); } catch (e) {} }
       log('run', reason + ' ✓', { match: st.match, audit: { applied: st.audit.applied, fixes: st.audit.fixes.length }, dues: { n: st.dues.n, tot: st.dues.tot } });
     } catch (e) { STATE.lastError = String(e.message).slice(0, 200); log('error', STATE.lastError); }

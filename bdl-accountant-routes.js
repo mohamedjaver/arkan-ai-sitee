@@ -46,12 +46,12 @@ module.exports = function (app, ctx) {
     const s = await summary();
     const brief = { date: new Date().toISOString().slice(0, 10), receipts_total: s.total, customers: { receipts: s.custN, sum_aoa: fmt(s.custSum), open_without_supplier: s.open - s.openSup, open_sum_aoa: fmt(s.openSum) }, suppliers: { receipts: s.supN, sum_aoa: fmt(s.supSum), open_without_customer: s.openSup, open_sum_aoa: fmt(s.openSupSum) }, matched_pairs: Math.floor(s.matched / 2), needs_review: s.review,
       top_parties: s.parties.slice(0, 15).map(p => ({ party: p.party, phone: p.phone, count: p.count, sum_aoa: fmt(p.sum), oldest: String(p.oldest || '').slice(0, 10) })) };
-    const text = await claude(
-      'أنت المحاسب الداخلي لـBDL (لبدال)، تخاطب المالك محمد مباشرة بصيغة المخاطب. العملة: الكوانزا الأنغولية (AOA/Kz) — لا تكتب «أوقية» أبدًا. المعنى: إيصال زبون = مال وصل إلى المالك؛ إيصال مورد = مال حوّله المالك. إيصال زبون بلا مورد = ذمة على المالك تجاه الزبون (الأخطر). إيصال مورد بلا زبون = فائض تحويل أو إيصالات زبائن لم تُرفع بعد إلى الدفتر — ليس خطأ حساب. الأرقام في البيانات صحيحة ومتسقة؛ لا تصفها بالتناقض ولا تطلب بيانات إضافية. اكتب بالعربية، نص عادي بلا Markdown ولا نجوم ولا رموز تعبيرية، أرقام بفواصل الآلاف، ولا تخترع رقمًا غير موجود.',
-      'بيانات اليوم (JSON):\n' + JSON.stringify(brief) + '\n\nاكتب تقرير المحاسب اليومي بهذا الترتيب بالضبط:\n1) سطر واحد: الوضع العام.\n2) أهم 3 ملاحظات (كل واحدة سطر).\n3) الإجراءات المطلوبة اليوم بالأولوية (5 كحد أقصى، كل إجراء يذكر الجهة والمبلغ).\n4) رسالة واتساب جاهزة لأكبر جهة زبون بلا مقابل (مهذبة، 3 أسطر) — وإن لم توجد إيصالات زبائن في الدفتر فاكتب بدلها سطرًا واحدًا: أن الخطوة التالية رفع إيصالات الزبائن إلى الدفتر ثم تشغيل مطابقة Claude.');
-    try { await sb('/bdl_agent_reports', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: { report: text, facts: { source: 'accountant.html', brief } } }); } catch (e) {}
-    if (notifyAdmin) { try { await notifyAdmin('<b>المحاسب</b> — ' + brief.date + '\n\n' + text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')); } catch (e) {} }
-    return { date: brief.date, model: MODEL(), text };
+    const skill = require('./bdl-report-skill');
+    const rep = await skill.ask(brief, { extra: 'اكتب تقرير اليوم: الوضع، المؤشرات، الذمم (زبائن بلا مقابل حسب الجهة)، الإجراءات، المخاطر، ورسالة واتساب لأكبر جهة زبون بلا مقابل — وإن لم توجد إيصالات زبائن فاجعل whatsapp فارغًا وأضف إجراءً: رفع إيصالات الزبائن ثم مطابقة Claude.' });
+    const text = skill.toPlain(rep);
+    try { await sb('/bdl_agent_reports', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: { report: text, facts: { source: 'accountant.html', brief, structured: rep } } }); } catch (e) {}
+    if (notifyAdmin) { try { await notifyAdmin(skill.toTelegram(rep)); } catch (e) {} }
+    return { date: brief.date, model: MODEL(), text, structured: rep };
   }
 
   const wrap = fn => async (req, res) => { if (!auth(req)) return res.status(401).json({ error: 'الجلسة منتهية — افتح account.html' }); try { res.json(await fn(req)); } catch (e) { res.status(500).json({ error: String(e.message).slice(0, 300) }); } };
@@ -120,6 +120,6 @@ module.exports = function (app, ctx) {
   app.post('/accountant/ai-audit', express.json(), wrap(aiAudit));
   app.get('/accountant/summary', wrap(summary));
   app.post('/accountant/run', express.json(), wrap(writeReport));
-  app.get('/accountant/report', wrap(async () => { let r; try { r = await sb('/bdl_agent_reports?select=report,created_at&order=created_at.desc&limit=1'); } catch (e) { return { text: '', note: /PGRST205|Could not find/.test(e.message) ? 'جدول التقارير غير موجود — الصق bdl-agent.sql في Supabase (SQL Editor)' : e.message }; } return r && r[0] ? { text: r[0].report, date: String(r[0].created_at).slice(0, 10) } : { text: '' }; }));
+  app.get('/accountant/report', wrap(async () => { let r; try { r = await sb('/bdl_agent_reports?select=report,created_at&order=created_at.desc&limit=1'); } catch (e) { return { text: '', note: /PGRST205|Could not find/.test(e.message) ? 'جدول التقارير غير موجود — الصق bdl-agent.sql في Supabase (SQL Editor)' : e.message }; } return r && r[0] ? { text: r[0].report, structured: r[0].facts && r[0].facts.structured || null, date: String(r[0].created_at).slice(0, 10) } : { text: '' }; }));
   console.log('▲ accountant routes ready (' + MODEL() + (KEY() ? ', key on' : ', key off') + ')');
 };
