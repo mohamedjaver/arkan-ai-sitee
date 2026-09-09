@@ -6,7 +6,7 @@
 const akey = () => { for (const k of Object.keys(process.env)) if (/^anthropic_(api_)?key$/i.test(k)) { const v = String(process.env[k] || '').trim(); if (v) return v; } return ''; };
 const UA = { 'User-Agent': 'Mozilla/5.0 (compatible; BDL-rates/1.0; +https://lbdal.com)', 'Accept': 'application/json,text/html;q=0.9,*/*;q=0.8' };
 const BOUNDS = { MRU: { USD: [30, 70], EUR: [35, 85], CNY: [4, 10], AED: [8, 20] }, AOA: { USD: [500, 3000], EUR: [550, 3500] } };
-const inB = (q, c, v) => { const b = BOUNDS[q] && BOUNDS[q][c]; return b ? v >= b[0] && v <= b[1] : v > 0; };
+const inB = (q, c, v) => { if (!(v > 0)) return false; const b = BOUNDS[q] && BOUNDS[q][c]; return b ? v >= b[0] && v <= b[1] : true; };
 async function get(url, ms) { const ac = new AbortController(); const t = setTimeout(() => ac.abort(), ms || 12000); try { const r = await fetch(url, { headers: UA, signal: ac.signal }); const txt = await r.text(); return { ok: r.ok, status: r.status, text: txt }; } finally { clearTimeout(t); } }
 const num = s => { if (s == null) return null; const t = String(s).replace(/\s/g, '').replace(/,(?=\d{3}\b)/g, '').replace(',', '.'); const v = parseFloat(t.replace(/[^\d.]/g, '')); return isFinite(v) ? v : null; };
 const strip = h => String(h).replace(/<script[\s\S]*?<\/script>/gi, ' ').replace(/<style[\s\S]*?<\/style>/gi, ' ').replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim();
@@ -45,8 +45,13 @@ async function market() { try { const j = await (await get('https://open.er-api.
 
 async function fetchAll() {
   const bcm = await trySources([
+    { name: 'BCM', url: 'https://www.bcm.mr/api/money-rate-table' },
+    { name: 'BCM', url: 'https://www.bcm.mr/api/money-rates' },
+    { name: 'BCM', url: 'https://www.bcm.mr/api/v1/money-rate-table' },
     { name: 'BCM', url: 'https://www.bcm.mr/-cours-central-interbancaire-de-reference-165-' },
-    { name: 'BCM-home', url: 'https://www.bcm.mr/' },
+    { name: 'BNM', url: 'https://www.bnm.mr/cours-de-change' },
+    { name: 'BMCI', url: 'https://www.bmci.mr/cours-de-change' },
+    { name: 'Attijari-MR', url: 'https://www.attijaribank.mr/cours-de-change' },
     { name: 'BPM-mirror', url: 'https://www.bpm.mr/COURS-DEVISE-BCM' }
   ], 'MRU', ['USD', 'EUR', 'CNY', 'AED']);
   const bna = await trySources([

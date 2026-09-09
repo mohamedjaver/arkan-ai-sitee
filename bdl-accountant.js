@@ -92,7 +92,7 @@ module.exports = function (app, ctx) {
   app.post('/agent/run', express.json(), async (req, res) => { if (!auth(req)) return res.status(401).json({ ok: false }); const st = await run('manual'); res.json({ ok: true, state: st }); });
   app.get('/agent/status', (req, res) => { if (!auth(req)) return res.status(401).json({ ok: false }); res.json({ ok: true, state: STATE, claude: !!AKEY, hour: HOUR, log: LOG.slice(-30) }); });
   /* نبضة بدء: تخبرك أن الوكيل حيّ ومفاتيحه سليمة */
-  setTimeout(() => { tgSend('المحاسب يعمل الآن على الخادم.\nالتقرير اليومي: ' + HOUR + ':00 بتوقيت لواندا · Claude: ' + (AKEY ? 'مفعّل' : 'غير مفعّل') + ' · Gemini: ' + (process.env.GEMINI_KEY ? 'مفعّل' : 'غير مفعّل') + '\nللتقرير الفوري: زر «تقرير المحاسب» في صفحة المطابقة.'); }, 8000);
+  if (process.env.AGENT_BOOT_MSG === '1') setTimeout(() => { tgSend('المحاسب يعمل الآن على الخادم.\nالتقرير اليومي: ' + HOUR + ':00 بتوقيت لواندا · Claude: ' + (AKEY ? 'مفعّل' : 'غير مفعّل') + ' · Gemini: ' + (process.env.GEMINI_KEY ? 'مفعّل' : 'غير مفعّل') + '\nللتقرير الفوري: زر «تقرير المحاسب» في صفحة المطابقة.'); }, 8000);
   app.get('/agent/ping', async (req, res) => { if (!auth(req)) return res.status(401).json({ ok: false }); await tgSend('اختبار: المحاسب متصل بتيليجرام ✓'); res.json({ ok: true, tg: STATE.tg }); });
   console.log('▲ accountant agent ready (daily ' + HOUR + ':00 UTC' + (TZ >= 0 ? '+' : '') + TZ + (AKEY ? ', Claude on' : ', Claude off') + ')');
 };
