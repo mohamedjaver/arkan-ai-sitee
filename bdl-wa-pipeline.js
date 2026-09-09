@@ -87,6 +87,7 @@ module.exports = function (app, ctx) {
         if (!a || !b) return ans('الإيصال غير موجود'); if (a.matched_fp || b.matched_fp) return ans('أحدهما مربوط أصلًا');
         await sb('/bdl_cmp_receipts?fp=eq.' + a.fp, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: { matched_fp: b.fp, how: 'wa-confirm' } });
         await sb('/bdl_cmp_receipts?fp=eq.' + b.fp, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: { matched_fp: a.fp, how: 'wa-confirm' } });
+        try { if (app.locals.upsertDeal) { const A = (await sb('/bdl_cmp_receipts?select=fp,side,amount&fp=in.("' + a.fp + '","' + b.fp + '")')); const c = A.find(x => x.side === 'cust'), sp = A.find(x => x.side === 'sup'); if (c && sp) await app.locals.upsertDeal({ cust_fp: c.fp, sup_fp: sp.fp, amount_aoa: c.amount, source: 'whatsapp' }); } } catch (e) {}
         return ans('تم الربط ✓'); }
       ans('');
     } catch (e) { ans('خطأ: ' + e.message.slice(0, 60)); }

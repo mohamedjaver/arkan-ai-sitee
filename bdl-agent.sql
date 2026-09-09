@@ -28,3 +28,18 @@ drop policy if exists "owner rw" on bdl_wa_parties;
 create policy "owner rw" on bdl_wa_parties for all using (coalesce(auth.jwt()->>'arkan_role','')='owner') with check (coalesce(auth.jwt()->>'arkan_role','')='owner');
 drop policy if exists "owner rw" on bdl_wa_pending;
 create policy "owner rw" on bdl_wa_pending for all using (coalesce(auth.jwt()->>'arkan_role','')='owner') with check (coalesce(auth.jwt()->>'arkan_role','')='owner');
+
+-- Build 1286: الأرباح والتصعيد
+create table if not exists bdl_deals (
+  id bigserial primary key, created_at timestamptz default now(),
+  cust_fp text, sup_fp text, amount_aoa numeric, unit text default 'MRU',
+  cust_rate numeric, sup_rate numeric, profit numeric, note text, source text,
+  unique (cust_fp, sup_fp));
+create table if not exists bdl_rates_daily (
+  day date primary key, unit text default 'MRU', cust_rate numeric, sup_rate numeric, updated_at timestamptz default now());
+alter table bdl_deals enable row level security;
+alter table bdl_rates_daily enable row level security;
+drop policy if exists "owner rw" on bdl_deals;
+create policy "owner rw" on bdl_deals for all using (coalesce(auth.jwt()->>'arkan_role','')='owner') with check (coalesce(auth.jwt()->>'arkan_role','')='owner');
+drop policy if exists "owner rw" on bdl_rates_daily;
+create policy "owner rw" on bdl_rates_daily for all using (coalesce(auth.jwt()->>'arkan_role','')='owner') with check (coalesce(auth.jwt()->>'arkan_role','')='owner');

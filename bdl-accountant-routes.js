@@ -44,10 +44,11 @@ module.exports = function (app, ctx) {
 
   async function writeReport() {
     const s = await summary();
-    const brief = { date: new Date().toISOString().slice(0, 10), receipts_total: s.total, customers: { receipts: s.custN, sum_aoa: fmt(s.custSum), open_without_supplier: s.open - s.openSup, open_sum_aoa: fmt(s.openSum) }, suppliers: { receipts: s.supN, sum_aoa: fmt(s.supSum), open_without_customer: s.openSup, open_sum_aoa: fmt(s.openSupSum) }, matched_pairs: Math.floor(s.matched / 2), needs_review: s.review,
-      top_parties: s.parties.slice(0, 15).map(p => ({ party: p.party, phone: p.phone, count: p.count, sum_aoa: fmt(p.sum), oldest: String(p.oldest || '').slice(0, 10) })) };
+    let deals = null, esc = null; try { deals = await dealsSummary(); } catch (e) {} try { esc = await duesEscalation(); } catch (e) {}
+    const brief = { date: new Date().toISOString().slice(0, 10), profits: deals ? { unit: deals.unit, today: deals.today, month: deals.month, deals: deals.n, unpriced_deals: deals.unpriced, avg_margin_pct: deals.avgMargin } : null, escalation: esc ? esc.levels : null, receipts_total: s.total, customers: { receipts: s.custN, sum_aoa: fmt(s.custSum), open_without_supplier: s.open - s.openSup, open_sum_aoa: fmt(s.openSum) }, suppliers: { receipts: s.supN, sum_aoa: fmt(s.supSum), open_without_customer: s.openSup, open_sum_aoa: fmt(s.openSupSum) }, matched_pairs: Math.floor(s.matched / 2), needs_review: s.review,
+      top_parties: (esc ? esc.parties : s.parties).slice(0, 15).map(p => ({ party: p.party, phone: p.phone, count: p.count, sum_aoa: fmt(p.sum), oldest: String(p.oldest || '').slice(0, 10), days_open: p.days, escalation_level: p.level, risk_score: p.risk })) };
     const skill = require('./bdl-report-skill');
-    const rep = await skill.ask(brief, { extra: 'اكتب تقرير اليوم: الوضع، المؤشرات، الذمم (زبائن بلا مقابل حسب الجهة)، الإجراءات، المخاطر، ورسالة واتساب لأكبر جهة زبون بلا مقابل — وإن لم توجد إيصالات زبائن فاجعل whatsapp فارغًا وأضف إجراءً: رفع إيصالات الزبائن ثم مطابقة Claude.' });
+    const rep = await skill.ask(brief, { extra: 'اكتب تقرير اليوم: الوضع، المؤشرات (منها ربح اليوم والشهر بوحدة profits.unit)، الذمم (زبائن بلا مقابل حسب الجهة مع مستوى التصعيد 1=إشعار 2=تذكير 3=خطر 4=تقرير إداري)، الإجراءات، المخاطر (منها الصفقات بلا سعر unpriced_deals إن وجدت)، ورسالة واتساب لأكبر جهة زبون بلا مقابل — وإن لم توجد إيصالات زبائن فاجعل whatsapp فارغًا وأضف إجراءً: رفع إيصالات الزبائن ثم مطابقة Claude.' });
     const text = skill.toPlain(rep);
     try { await sb('/bdl_agent_reports', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: { report: text, facts: { source: 'accountant.html', brief, structured: rep } } }); } catch (e) {}
     if (notifyAdmin) { try { await notifyAdmin(skill.toTelegram(rep)); } catch (e) {} }
@@ -118,6 +119,45 @@ module.exports = function (app, ctx) {
   app.locals.aiMatch = aiMatch;
   app.post('/accountant/ai-match', express.json(), wrap(aiMatch));
   app.post('/accountant/ai-audit', express.json(), wrap(aiAudit));
+  /* ── الأرباح: سعر الزبون − سعر المورد لكل 1,000 AOA (بالأوقية أو USDT) ── */
+  const today = () => new Date().toISOString().slice(0, 10);
+  async function ratesFor(day) { const r = await sb('/bdl_rates_daily?select=*&day=lte.' + day + '&order=day.desc&limit=1'); return r && r[0] || null; }
+  const profitOf = (amount, cr, sr) => (cr != null && sr != null) ? Math.round((Number(amount) / 1000) * (Number(cr) - Number(sr)) * 100) / 100 : null;
+  async function upsertDeal(b) {
+    if (!b.cust_fp || !b.sup_fp || !(Number(b.amount_aoa) > 0)) throw new Error('بيانات الصفقة ناقصة');
+    let unit = b.unit, cr = b.cust_rate, sr = b.sup_rate;
+    if (cr == null || sr == null) { const d = await ratesFor(today()); if (d) { unit = unit || d.unit; if (cr == null) cr = d.cust_rate; if (sr == null) sr = d.sup_rate; } }
+    const row = { cust_fp: b.cust_fp, sup_fp: b.sup_fp, amount_aoa: Number(b.amount_aoa), unit: unit || 'MRU', cust_rate: cr == null ? null : Number(cr), sup_rate: sr == null ? null : Number(sr), profit: profitOf(b.amount_aoa, cr, sr), note: b.note ? String(b.note).slice(0, 120) : null, source: b.source || 'manual' };
+    await sb('/bdl_deals?on_conflict=cust_fp,sup_fp', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates,return=minimal' }, body: row });
+    return row;
+  }
+  async function dealsSummary() {
+    const rows = await sb('/bdl_deals?select=*&order=created_at.desc&limit=2000');
+    const t = today(), m = t.slice(0, 7); const S = { today: 0, month: 0, all: 0, n: rows.length, unpriced: 0, unit: (rows[0] && rows[0].unit) || 'MRU', avgMargin: null, recent: rows.slice(0, 20) };
+    let marg = 0, mn = 0;
+    for (const r of rows) { if (r.profit == null) { S.unpriced++; continue; } const d = String(r.created_at).slice(0, 10); S.all += Number(r.profit); if (d === t) S.today += Number(r.profit); if (d.slice(0, 7) === m) S.month += Number(r.profit); if (r.cust_rate && r.sup_rate) { marg += (r.cust_rate - r.sup_rate) / r.sup_rate * 100; mn++; } }
+    if (mn) S.avgMargin = Math.round(marg / mn * 100) / 100;
+    S.rates = await ratesFor(t);
+    return S;
+  }
+  /* ── التصعيد ودرجة خطر الجهة: يوم 1 إشعار · 3 تذكير · 7 خطر · 14 تقرير ── */
+  function escalate(days) { return days >= 14 ? 4 : days >= 7 ? 3 : days >= 3 ? 2 : days >= 1 ? 1 : 0; }
+  async function duesEscalation() {
+    const s = await summary(); const now = Date.now();
+    const parties = s.parties.map(p => { const days = p.oldest ? Math.floor((now - new Date(p.oldest)) / 864e5) : 0; const lvl = escalate(days);
+      const risk = Math.min(100, Math.round(Math.min(days, 60) / 60 * 60 + Math.min(p.count, 5) / 5 * 20 + Math.min(p.sum / 20000000, 1) * 20));
+      return Object.assign({}, p, { days, level: lvl, risk }); }).sort((a, b) => b.risk - a.risk);
+    return { openSum: s.openSum, open: s.open, parties, levels: { l1: parties.filter(p => p.level === 1).length, l2: parties.filter(p => p.level === 2).length, l3: parties.filter(p => p.level === 3).length, l4: parties.filter(p => p.level === 4).length } };
+  }
+  app.get('/accountant/deals', wrap(dealsSummary));
+  app.post('/accountant/deal', express.json(), wrap(async req => upsertDeal(req.body || {})));
+  app.get('/accountant/rates', wrap(async () => (await ratesFor(today())) || {}));
+  app.post('/accountant/rates', express.json(), wrap(async req => { const b = req.body || {}; const row = { day: today(), unit: b.unit || 'MRU', cust_rate: Number(b.cust_rate), sup_rate: Number(b.sup_rate) }; if (!(row.cust_rate > 0) || !(row.sup_rate > 0)) throw new Error('أدخل السعرين'); await sb('/bdl_rates_daily?on_conflict=day', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates,return=minimal' }, body: row });
+    /* الصفقات بلا سعر تُسعَّر بأسعار اليوم */
+    try { const un = await sb('/bdl_deals?select=cust_fp,sup_fp,amount_aoa&profit=is.null&limit=500'); for (const d of un) await upsertDeal({ cust_fp: d.cust_fp, sup_fp: d.sup_fp, amount_aoa: d.amount_aoa, unit: row.unit, cust_rate: row.cust_rate, sup_rate: row.sup_rate, source: 'rates' }); row.priced = un.length; } catch (e) {}
+    return row; }));
+  app.get('/accountant/dues', wrap(duesEscalation));
+  app.locals.upsertDeal = upsertDeal;
   app.get('/accountant/summary', wrap(summary));
   app.post('/accountant/run', express.json(), wrap(writeReport));
   app.get('/accountant/report', wrap(async () => { let r; try { r = await sb('/bdl_agent_reports?select=report,created_at&order=created_at.desc&limit=1'); } catch (e) { return { text: '', note: /PGRST205|Could not find/.test(e.message) ? 'جدول التقارير غير موجود — الصق bdl-agent.sql في Supabase (SQL Editor)' : e.message }; } return r && r[0] ? { text: r[0].report, structured: r[0].facts && r[0].facts.structured || null, date: String(r[0].created_at).slice(0, 10) } : { text: '' }; }));

@@ -765,14 +765,16 @@ async function aiApply(){const sel=[...document.querySelectorAll('#ai input[type
   for(const f of sel){try{if(f.type==='del'){await sbq('/bdl_book_entries?id=eq.'+f.id,{method:'DELETE',headers:{Prefer:'return=minimal'}});try{await sbq('/bdl_cmp_receipts?book_entry_id=eq.'+f.id,{method:'PATCH',headers:{Prefer:'return=minimal'},body:{book_entry_id:null}});}catch(e){}S.cust.concat(S.sup).forEach(r=>{if(r.book_entry_id===f.id)r.book_entry_id=null;});}
     else if(f.type==='patch'){await sbq('/bdl_book_entries?id=eq.'+f.id,{method:'PATCH',headers:{Prefer:'return=minimal'},body:{amount:f.amount}});}n++;}catch(e){toast('فشل: '+f.label);}}
   toast('طُبّق '+n+' إصلاحًا');$('#ai').style.display='none';persist();render();}
+/* كل زوج مطابَق = صفقة ربح (بأسعار اليوم الافتراضية؛ تُعدَّل من المحاسب) */
+function dealOf(c,s){if(!c||!s||!c.fp||!s.fp||!tokenOf())return;const k=c.fp+'|'+s.fp;S.dealt=S.dealt||{};if(S.dealt[k])return;S.dealt[k]=1;fetch(SRV+'/accountant/deal',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+tokenOf()},body:JSON.stringify({cust_fp:c.fp,sup_fp:s.fp,amount_aoa:c.amount,source:'compare'})}).catch(()=>{});}
 function rematch(reset){
   if(reset!==false){S.cust.forEach(c=>{if(c.how!=='manual'){c.matched=null;c.how='';}});S.sup.forEach(s=>{if(!(s.matched&&s.matched.how==='manual'))s.matched=null;});}
   else{S.cust.forEach(c=>{if(c.how!=='manual'){c.matched=null;c.how='';}});S.sup.forEach(s=>{if(!(s.matched&&s.matched.how==='manual'))s.matched=null;});}
-  S.cust.forEach(c=>{if(c.matched||!key(c))return;const s=S.sup.find(x=>!x.matched&&key(x)&&key(x)===key(c));if(s){c.matched=s;s.matched=c;c.how='ref';}});
+  S.cust.forEach(c=>{if(c.matched||!key(c))return;const s=S.sup.find(x=>!x.matched&&key(x)&&key(x)===key(c));if(s){c.matched=s;s.matched=c;c.how='ref';dealOf(c,s);}});
   const tol=Math.max(0,Number($('#tol').value)||0)/100;
   S.cust.slice().sort((a,b)=>(b.amount||0)-(a.amount||0)).forEach(c=>{if(c.matched||!c.amount)return;let best=null,bd=Infinity;
     S.sup.forEach(s=>{if(s.matched||s.ccy!==c.ccy||!s.amount)return;const d=Math.abs(s.amount-c.amount)/c.amount;const dt=Math.abs(s.date-c.date);if(d<=tol&&dt<=48*36e5&&d<bd){bd=d;best=s;}});
-    if(best){c.matched=best;best.matched=c;c.how=bd===0?'amount':'approx';}});
+    if(best){c.matched=best;best.matched=c;c.how=bd===0?'amount':'approx';dealOf(c,best);}});
   if(LED.ready){const chk=r=>{if(!r.fp||!LED.idx[r.fp])return;const mf=r.matched&&r.matched.fp||null;if((LED.idx[r.fp].matched_fp||null)!==mf)LED.patch(r,{matched_fp:mf,how:(r.side==='cust'?r.how:(r.matched&&r.matched.how))||''});};S.cust.forEach(chk);S.sup.forEach(chk);}
   render();
 }
@@ -781,7 +783,7 @@ function tap(id){const r=find(id);if(!r)return;if(!S.link){r.edit=!r.edit;render
   if(r.side==='cust')S.selC=S.selC===id?null:id;else S.selS=S.selS===id?null:id;render();}
 function link(){const c=find(S.selC),s=find(S.selS);if(!c||!s)return;
   if(c.matched){c.matched.matched=null;}if(s.matched){s.matched.matched=null;s.matched.how='';}
-  c.matched=s;s.matched=c;c.how='manual';S.selC=S.selS=null;LED.patch(c,{matched_fp:s.fp||null,how:'manual'});LED.patch(s,{matched_fp:c.fp||null,how:'manual'});toast('رُبط الإيصالان ✓');render();}
+  c.matched=s;s.matched=c;c.how='manual';S.selC=S.selS=null;dealOf(c,s);LED.patch(c,{matched_fp:s.fp||null,how:'manual'});LED.patch(s,{matched_fp:c.fp||null,how:'manual'});toast('رُبط الإيصالان ✓');render();}
 function unlink(id){const r=find(id);if(!r||!r.matched)return;const o=r.matched;r.matched=null;o.matched=null;r.how='';o.how='';S.selC=S.selS=null;LED.patch(r,{matched_fp:null,how:''});LED.patch(o,{matched_fp:null,how:''});toast('فُكّ الربط');render();}
 
 /* ───── العرض ───── */
