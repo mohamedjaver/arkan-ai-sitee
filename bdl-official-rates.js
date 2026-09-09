@@ -41,7 +41,7 @@ async function discover(base, key) {
     const abs = u => u.startsWith('http') ? u : (u.startsWith('/') ? new URL(base).origin + u : base.replace(/\/[^/]*$/, '/') + u);
     const seen = new Set();
     for (const sc of scripts) { try { const js = await get(abs(sc), 20000); if (!js.ok) continue;
-      for (const m of js.text.matchAll(/["'`](https?:\/\/[^"'`\s]{6,160}|\/[A-Za-z0-9_\-./]{3,120})["'`]/g)) { const u = m[1]; if (/(rate|cours|devise|taux|change|exchange|currenc|money)/i.test(u) && /(api|json|rest|service|graphql|wp-json)/i.test(u) && !seen.has(u)) { seen.add(u); found.push(abs(u)); } }
+      for (const m of js.text.matchAll(/["'`](https?:\/\/[^"'`\s]{6,160}|\/[A-Za-z0-9_\-./?=&]{3,120})["'`]/g)) { const u = m[1]; if (/(rate|cours|devise|taux|change|exchange|currenc|money)/i.test(u) && /(api|json|rest|service|graphql|wp-json)/i.test(u) && !seen.has(u)) { seen.add(u); found.push(abs(u)); } }
       for (const m of js.text.matchAll(/["'`](https?:\/\/[^"'`\s]*(api|rest|service)[^"'`\s]{0,80})["'`]/gi)) { const u = m[1]; if (!seen.has(u) && u.length < 160) { seen.add(u); found.push(u); } }
     } catch (e) {} }
   } catch (e) {}
