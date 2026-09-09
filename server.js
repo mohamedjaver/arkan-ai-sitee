@@ -135,10 +135,11 @@ setInterval(pollTron, ENV.POLL_TRON_MS);
 let tgOffset = 0;
 async function pollTelegram() {
   if (!ENV.BOT_TOKEN) return;
-  const updates = await tg('getUpdates', { offset: tgOffset, timeout: 0, allowed_updates: ['message'] });
+  const updates = await tg('getUpdates', { offset: tgOffset, timeout: 0, allowed_updates: ['message', 'callback_query'] });
   if (!updates) return;
   for (const u of updates) {
     tgOffset = u.update_id + 1;
+    if (u.callback_query) { if (app.locals.tgCallback && String(u.callback_query.from && u.callback_query.from.id) === String(ENV.ADMIN_ID)) { try { await app.locals.tgCallback(u.callback_query); } catch (e) { console.warn('tg-cb:', e.message); } } continue; }
     const msg = u.message;
     if (!msg || !msg.text) continue;
     const chatId = msg.chat.id;
@@ -1050,6 +1051,7 @@ app.post('/wa/webhook', async (req, res) => {
       const up = await fetch(base + '/storage/v1/object/receipts/' + path, { method: 'POST',
         headers: { apikey: SB_PUB, Authorization: 'Bearer ' + tok, 'Content-Type': mime, 'x-upsert': 'true' }, body: buf });
       if (up.ok) furl = base + '/storage/v1/object/public/receipts/' + path;
+      if (app.locals.waPipe) { await app.locals.waPipe.handle({ buf, mime, fp, from: m.from, caption, url: furl, pnid }); continue; }   /* الأنبوب الجديد: Claude → الدفتر → المطابقة */
       const ocr = { side, source: 'whatsapp', from: m.from, caption: String(caption).slice(0, 120),
         pending: true, uploaded_at: new Date().toISOString() };
       if (supName) ocr.sup_name = supName;
@@ -1487,6 +1489,11 @@ try {
     ownerToken: () => { const ts = Math.floor(Date.now() / 1000); return jwt.sign({ sub: phoneToUuid(OWNER_PHONES[0]), role: 'authenticated', aud: 'authenticated', arkan_role: 'owner', iat: ts, exp: ts + 300 }, JWT_SECRET); },
     notifyAdmin: typeof notifyAdmin === 'function' ? notifyAdmin : null });
 } catch (e) { console.warn('accountant routes off:', e.message); }
+/* أنبوب واتساب → Claude → الدفتر → المطابقة (إضافي) */
+try {
+  require('./bdl-wa-pipeline')(app, { SB_REST, SB_PUB, tg, ADMIN_ID: ENV.ADMIN_ID, WA_TOKEN,
+    ownerToken: () => { const ts = Math.floor(Date.now() / 1000); return jwt.sign({ sub: phoneToUuid(OWNER_PHONES[0]), role: 'authenticated', aud: 'authenticated', arkan_role: 'owner', iat: ts, exp: ts + 300 }, JWT_SECRET); } });
+} catch (e) { console.warn('wa pipeline off:', e.message); }
 app.listen(ENV.PORT, () => {
   console.log(`▲ BDL STORE on :${ENV.PORT}`);
   console.log(`  Wallet: ${ENV.WALLET}`);

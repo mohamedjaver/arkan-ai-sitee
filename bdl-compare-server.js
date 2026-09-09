@@ -274,4 +274,5 @@ verdict=ok إن كانت القراءة صحيحة، fixed إن صحّحت شي�
   /* ── تنظيف 24 ساعة ── */
   setInterval(() => { const now = Date.now(); for (const id in JOBS) { const j = JOBS[id]; if (now - j.created > TTL) { try { fs.rmSync(j.dir, { recursive: true, force: true }); } catch (e) {} delete JOBS[id]; } } }, 30 * 60e3);
   console.log('▲ compare batch engine ready (' + MODEL + ', x' + CONC + ')');
+  app.locals.cmpReadOne = readOne;   // للأنبوب (واتساب)
 };

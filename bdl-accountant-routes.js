@@ -115,6 +115,7 @@ module.exports = function (app, ctx) {
     try { await sb('/bdl_agent_log', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: { at: new Date().toISOString(), kind: 'ai-audit', msg: String(j.summary || '').slice(0, 200), data: findings.slice(0, 30) } }); } catch (e) {}
     return { findings, summary: String(j.summary || ''), entries: E.length, linked: L.length, model: MODEL() };
   }
+  app.locals.aiMatch = aiMatch;
   app.post('/accountant/ai-match', express.json(), wrap(aiMatch));
   app.post('/accountant/ai-audit', express.json(), wrap(aiAudit));
   app.get('/accountant/summary', wrap(summary));
