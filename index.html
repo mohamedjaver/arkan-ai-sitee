@@ -968,7 +968,7 @@ function renderMarket(){
 }
 
 function renderCardPrice(){
-  const el=document.getElementById('vprice');
+  const el=document.getElementById('vprice'); if(!el) return;
   const usd=RATES.card_price_mro/RATES.usd_mro;
   const eur=RATES.card_price_mro/RATES.eur_mro;
   const aoa=RATES.card_price_mro/RATES.aoa_mro;
@@ -1118,7 +1118,7 @@ function setLang(l){
   }catch(e){}
   document.querySelectorAll('[data-ih]').forEach(el=>{const k=el.dataset.ih;if(t[k]!==undefined)el.innerHTML=t[k];});
   document.querySelectorAll('#langSeg button').forEach(b=>b.classList.toggle('on',b.dataset.l===l));
-  document.getElementById('waBtn').href='https://wa.me/22236295050?text='+encodeURIComponent(t.wa);
+  { const wb=document.getElementById('waBtn'); if(wb) wb.href='https://wa.me/22236295050?text='+encodeURIComponent(t.wa); }
   document.title=(l==='ar')?'BDL — الصرف والتسويات الدولية':'BDL — Move Money Across Africa Instantly';
   renderMarket(); renderDash(); renderCardPrice(); calc();
 }
