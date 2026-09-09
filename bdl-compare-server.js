@@ -17,6 +17,24 @@ module.exports = function (app, ctx) {
   const JOBS = {};                 // id → job
   const TTL = 24 * 3600e3;
   const MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+  /* مفتاح Claude: يُقبل بأي حالة أحرف (ANTHROPIC_KEY / Anthropic_key / ANTHROPIC_API_KEY) */
+  const akey = () => { for (const k of Object.keys(process.env)) if (/^anthropic_(api_)?key$/i.test(k)) { const v = String(process.env[k] || '').trim(); if (v) return v; } return ''; };
+  const CMODEL = () => process.env.ANTHROPIC_MODEL || 'claude-sonnet-5';
+  const ENGINE = () => (process.env.READ_ENGINE || (akey() ? 'claude' : 'gemini')).toLowerCase();   // READ_ENGINE=gemini يعيد المحرك القديم
+  async function claudeRead(prompt, b64, mime, maxTok, textOnly) {
+    const content = textOnly ? [{ type: 'text', text: prompt + '\n\nنص الإيصال (مستخرج من PDF):\n' + textOnly }]
+      : [mime === 'application/pdf' ? { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: b64 } } : { type: 'image', source: { type: 'base64', media_type: mime, data: b64 } }, { type: 'text', text: prompt }];
+    for (let a = 0; a < 4; a++) {
+      const r = await fetch('https://api.anthropic.com/v1/messages', { method: 'POST', headers: { 'content-type': 'application/json', 'x-api-key': akey(), 'anthropic-version': '2023-06-01' },
+        body: JSON.stringify({ model: CMODEL(), max_tokens: Math.max(900, (maxTok || 300) * 3), system: 'أعد JSON صالحًا فقط، بلا أي نص قبله أو بعده وبلا أسوار كود.', messages: [{ role: 'user', content }] }) });
+      const j = await r.json().catch(() => ({}));
+      if (r.status === 429 || r.status === 529 || r.status >= 500) { await new Promise(res => setTimeout(res, 1500 * (a + 1) * (a + 1))); continue; }
+      if (!r.ok) throw new Error('Claude ' + r.status + ': ' + ((j.error && j.error.message) || '').slice(0, 120));
+      const t = (j.content || []).filter(b => b.type === 'text').map(b => b.text).join('').replace(/```json|```/g, '').trim();
+      try { return JSON.parse(t.slice(t.indexOf('{'), t.lastIndexOf('}') + 1)); } catch (e) { throw new Error('Claude JSON: ' + t.slice(0, 120) + (j.stop_reason === 'max_tokens' ? ' [max_tokens]' : '')); }
+    }
+    throw new Error('quota');
+  }
   const CONC = Math.max(1, parseInt(process.env.COMPARE_CONC || '4'));
 
   /* ── مصادقة المالك (نفس JWT جلسة الحساب) ── */
@@ -107,6 +125,8 @@ module.exports = function (app, ctx) {
     }
   }
   async function gem(key, prompt, b64, mime, maxTok, textOnly) {
+    if (ENGINE() === 'claude' && akey()) return claudeRead(prompt, b64, mime, maxTok, textOnly);
+    if (!key) throw new Error('no gemini key');
     for (let a = 0; a < 4; a++) {
       const r = await fetch('https://generativelanguage.googleapis.com/v1beta/models/' + MODEL + ':generateContent?key=' + encodeURIComponent(key), {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -162,7 +182,7 @@ verdict=ok إن كانت القراءة صحيحة، fixed إن صحّحت شي�
     return r; }
   async function readOne(job, it) {
     const b64 = it.data.toString('base64'), mime = mimeOf(it.name), isPdf = mime === 'application/pdf';
-    let p1 = null, txt = null, eng = 'gemini-image', err1 = '';
+    let p1 = null, txt = null, eng = (ENGINE() === 'claude' && akey() ? 'claude' : 'gemini') + '-image', err1 = '';
     try { p1 = await gem(job.key, P1 + examplesFor(''), b64, mime, 320); } catch (e) { if (!isPdf) throw e; err1 = String(e.message || e).slice(0, 80); }
     if (isPdf && (!p1 || p1.is_bank_receipt === false || !num(p1.amount))) {
       /* Gemini لم يفتح الـ PDF أو لم يجد مبلغًا: طبقة النص ثم قراءة نصية بقراءتين */
@@ -212,7 +232,7 @@ verdict=ok إن كانت القراءة صحيحة، fixed إن صحّحت شي�
   app.post('/compare/job', express.raw({ type: '*/*', limit: '1500mb' }), async (req, res) => {
     if (!auth(req)) return res.status(401).json({ ok: false, err: 'auth' });
     const key = String(req.headers['x-gemini-key'] || process.env.GEMINI_KEY || '').trim();
-    if (!key) return res.status(400).json({ ok: false, err: 'no gemini key' });
+    if (!key && !(ENGINE() === 'claude' && akey())) return res.status(400).json({ ok: false, err: 'no gemini key' });
     const buf = req.body; if (!buf || !buf.length) return res.status(400).json({ ok: false, err: 'empty' });
     const id = crypto.randomBytes(8).toString('hex'); const dir = path.join(ROOT, id); fs.mkdirSync(dir);
     const name = String(req.headers['x-file-name'] || 'upload'); const side = req.headers['x-side'] === 'sup' ? 'sup' : 'cust';

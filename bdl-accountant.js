@@ -11,7 +11,7 @@
 module.exports = function (app, ctx) {
   const { express, jwt, JWT_SECRET, SB_REST, SB_PUB, ownerToken, notifyAdmin, pushOwner } = ctx;
   const HOUR = parseInt(process.env.AGENT_HOUR || '7'), TZ = parseFloat(process.env.AGENT_TZ_OFFSET || '1');
-  const AKEY = (process.env.ANTHROPIC_KEY || '').trim();
+  const AKEY = (() => { for (const k of Object.keys(process.env)) if (/^anthropic_(api_)?key$/i.test(k)) { const v = String(process.env[k] || '').trim(); if (v) return v; } return ''; })();
   const H = () => ({ apikey: SB_PUB, Authorization: 'Bearer ' + ownerToken(), 'Content-Type': 'application/json' });
   async function sb(path, opt) { opt = opt || {}; const r = await fetch(SB_REST + path, Object.assign({}, opt, { headers: Object.assign(H(), opt.headers || {}), body: opt.body ? JSON.stringify(opt.body) : undefined })); const t = await r.text(); if (!r.ok) throw new Error(path.slice(0, 60) + ' → ' + t.slice(0, 160)); return t ? JSON.parse(t) : null; }
   const fmt = n => Number(n || 0).toLocaleString('en-US', { maximumFractionDigits: 0 });

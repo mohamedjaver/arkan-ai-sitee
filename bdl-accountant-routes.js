@@ -5,7 +5,7 @@
 'use strict';
 module.exports = function (app, ctx) {
   const { express, jwt, JWT_SECRET, SB_REST, SB_PUB, ownerToken, notifyAdmin } = ctx;
-  const KEY = () => (process.env.ANTHROPIC_KEY || process.env.ANTHROPIC_API_KEY || '').trim();
+  const KEY = () => (() => { for (const k of Object.keys(process.env)) if (/^anthropic_(api_)?key$/i.test(k)) { const v = String(process.env[k] || '').trim(); if (v) return v; } return ''; })();
   const MODEL = () => process.env.ANTHROPIC_MODEL || 'claude-sonnet-5';
   const fmt = n => Math.round(Number(n) || 0).toLocaleString('en-US');
   const auth = req => { try { jwt.verify(String(req.headers.authorization || '').replace(/^Bearer\s+/i, ''), JWT_SECRET); return true; } catch (e) { return false; } };

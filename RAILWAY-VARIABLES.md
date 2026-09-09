@@ -3,7 +3,7 @@
 ## جديدة (المحاسب + محرك القراءة)
 | المتغير | القيمة | ملاحظة |
 |---|---|---|
-| ANTHROPIC_KEY | sk-ant-... | من console.anthropic.com → API Keys (مع رصيد في Billing). بدونه يعمل المحاسب بتقرير قالبي. |
+| ANTHROPIC_KEY | sk-ant-... | من console.anthropic.com → API Keys (مع رصيد في Billing). يُقبل بأي حالة أحرف. مع وجوده يصبح Claude هو قارئ الإيصالات في محرك الخادم (READ_ENGINE=gemini يعيد Gemini). ANTHROPIC_MODEL اختياري (افتراضي claude-sonnet-5). |
 | GEMINI_KEY | AIza... | مفتاح Gemini مع تفعيل الفوترة في aistudio.google.com → Billing (يرفع الحد من 15 إلى ~1000 طلب/دقيقة). |
 | GEMINI_MODEL | gemini-2.5-flash | اختياري. |
 | COMPARE_CONC | 8 | عدد القراءات المتوازية على الخادم (6 افتراضيًا؛ 8–10 مع فوترة Gemini). |
