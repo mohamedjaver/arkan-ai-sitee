@@ -15,14 +15,14 @@ module.exports = function (app, ctx) {
 
   async function summary() {
     const rows = await sb('/bdl_cmp_receipts?select=fp,side,amount,who,phone,msg_at,ref,bank,ccy,matched_fp,book_entry_id&order=msg_at.desc.nullslast&limit=50000');
-    const s = { total: rows.length, sum: 0, matched: 0, review: 0, open: 0, openSum: 0, parties: {} };
+    const s = { total: rows.length, sum: 0, matched: 0, review: 0, open: 0, openSum: 0, custN: 0, custSum: 0, supN: 0, supSum: 0, openSup: 0, openSupSum: 0, parties: {} };
     for (const r of rows) {
       const amt = Number(r.amount) || 0; const aoa = !r.ccy || r.ccy === 'AOA';
-      if (aoa) s.sum += amt;
+      if (aoa) { s.sum += amt; if (r.side === 'cust') { s.custN++; s.custSum += amt; } else if (r.side === 'sup') { s.supN++; s.supSum += amt; } }
       if (r.matched_fp) { s.matched++; continue; }
       if (!(amt > 0) || !aoa) { s.review++; continue; }
       s.open++;
-      if (r.side !== 'cust') continue;
+      if (r.side !== 'cust') { s.openSup++; s.openSupSum += amt; continue; }
       s.openSum += amt;
       const k = (r.who || 'بدون اسم') + '|' + (r.phone || '');
       const p = s.parties[k] || (s.parties[k] = { party: r.who || 'بدون اسم', phone: r.phone || '', count: 0, sum: 0, oldest: r.msg_at, receipts: [] });
@@ -44,11 +44,11 @@ module.exports = function (app, ctx) {
 
   async function writeReport() {
     const s = await summary();
-    const brief = { date: new Date().toISOString().slice(0, 10), receipts: s.total, total_aoa: fmt(s.sum), matched: s.matched, review: s.review, open_customer_receipts: s.open, open_sum_aoa: fmt(s.openSum),
+    const brief = { date: new Date().toISOString().slice(0, 10), receipts_total: s.total, customers: { receipts: s.custN, sum_aoa: fmt(s.custSum), open_without_supplier: s.open - s.openSup, open_sum_aoa: fmt(s.openSum) }, suppliers: { receipts: s.supN, sum_aoa: fmt(s.supSum), open_without_customer: s.openSup, open_sum_aoa: fmt(s.openSupSum) }, matched_pairs: Math.floor(s.matched / 2), needs_review: s.review,
       top_parties: s.parties.slice(0, 15).map(p => ({ party: p.party, phone: p.phone, count: p.count, sum_aoa: fmt(p.sum), oldest: String(p.oldest || '').slice(0, 10) })) };
     const text = await claude(
-      'أنت محاسب BDL (لبدال) — صرافة بين موريتانيا وأنغولا. الإيصالات بالكوانزا AOA. الزبائن يرسلون إيصالات ثم يُحوَّل المقابل للموردين؛ «بلا مقابل» = إيصال زبون لم يصل مقابله لأي مورد. اكتب بالعربية، مختصرًا، بلا مجاملات ولا رموز تعبيرية، أرقام بفواصل الآلاف. لا تخترع أي رقم غير موجود في البيانات.',
-      'بيانات اليوم (JSON):\n' + JSON.stringify(brief) + '\n\nاكتب تقرير المحاسب اليومي بهذا الترتيب بالضبط:\n1) سطر واحد: الوضع العام.\n2) أهم 3 ملاحظات (كل واحدة سطر).\n3) الإجراءات المطلوبة اليوم بالأولوية (5 كحد أقصى، كل إجراء يذكر الجهة والمبلغ).\n4) رسالة واتساب جاهزة لأكبر جهة بلا مقابل (مهذبة، 3 أسطر).');
+      'أنت المحاسب الداخلي لـBDL (لبدال)، تخاطب المالك محمد مباشرة بصيغة المخاطب. العملة: الكوانزا الأنغولية (AOA/Kz) — لا تكتب «أوقية» أبدًا. المعنى: إيصال زبون = مال وصل إلى المالك؛ إيصال مورد = مال حوّله المالك. إيصال زبون بلا مورد = ذمة على المالك تجاه الزبون (الأخطر). إيصال مورد بلا زبون = فائض تحويل أو إيصالات زبائن لم تُرفع بعد إلى الدفتر — ليس خطأ حساب. الأرقام في البيانات صحيحة ومتسقة؛ لا تصفها بالتناقض ولا تطلب بيانات إضافية. اكتب بالعربية، نص عادي بلا Markdown ولا نجوم ولا رموز تعبيرية، أرقام بفواصل الآلاف، ولا تخترع رقمًا غير موجود.',
+      'بيانات اليوم (JSON):\n' + JSON.stringify(brief) + '\n\nاكتب تقرير المحاسب اليومي بهذا الترتيب بالضبط:\n1) سطر واحد: الوضع العام.\n2) أهم 3 ملاحظات (كل واحدة سطر).\n3) الإجراءات المطلوبة اليوم بالأولوية (5 كحد أقصى، كل إجراء يذكر الجهة والمبلغ).\n4) رسالة واتساب جاهزة لأكبر جهة زبون بلا مقابل (مهذبة، 3 أسطر) — وإن لم توجد إيصالات زبائن في الدفتر فاكتب بدلها سطرًا واحدًا: أن الخطوة التالية رفع إيصالات الزبائن إلى الدفتر ثم تشغيل مطابقة Claude.');
     try { await sb('/bdl_agent_reports', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: { report: text, facts: { source: 'accountant.html', brief } } }); } catch (e) {}
     if (notifyAdmin) { try { await notifyAdmin('<b>المحاسب</b> — ' + brief.date + '\n\n' + text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')); } catch (e) {} }
     return { date: brief.date, model: MODEL(), text };

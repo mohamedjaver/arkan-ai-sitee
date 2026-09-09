@@ -169,7 +169,7 @@ async function load(refresh){
 
 async function showReport(){
   const r = await api('/accountant/report');
-  if (r.text) { $('report').textContent = r.text; $('report').classList.remove('empty'); $('repAt').textContent = r.date || ''; }
+  if (r.text) { $('report').textContent = r.text.replace(/\*\*/g, '').replace(/^#+\s*/gm, ''); $('report').classList.remove('empty'); $('repAt').textContent = r.date || ''; }
   else if (r.note) { $('report').textContent = r.note; }
 }
 async function run(){
