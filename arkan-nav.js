@@ -56,6 +56,8 @@
     doc:'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zM14 2v6h6M16 13H8M16 17H8',
     wallet:'M20 7H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2zM16 7V5a2 2 0 0 0-2-2H10a2 2 0 0 0-2 2v2M16 14h.01',
     more:'M5 12h.01M12 12h.01M19 12h.01',
+    menu:'M3 12h18M3 6h18M3 18h18',
+    bell:'M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0',
     logout:'M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9',
     close:'M18 6L6 18M6 6l12 12'
   };
@@ -74,17 +76,24 @@
     '#akMore h4{margin:0 0 10px;font-size:14px;color:#0B2F70;display:flex;justify-content:space-between;align-items:center}' +
     '#akMore .g{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}#akMore .g a{display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 4px;border:1px solid rgba(11,47,112,.12);border-radius:12px;color:#0B2F70;text-decoration:none;font-size:11px;font-weight:700;text-align:center}' +
     '#akMore .lo{margin-top:12px;width:100%;padding:14px;border:1.5px solid #D5D8E0;color:#D0342C;background:#fff;border-radius:99px;font:inherit;font-weight:700}' +
-    '@media print{#akTabs,#akMore{display:none!important}}';
+    '#akTop{position:fixed;top:calc(env(safe-area-inset-top,0px) + 8px);left:10px;right:10px;z-index:9000;display:flex;gap:8px;pointer-events:none}' +
+    '#akTop span{flex:1}#akTop a{pointer-events:auto;width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,.92);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);display:grid;place-items:center;color:#0B2F70;box-shadow:0 2px 10px rgba(10,10,10,.08);text-decoration:none}' +
+    '#akTop a:active{opacity:.6}' +
+    '/* تعطيل قوائم الصفحات القديمة التي كان يحلّ محلّها الشريط */.nav-toggle,#navToggle,#akNavBtns{display:none!important}' +
+    '#arkChatFab{bottom:calc(84px + env(safe-area-inset-bottom,0px))!important}' +
+    '@media print{#akTabs,#akMore,#akTop{display:none!important}}';
   document.head.appendChild(css);
 
   var bar = document.createElement('nav'); bar.id = 'akTabs'; bar.setAttribute('aria-label', 'التنقل');
-  bar.innerHTML = tabs.map(function (t) { return '<a href="' + t.href + '" class="' + (active(t.href) ? 'on' : '') + '">' + svg(t.icon) + '<span>' + t.label + '</span></a>'; }).join('') +
-    '<a href="#" id="akMoreBtn">' + svg('more') + '<span>المزيد</span></a>';
+  bar.innerHTML = tabs.map(function (t) { return '<a href="' + t.href + '" class="' + (active(t.href) ? 'on' : '') + '">' + svg(t.icon) + '<span>' + t.label + '</span></a>'; }).join('');
+  /* شريط علوي خفيف على نمط PayPal: ☰ يسارًا (يفتح «المزيد»)، جرس + حساب يمينًا — لا يزاحم رأس الصفحة */
+  var top = document.createElement('div'); top.id = 'akTop';
+  top.innerHTML = '<a href="#" id="akMoreBtn" aria-label="القائمة">' + svg('menu', 20) + '</a><span></span><a href="chat-v2.html" aria-label="الرسائل">' + svg('bell', 20) + '</a><a href="account.html" aria-label="الحساب">' + svg('user', 20) + '</a>';
   var sheet = document.createElement('div'); sheet.id = 'akMore';
   sheet.innerHTML = '<div class="sh"><h4><span>المزيد</span><a href="#" id="akClose" style="color:#C62828">' + svg('close', 18) + '</a></h4><div class="g">' +
     more.filter(function (m) { return m.href !== path; }).map(function (m) { return '<a href="' + m.href + '">' + svg(m.icon, 20) + m.label + '</a>'; }).join('') +
     '</div><button class="lo" id="akLogout">تسجيل الخروج</button></div>';
-  function mount() { document.body.appendChild(bar); document.body.appendChild(sheet);
+  function mount() { document.body.appendChild(bar); document.body.appendChild(sheet); document.body.appendChild(top);
     document.getElementById('akMoreBtn').onclick = function (e) { e.preventDefault(); sheet.classList.add('on'); };
     document.getElementById('akClose').onclick = function (e) { e.preventDefault(); sheet.classList.remove('on'); };
     sheet.onclick = function (e) { if (e.target === sheet) sheet.classList.remove('on'); };
