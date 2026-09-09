@@ -26,7 +26,7 @@
        chatdiag.html, diag2.html · deltest.html → HOME */
   });
   g.ARKAN_LEGACY = Object.freeze({
-    'chat.html':'chat-v2.html','chat2.html':'chat-v2.html','chat3.html':'chat-v2.html',
-    'chatdiag.html':'chat-v2.html','diag2.html':'chat-v2.html','deltest.html':'index.html'
+    'chat.html':'chat-v2.html','m.html':'chat-v2.html','home-v2.html':'index.html','login.html':'account.html',
+    'chat2.html':'chat-v2.html','chat3.html':'chat-v2.html','chatdiag.html':'chat-v2.html','diag2.html':'chat-v2.html','deltest.html':'index.html','brand.html':'index.html'
   });
 })(window);

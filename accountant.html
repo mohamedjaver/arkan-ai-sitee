@@ -76,15 +76,16 @@ section h2 span{color:var(--mute);font-weight:400;font-size:13px}
 .diag div{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px solid var(--line)}
 .diag div:last-child{border:0}
 .diag .bad{color:var(--red)} .diag .ok{color:var(--green)}
-.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 16px;border-radius:12px;font-size:14px;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast{position:fixed;bottom:calc(84px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 16px;border-radius:12px;font-size:14px;opacity:0;transition:opacity .2s;pointer-events:none}
 .toast.show{opacity:1}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
+<script src="arkan-nav.js" defer></script>
 </head>
 <body>
 
 <header>
-  <h1>المحاسب <a href="compare.html" style="font-size:13px;font-weight:400;color:var(--gold);text-decoration:none;margin-inline-start:8px">المطابقة</a></h1>
+  <h1>المحاسب</h1>
   <span class="chip" id="chip"><i></i><span>جارٍ الفحص</span></span>
 </header>
 <div style="font-size:10px;color:var(--mute);text-align:left;margin:-12px 0 8px">v1282</div>

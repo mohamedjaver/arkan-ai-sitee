@@ -1,7 +1,7 @@
 /* ARKAN GATE v2 — حماية بأدوار: عام / عميل / أدمن (fail-closed) */
 (function(){
   var here=(location.pathname.split('/').pop()||'index.html');
-  var PUBLIC=['index.html','home-v2.html','account.html','offline.html','brand.html'];
+  var PUBLIC=['index.html','account.html','offline.html'];
   var ADMIN =['settlement.html','admin.html','rates-admin.html','archive.html','trading.html','invoice.html'];
   /* صفحات تتطلب حساب عميل مسجلًا دائمًا — تجاوز الأدمن لا يكفي */
   var CLIENT_STRICT=['request.html','chat-v2.html','settings.html','app.html'];
