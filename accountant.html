@@ -87,6 +87,7 @@ section h2 span{color:var(--mute);font-weight:400;font-size:13px}
   <h1>المحاسب <a href="compare.html" style="font-size:13px;font-weight:400;color:var(--gold);text-decoration:none;margin-inline-start:8px">المطابقة</a></h1>
   <span class="chip" id="chip"><i></i><span>جارٍ الفحص</span></span>
 </header>
+<div style="font-size:10px;color:var(--mute);text-align:left;margin:-12px 0 8px">v1282</div>
 
 
 <div id="app">
@@ -195,7 +196,7 @@ async function showReport(){
 }
 async function run(){
   const b = $('runBtn'); b.disabled = true; b.textContent = 'Claude يكتب…';
-  try { await api('/accountant/run', { method:'POST', body:'{}' }); await showReport(); toast('تم كتابة التقرير'); }
+  try { const r = await api('/accountant/run', { method:'POST', body:'{}' }); if (r.structured) { $('report').outerHTML = '<div id="report">' + renderReport(r.structured) + '</div>'; $('repAt').textContent = r.date || ''; } else await showReport(); toast('تم كتابة التقرير' + (r.structured ? '' : ' (نص)')); }
   catch(e){ toast(e.message); }
   b.disabled = false; b.textContent = 'اكتب تقرير اليوم';
 }
