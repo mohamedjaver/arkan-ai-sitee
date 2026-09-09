@@ -472,6 +472,31 @@ body::after{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;opac
   <a href="#" id="akOutM" data-i="nav_signout" style="color:#FF8A80"></a>
 </div>
 
+<!-- لوحة المالك: تظهر فقط للمالك المسجّل (Build 1293) -->
+<section id="ownerDash" hidden style="background:#F0F2F7;padding:14px 16px 4px">
+  <div style="max-width:600px;margin:0 auto;background:#fff;border-radius:20px;padding:18px 20px;font-family:inherit">
+    <div style="display:flex;justify-content:space-between;align-items:baseline"><small style="color:#6B7280;font-size:13px">ذمم زبائن بلا مقابل</small><small id="odMeta" style="color:#6B7280;font-size:12px"></small></div>
+    <div id="odOpen" style="font-size:34px;font-weight:700;letter-spacing:-1px;font-variant-numeric:tabular-nums;color:#0A0A0A">—<span style="font-size:15px;color:#6B7280;margin-inline-start:6px">AOA</span></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:12px">
+      <div style="background:#F0F2F7;border-radius:12px;padding:10px;text-align:center"><b id="odProfit" style="display:block;font-size:18px;color:#1F8F5B">—</b><small style="color:#6B7280;font-size:11px">ربح الشهر</small></div>
+      <div style="background:#F0F2F7;border-radius:12px;padding:10px;text-align:center"><b id="odRisk" style="display:block;font-size:18px;color:#D0342C">—</b><small style="color:#6B7280;font-size:11px">جهات في خطر</small></div>
+      <div style="background:#F0F2F7;border-radius:12px;padding:10px;text-align:center"><b id="odRev" style="display:block;font-size:18px;color:#D08A15">—</b><small style="color:#6B7280;font-size:11px">تحتاج مراجعة</small></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:14px">
+      <a href="compare.html" style="flex:1;text-align:center;padding:13px;border-radius:99px;background:#0A0A0A;color:#fff;text-decoration:none;font-weight:700;font-size:14px">رفع إيصالات</a>
+      <a href="accountant.html" style="flex:1;text-align:center;padding:13px;border-radius:99px;background:#fff;color:#0A0A0A;border:1.5px solid #D5D8E0;text-decoration:none;font-weight:700;font-size:14px">المحاسب</a>
+    </div>
+  </div>
+</section>
+<script>
+(function(){try{var s=JSON.parse(localStorage.getItem('arkan_session')||'null');var ph=String(s&&s.phone||'').replace(/\D/g,'');var own=/36295050$/.test(ph)||localStorage.getItem('arkan_admin_dev')==='1';if(!own)return;
+var j=JSON.parse(localStorage.getItem('arkan_sb_jwt')||'null');if(!j||!j.token||j.exp<=Math.floor(Date.now()/1000)+60)return;
+var d=document.getElementById('ownerDash');d.hidden=false;var H={Authorization:'Bearer '+j.token};var API='https://arkan-ai-site-production.up.railway.app';var f=function(n){return Math.round(Number(n)||0).toLocaleString('en-US')};
+fetch(API+'/accountant/dues',{headers:H}).then(function(r){return r.json()}).then(function(x){document.getElementById('odOpen').innerHTML=f(x.openSum)+'<span style="font-size:15px;color:#6B7280;margin-inline-start:6px">AOA</span>';document.getElementById('odMeta').textContent=x.parties.length+' جهة · '+x.open+' إيصال';document.getElementById('odRisk').textContent=(x.levels.l3+x.levels.l4);}).catch(function(){});
+fetch(API+'/accountant/summary',{headers:H}).then(function(r){return r.json()}).then(function(x){document.getElementById('odRev').textContent=x.review;}).catch(function(){});
+fetch(API+'/accountant/deals',{headers:H}).then(function(r){return r.json()}).then(function(x){document.getElementById('odProfit').textContent=f(x.month)+' '+(x.unit||'');}).catch(function(){});
+}catch(e){}})();
+</script>
 <!-- ================= HERO ================= -->
 <header class="hero">
   <div class="wrap">
