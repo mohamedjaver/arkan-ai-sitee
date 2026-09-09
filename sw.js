@@ -2,13 +2,13 @@
    إستراتيجية: الشبكة أولًا لصفحات HTML والبيانات (لا محتوى قديم أبدًا)
               الكاش أولًا للأصول الثابتة فقط (صور، أيقونات، شعار) */
 
-const V='arkan-v230-1304'; /* login gate: inputs always focusable */
+const V='arkan-v231-1305'; /* gate video: continuous loop from memory */
 
 
 const STATIC=['./favicon.svg','./arkan-icon-512.png','./arkan-touch-180.png','./site-manifest.json',
   /* صفحات التشغيل اليومي + الملفات المشتركة: تُخزَّن مسبقًا فيفتح التبويب فورًا (الإصدار V يضمن حداثتها) */
   './index.html','./account.html','./settle-v2.html','./compare.html','./accountant.html','./books.html','./chat-v2.html','./request.html',
-  './arkan-nav.js','./bdl-core.js','./bdl.css','./arkan-gate.js','./routes.config.js'];
+  './arkan-nav.js','./bdl-core.js','./bdl.css','./arkan-gate.js','./routes.config.js','./bdl-bg.mp4','./bdl-bg.jpg'];
 
 self.addEventListener('install',e=>{
   e.waitUntil(

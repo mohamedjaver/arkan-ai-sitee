@@ -2147,8 +2147,13 @@ async function mrbMakePdf(){
     var v=document.createElement('video');
     v.autoplay=true; v.muted=true; v.loop=true; v.playsInline=true;
     v.setAttribute('playsinline',''); v.setAttribute('muted','');
-    v.preload='auto'; v.poster='bdl-bg.jpg'; v.src='bdl-bg.mp4';
+    v.preload='auto'; v.poster='bdl-bg.jpg'; v.setAttribute('loop',''); v.disableRemotePlayback=true;
     bg.insertBefore(v, bg.firstChild);
+    /* حركة دائمة بلا توقف: الملف يُحمَّل كاملًا في الذاكرة أولًا (لا تقطّع بسبب الشبكة)، ثم يُعاد تشغيله فور أي توقف أو نهاية */
+    (async function(){try{var r=await fetch('bdl-bg.mp4',{cache:'force-cache'});if(r.ok){var b=await r.blob();v.src=URL.createObjectURL(b);}else v.src='bdl-bg.mp4';}catch(e){v.src='bdl-bg.mp4';}try{v.load();v.play().catch(function(){});}catch(e){}})();
+    v.addEventListener('ended',function(){try{v.currentTime=0;v.play().catch(function(){});}catch(e){}});
+    v.addEventListener('pause',function(){if(!document.hidden)setTimeout(function(){try{if(v.paused)v.play().catch(function(){});}catch(e){}},150);});
+    v.addEventListener('timeupdate',function(){try{if(v.duration&&v.duration-v.currentTime<0.12){v.currentTime=0.001;}}catch(e){}});
     /* تشغيل مضمون حتى في وضع توفير الطاقة: iOS يسمح بعد أي إيماءة */
     var go=function(){ try{ if(v.paused) v.play().catch(function(){}); }catch(e){} };
     go();
