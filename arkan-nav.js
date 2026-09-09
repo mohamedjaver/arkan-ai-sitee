@@ -84,11 +84,13 @@
     '#akTop span{flex:1}#akTop a{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;color:#0A0A0A;text-decoration:none}#akTop a:active{background:#F0F2F7}' +
     '#akTop a.lg{width:auto;border-radius:0;display:flex;gap:8px;align-items:center;padding:0 4px}#akTop a.lg img{width:32px;height:32px;border-radius:8px}#akTop a.lg b{font:800 15px/1 Inter,system-ui,sans-serif;letter-spacing:.5px;color:#0B2F70}' +
     '/* رؤوس الصفحات القديمة تُخفى لأن الشريط العلوي حلّ محلّها */nav.nav,.nav-toggle,#navToggle,#akNavBtns,#mmenu{display:none!important}' +
+    (isOwner && path === 'account.html' ? '#nav,#pendBox{display:none!important}' : '') +
+    '#akTabs{width:100%!important;max-width:none!important;margin:0!important;grid-template-columns:none!important;transform:none!important}' +
     '#arkChatFab{bottom:calc(84px + env(safe-area-inset-bottom,0px))!important}' +
     '@media print{#akTabs,#akMore,#akTop{display:none!important}}';
   document.head.appendChild(css);
 
-  var bar = document.createElement('nav'); bar.id = 'akTabs'; bar.setAttribute('aria-label', 'التنقل');
+  var bar = document.createElement('div'); bar.id = 'akTabs'; bar.setAttribute('role', 'navigation'); bar.setAttribute('aria-label', 'التنقل');
   bar.innerHTML = tabs.map(function (t) { return '<a href="' + t.href + '" class="' + (active(t.href) ? 'on' : '') + '">' + svg(t.icon) + '<span>' + t.label + '</span></a>'; }).join('');
   /* شريط علوي خفيف على نمط PayPal: ☰ يسارًا (يفتح «المزيد»)، جرس + حساب يمينًا — لا يزاحم رأس الصفحة */
   var top = document.createElement('div'); top.id = 'akTop';
