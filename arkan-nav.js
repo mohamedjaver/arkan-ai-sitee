@@ -108,7 +108,9 @@
     more.filter(function (m) { return m.href !== path; }).map(function (m) { return '<a href="' + m.href + '"><i>' + svg(m.icon, 20) + '</i>' + m.label + '</a>'; }).join('') +
     '</div><div class="lbl" id="akLangLbl" style="display:none">اللغة</div><div id="akLang" style="display:none"></div><button class="lo" id="akLogout">تسجيل الخروج</button></div>';
   function mount() { document.body.appendChild(bar); document.body.appendChild(sheet); document.body.appendChild(top);
-    bar.querySelectorAll('a').forEach(function (a) { a.addEventListener('touchstart', function () { a.classList.add('tap'); }, { passive: true }); a.addEventListener('click', function () { a.classList.add('tap'); }); });
+    var clearTap = function () { bar.querySelectorAll('a.tap').forEach(function (x) { x.classList.remove('tap'); }); };
+    bar.querySelectorAll('a').forEach(function (a) { a.addEventListener('touchstart', function () { clearTap(); a.classList.add('tap'); }, { passive: true }); a.addEventListener('click', function () { clearTap(); a.classList.add('tap'); setTimeout(clearTap, 1500); }); });
+    window.addEventListener('pageshow', clearTap); document.addEventListener('visibilitychange', function () { if (!document.hidden) clearTap(); });
     var open = function () { sheet.classList.add('on'); document.body.classList.add('ak-more-open'); }, close = function () { sheet.classList.remove('on'); document.body.classList.remove('ak-more-open'); };
     document.getElementById('akMoreBtn').onclick = function (e) { e.preventDefault(); open(); };
     document.getElementById('akClose').onclick = function (e) { e.preventDefault(); close(); };

@@ -701,11 +701,13 @@ function bioManual(){var c=document.querySelector('#ovl-login .login');if(c)c.cl
   var b=JSON.parse(localStorage.getItem('bdl_bio')||'null');
   if(b&&b.id){ /* مسجّل: وضع البصمة فقط — الحقول مخفية فلا تتصادم نافذتا iOS */
     var c=document.querySelector('#ovl-login .login');if(c)c.classList.add('bioMode');
-    setTimeout(function(){var ov=$('#ovl-login');
-      if(ov&&ov.classList.contains('on')&&ov.style.display!=='none')bioLogin(true);},600);}
+    window.__bioAuto=function(){var ov=$('#ovl-login');if(ov&&ov.classList.contains('on')&&ov.style.display!=='none')bioLogin(true);};}
   else if(bioSupported()&&!localStorage.getItem('bdl_bio_off')){var r=$('#lBioRow');if(r)r.style.display='flex';}
 }catch(e){}})();
 (async function(){ /* استئناف الجلسة، ثم دخول تلقائي ببيانات المالك المحفوظة */
+  try{var sj=JSON.parse(localStorage.getItem('arkan_sb_jwt')||'null');   /* جلسة الموقع نفسها — لا طلب Face ID ثانٍ */
+    if(sj&&sj.token&&sj.exp-Date.now()/1000>3600){TOK=sj.token;try{sessionStorage.setItem('bdl-tok',JSON.stringify({t:sj.token,e:sj.exp}));}catch(e){}
+      $('#ovl-login').classList.remove('on');$('#ovl-login').style.display='none';syncUI('ok','');boot();return;}}catch(e){}
   try{var c=JSON.parse(sessionStorage.getItem('bdl-tok')||'null');
     if(c&&c.t&&(!c.e||c.e-Date.now()/1000>3600)){TOK=c.t;
       $('#ovl-login').classList.remove('on');$('#ovl-login').style.display='none';
@@ -727,6 +729,7 @@ function bioManual(){var c=document.querySelector('#ovl-login .login');if(c)c.cl
       if(m)m.textContent='بياناتك محفوظة مركزيًا وتظهر على كل أجهزتك بعد الدخول.';
     }
   }catch(e){}
+  if(window.__bioAuto)window.__bioAuto();   /* Face ID مرة واحدة فقط، وبعد فشل الاستعادة الصامتة */
 })();
 
 /* ═══════════ التحميل ═══════════ */
