@@ -79,11 +79,16 @@ module.exports = function (app, ctx) {
   const fmt = n => Math.round(Number(n) || 0).toLocaleString('en-US');
   const escT = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   app.locals.tgText = async function (text, chatId) {
-    const m = String(text).match(/^(?:\/del|\/حذف|حذف|delete)\s+([\d.,\s]+)/i); if (!m) return false;
+    const m = String(text).match(/^(?:\/del|\/حذف|حذف|delete)\s+([\d][\d.,]*)\s*(.*)$/i); if (!m) return false;
     const amt = Number(m[1].replace(/[^\d.]/g, '')); if (!(amt > 0)) return false;
     const tg = ctx.tg; if (!tg) return false;
-    const rows = await sb('/bdl_cmp_receipts?select=fp,side,amount,who,phone,msg_at,bank&amount=eq.' + amt + '&order=msg_at.desc&limit=8');
-    if (!rows.length) { await tg('sendMessage', { chat_id: chatId, text: 'لا يوجد إيصال بمبلغ ' + fmt(amt) }); return true; }
+    /* فلتر اختياري بعد المبلغ: اسم أو تاريخ (24/08 أو 2026-08-24) — مثال: «حذف 5000000 Ahmed» أو «حذف 5000000 24/08» */
+    const f = String(m[2] || '').trim(); let q = '/bdl_cmp_receipts?select=fp,side,amount,who,phone,msg_at,bank&amount=eq.' + amt + '&order=msg_at.desc&limit=30';
+    const dm = f.match(/^(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?$/); const im = f.match(/^\d{4}-\d{2}-\d{2}$/);
+    if (im) q += '&msg_at=gte.' + f + '&msg_at=lt.' + f + 'T23:59:59'; else if (dm) { const y = dm[3] ? (dm[3].length === 2 ? '20' + dm[3] : dm[3]) : String(new Date().getFullYear()); const d = y + '-' + dm[2].padStart(2, '0') + '-' + dm[1].padStart(2, '0'); q += '&msg_at=gte.' + d + '&msg_at=lt.' + d + 'T23:59:59'; } else if (f) q += '&who=ilike.*' + encodeURIComponent(f) + '*';
+    const rows = await sb(q);
+    if (!rows.length) { await tg('sendMessage', { chat_id: chatId, text: 'لا يوجد إيصال بمبلغ ' + fmt(amt) + (f ? ' يطابق «' + f + '»' : '') }); return true; }
+    if (rows.length > 12) { await tg('sendMessage', { chat_id: chatId, text: rows.length + ' إيصالًا بهذا المبلغ — أعرض أول 12. ضيّق البحث: «حذف ' + fmt(amt) + ' اسم» أو «حذف ' + fmt(amt) + ' يوم/شهر»' }); rows.length = 12; }
     for (const r of rows) await tg('sendMessage', { chat_id: chatId, parse_mode: 'HTML', text: (r.side === 'cust' ? '👤 زبون' : '🏦 مورد') + ' · <b>' + fmt(r.amount) + ' AOA</b>\n' + escT(r.who || '') + ' ' + escT(r.phone || '') + '\n' + String(r.msg_at || '').slice(0, 10) + ' · ' + escT(r.bank || ''), reply_markup: { inline_keyboard: [[{ text: '🗑 حذف إلى السلة', callback_data: 'vt:' + r.fp.slice(0, 24) }, { text: '✖', callback_data: 'wa:skip' }]] } });
     return true;
   };
