@@ -12,6 +12,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="bdl-brand.js?v=1"></script>
 <script src="bdl-qr.js?v=1" defer></script>
+<script src="bdl-core.js"></script>
 <script src="arkan-read.js?v=5" defer></script>
 <style>
 :root{--cyan:#19A9F5;--blue:#0A56B8;--navy:#0B2F70;--ink:#0C1526;--muted:#66788F;
@@ -109,7 +110,9 @@ input,select{font-family:inherit;color:var(--ink)}
 .settleBtn .cnt{background:rgba(255,255,255,.2);border-radius:999px;padding:2px 10px;font-size:12px}
 
 /* ═ SHEETS ═ */
-.ovl{position:fixed;inset:0;background:rgba(8,21,54,.55);z-index:50;display:none;align-items:flex-end}
+.ovl{position:fixed;inset:0;background:rgba(8,21,54,.55);z-index:99990;display:none;align-items:flex-end}
+body.sheet-open .bbar,body.sheet-open #akTabs,body.sheet-open #akTop,body.sheet-open #arkChatFab{visibility:hidden}
+.sheet{padding-bottom:calc(24px + env(safe-area-inset-bottom))!important}
 .ovl.on{display:flex}
 .sheet{background:#fff;width:100%;max-height:88vh;overflow-y:auto;border-radius:18px 18px 0 0;
   padding:18px 16px calc(18px + env(safe-area-inset-bottom))}
@@ -580,10 +583,10 @@ input,select{font-family:inherit;color:var(--ink)}
       <input id="sFwdSup" placeholder="مثال: Domingo" oninput="SS.fwdSup=this.value.trim();RCPTS.forEach(function(r){if(!r.fwdTouched)r.fwdSup=SS.fwdSup;});renderRcpts()" style="margin-bottom:10px">
       <label>إيصالات التسوية (صورة / PDF — يُقرأ تلقائيًا)</label>
       <input type="file" id="sFiles" multiple accept="image/*,.pdf" onchange="addReceipts(this.files)">
-      <div id="sSupSum" style="font-size:11.5px;font-weight:700;margin:6px 0 2px"></div><div id="rcptList"></div>
+      <datalist id="supDL"></datalist><div id="sSupSum" style="font-size:11.5px;font-weight:700;margin:6px 0 2px"></div><div id="rcptList"></div>
     </div>
     <div class="fld"><label>ملاحظة (اختياري)</label><input id="sNote"></div>
-    <button id="doPend" onclick="savePending()" style="width:100%;height:52px;margin-bottom:10px;border:1.5px solid #B98900;background:#FFF9E8;color:#8A6100;font-weight:800;font-size:14px;font-family:inherit;cursor:pointer">حفظ مؤقت — تسوية معلقة (بانتظار الأوقية)</button>
+    <button id="doPend" onclick="savePending()" title="يحفظ الإيصالات والاختيارات كتسوية معلّقة لإكمالها لاحقًا" style="width:100%;height:52px;margin-bottom:10px;border:1.5px solid #B98900;background:#FFF9E8;color:#8A6100;font-weight:800;font-size:14px;font-family:inherit;cursor:pointer">حفظ مؤقت — تسوية معلقة (بانتظار الأوقية)</button>
     <button class="primary" id="doSettle" onclick="commitSettle()">تأكيد التسوية</button>
   </div>
 </div>
@@ -1039,7 +1042,8 @@ function openNew(){PICK=null;$('#nCust').value='';$('#custHint').textContent='';
   $('#newAccBox').style.display='none';$('#custSg').classList.remove('on');
   $('#nAmt').value='';$('#nRate').value='';calcNew();$('#ovl-new').classList.add('on');}
 function openOvl(n){$('#ovl-'+n).classList.add('on');}
-function closeOvl(n){$('#ovl-'+n).classList.remove('on');}
+function closeOvl(n){$('#ovl-'+n).classList.remove('on');if(!document.querySelector('.ovl.on'))document.body.classList.remove('sheet-open');}
+new MutationObserver(function(){document.body.classList.toggle('sheet-open',!!document.querySelector('.ovl.on:not(#ovl-login)'));}).observe(document.documentElement,{subtree:true,attributes:true,attributeFilter:['class']});
 function custSuggest(v){
   clearTimeout(SGT);PICK=null;$('#custHint').textContent='';
   v=v.trim();if(v.length<2){$('#custSg').classList.remove('on');$('#newAccBox').style.display='none';return;}
@@ -1140,6 +1144,8 @@ async function readReceipt(file){
       out.name=p.beneficiary||p.name||null;
       out.receiver=p.sender||p.receiver||null;
       out.engine=r.engine;
+      /* اقتراح المورد تلقائيًا من الدليل الموحّد بحسب اسم المستلم في الإيصال */
+      try{var nm=String(p.receiver||'').toLowerCase();if(nm&&window.BDL&&BDL.parties){var L=BDL.parties.list().filter(function(x){return x.side!=='cust';});var hit=L.find(function(x){var n=String(x.name||'').toLowerCase();return n&&(nm.indexOf(n)>=0||n.indexOf(nm)>=0);});if(hit)out.supGuess=hit.name;}}catch(e){}
       var fc=p.field_confidence&&Number(p.field_confidence.amount);
       out.conf=Math.round(fc||Number(p.confidence)||0)||(r.engine==='gemini'?85:r.engine==='pdf'?70:50);
       /* صور: إن كان المرجع مقتطعًا من رقم الحساب/IBAN الذي قرأه Gemini نفسه — يُلغى بدل حفظه خاطئًا */
@@ -1393,7 +1399,7 @@ async function addReceipts(files){
     }
     var rec={file:f,fp:fp,dup:dup,ok:!dup,why:why,parsed:null,id:null};
     RCPTS.push(rec);renderRcpts();
-    readReceipt(f).then(function(rec){return function(p){rec.parsed=p;rcptRefGuard(rec);supProbe(rec);renderRcpts();updMatch();};}(rec));
+    readReceipt(f).then(function(rec){return function(p){rec.parsed=p;if(p&&p.supGuess&&!rec.fwdTouched&&!rec.fwdSup){rec.fwdSup=p.supGuess;}rcptRefGuard(rec);supProbe(rec);renderRcpts();updMatch();};}(rec));
   }
   $('#sFiles').value='';
 }
@@ -1438,7 +1444,7 @@ function renderRcpts(){
       '<div class="ic"></div><div class="fi"><div>'+esc(r.file.name)+'</div>'+
       (r.dup&&!r.ok?'<small>'+esc(r.why||'استُخدم من قبل في تسوية — مرفوض، احذفه')+'</small>'+'<button onclick="event.stopPropagation();rcptForce('+i+')" style="display:block;margin-top:6px;padding:8px 12px;border:1.5px solid #0B2F70;background:#fff;color:#0B2F70;font:800 12px \'IBM Plex Sans Arabic\',sans-serif;cursor:pointer">إدراج يدويًا — يُحتسب في هذه التسوية لإكمال حساب المورد</button>'+
         (r.soft?'<button onclick="RCPTS['+i+'].ok=true;renderRcpts();updMatch()" style="display:block;margin-top:5px;border:1px solid #0A56B8;background:#fff;color:#0A56B8;font-weight:800;font-size:11px;padding:6px 11px;font-family:inherit;cursor:pointer">تحويل جديد مختلف فعلًا — احسبه</button>':'')
-        :amtBox+'<input value="'+esc(r.fwdSup||SS.fwdSup||'')+'" placeholder="المورد لهذا الإيصال" data-ri="'+i+'" oninput="rcptSup(this)" onclick="event.stopPropagation()" style="display:block;width:170px;height:32px;margin-top:6px;border:1px solid '+((r.fwdSup||SS.fwdSup)?'#C9DFFA':'#E6A700')+';background:#F6FAFF;text-align:center;font:700 12px \'IBM Plex Sans Arabic\',sans-serif;color:#0B2F70;outline:none">')+'</div>'+
+        :amtBox+'<input value="'+esc(r.fwdSup||SS.fwdSup||'')+'" placeholder="المورد لهذا الإيصال" data-ri="'+i+'" list="supDL" oninput="rcptSup(this)" onclick="event.stopPropagation()" style="display:block;width:170px;height:32px;margin-top:6px;border:1px solid '+((r.fwdSup||SS.fwdSup)?'#C9DFFA':'#E6A700')+';background:#F6FAFF;text-align:center;font:700 12px \'IBM Plex Sans Arabic\',sans-serif;color:#0B2F70;outline:none">')+'</div>'+
       '<button class="del" onclick="RCPTS.splice('+i+',1);renderRcpts();updMatch()">✕</button></div>';
   }).join('');
 }
@@ -1728,6 +1734,7 @@ function openSettle(){
   try{ssProfitPrev();}catch(e){}
   ssRatePrev(); /* المستحق فورًا من الأسعار الضمنية */
   updMatch();
+  try{if(window.BDL&&BDL.parties){var dl=$('#supDL');if(dl)dl.innerHTML=BDL.parties.list().filter(function(x){return x.side!=='cust';}).map(function(x){return '<option value="'+String(x.name).replace(/"/g,'&quot;')+'">';}).join('');BDL.parties.load();}}catch(e){}
   $('#ovl-settle').classList.add('on');
 }
 function ccyNorm(c){
