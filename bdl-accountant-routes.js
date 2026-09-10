@@ -45,7 +45,7 @@ module.exports = function (app, ctx) {
   async function writeReport() {
     const s = await summary();
     let deals = null, esc = null; try { deals = await dealsSummary(); } catch (e) {} try { esc = await duesEscalation(); } catch (e) {}
-    const brief = { date: new Date().toISOString().slice(0, 10), profits: deals ? { unit: deals.unit, today: deals.today, month: deals.month, deals: deals.n, unpriced_deals: deals.unpriced, avg_margin_pct: deals.avgMargin } : null, escalation: esc ? esc.levels : null, receipts_total: s.total, customers: { receipts: s.custN, sum_aoa: fmt(s.custSum), open_without_supplier: s.open - s.openSup, open_sum_aoa: fmt(s.openSum) }, suppliers: { receipts: s.supN, sum_aoa: fmt(s.supSum), open_without_customer: s.openSup, open_sum_aoa: fmt(s.openSupSum) }, matched_pairs: Math.floor(s.matched / 2), needs_review: s.review,
+    const brief = { date: new Date().toISOString().slice(0, 10), profits: deals ? { unit: deals.unit, today: deals.today, month: deals.month, deals: deals.n, unpriced_deals: deals.unpriced, avg_margin_pct: deals.avgMargin, console_ops_profit_mru: deals.ops ? { today: deals.ops.today, month: deals.ops.month, closed_ops: deals.ops.n } : null } : null, escalation: esc ? esc.levels : null, receipts_total: s.total, customers: { receipts: s.custN, sum_aoa: fmt(s.custSum), open_without_supplier: s.open - s.openSup, open_sum_aoa: fmt(s.openSum) }, suppliers: { receipts: s.supN, sum_aoa: fmt(s.supSum), open_without_customer: s.openSup, open_sum_aoa: fmt(s.openSupSum) }, matched_pairs: Math.floor(s.matched / 2), needs_review: s.review,
       top_parties: (esc ? esc.parties : s.parties).slice(0, 15).map(p => ({ party: p.party, phone: p.phone, count: p.count, sum_aoa: fmt(p.sum), oldest: String(p.oldest || '').slice(0, 10), days_open: p.days, escalation_level: p.level, risk_score: p.risk })) };
     const skill = require('./bdl-report-skill');
     const rep = await skill.ask(brief, { extra: 'اكتب تقرير اليوم: الوضع، المؤشرات (منها ربح اليوم والشهر بوحدة profits.unit)، الذمم (زبائن بلا مقابل حسب الجهة مع مستوى التصعيد 1=إشعار 2=تذكير 3=خطر 4=تقرير إداري)، الإجراءات، المخاطر (منها الصفقات بلا سعر unpriced_deals إن وجدت)، ورسالة واتساب لأكبر جهة زبون بلا مقابل — وإن لم توجد إيصالات زبائن فاجعل whatsapp فارغًا وأضف إجراءً: رفع إيصالات الزبائن ثم مطابقة Claude.' });
@@ -138,6 +138,7 @@ module.exports = function (app, ctx) {
     for (const r of rows) { if (r.profit == null) { S.unpriced++; continue; } const d = String(r.created_at).slice(0, 10); S.all += Number(r.profit); if (d === t) S.today += Number(r.profit); if (d.slice(0, 7) === m) S.month += Number(r.profit); if (r.cust_rate && r.sup_rate) { marg += (r.cust_rate - r.sup_rate) / r.sup_rate * 100; mn++; } }
     if (mn) S.avgMargin = Math.round(marg / mn * 100) / 100;
     S.rates = await ratesFor(t);
+    try { const ops = await sb('/bdl_ops_profit_daily?select=day,ops_n,profit_mru&order=day.desc&limit=400'); S.ops = { today: 0, month: 0, all: 0, n: 0 }; for (const o of ops) { const d = String(o.day); const v = Number(o.profit_mru) || 0; S.ops.all += v; S.ops.n += Number(o.ops_n) || 0; if (d === t) S.ops.today += v; if (d.slice(0, 7) === m) S.ops.month += v; } } catch (e) { S.ops = null; }
     return S;
   }
   /* ── التصعيد ودرجة خطر الجهة: يوم 1 إشعار · 3 تذكير · 7 خطر · 14 تقرير ── */

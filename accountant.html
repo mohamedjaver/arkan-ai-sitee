@@ -157,7 +157,7 @@ async function loadDues(){
 async function loadDeals(){
   const d = await api('/accountant/deals');
   $('pUnit').textContent = d.unit; $('pMonth').innerHTML = fmt2(d.month) + '<span>' + esc(d.unit) + '</span>';
-  $('pMeta').textContent = `اليوم ${fmt2(d.today)} · الإجمالي ${fmt2(d.all)} · ${d.n} صفقة` + (d.avgMargin!=null?` · هامش ${d.avgMargin}%`:'') + (d.unpriced?` · ${d.unpriced} بلا سعر`:'');
+  $('pMeta').textContent = `اليوم ${fmt2(d.today)} · الإجمالي ${fmt2(d.all)} · ${d.n} صفقة` + (d.avgMargin!=null?` · هامش ${d.avgMargin}%`:'') + (d.unpriced?` · ${d.unpriced} بلا سعر`:'') + (d.ops?` · كونسول التسوية: ${fmt2(d.ops.month)} MRU هذا الشهر (${d.ops.n} عملية)`:'');
   if (d.rates) { $('rUnit').value = d.rates.unit || 'MRU'; $('rCust').value = d.rates.cust_rate || ''; $('rSup').value = d.rates.sup_rate || ''; }
   $('deals').innerHTML = d.recent.length ? d.recent.slice(0,8).map(x => `<div class="deal"><span>${dt(x.created_at)} · <b>${fmt(x.amount_aoa)}</b> AOA</span>${x.profit==null?'<span class="u">بلا سعر</span>':'<span class="p">+'+fmt2(x.profit)+' '+esc(x.unit)+'</span>'}</div>`).join('') : '<div class="empty">لا صفقات بعد — كل مطابقة في الإيصالات تُنشئ صفقة.</div>';
 }

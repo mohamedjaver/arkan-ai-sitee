@@ -1435,7 +1435,7 @@ function renderRcpts(){
           ' placeholder="أدخل المبلغ" data-ri="'+i+'" oninput="rcptAmt(this)" onclick="event.stopPropagation()"'+
           ' style="width:130px;height:40px;border:1.5px solid '+(p.amount?'#C9DFFA':'#E6A700')+';border-radius:0;background:#fff;text-align:center;font-family:\'IBM Plex Mono\',monospace;font-size:15px;font-weight:700;color:#003B8F;outline:none">'+
           '<small style="display:block;color:var(--muted);font-size:10px;margin-top:2px">'+
-          (p.amount?(rcptCcyOk(r)?'قُرئ تلقائيًا — عدّله إن أخطأ'
+          (p.amount?(rcptCcyOk(r)?'قُرئ بـ'+(p.engine==='claude'?'Claude':(p.engine||'القارئ المحلي'))+' — عدّله إن أخطأ'
             :'<span style="color:#B00020;font-weight:800">عملة الإيصال '+esc(p.ccy)+' ≠ عملة المستحق '+esc(SS.dueCcy||'')+' — مستثنى من العدّاد</span>')
             :' لم يُقرأ — اكتبه يدويًا')+(p.ref?' · '+esc(p.ref):'')+(r.supChecked?(r.sup?' · <span style="color:#0E8F5B;font-weight:800">مورد مقابل بالمرجع: '+esc(r.sup)+' ✓</span>':(r.supAmtOnly?' · <span style="color:#9A4B00;font-weight:800">تشابه مبلغ فقط — ليس تأكيدًا</span>':' · <span style="color:#B00020;font-weight:800">بانتظار إيصال المورد</span>')):'')+'</small>';
       } else amtBox='<small>جارٍ القراءة…</small>';
@@ -1848,6 +1848,7 @@ async function commitSettle(){
       if(!r.ok){var et=await r.text();throw new Error(et.slice(0,120));}
       var st=await r.json();
       toast('تمت التسوية ✓ '+(st.ref||''));
+      try{fetch('https://arkan-ai-site-production.up.railway.app/vault/audit',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+TOK},body:JSON.stringify({action:'settle-ops',tbl:'bdl_transactions',row_id:String(st.ref||''),after:{ops:s.length,receipts:rids.length,paid:SS.paid,ccy:SS.dueCcy},source:'console'})});}catch(e){}
     }
     SEL={};TXCACHE={};RCPTS=[];closeOvl('settle');loadGroups();ARCH=null;PROF=null;
   }catch(e){toast('فشل: '+e.message);}
