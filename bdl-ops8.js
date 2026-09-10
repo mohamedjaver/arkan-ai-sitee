@@ -81,8 +81,7 @@ function sheet(t,s,html){$('#op8t').textContent=t;$('#op8s').textContent=s||'';$
 
 /* ─────────── حقن التبويب والواجهة ─────────── */
 var tabs=document.querySelector('.tabs');
-if(tabs){var tb=document.createElement('button');tb.dataset.tab='books';tb.textContent='الدفاتر';
-  tb.onclick=function(){go('books');};tabs.appendChild(tb);}
+/* تبويب «الدفاتر/مركز المطابقة» داخل الكونسول أُزيل — المطابقة في تبويب «3 المطابقة» والدفاتر في ☰ */
 
 var v=document.createElement('div');v.id='v-books';v.style.display='none';
 v.innerHTML=
