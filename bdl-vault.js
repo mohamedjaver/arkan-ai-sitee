@@ -67,6 +67,7 @@ module.exports = function (app, ctx) {
     return { month, receipts: R.length, entries: E.length, deals: D.length, sums: { cust: R.filter(r => r.side === 'cust').reduce((a, r) => a + Number(r.amount || 0), 0), sup: R.filter(r => r.side === 'sup').reduce((a, r) => a + Number(r.amount || 0), 0), profit: D.reduce((a, d) => a + Number(d.profit || 0), 0) }, urls };
   }
 
+  app.post('/vault/verify-pin', express.json(), wrap(async () => ({ ok: true, configured: !!PIN() }), true));
   app.get('/vault/status', wrap(async () => ({ pin: PIN() ? 'مفعّل' : 'غير مضبوط — أضف BDL_PIN في Railway' })));
   app.post('/vault/trash', express.json(), wrap(async req => trashReceipts((req.body && req.body.fps) || [], (req.body && req.body.reason) || '', 'compare'), true));
   app.post('/vault/restore', express.json(), wrap(async req => restore(req.body && req.body.id), true));

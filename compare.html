@@ -262,7 +262,7 @@ function pickParty(side,title,extra){const rows=(side==='sup'?S.sup:S.cust).conc
   if(!g)g=groups.find(x=>x.label.toLowerCase()===t.toLowerCase())||groups.find(x=>x.label.toLowerCase().includes(t.toLowerCase()));if(!g){toast('لم أجد هذه الجهة');return null;}
   return {name:g.label+(g.phone?' '+g.phone:''),rows:g.rows};}
 /* حذف جهة كاملة: الجهاز + الدفتر الدائم + الأصول في Storage + فكّ المطابقات (قيود الدفاتر تُحذف فقط إذا كانت كل إيصالاتها ضمن المحذوف) */
-async function delParty(side){const P=pickParty(side,'حذف جهة نهائيًا من عمود '+(side==='sup'?'الموردين':'الزبائن')+':');if(!P)return;const sel=P.rows;const booked=sel.filter(r=>r.book_entry_id).length;
+async function delParty(side){if(!(await requirePin()))return;const P=pickParty(side,'حذف جهة نهائيًا من عمود '+(side==='sup'?'الموردين':'الزبائن')+':');if(!P)return;const sel=P.rows;const booked=sel.filter(r=>r.book_entry_id).length;
   if(!confirm('حذف «'+P.name+'» — '+sel.length+' إيصال من هذا الجهاز ومن الدفتر الدائم ومن التخزين؟'+(booked?'\n\n'+booked+' منها مرحّل إلى دفتر — سيُحذف القيد إن كانت كل إيصالاته هنا، وإلا يُترك ويظهر في «تفتيش الدفاتر».':'')+'\n\nلا يمكن التراجع.'))return;
   if(!confirm('تأكيد أخير: حذف كل إيصالات «'+P.name+'» الآن؟'))return;toast('جارٍ حذف '+sel.length+' إيصال…');
   const ids=new Set(sel.map(r=>r.id)),fps=sel.map(r=>r.fp).filter(Boolean),paths=sel.map(r=>r.receipt_url).filter(Boolean);
@@ -442,6 +442,13 @@ async function zipSeen(f,side){const key=f.name+'|'+f.size;let reg={};try{reg=(a
   S._zipKey=key;S._zipSide=side;return true;}
 async function zipDone(fps){try{const reg=(await IDB.get('state','zips'))||{};reg[S._zipKey]={name:S.party[S._zipSide]&&S.party[S._zipSide].who||'',side:S._zipSide,when:Date.now(),fps};await IDB.put('state','zips',reg);}catch(e){}}
 async function pinOf(){let p=sessionStorage.getItem('bdl_pin');if(p!=null&&p!=='')return p;try{const r=await fetch(SRV+'/vault/status',{headers:{Authorization:'Bearer '+tokenOf()}});const j=await r.json();if(j&&/غير مضبوط/.test(j.pin||'')){sessionStorage.setItem('bdl_pin','-');return '-';}}catch(e){}p=prompt('رمز PIN للعمليات الحساسة:')||'';sessionStorage.setItem('bdl_pin',p);return p;}
+/* العمليات المدمِّرة (مسح الجلسة/المسح الكامل/حذف جهة) لا تتم إلا برمز PIN مضبوط في Railway ومُتحقَّق منه على الخادم */
+async function requirePin(){if(!tokenOf()){alert('الجلسة منتهية — أعد الدخول');return false;}
+  for(let a=0;a<3;a++){const p=await pinOf();if(p==='-'){alert('لا يوجد رمز PIN مضبوط في Railway (BDL_PIN) — هذه العملية تتطلب رمزًا.');sessionStorage.removeItem('bdl_pin');return false;}
+    const r=await fetch(SRV+'/vault/verify-pin',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+tokenOf(),'x-bdl-pin':p},body:'{}'});const d=await r.json().catch(()=>({}));
+    if(r.ok&&d.configured)return true;if(r.ok&&!d.configured){alert('لا يوجد رمز PIN مضبوط في Railway (BDL_PIN) — هذه العملية تتطلب رمزًا.');return false;}
+    sessionStorage.removeItem('bdl_pin');if(a<2)alert('PIN غير صحيح');}
+  return false;}
 async function wipeFps(fps){if(!fps.length)return false;if(!tokenOf()){alert('الجلسة منتهية — أعد الدخول');return false;}
   /* الحذف يمر بالخادم: نسخة في السلة 30 يومًا + سجل تدقيق + تصحيح القيود المرتبطة — لا حذف نهائي من الواجهة */
   for(let a=0;a<2;a++){const r=await fetch(SRV+'/vault/trash',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+tokenOf(),'x-bdl-pin':await pinOf()},body:JSON.stringify({fps,reason:'compare'})});
@@ -734,7 +741,7 @@ function delSel(side){const ids=(S.excl||[]).filter(r=>r.side===side&&S.exs[r.id
 function restore(id){const i=(S.excl||[]).findIndex(r=>r.id===id);if(i<0)return;const r=S.excl.splice(i,1)[0];r.excl=false;r.why='';r.ccy='AOA';r.rccy=null;r.edit=true;(r.side==='sup'?S.sup:S.cust).push(r);toast('أُعيد الإيصال — اكتب مبلغه بالكوانزا');rematch();}
 function find(id){return S.cust.find(r=>r.id===id)||S.sup.find(r=>r.id===id);}
 /* ───── مسح كامل: الجلسة المحلية + دفتر الإيصالات الدائم + قيود الدفاتر التي أنشأتها هذه الصفحة ───── */
-async function wipeAll(){if(!tokenOf()){toast('سجّل الدخول أولًا');return;}
+async function wipeAll(){if(!tokenOf()){toast('سجّل الدخول أولًا');return;}if(!(await requirePin()))return;
   if(!confirm('مسح كامل؟ سيُحذف من هذا الجهاز ومن الدفتر الدائم كل إيصال سُجّل عبر صفحة المقارنة (زبائن وموردون) وكل قيد دفتر أنشأته هذه الصفحة. لا يمكن التراجع.'))return;
   if(!confirm('تأكيد أخير: حذف كل الإيصالات (زبائن + موردون) من الجهاز ومن الدفتر الدائم الآن؟'))return;
   toast('جارٍ المسح…');
@@ -744,7 +751,7 @@ async function wipeAll(){if(!tokenOf()){toast('سجّل الدخول أولًا'
     await sbq('/bdl_cmp_receipts?fp=not.is.null',{method:'DELETE',headers:{Prefer:'return=minimal'}});}catch(e){toast('تعذّر مسح الدفتر: '+(e.message||e));}
   S.cust=[];S.sup=[];S.excl=[];S.jobs=[];S.selC=S.selS=null;S.ts=null;S.party={cust:{who:'',phone:''},sup:{who:'',phone:''}};await IDB.clear().catch(()=>{});LED.idx={};
   toast('تم المسح الكامل: '+n+' إيصال من الدفتر'+(b?' · '+b+' قيد':'')+' — ابدأ غدًا من صفر');render(true);}
-function clearAll(){if(!confirm('مسح الجلسة من هذا الجهاز فقط — الإيصالات المسجّلة تبقى في الدفتر ويمكن تحميلها من «تحميل من الدفتر». متابعة؟'))return;S.cust=[];S.sup=[];S.excl=[];S.selC=S.selS=null;S.ts=null;IDB.clear().catch(()=>{});LED.index();render();}
+async function clearAll(){if(!(await requirePin()))return;if(!confirm('مسح الجلسة من هذا الجهاز فقط — الإيصالات المسجّلة تبقى في الدفتر ويمكن تحميلها من «تحميل من الدفتر». متابعة؟'))return;S.cust=[];S.sup=[];S.excl=[];S.selC=S.selS=null;S.ts=null;IDB.clear().catch(()=>{});LED.index();render();}
 
 /* ───── المطابقة ───── */
 /* ── مطابقة وتفتيش بـ Claude (الخادم) — اقتراحات يعتمدها المالك ── */
