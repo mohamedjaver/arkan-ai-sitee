@@ -100,7 +100,7 @@ input,select{font-family:inherit;color:var(--ink)}
 .empty{text-align:center;padding:52px 20px;color:var(--muted);font-size:13px;line-height:2}
 
 /* ═ BOTTOM BAR ═ */
-.bbar{position:fixed;bottom:calc(66px + env(safe-area-inset-bottom));inset-inline:0;z-index:9100;padding:10px 12px 10px;transform:translateY(120%);transition:transform .2s}.bbar.show{transform:none}
+.bbar{position:fixed;bottom:calc(66px + env(safe-area-inset-bottom));inset-inline:0;z-index:8990;padding:10px 12px 10px;display:none!important}.bbar.show{display:flex!important}
   background:rgba(255,255,255,.92);backdrop-filter:blur(14px);border-top:1px solid var(--line);display:flex;gap:9px}
 .fab{width:52px;height:52px;border-radius:15px;background:#fff;border:1px solid var(--line);
   color:var(--navy);font-size:26px;font-weight:300;flex:0 0 auto}
