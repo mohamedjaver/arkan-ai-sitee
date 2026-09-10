@@ -1106,7 +1106,7 @@ async function login(phone, pin, silent){
       localStorage.removeItem('arkan_session'); return;
     }
     SESSION = {phone:d};
-    localStorage.setItem('arkan_session', JSON.stringify(SESSION));
+    localStorage.setItem('arkan_session', JSON.stringify(SESSION)); if(!silent) window.__justLoggedIn=true;
     /* توكن خادم موقّع (30 يوماً) بدل تخزين PIN — يُستخدم للدخول الصامت ولـ chat-v2 */
     try{
       const tr=await fetch('https://arkan-ai-site-production.up.railway.app/supabase-token',{
@@ -1121,6 +1121,8 @@ async function login(phone, pin, silent){
     try{ window.__bdlOwner={phone:d,pin:String(USER.pin||pin||'')}; }catch(e){}
     const nxt=new URLSearchParams(location.search).get('next');
     if(nxt&&/^[a-z0-9_-]+\.html$/i.test(nxt)){location.href=nxt;return;}
+    /* بعد الدخول: الرئيسية دائمًا (تُحمَّل بالشريط الموحّد وحالة المالك الصحيحة) */
+    if(!silent){location.href='index.html';return;}
     openApp(foundId);
   } catch(e){ console.error(e); if(!silent) gErr('تعذّر الاتصال — حاول ثانية'); }
   finally { $('gEnter').disabled=false; $('gEnter').textContent='دخول'; }
@@ -1149,6 +1151,8 @@ function openApp(phone){
     if(nx && !/^https?:/i.test(nx) && !/^\/\//.test(nx) && nx.indexOf('account')!==0){
       location.replace(nx); return;
     }
+    /* بعد الدخول: الرئيسية أولًا (وبها الشريطان)، إلا إذا فُتحت الصفحة بقصد الحساب نفسه */
+    if(window.__justLoggedIn){ window.__justLoggedIn=false; location.replace('index.html'); return; }
   }catch(e){}
   $('gate').classList.remove('on');
   $('app').style.display='block';
