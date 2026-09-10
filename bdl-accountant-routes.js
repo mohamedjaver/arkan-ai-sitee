@@ -174,6 +174,7 @@ module.exports = function (app, ctx) {
     let out; try { out = JSON.parse(t.slice(t.indexOf('{'), t.lastIndexOf('}') + 1)); } catch (e) { throw new Error('تعذر تفسير القراءة'); }
     if (out.amount != null) out.amount = Number(String(out.amount).replace(/[^\d.]/g, '')) || null;
     if (out.phone) out.phone = String(out.phone).replace(/\D/g, '');
+    if (out.currency) { const c = String(out.currency).toUpperCase(); out.currency = /AKZ|KZ|KWANZA|AOA/.test(c) ? 'AOA' : /MRU|MRO|UM|OUGUIYA|أوقية/.test(c) ? 'MRU' : /USDT|TETHER/.test(c) ? 'USDT' : /USD|\$/.test(c) ? 'USD' : /EUR|€/.test(c) ? 'EUR' : c; }
     try { if (out.phone && app.locals.parties) { const pt = await app.locals.parties.find(out.phone); if (pt && !out.receiver) out.receiver = pt.name; } } catch (e) {}
     return out;
   }));
