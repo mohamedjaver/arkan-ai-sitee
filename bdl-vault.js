@@ -36,6 +36,8 @@ module.exports = function (app, ctx) {
     const mates = rows.map(r => r.matched_fp).filter(f => f && !set.has(f));
     for (let i = 0; i < mates.length; i += 150) await sb('/bdl_cmp_receipts?fp=in.' + inList(mates.slice(i, i + 150)), { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: { matched_fp: null, how: '' } });
     for (let i = 0; i < fps.length; i += 150) await sb('/bdl_cmp_receipts?fp=in.' + inList(fps.slice(i, i + 150)), { method: 'DELETE', headers: { Prefer: 'return=minimal' } });
+    const left = await sb('/bdl_cmp_receipts?select=fp&fp=in.' + inList(fps.slice(0, 150)));
+    if (left && left.length) throw new Error('الخادم لم يستطع حذف ' + left.length + ' إيصالًا (سياسة RLS/مالك مختلف) — أرسل هذا النص');
     await audit('trash', 'bdl_cmp_receipts', fps.length + ' receipts', { fps: fps.slice(0, 200), sum: rows.reduce((a, x) => a + Number(x.amount || 0), 0) }, null, source);
     return { moved: rows.length, warning: warn };
   }
@@ -73,6 +75,27 @@ module.exports = function (app, ctx) {
   app.get('/vault/audit', wrap(async () => sb('/bdl_audit?select=id,at,action,tbl,row_id,before,after,source&order=at.desc&limit=100')));
   app.post('/vault/audit', express.json(), wrap(async req => { const b = req.body || {}; await audit(b.action, b.tbl, b.row_id, b.before, b.after, b.source || 'web'); return { ok: true }; }));
   app.post('/vault/export', express.json(), wrap(async req => exportMonth(String((req.body && req.body.month) || new Date().toISOString().slice(0, 7))), true));
+  /* أوامر تيليجرام: «حذف 5000000» يعرض الإيصالات المطابقة بأزرار حذف — يعمل من أي جهاز بلا واجهة */
+  const fmt = n => Math.round(Number(n) || 0).toLocaleString('en-US');
+  const escT = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  app.locals.tgText = async function (text, chatId) {
+    const m = String(text).match(/^(?:\/del|\/حذف|حذف|delete)\s+([\d.,\s]+)/i); if (!m) return false;
+    const amt = Number(m[1].replace(/[^\d.]/g, '')); if (!(amt > 0)) return false;
+    const tg = ctx.tg; if (!tg) return false;
+    const rows = await sb('/bdl_cmp_receipts?select=fp,side,amount,who,phone,msg_at,bank&amount=eq.' + amt + '&order=msg_at.desc&limit=8');
+    if (!rows.length) { await tg('sendMessage', { chat_id: chatId, text: 'لا يوجد إيصال بمبلغ ' + fmt(amt) }); return true; }
+    for (const r of rows) await tg('sendMessage', { chat_id: chatId, parse_mode: 'HTML', text: (r.side === 'cust' ? '👤 زبون' : '🏦 مورد') + ' · <b>' + fmt(r.amount) + ' AOA</b>\n' + escT(r.who || '') + ' ' + escT(r.phone || '') + '\n' + String(r.msg_at || '').slice(0, 10) + ' · ' + escT(r.bank || ''), reply_markup: { inline_keyboard: [[{ text: '🗑 حذف إلى السلة', callback_data: 'vt:' + r.fp.slice(0, 24) }, { text: '✖', callback_data: 'wa:skip' }]] } });
+    return true;
+  };
+  const prevCb = app.locals.tgCallback;
+  app.locals.tgCallback = async function (cq) {
+    const d = String(cq.data || ''); const mm = d.match(/^vt:([0-9a-f]+)$/);
+    if (!mm) return prevCb ? prevCb(cq) : null;
+    const ans = t => ctx.tg ? ctx.tg('answerCallbackQuery', { callback_query_id: cq.id, text: t }).catch(() => {}) : null;
+    try { const r = (await sb('/bdl_cmp_receipts?select=fp&fp=like.' + mm[1] + '*&limit=1'))[0]; if (!r) return ans('غير موجود (حُذف سابقًا)');
+      const out = await trashReceipts([r.fp], 'telegram', 'telegram'); return ans(out.moved ? 'حُذف إلى السلة ✓' : 'لم يُحذف'); }
+    catch (e) { return ans('خطأ: ' + e.message.slice(0, 80)); }
+  };
   app.locals.vault = { audit, exportMonth, purge };
   purge(); setInterval(purge, 24 * 3600e3);
   console.log('▲ vault ready (PIN ' + (PIN() ? 'on' : 'off') + ')');

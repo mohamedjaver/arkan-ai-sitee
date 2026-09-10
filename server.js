@@ -144,6 +144,8 @@ async function pollTelegram() {
     if (!msg || !msg.text) continue;
     const chatId = msg.chat.id;
     const text = msg.text.trim();
+    /* أوامر المالك على تيليجرام (حذف/بحث في الدفتر) */
+    if (String(chatId) === String(ENV.ADMIN_ID) && app.locals.tgText) { try { if (await app.locals.tgText(text, chatId)) continue; } catch (e) { console.warn('tg-text:', e.message); } }
 
     /* /start ORDERID — يربط المحادثة بالطلب */
     if (text.startsWith('/start')) {
@@ -1518,7 +1520,7 @@ try {
 } catch (e) { console.warn('wa pipeline off:', e.message); }
 /* المعايير المالية: سجل تدقيق، سلة 30 يومًا، PIN، تصدير شهري (إضافي) */
 try {
-  require('./bdl-vault')(app, { express, jwt, JWT_SECRET, SB_REST, SB_PUB,
+  require('./bdl-vault')(app, { express, jwt, JWT_SECRET, SB_REST, SB_PUB, tg,
     ownerToken: () => { const ts = Math.floor(Date.now() / 1000); return jwt.sign({ sub: phoneToUuid(OWNER_PHONES[0]), role: 'authenticated', aud: 'authenticated', arkan_role: 'owner', iat: ts, exp: ts + 300 }, JWT_SECRET); } });
 } catch (e) { console.warn('vault off:', e.message); }
 app.listen(ENV.PORT, () => {
