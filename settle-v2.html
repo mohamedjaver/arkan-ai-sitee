@@ -99,7 +99,7 @@ input,select{font-family:inherit;color:var(--ink)}
 .empty{text-align:center;padding:52px 20px;color:var(--muted);font-size:13px;line-height:2}
 
 /* ═ BOTTOM BAR ═ */
-.bbar{position:fixed;bottom:0;inset-inline:0;z-index:40;padding:10px 12px calc(10px + env(safe-area-inset-bottom));
+.bbar{position:fixed;bottom:calc(66px + env(safe-area-inset-bottom));inset-inline:0;z-index:9100;padding:10px 12px 10px;
   background:rgba(255,255,255,.92);backdrop-filter:blur(14px);border-top:1px solid var(--line);display:flex;gap:9px}
 .fab{width:52px;height:52px;border-radius:15px;background:#fff;border:1px solid var(--line);
   color:var(--navy);font-size:26px;font-weight:300;flex:0 0 auto}
@@ -879,6 +879,7 @@ function renderGroups(){
         '</div>'+
         '<div class="grp-amt" onclick="expand(this.closest(\'.grp\'),\''+k+'\')">'+
           '<div class="a num">'+fmt(g.total_amount)+'</div><div class="b">'+esc(g.ccy)+'</div></div>'+
+        '<button onclick="event.stopPropagation();grpSettle(\''+k+'\')" style="border:1px solid #1F8F5B;background:#1F8F5B;color:#fff;font-weight:800;font-size:10.5px;padding:6px 12px;font-family:inherit;cursor:pointer;border-radius:8px;margin-inline-end:6px">تسوية</button>'+
         '<button onclick="event.stopPropagation();grpDelete(\''+k+'\')" style="border:1px solid #F0C9C5;background:#fff;color:#B00020;font-weight:800;font-size:10.5px;padding:6px 10px;font-family:inherit;cursor:pointer;flex:none">حذف</button>'+
       '<span class="arrow">◀</span>'+
       '</div><div class="txs" id="tx-'+k.replace(/[^a-z0-9]/gi,'')+'"></div></div>';
@@ -994,6 +995,12 @@ async function purgeOld(){
   }catch(e){toast('تعذّر التنظيف: '+e.message);}
 }
 /* ═══════════ التحديد ═══════════ */
+/* تسوية جهة واحدة بضغطة: تحديدها وحدها ثم فتح نافذة التسوية */
+async function grpSettle(k){try{var g=GROUPS.find(function(x){return gKey(x)===k;});if(!g)return;if(!TXCACHE[k]){await expandFetch(g,k);}
+  Object.keys(SEL).forEach(function(x){if(x!==k)delete SEL[x];});
+  if(!SEL[k]||!Object.keys(SEL[k]).length){await toggleGrp(k);}
+  if(typeof updSel==='function')updSel();if(typeof render==='function')render();
+  openSettle();}catch(e){toast('تعذر فتح التسوية: '+(e.message||e));}}
 async function toggleGrp(k){
   var g=GROUPS.find(function(x){return gKey(x)===k;});
   if(!TXCACHE[k]){await expandFetch(g,k);}
