@@ -158,6 +158,24 @@ module.exports = function (app, ctx) {
     return row; }));
   app.get('/accountant/dues', wrap(duesEscalation));
   app.locals.upsertDeal = upsertDeal;
+  /* ── قارئ عام لأي إيصال (Bankily, Masrvi, Sedad, BMCI, BCI, GBM, BAI, BFA, MULTICAIXA, USDT…) → حقول جاهزة للتعبئة ── */
+  const RECEIPT_SYS = 'أنت قارئ إيصالات مالية لصرافة تعمل بين موريتانيا (MRU) وأنغولا (AOA) وUSDT. اقرأ الإيصال (صورة أو PDF أو لقطة شاشة تطبيق بنكي/محفظة) واستخرج الحقول بدقة حرفية. ' +
+    'أعد JSON فقط بلا أي نص آخر وبلا أسوار كود: {"is_receipt":true,"bank":"اسم البنك/التطبيق","currency":"MRU|AOA|USD|USDT|EUR|null","amount":123456.78,"amount_verbatim":"كما كُتب","sender":"اسم المرسل أو null","receiver":"اسم المستلم أو null","phone":"هاتف المستلم/المرسل بالأرقام أو null","account":"رقم الحساب/IBAN/المحفظة أو null","txn":"رقم العملية/المرجع أو null","date":"YYYY-MM-DD HH:MM أو null","status":"success|failed|pending|null","confidence":0-100}. ' +
+    'قواعد: المبلغ المحوَّل فقط (لا الرصيد ولا العمولة)؛ MRU 320000 يعني 320000؛ الفاصلة الأوروبية 5.000.000,00 تعني 5000000؛ إن كان النص عربيًا فالتسميات: المبلغ المرسل، المستلم، معرف المعاملة، التاريخ والوقت؛ لا تخترع قيمًا — استخدم null.';
+  app.post('/read/receipt', express.json({ limit: '12mb' }), wrap(async req => {
+    const b = req.body || {}; if (!b.b64) throw new Error('لا ملف');
+    const mime = b.mime || 'image/jpeg';
+    const content = [mime === 'application/pdf' ? { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: b.b64 } } : { type: 'image', source: { type: 'base64', media_type: mime, data: b.b64 } }, { type: 'text', text: 'اقرأ هذا الإيصال وأعد JSON.' }];
+    const r = await fetch('https://api.anthropic.com/v1/messages', { method: 'POST', headers: { 'content-type': 'application/json', 'x-api-key': KEY(), 'anthropic-version': '2023-06-01' },
+      body: JSON.stringify({ model: MODEL(), max_tokens: 600, system: RECEIPT_SYS, messages: [{ role: 'user', content }] }) });
+    const j = await r.json(); if (!r.ok) throw new Error('Claude ' + r.status + ': ' + ((j.error && j.error.message) || '').slice(0, 160));
+    const t = (j.content || []).filter(x => x.type === 'text').map(x => x.text).join('').replace(/```json|```/g, '').trim();
+    let out; try { out = JSON.parse(t.slice(t.indexOf('{'), t.lastIndexOf('}') + 1)); } catch (e) { throw new Error('تعذر تفسير القراءة'); }
+    if (out.amount != null) out.amount = Number(String(out.amount).replace(/[^\d.]/g, '')) || null;
+    if (out.phone) out.phone = String(out.phone).replace(/\D/g, '');
+    try { if (out.phone && app.locals.parties) { const pt = await app.locals.parties.find(out.phone); if (pt && !out.receiver) out.receiver = pt.name; } } catch (e) {}
+    return out;
+  }));
   app.get('/accountant/summary', wrap(summary));
   app.post('/accountant/run', express.json(), wrap(writeReport));
   app.get('/accountant/report', wrap(async () => { let r; try { r = await sb('/bdl_agent_reports?select=report,created_at&order=created_at.desc&limit=1'); } catch (e) { return { text: '', note: /PGRST205|Could not find/.test(e.message) ? 'جدول التقارير غير موجود — الصق bdl-agent.sql في Supabase (SQL Editor)' : e.message }; } return r && r[0] ? { text: r[0].report, structured: r[0].facts && r[0].facts.structured || null, date: String(r[0].created_at).slice(0, 10) } : { text: '' }; }));

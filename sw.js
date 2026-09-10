@@ -2,7 +2,7 @@
    إستراتيجية: الشبكة أولًا لصفحات HTML والبيانات (لا محتوى قديم أبدًا)
               الكاش أولًا للأصول الثابتة فقط (صور، أيقونات، شعار) */
 
-const V='arkan-v241-1317'; /* PIN required for destructive actions */
+const V='arkan-v242-1318'; /* universal Claude receipt reader in account */
 
 
 const STATIC=['./favicon.svg','./arkan-icon-512.png','./arkan-touch-180.png','./site-manifest.json',

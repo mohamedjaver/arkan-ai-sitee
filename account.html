@@ -2124,7 +2124,15 @@ async function mrbReadReceipt(file){
   btn.textContent='⏳ جارٍ قراءة الإيصال…'; btn.disabled=true; msg.textContent='';
   mrbResetFlow(); /* إيصال جديد = عملية جديدة — الدورة من أولها */
   try{
-    const p=await (window.ArkanRead?window.ArkanRead.readAmount(file):null);
+    /* القارئ الموحّد على الخادم (Claude) لكل أنواع الإيصالات — ثم القارئ المحلي احتياطًا */
+    let p=null;
+    try{const j=JSON.parse(localStorage.getItem('arkan_sb_jwt')||'null');if(j&&j.token){
+      const b64=await (async()=>{if(/pdf/.test(file.type)){const ab=await file.arrayBuffer();let bin='';const u=new Uint8Array(ab);for(let i=0;i<u.length;i++)bin+=String.fromCharCode(u[i]);return{b64:btoa(bin),mime:'application/pdf'};}
+        const im=await createImageBitmap(file);const sc=Math.min(1,1600/Math.max(im.width,im.height));const c=document.createElement('canvas');c.width=Math.round(im.width*sc);c.height=Math.round(im.height*sc);c.getContext('2d').drawImage(im,0,0,c.width,c.height);return{b64:c.toDataURL('image/jpeg',.85).split(',')[1],mime:'image/jpeg'};})();
+      const r=await fetch('https://arkan-ai-site-production.up.railway.app/read/receipt',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+j.token},body:JSON.stringify(b64)});
+      if(r.ok){const x=await r.json();if(x&&x.is_receipt!==false&&x.amount){p={amount:x.amount,txn:x.txn||'',receiver:x.account||x.receiver||'',name:x.receiver||'',bank:x.bank||'',ccy:x.currency||'MRU',phone:x.phone||'',date:x.date||''};}}}}catch(e){}
+    if(!p)p=await (window.ArkanRead?window.ArkanRead.readAmount(file):null);
+    if(p&&p.phone){const ph=document.getElementById('mrbPhone');if(ph&&!ph.value)ph.value='+'+String(p.phone).replace(/\D/g,'');}
     if(p&&p.amount){ document.getElementById('mrbAmt').value=p.amount; }
     if(p&&p.txn){ document.getElementById('mrbRef').value=p.txn; }
     if(p&&p.receiver){ document.getElementById('mrbTo').value=p.receiver; }
