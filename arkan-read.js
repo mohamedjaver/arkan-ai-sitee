@@ -248,8 +248,25 @@ async function miniGemini(b64,mime){
   QUOTA_TRIP=0; return p;
 }
 window.ArkanRead={
+  /* claude(File) → parsed بنفس شكل Gemini — القارئ الموحّد على الخادم لكل نوافذ الموقع (يتطلب جلسة) */
+  async claude(file){
+    const j=(function(){try{return JSON.parse(localStorage.getItem('arkan_sb_jwt')||'null');}catch(e){return null;}})();
+    if(!j||!j.token||(j.exp&&j.exp<Math.floor(Date.now()/1000)+60))return null;
+    const mime=file.type||'image/jpeg';const isPdf=/pdf/i.test(mime)||/\.pdf$/i.test(file.name||'');
+    let payload;
+    if(isPdf){const ab=await file.arrayBuffer();let bin='';const u=new Uint8Array(ab);for(let i=0;i<u.length;i++)bin+=String.fromCharCode(u[i]);payload={b64:btoa(bin),mime:'application/pdf'};}
+    else{try{const im=await createImageBitmap(file);const sc=Math.min(1,1600/Math.max(im.width,im.height));const c=document.createElement('canvas');c.width=Math.round(im.width*sc);c.height=Math.round(im.height*sc);c.getContext('2d').drawImage(im,0,0,c.width,c.height);payload={b64:c.toDataURL('image/jpeg',.85).split(',')[1],mime:'image/jpeg'};}
+      catch(e){payload={b64:await toB64(file),mime};}}
+    const ac=new AbortController();const t=setTimeout(()=>ac.abort(),25000);
+    try{const r=await fetch('https://arkan-ai-site-production.up.railway.app/read/receipt',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+j.token},body:JSON.stringify(payload),signal:ac.signal});
+      if(!r.ok)return null;const x=await r.json();if(!x||x.is_receipt===false)return {amount:0,currency:'',reference:'',receiver:'',sender:'',name:'',bank:'',date:'',confidence:0,is_receipt:false,phone:'',account:''};
+      return {amount:+x.amount||0,currency:x.currency||'',reference:x.txn||'',receiver:x.receiver||'',sender:x.sender||'',name:x.receiver||x.sender||'',bank:x.bank||'',date:x.date||'',confidence:+x.confidence||70,phone:x.phone||'',account:x.account||'',status:x.status||''};}
+    catch(e){return null;}finally{clearTimeout(t);}
+  },
   /* readAmount(File) → {amount,ccy,txn,bank,date,eng} — المبلغ فقط، بأخف استدعاء */
   async readAmount(file){
+    /* 1) Claude على الخادم — لكل أنواع الإيصالات */
+    try{const c=await this.claude(file);if(c&&(c.amount||c.is_receipt===false)){const cy=(c.currency||'').toUpperCase();return {amount:(+c.amount||null),ccy:cy||null,txn:c.reference||null,receiver:c.account||c.receiver||null,name:c.name||null,bank:c.bank||null,date:c.date||null,phone:c.phone||null,eng:'claude'};}}catch(e){}
     const mime=file.type||'image/jpeg';
     const isPdf=/pdf/i.test(mime)||/\.pdf$/i.test(file.name||'');
     let p=null,eng='';
@@ -280,6 +297,8 @@ window.ArkanRead={
     opts=opts||{};
     const mime=file.type||'image/jpeg';
     const isPdf=/pdf/i.test(mime)||/\.pdf$/i.test(file.name||'');
+    /* 1) Claude على الخادم أولًا — نفس القارئ في كل نوافذ الموقع */
+    try{const c=await this.claude(file);if(c&&(c.amount||c.is_receipt===false))return {parsed:c,text:asText(c),engine:'claude'};}catch(e){}
     /* Gemini أولاً — إلا إذا انقطعت الحصة في هذه الدفعة */
     if(QUOTA_TRIP<2){
       try{

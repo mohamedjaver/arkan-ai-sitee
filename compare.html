@@ -10,7 +10,7 @@
 <script src="arkan-gate.js?v=5"></script>
 <script>/* صفحة المالك: جلسة محلية بهاتف المالك تكفي فورًا — بلا انتظار Firebase ولا شاشة بيضاء */(function(){try{var s=JSON.parse(localStorage.getItem('arkan_session')||'null');var ph=String(s&&s.phone||'').replace(/\D/g,'');if(!/36295050$/.test(ph)&&localStorage.getItem('arkan_admin_dev')!=='1')location.replace('account.html?next=compare.html');}catch(e){location.replace('index.html');}})();</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
-<script src="arkan-read.js?v=4" defer></script>
+<script src="arkan-read.js?v=5" defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" defer></script>
 <script src="arkan-nav.js?v=14" defer></script>
 <style>
@@ -316,7 +316,10 @@ async function verifyRead(file,p){const key=(localStorage.getItem('gemKey')||'')
 /* ───── المحرك المدمج: قالب محلي أولًا (PDF بنص) → وإلا Gemini بنداء واحد يحمل النص الحرفي للمبلغ والمرجع
    → تحقق محلي (تحليل النص الحرفي = المبلغ؟ المرجع ليس IBAN؟) → القراءة الثانية فقط عند الشك. أسرع بنصف النداءات وأدق. ───── */
 const PTNUM=v=>{if(v==null)return null;let x=String(v).replace(/[^\d.,\s]/g,'').trim().replace(/\s+/g,'');if(!x)return null;if(/,\d{1,2}$/.test(x))x=x.replace(/\./g,'').replace(',','.');else if(/\.\d{1,2}$/.test(x)&&!/\.\d{3}(\.|$)/.test(x))x=x.replace(/,/g,'');else x=x.replace(/[.,]/g,'');const n=Number(x);return isFinite(n)&&n>0?n:null;};
-async function gemRead(file,pre){const key=(localStorage.getItem('gemKey')||'').trim();if(!key)return null;if(pre)file=pre;
+async function gemRead(file,pre){
+  /* Claude على الخادم أولًا — القارئ الموحّد لكل الموقع؛ Gemini المحلي احتياطًا */
+  try{if(window.ArkanRead&&ArkanRead.claude){const c=await ArkanRead.claude(pre||file);if(c&&(c.amount||c.is_receipt===false))return {is_bank_receipt:c.is_receipt!==false,bank:c.bank||'',amount:+c.amount||0,amount_verbatim:String(c.amount||''),currency:c.currency||'',reference:c.reference||'',reference_verbatim:c.reference||'',date:c.date||'',sender:c.sender||'',receiver:c.receiver||'',confidence:c.confidence||80,phone:c.phone||'',_eng:'claude'};}}catch(e){}
+  const key=(localStorage.getItem('gemKey')||'').trim();if(!key)return null;if(pre)file=pre;
   const P='اقرأ إيصال التحويل البنكي وأعد JSON فقط:\n{"is_bank_receipt":true,"bank":"","amount":0,"amount_verbatim":"","currency":"","reference":"","reference_verbatim":"","date":"","sender":"","receiver":"","confidence":0}\n'+
     'قواعد: amount = مبلغ التحويل فقط (Montante/Valor/Importância) كرقم؛ amount_verbatim = نفس السطر كما هو مكتوب حرفيًا مثل "Kz 7 500 000,00" أو "1.000.000,00 KZ".\n'+
     'reference = رقم العملية (Transacção/Referência/N.º operação/Trs ID) وreference_verbatim نصه الحرفي؛ ليس IBAN (AO06…) ولا رقم حساب (21 رقمًا).\n'+
@@ -366,7 +369,7 @@ async function auditBatch(rows){const flagged=rows.filter(r=>!r.excl&&!r.audited
   if(fixed||rej)toast('المدقق: صحّح '+fixed+' مبلغًا · استبعد '+rej+' — راجع ما بقي كهرمانيًا');render(true);persist();}
 const BATCH=50;
 async function readPending(side){if(S.busy&&Date.now()-(S.lastTick||0)<120000){toast('القراءة جارية بالفعل… ('+(S.prog||0)+' في هذه الدفعة)');return;}S.busy=true;S.lastTick=Date.now();S.prog=0;S.miss=0;
-  if(!(localStorage.getItem('gemKey')||'').trim())toast('لا يوجد مفتاح Gemini — القراءة ستعتمد على OCR البطيء. اضغط «مفتاح Gemini» لإدخاله');
+  if(!tokenOf()&&!(localStorage.getItem('gemKey')||'').trim())toast('لا جلسة ولا مفتاح Gemini — القراءة ستعتمد على OCR البطيء. اضغط «مفتاح Gemini» لإدخاله');
   try{const all=(side==='sup'?S.sup:S.cust).filter(r=>r.reading);const pending=all.slice(0,BATCH);S.left=all.length-pending.length;toast('بدأت قراءة '+pending.length+' إيصال ('+(side==='sup'?'موردون':'زبائن')+') — 3 بالتوازي');render(true);
   let i=0;const worker=async()=>{while(i<pending.length){const r=pending[i++];S.lastTick=Date.now();try{
       const T=(f)=>Promise.race([ArkanRead.readAmount(f),new Promise((_,j)=>setTimeout(()=>j('timeout'),45000))]);
