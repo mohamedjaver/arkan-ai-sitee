@@ -2946,11 +2946,12 @@ try{ /* جسر البطاقة الخضراء: #pair=SUPPLIER → مركز الم
       })();
     }catch(e){}},600);}
 }catch(e){}
-function go(t){bdlDebtPaint();
+function go(t){try{bdlDebtPaint();}catch(e){}
   document.querySelectorAll('.tabs button').forEach(function(b){b.classList.toggle('on',b.dataset.tab===t);});
-  ['ops','settle','clients','archive','profit'].forEach(function(k){$('#v-'+k).style.display=k===t?'block':'none';});
-  $('#bbar').style.display=t==='settle'?'flex':'none';
-  if(t==='ops'&&!OPS_DATA)loadOps();
+  ['ops','settle','clients','archive','profit'].forEach(function(k){var v=$('#v-'+k);if(v)v.style.display=k===t?'block':'none';});
+  var bb=$('#bbar');if(bb)bb.style.display=t==='settle'?'flex':'none';
+  try{var tv=$('#v-'+t);if(tv){var top=tv.getBoundingClientRect().top+window.scrollY-120;if(top>window.scrollY||tv.getBoundingClientRect().top<60)window.scrollTo({top:Math.max(0,top),behavior:'smooth'});}}catch(e){}
+  if(t==='ops'&&(!OPS_DATA||!OPS_DATA.length))loadOps();
   if(t==='clients'&&!CLIENTS)loadClients();
   if(t==='archive'&&!ARCH)loadArchive();
   if(t==='profit'){if(!PROF)loadProfit();if(!OPSPROF)loadOpsProfit();}
