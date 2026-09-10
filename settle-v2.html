@@ -999,7 +999,7 @@ async function purgeOld(){
 async function grpSettle(k){try{var g=GROUPS.find(function(x){return gKey(x)===k;});if(!g)return;if(!TXCACHE[k]){await expandFetch(g,k);}
   Object.keys(SEL).forEach(function(x){if(x!==k)delete SEL[x];});
   if(!SEL[k]||!Object.keys(SEL[k]).length){await toggleGrp(k);}
-  if(typeof updSel==='function')updSel();if(typeof render==='function')render();
+  if(typeof renderGroups==='function')renderGroups();if(typeof updateBar==='function')updateBar();
   openSettle();}catch(e){toast('تعذر فتح التسوية: '+(e.message||e));}}
 async function toggleGrp(k){
   var g=GROUPS.find(function(x){return gKey(x)===k;});
