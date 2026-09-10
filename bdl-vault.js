@@ -68,6 +68,7 @@ module.exports = function (app, ctx) {
   app.get('/vault/status', wrap(async () => ({ pin: PIN() ? 'مفعّل' : 'غير مضبوط — أضف BDL_PIN في Railway' })));
   app.post('/vault/trash', express.json(), wrap(async req => trashReceipts((req.body && req.body.fps) || [], (req.body && req.body.reason) || '', 'compare'), true));
   app.post('/vault/restore', express.json(), wrap(async req => restore(req.body && req.body.id), true));
+  app.get('/vault/trash/fps', wrap(async () => { const cut = new Date(Date.now() - 30 * 864e5).toISOString(); const t = await sb('/bdl_trash?select=row_id&tbl=eq.bdl_cmp_receipts&restored_at=is.null&at=gte.' + cut + '&limit=5000'); return t.map(x => x.row_id); }));
   app.get('/vault/trash', wrap(async () => sb('/bdl_trash?select=id,at,tbl,row_id,reason,restored_at,row->amount,row->who,row->side&order=at.desc&limit=100')));
   app.get('/vault/audit', wrap(async () => sb('/bdl_audit?select=id,at,action,tbl,row_id,before,after,source&order=at.desc&limit=100')));
   app.post('/vault/audit', express.json(), wrap(async req => { const b = req.body || {}; await audit(b.action, b.tbl, b.row_id, b.before, b.after, b.source || 'web'); return { ok: true }; }));

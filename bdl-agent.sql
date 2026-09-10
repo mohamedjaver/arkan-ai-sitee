@@ -72,3 +72,14 @@ create table if not exists bdl_rates_live (id int primary key, data jsonb, updat
 alter table bdl_rates_live enable row level security;
 drop policy if exists "owner rw" on bdl_rates_live;
 create policy "owner rw" on bdl_rates_live for all using (coalesce(auth.jwt()->>'arkan_role','')='owner') with check (coalesce(auth.jwt()->>'arkan_role','')='owner');
+
+-- Build 1314: المحذوف لا يعود — أي إدراج لإيصال موجود في السلة (غير مُستعاد، خلال 30 يومًا) يُتجاهل
+create or replace function bdl_block_trashed() returns trigger language plpgsql as $$
+begin
+  if exists (select 1 from bdl_trash t where t.tbl='bdl_cmp_receipts' and t.row_id=new.fp and t.restored_at is null and t.at > now() - interval '30 days') then
+    return null;
+  end if;
+  return new;
+end $$;
+drop trigger if exists bdl_block_trashed_trg on bdl_cmp_receipts;
+create trigger bdl_block_trashed_trg before insert on bdl_cmp_receipts for each row execute function bdl_block_trashed();

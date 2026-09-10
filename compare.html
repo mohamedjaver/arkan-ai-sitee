@@ -569,7 +569,9 @@ const LED={idx:{},refs:{},ready:false,q:[],busy:0,
    يُنفَّذ عند الفتح، بعد كل دفعة قراءة، بعد حذف جهة، وبالزر «مزامنة». يوفّق الجهاز مع الدفتر في الاتجاهين:
    حُذف في الدفتر → يُزال من الجهاز · موجود في الدفتر فقط → يُضاف · تعديل يدوي في الدفتر → يُطبَّق · موجود محليًا فقط (مقروء) → يُسجَّل. */
 const SYNC={busy:false,at:0,led:null};
-async function syncLedger(silent){if(SYNC.busy||!tokenOf())return;if(S.busy&&!silent){toast('القراءة جارية — المزامنة بعدها تلقائيًا');return;}SYNC.busy=true;const t0=Date.now();
+async function syncLedger(silent){
+  /* المحذوفات (السلة) لا تعود من أجهزة أخرى: نحذفها محليًا قبل الدفع */
+  try{if(tokenOf()){const tr=await fetch(SRV+'/vault/trash/fps',{headers:{Authorization:'Bearer '+tokenOf()}});if(tr.ok){const fps=new Set(await tr.json());if(fps.size){let n=0;['cust','sup'].forEach(k=>{S[k]=S[k].filter(r=>{if(r.fp&&fps.has(r.fp)){n++;IDB.del('files',r.id).catch(()=>{});IDB.del('files',r.id+'_t').catch(()=>{});return false;}return true;});});if(n){persist();}}}}}catch(e){}if(SYNC.busy||!tokenOf())return;if(S.busy&&!silent){toast('القراءة جارية — المزامنة بعدها تلقائيًا');return;}SYNC.busy=true;const t0=Date.now();
   try{let rows;const sel='fp,side,amount,amount_read,ccy,ref,who,phone,bank,msg_at,manual,verified,review,flags,matched_fp,how,receipt_url,book_entry_id,updated_at';
     try{rows=await sbq('/bdl_cmp_receipts?select='+sel+'&order=msg_at.desc&limit=50000');}catch(e){if(!colMissing(e))throw e;LED.noPhone=true;rows=await sbq('/bdl_cmp_receipts?select='+sel.replace('phone,','')+'&order=msg_at.desc&limit=50000');}
     const L={};rows.forEach(x=>{L[x.fp]=x;});LED.idx=L;LED.refs={};rows.forEach(x=>{if(x.ref)LED.refs[x.side+'|'+x.ref.replace(/\s+/g,'').toLowerCase()]=x;});LED.ready=true;
