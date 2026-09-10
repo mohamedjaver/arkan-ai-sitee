@@ -441,7 +441,7 @@ async function zipSeen(f,side){const key=f.name+'|'+f.size;let reg={};try{reg=(a
   if(prev){toast('هذا الملف رُفع سابقًا ('+new Date(prev.when).toLocaleDateString('en-GB')+' · '+(prev.fps||[]).length+' إيصال) — كل إيصال مكرر سيُتخطى تلقائيًا ولن يُسجَّل مرتين');S._reupload=true;}
   S._zipKey=key;S._zipSide=side;return true;}
 async function zipDone(fps){try{const reg=(await IDB.get('state','zips'))||{};reg[S._zipKey]={name:S.party[S._zipSide]&&S.party[S._zipSide].who||'',side:S._zipSide,when:Date.now(),fps};await IDB.put('state','zips',reg);}catch(e){}}
-async function pinOf(){let p=sessionStorage.getItem('bdl_pin');if(!p){p=prompt('رمز PIN للعمليات الحساسة (6 أرقام):')||'';sessionStorage.setItem('bdl_pin',p);}return p;}
+async function pinOf(){let p=sessionStorage.getItem('bdl_pin');if(p!=null&&p!=='')return p;try{const r=await fetch(SRV+'/vault/status',{headers:{Authorization:'Bearer '+tokenOf()}});const j=await r.json();if(j&&/غير مضبوط/.test(j.pin||'')){sessionStorage.setItem('bdl_pin','-');return '-';}}catch(e){}p=prompt('رمز PIN للعمليات الحساسة:')||'';sessionStorage.setItem('bdl_pin',p);return p;}
 async function wipeFps(fps){if(!fps.length)return false;if(!tokenOf()){alert('الجلسة منتهية — أعد الدخول');return false;}
   /* الحذف يمر بالخادم: نسخة في السلة 30 يومًا + سجل تدقيق + تصحيح القيود المرتبطة — لا حذف نهائي من الواجهة */
   for(let a=0;a<2;a++){const r=await fetch(SRV+'/vault/trash',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+tokenOf(),'x-bdl-pin':await pinOf()},body:JSON.stringify({fps,reason:'compare'})});
