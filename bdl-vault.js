@@ -30,13 +30,14 @@ module.exports = function (app, ctx) {
       if (all.every(x => set.has(x.fp))) { await sb('/bdl_trash', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: { tbl: 'bdl_book_entries', row_id: String(eid), row: ent, reason } }); await sb('/bdl_book_entries?id=eq.' + eid, { method: 'DELETE', headers: { Prefer: 'return=minimal' } }); await audit('trash', 'bdl_book_entries', eid, ent, null, source); }
       else { const na = Math.max(0, Number(ent.amount) - byE[eid].reduce((a, x) => a + Number(x.amount || 0), 0)); await sb('/bdl_book_entries?id=eq.' + eid, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: { amount: na } }); await audit('patch', 'bdl_book_entries', eid, { amount: ent.amount }, { amount: na }, source); }
     } catch (e) {} }
-    for (const r of rows) await sb('/bdl_trash', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: { tbl: 'bdl_cmp_receipts', row_id: r.fp, row: r, reason } });
+    let warn = null;
+    for (const r of rows) { try { await sb('/bdl_trash', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: { tbl: 'bdl_cmp_receipts', row_id: r.fp, row: r, reason } }); } catch (e) { if (/PGRST205|Could not find/.test(e.message)) { warn = 'جدول السلة غير موجود — الصق SQL الدفعة D؛ الحذف تم بلا نسخة احتياطية'; break; } throw e; } }
     // فك الربط من الطرف الآخر إن كان مرتبطًا بإيصال باقٍ
     const mates = rows.map(r => r.matched_fp).filter(f => f && !set.has(f));
     for (let i = 0; i < mates.length; i += 150) await sb('/bdl_cmp_receipts?fp=in.' + inList(mates.slice(i, i + 150)), { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body: { matched_fp: null, how: '' } });
     for (let i = 0; i < fps.length; i += 150) await sb('/bdl_cmp_receipts?fp=in.' + inList(fps.slice(i, i + 150)), { method: 'DELETE', headers: { Prefer: 'return=minimal' } });
     await audit('trash', 'bdl_cmp_receipts', fps.length + ' receipts', { fps: fps.slice(0, 200), sum: rows.reduce((a, x) => a + Number(x.amount || 0), 0) }, null, source);
-    return { moved: rows.length };
+    return { moved: rows.length, warning: warn };
   }
   async function restore(id) {
     const t = (await sb('/bdl_trash?select=*&id=eq.' + Number(id)))[0]; if (!t || t.restored_at) throw new Error('غير موجود أو مُستعاد');
