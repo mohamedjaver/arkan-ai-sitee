@@ -67,10 +67,10 @@ module.exports = function (app, ctx) {
   async function writeReport(st) {
     const facts = JSON.stringify(st, null, 0).slice(0, 12000);
     let text = null, rep = null;
-    if (AKEY) { try { rep = await require('./bdl-report-skill').ask(facts, { extra: 'اكتب تقرير اليوم كاملًا: ما تم (المطابقة/التدقيق/الإصلاحات)، المؤشرات، الذمم، الإجراءات، المخاطر، ورسالة واتساب لأكبر ذمة.' }); text = require('./bdl-report-skill').toPlain(rep); } catch (e) { log('claude-error', String(e.message).slice(0, 120)); } }
+    if (AKEY) { try { rep = await require('./bdl-report-skill').ask(facts, { extra: 'اكتب تقرير اليوم كاملًا: ما تم (المطابقة/التدقيق/الإصلاحات)، المؤشرات، الذمم، الإجراءات، المخاطر، ورسالة واتساب لأكبر ذمة.' }); text = require('./bdl-report-skill').toPlain(rep); } catch (e) { STATE.lastClaudeErr = String(e.message).slice(0, 160); log('claude-error', STATE.lastClaudeErr); } }
     if (!text) { const d = st.dues; text = 'تقرير المحاسب — ' + new Date().toLocaleDateString('en-GB') + '\nمطابقات جديدة: ' + st.match.pairs + ' · زبائن بلا مورد: ' + st.match.custOpen + ' · موردون بلا زبون: ' + st.match.supOpen + '\nتدقيق الدفاتر: ' + st.audit.entries + ' قيد · إصلاحات مطبّقة: ' + st.audit.applied + '\nالذمم المفتوحة: ' + d.n + ' إيصال · ' + fmt(d.tot) + ' AOA · ' + d.partiesN + ' جهة\n' + d.parties.slice(0, 8).map(p => '• ' + p.who + ': ' + fmt(p.tot) + ' AOA (' + p.n + ' · أقدمها ' + p.oldest + ' يوم)').join('\n'); }
     try { await sb('/bdl_agent_reports', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: { report: text, facts: Object.assign({}, st, { structured: rep }) } }); } catch (e) {}
-    STATE.lastRep = rep; return text;
+    STATE.lastRep = rep; if (rep) STATE.lastClaudeErr = null; return text;
   }
   async function run(reason) {
     if (STATE.running) return STATE; STATE.running = true;
@@ -82,7 +82,7 @@ module.exports = function (app, ctx) {
           await tgSend('<b>⏰ التصعيد اليومي</b> — ' + L.length + ' جهة\n\n' + lines.join('\n\n'), true); } } } catch (e) { log('escalation-error', String(e.message).slice(0, 120)); }
       try { if (new Date().getDate() === 1 && app.locals.vault) { const prev = new Date(); prev.setDate(0); const m = prev.toISOString().slice(0, 7); const ex = await app.locals.vault.exportMonth(m); await tgSend('📦 تصدير شهر ' + m + ' مجمّد: ' + ex.receipts + ' إيصال · ' + ex.entries + ' قيد · ' + ex.deals + ' صفقة'); } } catch (e) { log('export-error', String(e.message).slice(0, 120)); }
       const worth = reason !== 'hourly' || st.audit.applied || st.match.pairs;
-      if (worth) { await tgSend(STATE.lastRep ? require('./bdl-report-skill').toTelegram(STATE.lastRep) : ('<b>المحاسب BDL</b> — ' + new Date().toLocaleDateString('en-GB') + '\n\n' + text), !!STATE.lastRep);
+      if (worth) { await tgSend(STATE.lastRep ? require('./bdl-report-skill').toTelegram(STATE.lastRep) : ('المحاسب BDL — ' + new Date().toLocaleDateString('en-GB') + '\n\n' + text + (STATE.lastClaudeErr ? '\n\n⚠️ تقرير Claude لم يُكتب: ' + STATE.lastClaudeErr : '')), !!STATE.lastRep);
         try { if (pushOwner) await pushOwner('المحاسب: ' + (st.dues.n ? st.dues.n + ' إيصال بلا مورد · ' + fmt(st.dues.tot) + ' AOA' : 'لا ذمم مفتوحة'), String(text).slice(0, 120)); } catch (e) {} }
       log('run', reason + ' ✓', { match: st.match, audit: { applied: st.audit.applied, fixes: st.audit.fixes.length }, dues: { n: st.dues.n, tot: st.dues.tot } });
     } catch (e) { STATE.lastError = String(e.message).slice(0, 200); log('error', STATE.lastError); }
