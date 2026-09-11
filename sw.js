@@ -2,7 +2,7 @@
    إستراتيجية: الشبكة أولًا لصفحات HTML والبيانات (لا محتوى قديم أبدًا)
               الكاش أولًا للأصول الثابتة فقط (صور، أيقونات، شعار) */
 
-const V='arkan-v250-1327'; /* profit source = console settlements */
+const V='arkan-v251-1330'; /* contacts: visible suggestion list on every field */
 
 
 const STATIC=['./favicon.svg','./arkan-icon-512.png','./arkan-touch-180.png','./site-manifest.json',
