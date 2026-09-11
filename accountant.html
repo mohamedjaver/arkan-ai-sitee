@@ -80,7 +80,7 @@ h2{font-size:20px;font-weight:700;margin:22px 0 10px;display:flex;justify-conten
 </div>
 
 <div class="card">
-  <small>ربح الشهر</small>
+  <small>ربح الشهر — كونسول التسوية</small>
   <div class="big" id="pMonth">—<span id="pUnit">MRU</span></div>
   <div class="sub" id="pMeta"></div>
   <details style="margin-top:14px"><summary style="font-size:13px;font-weight:600;color:var(--blue);cursor:pointer;list-style:none">أسعار اليوم لكل 1,000 AOA ▾</summary>
@@ -156,8 +156,10 @@ async function loadDues(){
 }
 async function loadDeals(){
   const d = await api('/accountant/deals');
-  $('pUnit').textContent = d.unit; $('pMonth').innerHTML = fmt2(d.month) + '<span>' + esc(d.unit) + '</span>';
-  $('pMeta').textContent = `اليوم ${fmt2(d.today)} · الإجمالي ${fmt2(d.all)} · ${d.n} صفقة` + (d.avgMargin!=null?` · هامش ${d.avgMargin}%`:'') + (d.unpriced?` · ${d.unpriced} بلا سعر`:'') + (d.ops?` · كونسول التسوية: ${fmt2(d.ops.month)} MRU هذا الشهر (${d.ops.n} عملية)`:'');
+  if (d.ops) { $('pUnit').textContent = 'MRU'; $('pMonth').innerHTML = fmt2(d.ops.month) + '<span>MRU</span>';
+    $('pMeta').textContent = `اليوم ${fmt2(d.ops.today)} · الإجمالي ${fmt2(d.ops.all)} · ${d.ops.n} عملية مغلقة في كونسول التسوية` + (d.n?` · صفقات المطابقة: ${d.n}` + (d.unpriced?` (${d.unpriced} بلا سعر)`:''):''); }
+  else { $('pUnit').textContent = d.unit; $('pMonth').innerHTML = fmt2(d.month) + '<span>' + esc(d.unit) + '</span>';
+    $('pMeta').textContent = `اليوم ${fmt2(d.today)} · الإجمالي ${fmt2(d.all)} · ${d.n} صفقة` + (d.avgMargin!=null?` · هامش ${d.avgMargin}%`:'') + (d.unpriced?` · ${d.unpriced} بلا سعر`:''); }
   if (d.rates) { $('rUnit').value = d.rates.unit || 'MRU'; $('rCust').value = d.rates.cust_rate || ''; $('rSup').value = d.rates.sup_rate || ''; }
   $('deals').innerHTML = d.recent.length ? d.recent.slice(0,8).map(x => `<div class="deal"><span>${dt(x.created_at)} · <b>${fmt(x.amount_aoa)}</b> AOA</span>${x.profit==null?'<span class="u">بلا سعر</span>':'<span class="p">+'+fmt2(x.profit)+' '+esc(x.unit)+'</span>'}</div>`).join('') : '<div class="empty">لا صفقات بعد — كل مطابقة في الإيصالات تُنشئ صفقة.</div>';
 }
