@@ -1439,7 +1439,7 @@ async function arRun(){
       AR_LAST_OFFICIAL = off; if (diff.length) { changed = true; console.log('OFFICIAL-RATES:', diff.join(' · ')); }
       const today = new Date().toISOString().slice(0, 10); const hourRun = new Date().getUTCHours() === parseInt(process.env.RATES_HOUR || '8', 10);
       let already = AR_NOTIFIED_TODAY === today; if (!already && AR_LIVE && AR_LIVE.notifiedOn === today) already = true;
-      if (diff.length || (hourRun && !already)) { AR_NOTIFIED_TODAY = today; cur.notifiedOn = today;
+      if (diff.length || (hourRun && !already)) { AR_NOTIFIED_TODAY = today; cur.notifiedOn = today; await arPersistLive(cur);
         try { await notifyAdmin('💱 <b>المراجع الرسمية</b> ' + AR_NOTIFIED_TODAY + '\nMRU (' + (off.sources.MRU || '—') + '): USD ' + (off.MRU.USD || '—') + ' · EUR ' + (off.MRU.EUR || '—') + ' · CNY ' + (off.MRU.CNY || '—') + ' · AED ' + (off.MRU.AED || '—') + '\nAOA (' + (off.sources.AOA || '—') + '): USD ' + (off.AOA.USD || '—') + ' · EUR ' + (off.AOA.EUR || '—') + (diff.length ? '\n' + diff.join('\n') : '\nلا تغيير') + (/Market/.test(String(off.sources.MRU) + off.sources.AOA) ? '\n⚠️ تعذّر الوصول لمصدر رسمي — استُخدم سعر السوق' : '')); } catch (e) {} }
     } catch (e) { console.warn('OFFICIAL-RATES err:', e.message); }
     const anchorRow=(cur.r||[]).find(x=>x.ccy==='USDT'||x.ccy==='USD');
