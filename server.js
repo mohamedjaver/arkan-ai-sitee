@@ -1470,7 +1470,7 @@ async function arRun(){
     /* نشر عبر Contents API */
     const gh={Authorization:'Bearer '+process.env.GH_TOKEN,'Accept':'application/vnd.github+json'};
     const meta=await (await fetch(AR_API,{headers:gh})).json();
-    const body={message:'auto-rates: market refresh '+cur.d,
+    const body={message:'auto-rates: market refresh '+cur.d+' [skip ci]',
       content:Buffer.from(JSON.stringify(cur,null,1)).toString('base64'), sha:meta.sha, branch:'main'};
     await arPersistLive(cur);   /* النشرة الحيّة أولًا — تعمل حتى لو فشل GitHub */
     const pr=await fetch(AR_API,{method:'PUT',headers:{...gh,'Content-Type':'application/json'},body:JSON.stringify(body)});
