@@ -422,19 +422,20 @@ async function srvUpload(side0,f){S.side=side0;if(!await zipSeen(f,side0))return
       const H0={Authorization:'Bearer '+tokenOf()};const st=await (await fetch(SRV+'/compare/upload/start',{method:'POST',headers:{...H0,'Content-Type':'application/json'},body:'{}'})).json();if(!st.ok)throw new Error(st.err||'start');
       const CH=8*1048576;let off=0,part=0,parts=Math.ceil(f.size/CH);
       while(off<f.size){const blob=f.slice(off,Math.min(f.size,off+CH));let ok=false;for(let a=0;a<3&&!ok;a++){try{const rr=await fetch(SRV+'/compare/upload/'+st.uid+'/chunk',{method:'POST',headers:{...H0,'Content-Type':'application/octet-stream'},body:blob});ok=rr.ok;}catch(e){}}
-        if(!ok)throw new Error('انقطع الرفع عند الجزء '+(part+1)+'/'+parts);off+=CH;part++;toast('رفع '+Math.round(off/f.size*100)+'% ('+part+'/'+parts+')');}
+        if(!ok)throw new Error('انقطع الرفع عند الجزء '+(part+1)+'/'+parts);off+=CH;part++;prog('up',off/f.size*100,'رفع '+f.name+' — الجزء '+part+'/'+parts);}
       r=await (await fetch(SRV+'/compare/upload/'+st.uid+'/finish',{method:'POST',headers:{...H0,'Content-Type':'application/json','x-gemini-key':(localStorage.getItem('gemKey')||'').trim()},body:JSON.stringify({name:f.name,side})})).json();
     } else r=await new Promise((res,rej)=>{const x=new XMLHttpRequest();x.open('POST',SRV+'/compare/job');x.setRequestHeader('Authorization','Bearer '+tokenOf());x.setRequestHeader('x-gemini-key',(localStorage.getItem('gemKey')||'').trim());x.setRequestHeader('x-file-name',f.name);x.setRequestHeader('x-side',side);x.setRequestHeader('Content-Type','application/octet-stream');
-      x.upload.onprogress=e=>{if(e.lengthComputable)toast('رفع… '+Math.round(e.loaded/e.total*100)+'%');};x.onload=()=>{try{res(JSON.parse(x.responseText));}catch(e){rej(new Error('bad response '+x.status));}};x.onerror=()=>rej(new Error('network'));x.send(f);});
+      x.upload.onprogress=e=>{if(e.lengthComputable)prog('up',e.loaded/e.total*100,'رفع '+f.name);};x.onload=()=>{try{res(JSON.parse(x.responseText));}catch(e){rej(new Error('bad response '+x.status));}};x.onerror=()=>rej(new Error('network'));x.send(f);});
     if(!r.ok)throw new Error(r.err||'فشل');
-    (S.jobs=S.jobs||[]).push({id:r.id,side,total:r.total,done:0,next:0,status:'queued',name:f.name});
+    (S.jobs=S.jobs||[]).push({id:r.id,side,total:r.total,done:0,next:0,status:'queued',name:f.name});prog('read',0,'بدء القراءة بـ Claude — '+r.total+' إيصال');
     toast('استُلم على الخادم: '+r.total+' إيصال'+(r.dup?' · '+r.dup+' مكرر':'')+' — تُقرأ الآن، وتصلك تباعًا');render();pollJobs();
-  }catch(e){toast('تعذّر الرفع: '+(e.message||e));}}
+  }catch(e){prog('hide');toast('تعذّر الرفع: '+(e.message||e));}}
 $('#fs').addEventListener('change',function(){const f=this.files[0];if(f)srvUpload(S.side,f);});
 let _pj=null;
 async function pollJobs(){clearTimeout(_pj);const open=(S.jobs||[]).filter(j=>j.status!=='done'&&j.status!=='error'&&j.status!=='cancelled');if(!open.length)return;
   for(const j of open){try{const r=await fetch(SRV+'/compare/job/'+j.id+'?since='+j.next,{headers:{Authorization:'Bearer '+tokenOf()}});const d=await r.json();if(!d.ok){if(r.status===404){j.status='error';}continue;}
     j.status=d.status;j.done=d.done;j.total=d.total;j.warn=d.warn;j.next=d.next;
+    {const all=(S.jobs||[]);const tot=all.reduce((a,x)=>a+(x.total||0),0),dn=all.reduce((a,x)=>a+(x.done||0),0);if(tot){const left=tot-dn;const eta=left?Math.ceil(left*2.5/60):0;if(dn>=tot||d.status==='done')prog('done',100,'اكتملت القراءة — '+tot+' إيصال');else prog('read',dn/tot*100,'قراءة Claude: '+dn+'/'+tot+(eta?' · ~'+eta+' د':''));}}
     const arr=j.side==='sup'?S.sup:S.cust;
     for(const x of d.results){ if(x.fail){arr.push({id:'r'+(++S.seq),side:j.side,file:null,url:null,amount:null,ccy:'AOA',ref:'',who:'',bank:'',date:new Date(),reading:false,matched:null,how:'',src:'srv',srv:SRV+'/compare/job/'+j.id+'/file/'+x.fid,pdf:!!x.pdf,hasFile:true,fail:true,edit:true,name:x.name,fp:x.fp,job:j.id,fid:x.fid,err:x.err||''});continue;}
       if(x.isReceipt===false||MAURI.test((x.bank||'')+' '+(x.receiver||'')+' '+(x.who||''))||EMOJI.test((x.who||'')+' '+(x.bank||'')+' '+(x.ref||''))||/USDT|USDC|BTC|ETH/i.test(x.ccy||'')||(x.amount&&x.ccy&&x.ccy!=='AOA')){(S.excl=S.excl||[]).push({id:'r'+(++S.seq),side:j.side,excl:true,amount:x.amount,ccy:x.ccy||'',rccy:x.ccy||'',ref:x.ref||'',who:x.who||'',bank:x.bank||x.docType||'',date:x.date?new Date(x.date):new Date(),src:'srv',srv:SRV+'/compare/job/'+j.id+'/file/'+x.fid,pdf:!!x.pdf,hasFile:true,name:x.name,fp:x.fp,file:null,url:null,reading:false,matched:null,how:''});continue;}
@@ -624,6 +625,12 @@ function tableMissing(e){return e&&(e.status===404||/PGRST205|does not exist/.te
 function loadLedger(){syncLedger(false);}
 function setParty(side,k,v){S.party[side][k]=String(v||'').trim();persist();render(true);}
 function render(){var r=__render_.apply(this,arguments);bindParties();return r;}
+/* شريط تقدم الرفع والقراءة — ثابت تحت الشريط العلوي */
+function prog(phase,pct,txt){let b=$('#bdlProg');if(!b){b=document.createElement('div');b.id='bdlProg';b.innerHTML='<div class="bp-top"><span id="bpTxt"></span><span id="bpPct"></span></div><div class="bp-bar"><i id="bpFill"></i></div>';document.body.appendChild(b);
+    const st=document.createElement('style');st.textContent='#bdlProg{position:fixed;top:calc(56px + env(safe-area-inset-top,0px));left:0;right:0;z-index:8999;background:#fff;border-bottom:1px solid #E6E8EE;padding:8px 14px 10px;box-shadow:0 6px 18px rgba(10,10,10,.06);font-size:13px;display:none}#bdlProg.on{display:block}#bdlProg .bp-top{display:flex;justify-content:space-between;font-weight:700;color:#0B2F70;margin-bottom:6px}#bdlProg .bp-bar{height:8px;border-radius:99px;background:#EEF0F4;overflow:hidden}#bdlProg .bp-bar i{display:block;height:100%;width:0;border-radius:99px;background:linear-gradient(90deg,#1F5FE0,#2ECC8A);transition:width .3s}#bdlProg.read .bp-bar i{background:linear-gradient(90deg,#C9A227,#2ECC8A)}#bdlProg.done .bp-bar i{background:#2ECC8A}';document.head.appendChild(st);}
+  if(phase==='hide'){b.classList.remove('on');return;}b.classList.add('on');b.classList.toggle('read',phase==='read');b.classList.toggle('done',phase==='done');
+  $('#bpTxt').textContent=txt||'';$('#bpPct').textContent=(pct==null?'':Math.round(pct)+'%');$('#bpFill').style.width=(pct==null?100:Math.max(2,Math.min(100,pct)))+'%';
+  if(phase==='done')setTimeout(()=>{if(b.classList.contains('done'))b.classList.remove('on');},4000);}
 /* دليل الجهات الموحّد: كل اسم+هاتف يُكتب هنا يُحفظ للجميع (المحاسب، الدفاتر، واتساب) */
 /* تسوية يدوية: الإيصال تحقّق منه المالك ولا مقابل له في الدفتر — يخرج من الذمم ويبقى مسجّلًا كمسوّى */
 async function settle(id){const r=find(id);if(!r||!r.fp)return;if(!confirm('تثبيت هذا الإيصال كمسوّى؟ سيخرج من «بلا مقابل» ويبقى في الدفتر.'))return;
