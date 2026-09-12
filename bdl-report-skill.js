@@ -25,8 +25,13 @@ async function ask(facts, opt) {
     body: JSON.stringify({ model: process.env.ANTHROPIC_MODEL || 'claude-sonnet-5', max_tokens: opt.maxTokens || 7000, system: SYSTEM, messages: [{ role: 'user', content: 'بيانات اليوم (JSON):\n' + (typeof facts === 'string' ? facts : JSON.stringify(facts)) + (opt.extra ? '\n\n' + opt.extra : '') }] }) });
   const j = await r.json(); if (!r.ok) throw new Error('Claude ' + r.status + ': ' + ((j.error && j.error.message) || '').slice(0, 160));
   const t = (j.content || []).filter(b => b.type === 'text').map(b => b.text).join('').replace(/```json|```/g, '').trim();
+  if (j.stop_reason === 'max_tokens' && !opt._retried) return ask(facts, Object.assign({}, opt, { _retried: true, maxTokens: 12000, extra: (opt.extra || '') + '\nاختصر: كل قائمة 4 عناصر كحد أقصى والجمل قصيرة.' }));
   const body = t.slice(t.indexOf('{'), t.lastIndexOf('}') + 1);
-  let rep; try { rep = JSON.parse(body); } catch (e) { try { rep = JSON.parse(fixJson(body)); } catch (e2) { throw new Error('Claude JSON: ' + t.slice(0, 100)); } }
+  let rep; try { rep = JSON.parse(body); } catch (e) { try { rep = JSON.parse(fixJson(body)); } catch (e2) {
+    /* إصلاح بواسطة Claude نفسه: يعيد JSON صالحًا فقط */
+    try { const r2 = await fetch('https://api.anthropic.com/v1/messages', { method: 'POST', headers: { 'content-type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01' }, body: JSON.stringify({ model: process.env.ANTHROPIC_MODEL || 'claude-sonnet-5', max_tokens: 8000, system: 'أصلح JSON التالي وأعده صالحًا فقط بلا أي نص آخر. لا تغيّر المحتوى.', messages: [{ role: 'user', content: body.slice(0, 20000) }] }) });
+      const j2 = await r2.json(); const t2 = (j2.content || []).map(b => b.text || '').join('').replace(/```json|```/g, '').trim(); rep = JSON.parse(fixJson(t2.slice(t2.indexOf('{'), t2.lastIndexOf('}') + 1))); }
+    catch (e3) { throw new Error('Claude JSON: ' + t.slice(0, 100)); } } }
   rep.title = rep.title || 'تقرير المحاسب اليومي'; rep.date = rep.date || new Date().toISOString().slice(0, 10);
   rep.kpis = rep.kpis || []; rep.sections = rep.sections || []; rep.dues = rep.dues || []; rep.actions = rep.actions || []; rep.risks = rep.risks || [];
   return rep;
