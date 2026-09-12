@@ -24,7 +24,7 @@ main,.big,.cols,.col,.bc,.hero,.rep,.tools{max-width:100%;min-width:0}
 .rep>div[style*='overflow']{max-width:100%}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:"Cairo","Inter",-apple-system,sans-serif;padding-bottom:110px}
 .num{font-family:"Inter",sans-serif;font-weight:700}
-header{background:var(--navy);color:#fff;padding:calc(env(safe-area-inset-top) + 12px) 14px 10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+header{position:relative;background:var(--navy);color:#fff;padding:calc(env(safe-area-inset-top) + 12px) 14px 10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 header .nav{flex-basis:100%;display:flex;gap:6px;margin-top:8px}header .nav .tag{flex:1;text-align:center;padding:7px 4px;text-decoration:none;white-space:nowrap}
 header img{width:36px;height:36px}
 header h1{margin:0;font-size:16px;font-weight:800;flex:1;min-width:0}
@@ -135,7 +135,7 @@ table{width:100%;border-collapse:collapse;font-size:12px}th{background:#F3F7FD;c
 <script src="bdl-core.js"></script>
 </head>
 <body>
-<header><img src="favicon.svg?v=bdl7" alt=""><div><h1>مقارنة الإيصالات</h1><small>الزبائن مقابل الموردين — دفتر دائم</small></div><span class="tag" id="tag">الدفتر</span></header>
+<header><img src="favicon.svg?v=bdl7" alt=""><div><h1>مقارنة الإيصالات</h1><small>الزبائن مقابل الموردين — دفتر دائم</small></div><span class="tag" id="tag">الدفتر</span><span style="position:absolute;left:8px;bottom:2px;font-size:9px;opacity:.5">v1337</span></header>
 <main>
 <div class="hero" id="hero"></div>
 <div class="tools" id="prim">
