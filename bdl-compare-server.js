@@ -256,12 +256,15 @@ verdict=ok إن كانت القراءة صحيحة، fixed إن صحّحت شي�
   /* ── رفع مجزّأ للملفات الكبيرة (ZIP بمئات الميغابايت): أجزاء 8MB تُلحق بملف مؤقت ثم تُعالج ── */
   const UPS = {};
   app.post('/compare/upload/start', express.json(), (req, res) => { if (!auth(req)) return res.status(401).json({ ok: false, err: 'auth' }); const uid = crypto.randomBytes(8).toString('hex'); const p = path.join(ROOT, 'up_' + uid); fs.writeFileSync(p, ''); UPS[uid] = { p, at: Date.now(), size: 0 }; res.json({ ok: true, uid }); });
-  app.post('/compare/upload/:uid/chunk', express.raw({ type: '*/*', limit: '32mb' }), (req, res) => { if (!auth(req)) return res.status(401).json({ ok: false, err: 'auth' }); const u = UPS[req.params.uid]; if (!u) return res.status(404).json({ ok: false, err: 'no upload' }); if (!req.body || !req.body.length) return res.status(400).json({ ok: false, err: 'empty' }); fs.appendFileSync(u.p, req.body); u.size += req.body.length; u.at = Date.now(); res.json({ ok: true, size: u.size }); });
+  app.get('/compare/upload/:uid/status', (req, res) => { if (!auth(req)) return res.status(401).json({ ok: false, err: 'auth' }); const u = UPS[req.params.uid]; if (!u) return res.status(404).json({ ok: false, err: 'no upload' }); res.json({ ok: true, size: u.size, next: u.next || 0 }); });
+  app.post('/compare/upload/:uid/chunk', express.raw({ type: '*/*', limit: '32mb' }), (req, res) => { if (!auth(req)) return res.status(401).json({ ok: false, err: 'auth' }); const u = UPS[req.params.uid]; if (!u) return res.status(404).json({ ok: false, err: 'no upload' }); if (!req.body || !req.body.length) return res.status(400).json({ ok: false, err: 'empty' });
+    const idx = parseInt(req.headers['x-chunk-index'] || '-1', 10); if (idx >= 0 && idx < (u.next || 0)) return res.json({ ok: true, size: u.size, next: u.next, dup: true });   // جزء مكرر بعد انقطاع — يُتجاهل
+    fs.appendFileSync(u.p, req.body); u.size += req.body.length; u.next = (idx >= 0 ? idx + 1 : (u.next || 0) + 1); u.at = Date.now(); res.json({ ok: true, size: u.size, next: u.next }); });
   app.post('/compare/upload/:uid/finish', express.json(), async (req, res) => { if (!auth(req)) return res.status(401).json({ ok: false, err: 'auth' }); const u = UPS[req.params.uid]; if (!u) return res.status(404).json({ ok: false, err: 'no upload' });
     const key = String(req.headers['x-gemini-key'] || process.env.GEMINI_KEY || '').trim(); if (!key && !(ENGINE() === 'claude' && akey())) return res.status(400).json({ ok: false, err: 'no gemini key' });
     try { const buf = fs.readFileSync(u.p); fs.unlinkSync(u.p); delete UPS[req.params.uid]; const b = req.body || {}; const job = createJob(buf, String(b.name || 'upload.zip'), b.side === 'sup' ? 'sup' : 'cust', key); res.json({ ok: true, id: job.id, total: job.total, dup: job.dup }); }
     catch (e) { try { fs.unlinkSync(u.p); } catch (x) {} delete UPS[req.params.uid]; res.status(400).json({ ok: false, err: e.message }); } });
-  setInterval(() => { const now = Date.now(); for (const k in UPS) if (now - UPS[k].at > 3600e3) { try { fs.unlinkSync(UPS[k].p); } catch (e) {} delete UPS[k]; } }, 600e3);
+  setInterval(() => { const now = Date.now(); for (const k in UPS) if (now - UPS[k].at > 24 * 3600e3) { try { fs.unlinkSync(UPS[k].p); } catch (e) {} delete UPS[k]; } }, 600e3);
   app.get('/compare/job/:id', (req, res) => {
     if (!auth(req)) return res.status(401).json({ ok: false, err: 'auth' });
     const j = JOBS[req.params.id]; if (!j) return res.status(404).json({ ok: false, err: 'no job' });

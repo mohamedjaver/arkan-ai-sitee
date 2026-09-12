@@ -135,7 +135,7 @@ table{width:100%;border-collapse:collapse;font-size:12px}th{background:#F3F7FD;c
 <script src="bdl-core.js"></script>
 </head>
 <body>
-<header><img src="favicon.svg?v=bdl7" alt=""><div><h1>مقارنة الإيصالات</h1><small>الزبائن مقابل الموردين — دفتر دائم</small></div><span class="tag" id="tag">الدفتر</span><span style="position:absolute;left:8px;bottom:2px;font-size:9px;opacity:.5">v1337</span></header>
+<header><img src="favicon.svg?v=bdl7" alt=""><div><h1>مقارنة الإيصالات</h1><small>الزبائن مقابل الموردين — دفتر دائم</small></div><span class="tag" id="tag">الدفتر</span><span style="position:absolute;left:8px;bottom:2px;font-size:9px;opacity:.5">v1338</span></header>
 <main>
 <div class="hero" id="hero"></div>
 <div class="tools" id="prim">
@@ -419,11 +419,20 @@ async function srvUpload(side0,f){S.side=side0;if(!await zipSeen(f,side0))return
   const side=S.side;toast('جارٍ رفع '+f.name+' ('+(f.size/1048576).toFixed(1)+' MB)…');
   try{let r;
     if(f.size>24*1048576){ /* ملف كبير: رفع مجزّأ 8MB — يعمل مع مئات الميغابايت على الهاتف */
-      const H0={Authorization:'Bearer '+tokenOf()};const st=await (await fetch(SRV+'/compare/upload/start',{method:'POST',headers:{...H0,'Content-Type':'application/json'},body:'{}'})).json();if(!st.ok)throw new Error(st.err||'start');
-      const CH=8*1048576;let off=0,part=0,parts=Math.ceil(f.size/CH);
-      while(off<f.size){const blob=f.slice(off,Math.min(f.size,off+CH));let ok=false;for(let a=0;a<3&&!ok;a++){try{const rr=await fetch(SRV+'/compare/upload/'+st.uid+'/chunk',{method:'POST',headers:{...H0,'Content-Type':'application/octet-stream'},body:blob});ok=rr.ok;}catch(e){}}
-        if(!ok)throw new Error('انقطع الرفع عند الجزء '+(part+1)+'/'+parts);off+=CH;part++;prog('up',off/f.size*100,'رفع '+f.name+' — الجزء '+part+'/'+parts);}
-      r=await (await fetch(SRV+'/compare/upload/'+st.uid+'/finish',{method:'POST',headers:{...H0,'Content-Type':'application/json','x-gemini-key':(localStorage.getItem('gemKey')||'').trim()},body:JSON.stringify({name:f.name,side})})).json();
+      const H0=()=>({Authorization:'Bearer '+tokenOf()});
+      /* رفع قابل للاستئناف: عند انقطاع الإنترنت يتوقف الشريط ويحفظ ما رُفع، ويستكمل تلقائيًا من آخر جزء عند عودة الاتصال (حتى بعد إعادة فتح الصفحة) */
+      const CH=8*1048576;const parts=Math.ceil(f.size/CH);let uid=null,part=0;
+      const saved=(()=>{try{return JSON.parse(localStorage.getItem('bdl_up_resume')||'null');}catch(e){return null;}})();
+      if(saved&&saved.name===f.name&&saved.size===f.size&&saved.side===side){try{const stt=await (await fetch(SRV+'/compare/upload/'+saved.uid+'/status',{headers:H0()})).json();if(stt.ok){uid=saved.uid;part=stt.next||0;toast('استئناف الرفع من الجزء '+(part+1)+'/'+parts);}}catch(e){}}
+      if(!uid){const st=await (await fetch(SRV+'/compare/upload/start',{method:'POST',headers:{...H0(),'Content-Type':'application/json'},body:'{}'})).json();if(!st.ok)throw new Error(st.err||'start');uid=st.uid;}
+      localStorage.setItem('bdl_up_resume',JSON.stringify({uid,name:f.name,size:f.size,side,at:Date.now()}));try{IDB.put('files',{id:'__resume__',blob:f,name:f.name,size:f.size,side});}catch(e){}
+      const waitOnline=()=>new Promise(res=>{if(navigator.onLine)return res();prog('up',part/parts*100,'⏸ لا اتصال — سيُستكمل تلقائيًا من الجزء '+(part+1)+'/'+parts);const h=()=>{window.removeEventListener('online',h);res();};window.addEventListener('online',h);});
+      while(part<parts){await waitOnline();const off=part*CH;const blob=f.slice(off,Math.min(f.size,off+CH));let ok=false,tries=0;
+        while(!ok){try{const rr=await fetch(SRV+'/compare/upload/'+uid+'/chunk',{method:'POST',headers:{...H0(),'Content-Type':'application/octet-stream','x-chunk-index':String(part)},body:blob});if(rr.status===404)throw Object.assign(new Error('gone'),{gone:true});ok=rr.ok;}catch(e){if(e.gone)throw new Error('انتهت صلاحية الرفع على الخادم — ابدأ من جديد');}
+          if(!ok){tries++;prog('up',part/parts*100,'⏸ تعذّر الاتصال — إعادة المحاولة ('+tries+') الجزء '+(part+1)+'/'+parts);await new Promise(res=>setTimeout(res,Math.min(30000,2000*tries)));await waitOnline();}}
+        part++;prog('up',part/parts*100,'رفع '+f.name+' — الجزء '+part+'/'+parts);}
+      r=await (await fetch(SRV+'/compare/upload/'+uid+'/finish',{method:'POST',headers:{...H0(),'Content-Type':'application/json','x-gemini-key':(localStorage.getItem('gemKey')||'').trim()},body:JSON.stringify({name:f.name,side})})).json();
+      localStorage.removeItem('bdl_up_resume');try{IDB.del('files','__resume__');}catch(e){}
     } else r=await new Promise((res,rej)=>{const x=new XMLHttpRequest();x.open('POST',SRV+'/compare/job');x.setRequestHeader('Authorization','Bearer '+tokenOf());x.setRequestHeader('x-gemini-key',(localStorage.getItem('gemKey')||'').trim());x.setRequestHeader('x-file-name',f.name);x.setRequestHeader('x-side',side);x.setRequestHeader('Content-Type','application/octet-stream');
       x.upload.onprogress=e=>{if(e.lengthComputable)prog('up',e.loaded/e.total*100,'رفع '+f.name);};x.onload=()=>{try{res(JSON.parse(x.responseText));}catch(e){rej(new Error('bad response '+x.status));}};x.onerror=()=>rej(new Error('network'));x.send(f);});
     if(!r.ok)throw new Error(r.err||'فشل');
@@ -431,6 +440,8 @@ async function srvUpload(side0,f){S.side=side0;if(!await zipSeen(f,side0))return
     toast('استُلم على الخادم: '+r.total+' إيصال'+(r.dup?' · '+r.dup+' مكرر':'')+' — تُقرأ الآن، وتصلك تباعًا');render();pollJobs();
   }catch(e){prog('hide');toast('تعذّر الرفع: '+(e.message||e));}}
 $('#fs').addEventListener('change',function(){const f=this.files[0];if(f)srvUpload(S.side,f);});
+/* استئناف رفع متوقف بعد إعادة فتح الصفحة */
+setTimeout(async()=>{try{const sv=JSON.parse(localStorage.getItem('bdl_up_resume')||'null');if(!sv||Date.now()-sv.at>24*3600e3)return;const rec=await IDB.get('files','__resume__');if(rec&&rec.blob&&confirm('يوجد رفع لم يكتمل: '+sv.name+' — استكماله الآن؟')){const f=new File([rec.blob],sv.name,{type:rec.blob.type||'application/zip'});srvUpload(sv.side,f);}}catch(e){}},2500);
 let _pj=null;
 async function pollJobs(){clearTimeout(_pj);const open=(S.jobs||[]).filter(j=>j.status!=='done'&&j.status!=='error'&&j.status!=='cancelled');if(!open.length)return;
   for(const j of open){try{const r=await fetch(SRV+'/compare/job/'+j.id+'?since='+j.next,{headers:{Authorization:'Bearer '+tokenOf()}});const d=await r.json();if(!d.ok){if(r.status===404){j.status='error';}continue;}
