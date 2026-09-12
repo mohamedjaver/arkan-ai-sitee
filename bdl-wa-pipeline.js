@@ -46,7 +46,10 @@ module.exports = function (app, ctx) {
   }
 
   async function finalize(fp, side, r, phone, name, url, pnid) {
-    const x = row(fp, side, r, phone, name, url); await insertLedger(x);
+    const x = row(fp, side, r, phone, name, url);
+    /* منع التكرار بالمحتوى: نفس الجانب والمبلغ واليوم والهاتف (بلا مرجع) → يُسجَّل للمراجعة لا كإيصال جديد */
+    try { if (x.amount > 0) { const day = x.msg_at.slice(0, 10); const q = '/bdl_cmp_receipts?select=fp,ref,who&side=eq.' + side + '&amount=eq.' + x.amount + '&msg_at=gte.' + day + '&msg_at=lt.' + day + 'T23:59:59&phone=eq.' + encodeURIComponent(x.phone) + '&limit=3'; const same = await sb(q); const hit = same.find(s => s.fp !== fp && (!x.ref || !s.ref || s.ref === x.ref)); if (hit) { x.review = true; x.flags = (x.flags || []).concat(['dup-suspect']); await tgSend('⚠️ إيصال <b>مكرر محتمل</b> من ' + esc(x.who) + ' — ' + fmt(x.amount) + ' ' + x.ccy + ' اليوم (سُجّل للمراجعة، لن يدخل المطابقة)'); } } } catch (e) {}
+    await insertLedger(x);
     await waReply(pnid, phone, x.review ? 'تم استلام الإيصال وسيُراجع يدويًا.' : 'تم تسجيل إيصال ' + fmt(x.amount) + ' ' + x.ccy + (x.ref ? ' (مرجع ' + x.ref + ')' : '') + '.');
     await tgSend((x.review ? '🟠 إيصال يحتاج مراجعة' : '🧾 إيصال جديد') + ' — ' + sideAr(side) + '\n<b>' + fmt(x.amount) + ' ' + x.ccy + '</b> · ' + esc(x.who) + ' · ' + esc(x.bank) + (x.ref ? ' · ' + esc(x.ref) : '') + '\n📱 +' + norm(phone) + (url ? '\n' + url : ''));
     try { await proposeMatch(x); } catch (e) { console.warn('wa-match:', e.message); }
