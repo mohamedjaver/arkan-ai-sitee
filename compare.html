@@ -417,7 +417,14 @@ function pickSrv(side){if(needParty(side))return;S.side=side;$('#fs').value='';$
 async function srvUpload(side0,f){S.side=side0;if(!await zipSeen(f,side0))return;const tok=tokenOf();if(!tok){toast('سجّل الدخول في «حسابي» أولًا ثم عد لهذه الصفحة');return;}
   /* الخادم يقرأ بـ Claude — مفتاح Gemini اختياري هنا */
   const side=S.side;toast('جارٍ رفع '+f.name+' ('+(f.size/1048576).toFixed(1)+' MB)…');
-  try{const r=await new Promise((res,rej)=>{const x=new XMLHttpRequest();x.open('POST',SRV+'/compare/job');x.setRequestHeader('Authorization','Bearer '+tokenOf());x.setRequestHeader('x-gemini-key',(localStorage.getItem('gemKey')||'').trim());x.setRequestHeader('x-file-name',f.name);x.setRequestHeader('x-side',side);x.setRequestHeader('Content-Type','application/octet-stream');
+  try{let r;
+    if(f.size>24*1048576){ /* ملف كبير: رفع مجزّأ 8MB — يعمل مع مئات الميغابايت على الهاتف */
+      const H0={Authorization:'Bearer '+tokenOf()};const st=await (await fetch(SRV+'/compare/upload/start',{method:'POST',headers:{...H0,'Content-Type':'application/json'},body:'{}'})).json();if(!st.ok)throw new Error(st.err||'start');
+      const CH=8*1048576;let off=0,part=0,parts=Math.ceil(f.size/CH);
+      while(off<f.size){const blob=f.slice(off,Math.min(f.size,off+CH));let ok=false;for(let a=0;a<3&&!ok;a++){try{const rr=await fetch(SRV+'/compare/upload/'+st.uid+'/chunk',{method:'POST',headers:{...H0,'Content-Type':'application/octet-stream'},body:blob});ok=rr.ok;}catch(e){}}
+        if(!ok)throw new Error('انقطع الرفع عند الجزء '+(part+1)+'/'+parts);off+=CH;part++;toast('رفع '+Math.round(off/f.size*100)+'% ('+part+'/'+parts+')');}
+      r=await (await fetch(SRV+'/compare/upload/'+st.uid+'/finish',{method:'POST',headers:{...H0,'Content-Type':'application/json','x-gemini-key':(localStorage.getItem('gemKey')||'').trim()},body:JSON.stringify({name:f.name,side})})).json();
+    } else r=await new Promise((res,rej)=>{const x=new XMLHttpRequest();x.open('POST',SRV+'/compare/job');x.setRequestHeader('Authorization','Bearer '+tokenOf());x.setRequestHeader('x-gemini-key',(localStorage.getItem('gemKey')||'').trim());x.setRequestHeader('x-file-name',f.name);x.setRequestHeader('x-side',side);x.setRequestHeader('Content-Type','application/octet-stream');
       x.upload.onprogress=e=>{if(e.lengthComputable)toast('رفع… '+Math.round(e.loaded/e.total*100)+'%');};x.onload=()=>{try{res(JSON.parse(x.responseText));}catch(e){rej(new Error('bad response '+x.status));}};x.onerror=()=>rej(new Error('network'));x.send(f);});
     if(!r.ok)throw new Error(r.err||'فشل');
     (S.jobs=S.jobs||[]).push({id:r.id,side,total:r.total,done:0,next:0,status:'queued',name:f.name});

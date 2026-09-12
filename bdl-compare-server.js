@@ -181,6 +181,7 @@ verdict=ok إن كانت القراءة صحيحة، fixed إن صحّحت شي�
     } catch (e) {}
     return r; }
   async function readOne(job, it) {
+    if (!it.data) { try { const f = fs.readdirSync(job.dir).find(n => n.startsWith(it.fid + '_')); if (f) it.data = fs.readFileSync(path.join(job.dir, f)); } catch (e) {} }   // من القرص عند الحاجة
     const b64 = it.data.toString('base64'), mime = mimeOf(it.name), isPdf = mime === 'application/pdf';
     let p1 = null, txt = null, eng = (ENGINE() === 'claude' && akey() ? 'claude' : 'gemini') + '-image', err1 = '';
     try { p1 = await gem(job.key, P1 + examplesFor(''), b64, mime, 320); } catch (e) { if (!isPdf) throw e; err1 = String(e.message || e).slice(0, 80); }
@@ -219,7 +220,7 @@ verdict=ok إن كانت القراءة صحيحة، fixed إن صحّحت شي�
         const idx = i++, it = job.items[idx];
         try {
           const r = await readOne(job, it);
-          job.results.push(Object.assign({ fid: it.fid, name: it.name, pdf: /pdf$/i.test(it.name), size: it.size, fp: it.fp }, r));
+          job.results.push(Object.assign({ fid: it.fid, name: it.name, pdf: /pdf$/i.test(it.name), size: it.size, fp: it.fp }, r)); it.data = null;   // تحرير الذاكرة
         } catch (e) { job.results.push({ fid: it.fid, name: it.name, pdf: /pdf$/i.test(it.name), fp: it.fp, fail: true, err: String(e.message || e).slice(0, 120), review: true }); if (/quota|API key|403/i.test(String(e.message))) job.warn = String(e.message).slice(0, 160); }
         job.done++;
       }
@@ -229,26 +230,38 @@ verdict=ok إن كانت القراءة صحيحة، fixed إن صحّحت شي�
   }
 
   /* ── الرفع ── */
+  function createJob(buf, name, side, key) {
+    const id = crypto.randomBytes(8).toString('hex'); const dir = path.join(ROOT, id); fs.mkdirSync(dir);
+    let files = [];
+    try { files = /\.zip$/i.test(name) || buf.readUInt32LE(0) === 0x04034b50 ? unzip(buf).filter(f => isDoc(f.name)) : [{ name, data: buf, size: buf.length }]; }
+    catch (e) { throw new Error('bad zip'); }
+    const seen = new Set(); const items = [];
+    for (const f of files) {
+      const fp = crypto.createHash('sha256').update(f.data).digest('hex'); if (seen.has(fp)) continue; seen.add(fp);
+      const fid = crypto.randomBytes(6).toString('hex'); fs.writeFileSync(path.join(dir, fid + '_' + f.name.replace(/[^\w.\-]/g, '_')), f.data);
+      items.push({ fid, name: f.name, size: f.size, fp });   // البيانات تُقرأ من القرص عند الحاجة — لا نحتفظ بـ400MB في الذاكرة
+    }
+    const job = { id, dir, side, key, created: Date.now(), total: items.length, done: 0, dup: files.length - items.length, items, results: [], status: 'queued' };
+    JOBS[id] = job; run(job).catch(e => { job.status = 'error'; job.warn = String(e.message); });
+    return job;
+  }
   app.post('/compare/job', express.raw({ type: '*/*', limit: '1500mb' }), async (req, res) => {
     if (!auth(req)) return res.status(401).json({ ok: false, err: 'auth' });
     const key = String(req.headers['x-gemini-key'] || process.env.GEMINI_KEY || '').trim();
     if (!key && !(ENGINE() === 'claude' && akey())) return res.status(400).json({ ok: false, err: 'no gemini key' });
     const buf = req.body; if (!buf || !buf.length) return res.status(400).json({ ok: false, err: 'empty' });
-    const id = crypto.randomBytes(8).toString('hex'); const dir = path.join(ROOT, id); fs.mkdirSync(dir);
-    const name = String(req.headers['x-file-name'] || 'upload'); const side = req.headers['x-side'] === 'sup' ? 'sup' : 'cust';
-    let files = [];
-    try { files = /\.zip$/i.test(name) || buf.readUInt32LE(0) === 0x04034b50 ? unzip(buf).filter(f => isDoc(f.name)) : [{ name, data: buf, size: buf.length }]; }
-    catch (e) { return res.status(400).json({ ok: false, err: 'bad zip' }); }
-    const seen = new Set(); const items = [];
-    for (const f of files) {
-      const fp = crypto.createHash('sha256').update(f.data).digest('hex'); if (seen.has(fp)) continue; seen.add(fp);
-      const fid = crypto.randomBytes(6).toString('hex'); fs.writeFileSync(path.join(dir, fid + '_' + f.name.replace(/[^\w.\-]/g, '_')), f.data);
-      items.push({ fid, name: f.name, data: f.data, size: f.size, fp });
-    }
-    const job = { id, dir, side, key, created: Date.now(), total: items.length, done: 0, dup: files.length - items.length, items, results: [], status: 'queued' };
-    JOBS[id] = job; run(job).catch(e => { job.status = 'error'; job.warn = String(e.message); });
-    res.json({ ok: true, id, total: job.total, dup: job.dup });
+    try { const job = createJob(buf, String(req.headers['x-file-name'] || 'upload'), req.headers['x-side'] === 'sup' ? 'sup' : 'cust', key); res.json({ ok: true, id: job.id, total: job.total, dup: job.dup }); }
+    catch (e) { res.status(400).json({ ok: false, err: e.message }); }
   });
+  /* ── رفع مجزّأ للملفات الكبيرة (ZIP بمئات الميغابايت): أجزاء 8MB تُلحق بملف مؤقت ثم تُعالج ── */
+  const UPS = {};
+  app.post('/compare/upload/start', express.json(), (req, res) => { if (!auth(req)) return res.status(401).json({ ok: false, err: 'auth' }); const uid = crypto.randomBytes(8).toString('hex'); const p = path.join(ROOT, 'up_' + uid); fs.writeFileSync(p, ''); UPS[uid] = { p, at: Date.now(), size: 0 }; res.json({ ok: true, uid }); });
+  app.post('/compare/upload/:uid/chunk', express.raw({ type: '*/*', limit: '32mb' }), (req, res) => { if (!auth(req)) return res.status(401).json({ ok: false, err: 'auth' }); const u = UPS[req.params.uid]; if (!u) return res.status(404).json({ ok: false, err: 'no upload' }); if (!req.body || !req.body.length) return res.status(400).json({ ok: false, err: 'empty' }); fs.appendFileSync(u.p, req.body); u.size += req.body.length; u.at = Date.now(); res.json({ ok: true, size: u.size }); });
+  app.post('/compare/upload/:uid/finish', express.json(), async (req, res) => { if (!auth(req)) return res.status(401).json({ ok: false, err: 'auth' }); const u = UPS[req.params.uid]; if (!u) return res.status(404).json({ ok: false, err: 'no upload' });
+    const key = String(req.headers['x-gemini-key'] || process.env.GEMINI_KEY || '').trim(); if (!key && !(ENGINE() === 'claude' && akey())) return res.status(400).json({ ok: false, err: 'no gemini key' });
+    try { const buf = fs.readFileSync(u.p); fs.unlinkSync(u.p); delete UPS[req.params.uid]; const b = req.body || {}; const job = createJob(buf, String(b.name || 'upload.zip'), b.side === 'sup' ? 'sup' : 'cust', key); res.json({ ok: true, id: job.id, total: job.total, dup: job.dup }); }
+    catch (e) { try { fs.unlinkSync(u.p); } catch (x) {} delete UPS[req.params.uid]; res.status(400).json({ ok: false, err: e.message }); } });
+  setInterval(() => { const now = Date.now(); for (const k in UPS) if (now - UPS[k].at > 3600e3) { try { fs.unlinkSync(UPS[k].p); } catch (e) {} delete UPS[k]; } }, 600e3);
   app.get('/compare/job/:id', (req, res) => {
     if (!auth(req)) return res.status(401).json({ ok: false, err: 'auth' });
     const j = JOBS[req.params.id]; if (!j) return res.status(404).json({ ok: false, err: 'no job' });
