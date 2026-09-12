@@ -143,6 +143,7 @@ table{width:100%;border-collapse:collapse;font-size:12px}th{background:#F3F7FD;c
   <button class="pri" onclick="syncLedger(false)">مزامنة مع الدفتر</button>
   <button style="border-color:var(--gold);color:var(--gold)" onclick="location.href='accountant.html'">المحاسب</button>
   <button style="border-color:var(--navy)" onclick="aiMatch()">مطابقة Claude</button>
+  <button onclick="clearAll()" title="يمسح إيصالات هذا الجهاز فقط — الدفتر الدائم يبقى كما هو">جلسة جديدة</button>
   <button onclick="exportPDF()">تقرير PDF</button>
   <button id="rsm" style="display:none;background:#ED6C02;color:#fff;border-color:#ED6C02" onclick="resume()">متابعة القراءة</button>
   <span style="flex:1"></span>
@@ -760,7 +761,7 @@ async function wipeAll(){if(!tokenOf()){toast('سجّل الدخول أولًا'
     await sbq('/bdl_cmp_receipts?fp=not.is.null',{method:'DELETE',headers:{Prefer:'return=minimal'}});}catch(e){toast('تعذّر مسح الدفتر: '+(e.message||e));}
   S.cust=[];S.sup=[];S.excl=[];S.jobs=[];S.selC=S.selS=null;S.ts=null;S.party={cust:{who:'',phone:''},sup:{who:'',phone:''}};await IDB.clear().catch(()=>{});LED.idx={};
   toast('تم المسح الكامل: '+n+' إيصال من الدفتر'+(b?' · '+b+' قيد':'')+' — ابدأ غدًا من صفر');render(true);}
-async function clearAll(){if(!(await requirePin()))return;if(!confirm('مسح الجلسة من هذا الجهاز فقط — الإيصالات المسجّلة تبقى في الدفتر ويمكن تحميلها من «تحميل من الدفتر». متابعة؟'))return;S.cust=[];S.sup=[];S.excl=[];S.selC=S.selS=null;S.ts=null;IDB.clear().catch(()=>{});LED.index();render();}
+async function clearAll(){if(!confirm('مسح الجلسة من هذا الجهاز فقط — الإيصالات المسجّلة تبقى في الدفتر ويمكن تحميلها من «تحميل من الدفتر». متابعة؟'))return;S.cust=[];S.sup=[];S.excl=[];S.selC=S.selS=null;S.ts=null;IDB.clear().catch(()=>{});LED.index();render();}
 
 /* ───── المطابقة ───── */
 /* ── مطابقة وتفتيش بـ Claude (الخادم) — اقتراحات يعتمدها المالك ── */
@@ -828,8 +829,9 @@ function bigCards(){const one=side=>{const sup=side==='sup',P=S.party[side]||{wh
     '<div class="row"><div><span>بلا مقابل</span><b>'+pend+'</b></div><div><span>مطابَق</span><b>'+ok+'</b></div><div><span>'+(sup?'المورد':'الزبون')+'</span><b style="font-size:13px">'+esc(P.who||'—')+'</b></div></div>'+
     '<input id="pw-'+side+'" placeholder="'+(sup?'اسم المورد':'اسم الزبون')+'" value="'+esc(P.who)+'" onchange="setParty(\''+side+'\',\'who\',this.value)"><input id="pp-'+side+'" placeholder="رقم الهاتف" inputmode="tel" value="'+esc(P.phone)+'" style="direction:ltr;font-family:Inter,sans-serif" onchange="setParty(\''+side+'\',\'phone\',this.value)">'+
     '<button class="p" onclick="pickSrv(\''+side+'\')">رفع كبير — الخادم + Claude</button><div class="bb"><button onclick="pick(\''+side+'\')">رفع محلي</button><button onclick="pickWA(\''+side+'\')">واتساب</button><button onclick="manual(\''+side+'\')">يدوي</button></div>'+
+    '<details style="margin-top:10px"><summary style="cursor:pointer;font-size:12px;font-weight:700;opacity:.85;list-style:none;padding:6px 2px">خيارات الجهة ▸</summary>'+
     '<button class="mv" onclick="moveParty(\''+side+'\')">نقل جهة إلى عمود '+(sup?'الزبائن':'الموردين')+'</button>'+
-    '<div class="pa"><button onclick="rereadParty(\''+side+'\')">إعادة قراءة جهة</button><button class="dl" onclick="delParty(\''+side+'\')">حذف جهة نهائيًا</button></div></div>';};
+    '<div class="pa"><button onclick="rereadParty(\''+side+'\')">إعادة قراءة جهة</button><button class="dl" onclick="delParty(\''+side+'\')">حذف جهة نهائيًا</button></div></details></div>';};
   $('#big').innerHTML=one('cust')+one('sup');}
 /* ───── التقسيم: الكل / زبائن بلا مورد / موردون بلا زبون / مطابَق (للمراجعة) / يحتاج مراجعة + بحث ───── */
 function hit(r){const q=(S.q||'').trim().toLowerCase();if(!q)return true;return [r.who,r.phone,r.ref,r.bank,r.bankName,r.receiver,String(r.amount||'')].join(' ').toLowerCase().includes(q)||String(r.amount||'').replace(/\D/g,'').includes(q.replace(/\D/g,'')||'§');}
