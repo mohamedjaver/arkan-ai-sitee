@@ -30,7 +30,36 @@ module.exports = function (app, ctx) {
     try { const w = await sb('/bdl_wa_parties?select=phone,name,side&limit=5000'); out.whatsapp = await upsert(w.map(x => ({ phone: x.phone, name: x.name, side: x.side }))); } catch (e) {}
     return out;
   }
-  app.get('/parties', wrap(async () => sb('/bdl_parties?select=phone,name,side,aliases,note,updated_at&order=updated_at.desc&limit=5000')));
+  /* ── ملفات التعريف: لكل جهة أسماء الشركات/المستلمين والحسابات التي ظهرت في إيصالاتها ── */
+  const tok = t => String(t || '').toLowerCase().replace(/[^a-z\u0600-\u06ff0-9 ]/g, ' ').replace(/\s+/g, ' ').trim();
+  async function rebuildProfiles() {
+    const rows = await sb('/bdl_cmp_receipts?select=side,who,phone,receiver,account,bank,sender&limit=50000');
+    const P = {};
+    for (const r of rows) { const ph = norm(r.phone); if (!ph) continue; const p = P[ph] = P[ph] || { phone: ph, name: r.who || '', side: r.side, receivers: {}, accounts: {}, senders: {}, banks: {} };
+      if (r.receiver) p.receivers[tok(r.receiver)] = (p.receivers[tok(r.receiver)] || 0) + 1; if (r.sender) p.senders[tok(r.sender)] = (p.senders[tok(r.sender)] || 0) + 1;
+      if (r.account) p.accounts[String(r.account).replace(/\s+/g, '')] = (p.accounts[String(r.account).replace(/\s+/g, '')] || 0) + 1; if (r.bank) p.banks[tok(r.bank)] = (p.banks[tok(r.bank)] || 0) + 1; }
+    let n = 0;
+    for (const ph in P) { const p = P[ph]; const idents = { receivers: Object.keys(p.receivers).filter(k => k), accounts: Object.keys(p.accounts).filter(k => k), senders: Object.keys(p.senders).filter(k => k), banks: Object.keys(p.banks).filter(k => k) };
+      try { await sb('/bdl_parties?on_conflict=phone', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates,return=minimal' }, body: { phone: ph, name: p.name || ph, side: p.side === 'sup' ? 'sup' : 'cust', identifiers: idents, updated_at: new Date().toISOString() } }); n++; } catch (e) {} }
+    return { parties: n };
+  }
+  async function infer(items) {
+    const parties = await sb('/bdl_parties?select=phone,name,side,identifiers&limit=5000');
+    const out = [];
+    for (const it of items) { const acc = String(it.account || '').replace(/\s+/g, ''); const rc = tok(it.receiver), sd = tok(it.sender); let best = null;
+      for (const p of parties) { const id = p.identifiers || {}; let score = 0, why = '';
+        if (acc && (id.accounts || []).includes(acc)) { score = 0.95; why = 'نفس رقم الحساب'; }
+        else if (rc && (id.receivers || []).some(x => x === rc)) { score = 0.85; why = 'نفس اسم المستلم'; }
+        else if (rc && (id.receivers || []).some(x => x.length > 5 && (rc.includes(x) || x.includes(rc)))) { score = 0.7; why = 'اسم مستلم مشابه'; }
+        else if (sd && (id.senders || []).some(x => x === sd)) { score = 0.6; why = 'نفس اسم المرسل'; }
+        if (score > (best ? best.score : 0)) best = { phone: p.phone, name: p.name, side: p.side, score, why }; }
+      out.push({ id: it.id, guess: best }); }
+    return out;
+  }
+  app.post('/parties/profiles/rebuild', express.json(), wrap(rebuildProfiles));
+  app.post('/parties/infer', express.json(), wrap(async req => infer(Array.isArray(req.body) ? req.body.slice(0, 500) : [])));
+  setInterval(() => rebuildProfiles().catch(() => {}), 6 * 3600e3);
+  app.get('/parties', wrap(async () => sb('/bdl_parties?select=phone,name,side,aliases,note,identifiers,updated_at&order=updated_at.desc&limit=5000')));
   app.get('/parties/find', wrap(async req => { const q = String(req.query.q || '').trim(); if (!q) return []; const ph = norm(q); if (ph.length >= 5) return sb('/bdl_parties?select=phone,name,side,aliases&phone=like.*' + ph + '*&limit=10'); return sb('/bdl_parties?select=phone,name,side,aliases&or=(name.ilike.*' + encodeURIComponent(q) + '*,aliases.cs.{' + encodeURIComponent(q) + '})&limit=10'); }));
   app.post('/parties', express.json(), wrap(async req => ({ saved: await upsert(Array.isArray(req.body) ? req.body : [req.body || {}]) })));
   app.post('/parties/sync', express.json(), wrap(sync));

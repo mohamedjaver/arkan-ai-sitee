@@ -87,7 +87,7 @@ module.exports = function (app, ctx) {
 
   /* ── Gemini ── */
   const P1 = `أنت قارئ إيصالات بنكية أنغولية (BAI, BFA, BIC, ATLANTICO, SOL, KEVE, BCI, MULTICAIXA Express, Standard Bank, Yetu, Caixa Angola...).
-أعد JSON فقط: {"is_bank_receipt":true,"bank":"","amount":0,"amount_verbatim":"","currency":"","reference":"","date":"","sender":"","receiver":"","confidence":0,"doc_type":""}
+أعد JSON فقط: {"is_bank_receipt":true,"bank":"","amount":0,"amount_verbatim":"","currency":"","reference":"","date":"","sender":"","receiver":"", "account":"رقم حساب/IBAN المستلم إن وُجد وإلا \"\"","confidence":0,"doc_type":""}
 قواعد صارمة:
 - amount: مبلغ التحويل فقط (Montante/Valor/Importância). ليس رقم العملية ولا الحساب ولا IBAN ولا الرصيد ولا الرسوم. الفاصلة العشرية البرتغالية (1.234.567,00 = 1234567)، والمسافات فواصل آلاف (Kz 7 500 000,00 = 7500000). اقرأ الأرقام واحدًا واحدًا ولا تضف رقمًا في البداية.
 - amount_verbatim: المبلغ كما هو مكتوب حرفيًا.
@@ -194,7 +194,7 @@ verdict=ok إن كانت القراءة صحيحة، fixed إن صحّحت شي�
     }
     if (!p1) p1 = {};
     const r = { bank: String(p1.bank || '').slice(0, 40), amount: num(p1.amount), ccy: ccyN(p1.currency), ref: String(p1.reference || '').trim().slice(0, 64), date: p1.date || null,
-      who: String(p1.sender || p1.receiver || '').slice(0, 80), receiver: String(p1.receiver || '').slice(0, 80), conf: Number(p1.confidence) || 0, isReceipt: p1.is_bank_receipt !== false, docType: p1.doc_type || '' };
+      who: String(p1.sender || p1.receiver || '').slice(0, 80), receiver: String(p1.receiver || '').slice(0, 80), sender: String(p1.sender || '').slice(0, 80), account: String(p1.account || '').replace(/\s+/g, '').slice(0, 40), conf: Number(p1.confidence) || 0, isReceipt: p1.is_bank_receipt !== false, docType: p1.doc_type || '' };
     if (r.ref && /^AO\d{2}/i.test(r.ref)) r.ref = '';                       // IBAN ليس مرجعًا
     if (r.ref && r.amount && String(Math.round(r.amount)) === r.ref.replace(/\D/g, '')) r.ref = '';
     r.review = false; r.verified = false;

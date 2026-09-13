@@ -83,3 +83,9 @@ begin
 end $$;
 drop trigger if exists bdl_block_trashed_trg on bdl_cmp_receipts;
 create trigger bdl_block_trashed_trg before insert on bdl_cmp_receipts for each row execute function bdl_block_trashed();
+
+-- Build 1339: المطابقة الذكية — من يتبع من
+alter table bdl_cmp_receipts add column if not exists receiver text;
+alter table bdl_cmp_receipts add column if not exists sender text;
+alter table bdl_cmp_receipts add column if not exists account text;
+alter table bdl_parties add column if not exists identifiers jsonb default '{}'::jsonb;
