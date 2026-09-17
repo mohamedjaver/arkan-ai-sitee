@@ -1033,8 +1033,12 @@ function calc(){
     if(ti){ let fx=a/(ti.rate/10); const ti2=tierFor(T,fx); if(ti2&&ti2.tier!==ti.tier){ti=ti2;fx=a/(ti.rate/10);}
       rate=1/(ti.rate/10); tierNote=ti.label[LANG]||ti.label.ar; }
   }else if(TIERS[F]&&T==='MRU'){
+    if(+TIERS[F].mkt>0&&+TIERS[F].buy>0){ /* 1347: الزبون يبيعنا USDT/USD/AED → سعر شرائنا (جانب الشراء في السوق) لا سعر البيع */
+      rate=+TIERS[F].buy/10; tierNote={ar:'سعر الشراء — السوق',fr:'Prix d\'achat',en:'Buy price',pt:'Preço de compra'}[LANG]||'سعر الشراء — السوق';
+    }else{
     const ti=tierFor(F,a);
     if(ti){ rate=ti.rate/10; tierNote=ti.label[LANG]||ti.label.ar; }
+    }
   }
   /* ═ دفتر الكوانزا ثنائي الاتجاه: بيع كوانزا بسعر out موحّد، شراؤها بالشرائح ═ */
   const AO=TIERS.AOA||{}, aoOut=+AO.out||0;
@@ -1057,7 +1061,7 @@ function calc(){
   /* Build 1346: سعر السوق الحقيقي (Binance P2P) بجانب المرجع الرسمي للدولار/USDT/الدرهم */
   try{const mk=(TIERS[F]&&+TIERS[F].mkt>0)?+TIERS[F].mkt:((F==='MRU'&&TIERS[T]&&+TIERS[T].mkt>0)?+TIERS[T].mkt:null);
     if(mk&&rt.textContent){const c=(F==='MRU')?T:F; const mel=document.getElementById('mktRef')||(()=>{const d=document.createElement('div');d.id='mktRef';d.style.cssText='font-size:12px;color:#5C7699;margin-top:4px;font-family:inherit';rt.parentNode.insertBefore(d,rt.nextSibling);return d;})();
-      mel.textContent='سعر السوق (Binance P2P): 1 '+c+' = '+fmt(mk)+' MRU';}else{const m=document.getElementById('mktRef');if(m)m.remove();}}catch(e){}
+      const mb=(TIERS[c]&&+TIERS[c].mktBuy>0)?+TIERS[c].mktBuy:null; mel.textContent='سعر السوق (Binance P2P): 1 '+c+' = '+fmt(mk)+' MRU'+(mb?' بيع · '+fmt(mb)+' شراء':'');}else{const m=document.getElementById('mktRef');if(m)m.remove();}}catch(e){}
   const tb=document.getElementById('tierBadge');
   if(tb){ tb.textContent=tierNote||''; tb.style.display=tierNote?'inline-block':'none'; }
   const go=document.getElementById('goBtn');

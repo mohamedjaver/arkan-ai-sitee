@@ -1504,9 +1504,15 @@ async function arRun(){
       }
       if(!bankMRO) continue;
       const dp=bankMRO<5?4:2, rnd=v=>+v.toFixed(dp);
-      const nw=rnd(bankMRO*(1+c/100)), nm=rnd(bankMRO*(1+(c+1.5)/100)), nr=rnd(bankMRO*(1+(c+3)/100)); /* جملة=العمولة، وسيط=+1.5، تجزئة=+3 */
+      const isP2P=/^P2P/.test(src);
+      /* 1347: الصفوف المربوطة بالسوق تُسعَّر على السوق نفسه — شرائح رفيعة (جملة=العمولة، أعمال +0.15، تجزئة +0.3) */
+      const stepM=isP2P?0.15:1.5, stepR=isP2P?0.3:3;
+      const nw=rnd(bankMRO*(1+c/100)), nm=rnd(bankMRO*(1+(c+stepM)/100)), nr=rnd(bankMRO*(1+(c+stepR)/100));
       if(row.r!==nr||row.m!==nm||row.w!==nw||row.src!==src){ changed=true; }
       row.r=nr; row.m=nm; row.w=nw; row.src=src;
+      /* سعر شرائنا (الزبون يبيعنا USDT/USD/AED): جانب الشراء في P2P ناقص العمولة */
+      if(isP2P&&p2p&&p2p.buy>0){ const base=row.ccy==='AED'?p2p.buy/require('./bdl-p2p').AED_PER_USD:p2p.buy*(row.ccy==='USD'?(+row.usdDisc>0?1-row.usdDisc/100:1):1);
+        const nb=rnd(base*10*(1-c/100)); if(row.buy!==nb){row.buy=nb;changed=true;} row.mktBuy=+base.toFixed(3); }
     }
     if(!changed){ console.log('AUTO-RATES: لا تغيير'); if(!AR_LIVE) await arPersistLive(cur); return; }
     cur.d=new Date().toLocaleDateString('fr-FR');
