@@ -153,30 +153,6 @@ body.sheet-open .bbar,body.sheet-open #akTabs,body.sheet-open #akTop,body.sheet-
 .match .mtxt span{font-size:11.5px;color:var(--muted)}
 .match.ok .fg{stroke:var(--ok)}.match.ok .mtxt b{color:var(--ok)}
 .match.over .fg{stroke:var(--warn)}.match.over .mtxt b{color:var(--warn)}
-.rcpt{display:flex;align-items:center;gap:10px;border:1px solid var(--line);padding:9px 11px;margin-top:7px;background:var(--wash)}
-.rcpt .ic{width:56px;height:56px;background:#fff;border:1px solid var(--line);display:grid;place-items:center;font-size:11px;font-weight:800;color:#0B2F70;overflow:hidden;cursor:zoom-in;flex:none;align-self:flex-start}
-.rcpt .ic img{width:100%;height:100%;object-fit:cover;display:block}
-.rcpt .sm{margin-top:7px;padding:7px 8px;border:1px dashed #C9DFFA;background:#fff;display:flex;align-items:center;gap:8px;font-size:11px}
-.rcpt .sm .ic{width:44px;height:44px}
-.rcpt .sm button{border:1.5px solid #0B2F70;background:#fff;color:#0B2F70;font:800 11px 'IBM Plex Sans Arabic',sans-serif;padding:7px 10px;cursor:pointer}
-.rcpt .sm.ok{border-color:#0E8F5B;background:#F0FBF5}.rcpt .sm.warn{border-color:#E6A700;background:#FFF9E8}
-#rcptView{position:fixed;inset:0;z-index:99999;background:rgba(3,15,40,.92);display:none;flex-direction:column}
-#rcptView.on{display:flex}#rcptView .bar{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;color:#fff;font-weight:800;padding-top:calc(10px + env(safe-area-inset-top))}
-#rcptView .bar button{background:#fff;color:#0B2F70;border:0;padding:8px 14px;font:800 13px 'IBM Plex Sans Arabic',sans-serif}
-#rcptView .body{flex:1;overflow:auto;-webkit-overflow-scrolling:touch;padding:8px;touch-action:pinch-zoom;display:flex;align-items:flex-start;justify-content:center}#rcptView img{width:100%;height:auto;max-width:none;background:#fff}#rcptView iframe{width:100%;height:100%;border:0;background:#fff}
-.rcpt{align-items:flex-start;flex-wrap:nowrap}
-.rcpt .fi{flex:1;min-width:0;font-size:12px;display:flex;flex-direction:column;gap:6px}
-.rcpt .fi>div:first-child{font-weight:700;color:#0B2447;font-family:"Inter",sans-serif;direction:ltr;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.rcpt .fi input[inputmode="numeric"]{width:100%!important;box-sizing:border-box}
-.rcpt .fi input[list="supDL"]{width:100%!important;box-sizing:border-box;margin-top:0!important}
-.rcpt .fi small{display:block;color:var(--muted);font-size:11px;font-family:"IBM Plex Sans Arabic","Inter",sans-serif;direction:rtl;text-align:right;line-height:1.5;margin-top:0!important}
-.rcpt .sm{margin-top:0}
-.rcpt .del{align-self:flex-start}
-#bulkBox{margin:8px 0;padding:8px;border:1px dashed #0B2F70;background:#F7FAFF;font-size:11.5px}
-#bulkBox .row{display:flex;align-items:center;gap:8px;padding:6px 0;border-top:1px solid #E6EEF7}
-#bulkBox select{flex:1;height:34px;border:1px solid #C9DFFA;font-family:inherit;font-size:12px;background:#fff}
-.rcpt .fi small{display:block;color:var(--muted);font-size:10.5px;font-family:"Inter",sans-serif;direction:ltr;text-align:right}
-.rcpt .del{color:var(--bad);font-size:16px;padding:4px 8px}
 .dup{border-color:#F3C98B;background:#FFF9EE}
 .dup .fi small{color:var(--warn)}
 .toast{position:fixed;bottom:96px;left:50%;transform:translateX(-50%);background:var(--navy);color:#fff;
@@ -279,6 +255,36 @@ body.sheet-open .bbar,body.sheet-open #akTabs,body.sheet-open #akTop,body.sheet-
 .reconrow .num{font-weight:700;color:#0B2447}
 .rec-ok{color:#0B7A3B;font-weight:800}
 .rec-miss{color:#B00020;font-weight:800}
+/* ═══ 1356: بطاقات إيصالات التسوية — بنمط صفحة المطابقة ═══ */
+.rcpt{padding:10px 12px;margin-top:8px;border:1px solid var(--line);border-inline-start:6px solid var(--line);background:#fff;position:relative;min-width:0;overflow-wrap:anywhere}
+.rcpt.ok{background:#EEF9F2;border-inline-start-color:#0E8F5B}.rcpt.pend{background:#FFF1F1;border-inline-start-color:#B00020}.rcpt.rev{background:#FFF6E5;border-inline-start-color:#9A4B00}.rcpt.rd{border-inline-start-color:#0A56B8}
+.rcpt .t{display:flex;align-items:center;gap:10px}
+.rcpt .ic{width:52px;height:52px;flex:none;background:#fff;border:1px solid var(--line);display:grid;place-items:center;font-size:11px;font-weight:800;color:#0B2F70;overflow:hidden;cursor:zoom-in}
+.rcpt .ic img{width:100%;height:100%;object-fit:cover;display:block}
+.rcpt .tt{flex:1;min-width:0}
+.rcpt .st{display:inline-block;font-size:10.5px;font-weight:800;padding:3px 7px;background:#E8EEF7;color:#0B2447}
+.rcpt.ok .st{background:#CDEFD9;color:#0E8F5B}.rcpt.pend .st{background:#FBDADA;color:#B00020}.rcpt.rev .st{background:#FFE9C7;color:#9A4B00}
+.rcpt .fn{font:700 11px "Inter",sans-serif;color:var(--muted);direction:ltr;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:4px}
+.rcpt .del{border:0;background:transparent;color:#B00020;font-size:18px;padding:4px 6px;cursor:pointer;flex:none}
+.rcpt .f{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}
+.rcpt .f input{width:100%;box-sizing:border-box;height:42px;border:1.5px solid #C9DFFA;background:#fff;padding:0 10px;font-family:'IBM Plex Sans Arabic',sans-serif;font-size:13px;outline:none;min-width:0}
+.rcpt .f input.amt{font-family:'IBM Plex Mono',monospace;font-weight:800;font-size:16px;color:#003B8F;text-align:center}
+.rcpt .f input.need{border-color:#E6A700}
+.rcpt .m{font-size:11px;color:var(--muted);font-weight:700;margin-top:6px;line-height:1.5}
+.rcpt .acts{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}
+.rcpt .acts button{border:1px solid var(--line);background:#fff;color:var(--navy);font:800 11.5px 'IBM Plex Sans Arabic',sans-serif;padding:10px 6px;cursor:pointer}
+.rcpt .acts button.pri{border-color:#0B2F70;background:#0B2F70;color:#fff}
+.rcpt .sm{margin-top:8px;padding:8px;border:1px solid #C9DFFA;background:#fff;display:flex;align-items:center;gap:8px;font-size:11.5px}
+.rcpt .sm .ic{width:44px;height:44px}.rcpt .sm .sx{flex:1;min-width:0}
+.rcpt .sm.ok{border-color:#0E8F5B;background:#F0FBF5}.rcpt .sm.warn{border-color:#E6A700;background:#FFF9E8}
+.rcpt .x{border:0;background:transparent;color:#B00020;font-weight:800;font-size:14px;cursor:pointer;padding:0 6px}
+#bulkBox{margin:8px 0;padding:8px;border:1px dashed #0B2F70;background:#F7FAFF;font-size:11.5px}
+#bulkBox .row{display:flex;align-items:center;gap:8px;padding:6px 0;border-top:1px solid #E6EEF7}
+#bulkBox select{flex:1;height:34px;border:1px solid #C9DFFA;font-family:inherit;font-size:12px;background:#fff;min-width:0}
+#rcptView{position:fixed;inset:0;z-index:99999;background:rgba(3,15,40,.92);display:none;flex-direction:column}
+#rcptView.on{display:flex}#rcptView .bar{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;color:#fff;font-weight:800;padding-top:calc(10px + env(safe-area-inset-top))}
+#rcptView .bar button{background:#fff;color:#0B2F70;border:0;padding:8px 14px;font:800 13px 'IBM Plex Sans Arabic',sans-serif}
+#rcptView .body{flex:1;overflow:auto;-webkit-overflow-scrolling:touch;padding:8px;touch-action:pinch-zoom;display:flex;align-items:flex-start;justify-content:center}#rcptView img{width:100%;height:auto;max-width:none;background:#fff}#rcptView iframe{width:100%;height:100%;border:0;background:#fff}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
 </head>
@@ -1456,37 +1462,35 @@ function renderRcpts(){
     var el=$('#sSupSum');if(el)el.innerHTML=RCPTS.length?('مطابقة الموردين: <span class="num">'+mt.length+'/'+RCPTS.length+'</span>'+(mt.length===RCPTS.length&&RCPTS.length?' <span style="color:#0E8F5B">✓ كل إيصال له مورد مقابل بالمرجع</span>':' · <span style="color:#B00020;font-weight:800">المطابقة ينقصها '+fmt(miss,0)+' AOA</span>')):'';
   }catch(e){}
   $('#rcptList').innerHTML=RCPTS.map(function(r,i){
-    var p=r.parsed;
-    var amtBox='';
-    if(!r.dup||r.ok){
-      if(p){ /* قُرئ (أو فشل) — المبلغ قابل للتحرير دائمًا */
-        amtBox='<input inputmode="numeric" dir="ltr" value="'+(p.amount||'')+'"'+
-          ' placeholder="أدخل المبلغ" data-ri="'+i+'" oninput="rcptAmt(this)" onclick="event.stopPropagation()"'+
-          ' style="width:130px;height:40px;border:1.5px solid '+(p.amount?'#C9DFFA':'#E6A700')+';border-radius:0;background:#fff;text-align:center;font-family:\'IBM Plex Mono\',monospace;font-size:15px;font-weight:700;color:#003B8F;outline:none">'+
-          '<small style="display:block;color:var(--muted);font-size:10px;margin-top:2px">'+
-          (p.amount?(rcptCcyOk(r)?'قُرئ بـ'+(p.engine==='claude'?'Claude':(p.engine||'القارئ المحلي'))+' — عدّله إن أخطأ'
-            :'<span style="color:#B00020;font-weight:800">عملة الإيصال '+esc(p.ccy)+' ≠ عملة المستحق '+esc(SS.dueCcy||'')+' — مستثنى من العدّاد</span>')
-            :' لم يُقرأ — اكتبه يدويًا')+(p.ref?' · '+esc(p.ref):'')+(r.supChecked?(r.sup?' · <span style="color:#0E8F5B;font-weight:800">مورد مقابل بالمرجع: '+esc(r.sup)+' ✓</span>':(r.supAmtOnly?' · <span style="color:#9A4B00;font-weight:800">تشابه مبلغ فقط — ليس تأكيدًا</span>':' · <span style="color:#B00020;font-weight:800">بانتظار إيصال المورد</span>')):'')+'</small>';
-      } else amtBox='<small>جارٍ القراءة…</small>';
-    }
-    var thumb='<div class="ic" onclick="event.stopPropagation();rcptView('+i+',false)" title="فتح الإيصال">'+(r.isPdf?'PDF':'<img src="'+r.url+'" alt="">')+'</div>';
-    var sm='';
-    if(!(r.dup&&!r.ok)){ /* 1353: خانة مطابقة مع إيصال المورد قبل التنفيذ */
-      if(r.supFile){var sp=r.supParsed||{};var okA=p&&sp.amount&&Number(sp.amount)===Number(p.amount),okR=p&&sp.ref&&p.ref&&sp.ref===p.ref;
-        sm='<div class="sm '+((okA||okR)?'ok':'warn')+'"><div class="ic" onclick="event.stopPropagation();rcptView('+i+',true)">'+(r.supIsPdf?'PDF':'<img src="'+r.supUrl+'" alt="">')+'</div>'+
-          '<div style="flex:1;min-width:0"><b>إيصال المورد'+(r.sup?' — '+esc(r.sup):'')+'</b><br>'+(sp.amount?'<span class="num">'+esc(String(sp.amount))+'</span>':'لم يُقرأ المبلغ')+(sp.ref?' · '+esc(sp.ref):'')+
-          ' · '+(okR?'<span style="color:#0E8F5B;font-weight:800">✓ مطابق بالمرجع</span>':okA?'<span style="color:#0E8F5B;font-weight:800">✓ مطابق بالمبلغ</span>':'<span style="color:#9A4B00;font-weight:800">⚠ غير مطابق — راجع</span>')+'</div>'+
-          '<button onclick="event.stopPropagation();rcptSupClear('+i+')" style="border-color:#B00020;color:#B00020">✕</button></div>';
+    var p=r.parsed,bad=r.dup&&!r.ok,ccyBad=p&&p.amount&&!rcptCcyOk(r);
+    var stat=bad?['pend','مرفوض']:(!p?['rd','جارٍ القراءة…']:(r.supFile?['ok','مطابَق مع إيصال المورد ✓']:(r.sup?['ok','مورد مقابل بالمرجع ✓']:(r.supAmtOnly?['rev','تشابه مبلغ فقط']:['pend','بانتظار إيصال المورد']))));
+    var thumb='<div class="ic" onclick="event.stopPropagation();rcptView('+i+',false)">'+(r.isPdf?'PDF':'<img src="'+r.url+'" alt="">')+'</div>';
+    var head='<div class="t">'+thumb+'<div class="tt"><span class="st '+stat[0]+'">'+(sheetSide()==='supplier'?'مورد · ':'زبون · ')+stat[1]+'</span><div class="fn">'+esc((r.orig||r.file).name)+'</div></div>'+
+      '<button class="del" onclick="event.stopPropagation();RCPTS.splice('+i+',1);renderRcpts();updMatch()">✕</button></div>';
+    var body='';
+    if(bad){
+      body='<div class="m" style="color:var(--bad)">'+esc(r.why||'استُخدم من قبل في تسوية — مرفوض، احذفه')+'</div>'+
+        '<div class="acts"><button onclick="event.stopPropagation();rcptForce('+i+')">إيصال مختلف فعلًا — أعده</button></div>';
+    } else if(!p){
+      body='<div class="m">جارٍ القراءة…</div>';
+    } else {
+      body='<div class="f" onclick="event.stopPropagation()"><input inputmode="numeric" dir="ltr" value="'+(p.amount||'')+'" placeholder="المبلغ" data-ri="'+i+'" oninput="rcptAmt(this)" class="amt'+(p.amount?'':' need')+'">'+
+        '<input value="'+esc(r.fwdSup||SS.fwdSup||'')+'" placeholder="المورد لهذا الإيصال" data-ri="'+i+'" list="supDL" oninput="rcptSup(this)" class="'+((r.fwdSup||SS.fwdSup)?'':'need')+'"></div>'+
+        '<div class="m">'+(p.amount?(ccyBad?'<span style="color:#B00020;font-weight:800">عملة الإيصال '+esc(p.ccy)+' ≠ عملة المستحق '+esc(SS.dueCcy||'')+' — مستثنى</span>':'قُرئ بـ'+(p.engine==='claude'?'Claude':(p.engine||'القارئ المحلي'))+(p.manual?' · ✓ عُدّل يدويًا':'')):'لم يُقرأ — اكتب المبلغ')+(p.ref?' · <span class="num">'+esc(p.ref)+'</span>':'')+(p.bank?' · '+esc(p.bank):'')+'</div>'+
+        (r.soft?'<div class="acts"><button onclick="RCPTS['+i+'].ok=true;renderRcpts();updMatch()">تحويل جديد مختلف فعلًا — احسبه</button></div>':'');
+      /* المطابقة مع إيصال المورد */
+      if(r.supFile){var sp=r.supParsed||{};var okA=sp.amount&&Number(sp.amount)===Number(p.amount),okR=sp.ref&&p.ref&&sp.ref===p.ref;
+        body+='<div class="sm '+((okA||okR)?'ok':'warn')+'"><div class="ic" onclick="event.stopPropagation();rcptView('+i+',true)">'+(r.supIsPdf?'PDF':'<img src="'+r.supUrl+'" alt="">')+'</div>'+
+          '<div class="sx"><b>إيصال المورد'+(r.sup&&r.sup!=='مورد'?' — '+esc(r.sup):'')+'</b><div class="m" style="margin-top:2px">'+(sp.amount?'<span class="num">'+esc(String(sp.amount))+'</span>':'لم يُقرأ المبلغ')+(sp.ref?' · <span class="num">'+esc(sp.ref)+'</span>':'')+
+          ' · '+(okR?'<span style="color:#0E8F5B;font-weight:800">✓ مطابق بالمرجع</span>':okA?'<span style="color:#0E8F5B;font-weight:800">✓ مطابق بالمبلغ</span>':'<span style="color:#9A4B00;font-weight:800">⚠ غير مطابق — راجع</span>')+'</div></div>'+
+          '<button class="x" onclick="event.stopPropagation();rcptSupClear('+i+')">✕</button></div>';
       } else if(!r.sup){
-        sm='<div class="sm"><button onclick="event.stopPropagation();rcptSupPick('+i+')">⇅ مطابقة مع إيصال المورد</button><span style="color:var(--muted)">ارفع إيصال المورد المقابل ليُحفظ مع هذا الإيصال</span></div>';
+        body+='<div class="acts"><button class="pri" onclick="event.stopPropagation();rcptSupPick('+i+')">⇅ مطابقة مع إيصال المورد</button><button onclick="event.stopPropagation();rcptView('+i+',false)">'+(r.isPdf?'فتح PDF':'فتح الصورة')+'</button></div>';
+      } else {
+        body+='<div class="m" style="color:#0E8F5B">مورد مقابل بالمرجع: '+esc(r.sup)+' ✓</div>';
       }
     }
-    return '<div class="rcpt'+(r.dup&&!r.ok?' dup':'')+'">'+
-      thumb+'<div class="fi"><div>'+esc(r.file.name)+'</div>'+
-      (r.dup&&!r.ok?'<small>'+esc(r.why||'استُخدم من قبل في تسوية — مرفوض، احذفه')+'</small>'+'<button onclick="event.stopPropagation();rcptForce('+i+')" style="display:block;margin-top:6px;padding:8px 12px;border:1.5px solid #0B2F70;background:#fff;color:#0B2F70;font:800 12px \'IBM Plex Sans Arabic\',sans-serif;cursor:pointer">إدراج يدويًا — يُحتسب في هذه التسوية لإكمال حساب المورد</button>'+
-        (r.soft?'<button onclick="RCPTS['+i+'].ok=true;renderRcpts();updMatch()" style="display:block;margin-top:5px;border:1px solid #0A56B8;background:#fff;color:#0A56B8;font-weight:800;font-size:11px;padding:6px 11px;font-family:inherit;cursor:pointer">تحويل جديد مختلف فعلًا — احسبه</button>':'')
-        :amtBox+'<input value="'+esc(r.fwdSup||SS.fwdSup||'')+'" placeholder="المورد لهذا الإيصال" data-ri="'+i+'" list="supDL" oninput="rcptSup(this)" onclick="event.stopPropagation()" style="display:block;width:170px;height:32px;margin-top:6px;border:1px solid '+((r.fwdSup||SS.fwdSup)?'#C9DFFA':'#E6A700')+';background:#F6FAFF;text-align:center;font:700 12px \'IBM Plex Sans Arabic\',sans-serif;color:#0B2F70;outline:none">')+'</div>'+
-      sm+'<button class="del" onclick="RCPTS.splice('+i+',1);renderRcpts();updMatch()">✕</button></div>';
+    return '<div class="rcpt '+stat[0]+'">'+head+body+'</div>';
   }).join('');
 }
 /* ═══ 1353: عارض الإيصال + مطابقة إيصال المورد قبل التنفيذ ═══ */
@@ -1541,8 +1545,7 @@ function rcptAmt(inp){
   r.parsed.amount=parseFloat(String(inp.value).replace(/[^\d.]/g,''))||0;
   r.parsed.manual=true;
   inp.style.borderColor=r.parsed.amount?'#0A56B8':'#E6A700';
-  var note=inp.nextElementSibling;
-  if(note&&r.parsed.amount)note.innerHTML='✓ أُدخل يدويًا — معتمد في العدّاد'+(r.parsed.ref?' · '+esc(r.parsed.ref):'');
+  
   updMatch();
 }
 var SS={due:0,dueCcy:'',paid:0};
