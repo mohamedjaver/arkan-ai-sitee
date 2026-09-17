@@ -268,7 +268,9 @@ body.ready #scList,body.ready #scChat{visibility:visible}
 #upBar i{display:block;height:100%;width:0;background:var(--grad);transition:width .18s}
 
 /* ═══ الأوراق السفلية ═══ */
-.sheet{position:fixed;inset:0;z-index:60;display:none}
+.sheet{position:fixed;inset:0;z-index:9600;display:none} /* 1352: الأوراق (مرفقات/خيارات) فوق شريطي BDL */
+.sheet .card{padding-bottom:calc(16px + env(safe-area-inset-bottom,0px))}
+body:has(.sheet.on) #akTabs,body:has(.sheet.on) #akTop{display:none!important}
 .sheet.on{display:block}
 .sheet .bg{position:absolute;inset:0;background:rgba(11,27,51,.4);backdrop-filter:blur(3px)}
 .sheet .card{position:absolute;bottom:0;inset-inline:0;background:var(--paper);border-radius:0;
