@@ -1496,6 +1496,8 @@ async function arRun(){
         bankMRO=p2p.sell*10*(row.ccy==='USD'?(+row.usdDisc>0?1-row.usdDisc/100:1):1); src='P2P'; row.mkt=+p2p.sell;
       } else if(p2p&&p2p.sell>0&&row.ccy==='AED'){  /* الدرهم مربوط بالدولار: السوق ÷ 3.6725 */
         bankMRO=p2p.sell*10/require('./bdl-p2p').AED_PER_USD; src='P2P·peg'; row.mkt=+(p2p.sell/require('./bdl-p2p').AED_PER_USD).toFixed(3);
+      } else if(p2p&&p2p.sell>0&&mkt&&+mkt[row.ccy]>0){ /* 1349: نسبة وتناسب — كل العملات تُشتق من مرجع USDT/MRU في P2P عبر تقاطع السوق العالمي (وحدات لكل دولار) */
+        bankMRO=p2p.sell*10/+mkt[row.ccy]; src='P2P×'; row.mkt=+(p2p.sell/+mkt[row.ccy]).toFixed(bankMRO<5?4:3);
       } else if((+row.bank||0)>0){                /* مرجع BCM بالجديدة لكل وحدة */
         bankMRO=+row.bank*10; src='BCM';
       } else {                                    /* احتياط: السوق الحي */
@@ -1506,13 +1508,16 @@ async function arRun(){
       const dp=bankMRO<5?4:2, rnd=v=>+v.toFixed(dp);
       const isP2P=/^P2P/.test(src);
       /* 1347: الصفوف المربوطة بالسوق تُسعَّر على السوق نفسه — شرائح رفيعة (جملة=العمولة، أعمال +0.15، تجزئة +0.3) */
-      const stepM=isP2P?0.15:1.5, stepR=isP2P?0.3:3;
+      /* 1349: على السوق نفسه — سعر واحد (جملة=أعمال=تجزئة) ما لم تُضبط خطوات الشرائح في الصف (row.stepM/row.stepR) */
+      const stepM=isP2P?(+row.stepM||0):1.5, stepR=isP2P?(+row.stepR||0):3;
       const nw=rnd(bankMRO*(1+c/100)), nm=rnd(bankMRO*(1+(c+stepM)/100)), nr=rnd(bankMRO*(1+(c+stepR)/100));
       if(row.r!==nr||row.m!==nm||row.w!==nw||row.src!==src){ changed=true; }
       row.r=nr; row.m=nm; row.w=nw; row.src=src;
       /* سعر شرائنا (الزبون يبيعنا USDT/USD/AED): جانب الشراء في P2P ناقص العمولة */
-      if(isP2P&&p2p&&p2p.buy>0){ const base=row.ccy==='AED'?p2p.buy/require('./bdl-p2p').AED_PER_USD:p2p.buy*(row.ccy==='USD'?(+row.usdDisc>0?1-row.usdDisc/100:1):1);
-        const nb=rnd(base*10*(1-c/100)); if(row.buy!==nb){row.buy=nb;changed=true;} row.mktBuy=+base.toFixed(3); }
+      if(isP2P){ /* 1349: السعر المعروض في BDL = سعر البيع على Binance في الاتجاهين؛ row.twoSided=true يُفعّل جانب الشراء (P2P buy − العمولة) */
+        const useBuy=row.twoSided&&p2p&&p2p.buy>0; const ref=useBuy?p2p.buy:p2p.sell;
+        const base=row.ccy==='AED'?ref/require('./bdl-p2p').AED_PER_USD:(row.ccy==='USD'||row.ccy==='USDT')?ref*(row.ccy==='USD'?(+row.usdDisc>0?1-row.usdDisc/100:1):1):(mkt&&+mkt[row.ccy]>0?ref/+mkt[row.ccy]:0);
+        if(base>0){ const nb=rnd(base*10*(1-c/100)); if(row.buy!==nb){row.buy=nb;changed=true;} row.mktBuy=+base.toFixed(3); } }
     }
     if(!changed){ console.log('AUTO-RATES: لا تغيير'); if(!AR_LIVE) await arPersistLive(cur); return; }
     cur.d=new Date().toLocaleDateString('fr-FR');
