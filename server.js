@@ -418,6 +418,16 @@ const ARKAN_NS = '7c9e6679-7425-40de-944b-e07fc1f90ae7'; // لا تغيّره أ
    (كان اللصق يترك فراغًا يفسد التوقيع فترفضه Supabase) */
 const JWT_SECRET = String(process.env.SUPABASE_JWT_SECRET || '').trim();
 const OWNER_PHONES = ['22236295050'];
+/* Build 1341: تحقق صلاحية المالك من توكن الطالب — لا تصعيد إلى هوية المالك لأي زبون */
+function ownerClaims(req) {
+  try {
+    const c = jwt.verify(String(req.headers.authorization || '').replace(/^Bearer\s+/i, ''), JWT_SECRET);
+    const ph = String(c.phone || '').replace(/\D/g, '');
+    if (c.arkan_role === 'owner' || OWNER_PHONES.some(o => ph && o.slice(-8) === ph.slice(-8))) return c;
+  } catch (e) {}
+  return null;
+}
+
 const sbHits = new Map();
 const phoneToUuid = p => uuidv5(String(p).replace(/\D/g, ''), ARKAN_NS);
 
@@ -900,6 +910,8 @@ app.post('/account/log-transfer', async (req, res) => {
       claims = jwt.verify(bearer, JWT_SECRET);
     } catch (e) { return res.status(401).json({ ok: false, err: 'auth' }); }
     const byPhone = String(claims.phone || '').replace(/\D/g, '');
+    const callerOwner = claims.arkan_role === 'owner' || OWNER_PHONES.some(o => byPhone && o.slice(-8) === byPhone.slice(-8));
+    if (!callerOwner && req.body.side === 'supplier') req.body.side = 'customer'; /* 1341: قيد المورد للمالك فقط */
     /* 2) مدخلات القيد */
     const ref = String(req.body.ref || '').trim().slice(0, 64);
     const name = String(req.body.name || '').trim().slice(0, 80) || 'عميل';
@@ -988,8 +1000,7 @@ app.post('/account/log-transfer', async (req, res) => {
 app.post('/account/unlock-ref', async (req, res) => {
   try {
     if (!JWT_SECRET) return res.status(503).json({ ok: false, err: 'service' });
-    try { jwt.verify(String(req.headers.authorization || '').replace(/^Bearer\s+/i, ''), JWT_SECRET); }
-    catch (e) { return res.status(401).json({ ok: false, err: 'auth' }); }
+    if (!ownerClaims(req)) return res.status(403).json({ ok: false, err: 'owner-only' });
     const ref = String(req.body.ref || '').trim().slice(0, 64);
     if (!ref) return res.status(400).json({ ok: false, err: 'ref' });
     const side = req.body.side === 'supplier' ? 'supplier' : 'customer';
@@ -1074,8 +1085,7 @@ app.post('/wa/webhook', async (req, res) => {
 app.post('/account/receipt-log', async (req, res) => {
   try {
     if (!JWT_SECRET) return res.status(503).json({ ok: false, err: 'service' });
-    try { jwt.verify(String(req.headers.authorization || '').replace(/^Bearer\s+/i, ''), JWT_SECRET); }
-    catch (e) { return res.status(401).json({ ok: false, err: 'auth' }); }
+    if (!ownerClaims(req)) return res.status(403).json({ ok: false, err: 'owner-only' });
     const side = req.body.side === 'supplier' ? 'supplier' : 'customer';
     const amount = Number(req.body.amount) || 0;
     if (amount <= 0) return res.status(400).json({ ok: false, err: 'bad amount' });

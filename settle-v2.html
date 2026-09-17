@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
+<script>/* Build 1341: كونسول المالك — الزبون يُعاد فورًا إلى حسابه (توكن الموقع وحده لا يكفي) */(function(){try{var s=JSON.parse(localStorage.getItem('arkan_session')||'null');var ph=String(s&&s.phone||'').replace(/\D/g,'');var ok=/36295050$/.test(ph)||localStorage.getItem('arkan_admin_dev')==='1'||!!localStorage.getItem('arkan-owner-phone');if(!ok&&s&&(s.phone||s.uid))location.replace('account.html');}catch(e){}})();</script>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
 <meta name="view-transition" content="same-origin">
@@ -697,6 +699,8 @@ function bioManual(){var c=document.querySelector('#ovl-login .login');if(c)c.cl
 }catch(e){}})();
 (async function(){ /* استئناف الجلسة، ثم دخول تلقائي ببيانات المالك المحفوظة */
   try{var sj=JSON.parse(localStorage.getItem('arkan_sb_jwt')||'null');   /* جلسة الموقع نفسها — لا طلب Face ID ثانٍ */
+    var _r=null;try{_r=JSON.parse(atob(String(sj.token).split('.')[1].replace(/-/g,'+').replace(/_/g,'/')));}catch(e){}
+    if(sj&&sj.token&&_r&&_r.arkan_role!=='owner'){location.replace('account.html');return;}
     if(sj&&sj.token&&sj.exp-Date.now()/1000>3600){TOK=sj.token;try{sessionStorage.setItem('bdl-tok',JSON.stringify({t:sj.token,e:sj.exp}));}catch(e){}
       $('#ovl-login').classList.remove('on');$('#ovl-login').style.display='none';syncUI('ok','');boot();return;}}catch(e){}
   try{var c=JSON.parse(sessionStorage.getItem('bdl-tok')||'null');

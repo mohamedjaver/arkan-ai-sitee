@@ -2,6 +2,10 @@
 <html lang="ar" dir="rtl">
 <head>
 <script>if(location.protocol==="http:"&&location.hostname.indexOf("lbdal")>-1)location.replace(location.href.replace("http:","https:"));</script>
+<script id="akRole">/* Build 1341: فصل الأدوار — data-role يُحدَّد قبل الرسم؛ الزبون لا يرى أدوات المالك */
+(function(){function calc(){try{var s=JSON.parse(localStorage.getItem('arkan_session')||'null');var ph=String(s&&s.phone||'').replace(/\D/g,'');if(/36295050$/.test(ph))return 'owner';if(s&&(s.phone||s.uid))return 'client';}catch(e){}return 'guest';}
+window.bdlRole=function(){var r=calc();document.documentElement.setAttribute('data-role',r);return r;};window.bdlRole();
+window.addEventListener('storage',function(e){if(e.key==='arkan_session')window.bdlRole();});})();</script>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -311,6 +315,14 @@
 .hm-rates .rt .v small{font-size:10px;color:#6B84A6;font-weight:700}
 .hm-rates .rt .w{font-size:10.5px;color:#0B7A3B;font-weight:700}
 .hm-rates .sk{width:150px;height:74px;flex:none}
+/* Build 1341: فصل الأدوار */
+html[data-role="client"] .hm-mrb,html[data-role="guest"] .hm-mrb{display:none!important}
+html[data-role="client"] .hm-qa [data-qa="cust"],html[data-role="client"] .hm-qa [data-qa="sup"],html[data-role="client"] .hm-qa [data-qa="books"],
+html[data-role="guest"] .hm-qa [data-qa="cust"],html[data-role="guest"] .hm-qa [data-qa="sup"],html[data-role="guest"] .hm-qa [data-qa="books"]{display:none!important}
+html[data-role="owner"] .hm-qa [data-qa="chat"],html[data-role="owner"] .hm-qa [data-qa="rates"]{display:none!important}
+html[data-role="client"] .hm-qa,html[data-role="guest"] .hm-qa{grid-template-columns:repeat(4,1fr)}
+html:not([data-role="owner"]) .owner-only{display:none!important}
+html[data-role="owner"] .client-only{display:none!important}
 .hm-mrb{margin-top:22px}
 .hm-mrb .mrbUni.big{margin-bottom:10px;border-radius:18px!important}
 #homeTx .tx{border-radius:14px}
@@ -353,6 +365,8 @@
         <button type="button" data-qa="cust"><span><svg viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></svg></span>إيصال زبون</button>
         <button type="button" data-qa="sup"><span><svg viewBox="0 0 24 24"><path d="M12 21V9M7 14l5-5 5 5M4 3h16"/></svg></span>إيصال مورد</button>
         <button type="button" data-qa="books"><span><svg viewBox="0 0 24 24"><path d="M4 4h12a2 2 0 0 1 2 2v14H6a2 2 0 0 1-2-2z"/><path d="M8 4v16"/></svg></span>دفاتري</button>
+        <button type="button" data-qa="chat" class="client-only"><span><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>الدردشة</button>
+        <button type="button" data-qa="rates" class="client-only"><span><svg viewBox="0 0 24 24"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span>الأسعار</button>
         <button type="button" data-qa="stmt"><span><svg viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M9 13h6M9 17h6"/></svg></span>كشف حساب</button>
       </div>
 
@@ -1103,10 +1117,10 @@ async function login(phone, pin, silent){
     }
     if (!snap || String(snap.data().pin)!==String(pin)){
       if(!silent) gErr('رقم أو رمز غير صحيح');
-      localStorage.removeItem('arkan_session'); return;
+      localStorage.removeItem('arkan_session'); try{window.bdlRole&&bdlRole();}catch(e){} return;
     }
     SESSION = {phone:d};
-    localStorage.setItem('arkan_session', JSON.stringify(SESSION)); if(!silent) window.__justLoggedIn=true;
+    localStorage.setItem('arkan_session', JSON.stringify(SESSION)); if(!silent) window.__justLoggedIn=true; try{window.bdlRole&&bdlRole();}catch(e){}
     /* توكن خادم موقّع (30 يوماً) بدل تخزين PIN — يُستخدم للدخول الصامت ولـ chat-v2 */
     try{
       const tr=await fetch('https://arkan-ai-site-production.up.railway.app/supabase-token',{
@@ -1536,6 +1550,7 @@ function apply(){
     pb.style.cssText+='background:#0058D9;color:#fff;border-color:#0058D9;font-weight:800';}
   const st=document.getElementById('acctStatus');
   if(st)st.textContent='المالك';
+  try{window.bdlRole&&bdlRole();var lb=document.querySelector('.hm-lbl span');if(lb)lb.textContent='إجمالي التسويات — كل الزبائن';}catch(e){}
   /* 2) settlement في الخيارات: بلاطة في الرئيسية + صف في حسابي */
   /* الشريط نفسه زر الكونسول — بلا بلاطات إضافية */
   if(pb){pb.style.cursor='pointer';
@@ -1781,6 +1796,7 @@ function mrbBankOf(s){
 function mrbChan(){ return MRB_CUR.n ? (MRB_CUR.n+' — '+MRB_CUR.ar) : 'تحويل بنكي'; }
 var MRB_SIDE='customer';
 function mrbPick(side){
+  if((window.bdlRole?bdlRole():'')!=='owner'){(typeof toast==='function'&&toast('هذه الخدمة لحساب المالك فقط'));return;}
   MRB_SIDE=(side==='supplier')?'supplier':'customer';
   MRB_CUR=MRB_BANKS[MRB_BANKS.length-1];
   document.getElementById('mrbBankName').textContent='';
@@ -1789,6 +1805,7 @@ function mrbPick(side){
   document.getElementById('mrbFile').click();
 }
 function mrbManual(ev,side){
+  if((window.bdlRole?bdlRole():'')!=='owner'){if(ev)ev.stopPropagation();(typeof toast==='function'&&toast('هذه الخدمة لحساب المالك فقط'));return;}
   if(ev){ev.stopPropagation();ev.preventDefault();}
   MRB_SIDE=(side==='supplier')?'supplier':'customer';
   MRB_CUR=MRB_BANKS[MRB_BANKS.length-1];
@@ -2423,7 +2440,7 @@ async function mrbPdf(){
   document.querySelectorAll('.hm-qa [data-qa]').forEach(b=>b.onclick=()=>{
     const k=b.dataset.qa;
     if(k==='send')go('s-send');else if(k==='cust')mrbPick('customer');else if(k==='sup')mrbPick('supplier');
-    else if(k==='books')location.href='books.html';else if(k==='stmt')go('s-acct');
+    else if(k==='books')location.href='books.html';else if(k==='stmt')go('s-acct');else if(k==='chat')location.href='chat-v2.html';else if(k==='rates')go('s-rates');
   });
 })();
 </script>
