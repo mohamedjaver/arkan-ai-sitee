@@ -164,7 +164,17 @@ body.sheet-open .bbar,body.sheet-open #akTabs,body.sheet-open #akTop,body.sheet-
 #rcptView.on{display:flex}#rcptView .bar{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;color:#fff;font-weight:800;padding-top:calc(10px + env(safe-area-inset-top))}
 #rcptView .bar button{background:#fff;color:#0B2F70;border:0;padding:8px 14px;font:800 13px 'IBM Plex Sans Arabic',sans-serif}
 #rcptView .body{flex:1;overflow:auto;-webkit-overflow-scrolling:touch;padding:8px;touch-action:pinch-zoom;display:flex;align-items:flex-start;justify-content:center}#rcptView img{width:100%;height:auto;max-width:none;background:#fff}#rcptView iframe{width:100%;height:100%;border:0;background:#fff}
-.rcpt .fi{flex:1;min-width:0;font-size:12px}
+.rcpt{align-items:flex-start;flex-wrap:nowrap}
+.rcpt .fi{flex:1;min-width:0;font-size:12px;display:flex;flex-direction:column;gap:6px}
+.rcpt .fi>div:first-child{font-weight:700;color:#0B2447;font-family:"Inter",sans-serif;direction:ltr;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rcpt .fi input[inputmode="numeric"]{width:100%!important;box-sizing:border-box}
+.rcpt .fi input[list="supDL"]{width:100%!important;box-sizing:border-box;margin-top:0!important}
+.rcpt .fi small{display:block;color:var(--muted);font-size:11px;font-family:"IBM Plex Sans Arabic","Inter",sans-serif;direction:rtl;text-align:right;line-height:1.5;margin-top:0!important}
+.rcpt .sm{margin-top:0}
+.rcpt .del{align-self:flex-start}
+#bulkBox{margin:8px 0;padding:8px;border:1px dashed #0B2F70;background:#F7FAFF;font-size:11.5px}
+#bulkBox .row{display:flex;align-items:center;gap:8px;padding:6px 0;border-top:1px solid #E6EEF7}
+#bulkBox select{flex:1;height:34px;border:1px solid #C9DFFA;font-family:inherit;font-size:12px;background:#fff}
 .rcpt .fi small{display:block;color:var(--muted);font-size:10.5px;font-family:"Inter",sans-serif;direction:ltr;text-align:right}
 .rcpt .del{color:var(--bad);font-size:16px;padding:4px 8px}
 .dup{border-color:#F3C98B;background:#FFF9EE}
@@ -594,6 +604,12 @@ body.sheet-open .bbar,body.sheet-open #akTabs,body.sheet-open #akTop,body.sheet-
       <input id="sFwdSup" placeholder="مثال: Domingo" oninput="SS.fwdSup=this.value.trim();RCPTS.forEach(function(r){if(!r.fwdTouched)r.fwdSup=SS.fwdSup;});renderRcpts()" style="margin-bottom:10px">
       <label>إيصالات التسوية (صورة / PDF — يُقرأ تلقائيًا)</label>
       <input type="file" id="sFiles" multiple accept="image/*,.pdf" onchange="addReceipts(this.files)">
+      <div style="display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap">
+        <button type="button" onclick="document.getElementById('bulkSup').click()" style="border:1.5px solid #0B2F70;background:#0B2F70;color:#fff;font:800 12px 'IBM Plex Sans Arabic',sans-serif;padding:9px 14px;cursor:pointer">⇅ مطابقة جماعية — ارفع إيصالات الموردين</button>
+        <small style="color:var(--muted)">تُطابَق تلقائيًا بالمرجع ثم بالمبلغ؛ ما لم يُطابَق تختار له إيصال الزبون يدويًا</small>
+        <input type="file" id="bulkSup" multiple accept="image/*,.pdf" style="display:none" onchange="bulkSupMatch(this.files);this.value=''">
+      </div>
+      <div id="bulkBox" style="display:none"></div>
       <datalist id="supDL"></datalist><div id="sSupSum" style="font-size:11.5px;font-weight:700;margin:6px 0 2px"></div><div id="rcptList"></div>
     </div>
     <div class="fld"><label>ملاحظة (اختياري)</label><input id="sNote"></div>
@@ -1483,6 +1499,33 @@ function rcptSupPick(i){var inp=document.createElement('input');inp.type='file';
     try{var p=await readReceipt(f);r.supParsed=p||{};if(!r.sup)r.sup=(p&&(p.sup_name||p.supGuess||p.name))||r.fwdSup||SS.fwdSup||'مورد';if(!r.fwdSup&&r.sup&&r.sup!=='مورد')r.fwdSup=r.sup;}catch(e){r.supParsed={};r.sup=r.sup||r.fwdSup||SS.fwdSup||'مورد';}
     r.supChecked=true;renderRcpts();updMatch();};
   inp.click();}
+/* ═══ 1355: مطابقة جماعية لإيصالات الموردين ═══ */
+var BULK=[];
+function attachSup(r,b){r.supFile=b.file;r.supUrl=b.url;r.supIsPdf=b.isPdf;r.supParsed=b.parsed||{};r.supFp=b.fp;
+  if(!r.sup||r.sup==='مورد')r.sup=(b.parsed&&(b.parsed.sup_name||b.parsed.supGuess||b.parsed.name))||r.fwdSup||SS.fwdSup||'مورد';
+  if(!r.fwdSup&&r.sup&&r.sup!=='مورد')r.fwdSup=r.sup;r.supChecked=true;}
+async function bulkSupMatch(files){if(!files||!files.length)return;
+  var box=$('#bulkBox');box.style.display='';box.innerHTML='<b>جارٍ قراءة '+files.length+' إيصال مورد…</b>';
+  var items=[];
+  for(var i=0;i<files.length;i++){var f=files[i];var it={file:f,url:URL.createObjectURL(f),isPdf:/pdf$/i.test(f.type||f.name),parsed:null,fp:null,to:null};
+    try{it.fp=await sha256(await f.arrayBuffer());it.parsed=await readReceipt(f)||{};}catch(e){it.parsed={};}
+    items.push(it);box.innerHTML='<b>قُرئ '+items.length+'/'+files.length+'…</b>';}
+  /* 1) بالمرجع  2) بالمبلغ (غير مستخدم)  */
+  var free=function(){return RCPTS.filter(function(r){return !r.supFile&&!(r.dup&&!r.ok)&&r.parsed;});};
+  items.forEach(function(it){var p=it.parsed||{};if(!p.ref)return;var r=free().find(function(x){return x.parsed.ref&&x.parsed.ref===p.ref;});if(r){attachSup(r,it);it.to=r;it.how='ref';}});
+  items.forEach(function(it){if(it.to)return;var p=it.parsed||{};if(!p.amount)return;var c=free().filter(function(x){return Number(x.parsed.amount)===Number(p.amount);});if(c.length===1){attachSup(c[0],it);it.to=c[0];it.how='amt';}});
+  BULK=items.filter(function(it){return !it.to;});
+  var n=items.length-BULK.length;
+  box.innerHTML='<b>مطابقة جماعية: '+n+'/'+items.length+' طُوبقت تلقائيًا</b>'+(BULK.length?' · <span style="color:#9A4B00;font-weight:800">'+BULK.length+' بلا مطابقة — اختر لها إيصال الزبون:</span>':' <span style="color:#0E8F5B;font-weight:800">✓</span>')+
+    BULK.map(function(it,k){var p=it.parsed||{};var opts=RCPTS.map(function(r,i){if(r.supFile||(r.dup&&!r.ok))return '';var rp=r.parsed||{};return '<option value="'+i+'">'+esc(r.file.name)+' · '+(rp.amount||'?')+(rp.ref?' · '+esc(rp.ref):'')+'</option>';}).join('');
+      return '<div class="row"><div class="ic" style="width:40px;height:40px;border:1px solid var(--line);overflow:hidden;flex:none">'+(it.isPdf?'PDF':'<img src="'+it.url+'" style="width:100%;height:100%;object-fit:cover">')+'</div>'+
+        '<div style="flex:1;min-width:0"><span class="num">'+(p.amount||'—')+'</span>'+(p.ref?' · '+esc(p.ref):'')+'<br><select onchange="bulkAssign('+k+',this.value)"><option value="">— إيصال الزبون —</option>'+opts+'</select></div>'+
+        '<button onclick="BULK.splice('+k+',1);bulkRender()" style="border:1px solid #B00020;color:#B00020;background:#fff;padding:6px 9px;font-weight:800">✕</button></div>';}).join('');
+  renderRcpts();updMatch();}
+function bulkRender(){var box=$('#bulkBox');if(!BULK.length){box.style.display='none';box.innerHTML='';return;}
+  box.innerHTML='<b><span style="color:#9A4B00">'+BULK.length+' إيصال مورد بلا مطابقة — اختر إيصال الزبون:</span></b>'+BULK.map(function(it,k){var p=it.parsed||{};var opts=RCPTS.map(function(r,i){if(r.supFile||(r.dup&&!r.ok))return '';var rp=r.parsed||{};return '<option value="'+i+'">'+esc(r.file.name)+' · '+(rp.amount||'?')+(rp.ref?' · '+esc(rp.ref):'')+'</option>';}).join('');
+    return '<div class="row"><div class="ic" style="width:40px;height:40px;border:1px solid var(--line);overflow:hidden;flex:none">'+(it.isPdf?'PDF':'<img src="'+it.url+'" style="width:100%;height:100%;object-fit:cover">')+'</div><div style="flex:1;min-width:0"><span class="num">'+(p.amount||'—')+'</span>'+(p.ref?' · '+esc(p.ref):'')+'<br><select onchange="bulkAssign('+k+',this.value)"><option value="">— إيصال الزبون —</option>'+opts+'</select></div><button onclick="BULK.splice('+k+',1);bulkRender()" style="border:1px solid #B00020;color:#B00020;background:#fff;padding:6px 9px;font-weight:800">✕</button></div>';}).join('');}
+function bulkAssign(k,v){if(v==='')return;var it=BULK[k],r=RCPTS[+v];if(!it||!r)return;attachSup(r,it);BULK.splice(k,1);bulkRender();renderRcpts();updMatch();}
 function rcptSupClear(i){var r=RCPTS[i];if(!r)return;r.supFile=null;r.supUrl=null;r.supParsed=null;r.supFp=null;if(!r.supFromDb)r.sup=null;renderRcpts();updMatch();}
 async function rcptStore(file,fp){ /* حفظ الصورة في التخزين لفتحها لاحقًا من السجل */
   try{var ext=/pdf$/i.test(file.type||file.name)?'pdf':/png/i.test(file.type)?'png':'jpg';var path='settle/'+fp+'.'+ext;
