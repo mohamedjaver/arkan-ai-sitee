@@ -1332,13 +1332,42 @@ async function ssDropSaved(rid,amt,label){
     }else toast('لم يوجد في عمليات هذه التسوية');
   }catch(e){toast('تعذّرت الإزالة');}
 }
+/* ═══ 1359: تعديل إيصال محفوظ من اللائحة مباشرة (المبلغ / المرجع / العملة) + فتح صورته ═══ */
+function ssEditRow(id){var x=SS.prevRows&&SS.prevRows[id];var row=$('#pr-'+id);if(!x||!row||row._edit)return;row._edit=true;
+  row.innerHTML='<div style="flex:1;display:grid;grid-template-columns:1.2fr 1.6fr .7fr;gap:6px;direction:ltr">'+
+    '<input id="pe-a-'+id+'" inputmode="decimal" value="'+(Number(x.amount)||'')+'" placeholder="المبلغ" style="height:38px;border:1.5px solid #0A56B8;padding:0 8px;font:800 14px \'IBM Plex Mono\',monospace;color:#003B8F;min-width:0;text-align:center">'+
+    '<input id="pe-r-'+id+'" value="'+esc(x.txn_ref||'')+'" placeholder="المرجع" style="height:38px;border:1px solid #C9DFFA;padding:0 8px;font:700 12px \'Inter\',sans-serif;min-width:0">'+
+    '<input id="pe-c-'+id+'" value="'+esc(x.ccy||'')+'" placeholder="AOA" style="height:38px;border:1px solid #C9DFFA;padding:0 6px;font:700 12px \'Inter\',sans-serif;min-width:0;text-align:center"></div>'+
+    '<button onclick="ssEditSave(\''+id+'\')" style="border:0;background:#0E8F5B;color:#fff;font:800 12px \'IBM Plex Sans Arabic\',sans-serif;padding:0 10px;height:38px;cursor:pointer">حفظ</button>'+
+    '<button onclick="ssShowPrevRcpts(selected())" style="border:1px solid var(--line);background:#fff;color:#5C7699;font:800 12px \'IBM Plex Sans Arabic\',sans-serif;padding:0 8px;height:38px;cursor:pointer">✕</button>';
+  setTimeout(function(){var a=$('#pe-a-'+id);if(a){a.focus();a.select();}},50);}
+async function ssEditSave(id){var x=SS.prevRows&&SS.prevRows[id];if(!x)return;
+  var amt=parseFloat(String($('#pe-a-'+id).value).replace(/[^\d.]/g,''))||0,ref=$('#pe-r-'+id).value.trim(),ccy=$('#pe-c-'+id).value.trim().toUpperCase();
+  if(!amt){toast('أدخل مبلغًا صحيحًا');return;}
+  var old=Number(x.amount)||0,delta=amt-old;
+  try{
+    var rr=await fetch(SB+'/bdl_receipts?id=eq.'+id,{method:'PATCH',headers:H({Prefer:'return=minimal'}),body:JSON.stringify({amount:amt,txn_ref:ref||null,ccy:ccy||null,ocr:Object.assign({},x.ocr||{},{amount:amt,ref:ref||null,ccy:ccy||null,manual:true,edited_at:new Date().toISOString()})})});
+    if(!rr.ok)throw new Error('HTTP '+rr.status);
+    /* تعديل المدفوع المتراكم في العملية التي تحمل هذا الإيصال */
+    if(delta){var s=selected();for(var i=0;i<s.length;i++){var t=s[i];if(((t.meta&&t.meta.rcpt_ids)||[]).indexOf(id)<0)continue;
+        var prev=(t.meta&&Number(t.meta.paid_aoa))||0;var nm=Object.assign({},t.meta||{},{paid_aoa:Math.max(0,prev+delta)});
+        await fetch(SB+'/bdl_transactions?id=eq.'+t.id,{method:'PATCH',headers:H(),body:JSON.stringify({meta:nm})});t.meta=nm;break;}
+      SS.prevPaid=Math.max(0,(SS.prevPaid||0)+delta);}
+    toast('✓ عُدّل الإيصال'+(delta?' — المدفوع '+(delta>0?'+':'')+fmt(delta,0):''));
+    try{navigator.vibrate&&navigator.vibrate(20);}catch(e){}
+    await ssShowPrevRcpts(selected());updMatch();
+  }catch(e){toast('تعذّر التعديل: '+e.message);}}
+function ssOpenImg(path){var url=SB.replace('/rest/v1','')+'/storage/v1/object/authenticated/receipts/'+path;
+  fetch(url,{headers:{apikey:ANON,Authorization:'Bearer '+(TOK||ANON)}}).then(function(r){return r.ok?r.blob():null;}).then(function(b){if(!b){toast('تعذّر فتح الصورة');return;}
+    var o=URL.createObjectURL(b);var pdf=/pdf/i.test(b.type);RCPTS.push({file:new File([b],path.split('/').pop()||'receipt'),orig:null,url:o,isPdf:pdf,_tmp:true});rcptView(RCPTS.length-1,false);RCPTS.pop();});}
 async function ssShowPrevRcpts(s){
   var box=$('#ssPrevR');if(!box)return;box.innerHTML='';
   SS.savedR={};SS.savedRefs={};
   var ids=[];s.forEach(function(t){((t.meta&&t.meta.rcpt_ids)||[]).forEach(function(id){if(ids.indexOf(id)<0)ids.push(id);SS.savedR[id]=1;});});
   if(!ids.length)return;
   try{
-    var r=await fetch(SB+'/bdl_receipts?id=in.('+ids.join(',')+')&select=id,amount,ccy,txn_ref,bank',{headers:H()});
+    var r=await fetch(SB+'/bdl_receipts?id=in.('+ids.join(',')+')&select=id,amount,ccy,txn_ref,bank,ocr',{headers:H()});
+    SS.prevRows={};
     var rows=r.ok?await r.json():[];
     SS.savedAmts=[];
     rows.forEach(function(x){if(x.txn_ref)SS.savedRefs[String(x.txn_ref)]=1;
@@ -1350,11 +1379,13 @@ async function ssShowPrevRcpts(s){
         '<button onclick="ssSelAll()" style="flex:1;border:1.4px solid #0B2F70;background:#fff;color:#0B2F70;font:800 12px \'IBM Plex Sans Arabic\',sans-serif;padding:8px;cursor:pointer">تحديد الكل</button>'+
         '<button id="ssDropBtn" onclick="ssDropSel()" style="flex:1.4;border:0;background:#B00020;color:#fff;font:800 12px \'IBM Plex Sans Arabic\',sans-serif;padding:8px;cursor:pointer">إزالة المحدد (0)</button>'+
       '</div>'+
-      rows.map(function(x){
-        return '<div class="num" style="display:flex;align-items:center;gap:9px;font-size:12.5px;font-weight:700;color:#0B2447;padding:5px 0;border-top:1px solid #F3E7C0">'+
+      rows.map(function(x){SS.prevRows[x.id]=x;var img=x.ocr&&x.ocr.image;
+        return '<div class="num" id="pr-'+x.id+'" style="display:flex;align-items:center;gap:9px;font-size:12.5px;font-weight:700;color:#0B2447;padding:5px 0;border-top:1px solid #F3E7C0">'+
           '<input type="checkbox" class="ssRc" data-rid="'+x.id+'" data-amt="'+(Number(x.amount)||0)+'" onchange="ssSelCnt()" style="width:19px;height:19px;flex:0 0 auto;accent-color:#B00020">'+
-          '<span style="color:#5C7699;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(x.txn_ref||x.bank||'إيصال')+'</span>'+
-          '<b>'+fmt(Number(x.amount)||0,0)+' '+esc(x.ccy||'')+'</b></div>';
+          '<span style="color:#5C7699;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" onclick="ssEditRow(\''+x.id+'\')">'+esc(x.txn_ref||x.bank||'إيصال')+'</span>'+
+          '<b onclick="ssEditRow(\''+x.id+'\')">'+fmt(Number(x.amount)||0,0)+' '+esc(x.ccy||'')+'</b>'+
+          (img?'<button onclick="ssOpenImg(\''+esc(img)+'\')" title="فتح الإيصال" style="border:1px solid #C9DFFA;background:#fff;color:#0A56B8;font-size:12px;padding:4px 7px;cursor:pointer">🖼</button>':'')+
+          '<button onclick="ssEditRow(\''+x.id+'\')" title="تعديل" style="border:1px solid #C9DFFA;background:#fff;color:#0B2F70;font:800 12px \'IBM Plex Sans Arabic\',sans-serif;padding:4px 8px;cursor:pointer">✎</button></div>';
       }).join('')+'</div>';
   }catch(e){}
 }
