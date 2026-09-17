@@ -354,10 +354,13 @@ window.addEventListener('unhandledrejection',function(e){
         <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="3.4"/><path d="M5 20c1.4-3.3 4-5 7-5s5.6 1.7 7 5"/></svg>
       </button>
       <h1>BDL <span>Chat</span></h1>
+      <button class="hbtn" id="newChatBtn" onclick="ocOpen()" aria-label="محادثة جديدة" title="محادثة جديدة مع زبون">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+      </button>
       <button class="hbtn" onclick="arkanLogout()" aria-label="تسجيل الخروج" title="تسجيل الخروج">
         <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>
       </button>
-      <button class="hbtn" onclick="location.href='app.html'" aria-label="الرئيسية">
+      <button class="hbtn" onclick="location.href='account.html'" aria-label="الرئيسية">
         <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11l8-7 8 7v9a1 1 0 0 1-1 1h-5v-6h-4v6H5a1 1 0 0 1-1-1z"/></svg>
       </button>
     </div>
@@ -371,6 +374,18 @@ window.addEventListener('unhandledrejection',function(e){
 </div>
 
 <!-- ═══ شاشة المحادثة ═══ -->
+<!-- Build 1342: المالك يفتح دردشة مع زبون — كواتساب -->
+<div id="ocSheet" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(11,36,71,.45)" onclick="if(event.target===this)ocClose()">
+  <div style="position:absolute;inset-inline:0;bottom:0;max-height:88vh;background:#fff;display:flex;flex-direction:column;padding:14px 14px calc(14px + env(safe-area-inset-bottom));font-family:inherit">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px"><b style="font-size:17px;color:#0B2447">محادثة جديدة مع زبون</b><button class="hbtn" onclick="ocClose()" aria-label="إغلاق"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button></div>
+    <input id="ocQ" placeholder="ابحث باسم الزبون أو هاتفه…" oninput="ocRender()" style="width:100%;box-sizing:border-box;border:1px solid #D9E5F2;border-radius:0;padding:12px;font-size:15px;font-family:inherit;margin-bottom:8px" inputmode="search">
+    <div id="ocList" style="flex:1;overflow:auto;min-height:120px"></div>
+    <div style="border-top:1px solid #E6EEF7;padding-top:10px;margin-top:8px">
+      <div style="font-size:12px;color:#5C7699;margin-bottom:6px">زبون غير مسجّل؟ أدخل اسمه وهاتفه — يُنشأ حسابه ومحادثته فورًا</div>
+      <div style="display:flex;gap:6px"><input id="ocName" placeholder="الاسم" style="flex:1;border:1px solid #D9E5F2;border-radius:0;padding:11px;font-family:inherit;font-size:14px"><input id="ocPhone" placeholder="الهاتف" inputmode="tel" dir="ltr" style="flex:1;border:1px solid #D9E5F2;border-radius:0;padding:11px;font-family:inherit;font-size:14px"><button onclick="ocStart($('ocPhone').value,$('ocName').value)" style="background:#0B2F70;color:#fff;border:0;padding:0 16px;font-weight:800;font-family:inherit">فتح</button></div>
+    </div>
+  </div>
+</div>
 <div class="screen" id="scChat">
   <div class="chead">
     <button class="hbtn" style="width:36px;height:36px" onclick="closeChat()" aria-label="رجوع">
@@ -1749,6 +1764,43 @@ function quoteHTML(m){return renderStatus(m);}
 
 /* ═══════════ إشعارات الدفع — iOS PWA 16.4+ ═══════════ */
 const ARK_PUSH_API='https://arkan-ai-site-production.up.railway.app';
+/* ═══ Build 1342: المالك يفتح دردشة مع أي زبون — قائمة المسجلين + إدخال حر + رابط عميق ?phone= ═══ */
+let OC_LIST=null;
+async function ocLoad(){
+  if(OC_LIST)return OC_LIST;
+  const tok=JSON.parse(localStorage.getItem('arkan_sb_jwt')||'{}').token;
+  try{const r=await fetch(ARK_PUSH_API+'/account/recipients',{headers:{'Authorization':'Bearer '+tok}});const j=await r.json();OC_LIST=(j.items||[]).filter(x=>x.phone);}catch(e){OC_LIST=[];}
+  /* أضف أطراف المحادثات الحالية */
+  Object.values(PROFILES).forEach(u=>{if(u.role==='customer'&&u.phone&&!OC_LIST.some(x=>String(x.phone).slice(-8)===String(u.phone).slice(-8)))OC_LIST.push({name:u.full_name||'',phone:u.phone});});
+  return OC_LIST;
+}
+function ocOpen(){$('ocSheet').style.display='';$('ocList').innerHTML='<div style="padding:20px;text-align:center;color:#5C7699">جارٍ تحميل الزبائن…</div>';ocLoad().then(ocRender);setTimeout(()=>$('ocQ').focus(),150);}
+function ocClose(){$('ocSheet').style.display='none';}
+function ocRender(){
+  const q=($('ocQ').value||'').trim().toLowerCase();
+  const rows=(OC_LIST||[]).filter(x=>!q||String(x.name||'').toLowerCase().includes(q)||String(x.phone||'').includes(q)).slice(0,150);
+  $('ocList').innerHTML=rows.length?rows.map(x=>`<div onclick="ocStart('${String(x.phone).replace(/[^0-9+]/g,'')}','${String(x.name||'').replace(/['"<>]/g,'')}')" style="display:flex;align-items:center;gap:10px;padding:11px 6px;border-bottom:1px solid #EEF3FA;cursor:pointer"><div style="width:40px;height:40px;background:#0B2F70;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800">${(x.name||'?').trim().charAt(0)}</div><div style="flex:1;min-width:0"><b style="display:block;color:#0B2447;font-size:15px">${x.name||'بلا اسم'}</b><small dir="ltr" style="color:#5C7699">${x.phone}</small></div><span style="color:#0A56B8;font-weight:800;font-size:12px">دردشة ›</span></div>`).join('')
+    :'<div style="padding:20px;text-align:center;color:#5C7699">لا نتائج — أدخل الاسم والهاتف أسفله</div>';
+}
+async function ocStart(phone,name){
+  phone=String(phone||'').replace(/\D/g,'');if(phone.length<8){toast('أدخل هاتفًا صحيحًا');return;}
+  const tok=JSON.parse(localStorage.getItem('arkan_sb_jwt')||'{}').token;
+  toast('جارٍ فتح المحادثة…');
+  try{
+    const r=await fetch(ARK_PUSH_API+'/chat-api/open-with',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+tok},body:JSON.stringify({phone,name:name||''})});
+    const j=await r.json();
+    if(!r.ok||!j.ok){toast('تعذّر: '+(j.error||r.status)+(j.detail?' — '+j.detail:''));return;}
+    ocClose();
+    if(!CONVS.some(c=>c.id===j.conversation.id)){CONVS.unshift(j.conversation);}
+    if(!PROFILES[j.conversation.customer_id]){const {data:u}=await sb.from('chat_users').select('*').eq('id',j.conversation.customer_id).maybeSingle();if(u)PROFILES[u.id]=u;}
+    renderConvs();
+    await openConv(j.conversation,j.created);
+  }catch(e){toast('خطأ في الاتصال');}
+}
+/* رابط عميق من أي صفحة: chat-v2.html?phone=36xxxxxx&name=… (للمالك) */
+window.addEventListener('load',()=>{const u=new URLSearchParams(location.search);const ph=u.get('phone');if(!ph)return;
+  const wait=setInterval(()=>{if(window.__booted&&MY_ROLE!=='customer'&&sb){clearInterval(wait);ocStart(ph,u.get('name')||'');history.replaceState(null,'',location.pathname);}},300);setTimeout(()=>clearInterval(wait),20000);});
+
 function arkJwt(){try{return JSON.parse(localStorage.getItem('arkan_sb_jwt')||'{}').token||'';}catch(_){return'';}}
 function arkClearBadge(){
   try{if(navigator.clearAppBadge)navigator.clearAppBadge().catch(()=>{});}catch(_){}

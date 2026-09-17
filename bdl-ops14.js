@@ -113,7 +113,7 @@ function card(x){
     '<div class="cnt"><b>'+x.total+'</b><span>عملية</span></div></div>'+
     (dupTxt.length?'<div class="dup"><span>'+dupTxt.join(' · ')+'</span><button onclick="u14.merge('+x.i+')">دمج في «'+esc(x.name)+'»</button></div>':'')+
     maybe.map(m=>'<div class="dup"><span>مكرر محتمل: <b>'+esc(m.name)+'</b>'+(m.phone?' · '+esc(m.phone):' · بلا هاتف')+' ('+m.total+' عملية)</span><button onclick="u14.mergeWith('+x.i+','+m.i+')">دمج معه</button></div>').join('')+
-    '<div class="act"><button onclick="u14.edit('+x.i+')">تعديل</button>'+(!x.total&&x.custs.length<=1?'<button class="del" onclick="u14.del('+x.i+')">حذف</button>':'')+'</div></div>';
+    '<div class="act">'+(x.phone?'<button onclick="location.href=\'chat-v2.html?phone='+encodeURIComponent(x.phone)+'&name='+encodeURIComponent(x.name||'')+'\'" style="color:#0A56B8">دردشة</button>':'')+'<button onclick="u14.edit('+x.i+')">تعديل</button>'+(!x.total&&x.custs.length<=1?'<button class="del" onclick="u14.del('+x.i+')">حذف</button>':'')+'</div></div>';
 }
 /* ───── الدمج ───── */
 async function mergeCust(keep,drop,name,phone){

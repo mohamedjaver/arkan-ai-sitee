@@ -776,6 +776,34 @@ app.use('/chat-api', (req, res, next) => {
 });
 
 /* جلسة المحادثة: من كود الرابط → توكن ARKAN + بيانات المحادثة */
+/* ═══ Build 1342: المالك يفتح دردشة مع أي زبون (كواتساب) — ينشئ صف chat_users والمحادثة إن لم توجد ═══ */
+app.post('/chat-api/open-with', async (req, res) => {
+  try {
+    if (!JWT_SECRET) return res.status(503).json({ error: 'not configured' });
+    if (!ownerClaims(req)) return res.status(403).json({ error: 'owner-only' });
+    const p = normPhone(req.body.phone);
+    if (p.length < 8) return res.status(400).json({ error: 'phone' });
+    const name = String(req.body.name || '').trim().slice(0, 80);
+    const uid = phoneToUuid(p), ownerUid = phoneToUuid(OWNER_PHONES[0]);
+    const ts = Math.floor(Date.now() / 1000);
+    const tok = jwt.sign({ sub: ownerUid, role: 'authenticated', aud: 'authenticated', arkan_role: 'owner', phone: OWNER_PHONES[0], iat: ts, exp: ts + 300 }, JWT_SECRET);
+    const H = { apikey: SB_PUB, Authorization: 'Bearer ' + tok, 'Content-Type': 'application/json' };
+    const call = async (path, opt) => { const r = await fetch(SB_REST + '/' + path, Object.assign({ headers: H }, opt || {})); const t = await r.text(); let d; try { d = JSON.parse(t); } catch { d = t; } return { ok: r.ok, status: r.status, data: d }; };
+    /* 1) صف الزبون في chat_users (بلا كسر اسم موجود) */
+    const ex = await call('chat_users?id=eq.' + uid + '&select=id,full_name,role');
+    const has = ex.ok && Array.isArray(ex.data) && ex.data[0];
+    if (!has) await call('chat_users', { method: 'POST', headers: Object.assign({}, H, { Prefer: 'resolution=merge-duplicates,return=minimal' }), body: JSON.stringify({ id: uid, phone: p, full_name: name || 'عميل لبدال', role: 'customer' }) });
+    else if (name && (!has.full_name || /^عميل/.test(has.full_name))) await call('chat_users?id=eq.' + uid, { method: 'PATCH', headers: Object.assign({}, H, { Prefer: 'return=minimal' }), body: JSON.stringify({ full_name: name }) });
+    /* 2) المحادثة الدائمة للزبون */
+    const cv = await call('conversations_v2?customer_id=eq.' + uid + '&select=*&order=last_message_at.desc.nullslast&limit=1');
+    if (cv.ok && Array.isArray(cv.data) && cv.data[0]) return res.json({ ok: true, conversation: cv.data[0], created: false });
+    const secret = crypto.randomBytes(24).toString('hex');
+    const ins = await call('conversations_v2', { method: 'POST', headers: Object.assign({}, H, { Prefer: 'return=representation' }), body: JSON.stringify({ customer_id: uid, owner_id: ownerUid, secret, status: 'open', unread_owner: 0, last_message_at: new Date().toISOString(), last_preview: '' }) });
+    if (!ins.ok) { console.error('open-with insert:', ins.status, JSON.stringify(ins.data).slice(0, 300)); return res.status(500).json({ error: 'insert', detail: ins.data && ins.data.message }); }
+    res.json({ ok: true, conversation: Array.isArray(ins.data) ? ins.data[0] : ins.data, created: true });
+  } catch (e) { console.error('open-with:', e.message); res.status(500).json({ error: 'server' }); }
+});
+
 app.get('/chat-api/session', async (req, res) => {
   try {
     const code = String(req.query.c || '').replace(/[^A-Za-z0-9]/g, '').toUpperCase();
