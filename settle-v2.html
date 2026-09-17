@@ -284,7 +284,12 @@ body.sheet-open .bbar,body.sheet-open #akTabs,body.sheet-open #akTop,body.sheet-
 #rcptView{position:fixed;inset:0;z-index:99999;background:rgba(3,15,40,.92);display:none;flex-direction:column}
 #rcptView.on{display:flex}#rcptView .bar{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;color:#fff;font-weight:800;padding-top:calc(10px + env(safe-area-inset-top))}
 #rcptView .bar button{background:#fff;color:#0B2F70;border:0;padding:8px 14px;font:800 13px 'IBM Plex Sans Arabic',sans-serif}
-#rcptView .body{flex:1;overflow:auto;-webkit-overflow-scrolling:touch;padding:8px;touch-action:pinch-zoom;display:flex;align-items:flex-start;justify-content:center}#rcptView img{width:100%;height:auto;max-width:none;background:#fff}#rcptView iframe{width:100%;height:100%;border:0;background:#fff}
+#rcptView .body{flex:1;overflow:hidden;position:relative;display:flex;flex-direction:column}#rcptView iframe{width:100%;height:100%;border:0;background:#fff}
+#rcptView .zw{flex:1;overflow:hidden;touch-action:none;display:grid;place-items:center;background:#0B1B3A}
+#rcptView .zw img{max-width:100%;max-height:100%;object-fit:contain;transform-origin:center center;will-change:transform;user-select:none;-webkit-user-select:none;background:#fff}
+#rcptView .zb{display:flex;justify-content:center;align-items:center;gap:8px;padding:8px;padding-bottom:calc(8px + env(safe-area-inset-bottom));background:rgba(0,0,0,.5)}
+#rcptView .zb button{min-width:48px;height:40px;background:#fff;color:#0B2F70;border:0;font:800 18px 'IBM Plex Sans Arabic',sans-serif;cursor:pointer}
+#rcptView .zb span{color:#fff;font:800 13px 'Inter',sans-serif;min-width:52px;text-align:center}
 /* 1357: حفظ مؤقت حيّ — سبنر داخل الزر + بطاقة تأكيد */
 .spin{display:inline-block;width:14px;height:14px;border:2.5px solid rgba(0,0,0,.15);border-top-color:currentColor;border-radius:50%;animation:spn .7s linear infinite;vertical-align:-2px}
 @keyframes spn{to{transform:rotate(360deg)}}
@@ -1504,7 +1509,30 @@ function renderRcpts(){
 /* ═══ 1353: عارض الإيصال + مطابقة إيصال المورد قبل التنفيذ ═══ */
 function rcptView(i,sup){var r=RCPTS[i];if(!r)return;var url=sup?r.supUrl:r.url,pdf=sup?r.supIsPdf:r.isPdf,name=sup?(r.supFile&&r.supFile.name):(r.orig||r.file).name;
   var v=$('#rcptView');if(!v){v=document.createElement('div');v.id='rcptView';v.innerHTML='<div class="bar"><span id="rvT"></span><button onclick="$(\'#rcptView\').classList.remove(\'on\')">إغلاق</button></div><div class="body" id="rvB"></div>';document.body.appendChild(v);}
-  $('#rvT').textContent=name||'';$('#rvB').innerHTML=pdf?'<iframe src="'+url+'"></iframe>':'<img src="'+url+'" alt="">';v.classList.add('on');}
+  $('#rvT').textContent=name||'';
+  if(pdf){$('#rvB').innerHTML='<iframe src="'+url+'"></iframe>';v.classList.add('on');return;}
+  /* 1358: تكبير بالأصابع + نقر مزدوج + أزرار */
+  $('#rvB').innerHTML='<div class="zw" id="rvZ"><img src="'+url+'" alt="" draggable="false"></div><div class="zb"><button onclick="rvZoom(-1)">−</button><span id="rvPct">100%</span><button onclick="rvZoom(1)">+</button><button onclick="rvZoom(0)">ملاءمة</button></div>';
+  v.classList.add('on');rvInit();}
+var RVZ={s:1,x:0,y:0};
+function rvApply(){var im=document.querySelector('#rvZ img');if(!im)return;im.style.transform='translate('+RVZ.x+'px,'+RVZ.y+'px) scale('+RVZ.s+')';var p=$('#rvPct');if(p)p.textContent=Math.round(RVZ.s*100)+'%';}
+function rvZoom(d){if(d===0){RVZ={s:1,x:0,y:0};}else{RVZ.s=Math.min(6,Math.max(1,RVZ.s*(d>0?1.5:1/1.5)));if(RVZ.s===1){RVZ.x=0;RVZ.y=0;}}rvApply();}
+function rvInit(){RVZ={s:1,x:0,y:0};rvApply();var z=$('#rvZ');if(!z||z._bound)return;z._bound=true;
+  var pts={},d0=0,s0=1,c0=null,p0=null,lastTap=0,drag=null;
+  var dist=function(){var k=Object.keys(pts);if(k.length<2)return 0;var a=pts[k[0]],b=pts[k[1]];return Math.hypot(a.x-b.x,a.y-b.y);};
+  var center=function(){var k=Object.keys(pts);var a=pts[k[0]],b=pts[k[1]];return {x:(a.x+b.x)/2,y:(a.y+b.y)/2};};
+  z.addEventListener('pointerdown',function(e){z.setPointerCapture(e.pointerId);pts[e.pointerId]={x:e.clientX,y:e.clientY};
+    var k=Object.keys(pts);
+    if(k.length===2){d0=dist();s0=RVZ.s;c0=center();p0={x:RVZ.x,y:RVZ.y};drag=null;}
+    else if(k.length===1){var now=Date.now();if(now-lastTap<300){var r=z.getBoundingClientRect();if(RVZ.s>1.05){RVZ={s:1,x:0,y:0};}else{var cx=e.clientX-r.left-r.width/2,cy=e.clientY-r.top-r.height/2;RVZ.s=2.5;RVZ.x=-cx*1.5;RVZ.y=-cy*1.5;}rvApply();lastTap=0;}else lastTap=now;drag={x:e.clientX,y:e.clientY,ox:RVZ.x,oy:RVZ.y};}
+    e.preventDefault();});
+  z.addEventListener('pointermove',function(e){if(!pts[e.pointerId])return;pts[e.pointerId]={x:e.clientX,y:e.clientY};var k=Object.keys(pts);
+    if(k.length===2&&d0){var c=center();RVZ.s=Math.min(6,Math.max(1,s0*dist()/d0));RVZ.x=p0.x+(c.x-c0.x);RVZ.y=p0.y+(c.y-c0.y);rvApply();}
+    else if(k.length===1&&drag&&RVZ.s>1){RVZ.x=drag.ox+(e.clientX-drag.x);RVZ.y=drag.oy+(e.clientY-drag.y);rvApply();}
+    e.preventDefault();});
+  var up=function(e){delete pts[e.pointerId];if(Object.keys(pts).length<2){d0=0;}drag=null;if(RVZ.s<=1){RVZ.x=0;RVZ.y=0;rvApply();}};
+  z.addEventListener('pointerup',up);z.addEventListener('pointercancel',up);
+  z.addEventListener('wheel',function(e){e.preventDefault();RVZ.s=Math.min(6,Math.max(1,RVZ.s*(e.deltaY<0?1.1:1/1.1)));if(RVZ.s===1){RVZ.x=0;RVZ.y=0;}rvApply();},{passive:false});}
 function rcptSupPick(i){var inp=document.createElement('input');inp.type='file';inp.accept='image/*,.pdf';
   inp.onchange=async function(){var f=inp.files&&inp.files[0];if(!f)return;var r=RCPTS[i];if(!r)return;
     r.supFile=f;r.supUrl=URL.createObjectURL(f);r.supIsPdf=/pdf$/i.test(f.type||f.name);r.supParsed=null;r.supFp=await sha256(await f.arrayBuffer());renderRcpts();
