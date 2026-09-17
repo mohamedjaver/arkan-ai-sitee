@@ -1333,8 +1333,9 @@ async function ssDropSaved(rid,amt,label){
   }catch(e){toast('تعذّرت الإزالة');}
 }
 /* ═══ 1361: مطابقة المدفوع المتراكم مع الإيصالات المحفوظة فعلًا — لا يبقى شيء بعد الحذف ═══ */
-async function ssReconcile(s,amtById){var total=0,fixed=0;
-  for(var i=0;i<s.length;i++){var t=s[i];var ids=(t.meta&&t.meta.rcpt_ids)||[];var sum=0;ids.forEach(function(id){sum+=amtById[id]||0;});
+async function ssReconcile(s,amtById){var total=0,fixed=0,seen={};
+  /* 1362: الإيصال الواحد قد يكون مسجّلًا على كل العمليات المحددة (rcpt_ids مشتركة) — يُحسب مرة واحدة فقط على أول عملية تحمله */
+  for(var i=0;i<s.length;i++){var t=s[i];var ids=(t.meta&&t.meta.rcpt_ids)||[];var sum=0;ids.forEach(function(id){if(seen[id])return;seen[id]=1;sum+=amtById[id]||0;});
     var adj=(t.meta&&Number(t.meta.adj))||0;var want=Math.max(0,sum+adj);var have=(t.meta&&Number(t.meta.paid_aoa))||0;
     if(Math.abs(have-want)>1){var nm=Object.assign({},t.meta||{},{paid_aoa:want});try{var x=await fetch(SB+'/bdl_transactions?id=eq.'+t.id,{method:'PATCH',headers:H(),body:JSON.stringify({meta:nm})});if(x.ok){t.meta=nm;fixed++;}}catch(e){}}
     total+=want;}
