@@ -50,7 +50,9 @@ svg[fill="none"]:not([stroke]){stroke:currentColor}
 #scList,#scChat{visibility:hidden}
 body.ready #scList,body.ready #scChat{visibility:visible}
 #scList{z-index:10}
-#scChat{z-index:20;transform:translateX(-100%)}
+#scChat{z-index:9500;transform:translateX(-100%)} /* 1344: فوق شريطي BDL — خانة الكتابة والصوت والإيصالات كانت مغطاة بشريط التبويبات */
+#scList{padding-top:calc(56px + env(safe-area-inset-top,0px));padding-bottom:calc(72px + env(safe-area-inset-bottom,0px));box-sizing:border-box}
+#scChat.on~#akTabs,#scChat.on~#akTop,body:has(#scChat.on) #akTabs,body:has(#scChat.on) #akTop{display:none!important}
 #scChat.on{transform:none}
 @media(prefers-reduced-motion:reduce){.screen{transition:none}}
 
