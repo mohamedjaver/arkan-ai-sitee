@@ -143,6 +143,7 @@ table{width:100%;border-collapse:collapse;font-size:12px}th{background:#F3F7FD;c
   <button class="pri" onclick="syncLedger(false)">مزامنة مع الدفتر</button>
   <button style="border-color:var(--gold);color:var(--gold)" onclick="location.href='accountant.html'">المحاسب</button>
   <button style="border-color:var(--navy)" onclick="aiMatch()">مطابقة Claude</button>
+  <button style="border-color:#ED6C02;color:#ED6C02" onclick="wipeOld()" title="يحذف من السجل الدائم كل إيصالات الجلسات السابقة (قبل اليوم) وقيودها في الدفاتر — تبقى جلسة اليوم">حذف الجلسات السابقة</button>
   <button onclick="clearAll()" title="يمسح إيصالات هذا الجهاز فقط — الدفتر الدائم يبقى كما هو">جلسة جديدة</button>
   <button onclick="exportPDF()">تقرير PDF</button>
   <button id="rsm" style="display:none;background:#ED6C02;color:#fff;border-color:#ED6C02" onclick="resume()">متابعة القراءة</button>
@@ -794,6 +795,21 @@ async function wipeAll(){if(!tokenOf()){toast('سجّل الدخول أولًا'
     await sbq('/bdl_cmp_receipts?fp=not.is.null',{method:'DELETE',headers:{Prefer:'return=minimal'}});}catch(e){toast('تعذّر مسح الدفتر: '+(e.message||e));}
   S.cust=[];S.sup=[];S.excl=[];S.jobs=[];S.selC=S.selS=null;S.ts=null;S.party={cust:{who:'',phone:''},sup:{who:'',phone:''}};await IDB.clear().catch(()=>{});LED.idx={};
   toast('تم المسح الكامل: '+n+' إيصال من الدفتر'+(b?' · '+b+' قيد':'')+' — ابدأ غدًا من صفر');render(true);}
+/* 1351: حذف الجلسات السابقة — كل ما في السجل الدائم قبل بداية اليوم (وقيوده في الدفاتر)؛ جلسة اليوم تبقى */
+async function wipeOld(){if(!tokenOf()){toast('سجّل الدخول أولًا');return;}if(!(await requirePin()))return;
+  const d=new Date();d.setHours(0,0,0,0);const cut=d.toISOString();
+  let rows=[];try{rows=await sbq('/bdl_cmp_receipts?select=fp,book_entry_id&msg_at=lt.'+encodeURIComponent(cut));}catch(e){toast('تعذّر القراءة: '+(e.message||e));return;}
+  if(!rows.length){toast('لا جلسات سابقة في السجل');return;}
+  if(!confirm('حذف '+rows.length+' إيصالًا من الجلسات السابقة (قبل اليوم) مع قيودها في الدفاتر؟ لا يمكن التراجع.'))return;
+  toast('جارٍ الحذف…');let b=0;
+  try{const oids=[...new Set(rows.map(x=>x.book_entry_id).filter(Boolean))];
+    for(let i=0;i<oids.length;i+=50){const part=oids.slice(i,i+50);try{await sbq('/bdl_book_entries?id=in.('+part.join(',')+')',{method:'DELETE',headers:{Prefer:'return=minimal'}});b+=part.length;}catch(e){}}
+    await sbq('/bdl_cmp_receipts?msg_at=lt.'+encodeURIComponent(cut),{method:'DELETE',headers:{Prefer:'return=minimal'}});
+  }catch(e){toast('تعذّر الحذف: '+(e.message||e));return;}
+  const gone=new Set(rows.map(x=>x.fp));const keep=r=>!gone.has(r.fp);
+  S.cust=S.cust.filter(keep);S.sup=S.sup.filter(keep);S.excl=(S.excl||[]).filter(keep);gone.forEach(fp=>{delete LED.idx[fp];});
+  try{persist();}catch(e){}
+  toast('حُذفت '+rows.length+' إيصالًا'+(b?' و'+b+' قيدًا':'')+' من الجلسات السابقة');render(true);}
 async function clearAll(){const un=S.cust.concat(S.sup).filter(r=>!r.led&&r.amount).length;if(un&&!confirm('تنبيه: '+un+' إيصال في هذه الجلسة لم يُحفظ في الدفتر بعد وسيضيع بالمسح. احفظ أولًا بزر «حفظ الإيصالات إلى الدفتر». متابعة المسح رغم ذلك؟'))return;if(!un&&!confirm('مسح الجلسة من هذا الجهاز فقط — كل الإيصالات المسجّلة تبقى في الدفتر الدائم وتعود بزر «مزامنة مع الدفتر». متابعة؟'))return;S.cust=[];S.sup=[];S.excl=[];S.selC=S.selS=null;S.ts=null;IDB.clear().catch(()=>{});LED.index();render();}
 
 /* ───── المطابقة ───── */

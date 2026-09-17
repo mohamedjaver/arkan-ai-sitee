@@ -1019,7 +1019,7 @@ function ticks(m){
   return `<svg class="tick ${read?'read':''}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 13l4 4L15 9"/>${two?'<path d="M9 13l4 4 8-8"/>':''}</svg>`;
 }
 async function renderMsg(m){
-  if(m.type==='system')return `<div class="sys" id="m_${m.id}"><span>${esc(m.text)}</span></div>`;
+  if(m.type==='system')return `<div class="sys" id="m_${m.id}"><span>${esc(String(m.text||'').replace(/ARKAN/g,'BDL'))}</span></div>`; /* 1351: علامة BDL */
   if(m.type==='status_update')return renderStatus(m);
   const me=m.sender_id===MY_ID;
   const cls=`mrow ${me?'me':'them'} ${m._pending?'pending':''} ${m.delivery_status==='failed'?'failed':''}`;

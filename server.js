@@ -314,8 +314,13 @@ async function waSend(phone, code) {
   return j;
 }
 
+const otpIp = new Map(); /* 1351: حد لكل IP */
 app.post('/otp/send', async (req, res) => {
   try {
+    const ip = String(req.headers['x-forwarded-for'] || req.ip || '').split(',')[0].trim();
+    const ih = (otpIp.get(ip) || []).filter(t => nowMs() - t < 3600000);
+    if (ih.length >= 25) return res.status(429).json({ ok: false, err: 'محاولات كثيرة — حاول لاحقًا' });
+    ih.push(nowMs()); otpIp.set(ip, ih);
     const phone = normPhone(req.body.phone);
     if (!validPhone(phone)) return res.status(400).json({ ok: false, err: 'رقم غير صالح — موريتانيا أو أنغولا فقط' });
     const hist = (otpSends.get(phone) || []).filter(t => nowMs() - t < 3600000);

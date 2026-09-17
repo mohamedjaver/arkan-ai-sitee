@@ -366,7 +366,7 @@ Contacto: ${who||'—'}
 Solicito cotação para pagamento internacional.`;
   showProcessing(amt, ccy);
   try{
-    if(!window.ARKAN){ alert('ARKAN core لم يُحمّل'); }
+    if(!window.ARKAN){ alert('BDL core لم يُحمّل'); }
     else { await ARKAN.ready;
       if(!ARKAN.firebaseOK){ alert('Firebase غير متصل — لم يُسجّل الطلب (واتساب فقط)'); }
       else { const {addDoc,collection,serverTimestamp}=ARKAN.fb;
