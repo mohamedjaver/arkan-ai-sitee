@@ -128,10 +128,20 @@
   /* سرعة: جلب مسبق لصفحات التبويبات عند الخمول، وبدء الانتقال عند لمس التبويب (قبل رفع الإصبع) */
   function prefetchAll() { try { tabs.concat(more).map(function (t) { return t.href.split('#')[0]; }).filter(function (h, i, a) { return a.indexOf(h) === i && h !== path; }).forEach(function (h) { var l = document.createElement('link'); l.rel = 'prefetch'; l.href = h; l.as = 'document'; document.head.appendChild(l); }); } catch (e) {} }
   if ('requestIdleCallback' in window) requestIdleCallback(prefetchAll, { timeout: 3000 }); else setTimeout(prefetchAll, 1500);
-  function fastNav(a) { a.addEventListener('touchstart', function () { if (a.getAttribute('href') && a.getAttribute('href').indexOf('#') !== 0 && !a.classList.contains('on')) { a.__go = setTimeout(function () { location.href = a.href; }, 60); } }, { passive: true }); a.addEventListener('touchmove', function () { clearTimeout(a.__go); }, { passive: true }); a.addEventListener('touchcancel', function () { clearTimeout(a.__go); }, { passive: true }); }
+  function fastNav(a) { /* 1343: التنقل بالنقر فقط — touchstart كان يفتح صفحات بالخطأ أثناء التمرير */ }
   /* ضمان لوحة المفاتيح على iOS: أي لمسة على حقل تُركّزه داخل إيماءة المستخدم (لا يعتمد على النقر المُصنَّع) */
   document.addEventListener('touchend', function (e) { var t = e.target && e.target.closest ? e.target.closest('input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=button]):not([type=submit]),textarea,select,[contenteditable="true"]') : null; if (!t || t.disabled || t.readOnly) return; if (document.activeElement !== t) { try { t.focus({ preventScroll: true }); } catch (err) { try { t.focus(); } catch (e2) {} } } }, { passive: true, capture: true });
   /* عند وصول إصدار جديد للموقع: الصفحة تُعاد مرة واحدة تلقائيًا حتى لا يعمل المستخدم على نسخة قديمة */
-  if ('serviceWorker' in navigator) { var hadCtrl = !!navigator.serviceWorker.controller; navigator.serviceWorker.addEventListener('controllerchange', function () { if (hadCtrl && !window.__akReloaded) { window.__akReloaded = true; location.reload(); } }); navigator.serviceWorker.getRegistration && navigator.serviceWorker.getRegistration().then(function (r) { if (r) r.update().catch(function () {}); }).catch(function () {}); }
+  /* 1343: تحديث هادئ — لا إعادة تحميل والصفحة ظاهرة؛ تُحدَّث فقط عندما تُخفى (تبديل تطبيق/تبويب) أو في التنقل التالي */
+  if ('serviceWorker' in navigator) {
+    var pendingUpd = false;
+    function quietReload() { if (!pendingUpd || window.__akReloaded) return; if (document.visibilityState === 'hidden') { window.__akReloaded = true; location.reload(); } }
+    function mark() { pendingUpd = true; quietReload(); }
+    document.addEventListener('visibilitychange', quietReload);
+    var hadCtrl = !!navigator.serviceWorker.controller;
+    navigator.serviceWorker.addEventListener('controllerchange', function () { if (hadCtrl) mark(); });
+    navigator.serviceWorker.addEventListener('message', function (e) { if (e.data && e.data.type === 'bdl-update') mark(); });
+    navigator.serviceWorker.getRegistration && navigator.serviceWorker.getRegistration().then(function (r) { if (r) r.update().catch(function () {}); }).catch(function () {});
+  }
   if (document.body) mount(); else document.addEventListener('DOMContentLoaded', mount);
 })();

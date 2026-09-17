@@ -2,13 +2,13 @@
    إستراتيجية: الشبكة أولًا لصفحات HTML والبيانات (لا محتوى قديم أبدًا)
               الكاش أولًا للأصول الثابتة فقط (صور، أيقونات، شعار) */
 
-const V='arkan-v261-1342'; /* owner opens chat with customer */
+const V='arkan-v262-1343'; /* stop flicker: no forced reload, no video precache */
 
 
 const STATIC=['./favicon.svg','./arkan-icon-512.png','./arkan-touch-180.png','./site-manifest.json',
   /* صفحات التشغيل اليومي + الملفات المشتركة: تُخزَّن مسبقًا فيفتح التبويب فورًا (الإصدار V يضمن حداثتها) */
   './index.html','./account.html','./settle-v2.html','./compare.html','./accountant.html','./books.html','./chat-v2.html','./request.html',
-  './arkan-nav.js','./bdl-core.js','./bdl.css','./arkan-gate.js','./routes.config.js','./bdl-bg.mp4','./bdl-bg.jpg'];
+  './arkan-nav.js','./bdl-core.js','./bdl.css','./arkan-gate.js','./routes.config.js']; /* 1343: لا فيديو في التحميل المسبق */
 
 self.addEventListener('install',e=>{
   e.waitUntil(
@@ -25,8 +25,10 @@ self.addEventListener('activate',e=>{
       .then(ks=>Promise.all(ks.filter(k=>k!==V).map(k=>caches.delete(k))))
       .then(()=>self.clients.claim())
       /* إجبار الصفحات المفتوحة على التحديث فور تفعيل إصدار جديد */
+      /* 1343: لا إعادة تحميل قسرية للشاشة المفتوحة (كانت سبب «رعشة» الشاشات عند كل نشر) —
+         الصفحة تُبلَّغ وتُحدَّث نفسها عندما تُخفى فقط */
       .then(()=>self.clients.matchAll({type:'window'}))
-      .then(cs=>{cs.forEach(c=>{try{if('navigate' in c)c.navigate(c.url).catch(()=>{});}catch(e){}});})
+      .then(cs=>{cs.forEach(c=>{try{c.postMessage({type:'bdl-update',v:V});}catch(e){}});})
   );
 });
 
