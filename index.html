@@ -426,6 +426,7 @@ body::after{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;opac
 .wsl{display:inline-block;margin-inline-start:6px;font:700 10px 'IBM Plex Sans Arabic',sans-serif;
   background:#EDF6FF;color:#0058D9;border:1px solid #BFD9F7;border-radius:0;padding:2px 8px;vertical-align:middle}
 </style>
+<style>/* 1348: بلا سطر مرجع ولا سطر سوق في الحاسبة */#rateTxt,#mktRef,[data-i="x_rate"]{display:none!important}</style>
 </head>
 <body>
 
@@ -1060,7 +1061,7 @@ function calc(){
   rt.textContent=(_oF&&_oT)?`1 ${F} = ${fmt(_oT/_oF)} ${T}`:'';
   /* Build 1346: سعر السوق الحقيقي (Binance P2P) بجانب المرجع الرسمي للدولار/USDT/الدرهم */
   try{const mk=(TIERS[F]&&+TIERS[F].mkt>0)?+TIERS[F].mkt:((F==='MRU'&&TIERS[T]&&+TIERS[T].mkt>0)?+TIERS[T].mkt:null);
-    if(mk&&rt.textContent){const c=(F==='MRU')?T:F; const mel=document.getElementById('mktRef')||(()=>{const d=document.createElement('div');d.id='mktRef';d.style.cssText='font-size:12px;color:#5C7699;margin-top:4px;font-family:inherit';rt.parentNode.insertBefore(d,rt.nextSibling);return d;})();
+    if(false&&mk&&rt.textContent){const c=(F==='MRU')?T:F; const mel=document.getElementById('mktRef')||(()=>{const d=document.createElement('div');d.id='mktRef';d.style.cssText='font-size:12px;color:#5C7699;margin-top:4px;font-family:inherit';rt.parentNode.insertBefore(d,rt.nextSibling);return d;})();
       const mb=(TIERS[c]&&+TIERS[c].mktBuy>0)?+TIERS[c].mktBuy:null; mel.textContent='سعر السوق (Binance P2P): 1 '+c+' = '+fmt(mk)+' MRU'+(mb?' بيع · '+fmt(mb)+' شراء':'');}else{const m=document.getElementById('mktRef');if(m)m.remove();}}catch(e){}
   const tb=document.getElementById('tierBadge');
   if(tb){ tb.textContent=tierNote||''; tb.style.display=tierNote?'inline-block':'none'; }
