@@ -1478,16 +1478,24 @@ async function arRun(){
       const today = new Date().toISOString().slice(0, 10); const hourRun = new Date().getUTCHours() === parseInt(process.env.RATES_HOUR || '8', 10);
       let already = AR_NOTIFIED_TODAY === today; if (!already && AR_LIVE && AR_LIVE.notifiedOn === today) already = true;
       if (diff.length || (hourRun && !already)) { AR_NOTIFIED_TODAY = today; cur.notifiedOn = today; await arPersistLive(cur);
-        try { await notifyAdmin('💱 <b>المراجع الرسمية</b> ' + AR_NOTIFIED_TODAY + '\nMRU (' + (off.sources.MRU || '—') + '): USD ' + (off.MRU.USD || '—') + ' · EUR ' + (off.MRU.EUR || '—') + ' · CNY ' + (off.MRU.CNY || '—') + ' · AED ' + (off.MRU.AED || '—') + '\nAOA (' + (off.sources.AOA || '—') + '): USD ' + (off.AOA.USD || '—') + ' · EUR ' + (off.AOA.EUR || '—') + (diff.length ? '\n' + diff.join('\n') : '\nلا تغيير') + (/Market/.test(String(off.sources.MRU) + off.sources.AOA) ? '\n⚠️ تعذّر الوصول لمصدر رسمي — استُخدم سعر السوق' : '')); } catch (e) {} }
+        try { await notifyAdmin('💱 <b>المراجع الرسمية</b> ' + AR_NOTIFIED_TODAY + '\nMRU (' + (off.sources.MRU || '—') + '): USD ' + (off.MRU.USD || '—') + ' · EUR ' + (off.MRU.EUR || '—') + ' · CNY ' + (off.MRU.CNY || '—') + ' · AED ' + (off.MRU.AED || '—') + '\nAOA (' + (off.sources.AOA || '—') + '): USD ' + (off.AOA.USD || '—') + ' · EUR ' + (off.AOA.EUR || '—') + (diff.length ? '\n' + diff.join('\n') : '\nلا تغيير') + (/Market/.test(String(off.sources.MRU) + off.sources.AOA) ? '\n⚠️ تعذّر الوصول لمصدر رسمي — استُخدم سعر السوق' : '') + (cur.p2p ? '\nسوق USDT/MRU (Binance P2P): بيع ' + cur.p2p.sell + ' · شراء ' + cur.p2p.buy : '\n⚠️ Binance P2P غير متاح — USDT على المرجع الرسمي')); } catch (e) {} }
     } catch (e) { console.warn('OFFICIAL-RATES err:', e.message); }
+    /* Build 1346: مرجع السوق الحقيقي — Binance P2P USDT/MRU يقود تسعير USDT/USD/AED (BCM يبقى المرجع الرسمي المعروض) */
+    let p2p=null; try{ p2p=await require('./bdl-p2p').fetchUSDT('MRU'); }catch(e){}
+    cur.p2p=p2p||cur.p2p||null;
+    if(p2p) console.log('P2P USDT/MRU:', p2p.sell, '/', p2p.buy, '(n='+p2p.n+')');
     const anchorRow=(cur.r||[]).find(x=>x.ccy==='USDT'||x.ccy==='USD');
-    const anchorMRO=((+((anchorRow||{}).bank)||0)>0? +anchorRow.bank : ((mkt&&mkt.MRU)||0))*10;
+    const anchorMRO=(p2p&&p2p.sell>0? p2p.sell : ((+((anchorRow||{}).bank)||0)>0? +anchorRow.bank : ((mkt&&mkt.MRU)||0)))*10;
     for(const row of (cur.r||[])){
       if(!row.auto || row.lock) continue;        /* التلقائي اختياري + قفل طارئ */
       const c=+row.comm||0;
       let bankMRO=0, src='';
       if(row.ccy==='AOA'){                        /* مرجع بنك أنغولا: AOA لكل دولار */
         if((+row.bank||0)>0 && anchorMRO){ bankMRO=anchorMRO/+row.bank; src='BNA'; }
+      } else if(p2p&&p2p.sell>0&&(row.ccy==='USDT'||row.ccy==='USD')){ /* السوق الفعلي */
+        bankMRO=p2p.sell*10*(row.ccy==='USD'?(+row.usdDisc>0?1-row.usdDisc/100:1):1); src='P2P'; row.mkt=+p2p.sell;
+      } else if(p2p&&p2p.sell>0&&row.ccy==='AED'){  /* الدرهم مربوط بالدولار: السوق ÷ 3.6725 */
+        bankMRO=p2p.sell*10/require('./bdl-p2p').AED_PER_USD; src='P2P·peg'; row.mkt=+(p2p.sell/require('./bdl-p2p').AED_PER_USD).toFixed(3);
       } else if((+row.bank||0)>0){                /* مرجع BCM بالجديدة لكل وحدة */
         bankMRO=+row.bank*10; src='BCM';
       } else {                                    /* احتياط: السوق الحي */

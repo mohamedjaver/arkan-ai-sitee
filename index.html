@@ -1054,6 +1054,10 @@ function calc(){
     const bc=b(c); return (u&&bc)?u/bc:null; };
   const _oF=_OFF(F), _oT=_OFF(T);
   rt.textContent=(_oF&&_oT)?`1 ${F} = ${fmt(_oT/_oF)} ${T}`:'';
+  /* Build 1346: سعر السوق الحقيقي (Binance P2P) بجانب المرجع الرسمي للدولار/USDT/الدرهم */
+  try{const mk=(TIERS[F]&&+TIERS[F].mkt>0)?+TIERS[F].mkt:((F==='MRU'&&TIERS[T]&&+TIERS[T].mkt>0)?+TIERS[T].mkt:null);
+    if(mk&&rt.textContent){const c=(F==='MRU')?T:F; const mel=document.getElementById('mktRef')||(()=>{const d=document.createElement('div');d.id='mktRef';d.style.cssText='font-size:12px;color:#5C7699;margin-top:4px;font-family:inherit';rt.parentNode.insertBefore(d,rt.nextSibling);return d;})();
+      mel.textContent='سعر السوق (Binance P2P): 1 '+c+' = '+fmt(mk)+' MRU';}else{const m=document.getElementById('mktRef');if(m)m.remove();}}catch(e){}
   const tb=document.getElementById('tierBadge');
   if(tb){ tb.textContent=tierNote||''; tb.style.display=tierNote?'inline-block':'none'; }
   const go=document.getElementById('goBtn');
