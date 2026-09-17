@@ -163,7 +163,7 @@ body.sheet-open .bbar,body.sheet-open #akTabs,body.sheet-open #akTop,body.sheet-
 #rcptView{position:fixed;inset:0;z-index:99999;background:rgba(3,15,40,.92);display:none;flex-direction:column}
 #rcptView.on{display:flex}#rcptView .bar{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;color:#fff;font-weight:800;padding-top:calc(10px + env(safe-area-inset-top))}
 #rcptView .bar button{background:#fff;color:#0B2F70;border:0;padding:8px 14px;font:800 13px 'IBM Plex Sans Arabic',sans-serif}
-#rcptView .body{flex:1;overflow:auto;display:grid;place-items:center;padding:8px}#rcptView img{max-width:100%;max-height:100%;object-fit:contain}#rcptView iframe{width:100%;height:100%;border:0;background:#fff}
+#rcptView .body{flex:1;overflow:auto;-webkit-overflow-scrolling:touch;padding:8px;touch-action:pinch-zoom;display:flex;align-items:flex-start;justify-content:center}#rcptView img{width:100%;height:auto;max-width:none;background:#fff}#rcptView iframe{width:100%;height:100%;border:0;background:#fff}
 .rcpt .fi{flex:1;min-width:0;font-size:12px}
 .rcpt .fi small{display:block;color:var(--muted);font-size:10.5px;font-family:"Inter",sans-serif;direction:ltr;text-align:right}
 .rcpt .del{color:var(--bad);font-size:16px;padding:4px 8px}
@@ -1410,7 +1410,7 @@ async function addReceipts(files){
         if(u){dup=true;why=(u==='pending'?'محجوز في تسوية معلقة أخرى':'استُخدم من قبل في تسوية مكتملة — مرفوض');}
       }catch(e2){}
     }
-    var rec={file:f,fp:fp,dup:dup,ok:!dup,why:why,parsed:null,id:null,url:URL.createObjectURL(f),isPdf:/pdf$/i.test(f.type||f.name)};
+    var rec={file:f,orig:files[i],fp:fp,dup:dup,ok:!dup,why:why,parsed:null,id:null,url:URL.createObjectURL(files[i]),isPdf:/pdf$/i.test(files[i].type||files[i].name)}; /* 1354: العرض والتخزين من الأصل الكامل، القراءة من القص */
     RCPTS.push(rec);renderRcpts();
     readReceipt(f).then(function(rec){return function(p){rec.parsed=p;if(p&&p.supGuess&&!rec.fwdTouched&&!rec.fwdSup){rec.fwdSup=p.supGuess;}rcptRefGuard(rec);supProbe(rec);renderRcpts();updMatch();};}(rec));
   }
@@ -1474,7 +1474,7 @@ function renderRcpts(){
   }).join('');
 }
 /* ═══ 1353: عارض الإيصال + مطابقة إيصال المورد قبل التنفيذ ═══ */
-function rcptView(i,sup){var r=RCPTS[i];if(!r)return;var url=sup?r.supUrl:r.url,pdf=sup?r.supIsPdf:r.isPdf,name=sup?(r.supFile&&r.supFile.name):r.file.name;
+function rcptView(i,sup){var r=RCPTS[i];if(!r)return;var url=sup?r.supUrl:r.url,pdf=sup?r.supIsPdf:r.isPdf,name=sup?(r.supFile&&r.supFile.name):(r.orig||r.file).name;
   var v=$('#rcptView');if(!v){v=document.createElement('div');v.id='rcptView';v.innerHTML='<div class="bar"><span id="rvT"></span><button onclick="$(\'#rcptView\').classList.remove(\'on\')">إغلاق</button></div><div class="body" id="rvB"></div>';document.body.appendChild(v);}
   $('#rvT').textContent=name||'';$('#rvB').innerHTML=pdf?'<iframe src="'+url+'"></iframe>':'<img src="'+url+'" alt="">';v.classList.add('on');}
 function rcptSupPick(i){var inp=document.createElement('input');inp.type='file';inp.accept='image/*,.pdf';
@@ -1716,7 +1716,7 @@ async function savePending(){
   try{
     var rids=[],supIds=[];
     for(var i=0;i<RCPTS.length;i++){var rc=RCPTS[i],p=rc.parsed||{};
-      var imgPath=await rcptStore(rc.file,rc.fp);
+      var imgPath=await rcptStore(rc.orig||rc.file,rc.fp);
       /* 1353: إيصال المورد المطابق يُحفظ معه (side=supplier، مربوط بمرجع إيصال الزبون) */
       if(rc.supFile&&rc.supFp){var sp=rc.supParsed||{};var supPath=await rcptStore(rc.supFile,rc.supFp);
         var sb={fingerprint:rc.supFp,amount:sp.amount||null,ccy:sp.ccy||p.ccy||null,bank:sp.bank||null,account_no:sp.account||null,txn_ref:sp.ref||p.ref||null,
@@ -1864,7 +1864,7 @@ async function commitSettle(){
     /* حفظ الإيصالات أولًا */
     var rids=[],supIds=[];
     for(var i=0;i<RCPTS.length;i++){var rc=RCPTS[i],p=rc.parsed||{};
-      var imgPath=await rcptStore(rc.file,rc.fp);
+      var imgPath=await rcptStore(rc.orig||rc.file,rc.fp);
       /* 1353: إيصال المورد المطابق يُحفظ معه (side=supplier، مربوط بمرجع إيصال الزبون) */
       if(rc.supFile&&rc.supFp){var sp=rc.supParsed||{};var supPath=await rcptStore(rc.supFile,rc.supFp);
         var sb={fingerprint:rc.supFp,amount:sp.amount||null,ccy:sp.ccy||p.ccy||null,bank:sp.bank||null,account_no:sp.account||null,txn_ref:sp.ref||p.ref||null,
