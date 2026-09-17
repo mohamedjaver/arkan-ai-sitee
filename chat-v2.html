@@ -960,6 +960,7 @@ async function openConv(c,isNew){
   await sb.rpc('mark_conversation_read',{cid:c.id});
 }
 function closeChat(){
+  if(MY_ROLE==='customer'){location.href='index.html';return;} /* 1345: الزبون لا قائمة له — الرجوع إلى الرئيسية */
   $('scChat').classList.remove('on');
   stopAudio();
   if(SUB){sb.removeChannel(SUB);SUB=null;}
