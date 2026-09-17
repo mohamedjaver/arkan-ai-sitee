@@ -99,7 +99,8 @@ module.exports = function (app, ctx) {
 - التاريخ في الإيصالات الأنغولية بصيغة يوم/شهر/سنة (DD/MM/YYYY). لا تخترع سنة؛ إن لم يظهر التاريخ اترك date فارغًا. التاريخ لا يكون في المستقبل أبدًا.
 - تطبيقات موريتانيا (SEDAD, Bankily, Masrvi, Click, BimBank, Moov, BCI, BMCI, BNM, BPM) → currency="MRU" حتى لو لم تُكتب العملة. amount بالأوقية كما هو.
 - صورة شارع/أشخاص/حيوان/كتالوج/فاتورة تجارية/عرض أسعار/محادثة → is_bank_receipt=false وdoc_type يصف الصورة (photo/catalog/invoice/chat). المبلغ في الفاتورة التجارية ليس تحويلًا بنكيًا.
-- المبلغ المنطقي للتحويل بين 100 و500,000,000 Kz. رقم أطول من 9 خانات ليس مبلغًا.`;
+- المبلغ المنطقي للتحويل بين 100 و500,000,000 Kz. رقم أطول من 9 خانات ليس مبلغًا.
+- قالب ATLANTICO (Transfer to Atlântico / Transferência Atlântico، جدول Label/Value): amount = سطر Amount/Montante فقط (2394700,00 → 2394700)؛ reference = سطر Reference/Referencia فقط؛ sender = ACCOUNT HOLDER/NOME DO TITULAR؛ receiver = Name/Nome beneficiário؛ account = Account number/IBAN. لا تأخذ رقم ACCOUNT NUMBER في الرأس (292750887 1 0 001) ولا Current account/Conta origem كمبلغ أو مرجع. currency AKZ → AOA. التاريخ في التذييل DD-MM-YYYY.`;
   const P2 = (c) => `تحقّق مستقل. اقرأ هذا الإيصال من جديد رقمًا رقمًا وأعد JSON فقط:
 {"amount_verbatim":"","amount":0,"currency":"","reference":"","agree_amount":true,"agree_reference":true,"note":""}
 - amount_verbatim أولًا كما هو مكتوب (مثل "Kz 7 500 000,00")، ثم amount رقمًا بلا فواصل. المسافات والنقاط فواصل آلاف.

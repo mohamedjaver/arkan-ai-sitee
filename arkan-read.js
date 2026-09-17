@@ -176,7 +176,9 @@ function liteParse(t){
      المرجع سطر Reference حصراً، لا Account number/IBAN ولا Current account */
   if(/BANCO\s+MILLENNIUM\s+ATLANTICO|Transfer\s+to\s+Atl[âa]ntico|Transfer[êe]ncia\s+Atl[âa]ntico/i.test(t)||(/ATLANTICO/i.test(t)&&/(Reference|Refer[eê]ncia)/i.test(t)&&/(Amount|Montante)/i.test(t))){
     const ref=t.match(/(?:Reference|Refer[eê]ncia)[^\d]{0,14}(\d{6,})/i);
-    const am2=t.match(/(?:Amount|Montante)[^\d]{0,14}([\d][\d.,\s\u00A0]{2,})/i);
+    /* 1360: المبلغ = سطر Amount/Montante حصرًا بصيغة 1234567,00 — لا رقم الحساب في الرأس (292750887 1 0 001) */
+    const am2=t.match(/(?:\bAmount\b|Montante)[^\d\n]{0,14}(\d[\d.\s\u00A0]{0,14}\d,\d{2})\b/i)||t.match(/(?:\bAmount\b|Montante)[^\d\n]{0,14}(\d{4,12})\b/i);
+    const sd2=t.match(/(?:ACCOUNT\s+HOLDER|NOME\s+DO\s+TITULAR(?:\s+DA\s+CONTA)?)[\s:]{0,6}([A-ZÀ-Ú][A-ZÀ-Ú0-9 .,&\-]{3,70})/);
     const nm2=t.match(/(?:\bName\b|Nome(?:\s+benefici[áa]rio)?)[\s:]{0,6}([A-ZÀ-Ú][A-ZÀ-Ú0-9 .,&\-]{3,70})/);
     const ac2=t.match(/(?:Account\s*number|N[úu]mero\s*de\s*conta)\s*\/?\s*IBAN[^\d]{0,14}([\d][\d ]{5,})/i);
     const dt2=t.match(/(\d{2}-\d{2}-\d{4})/);
@@ -185,9 +187,14 @@ function liteParse(t){
       if(am2)p.amount=euNum(am2[1]);
       if(ref)p.reference=ref[1];
       if(nm2)p.name=nm2[1].replace(/\s+/g,' ').replace(/\s+(?:Amount|Currency|Type|Status|Current|Account|Description|Montante|Moeda|Tipo|Estado|Conta|Descri[çc][ãa]o)\b.*$/i,'').replace(/(?:\s+[A-Z]){1,2}$/,'').trim();
-      if(ac2)p.receiver=ac2[1].replace(/\s+/g,'');
+      if(ac2)p.iban=ac2[1].replace(/\s+/g,'');
+      if(sd2)p.sender=sd2[1].replace(/\s+/g,' ').replace(/\s+(?:SUMMARY|RESUMO|Status|Estado)\b.*$/i,'').trim();
+      if(p.name)p.beneficiary=p.name;
+      /* حارس: المبلغ لا يساوي جزءًا من رقم الحساب/المرجع */
+      try{const accD=String((ac2&&ac2[1])||'').replace(/\D/g,'');const hd=(t.match(/(?:ACCOUNT\s+NUMBER|N[ÚU]MERO\s+DE\s+CONTA)[^\d]{0,10}([\d][\d ]{6,})/i)||[])[1];const hdD=String(hd||'').replace(/\D/g,'');
+        const aS=String(Math.round(p.amount||0));if(p.amount&&((accD&&accD.indexOf(aS)>=0)||(hdD&&hdD.indexOf(aS)>=0)||(p.reference&&String(p.reference).indexOf(aS)>=0))){p.amount=null;}}catch(e){}
       if(dt2)p.date=dt2[1];
-      p.confidence=(p.amount&&p.reference)?100:85;return p;}
+      p.confidence=(p.amount&&p.reference)?100:(p.amount||p.reference)?70:40;return p;}
   }
   const cm=t.match(/\b(Kz|KZ|AKZ|MRU|UM|USDT|USDC|USD|EUR|CNY|AED|AOA)\b/i);
   if(cm)p.currency=cm[1].toUpperCase().replace('AKZ','Kz').replace('AOA','Kz').replace('KZ','Kz').replace('UM','MRU');
