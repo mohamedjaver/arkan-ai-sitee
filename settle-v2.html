@@ -1332,6 +1332,11 @@ async function ssDropSaved(rid,amt,label){
     }else toast('لم يوجد في عمليات هذه التسوية');
   }catch(e){toast('تعذّرت الإزالة');}
 }
+/* 1364: تاريخ الإيصال — من القراءة (dd-mm-yyyy / dd/mm/yyyy / yyyy-mm-dd) وإلا تاريخ الحفظ */
+function ssRcptDate(x){var o=x.ocr||{};var t=String(o.date||o.txn_date||'').trim();var m;
+  if((m=t.match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{4})/)))return new Date(+m[3],+m[2]-1,+m[1]);
+  if((m=t.match(/^(\d{4})[\/\-.](\d{1,2})[\/\-.](\d{1,2})/)))return new Date(+m[1],+m[2]-1,+m[3]);
+  if(x.created_at){var d=new Date(x.created_at);if(!isNaN(d))return d;}return null;}
 /* ═══ 1361: مطابقة المدفوع المتراكم مع الإيصالات المحفوظة فعلًا — لا يبقى شيء بعد الحذف ═══ */
 async function ssReconcile(s,amtById){var total=0,fixed=0,seen={};
   /* 1362: الإيصال الواحد قد يكون مسجّلًا على كل العمليات المحددة (rcpt_ids مشتركة) — يُحسب مرة واحدة فقط على أول عملية تحمله */
@@ -1375,10 +1380,11 @@ async function ssShowPrevRcpts(s){
   if(!ids.length){ /* 1361: لا إيصالات محفوظة → لا مدفوع متبقٍ (يصحّح بقايا paid_aoa) */
     await ssReconcile(s,{});return;}
   try{
-    var r=await fetch(SB+'/bdl_receipts?id=in.('+ids.join(',')+')&select=id,amount,ccy,txn_ref,bank,ocr',{headers:H()});
+    var r=await fetch(SB+'/bdl_receipts?id=in.('+ids.join(',')+')&select=id,amount,ccy,txn_ref,bank,ocr,created_at',{headers:H()});
     var rows=r.ok?await r.json():[];
     SS.prevRows={};
     var amtById={};rows.forEach(function(x){amtById[x.id]=Number(x.amount)||0;});await ssReconcile(s,amtById);
+    rows.sort(function(a,b){var da=ssRcptDate(a),db=ssRcptDate(b);return ((db&&db.getTime())||0)-((da&&da.getTime())||0);}); /* 1364: الأحدث أولًا حسب تاريخ الإيصال */
     SS.savedAmts=[];
     rows.forEach(function(x){if(x.txn_ref)SS.savedRefs[String(x.txn_ref)]=1;
       var a=Number(x.amount)||0;if(a>0)SS.savedAmts.push({a:a,label:String(x.txn_ref||x.bank||'إيصال محفوظ')});});
@@ -1389,11 +1395,11 @@ async function ssShowPrevRcpts(s){
         '<button onclick="ssSelAll()" style="flex:1;border:1.4px solid #0B2F70;background:#fff;color:#0B2F70;font:800 12px \'IBM Plex Sans Arabic\',sans-serif;padding:8px;cursor:pointer">تحديد الكل</button>'+
         '<button id="ssDropBtn" onclick="ssDropSel()" style="flex:1.4;border:0;background:#B00020;color:#fff;font:800 12px \'IBM Plex Sans Arabic\',sans-serif;padding:8px;cursor:pointer">إزالة المحدد (0)</button>'+
       '</div>'+
-      rows.map(function(x){SS.prevRows[x.id]=x;var img=x.ocr&&x.ocr.image;
-        return '<div class="num" id="pr-'+x.id+'" style="display:flex;align-items:center;gap:9px;font-size:12.5px;font-weight:700;color:#0B2447;padding:5px 0;border-top:1px solid #F3E7C0">'+
+      rows.map(function(x){SS.prevRows[x.id]=x;var img=x.ocr&&x.ocr.image;var d=ssRcptDate(x);var dl=d?d.toLocaleDateString('en-GB',{day:'2-digit',month:'2-digit',year:'2-digit'}):'—';
+        return '<div class="num" id="pr-'+x.id+'" style="display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:700;color:#0B2447;padding:7px 0;border-top:1px solid #F3E7C0">'+
           '<input type="checkbox" class="ssRc" data-rid="'+x.id+'" data-amt="'+(Number(x.amount)||0)+'" onchange="ssSelCnt()" style="width:19px;height:19px;flex:0 0 auto;accent-color:#B00020">'+
-          '<span style="color:#5C7699;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" onclick="ssEditRow(\''+x.id+'\')">'+esc(x.txn_ref||x.bank||'إيصال')+'</span>'+
-          '<b onclick="ssEditRow(\''+x.id+'\')">'+fmt(Number(x.amount)||0,0)+' '+esc(x.ccy||'')+'</b>'+
+          '<span style="flex:1;min-width:0" onclick="ssEditRow(\''+x.id+'\')"><span style="display:block;color:#0B2447;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;direction:ltr;text-align:right">'+esc(x.txn_ref||'—')+'</span><small style="display:block;color:#5C7699;font-size:10.5px;direction:ltr;text-align:right">'+dl+(x.bank?' · '+esc(x.bank):'')+'</small></span>'+
+          '<b onclick="ssEditRow(\''+x.id+'\')" style="font-family:\'IBM Plex Mono\',monospace;font-size:14.5px;color:#003B8F;white-space:nowrap;direction:ltr">'+fmt(Number(x.amount)||0,0)+'<small style="font-size:10px;color:#5C7699;margin-left:4px">'+esc(x.ccy||'')+'</small></b>'+
           (img?'<button onclick="ssOpenImg(\''+esc(img)+'\')" title="فتح الإيصال" style="border:1px solid #C9DFFA;background:#fff;color:#0A56B8;font-size:12px;padding:4px 7px;cursor:pointer">🖼</button>':'')+
           '<button onclick="ssEditRow(\''+x.id+'\')" title="تعديل" style="border:1px solid #C9DFFA;background:#fff;color:#0B2F70;font:800 12px \'IBM Plex Sans Arabic\',sans-serif;padding:4px 8px;cursor:pointer">✎</button></div>';
       }).join('')+'</div>';
