@@ -216,7 +216,7 @@ body.sheet-open .bbar,body.sheet-open #akTabs,body.sheet-open #akTop,body.sheet-
 #ovl-login #lEye{background:#12213C;border-color:#1E4FA8;color:#7FA6E8}
 #ovl-login #lBioBtn{background:#101A2E!important;color:#7FA6E8!important;border-color:#1E4FA8!important}
 }
-#v-ops .trk3{display:flex;align-items:flex-start;padding:12px 14px 10px;background:#F7F9FC;border-top:1px solid var(--line)}
+.trk3{display:flex;align-items:flex-start;padding:12px 14px 10px;background:#F7F9FC;border-top:1px solid var(--line)}
 .trk3 .st3{flex:0 0 auto;width:96px;display:flex;flex-direction:column;align-items:center;gap:5px;text-align:center}
 .trk3 .c3{width:24px;height:24px;border:2.5px solid #D5DEEC;background:#fff;display:grid;place-items:center;box-sizing:border-box}
 .trk3 .c3.done{background:#2F6FD0;border-color:#2F6FD0}
@@ -230,7 +230,28 @@ body.sheet-open .bbar,body.sheet-open #akTabs,body.sheet-open #akTop,body.sheet-
 .trk3.mini{padding:10px 0 0;background:none;border:0}
 .trk3.mini .st3{width:72px}
 @keyframes trk3sp{to{transform:rotate(360deg)}}
-.oppipe{display:flex;align-items:flex-start;margin-top:11px}
+/* 1368: بطاقة التسوية — سطر هوية، سطر مقابل، متتبّع أفقي، سطر أفعال */
+.g2{border-inline-start:4px solid #2F6FD0;margin-bottom:10px}
+.g2.pend{border-inline-start-color:#E6A700}
+.g2-top{display:flex;align-items:center;gap:12px;padding:14px 14px 10px;cursor:pointer}
+.g2-who{flex:1;min-width:0}
+.g2-who b{display:block;font-size:15.5px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.g2-who small{display:block;margin-top:4px;font-size:11.5px;color:var(--muted)}
+.g2-badge{display:inline-block;margin-inline-start:6px;background:#FFF3CC;color:#8A6100;font-weight:800;font-size:10px;padding:2px 7px;border:1px solid #EAD48A}
+.g2-amt{flex:none;text-align:left}
+.g2-amt b{display:block;font-size:18px;font-weight:800;color:var(--navy);direction:ltr}
+.g2-amt small{display:block;font-size:11px;font-weight:700;color:var(--muted)}
+.g2-conv{display:flex;justify-content:space-between;align-items:center;margin:0 14px 6px;padding:8px 10px;background:#F1F5FB;font-size:12px;color:var(--muted)}
+.g2-conv b{color:var(--navy);font-size:13.5px;direction:ltr}
+.g2 .trk3{background:none;border-top:0;padding:8px 10px 2px}
+.g2 .trk3 .st3{width:88px}
+.g2-act{display:flex;gap:8px;align-items:center;padding:10px 14px 12px}
+.g2-act button{height:44px;font-family:inherit;cursor:pointer}
+.g2-act .go{flex:1;border:0;background:#1F8F5B;color:#fff;font-weight:800;font-size:14px}
+.g2.pend .g2-act .go{background:var(--navy)}
+.g2-act .more{padding:0 14px;border:1px solid var(--line);background:#fff;color:var(--navy);font-weight:700;font-size:12.5px}
+.g2-act .del{padding:0 8px;border:0;background:none;color:#B00020;font-weight:700;font-size:12.5px}
+#v-ops .oppipe{display:flex;align-items:flex-start;margin-top:11px}
 #v-ops .oppipe .s9{display:flex;flex-direction:column;align-items:center;gap:4px;flex:0 0 auto}
 #v-ops .oppipe .d{width:11px;height:11px;background:#fff;border:2.5px solid #C9D8EC;display:block}
 #v-ops .oppipe .d.done{background:var(--navy);border-color:var(--navy)}
@@ -919,26 +940,19 @@ function renderGroups(){
     var ckCls=nSel===0?'':(nSel>=g.tx_count?' on':' half');
     var accTxt=g.account_number&&g.account_number!=='—'
       ?esc(g.account_kind)+' • ****'+esc(String(g.account_number).slice(-4)):'بدون حساب';
-    return '<div class="grp" id="g-'+k.replace(/[^a-z0-9]/gi,'')+'">'+
-      '<div class="grp-h">'+
+    var p=PENDMAP[k],ex='expand(this.closest(\'.grp\'),\''+k+'\')';
+    return '<div class="grp g2'+(p?' pend':'')+'" id="g-'+k.replace(/[^a-z0-9]/gi,'')+'">'+
+      '<div class="g2-top" onclick="'+ex+'">'+
         '<div class="ck'+ckCls+'" onclick="event.stopPropagation();toggleGrp(\''+k+'\')"></div>'+
-        '<div class="grp-i" onclick="expand(this.closest(\'.grp\'),\''+k+'\')">'+
-          '<div class="grp-t"><b>'+esc(g.customer_name)+'</b><span class="acc">'+accTxt+'</span></div>'+
-          '<div class="grp-s"><span><span class="n">'+g.tx_count+'</span> عمليات</span>'+
-          (PENDMAP[k]?'<span style="background:#FFF3CC;color:#8A6100;font-weight:800;font-size:10px;padding:3px 8px;border:1px solid #EAD48A">تسوية معلقة</span>':'')+
-          '<span class="num">'+fmt(g.total_amount)+' '+esc(g.ccy)+'</span>'+
-          (g.total_settle>0?'<span class="num">'+fmt(g.total_settle)+' '+esc(g.settle_ccy||'')+'</span>':'')+'</div>'+
-        '</div>'+
-        '<div class="grp-amt" onclick="expand(this.closest(\'.grp\'),\''+k+'\')">'+
-          '<div class="a num">'+fmt(g.total_amount)+'</div><div class="b">'+esc(g.ccy)+'</div></div>'+
-        '<button onclick="event.stopPropagation();grpSettle(\''+k+'\')" style="border:1px solid #1F8F5B;background:#1F8F5B;color:#fff;font-weight:800;font-size:10.5px;padding:6px 12px;font-family:inherit;cursor:pointer;border-radius:8px;margin-inline-end:6px">تسوية</button>'+
-        '<button onclick="event.stopPropagation();grpDelete(\''+k+'\')" style="border:1px solid #F0C9C5;background:#fff;color:#B00020;font-weight:800;font-size:10.5px;padding:6px 10px;font-family:inherit;cursor:pointer;flex:none">حذف</button>'+
-      '<span class="arrow">◀</span>'+
-      '</div>'+(function(){var p=PENDMAP[k];
-        return trk3(1,['الوارد','التسوية','التسليم'],
-          [g.tx_count+' عملية · '+fmt(g.total_amount)+' '+esc(g.ccy),
-           p?((p.n?p.n+' إيصال محفوظ':'محفوظة مؤقتًا')+(p.paid?' · '+fmt(p.paid,0):'')):'بانتظار التسعير والإيصالات',
-           g.total_settle>0?fmt(g.total_settle)+' '+esc(g.settle_ccy||''):''],!!p);})()+
+        '<div class="g2-who"><b>'+esc(g.customer_name)+'</b><small><span class="num">'+g.tx_count+'</span> عمليات · '+accTxt+(p?'<span class="g2-badge">معلقة</span>':'')+'</small></div>'+
+        '<div class="g2-amt"><b class="num">'+fmt(g.total_amount)+'</b><small>'+esc(g.ccy)+'</small></div>'+
+      '</div>'+
+      (g.total_settle>0?'<div class="g2-conv"><span>يقابلها</span><b class="num">'+fmt(g.total_settle)+' '+esc(g.settle_ccy||'')+'</b></div>':'')+
+      trk3(1,['الوارد','التسوية','التسليم'],
+        ['مقيَّد',p?(p.n?p.n+' إيصالًا محفوظًا':'محفوظة مؤقتًا'):'بانتظار التسعير',''],!!p)+
+      '<div class="g2-act"><button class="go" onclick="grpSettle(\''+k+'\')">'+(p?'متابعة التسوية':'تسوية')+'</button>'+
+        '<button class="more" onclick="'+ex+'">العمليات <span class="arrow">◀</span></button>'+
+        '<button class="del" onclick="grpDelete(\''+k+'\')">حذف</button></div>'+
       '<div class="txs" id="tx-'+k.replace(/[^a-z0-9]/gi,'')+'"></div></div>';
   }).join('');
 }
