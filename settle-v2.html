@@ -216,7 +216,21 @@ body.sheet-open .bbar,body.sheet-open #akTabs,body.sheet-open #akTop,body.sheet-
 #ovl-login #lEye{background:#12213C;border-color:#1E4FA8;color:#7FA6E8}
 #ovl-login #lBioBtn{background:#101A2E!important;color:#7FA6E8!important;border-color:#1E4FA8!important}
 }
-#v-ops .oppipe{display:flex;align-items:flex-start;margin-top:11px}
+#v-ops .trk3{display:flex;align-items:flex-start;padding:12px 14px 10px;background:#F7F9FC;border-top:1px solid var(--line)}
+.trk3 .st3{flex:0 0 auto;width:96px;display:flex;flex-direction:column;align-items:center;gap:5px;text-align:center}
+.trk3 .c3{width:24px;height:24px;border:2.5px solid #D5DEEC;background:#fff;display:grid;place-items:center;box-sizing:border-box}
+.trk3 .c3.done{background:#2F6FD0;border-color:#2F6FD0}
+.trk3 .c3.cur{border-color:#2F6FD0}
+.trk3 .c3.cur.spin{border-color:#D5DEEC;border-top-color:#2F6FD0;border-inline-end-color:#2F6FD0;animation:trk3sp 1s linear infinite}
+.trk3 .l3{flex:1;height:2.5px;background:#D5DEEC;margin-top:11px}
+.trk3 .l3.done{background:#2F6FD0}
+.trk3 .n3{font-size:11px;font-weight:800;color:#9AAAC2;white-space:nowrap}
+.trk3 .n3.on{color:var(--navy)}
+.trk3 .s3{font-size:9.5px;font-weight:600;color:#7C8BA5;line-height:1.35;min-height:13px}
+.trk3.mini{padding:10px 0 0;background:none;border:0}
+.trk3.mini .st3{width:72px}
+@keyframes trk3sp{to{transform:rotate(360deg)}}
+.oppipe{display:flex;align-items:flex-start;margin-top:11px}
 #v-ops .oppipe .s9{display:flex;flex-direction:column;align-items:center;gap:4px;flex:0 0 auto}
 #v-ops .oppipe .d{width:11px;height:11px;background:#fff;border:2.5px solid #C9D8EC;display:block}
 #v-ops .oppipe .d.done{background:var(--navy);border-color:var(--navy)}
@@ -874,8 +888,8 @@ async function loadGroups(){
     var r=await fetch(SB+'/bdl_open_groups?select=*&order=last_at.desc',{headers:H()});
     if(!r.ok)throw new Error(r.status);
     GROUPS=await r.json();syncUI('ok','متزامن');
-    try{var pr=await fetch(SB+'/bdl_transactions?select=customer_id,account_id,ccy&status=eq.settling&meta->>pending=eq.true&limit=500',{headers:H()});
-      PENDMAP={};(pr.ok?await pr.json():[]).forEach(function(t){PENDMAP[t.customer_id+'|'+(t.account_id||'x')+'|'+t.ccy]=1;});
+    try{var pr=await fetch(SB+'/bdl_transactions?select=customer_id,account_id,ccy,meta&status=eq.settling&meta->>pending=eq.true&limit=500',{headers:H()});
+      PENDMAP={};(pr.ok?await pr.json():[]).forEach(function(t){var _k=t.customer_id+'|'+(t.account_id||'x')+'|'+t.ccy,_m=t.meta||{},_p=PENDMAP[_k]||(PENDMAP[_k]={n:0,paid:0});_p.n=Math.max(_p.n,(_m.rcpt_ids||[]).length);_p.paid=Math.max(_p.paid,Number(_m.paid_aoa)||0);});
     }catch(e2){PENDMAP={};}
   }catch(e){GROUPS=[];syncUI('err','تعذّر الاتصال');}
   buildCcyChips();renderGroups();updateBar();
@@ -920,7 +934,12 @@ function renderGroups(){
         '<button onclick="event.stopPropagation();grpSettle(\''+k+'\')" style="border:1px solid #1F8F5B;background:#1F8F5B;color:#fff;font-weight:800;font-size:10.5px;padding:6px 12px;font-family:inherit;cursor:pointer;border-radius:8px;margin-inline-end:6px">تسوية</button>'+
         '<button onclick="event.stopPropagation();grpDelete(\''+k+'\')" style="border:1px solid #F0C9C5;background:#fff;color:#B00020;font-weight:800;font-size:10.5px;padding:6px 10px;font-family:inherit;cursor:pointer;flex:none">حذف</button>'+
       '<span class="arrow">◀</span>'+
-      '</div><div class="txs" id="tx-'+k.replace(/[^a-z0-9]/gi,'')+'"></div></div>';
+      '</div>'+(function(){var p=PENDMAP[k];
+        return trk3(1,['الوارد','التسوية','التسليم'],
+          [g.tx_count+' عملية · '+fmt(g.total_amount)+' '+esc(g.ccy),
+           p?((p.n?p.n+' إيصال محفوظ':'محفوظة مؤقتًا')+(p.paid?' · '+fmt(p.paid,0):'')):'بانتظار التسعير والإيصالات',
+           g.total_settle>0?fmt(g.total_settle)+' '+esc(g.settle_ccy||''):''],!!p);})()+
+      '<div class="txs" id="tx-'+k.replace(/[^a-z0-9]/gi,'')+'"></div></div>';
   }).join('');
 }
 async function expand(el,k){
@@ -2403,15 +2422,22 @@ function opsDash(){
   var conf=d.filter(function(o){return o.status==='confirmed';}).length;
   if(conf)$('#opsDash').innerHTML+=card('أكّد المورد — للإقفال',conf,'#0B7A3B','confirmed');
 }
-function opPipe(o){
-  var idx=o.status==='open'?1:(o.status==='covered'||o.status==='sent')?2:o.status==='confirmed'?3:o.status==='closed'?4:1;
-  var L=['إنشاء','الإيصالات','تأكيد المورد','التسوية'],h='<div class="oppipe">';
-  for(var i=0;i<4;i++){
-    var cl=i<idx?' done':i===idx?' cur':'';
-    h+='<div class="s9"><span class="d'+cl+'"></span><span class="t9'+(i===idx?' on':'')+'">'+L[i]+'</span></div>';
-    if(i<3)h+='<span class="ln'+(i<idx?' done':'')+'"></span>';
+/* ═══ 1367: متتبّع المحطات الثلاث — لكل عملية قبل اكتمالها: الوارد ← التسوية ← التسليم ═══
+   cur = رقم المحطة الجارية (0..2، و3 = اكتملت كلها) · spin = المحطة الجارية قيد التنفيذ فعلًا */
+function trk3(cur,names,subs,spin,mini){
+  var h='<div class="trk3'+(mini?' mini':'')+'">';
+  for(var i=0;i<3;i++){
+    var done=i<cur,on=i===cur;
+    h+='<div class="st3"><span class="c3'+(done?' done':on?(' cur'+(spin?' spin':'')):'')+'">'+(done?'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>':'')+'</span>'+
+      '<span class="n3'+(done||on?' on':'')+'">'+names[i]+'</span><span class="s3">'+((subs&&subs[i])||'')+'</span></div>';
+    if(i<2)h+='<span class="l3'+(i<cur?' done':'')+'"></span>';
   }
   return h+'</div>';
+}
+function opPipe(o){
+  var st=o.status,cur=st==='closed'?3:st==='confirmed'?2:(st==='covered'||st==='sent')?1:0;
+  return trk3(cur,['الإيصالات','المورد','التسوية'],
+    [cur>0?'مكتملة':'بانتظار التغطية',cur>1?'أكّد':(st==='sent'?'أُرسلت له':cur===1?'بانتظار تأكيده':''),cur>2?'أُقفلت':(cur===2?'جاهزة للإقفال':'')],st==='sent',true);
 }
 function opBar(o){
   var tgt=Number(o.target_aoa)||0, cov=Number(o.covered_aoa)||0, n=o.receipts_n||o.rcpt_count||0;
@@ -3325,7 +3351,7 @@ document.querySelectorAll('.ovl').forEach(function(o){
 <script src="bdl-ops11.js?v=1"></script>
 <script src="bdl-ops14.js?v=1"></script>
 <script src="bdl-ops16.js?v=1"></script>
-<link rel="stylesheet" href="bdl-sharp.css?v=1">
+<link rel="stylesheet" href="bdl-sharp.css?v=2">
 <script src="arkan-nav.js?v=15" defer></script>
 <script>addEventListener('hashchange',function(){var t=(location.hash||'').slice(1);if(['ops','settle','clients','archive','profit'].indexOf(t)>=0&&typeof go==='function')go(t);});</script>
 </body>
