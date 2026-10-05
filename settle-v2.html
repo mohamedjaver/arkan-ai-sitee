@@ -1569,6 +1569,7 @@ function renderRcpts(){
       body='<div class="f" onclick="event.stopPropagation()"><input inputmode="numeric" dir="ltr" value="'+(p.amount||'')+'" placeholder="المبلغ" data-ri="'+i+'" oninput="rcptAmt(this)" class="amt'+(p.amount?'':' need')+'">'+
         '<input value="'+esc(r.fwdSup||SS.fwdSup||'')+'" placeholder="المورد لهذا الإيصال" data-ri="'+i+'" list="supDL" oninput="rcptSup(this)" class="'+((r.fwdSup||SS.fwdSup)?'':'need')+'"></div>'+
         '<div class="m">'+(p.amount?(ccyBad?'<span style="color:#B00020;font-weight:800">عملة الإيصال '+esc(p.ccy)+' ≠ عملة المستحق '+esc(SS.dueCcy||'')+' — مستثنى</span>':'قُرئ بـ'+(p.engine==='claude'?'Claude':(p.engine||'القارئ المحلي'))+(p.manual?' · ✓ عُدّل يدويًا':'')):'لم يُقرأ — اكتب المبلغ')+(p.ref?' · <span class="num">'+esc(p.ref)+'</span>':'')+(p.bank?' · '+esc(p.bank):'')+'</div>'+
+        (r._when?'<div class="m num" style="color:#0B2F70;font-weight:700">'+esc(r._when)+'</div>':'')+
         (r.soft?'<div class="acts"><button onclick="RCPTS['+i+'].ok=true;renderRcpts();updMatch()">تحويل جديد مختلف فعلًا — احسبه</button></div>':'');
       /* المطابقة مع إيصال المورد */
       if(r.supFile){var sp=r.supParsed||{};var _ex=(r.supMore||[]).reduce(function(a,x){return a+(Number(x.parsed&&x.parsed.amount)||0);},0);var okA=sp.amount&&Math.abs(Number(sp.amount)+_ex-Number(p.amount))<1,okR=sp.ref&&p.ref&&sp.ref===p.ref;
@@ -3365,7 +3366,7 @@ document.querySelectorAll('.ovl').forEach(function(o){
 <script src="bdl-ops11.js?v=1"></script>
 <script src="bdl-ops14.js?v=1"></script>
 <script src="bdl-ops16.js?v=1"></script>
-<script src="bdl-sheet.js?v=4"></script>
+<script src="bdl-sheet.js?v=5"></script>
 <link rel="stylesheet" href="bdl-sharp.css?v=2">
 <script src="arkan-nav.js?v=15" defer></script>
 <script>addEventListener('hashchange',function(){var t=(location.hash||'').slice(1);if(['ops','settle','clients','archive','profit'].indexOf(t)>=0&&typeof go==='function')go(t);});</script>

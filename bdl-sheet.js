@@ -49,6 +49,8 @@ function init(){
   '#shZip .zk{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:14px}#shZip .zk div{border:1px solid var(--line);padding:10px 4px;text-align:center}#shZip .zk b{display:block;font-size:22px;font-family:"IBM Plex Mono",monospace}#shZip .zk small{font-size:11px;color:#5C7699}'+
   '#shZip .zsum{display:flex;justify-content:space-between;align-items:center;margin-top:8px;padding:10px 12px;background:#F1F5FB;font-size:12.5px;color:#5C7699}#shZip .zsum b{font-family:"IBM Plex Mono",monospace;font-size:16px;color:#0B2F70;direction:ltr}'+
   '#shZip .zb{width:100%;height:52px;margin-top:14px;border:0;background:#0E8F5B;color:#fff;font-weight:800;font-size:14.5px;font-family:inherit;cursor:pointer}#shZip .zb.ghost{background:#fff;color:#B00020;border:1.5px solid #B00020}'+
+  '#rcptView .bar{display:flex!important;align-items:center;gap:10px;padding-top:calc(8px + env(safe-area-inset-top))}#rcptView #rvT{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;direction:ltr;text-align:start;font-size:12px}'+
+  '#rcptView .bar button{flex:none!important;height:44px;padding:0 18px!important;background:#fff!important;color:#0B2F70!important;font-weight:800!important;font-size:14px!important;border:0!important}'+
   '#shFoot{position:sticky;bottom:0;z-index:6;display:grid;grid-template-columns:2fr 3fr;gap:8px;margin:14px -16px 0;padding:10px 16px calc(10px + env(safe-area-inset-bottom));background:#fff;border-top:1px solid var(--line);box-shadow:0 -6px 16px rgba(11,47,112,.08)}'+
   '#shFoot button{width:100%!important;height:54px!important;margin:0!important;font-size:13.5px!important;line-height:1.3;white-space:normal}';
   document.head.appendChild(st);
@@ -198,9 +200,39 @@ function init(){
     opsBox.innerHTML=ops.length>1?('<div class="t">عمليات هذه التسوية ('+ops.length+') — استبعد ما لا تريد تسويته الآن</div>'+ops.map(function(t){
       return '<div class="o"><div><b>'+esc(String(t.ref||'').toUpperCase())+'</b><small>'+esc(typeof fmt==='function'?fmt(t.amount,0):t.amount)+' '+esc(t.ccy||'')+'</small></div><button type="button" data-id="'+esc(t.id)+'">استبعاد</button></div>';}).join('')):'';
   }catch(e){}}
+  /* ═══ 1375: ترتيب الإيصالات زمنيًا (الأحدث أولًا) — من تاريخ ووقت الإيصال المقروء، وإلا من ختم اسم الملف ═══ */
+  function rcKey(r){var p=r.parsed||{},d=String(p.date||''),m,t=0;
+    if((m=d.match(/(20\d{2})[-\/.](\d{1,2})[-\/.](\d{1,2})(?:[ T]+(\d{1,2}):(\d{2})(?::(\d{2}))?)?/)))t=new Date(+m[1],+m[2]-1,+m[3],+(m[4]||0),+(m[5]||0),+(m[6]||0)).getTime();
+    else if((m=d.match(/(\d{1,2})[-\/.](\d{1,2})[-\/.](20\d{2}|\d{2})(?:[ T,]+(\d{1,2}):(\d{2})(?::(\d{2}))?)?/)))t=new Date(+(m[3].length===2?'20'+m[3]:m[3]),+m[2]-1,+m[1],+(m[4]||0),+(m[5]||0),+(m[6]||0)).getTime();
+    var hasTime=!!(m&&m[4]!=null&&(m.index!=null));
+    var n=String(((r.orig||r.file)||{}).name||''),f=n.match(/(20\d{2})-?(\d{2})-?(\d{2})[-_ T]?(\d{2})[-:]?(\d{2})[-:]?(\d{2})/),ft=f?new Date(+f[1],+f[2]-1,+f[3],+f[4],+f[5],+f[6]).getTime():0;
+    if(!t||isNaN(t)){t=ft;hasTime=!!ft;}else if(!hasTime&&ft&&Math.abs(ft-t)<2*864e5){t=ft;hasTime=true;} /* تاريخ بلا وقت: يُكمَّل الوقت من ختم الملف */
+    return {t:t||0,hasTime:hasTime};}
+  function whenTxt(k){if(!k.t)return '';var d=new Date(k.t),z=function(x){return (x<10?'0':'')+x;};
+    return z(d.getDate())+'/'+z(d.getMonth()+1)+'/'+d.getFullYear()+(k.hasTime?' · '+z(d.getHours())+':'+z(d.getMinutes()):'');}
+  window.__shRcKey=rcKey;
+  if(typeof window.renderRcpts==='function'&&!window.renderRcpts._sorted){var _rr=window.renderRcpts;
+    window.renderRcpts=function(){try{if(typeof RCPTS!=='undefined'&&RCPTS.length&&!(typeof BULK!=='undefined'&&BULK&&BULK.length)){
+        RCPTS.forEach(function(r){var k=rcKey(r);r._t=k.t;r._when=whenTxt(k);});
+        RCPTS.forEach(function(r,i){if(r._ord==null)r._ord=(window.__shOrd=(window.__shOrd||0)+1);});
+        RCPTS.sort(function(a,b){return (b._t||0)-(a._t||0)||a._ord-b._ord;});}}catch(e){}
+      return _rr.apply(this,arguments);};window.renderRcpts._sorted=true;}
+
+  /* ═══ 1375: زر الرجوع لا يُضيّع العمل — يغلق العارض أو يطلب تأكيدًا قبل ترك تسوية فيها إيصالات غير محفوظة ═══ */
+  function rvOn(){var v=$('rcptView');return !!(v&&v.classList.contains('on'));}
+  function unsaved(){try{return typeof RCPTS!=='undefined'&&RCPTS.length>0;}catch(e){return false;}}
+  function trap(){try{if(!(history.state&&history.state.bdlTrap))history.pushState({bdlTrap:1},'');}catch(e){}}
+  window.addEventListener('popstate',function(){
+    if(rvOn()){$('rcptView').classList.remove('on');if(ov.classList.contains('on'))trap();return;}
+    var zv=$('shZip');if(zv&&zv.classList.contains('on')){trap();return;}
+    if(ov.classList.contains('on')){
+      if(unsaved()&&!confirm('الخروج من التسوية؟\nالإيصالات المرفوعة غير المحفوظة ('+RCPTS.length+') ستُفقد.\n\nللاحتفاظ بها اضغط «إلغاء» ثم «حفظ مؤقت».')){trap();return;}
+      try{closeOvl('settle');}catch(e){ov.classList.remove('on');}}});
+  window.addEventListener('beforeunload',function(e){if(ov.classList.contains('on')&&unsaved()){e.preventDefault();e.returnValue='';}});
+  new MutationObserver(function(){if(rvOn())trap();}).observe(document.body,{subtree:true,attributes:true,attributeFilter:['class']});
   var mo=new MutationObserver(paint);
   ['ssDue','ssPaid','ssPct','ssDiff','ssN','ssIn','ssPrevR','ssMatch'].forEach(function(i){var e=$(i);if(e)mo.observe(e,{childList:true,characterData:true,subtree:true,attributes:i==='ssMatch',attributeFilter:i==='ssMatch'?['class']:undefined});});
-  new MutationObserver(function(){if(ov.classList.contains('on')){if(pv)pv.classList.add('shCol');sh.scrollTop=0;paint();}}).observe(ov,{attributes:true,attributeFilter:['class']});
+  new MutationObserver(function(){if(ov.classList.contains('on')){trap();if(pv)pv.classList.add('shCol');sh.scrollTop=0;paint();}}).observe(ov,{attributes:true,attributeFilter:['class']});
   paint();
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
