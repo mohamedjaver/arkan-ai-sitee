@@ -273,7 +273,7 @@ window.ArkanRead={
   /* readAmount(File) → {amount,ccy,txn,bank,date,eng} — المبلغ فقط، بأخف استدعاء */
   async readAmount(file){
     /* 1) Claude على الخادم — لكل أنواع الإيصالات */
-    try{const c=await this.claude(file);if(c&&(c.amount||c.is_receipt===false)){const cy=(c.currency||'').toUpperCase();return {amount:(+c.amount||null),ccy:cy||null,txn:c.reference||null,receiver:c.account||c.receiver||null,name:c.name||null,bank:c.bank||null,date:c.date||null,phone:c.phone||null,eng:'claude'};}}catch(e){}
+    try{const c=await this.claude(file);if(c&&c.amount){const cy=(c.currency||'').toUpperCase();return {amount:(+c.amount||null),ccy:cy||null,txn:c.reference||null,receiver:c.account||c.receiver||null,name:c.name||null,bank:c.bank||null,date:c.date||null,phone:c.phone||null,eng:'claude'};}}catch(e){}
     const mime=file.type||'image/jpeg';
     const isPdf=/pdf/i.test(mime)||/\.pdf$/i.test(file.name||'');
     let p=null,eng='';

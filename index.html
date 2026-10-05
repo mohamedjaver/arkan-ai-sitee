@@ -1098,7 +1098,7 @@ function setLang(l){
       document.querySelectorAll('.akUserLink').forEach(a=>{a.hidden=false;});
       document.querySelectorAll('.akOwnerLink').forEach(a=>{if(/36295050$/.test(String(ss.phone||'').replace(/\D/g,'')))a.hidden=false;});
       /* المالك: «التسوية» تفتح صفحة التسوية نفسها بدل قسم الشرح */
-      if(/36295050$/.test(String(ss.phone||'').replace(/\D/g,'')))document.querySelectorAll('[data-i="nav_settle"]').forEach(a=>{a.href='compare.html';});}
+      if(/36295050$/.test(String(ss.phone||'').replace(/\D/g,'')))document.querySelectorAll('[data-i="nav_settle"]').forEach(a=>{a.href='settle-v2.html';});}
     else{const o=document.getElementById('akOutM');if(o)o.style.display='none';}
   }catch(e){}
   document.querySelectorAll('[data-ih]').forEach(el=>{const k=el.dataset.ih;if(t[k]!==undefined)el.innerHTML=t[k];});

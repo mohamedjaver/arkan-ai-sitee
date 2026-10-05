@@ -1554,34 +1554,15 @@ app.post('/admin/refresh-rates', async (req,res)=>{
   }catch(e){ res.status(401).json({ok:false}); }
 });
 
-/* محرك مقارنة الإيصالات بالجملة (compare.html) — إضافي */
+/* طبقة القراءة — القارئ الموحّد للإيصالات */
 try {
-  require('./bdl-compare-server')(app, { express, jwt, JWT_SECRET, SB_REST, SB_PUB,
-    ownerToken: () => { const ts = Math.floor(Date.now() / 1000); return jwt.sign({ sub: phoneToUuid(OWNER_PHONES[0]), role: 'authenticated', aud: 'authenticated', arkan_role: 'owner', iat: ts, exp: ts + 300 }, JWT_SECRET); } });
-} catch (e) { console.warn('compare engine off:', e.message); }
-/* المحاسب — وكيل مجدول (إضافي) */
-try {
-  require('./bdl-accountant')(app, { express, jwt, JWT_SECRET, SB_REST, SB_PUB,
-    ownerToken: () => { const ts = Math.floor(Date.now() / 1000); return jwt.sign({ sub: phoneToUuid(OWNER_PHONES[0]), role: 'authenticated', aud: 'authenticated', arkan_role: 'owner', iat: ts, exp: ts + 300 }, JWT_SECRET); },
-    notifyAdmin: typeof notifyAdmin === 'function' ? notifyAdmin : null,
-    pushOwner: async (title, body) => { try { if (!webpush) return; const fs2 = admin.firestore(); const q = await fs2.collection('push_subs').where('role', '==', 'owner').get(); const payload = JSON.stringify({ title, body, url: '/dues.html' }); for (const doc of q.docs) { for (const sub of (doc.data().subs || [])) { try { await webpush.sendNotification(sub, payload, { TTL: 3600 }); } catch (e) {} } } } catch (e) {} } });
-} catch (e) { console.warn('accountant off:', e.message); }
-/* واجهة المحاسب المبسطة (accountant.html) — إضافي */
-try {
-  require('./bdl-accountant-routes')(app, { express, jwt, JWT_SECRET, SB_REST, SB_PUB,
-    ownerToken: () => { const ts = Math.floor(Date.now() / 1000); return jwt.sign({ sub: phoneToUuid(OWNER_PHONES[0]), role: 'authenticated', aud: 'authenticated', arkan_role: 'owner', iat: ts, exp: ts + 300 }, JWT_SECRET); },
-    notifyAdmin: typeof notifyAdmin === 'function' ? notifyAdmin : null });
-} catch (e) { console.warn('accountant routes off:', e.message); }
+  require('./bdl-reader')(app, { express, jwt, JWT_SECRET });
+} catch (e) { console.warn('reader off:', e.message); }
 /* دليل الجهات الموحّد (إضافي) */
 try {
   require('./bdl-parties')(app, { express, jwt, JWT_SECRET, SB_REST, SB_PUB,
     ownerToken: () => { const ts = Math.floor(Date.now() / 1000); return jwt.sign({ sub: phoneToUuid(OWNER_PHONES[0]), role: 'authenticated', aud: 'authenticated', arkan_role: 'owner', iat: ts, exp: ts + 300 }, JWT_SECRET); } });
 } catch (e) { console.warn('parties off:', e.message); }
-/* أنبوب واتساب → Claude → الدفتر → المطابقة (إضافي) */
-try {
-  require('./bdl-wa-pipeline')(app, { SB_REST, SB_PUB, tg, ADMIN_ID: ENV.ADMIN_ID, WA_TOKEN,
-    ownerToken: () => { const ts = Math.floor(Date.now() / 1000); return jwt.sign({ sub: phoneToUuid(OWNER_PHONES[0]), role: 'authenticated', aud: 'authenticated', arkan_role: 'owner', iat: ts, exp: ts + 300 }, JWT_SECRET); } });
-} catch (e) { console.warn('wa pipeline off:', e.message); }
 /* المعايير المالية: سجل تدقيق، سلة 30 يومًا، PIN، تصدير شهري (إضافي) */
 try {
   require('./bdl-vault')(app, { express, jwt, JWT_SECRET, SB_REST, SB_PUB, tg,

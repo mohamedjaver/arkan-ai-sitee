@@ -14,14 +14,12 @@
   var isOwner = !!localStorage.getItem('arkan_owner_auth') || !!localStorage.getItem('arkan_admin_dev');
   try { var ses = JSON.parse(localStorage.getItem('arkan_session') || 'null');
         if (ses && /36295050$/.test(String(ses.phone || '').replace(/\D/g, ''))) isOwner = true; } catch (e) {}
-  if (/^(compare|settle-v2|settlement|dues|accountant|books|admin|rates-admin|archive)\.html$/.test(path)) isOwner = true;
+  if (/^(settle-v2|settlement|books|admin|rates-admin|archive)\.html$/.test(path)) isOwner = true;
 
   /* ترتيب التشغيل اليومي للمالك (من اليمين): 1 رفع إيصالات الزبائن (الحساب) → 2 التسويات → 3 المطابقة → 4 المحاسب */
   var TABS_OWNER = [
     { href: 'account.html',    icon: 'upload', label: '1 الرفع' },
-    { href: 'settle-v2.html',  icon: 'layers', label: '2 التسوية' },
-    { href: 'compare.html',    icon: 'match',  label: '3 المطابقة' },
-    { href: 'accountant.html', icon: 'calc',   label: '4 المحاسب' }
+    { href: 'settle-v2.html',  icon: 'layers', label: '2 التسوية والمطابقة' }
   ];
   var TABS_CLIENT = [
     { href: 'index.html',   icon: 'home',    label: 'الرئيسية' },
@@ -66,7 +64,7 @@
   function svg(n, s) { s = s || 22; return '<svg width="' + s + '" height="' + s + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="' + (ICONS[n] || '') + '"/></svg>'; }
   if (!isOwner && path === 'account.html') return;
   var tabs = isOwner ? TABS_OWNER : TABS_CLIENT, more = isOwner ? MORE_OWNER : MORE_CLIENT;
-  var active = function (h) { return h.split('#')[0] === path || (path === 'dues.html' && h === 'accountant.html') || (path === 'settlement.html' && h === 'compare.html'); };
+  var active = function (h) { return h.split('#')[0] === path || (path === 'settlement.html' && h === 'settle-v2.html'); };
 
   var css = document.createElement('style');
   css.textContent =
