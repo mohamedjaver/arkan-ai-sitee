@@ -143,7 +143,8 @@ async function takeZip(maxAge){var z=S.zip;if(!z)return;var pick=z.list.filter(f
   S.busy=true;S.zipMsg='جارٍ استخراج '+pick.length+' إيصالًا…';render();var files=[];
   for(var i=0;i<pick.length;i++){try{var b=await pick[i].e.async('blob');var ext=pick[i].name.split('.').pop().toLowerCase();
       var mime=ext==='pdf'?'application/pdf':ext==='png'?'image/png':ext==='webp'?'image/webp':ext==='heic'?'image/heic':'image/jpeg';
-      files.push(new File([b],pick[i].name,{type:mime}));}catch(e){}}
+      files.push(new File([b],pick[i].name,{type:mime}));}catch(e){}
+    if(i%4===0){S.zipMsg='جارٍ تفكيك الإيصالات '+(i+1)+' / '+pick.length+'…';render();}}
   if(z.party&&!S.party)S.party=z.party;
   S.zip=null;S.busy=false;S.zipMsg='';render();add(files);}
 /* ── الرفع والقراءة ── */
