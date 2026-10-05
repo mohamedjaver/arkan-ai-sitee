@@ -4,7 +4,7 @@
 (function(){
 'use strict';
 var SRV='https://arkan-ai-site-production.up.railway.app';
-var S={items:[],party:'',recips:[],busy:false,done:false};
+var S={items:[],party:'',recips:[],busy:false,done:false,zip:null};
 var MAPK='bdl_acct_map';
 function $(id){return document.getElementById(id);}
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
@@ -75,6 +75,8 @@ function css(){if($('bnCss'))return;var c=document.createElement('style');c.id='
 '#bnView footer{flex:none;background:#fff;padding:10px 14px calc(12px + env(safe-area-inset-bottom,0px))}#bnView .rw{display:grid;grid-template-columns:1fr 100px;gap:8px;margin-top:8px}'+
 '#bnView input,#bnView select{height:50px;border:1.5px solid #C9D6EA;border-radius:10px;padding:0 12px;font-weight:800;font-size:18px;font-family:inherit;box-sizing:border-box;width:100%;background:#fff;color:#0E1B33;direction:ltr}#bnView select{font-size:14px}'+
 '#bnVOk{width:100%;height:52px;margin-top:8px;border:0;border-radius:12px;background:#0E8F5B;color:#fff;font-weight:800;font-size:15px;font-family:inherit}'+
+'.bnZip{display:grid;grid-template-columns:1fr 1fr;gap:8px}.bnZip button{min-height:72px;border:1.5px solid #0B2F70;background:#fff;color:#0B2F70;border-radius:14px;font-family:inherit;cursor:pointer}.bnZip button:disabled{opacity:.4}.bnZip b{display:block;font-size:22px;font-weight:800}.bnZip small{display:block;font-size:12px;font-weight:700;margin-top:2px}'+
+'.bnHow{margin-top:12px;background:#fff;border:1px solid #E3E9F3;border-radius:14px;padding:12px 14px;font-size:12.5px;line-height:1.8;color:#0E1B33}.bnHow>b{display:block;color:#0B2F70;font-size:13.5px;margin-bottom:4px}.bnHow ol{margin:0;padding-inline-start:18px}.bnHow small{display:block;margin-top:6px;color:#5B6B86}'+
 '.bnMain{flex:1;min-width:0}.bnAmt{font-size:17px;font-weight:800;direction:ltr;text-align:start}.bnMeta{font-size:11.5px;color:#5B6B86;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;direction:ltr;text-align:start}'+
 '.bnSide{flex:none;border:0;border-radius:999px;padding:7px 11px;font-weight:800;font-size:11.5px;font-family:inherit;cursor:pointer;color:#fff}.bnSide.customer{background:#0B2F70}.bnSide.supplier{background:#1F7A4D}'+
 '.bnX{flex:none;border:0;background:none;color:#8A97AD;font-size:18px;cursor:pointer;padding:4px}'+
@@ -99,7 +101,7 @@ function mount(){css();
   sh.innerHTML='<header><b>عملية جديدة</b><button type="button" id="bnClose" aria-label="إغلاق">✕</button></header>'+
     '<div id="bnSteps"><span data-k="1">1 · الرفع</span><span data-k="2">2 · الفرز</span><span data-k="3">3 · القيد</span></div>'+
     '<div id="bnBody"></div><div id="bnFoot"><button id="bnGo" type="button" disabled>قيّد الكل</button></div>'+
-    '<input type="file" id="bnFile" accept="image/*,.pdf,application/pdf" multiple style="display:none"><datalist id="bnDL"></datalist>';
+    '<input type="file" id="bnFile" accept="image/*,.pdf,application/pdf,.zip,application/zip,application/x-zip-compressed" multiple style="display:none"><datalist id="bnDL"></datalist>';
   document.body.appendChild(sh);
   $('bnClose').onclick=close;$('bnFile').onchange=function(){add(this.files);this.value='';};
   $('bnGo').onclick=commit;
@@ -108,7 +110,7 @@ function mount(){css();
     var fs=[];[].forEach.call((e.clipboardData||{}).items||[],function(it){if(it.kind==='file'){var f=it.getAsFile();if(f)fs.push(f);}});if(fs.length)add(fs);});
 }
 function open(){if((window.bdlRole?bdlRole():'')!=='owner'){say('هذه الخدمة لحساب المالك فقط');return;}
-  S.items=[];S.party='';S.done=false;S.busy=false;$('bnSheet').classList.add('on');render();recips();$('bnFile').click();}
+  S.items=[];S.party='';S.done=false;S.busy=false;S.zip=null;S.zipMsg='';$('bnSheet').classList.add('on');render();recips();}
 function close(){if(S.busy)return;$('bnSheet').classList.remove('on');
   if(S.done){try{if(typeof rcpCloudLoad==='function')rcpCloudLoad();}catch(e){}}}
 async function recips(){if(S.recips.length)return;try{var t=await token();if(!t)return;
@@ -116,8 +118,37 @@ async function recips(){if(S.recips.length)return;try{var t=await token();if(!t)
     S.recips=(j&&j.items)||[];$('bnDL').innerHTML=S.recips.map(function(c){return '<option value="'+esc(c.name)+'">';}).join('');
     S.items.forEach(function(it){resolve(it);});render();}catch(e){}}
 
+/* ── استيراد محادثة واتساب (ملف ZIP من «تصدير المحادثة ← إرفاق الوسائط»): كل إيصالات الزبون دفعة واحدة بلا لقطات شاشة ── */
+function loadZipLib(){return window.JSZip?Promise.resolve():new Promise(function(res,rej){var sc=document.createElement('script');
+  sc.src='https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';sc.onload=res;sc.onerror=function(){rej(new Error('تعذّر تحميل قارئ ZIP — تحقق من الاتصال'));};document.head.appendChild(sc);});}
+function zipParty(n){n=String(n||'').replace(/\.zip$/i,'').replace(/[_]+/g,' ').replace(/\s*\(\d+\)\s*$/,'');
+  var m=n.match(/WhatsApp Chat\s*[-–]\s*(.+)$/i)||n.match(/WhatsApp Chat with\s+(.+)$/i)||n.match(/Conversa do WhatsApp com\s+(.+)$/i)||n.match(/Discussion WhatsApp avec\s+(.+)$/i)||n.match(/محادثة (?:واتساب|WhatsApp) مع\s+(.+)$/);
+  return m?m[1].trim():'';}
+function zipDate(n){var m=String(n).match(/(20\d{2})-(\d{2})-(\d{2})/)||String(n).match(/(20\d{2})(\d{2})(\d{2})/);
+  if(!m)return null;var d=new Date(+m[1],+m[2]-1,+m[3]);return isNaN(d)?null:d;}
+function dayDiff(d){var a=new Date();a.setHours(0,0,0,0);var b=new Date(d);b.setHours(0,0,0,0);return Math.round((a-b)/864e5);}
+async function openZip(file){
+  S.busy=true;S.zipMsg='جارٍ فتح '+file.name+'…';render();
+  try{await loadZipLib();var z=await window.JSZip.loadAsync(file),list=[];
+    z.forEach(function(path,e){if(e.dir)return;var nm=path.split('/').pop();
+      if(!/\.(jpe?g|png|webp|heic|pdf)$/i.test(nm)||/STICKER|-STK-|\.vcf$/i.test(nm))return;
+      var d=zipDate(nm)||e.date||null;list.push({name:nm,e:e,age:d?dayDiff(d):9999,pdf:/\.pdf$/i.test(nm)});});
+    list.sort(function(a,b){return a.age-b.age;});
+    S.zip={file:file.name,party:zipParty(file.name),list:list};
+  }catch(err){say((err&&err.message)||'تعذّر فتح الملف');S.zip=null;}
+  S.busy=false;S.zipMsg='';render();}
+async function takeZip(maxAge){var z=S.zip;if(!z)return;var pick=z.list.filter(function(x){return x.age<=maxAge;});
+  if(pick.length>300){say('أكثر من 300 إيصال — أُخذ أحدث 300، كرّر للباقي');pick=pick.slice(0,300);}
+  S.busy=true;S.zipMsg='جارٍ استخراج '+pick.length+' إيصالًا…';render();var files=[];
+  for(var i=0;i<pick.length;i++){try{var b=await pick[i].e.async('blob');var ext=pick[i].name.split('.').pop().toLowerCase();
+      var mime=ext==='pdf'?'application/pdf':ext==='png'?'image/png':ext==='webp'?'image/webp':ext==='heic'?'image/heic':'image/jpeg';
+      files.push(new File([b],pick[i].name,{type:mime}));}catch(e){}}
+  if(z.party&&!S.party)S.party=z.party;
+  S.zip=null;S.busy=false;S.zipMsg='';render();add(files);}
 /* ── الرفع والقراءة ── */
 async function add(files){files=[].slice.call(files||[]);if(!files.length)return;
+  var zf=files.find(function(f){return /\.zip$/i.test(f.name||'')||/zip/i.test(f.type||'');});
+  if(zf){openZip(zf);files=files.filter(function(f){return f!==zf&&!/\.zip$/i.test(f.name||'');});if(!files.length)return;}
   var fresh=files.map(function(f){return {file:f,url:URL.createObjectURL(f),pdf:/pdf$/i.test(f.type||f.name||''),st:'read',p:{},side:'customer',ccy:'',amount:0,name:'',phone:'',auto:false,msg:''};});
   S.items=S.items.concat(fresh);render();
   await pool(fresh,3,async function(it){
@@ -149,8 +180,13 @@ function resolve(it,force){if(it.st==='dup'||it.st==='done'||(it.st==='read'&&!f
 /* ── العرض ── */
 function step(k){[].forEach.call($('bnSteps').children,function(s){s.classList.toggle('on',+s.dataset.k<=k);});}
 function render(){var b=$('bnBody'),go=$('bnGo');if(!b)return;
+  if(S.zipMsg){step(1);go.style.display='none';b.innerHTML='<div class="bnDrop" style="cursor:default"><span class="bnSpin"></span><b>'+esc(S.zipMsg)+'</b></div>';return;}
+  if(S.zip){step(1);go.style.display='none';var L=S.zip.list,c=function(a){return L.filter(function(x){return x.age<=a;}).length;};
+    b.innerHTML='<div class="bnParty"><label>محادثة واتساب</label><div style="font-size:17px;font-weight:800">'+esc(S.zip.party||S.zip.file)+'</div><div style="margin-top:6px;font-size:12.5px;color:#5B6B86">وُجد '+L.length+' إيصالًا (صور و PDF). اختر الفترة — المكرر والمقيَّد سابقًا يُرفض تلقائيًا.</div></div>'+
+      (L.length?'<div class="bnZip">'+[[0,'اليوم'],[1,'اليوم وأمس'],[7,'آخر 7 أيام'],[99999,'الكل']].map(function(o){var n=c(o[0]);return '<button type="button" data-act="zip" data-a="'+o[0]+'"'+(n?'':' disabled')+'><b>'+n+'</b><small>'+o[1]+'</small></button>';}).join('')+'</div>':'<div class="bnMsg" style="color:#B00020">لا صور ولا PDF في الملف — عند التصدير اختر «إرفاق الوسائط».</div>')+
+      '<div class="bnDrop" data-act="zipx" style="padding:14px;margin-top:10px"><b style="margin:0;font-size:13.5px">إلغاء واختيار ملف آخر</b></div>';return;}
   if(!S.items.length){step(1);go.style.display='none';
-    b.innerHTML='<div class="bnDrop" data-act="pick"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#0B2F70" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5M4 20h16"/></svg><b>اختر الإيصالات — واحدًا أو خمسين</b><small>زبائن وموردون معًا، صور أو PDF، أو الصقها مباشرة.<br>كوانزا = زبون · USDT = مورد · أوقية = تسليم لزبون</small></div>';return;}
+    b.innerHTML='<div class="bnDrop" data-act="pick"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#0B2F70" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5M4 20h16"/></svg><b>اختر الإيصالات — أو ملف محادثة واتساب</b><small>صور أو PDF، أو الصقها مباشرة.<br>كوانزا = زبون · USDT = مورد · أوقية = تسليم لزبون</small></div>'+'<div class="bnHow"><b>بلا لقطات شاشة — من واتساب مباشرة</b><ol><li>افتح محادثة الزبون ← اسمه في الأعلى ← <b>تصدير المحادثة</b> ← <b>إرفاق الوسائط</b>.</li><li>اختر <b>حفظ في الملفات</b>.</li><li>اضغط المربع أعلاه ← <b>اختيار ملفات</b> ← ملف ZIP.</li></ol><small>اسم الزبون يُؤخذ من اسم المحادثة، وتختار إيصالات اليوم فقط أو أي فترة.</small></div>';return;}
   go.style.display='';
   var reading=S.items.filter(function(x){return x.st==='read';}).length,
       ok=S.items.filter(function(x){return x.st==='ok';}),warn=S.items.filter(function(x){return x.st==='warn';}).length,
@@ -198,6 +234,8 @@ function view(i){var it=S.items[i];if(!it)return;var v=$('bnView');
   v.classList.add('on');}
 function onClick(e){var a=e.target.closest('[data-act]');if(!a)return;var act=a.dataset.act;
   if(act==='pick'){$('bnFile').click();return;}
+  if(act==='zip'){if(!a.disabled)takeZip(+a.dataset.a);return;}
+  if(act==='zipx'){S.zip=null;render();return;}
   var r0=a.closest('.bnRow');
   if(act==='view'&&r0){view(+r0.dataset.i);return;}
   if(act==='cand'&&r0){var c0=S.items[+r0.dataset.i];if(c0&&!S.busy){c0.amount=Number(a.dataset.v)||0;resolve(c0,true);render();}return;}
@@ -236,6 +274,6 @@ async function commit(){if(S.done){location.href='settle-v2.html';return;}
   try{if(typeof rcpCloudLoad==='function')rcpCloudLoad();}catch(e){}
   render();}
 
-window.BDLNew={open:open,_t:{normCcy:normCcy,sideOf:sideOf,keyOf:keyOf,numsOf:numsOf}};
+window.BDLNew={open:open,_t:{normCcy:normCcy,sideOf:sideOf,keyOf:keyOf,numsOf:numsOf,zipParty:zipParty,zipDate:zipDate}};
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',mount);else mount();
 })();
