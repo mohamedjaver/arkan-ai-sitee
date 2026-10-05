@@ -266,9 +266,10 @@ window.ArkanRead={
       catch(e){payload={b64:await toB64(file),mime};}}
     const ac=new AbortController();const t=setTimeout(()=>ac.abort(),25000);
     try{const r=await fetch('https://arkan-ai-site-production.up.railway.app/read/receipt',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+j.token},body:JSON.stringify(payload),signal:ac.signal});
-      if(!r.ok)return null;const x=await r.json();if(!x||x.is_receipt===false)return {amount:0,currency:'',reference:'',receiver:'',sender:'',name:'',bank:'',date:'',confidence:0,is_receipt:false,phone:'',account:''};
+      if(!r.ok){let em='';try{em=((await r.json())||{}).error||'';}catch(e){}window.__bdlReadErr='قارئ الخادم '+r.status+(em?': '+String(em).slice(0,120):'');return null;}
+      window.__bdlReadErr='';const x=await r.json();if(!x||x.is_receipt===false)return {amount:0,currency:'',reference:'',receiver:'',sender:'',name:'',bank:'',date:'',confidence:0,is_receipt:false,phone:'',account:''};
       return {amount:+x.amount||0,currency:x.currency||'',reference:x.txn||'',receiver:x.receiver||'',sender:x.sender||'',name:x.receiver||x.sender||'',bank:x.bank||'',date:x.date||'',confidence:+x.confidence||70,phone:x.phone||'',account:x.account||'',status:x.status||''};}
-    catch(e){return null;}finally{clearTimeout(t);}
+    catch(e){window.__bdlReadErr='تعذّر الاتصال بقارئ الخادم'+(e&&e.name==='AbortError'?' (انتهت المهلة)':'');return null;}finally{clearTimeout(t);}
   },
   /* readAmount(File) → {amount,ccy,txn,bank,date,eng} — المبلغ فقط، بأخف استدعاء */
   async readAmount(file){
