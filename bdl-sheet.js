@@ -65,7 +65,31 @@ function init(){
   var sf=$('sFiles'),bs=$('bulkSup');
   var up=document.createElement('div');up.id='shUp';
   up.innerHTML='<button type="button" data-u="sFiles"><b>＋ إيصالات الزبون</b><small>تُقرأ وتُحسب في المدفوع</small></button>'+(bs?'<button type="button" class="sup" data-u="bulkSup"><b>⇅ إيصالات المورد</b><small>مطابقة جماعية بالمرجع ثم المبلغ</small></button>':'');
-  up.onclick=function(e){var b=e.target.closest('button');if(b&&$(b.dataset.u))$(b.dataset.u).click();};
+  /* 1373: منتقٍ بلا قيد نوع (iOS يعطّل ZIP عند تقييد النوع) — يقبل صورًا و PDF وملف محادثة واتساب ZIP */
+  var pk=document.createElement('input');pk.type='file';pk.multiple=true;pk.style.display='none';sh.appendChild(pk);var pkFor='sFiles';
+  up.onclick=function(e){var b=e.target.closest('button');if(!b)return;pkFor=b.dataset.u;pk.value='';pk.click();};
+  function feed(files){if(!files.length)return;try{if(pkFor==='bulkSup'){if(typeof bulkSupMatch==='function')bulkSupMatch(files);}else if(typeof addReceipts==='function')addReceipts(files);}catch(e){say('تعذّر الرفع: '+(e.message||e));}}
+  function isDoc(n,ty){return /^image\//i.test(ty||'')||/pdf/i.test(ty||'')||/\.(jpe?g|png|webp|heic|pdf)$/i.test(n||'');}
+  pk.onchange=async function(){var all=[].slice.call(pk.files||[]),zf=all.find(function(f){return /\.zip$/i.test(f.name||'')||/zip/i.test(f.type||'');});
+    var plain=all.filter(function(f){return f!==zf&&isDoc(f.name,f.type);});
+    if(!zf){if(!plain.length&&all.length)say('اختر صورًا أو PDF أو ملف ZIP');feed(plain);return;}
+    if(zf.size>220*1048576&&!confirm('الملف كبير ('+Math.round(zf.size/1048576)+' MB) وقد لا يتحمله الهاتف.\nالأفضل تصدير «With selected media» للفترة فقط.\n\nالمتابعة؟'))return;
+    say('جارٍ فتح ملف المحادثة…');
+    try{if(!window.JSZip)await new Promise(function(res,rej){var sc=document.createElement('script');sc.src='https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';sc.onload=res;sc.onerror=function(){rej(new Error('تعذّر تحميل قارئ ZIP'));};document.head.appendChild(sc);});
+      var z=await window.JSZip.loadAsync(zf),list=[],t0=new Date();t0.setHours(0,0,0,0);
+      z.forEach(function(p,en){if(en.dir)return;var nm=p.split('/').pop();if(!isDoc(nm,'')||/STICKER|-STK-/i.test(nm))return;
+        var m=nm.match(/(20\d{2})-(\d{2})-(\d{2})/)||nm.match(/(20\d{2})(\d{2})(\d{2})/),d=m?new Date(+m[1],+m[2]-1,+m[3]):(en.date||null);
+        list.push({nm:nm,en:en,age:d?Math.round((t0-new Date(d).setHours(0,0,0,0))/864e5):9999});});
+      if(!list.length){say('لا صور ولا PDF في الملف — صدّره مع الوسائط');return;}
+      var cnt=function(a){return list.filter(function(x){return x.age<=a;}).length;};
+      var ans=prompt('وُجد '+list.length+' إيصالًا في المحادثة. اكتب رقم الفترة:\n1 = اليوم ('+cnt(0)+')\n2 = اليوم وأمس ('+cnt(1)+')\n3 = آخر 7 أيام ('+cnt(7)+')\n4 = الكل ('+list.length+')','1');
+      var mx={'1':0,'2':1,'3':7,'4':99999}[String(ans||'').trim()];if(mx==null)return;
+      var pick=list.filter(function(x){return x.age<=mx;}).sort(function(a,b){return a.age-b.age;}).slice(0,300),out=[];
+      if(!pick.length){say('لا إيصالات في هذه الفترة');return;}
+      for(var i=0;i<pick.length;i++){try{var bl=await pick[i].en.async('blob'),ex=pick[i].nm.split('.').pop().toLowerCase();
+        out.push(new File([bl],pick[i].nm,{type:ex==='pdf'?'application/pdf':ex==='png'?'image/png':ex==='webp'?'image/webp':'image/jpeg'}));}catch(e){}}
+      say('استُخرج '+out.length+' إيصالًا — جارٍ القراءة');feed(out.concat(plain));
+    }catch(e){say((e&&e.message)||'تعذّر فتح الملف');}};
   sf.parentNode.insertBefore(up,sf);sf.style.display='none';
   var l1=up.previousElementSibling;if(l1&&l1.tagName==='LABEL')l1.textContent='الإيصالات والمطابقة';
   if(bs){[].forEach.call(bs.parentNode.children,function(c){if(c!==bs)c.style.display='none';});}

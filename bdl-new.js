@@ -101,7 +101,7 @@ function mount(){css();
   sh.innerHTML='<header><b>عملية جديدة</b><button type="button" id="bnClose" aria-label="إغلاق">✕</button></header>'+
     '<div id="bnSteps"><span data-k="1">1 · الرفع</span><span data-k="2">2 · الفرز</span><span data-k="3">3 · القيد</span></div>'+
     '<div id="bnBody"></div><div id="bnFoot"><button id="bnGo" type="button" disabled>قيّد الكل</button></div>'+
-    '<input type="file" id="bnFile" accept="image/*,.pdf,application/pdf,.zip,application/zip,application/x-zip-compressed" multiple style="display:none"><datalist id="bnDL"></datalist>';
+    '<input type="file" id="bnFile" multiple style="display:none"><datalist id="bnDL"></datalist>';
   document.body.appendChild(sh);
   $('bnClose').onclick=close;$('bnFile').onchange=function(){add(this.files);this.value='';};
   $('bnGo').onclick=commit;
@@ -128,6 +128,7 @@ function zipDate(n){var m=String(n).match(/(20\d{2})-(\d{2})-(\d{2})/)||String(n
   if(!m)return null;var d=new Date(+m[1],+m[2]-1,+m[3]);return isNaN(d)?null:d;}
 function dayDiff(d){var a=new Date();a.setHours(0,0,0,0);var b=new Date(d);b.setHours(0,0,0,0);return Math.round((a-b)/864e5);}
 async function openZip(file){
+  if(file.size>220*1048576&&!confirm('الملف كبير ('+Math.round(file.size/1048576)+' MB) وقد لا يتحمله الهاتف.\nالأفضل: في واتساب اختر «With selected media» وحدد إيصالات الفترة فقط.\n\nالمتابعة على أي حال؟'))return;
   S.busy=true;S.zipMsg='جارٍ فتح '+file.name+'…';render();
   try{await loadZipLib();var z=await window.JSZip.loadAsync(file),list=[];
     z.forEach(function(path,e){if(e.dir)return;var nm=path.split('/').pop();
@@ -149,6 +150,8 @@ async function takeZip(maxAge){var z=S.zip;if(!z)return;var pick=z.list.filter(f
 async function add(files){files=[].slice.call(files||[]);if(!files.length)return;
   var zf=files.find(function(f){return /\.zip$/i.test(f.name||'')||/zip/i.test(f.type||'');});
   if(zf){openZip(zf);files=files.filter(function(f){return f!==zf&&!/\.zip$/i.test(f.name||'');});if(!files.length)return;}
+  var bad=files.filter(function(f){return !/^image\//i.test(f.type||'')&&!/pdf/i.test(f.type||'')&&!/\.(jpe?g|png|webp|heic|pdf)$/i.test(f.name||'');});
+  if(bad.length){say('تُجوهل '+bad.length+' ملف ليس صورة ولا PDF');files=files.filter(function(f){return bad.indexOf(f)<0;});if(!files.length)return;}
   var fresh=files.map(function(f){return {file:f,url:URL.createObjectURL(f),pdf:/pdf$/i.test(f.type||f.name||''),st:'read',p:{},side:'customer',ccy:'',amount:0,name:'',phone:'',auto:false,msg:''};});
   S.items=S.items.concat(fresh);render();
   await pool(fresh,3,async function(it){
