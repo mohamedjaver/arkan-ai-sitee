@@ -297,9 +297,10 @@ function init(){
   function amt(v){v=Number(v)||0;return v>=100?v:0;} /* مبلغ أقل من 100 = قراءة خاطئة، لا يُطابَق به */
   function custPool(){var out=[];
     try{(typeof RCPTS!=='undefined'?RCPTS:[]).forEach(function(r){var p=r.parsed;if(!p||(r.dup&&!r.ok))return;
-      out.push({kind:'new',r:r,amount:amt(p.amount),ref:nref(p.ref),when:r._when||'',t:r._t||0,taken:!!r.supFile});});}catch(e){}
+      var kn={t:0,hasTime:false};try{kn=rcKey(r);}catch(e){}
+      out.push({kind:'new',r:r,amount:amt(p.amount),ref:nref(p.ref),when:r._when||'',t:r._t||kn.t||0,ht:!!kn.hasTime,taken:!!r.supFile});});}catch(e){}
     try{var pr=(typeof SS!=='undefined'&&SS.prevRows)||{};Object.keys(pr).forEach(function(id){var x=pr[id],k=rcKey({parsed:{date:(x.ocr&&x.ocr.date)||''},file:{}});
-      out.push({kind:'saved',row:x,amount:amt(x.amount),ref:nref(x.txn_ref),when:whenTxt(k),t:k.t,taken:!!SHM.saved[x.id]});});}catch(e){}
+      out.push({kind:'saved',row:x,amount:amt(x.amount),ref:nref(x.txn_ref),when:whenTxt(k),t:k.t,ht:!!k.hasTime,taken:!!SHM.saved[x.id]});});}catch(e){}
     return out;}
   function link(it,cs,how){it.to=cs;it.how=how;var grp=cs.length>1;
     if(grp)it.covers=cs.filter(function(c){return c.kind==='new';}).map(function(c){return c.r.fp;});
@@ -308,9 +309,17 @@ function init(){
     var todo=function(){return SHM.items.filter(function(it){return !it.to&&!it.gone;});};
     /* ① المرجع */
     todo().forEach(function(it){var rf=nref((it.parsed||{}).ref);if(!rf)return;var c=free().find(function(x){return x.ref&&x.ref===rf;});if(c)link(it,[c],'ref');});
-    /* ② المبلغ: فريد من الجهتين فقط */
-    var byS={};todo().forEach(function(it){var a=amt((it.parsed||{}).amount);if(a)(byS[a]=byS[a]||[]).push(it);});
-    Object.keys(byS).forEach(function(a){var cs=free().filter(function(c){return c.amount===+a;});if(byS[a].length===cs.length)byS[a].forEach(function(it,k){link(it,[cs[k]],'amt');});});
+    /* ② 1402: المبلغ وحده لا يكفي. يُقبل فقط إذا: لا يحمل الطرفان مرجعين مختلفين، ونفس اليوم، والوقتان مقروءان وبينهما ≤ 10 دقائق، والمرشح وحيد من الجهتين.
+       غير ذلك يبقى أحمر ويُربط يدويًا من «اربط بـ…». */
+    var dayOf=function(ms){var d=new Date(ms);return d.getFullYear()*10000+(d.getMonth()+1)*100+d.getDate();};
+    var okPair=function(it,c){var p=it.parsed||{};if(nref(p.ref)&&c.ref)return false;
+      var k={t:0,hasTime:false};try{k=rcKey({parsed:p,file:it.file||{}});}catch(e){}
+      if(!k.t||!c.t||dayOf(k.t)!==dayOf(c.t))return false;
+      return !!(k.hasTime&&c.ht)&&Math.abs(k.t-c.t)<=10*60000;};
+    todo().forEach(function(it){var a=amt((it.parsed||{}).amount);if(!a||it.to)return;
+      var cs=free().filter(function(c){return c.amount===a&&okPair(it,c);});if(cs.length!==1)return;
+      var rivals=todo().filter(function(x){return x!==it&&amt((x.parsed||{}).amount)===a&&okPair(x,cs[0]);});if(rivals.length)return;
+      link(it,[cs[0]],'amt');});
     /* 1380: لا تجميع — قاعدة العمل: لكل إيصال زبون إيصال مورد واحد مقابل. ما لا يُطابَق واحدًا لواحد يبقى أحمر للمراجعة. */
     return pool;}
   function sameC(a,b){return a.kind===b.kind&&(a.kind==='new'?a.r===b.r:String(a.row.id)===String(b.row.id));}
@@ -354,9 +363,9 @@ function init(){
       return '<div class="med"><div class="ef"><label>المبلغ<input id="pe-a-'+id+'" inputmode="decimal" value="'+(Number(x.amount)||'')+'"></label><label>المرجع<input id="pe-r-'+id+'" value="'+esc(x.txn_ref||'')+'"></label></div><input id="pe-c-'+id+'" type="hidden" value="'+esc(x.ccy||'')+'">'
         +'<div class="eb"><button type="button" class="s" data-m="es" data-id="'+id+'">حفظ التعديل</button><button type="button" class="d" data-m="ex" data-id="'+id+'">حذف من التسوية</button><button type="button" data-m="ec">إلغاء</button></div></div>';};
     var pairH=function(it){var p=it.parsed||{},cs=it.to,ca=cs.reduce(function(a,c){return a+c.amount;},0),i=SHM.items.indexOf(it),sa=amt(p.amount),df=Math.abs(ca-sa)>=1;
-      if(cs.length===1&&!df&&(it.how==='ref'||it.how==='amt'))return '<div class="mq"><i>✓</i><div class="qd" data-m="vc" data-i="'+i+'"><b>'+f0(ca)+'</b><span>'+esc((cs[0].ref||'بلا مرجع')+(cs[0].when?' · '+cs[0].when:''))+'</span></div><small>'+(it.how==='ref'?'نفس المرجع':'نفس المبلغ')+'</small>'+edB(cs[0])+'<button type="button" class="qs" data-m="vs" data-i="'+i+'">المورد</button><button type="button" class="qx" data-m="un" data-i="'+i+'" aria-label="فك">✕</button></div>'+edH(cs[0]);
+      if(cs.length===1&&!df&&(it.how==='ref'||it.how==='amt'))return '<div class="mq"><i>✓</i><div class="qd" data-m="vc" data-i="'+i+'"><b>'+f0(ca)+'</b><span>'+esc((cs[0].ref||'بلا مرجع')+(cs[0].when?' · '+cs[0].when:''))+'</span></div><small>'+(it.how==='ref'?'نفس المرجع':'مبلغ + تاريخ ووقت')+'</small>'+edB(cs[0])+'<button type="button" class="qs" data-m="vs" data-i="'+i+'">المورد</button><button type="button" class="qx" data-m="un" data-i="'+i+'" aria-label="فك">✕</button></div>'+edH(cs[0]);
       return '<div class="mp'+((df||it.how==='man')?' df':'')+'"><div class="sd" data-m="vc" data-i="'+i+'"><small>الزبون'+(cs.length>1?' · '+cs.length+' إيصالات':'')+'</small><b>'+f0(ca)+'</b><span>'+esc(cs.length>1?cs.map(function(c){return f0(c.amount);}).join(' + '):((cs[0].ref||'بلا مرجع')+(cs[0].when?' · '+cs[0].when:'')))+'</span></div>'+
-        '<div class="md"><i>'+(df?'≠':'✓')+'</i><small>'+(df?'فرق مبلغ':it.how==='ref'?'نفس المرجع':it.how==='amt'?'نفس المبلغ':it.how==='man'?'ربط يدوي':'المجموع')+'</small></div>'+
+        '<div class="md"><i>'+(df?'≠':'✓')+'</i><small>'+(df?'فرق مبلغ':it.how==='ref'?'نفس المرجع':it.how==='amt'?'مبلغ + تاريخ ووقت':it.how==='man'?'ربط يدوي':'المجموع')+'</small></div>'+
         '<div class="sd" data-m="vs" data-i="'+i+'"><small>المورد'+(it.sup?' · '+esc(it.sup):'')+'</small><b>'+f0(amt(p.amount))+'</b><span>'+esc(nref(p.ref)||'بلا مرجع')+'</span></div>'+
         '<button type="button" data-m="un" data-i="'+i+'" aria-label="فك">✕</button></div>'+(cs.length===1&&cs[0].kind==='saved'?'<div class="mpa">'+edB(cs[0]).replace('>تعديل<','>تعديل إيصال الزبون<')+'</div>'+edH(cs[0]):'');};
     var named=order.length&&(order.length>1||order[0]!=='بلا اسم');SHM.ord=order;SHM.col=SHM.col||{};
@@ -365,7 +374,7 @@ function init(){
       h+='<div class="mmG" data-m="gp" data-g="'+gi+'"><div class="g1"><b>'+esc(k)+'</b><span class="bd'+(x.un?' p':'')+'">'+x.n+' / '+tot+'</span><button type="button" data-m="st" data-g="'+gi+'">كشف</button><i>'+(cl?'▾':'▴')+'</i></div><div class="g2"><u style="width:'+pcg+'%"></u></div><div class="g3">مجموع المطابق<span>'+f0(x.sum)+'</span></div></div>';
       if(!cl)h+=g.map(pairH).join('');});
     else h+=ok.map(pairH).join('');
-    if(un.length){h+='<div class="mmT">إيصالات مورد بلا مقابل — لم يُعثر على إيصال زبون بالمرجع أو المبلغ</div>';
+    if(un.length){h+='<div class="mmT">إيصالات مورد بلا مقابل — لا مرجع مطابق، ولا مبلغ بنفس التاريخ والوقت</div>';
       un.forEach(function(it){var p=it.parsed,i=SHM.items.indexOf(it),a=p?amt(p.amount):0;
         if(!p){h+='<div class="mu"><div class="sd"><b>…</b><span>'+esc(it.file.name)+'</span></div></div>';return;}
         h+='<div class="mu2"><div class="r1"><label><small>المبلغ'+(a?'':' — لم يُقرأ، اكتبه')+'</small><input data-f="amt" data-i="'+i+'" inputmode="decimal" dir="ltr" value="'+(a||'')+'" placeholder="المبلغ"></label>'+

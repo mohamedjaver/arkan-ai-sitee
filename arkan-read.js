@@ -96,8 +96,23 @@ function euNum(x){
   else x=x.replace(/[,\s\u00A0]/g,'');
   return parseFloat(x)||0;
 }
-function liteParse(t){
+function liteParse0(t){
   const p={amount:0,currency:'',reference:'',bank:'',date:'',confidence:40};
+  /* 1402: pdf.js يفصل الحروف المشكولة في بعض ملفات BFA APP («Opera çã o»، «Bene fi ci á rio») — نلحمها قبل القوالب */
+  if(/[A-Za-z] (?:[çãáàâéêíóôõú]{1,2}|fi|fl) [a-zà-ÿ]/.test(t)){let prev;do{prev=t;t=t.replace(/([A-Za-zÀ-ÿ]) ([çãáàâéêíóôõú]{1,2}|fi|fl) ([a-zà-ÿ])/g,'$1$2$3');}while(t!==prev);}
+  /* قالب BCI — Pedido Transferência entre Contas (Banco de Comércio e Indústria): المرجع = Número de Transferência */
+  if((/Banco\s+de\s+Com[ée]rcio\s+e\s+Ind[úu]stria|bci\.ao|Banco\s+Keve|Pedido\s+Transfer[êe]ncia\s+entre\s+Contas/i.test(t))&&/N[úu]mero\s+de\s+Transfer[êe]ncia[\s:]{0,8}\d{5,}/i.test(t)&&/Montante/i.test(t)){
+    const rfB=t.match(/N[úu]mero\s+de\s+Transfer[êe]ncia[\s:]{0,8}(\d{5,})/i);
+    const amB=t.match(/Montante[\s:]{0,8}([\d][\d.\s\u00A0]{0,16},\d{2})\s*(?:AOA|AKZ|Kz)?/i);
+    const dB=t.match(/Data\s+do\s+Movimento[\s:]{0,8}(\d{2}-\d{2}-\d{4})/i),hB=t.match(/Hora\s+do\s+Movimento[\s:]{0,8}(\d{2}:\d{2}(?::\d{2})?)/i);
+    const nmB=t.match(/Nome\s+do\s+Benefici[áa]rio[\s:]{0,8}([A-ZÀ-Ú][A-ZÀ-Ú0-9 .,&\-]{3,70})/);
+    if(rfB||amB){p.bank=/Banco\s+Keve/i.test(t)?'KEVE':/Com[ée]rcio\s+e\s+Ind[úu]stria|bci\.ao/i.test(t)?'BCI':'';p.currency='Kz';
+      if(amB)p.amount=euNum(amB[1]);
+      if(rfB)p.reference=rfB[1];
+      if(nmB)p.name=nmB[1].replace(/\s+(Tipo|Data|Conta|Montante).*$/i,'').trim();
+      if(dB)p.date=dB[1]+(hB?' '+hB[1]:'');
+      p.confidence=(p.amount&&p.reference)?100:80;return p;}
+  }
   /* قالب BFA — Comprovativo de Operação (Banco de Fomento Angola) */
   if(/Comprovativo\s+de\s+Opera[çc][ãa]o/i.test(t)||/Banco\s+de\s+Fomento\s+Angola/i.test(t)){
     const rf=t.match(/N\.?\s*[ºo°]?\s*da\s+opera[çc][ãa]o[\s:]{0,6}(\d{5,})/i);
@@ -112,6 +127,9 @@ function liteParse(t){
       if(nm)p.name=nm[1].replace(/\s+(Tipo|Data|E-?mail|Perioc|Descritivo).*$/i,'').replace(/(?:\s+[A-Z]){1,2}$/,'').trim();
       if(cr)p.receiver=cr[1].replace(/\s+/g,'');
       if(dt)p.date=dt[1];
+      else{const MES={janeiro:1,fevereiro:2,'março':3,marco:3,abril:4,maio:5,junho:6,julho:7,agosto:8,setembro:9,outubro:10,novembro:11,dezembro:12};
+        const dl=t.match(/Em\s+(\d{1,2})\s+de\s+([A-Za-zçÇ]+)\s+de\s+(20\d{2})/i),mo=dl&&MES[dl[2].toLowerCase()];
+        if(mo)p.date=('0'+dl[1]).slice(-2)+'/'+('0'+mo).slice(-2)+'/'+dl[3];} /* BFA APP: «Em 6 de Outubro de 2026» */
       p.confidence=(p.amount&&p.reference)?100:80;return p;}
   }
   /* قالب Binance — Detalhes do saque (سحب USDT): Txid كامل + تاريخ بالثواني */
@@ -230,6 +248,17 @@ function liteParse(t){
   if(dm)p.date=dm[1];
   let _sc=30;if(p.amount)_sc+=25;if(p.reference)_sc+=25;if(p.bank)_sc+=10;if(p.currency)_sc+=5;if(p.date)_sc+=5;
   p.confidence=Math.min(100,_sc);
+  return p;
+}
+/* 1402: المرجع والوقت من التسميات الشائعة حين لا يلتقطهما القالب (BIC «Número de transferência atribuído»، Keve/BCI «Número de Transferência») */
+function liteParse(t){
+  const p=liteParse0(t);
+  try{
+    if(p&&!p.reference){const m=String(t).match(/N[úu]mero\s+de\s+transfer[êe]ncia(?:\s+atribu[íi]do)?[\s:]{0,8}(\d{5,})/i);if(m){p.reference=m[1];if(p.amount)p.confidence=Math.max(p.confidence||0,95);}}
+    if(p&&!/\d{1,2}:\d{2}/.test(p.date||'')){const d=String(t).match(/Data\s+do\s+Movimento[\s:]{0,8}(\d{2}-\d{2}-\d{4})/i),h=String(t).match(/Hora\s+do\s+Movimento[\s:]{0,8}(\d{2}:\d{2}(?::\d{2})?)/i);
+      if(d&&h)p.date=d[1]+' '+h[1];
+      else if(!p.date){const di=String(t).match(/Data\s+de\s+impress[ãa]o:?\s*(\d{2}\/\d{2}\/\d{4})\s*\|\s*(\d{2}:\d{2}(?::\d{2})?)/i);if(di)p.date=di[1]+' '+di[2];}}
+  }catch(e){}
   return p;
 }
 function asText(p,raw){
