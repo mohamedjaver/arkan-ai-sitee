@@ -1,7 +1,7 @@
 /* bdl-daily.js — تقرير الدورات اليومي على Telegram (Build 1393)
    يقرأ الدورات المحفوظة في bdl_transactions.meta.cycle (بطاقة «دورة USDT»)، يحسب الأرقام في الكود،
    ثم يطلب من Claude قراءة قصيرة (أولويات ومخاطر). فشل Claude لا يمنع التقرير — تُرسل الأرقام وحدها.
-   Railway (اختياري): CYCLE_REPORT_HOUR (افتراضي 20 بتوقيت لواندا) · CYCLE_LATE_DAYS (افتراضي 2) · AGENT_TZ_OFFSET (افتراضي 1).
+   Railway (اختياري): CYCLE_REPORT_HOUR (افتراضي 22 بتوقيت لواندا) · CYCLE_LATE_DAYS (افتراضي 2) · AGENT_TZ_OFFSET (افتراضي 1).
    أوامر المالك في البوت: «تقرير» أو «دورات» — يرسل التقرير فورًا. */
 'use strict';
 module.exports = function (app, ctx) {
@@ -9,7 +9,7 @@ module.exports = function (app, ctx) {
   const KEY = () => { for (const k of Object.keys(process.env)) if (/^anthropic_(api_)?key$/i.test(k)) { const v = String(process.env[k] || '').trim(); if (v) return v; } return ''; };
   const MODEL = () => process.env.ANTHROPIC_MODEL || 'claude-sonnet-5';
   const TZ = () => { const v = parseFloat(process.env.AGENT_TZ_OFFSET); return isFinite(v) ? v : 1; };
-  const HOUR = () => { const v = parseInt(process.env.CYCLE_REPORT_HOUR, 10); return v >= 0 && v <= 23 ? v : 20; };
+  const HOUR = () => { const v = parseInt(process.env.CYCLE_REPORT_HOUR, 10); return v >= 0 && v <= 23 ? v : 22; };
   const LATE = () => { const v = parseFloat(process.env.CYCLE_LATE_DAYS); return v > 0 ? v : 2; };
   const f = (v, d) => Number(v || 0).toLocaleString('en-US', { minimumFractionDigits: d || 0, maximumFractionDigits: d || 0 });
   const esc = s => String(s == null ? '' : s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
