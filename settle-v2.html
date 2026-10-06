@@ -1412,7 +1412,7 @@ async function ssShowPrevRcpts(s){
   if(!ids.length){ /* 1361: لا إيصالات محفوظة → لا مدفوع متبقٍ (يصحّح بقايا paid_aoa) */
     await ssReconcile(s,{});return;}
   try{
-    var r=await fetch(SB+'/bdl_receipts?id=in.('+ids.join(',')+')&select=id,amount,ccy,txn_ref,bank,ocr,created_at',{headers:H()});
+    var r=await fetch(SB+'/bdl_receipts?id=in.('+ids.join(',')+')&select=id,amount,ccy,txn_ref,bank,fingerprint,ocr,created_at',{headers:H()});
     var rows=r.ok?await r.json():[];
     SS.prevRows={};
     var amtById={};rows.forEach(function(x){amtById[x.id]=Number(x.amount)||0;});await ssReconcile(s,amtById);
@@ -1633,7 +1633,7 @@ function rcptSupMoreDel(i,k){var r=RCPTS[i];if(!r||!r.supMore)return;r.supMore.s
 async function saveSupMore(rc,p,supSeen,supIds){ /* حفظ إيصالات المورد الإضافية — بمرجعها الخاص فقط (لا تصطدم بقفل المرجع) */
   for(var k=0;k<(rc.supMore||[]).length;k++){var x=rc.supMore[k];if(!x||!x.fp||supSeen[x.fp])continue;supSeen[x.fp]=1;var xp=x.parsed||{};
     try{var path=await rcptStore(x.file,x.fp);
-      var b={fingerprint:x.fp,amount:xp.amount||null,ccy:xp.ccy||p.ccy||null,bank:xp.bank||null,account_no:xp.account||null,txn_ref:xp.ref||null,
+      var b={fingerprint:'sup-'+x.fp,amount:xp.amount||null,ccy:xp.ccy||p.ccy||null,bank:xp.bank||null,account_no:xp.account||null,txn_ref:xp.ref||null,
         ocr:Object.assign({},xp,{side:'supplier',sup_name:rc.sup||rc.fwdSup||null,cust_fp:rc.fp,cust_fps:[rc.fp],cust_ref:p.ref||null,part:k+2,matched_at:new Date().toISOString(),image:path})};
       var r=await fetch(SB+'/bdl_receipts',{method:'POST',headers:H({Prefer:'return=representation,resolution=merge-duplicates'}),body:JSON.stringify(b)});
       if(r.ok){var j=await r.json();if(j[0])supIds.push(j[0].id);}}catch(e){}}}
@@ -1921,8 +1921,8 @@ async function savePending(){
       prog('حفظ الإيصالات '+(i+1)+'/'+RCPTS.length+'…');
       var imgPath=await rcptStore(rc.orig||rc.file,rc.fp);
       /* 1353: إيصال المورد المطابق يُحفظ معه (side=supplier، مربوط بمرجع إيصال الزبون) */
-      if(rc.supFile&&rc.supFp&&!supSeen[rc.supFp]){supSeen[rc.supFp]=1;var sp=rc.supParsed||{};var supPath=await rcptStore(rc.supFile,rc.supFp);
-        var sb={fingerprint:rc.supFp,amount:sp.amount||null,ccy:sp.ccy||p.ccy||null,bank:sp.bank||null,account_no:sp.account||null,txn_ref:sp.ref||p.ref||null,
+      if(rc.supFile&&rc.supFp&&!supSeen[rc.supFp]&&!(window.__SHM&&window.__SHM.items.some(function(q){return !q.gone&&q.id&&q.fp===rc.supFp;}))){supSeen[rc.supFp]=1;var sp=rc.supParsed||{};var supPath=await rcptStore(rc.supFile,rc.supFp);
+        var sb={fingerprint:'sup-'+rc.supFp,amount:sp.amount||null,ccy:sp.ccy||p.ccy||null,bank:sp.bank||null,account_no:sp.account||null,txn_ref:sp.ref||p.ref||null,
           ocr:Object.assign({},sp,{side:'supplier',sup_name:rc.sup||rc.fwdSup||null,cust_fp:rc.fp,cust_fps:rc.supGroup||[rc.fp],cust_ref:p.ref||null,matched_at:new Date().toISOString(),image:supPath})};
         try{var sr=await fetch(SB+'/bdl_receipts',{method:'POST',headers:H({Prefer:'return=representation,resolution=merge-duplicates'}),body:JSON.stringify(sb)});if(sr.ok){var sj=await sr.json();if(sj[0])supIds.push(sj[0].id);}}catch(e){}}
       await saveSupMore(rc,p,supSeen,supIds);
@@ -2075,8 +2075,8 @@ async function commitSettle(){
     for(var i=0;i<RCPTS.length;i++){var rc=RCPTS[i],p=rc.parsed||{};
       var imgPath=await rcptStore(rc.orig||rc.file,rc.fp);
       /* 1353: إيصال المورد المطابق يُحفظ معه (side=supplier، مربوط بمرجع إيصال الزبون) */
-      if(rc.supFile&&rc.supFp&&!supSeen[rc.supFp]){supSeen[rc.supFp]=1;var sp=rc.supParsed||{};var supPath=await rcptStore(rc.supFile,rc.supFp);
-        var sb={fingerprint:rc.supFp,amount:sp.amount||null,ccy:sp.ccy||p.ccy||null,bank:sp.bank||null,account_no:sp.account||null,txn_ref:sp.ref||p.ref||null,
+      if(rc.supFile&&rc.supFp&&!supSeen[rc.supFp]&&!(window.__SHM&&window.__SHM.items.some(function(q){return !q.gone&&q.id&&q.fp===rc.supFp;}))){supSeen[rc.supFp]=1;var sp=rc.supParsed||{};var supPath=await rcptStore(rc.supFile,rc.supFp);
+        var sb={fingerprint:'sup-'+rc.supFp,amount:sp.amount||null,ccy:sp.ccy||p.ccy||null,bank:sp.bank||null,account_no:sp.account||null,txn_ref:sp.ref||p.ref||null,
           ocr:Object.assign({},sp,{side:'supplier',sup_name:rc.sup||rc.fwdSup||null,cust_fp:rc.fp,cust_fps:rc.supGroup||[rc.fp],cust_ref:p.ref||null,matched_at:new Date().toISOString(),image:supPath})};
         try{var sr=await fetch(SB+'/bdl_receipts',{method:'POST',headers:H({Prefer:'return=representation,resolution=merge-duplicates'}),body:JSON.stringify(sb)});if(sr.ok){var sj=await sr.json();if(sj[0])supIds.push(sj[0].id);}}catch(e){}}
       await saveSupMore(rc,p,supSeen,supIds);
@@ -3366,7 +3366,7 @@ document.querySelectorAll('.ovl').forEach(function(o){
 <script src="bdl-ops11.js?v=1"></script>
 <script src="bdl-ops14.js?v=1"></script>
 <script src="bdl-ops16.js?v=1"></script>
-<script src="bdl-sheet.js?v=17"></script>
+<script src="bdl-sheet.js?v=18"></script>
 <link rel="stylesheet" href="bdl-sharp.css?v=2">
 <script src="arkan-nav.js?v=15" defer></script>
 <script>addEventListener('hashchange',function(){var t=(location.hash||'').slice(1);if(['ops','settle','clients','archive','profit'].indexOf(t)>=0&&typeof go==='function')go(t);});</script>
