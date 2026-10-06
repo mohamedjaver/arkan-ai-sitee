@@ -271,12 +271,28 @@ function init(){
     todo().forEach(function(it){var rf=nref((it.parsed||{}).ref);if(!rf)return;var c=free().find(function(x){return x.ref&&x.ref===rf;});if(c)link(it,[c],'ref');});
     /* ② المبلغ: فريد من الجهتين فقط */
     var byS={};todo().forEach(function(it){var a=amt((it.parsed||{}).amount);if(a)(byS[a]=byS[a]||[]).push(it);});
-    Object.keys(byS).forEach(function(a){var cs=free().filter(function(c){return c.amount===+a;});if(byS[a].length===1&&cs.length===1)link(byS[a][0],[cs[0]],'amt');});
+    Object.keys(byS).forEach(function(a){var cs=free().filter(function(c){return c.amount===+a;});if(byS[a].length===cs.length)byS[a].forEach(function(it,k){link(it,[cs[k]],'amt');});});
     /* ③ مجموع عدة إيصالات زبون (حتى 8 من أحدث 16) */
-    todo().forEach(function(it){var target=amt((it.parsed||{}).amount);if(!target)return;var pl=free().filter(function(c){return c.amount&&c.amount<target;}).slice(0,16),best=null;
+    if(SHM.reading)return pool;
+    var resv={};todo().forEach(function(it){var a=amt((it.parsed||{}).amount);if(a)resv[a]=1;});SHM.items.forEach(function(it){if(!it.parsed&&!it.gone)resv._wait=1;});
+    if(!resv._wait)todo().forEach(function(it){var target=amt((it.parsed||{}).amount);if(!target)return;var pl=free().filter(function(c){return c.amount&&c.amount<target&&!resv[c.amount];}).slice(0,16),best=null;
       (function rec(i,acc,sum){if(best)return;if(Math.abs(sum-target)<1&&acc.length>=2){best=acc.slice();return;}if(i>=pl.length||sum>target+0.5||acc.length>=8)return;rec(i+1,acc.concat([pl[i]]),sum+pl[i].amount);rec(i+1,acc,sum);})(0,[],0);
       if(best)link(it,best,'sum');});
     return pool;}
+  function sameC(a,b){return a.kind===b.kind&&(a.kind==='new'?a.r===b.r:String(a.row.id)===String(b.row.id));}
+  function holderOf(c){return SHM.items.find(function(x){return !x.gone&&x.to&&x.to.some(function(y){return sameC(y,c);});})||null;}
+  /* مطابقة موجَّهة بعد تصحيح يدوي: المطابقة التامة (مرجع أو مبلغ) تتقدم دائمًا على مطابقة «المجموع» وتنتزع الإيصال منها */
+  function fixMatch(it){var p=it.parsed||{},rf=nref(p.ref),a=amt(p.amount),pool=custPool(),c=null,how='';
+    var byRef=rf?pool.filter(function(x){return x.ref&&x.ref===rf;}):[],byAmt=a?pool.filter(function(x){return x.amount===a;}):[];
+    c=byRef.find(function(x){return !x.taken;});how='ref';
+    if(!c){c=byAmt.find(function(x){return !x.taken;});how='amt';}
+    if(c){link(it,[c],how);return '';}
+    var held=byRef.concat(byAmt);if(!held.length)return a?('لا يوجد في هذه التسوية أي إيصال زبون بالمبلغ '+f0(a)+(rf?' ولا بالمرجع '+rf:'')+' — ارفع إيصال الزبون أولًا'):'اكتب المبلغ كما في الإيصال ثم اضغط «طابق»';
+    for(var i=0;i<held.length;i++){var h=holderOf(held[i]);
+      if(h&&h.how==='sum'){unlink(h);var np=custPool(),nc=np.find(function(x){return sameC(x,held[i]);});if(nc){link(it,[nc],byRef.indexOf(held[i])>=0?'ref':'amt');matchAll();return '';}}
+      if(!h){var c2=held[i];c2.taken=false;if(c2.kind==='saved')delete SHM.saved[c2.row.id];link(it,[c2],byRef.indexOf(c2)>=0?'ref':'amt');return '';}} /* علامة مطابقة من حفظ سابق بلا إيصال مورد حاضر — تُستبدل */
+    var hh=holderOf(held[0]),hp=(hh&&hh.parsed)||{};
+    return 'إيصال الزبون '+f0(held[0].amount)+' موجود لكنه مطابَق مع إيصال مورد آخر ('+f0(amt(hp.amount))+(nref(hp.ref)?' · '+nref(hp.ref):'')+') — إن كانت تلك المطابقة خاطئة فُكّها بزر ✕ ثم اضغط «طابق»';}
   function f0(n){return typeof fmt==='function'?fmt(n,0):String(n);}
   function showFile(url,isPdf,name){try{var v=$('rcptView');
       if(!v){v=document.createElement('div');v.id='rcptView';v.innerHTML='<div class="bar"><span id="rvT"></span><button onclick="document.getElementById(\'rcptView\').classList.remove(\'on\')">إغلاق</button></div><div class="body" id="rvB"></div>';document.body.appendChild(v);}
@@ -324,8 +340,7 @@ function init(){
       it.parsed=it.parsed||{};var na=parseFloat(String(ia?ia.value:'').replace(/[^\d.]/g,''))||0;
       if(na>0){if(na!==Number(it.parsed.amount))it.manual=true;it.parsed.amount=na;}
       if(ir){it.parsed.ref=ir.value.trim()||null;}
-      it.note='';matchAll();
-      if(!it.to)it.note=na>=100?('لا يوجد إيصال زبون غير مطابَق بالمبلغ '+f0(na)+(it.parsed.ref?' ولا بالمرجع '+it.parsed.ref:'')+' — تحقق من الرقم أو ارفع إيصال الزبون أولًا'):'اكتب المبلغ كما في الإيصال ثم اضغط «طابق»';
+      it.note=fixMatch(it)||'';
       mRender();try{renderRcpts();updMatch();}catch(x){}return;}
     if(m==='vs')showFile(it.url,it.isPdf,it.file.name);
     else if(m==='vc'){var c=it.to&&it.to[0];if(c&&c.kind==='new'){try{rcptView(RCPTS.indexOf(c.r),false);}catch(x){}}else say('إيصال محفوظ — افتحه من «عرض الإيصالات المحفوظة»');}
