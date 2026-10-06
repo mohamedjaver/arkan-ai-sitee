@@ -360,9 +360,13 @@ function init(){
   var STOR_SQL="insert into storage.buckets (id,name,public) values ('receipts','receipts',true) on conflict (id) do nothing;\ndrop policy if exists \"receipts_read\" on storage.objects;\ndrop policy if exists \"receipts_write\" on storage.objects;\ndrop policy if exists \"receipts_update\" on storage.objects;\ncreate policy \"receipts_read\" on storage.objects for select using (bucket_id='receipts');\ncreate policy \"receipts_write\" on storage.objects for insert to authenticated with check (bucket_id='receipts');\ncreate policy \"receipts_update\" on storage.objects for update to authenticated using (bucket_id='receipts');";
   async function storProbe(){if(STOR.done)return;STOR.done=true;
     try{var r=await fetch(SB.replace('/rest/v1','')+'/storage/v1/object/receipts/settle/_probe.txt',{method:'POST',headers:{apikey:ANON,Authorization:'Bearer '+((typeof TOK!=='undefined'&&TOK)||ANON),'Content-Type':'text/plain','x-upsert':'true'},body:'ok'});
-      STOR.code=r.status;STOR.bad=!(r.ok||r.status===409);}catch(e){STOR.done=false;return;}
+      STOR.code=r.status;STOR.bad=!(r.ok||r.status===409);STOR.msg='';
+      if(STOR.bad){try{var ej=await r.json();STOR.msg=String(ej.message||ej.error||'').slice(0,140);var sc=String(ej.statusCode||'');
+          if(sc==='409'||/already exists|duplicate/i.test(STOR.msg))STOR.bad=false; /* الملف موجود = المخزن يعمل */
+          STOR.why=/bucket not found/i.test(STOR.msg)||sc==='404'?'حاوية الصور «receipts» غير موجودة في Supabase':/row-level security|policy|unauthorized|403/i.test(STOR.msg+sc)?'الحاوية موجودة لكن صلاحيات الرفع غير مفعّلة':/jwt|token|signature/i.test(STOR.msg)?'توكن الجلسة مرفوض من المخزن — سجّل الخروج ثم الدخول':'';}catch(e){}}
+    }catch(e){STOR.done=false;return;}
     var el=$('shStor');if(!el)return;
-    if(STOR.bad){el.innerHTML='<b>تنبيه: صور الإيصالات لا تُحفظ (خطأ المخزن '+STOR.code+')</b>الإيصالات تُقيَّد بمبالغها ومراجعها، لكن صورها تضيع بعد الحفظ فلا يمكن فتحها لاحقًا. الإصلاح مرة واحدة: انسخ الكود والصقه في Supabase ← SQL Editor ← Run.<br><button type="button" id="shStorB">نسخ كود الإصلاح</button>';el.style.display='block';
+    if(STOR.bad){el.innerHTML='<b>تنبيه: صور الإيصالات لا تُحفظ (خطأ المخزن '+STOR.code+')</b>'+(STOR.why?'<span style="display:block;font-weight:800">السبب: '+esc(STOR.why)+'</span>':'')+(STOR.msg?'<span style="display:block;direction:ltr;text-align:start;font-size:11px;opacity:.8">'+esc(STOR.msg)+'</span>':'')+'الإيصالات تُقيَّد بمبالغها ومراجعها، لكن صورها تضيع بعد الحفظ فلا يمكن فتحها لاحقًا. الإصلاح مرة واحدة: انسخ الكود والصقه في Supabase ← SQL Editor ← Run.<br><button type="button" id="shStorB">نسخ كود الإصلاح</button>';el.style.display='block';
       $('shStorB').onclick=async function(){try{await navigator.clipboard.writeText(STOR_SQL);say('نُسخ الكود — الصقه في Supabase SQL Editor');}catch(e){prompt('انسخ الكود:',STOR_SQL);}};}
     else el.style.display='none';}
   function unlink(it){(it.to||[]).forEach(function(c){if(c.kind==='new'){try{rcptSupClear(RCPTS.indexOf(c.r));}catch(e){}}else if(!c.persisted)delete SHM.saved[c.row.id];});it.to=null;it.how='';it.covers=null;}
