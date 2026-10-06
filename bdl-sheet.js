@@ -353,8 +353,31 @@ function init(){
       if(c.kind==='new'){var ix=RCPTS.indexOf(c.r);if(ix>=0){rcptView(ix,false);return;}showFile(c.r.url,c.r.isPdf,((c.r.orig||c.r.file)||{}).name);return;}
       var k=keepFind(c.row);if(k){showFile(k.url,k.isPdf,((k.orig||k.file)||{}).name);return;}
       var img=c.row.ocr&&c.row.ocr.image;if(img){openStored(img);return;}
-      say(STOR.bad?'لا صورة لهذا الإيصال — مخزن الصور غير مفعّل (انظر التنبيه الأحمر أعلى الشاشة)':'هذا الإيصال حُفظ بلا صورة — لا ملف لفتحه');
+      say(STOR.bad?'لا صورة لهذا الإيصال — مخزن الصور غير مفعّل (انظر التنبيه الأحمر أعلى الشاشة)':'هذا الإيصال قُيِّد بلا صورة. ارفعه مرة أخرى من «＋ إيصالات الزبون» وستُرفق صورته بالقيد تلقائيًا');
       if(STOR.bad){try{var sb=$('shStor');if(sb&&sb.scrollIntoView)sb.scrollIntoView({block:'center'});}catch(e2){}}}catch(e){say('تعذّر فتح الإيصال');}}
+  /* ═══ 1385: حفظ صورة الإيصال لا يفشل بصمت — إدراج عادي أولًا (الموجود = نجاح)، ثم استبدال، وإن فشل يظهر السبب ═══ */
+  var SFAIL={n:0,last:''};
+  window.rcptStore=async function(file,fp){if(!file||!fp)return null;
+    var nm=String(file.name||''),ty=String(file.type||''),ext=/pdf/i.test(ty)||/\.pdf$/i.test(nm)?'pdf':/png/i.test(ty)||/\.png$/i.test(nm)?'png':/webp/i.test(ty)||/\.webp$/i.test(nm)?'webp':'jpg';
+    var ct=ext==='pdf'?'application/pdf':ext==='png'?'image/png':ext==='webp'?'image/webp':'image/jpeg',path='settle/'+fp+'.'+ext;
+    var url=SB.replace('/rest/v1','')+'/storage/v1/object/receipts/'+path,why='';
+    for(var k=0;k<3;k++){try{var hd={apikey:ANON,Authorization:'Bearer '+((typeof TOK!=='undefined'&&TOK)||ANON),'Content-Type':ct};if(k===1)hd['x-upsert']='true';
+        var r=await fetch(url,{method:'POST',headers:hd,body:file});if(r.ok||r.status===409)return path;
+        var j={};try{j=await r.json();}catch(e){}var msg=String(j.message||j.error||'');
+        if(String(j.statusCode||'')==='409'||/already exists|duplicate/i.test(msg))return path;
+        why='خطأ '+r.status+(msg?': '+msg.slice(0,90):'');}catch(e){why='تعذّر الاتصال';await new Promise(function(x){setTimeout(x,600);});}}
+    SFAIL.n++;SFAIL.last=why;say('لم تُحفظ صورة الإيصال ('+why+') — القيد سليم لكن الصورة لن تُفتح لاحقًا');return null;};
+  /* إرفاق الصورة بإيصال محفوظ بلا صورة: عند رفع الإيصال نفسه مرة أخرى (يُرفض كمكرر) تُرفع صورته وتُربط بالقيد المحفوظ */
+  async function backfill(){try{var pr=(typeof SS!=='undefined'&&SS.prevRows)||{},rows=Object.keys(pr).map(function(k){return pr[k];}).filter(function(x){return !(x.ocr&&x.ocr.image);});
+      if(!rows.length)return;var list=(typeof RCPTS!=='undefined'?RCPTS:[]).concat(KEEP);
+      for(var i=0;i<list.length;i++){var r=list[i];if(!r||r._bf||!r.parsed||!r.fp||!(r.orig||r.file))continue;var rf=nref(r.parsed.ref);if(!rf)continue;
+        var row=rows.find(function(x){return nref(x.txn_ref)===rf&&!(x.ocr&&x.ocr.image);});if(!row)continue;r._bf=true;
+        var path=await window.rcptStore(r.orig||r.file,r.fp);if(!path)continue;
+        var no=Object.assign({},row.ocr||{},{image:path});
+        var q=await fetch(SB+'/bdl_receipts?id=eq.'+encodeURIComponent(row.id),{method:'PATCH',headers:H(),body:JSON.stringify({ocr:no})});
+        if(q.ok){row.ocr=no;BF.n++;clearTimeout(BF.t);BF.t=setTimeout(function(){say('أُرفقت الصورة بـ '+BF.n+' إيصال محفوظ كان بلا صورة');BF.n=0;try{mRender();}catch(e){}},1200);}}}catch(e){}}
+  var BF={n:0,t:0,busy:false};
+  function backfillSoon(){if(BF.busy)return;BF.busy=true;setTimeout(function(){backfill().then(function(){BF.busy=false;},function(){BF.busy=false;});},800);}
   /* فحص مخزن الصور مرة واحدة: رفع ملف اختبار صغير — إن رُفض فالصور لا تُحفظ، ويظهر تنبيه مع كود الإصلاح */
   var STOR={done:false,bad:false,code:0};
   var STOR_SQL="insert into storage.buckets (id,name,public) values ('receipts','receipts',true) on conflict (id) do nothing;\ndrop policy if exists \"receipts_read\" on storage.objects;\ndrop policy if exists \"receipts_write\" on storage.objects;\ndrop policy if exists \"receipts_update\" on storage.objects;\ncreate policy \"receipts_read\" on storage.objects for select using (bucket_id='receipts');\ncreate policy \"receipts_write\" on storage.objects for insert to authenticated with check (bucket_id='receipts');\ncreate policy \"receipts_update\" on storage.objects for update to authenticated using (bucket_id='receipts');";
@@ -403,7 +426,7 @@ function init(){
   new MutationObserver(function(){if(ov.classList.contains('on')&&!SHM._open){SHM._open=true;SHM.items=[];SHM.saved={};mRender();}else if(!ov.classList.contains('on'))SHM._open=false;}).observe(ov,{attributes:true,attributeFilter:['class']});
 
   if(typeof window.renderRcpts==='function'&&!window.renderRcpts._sorted){var _rr=window.renderRcpts;
-    window.renderRcpts=function(){try{keepScan();}catch(e){}try{if(typeof RCPTS!=='undefined'&&RCPTS.length&&!(typeof BULK!=='undefined'&&BULK&&BULK.length)){
+    window.renderRcpts=function(){try{keepScan();backfillSoon();}catch(e){}try{if(typeof RCPTS!=='undefined'&&RCPTS.length&&!(typeof BULK!=='undefined'&&BULK&&BULK.length)){
         RCPTS.forEach(function(r){var k=rcKey(r);r._t=k.t;r._when=whenTxt(k);});
         RCPTS.forEach(function(r,i){if(r._ord==null)r._ord=(window.__shOrd=(window.__shOrd||0)+1);});
         RCPTS.sort(function(a,b){return (b._t||0)-(a._t||0)||a._ord-b._ord;});}}catch(e){}

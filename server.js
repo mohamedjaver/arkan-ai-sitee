@@ -1132,6 +1132,8 @@ app.post('/account/receipt-log', async (req, res) => {
       aud: 'authenticated', arkan_role: 'owner', iat: ts, exp: ts + 300 }, JWT_SECRET);
     const H2 = { apikey: SB_PUB, Authorization: 'Bearer ' + tok, 'Content-Type': 'application/json', Prefer: 'return=minimal' };
     const ocr = { side, source: 'home', name, uploaded_at: new Date().toISOString() };
+    const image = String(req.body.image || '').trim().slice(0, 200); if (/^[\w\-./]+$/.test(image)) ocr.image = image; /* 1385: مسار صورة الإيصال في حاوية receipts */
+    if (req.body.date) ocr.date = String(req.body.date).slice(0, 40);
     if (side === 'supplier' && name) ocr.sup_name = name;
     const r = await fetch(SB_REST + '/bdl_receipts', { method: 'POST', headers: H2,
       body: JSON.stringify({ fingerprint: fp, amount, ccy, bank, txn_ref: ref, ocr }) });

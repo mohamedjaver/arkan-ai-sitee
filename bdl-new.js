@@ -274,6 +274,15 @@ function onChange(e){var t=e.target;
   if(t.dataset.f==='name'){it.name=t.value.trim();it.manual=true;var c=S.recips.find(function(x){return x.name===it.name;});if(c)it.phone=digits(c.phone);}
   resolve(it);render();}
 
+/* 1385: صورة الإيصال تُرفع إلى حاوية receipts ويُحفظ مسارها مع القيد — لا إيصال بلا صورة */
+async function storeImg(it,tok){try{if(!it.fp||!it.file)return '';
+    var base=(typeof AK_SB_URL!=='undefined'&&AK_SB_URL)||'https://vyxzlazwpbstigcqvizb.supabase.co',key=(typeof AK_SB_KEY!=='undefined'&&AK_SB_KEY)||(typeof MRB_ANON!=='undefined'&&MRB_ANON)||'';
+    var nm=String(it.file.name||''),ty=String(it.file.type||''),ext=it.pdf?'pdf':/png/i.test(ty)||/\.png$/i.test(nm)?'png':/webp/i.test(ty)||/\.webp$/i.test(nm)?'webp':'jpg';
+    var ct=ext==='pdf'?'application/pdf':ext==='png'?'image/png':ext==='webp'?'image/webp':'image/jpeg',path='settle/'+it.fp+'.'+ext;
+    for(var k=0;k<2;k++){var hd={Authorization:'Bearer '+tok,'Content-Type':ct};if(key)hd.apikey=key;if(k===1)hd['x-upsert']='true';
+      var r=await fetch(base+'/storage/v1/object/receipts/'+path,{method:'POST',headers:hd,body:it.file});if(r.ok||r.status===409)return path;
+      var j={};try{j=await r.json();}catch(e){}if(String(j.statusCode||'')==='409'||/already exists|duplicate/i.test(String(j.message||j.error||'')))return path;}
+  }catch(e){}return '';}
 /* ── القيد: نفس مسار كرت الإيصال (log-transfer ثم receipt-log) — إيصال فاشل لا يوقف الدفعة ── */
 async function commit(){if(S.done){location.href='settle-v2.html';return;}
   var list=S.items.filter(function(x){return x.st==='ok';});if(!list.length||S.busy)return;
@@ -286,7 +295,8 @@ async function commit(){if(S.done){location.href='settle-v2.html';return;}
       if(!(r.ok&&j.ok)){it.st='err';it.msg=r.status===401?'انتهت الجلسة — سجّل الدخول مجددًا':('لم يُقيَّد: خادم '+r.status+(j.err?' ('+j.err+')':''));render();return;}
       if(j.dup){it.st='dup';var pv=j.prev||{};it.msg='مقيَّد مسبقًا'+(pv.name?' — '+pv.name:'')+(pv.amount?' · '+fmt(pv.amount)+' '+(pv.ccy||''):'');}
       else{it.st='done';it.msg='✓ قُيّدت في التسوية باسم '+it.name;}
-      try{await fetch(SRV+'/account/receipt-log',{method:'POST',headers:H,body:JSON.stringify({side:it.side,amount:it.amount,ccy:it.ccy,bank:(it.p&&it.p.bank)||'',ref:(it.p&&it.p.txn)||'',name:it.name,fp:it.fp||''})});}catch(e){}
+      try{var img=await storeImg(it,tok);if(!img)it.msg+=' · لم تُحفظ الصورة';
+        await fetch(SRV+'/account/receipt-log',{method:'POST',headers:H,body:JSON.stringify({side:it.side,amount:it.amount,ccy:it.ccy,bank:(it.p&&it.p.bank)||'',ref:(it.p&&it.p.txn)||'',name:it.name,fp:it.fp||'',image:img,date:(it.p&&it.p.date)||''})});}catch(e){}
       var k=keyOf(it.p||{});if(k&&it.ccy!=='AOA'&&it.name)map[k]={name:it.name,phone:it.phone||'',side:it.side};
     }catch(e){it.st='err';it.msg='تعذّر الاتصال — أعد المحاولة';}
     render();});
