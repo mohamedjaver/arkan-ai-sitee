@@ -1,4 +1,4 @@
-/* ═══ BDL · bdl-cycle.js — دورة USDT (1392) ═══
+/* ═══ BDL · bdl-cycle.js — دورة USDT (1392 · منذ 1397 تعيش في تبويب «العمليات» ولا تمس شاشة «إتمام التسوية») ═══
    الزبون يدفع كوانزا ويستلم أوقية · المورد الأنغولي يحوّل الكوانزا إلى USDT · مشتري دبي يدفع أوقية مقابل USDT.
    تُحفظ الدورة في meta.cycle على عمليات التسوية نفسها — لا جداول جديدة ولا مساس بالتسعير. */
 (function(){'use strict';
@@ -8,7 +8,7 @@
   function f(v,d){return Number(v||0).toLocaleString('en-US',{minimumFractionDigits:d||0,maximumFractionDigits:d||0});}
   function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
   function say(m){try{toast(m);}catch(e){}}
-  function ops(){try{return selected()||[];}catch(e){return [];}}
+  function ops(){return CY.txs||[];}
   function blank(){return {id:'c'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),rs:0,ru:0,usdt:[],mru:[]};}
   /* أسعار الأوقية تُكتب كما تتفاوض (قديمة 434.2 / 0.371) وتُحوَّل تلقائيًا إلى MRU */
   function ruNew(v){v=n(v);return v>=100?v/10:v;}
@@ -30,11 +30,16 @@
     o.profitReal=o.mruGot-mruCust;
     return o;}
   CY.calc=calc;
+  function dueOf(t){var scy=t.settle_ccy||'AOA';if(scy!=='AOA')return 0;return (t.settle_amount&&scy!==t.ccy)?Number(t.settle_amount)||0:((t.rate&&scy!==t.ccy)?Number(t.amount)/Number(t.rate):0);}
   function base(){var s=ops(),aoa=0,mru=0,okPair=true;
-    try{aoa=(typeof SS!=='undefined'&&SS.dueCcy==='AOA')?Number(SS.due)||0:0;}catch(e){}
-    s.forEach(function(t){if(t.ccy==='MRU')mru+=Number(t.amount)||0;else okPair=false;});
+    s.forEach(function(t){if(t.ccy==='MRU'){mru+=Number(t.amount)||0;aoa+=dueOf(t);}else okPair=false;});
     return {aoa:aoa,mru:mru,ok:okPair&&s.length>0};}
   var CSS='#cyBox{margin:10px 0;border:1px solid #C9D6EA;background:#fff;font-family:inherit}#cyBox *{box-sizing:border-box}'
+    +'#cyPanel{position:fixed;inset:0;z-index:100040;background:#F4F7FB;display:flex;flex-direction:column;font-family:inherit}#cyPanel .th{display:flex;align-items:center;gap:10px;padding:calc(12px + env(safe-area-inset-top)) 14px 12px;background:#0B2447;color:#fff}#cyPanel .th b{flex:1;min-width:0;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}#cyPanel .th button{height:38px;padding:0 14px;border:1px solid rgba(255,255,255,.6);background:transparent;color:#fff;font-family:inherit;font-weight:800;font-size:12.5px;cursor:pointer}#cyPanel .sc{flex:1;overflow:auto;-webkit-overflow-scrolling:touch;padding:0 12px calc(24px + env(safe-area-inset-bottom))}#cyPanel #cyBox .hd{cursor:default}'
+    +'#cyHub{margin:0 0 14px;border:1px solid #C9D6EA;background:#fff}#cyHub *{box-sizing:border-box}#cyHub .ht{display:flex;align-items:center;gap:8px;padding:11px 12px;background:#0B2447;color:#fff}#cyHub .ht b{flex:1;font-size:13.5px}#cyHub .ht small{font-size:10.5px;font-weight:800;color:#F2C65A;border:1px solid #F2C65A;padding:2px 7px}#cyHub .ht button{height:34px;padding:0 12px;border:1px solid rgba(255,255,255,.6);background:transparent;color:#fff;font-family:inherit;font-weight:800;font-size:12px;cursor:pointer}'
+    +'#cyHub .hr{display:flex;align-items:center;gap:10px;padding:11px 12px;border-top:1px solid #E6ECF5}#cyHub .hr div{flex:1;min-width:0}#cyHub .hr b{display:block;font-size:14px;color:#0B2447;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}#cyHub .hr span{display:block;margin-top:2px;font-family:"IBM Plex Mono",monospace;font-size:11.5px;color:#5C7699;direction:ltr;text-align:start}#cyHub .hr button{flex:none;height:42px;padding:0 16px;border:0;background:#0B2F70;color:#fff;font-family:inherit;font-weight:800;font-size:12.5px;cursor:pointer}#cyHub .he{padding:14px 12px;font-size:12.5px;color:#5C7699;border-top:1px solid #E6ECF5}'
+    +'#cyBox .kw{margin-top:12px;padding:10px 12px;border:1.5px solid #0E8F5B;background:#EAF7F0}#cyBox .kw div{font-size:12.5px;font-weight:800;color:#0B5C3A;line-height:1.8}#cyBox .kw button{display:block;width:100%;height:46px;margin-top:8px;border:0;background:#0E8F5B;color:#fff;font-family:inherit;font-weight:800;font-size:13px;cursor:pointer}#cyBox .kw small{display:block;margin-top:6px;font-size:11px;color:#3A6B55}'
+    +'#cyAll .cd{cursor:pointer}'
     +'#cyBox .hd{display:flex;align-items:center;gap:8px;padding:11px 12px;background:#0B2447;color:#fff;cursor:pointer;-webkit-tap-highlight-color:transparent}#cyBox .hd b{font-size:13.5px;font-weight:800}#cyBox .hd span{flex:1;min-width:0;font-size:11.5px;font-weight:700;color:#F2C65A;text-align:end;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}#cyBox .hd i{font-style:normal;font-size:11px;opacity:.8}'
     +'#cyBox .bd{padding:12px}#cyBox .in{display:grid;grid-template-columns:1fr 1fr;gap:8px}#cyBox label{display:block;font-size:11px;font-weight:800;color:#5C7699;margin-bottom:4px}'
     +'#cyBox input{width:100%;height:46px;border:1.5px solid #B9C8DE;border-radius:0;background:#fff;padding:0 10px;font-family:"IBM Plex Mono",monospace;font-size:16px;font-weight:700;color:#0B2447;direction:ltr;text-align:center;outline:none}#cyBox input:focus{border-color:#0A56B8}'
@@ -56,7 +61,7 @@
     +'#cyAll .sc{flex:1;overflow:auto;-webkit-overflow-scrolling:touch;padding:12px 12px calc(20px + env(safe-area-inset-bottom))}#cyAll .tot{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:#DCE4EF;border:1px solid #DCE4EF;margin-bottom:12px}#cyAll .tot div{background:#fff;padding:11px 8px;text-align:center}#cyAll .tot small{display:block;font-size:10.5px;font-weight:800;color:#5C7699}#cyAll .tot b{display:block;margin-top:4px;font-family:"IBM Plex Mono",monospace;font-size:15px;color:#0B2447;direction:ltr}'
     +'#cyAll .cd{background:#fff;border:1px solid #DCE4EF;border-inline-start:5px solid #E0A300;margin-bottom:10px;padding:11px 12px}#cyAll .cd.dn{border-inline-start-color:#0E8F5B}#cyAll .cd .h{display:flex;justify-content:space-between;gap:8px;font-size:13px;font-weight:800;color:#0B2447}#cyAll .cd .h span{font-size:11px;color:#5C7699;font-weight:700}#cyAll .cd .l{display:flex;justify-content:space-between;gap:8px;margin-top:7px;font-size:12px;color:#3A4F6E}#cyAll .cd .l b{font-family:"IBM Plex Mono",monospace;color:#0B2447;direction:ltr}#cyAll .cd .l b.a{color:#8A6100}#cyAll .cd .l b.g{color:#0B7A3B}#cyAll .cd .l b.r{color:#B00020}#cyAll .em{padding:40px 16px;text-align:center;color:#5C7699;font-size:13px}';
   function css(){if($('cyCss'))return;var s=document.createElement('style');s.id='cyCss';s.textContent=CSS;document.head.appendChild(s);}
-  function box(){var b=$('cyBox');if(b)return b;var rb=$('ssRateBox');if(!rb||!rb.parentNode)return null;css();b=document.createElement('div');b.id='cyBox';rb.parentNode.insertBefore(b,rb.nextSibling);
+  function box(){var b=$('cyBox');if(b)return b;var p=$('cyPanel');if(!p)return null;b=document.createElement('div');b.id='cyBox';p.querySelector('.sc').appendChild(b);
     b.addEventListener('click',onClick);b.addEventListener('input',onInput);b.addEventListener('change',onChange);return b;}
   function logH(key,dir,title,unit,exp,dec,ph){var list=CY.c[key]||[],got=sum(list,dir),pc=exp>0?Math.min(100,Math.round(got/exp*100)):0;
     var h='<div class="lg"><div class="t"><span>'+title+'</span><b>'+f(got,dec)+(exp>0?' / '+f(exp,dec):'')+' '+unit+'</b></div><div class="br"><i style="width:'+pc+'%"></i></div>';
@@ -69,7 +74,7 @@
     var b=k.preFund>=1?'<div class="ps w"><span>دفعته للزبون قبل استلامه من دبي</span><b>'+f(k.preFund,0)+' MRU</b></div>':'<div class="ps"><span>أوقية عندك بعد الدفع للزبون</span><b>'+f(Math.max(0,k.mruGot-k.mruOut),0)+' MRU</b></div>';
     return {u:a,m:b+(k.mruCust>0?'<div class="ps'+(k.custLeft>=1?' w':'')+'"><span>باقٍ للزبون</span><b>'+f(k.custLeft,0)+' MRU</b></div>':'')};}
   function render(keep){var b=box();if(!b)return;var bs=base(),c=CY.c;
-    if(!bs.ok||!c){b.style.display='none';return;}b.style.display='';
+    if(!c)return;if(!bs.ok){b.innerHTML='<div class="st" style="margin-top:14px">هذه الدورة لعمليات أوقية مقابل كوانزا فقط.</div>';return;}
     var k=calc(c,bs.aoa,bs.mru),hd;
     if(!k.ok)hd='أدخل سعر المورد وسعر دبي';
     else if(!k.rc)hd='تكلفتك '+f(k.cost*10,4);
@@ -78,11 +83,11 @@
       var q=function(s){return b.querySelector(s);};
       if(q('.hd span'))q('.hd span').textContent=hd;if(q('#cyK'))q('#cyK').innerHTML=kp(k);if(q('#cyP'))q('#cyP').outerHTML=pf(k);
       if(q('#cyHu'))q('#cyHu').textContent=ruHint(c.ru);return;}
-    var h='<div class="hd" data-a="tg"><b>دورة USDT</b><span>'+esc(hd)+'</span><i>'+(CY.open?'▴':'▾')+'</i></div>';
-    if(CY.open){h+='<div class="bd"><div class="in"><div><label>سعر المورد — كوانزا لكل USDT</label><input inputmode="decimal" data-r="rs" value="'+(c.rs||'')+'" placeholder="1160"><div class="hint"></div></div>'
+    var h='<div class="hd"><b>'+f(bs.mru,0)+' MRU ↔ '+f(bs.aoa,0)+' AOA</b><span>'+esc(hd)+'</span></div>';
+    if(true){h+='<div class="bd"><div class="in"><div><label>سعر المورد — كوانزا لكل USDT</label><input inputmode="decimal" data-r="rs" value="'+(c.rs||'')+'" placeholder="1160"><div class="hint"></div></div>'
         +'<div><label>سعر دبي — أوقية لكل USDT</label><input inputmode="decimal" data-r="ru" value="'+(c.ru||'')+'" placeholder="434.2"><div class="hint" id="cyHu">'+ruHint(c.ru)+'</div></div></div>'
         +'<div class="kp" id="cyK">'+kp(k)+'</div>'+pf(k)
-        +'<button type="button" class="up" data-a="up"'+(CY.up&&CY.up.run?' disabled':'')+'>رفع إيصالات الدورة — ZIP أو صور</button>'+upH()+trayH()
+        +'<button type="button" class="up" data-a="up"'+(CY.up&&CY.up.run?' disabled':'')+'>رفع إيصالات الدورة — ZIP أو صور</button>'+upH()+kwH()+trayH()
         +'<div class="lt">رجل USDT</div>'+logH('usdt','in','وارد — من المورد','USDT',k.usdtExp,2,'المورد / رقم التحويل')+logH('usdt','out','صادر — إلى مشتري دبي','USDT',k.usdtGot||k.usdtExp,2,'المشتري / رقم التحويل')+posH(k).u
         +'<div class="lt">رجل الأوقية</div>'+logH('mru','in','وارد — من مشتري دبي','MRU',k.mruExp,0,'المشتري / ملاحظة')+logH('mru','out','صادر — مدفوع للزبون','MRU',k.mruCust,0,'الزبون / ملاحظة')+posH(k).m
         +(k.done?'<div class="pf'+(k.profitReal<0?' neg':'')+'" style="background:#0E8F5B"><span>الربح الفعلي — اكتملت الدورة</span><b>'+f(k.profitReal,0)+' MRU</b></div>':'')
@@ -135,7 +140,20 @@
   CY.destOf=destOf;
   function partyOf(nm){nm=String(nm||'').replace(/\.zip$/i,'').replace(/\s*\(\d+\)\s*$/,'');var m=nm.match(/WhatsApp Chat\s*[-–]\s*(.+)$/i)||nm.match(/WhatsApp Chat with\s+(.+)$/i)||nm.match(/Conversa do WhatsApp com\s+(.+)$/i)||nm.match(/Discussion WhatsApp avec\s+(.+)$/i)||nm.match(/محادثة (?:واتساب|WhatsApp) مع\s+(.+)$/);return m?m[1].trim():'';}
   function setRole(r){var u=CY.up;if(!u||!u.list)return;u.role=r;u.ask=false;if(u.zip){u.pickP=true;render();}else runBatch(99999);}
-  async function sendKwz(files,dst){if(!files.length)return;try{if(dst==='ks'&&typeof bulkSupMatch==='function')await bulkSupMatch(files);else await addReceipts(files);}catch(e){say('تعذّر نقل إيصالات الكوانزا');}}
+  /* إيصالات الكوانزا تُجمع هنا ثم تُرسل إلى شاشة «إتمام التسوية» كما هي — لا تعديل عليها */
+  async function sendKwz(files,dst){if(!files.length)return;CY.kw=CY.kw||{kc:[],ks:[]};var L=CY.kw[dst==='ks'?'ks':'kc'];[].forEach.call(files,function(fl){if(L.indexOf(fl)<0)L.push(fl);});render();}
+  function kwH(){var k=CY.kw||{kc:[],ks:[]};if(!k.kc.length&&!k.ks.length)return '';
+    return '<div class="kw"><div>إيصالات كوانزا مفروزة: زبون '+k.kc.length+' · مورد '+k.ks.length+'</div>'+(CY.gk?'<button type="button" data-a="tosettle">إرسالها إلى شاشة التسوية والمطابقة</button><small>تُفتح تسوية هذا الزبون وتدخل إيصالاته ثم إيصالات المورد للمطابقة. أرسلها قبل إغلاق الصفحة.</small>':'<small>تسوية هذا الزبون مقفلة — لا تُرسل إيصالات كوانزا جديدة إليها.</small>')+'</div>';}
+  async function toSettle(){var k=CY.kw||{kc:[],ks:[]},gk=CY.gk;if(!gk||(!k.kc.length&&!k.ks.length))return;var kc=k.kc.slice(),ks=k.ks.slice();
+    try{closePanel();go('settle');await grpSettle(gk);
+      var ov=$('ovl-settle');for(var w=0;w<40&&!(ov&&ov.classList.contains('on'));w++)await new Promise(function(r){setTimeout(r,150);});
+      if(!ov||!ov.classList.contains('on')){say('تعذّر فتح التسوية — الإيصالات ما زالت محفوظة في الدورة');return;}
+      await new Promise(function(r){setTimeout(r,900);});
+      CY.kw={kc:[],ks:[]};
+      if(kc.length)await addReceipts(kc);
+      if(ks.length&&typeof bulkSupMatch==='function')await bulkSupMatch(ks);
+      say('دخلت إيصالات الكوانزا: زبون '+kc.length+' · مورد '+ks.length);
+    }catch(e){say('تعذّر الإرسال إلى التسوية: '+((e&&e.message)||e));}}
   async function b64img(file){try{var im=await createImageBitmap(file),sc=Math.min(1,1600/Math.max(im.width,im.height)),cv=document.createElement('canvas');cv.width=Math.round(im.width*sc);cv.height=Math.round(im.height*sc);cv.getContext('2d').drawImage(im,0,0,cv.width,cv.height);return {b64:cv.toDataURL('image/jpeg',.85).split(',')[1],mime:'image/jpeg'};}
     catch(e){var ab=await file.arrayBuffer(),u=new Uint8Array(ab),bin='';for(var i=0;i<u.length;i++)bin+=String.fromCharCode(u[i]);return {b64:btoa(bin),mime:file.type||'image/jpeg'};}}
   /* القراءة: قارئ الخادم (Claude) مباشرة ليحتفظ بالعملة كما هي، ثم قارئ الشاشة كاحتياط */
@@ -180,7 +198,7 @@
         CY.c[kk].push(entryOf(p,fp,img,o.ts,dir,party));R[kk]++;
       }catch(e){R.skip++;}}
     if(R.usdt||R.mru)await save();
-    var m=[];if(R.usdt)m.push('USDT '+(role==='dxb'?'صادر ':'وارد ')+R.usdt);if(R.mru)m.push('أوقية '+(role==='cust'?'صادر ':'وارد ')+R.mru);if(R.kwz)m.push('كوانزا '+R.kwz+(kdst==='ks'?' — إلى مطابقة المورد':' — إلى إيصالات الزبون'));if(R.tray)m.push('تحتاج قرارك '+R.tray);if(R.dup)m.push('مكرر '+R.dup);if(R.other)m.push('مستخدم في دورة أخرى — مرفوض '+R.other);if(R.skip)m.push('ليست إيصالات '+R.skip);
+    var m=[];if(R.usdt)m.push('USDT '+(role==='dxb'?'صادر ':'وارد ')+R.usdt);if(R.mru)m.push('أوقية '+(role==='cust'?'صادر ':'وارد ')+R.mru);if(R.kwz)m.push('كوانزا '+R.kwz+(kdst==='ks'?' — في سلة المورد':' — في سلة الزبون'));if(R.tray)m.push('تحتاج قرارك '+R.tray);if(R.dup)m.push('مكرر '+R.dup);if(R.other)m.push('مستخدم في دورة أخرى — مرفوض '+R.other);if(R.skip)m.push('ليست إيصالات '+R.skip);
     CY.up={run:false,msg:'«'+title+'» · '+ROLES[role]+' — اكتمل: '+(m.join(' · ')||'لا شيء جديد')};CY.done=(CY.done||[]).concat([CY.up.msg]);render();
     await sendKwz(kw,kdst);
     if((CY.q||[]).length)setTimeout(nextFile,300);}
@@ -191,11 +209,11 @@
       d.innerHTML='<div class="th"><button type="button">إغلاق</button></div><div class="im"><img alt=""></div>';d.querySelector('img').src=url;d.querySelector('button').onclick=function(){URL.revokeObjectURL(url);d.parentNode.removeChild(d);};document.body.appendChild(d);}catch(x){say('تعذّر فتح الصورة');}}
   async function moveEntry(k,i,to){var e=CY.c[k][i];if(!e)return;CY.mv=null;
     if(to==='kwz'){var fl=null;try{fl=await fileOf(e);}catch(x){}if(!fl){say('الصورة غير متاحة للنقل');render();return;}
-      CY.c[k].splice(i,1);render();await save();try{await addReceipts([fl]);say('نُقل إلى إيصالات الزبون (كوانزا)');}catch(x){say('تعذّر النقل');}return;}
+      CY.c[k].splice(i,1);await sendKwz([fl],'kc');await save();say('نُقل إلى سلة كوانزا الزبون');return;}
     if(to==='flip'){e.d=(e.d||'in')==='in'?'out':'in';render();if(await save())say('نُقل إلى '+(e.d==='in'?'الوارد':'الصادر'));return;}
     CY.c[k].splice(i,1);CY.c[to].push(e);render();if(await save())say('نُقل إلى رجل '+(to==='usdt'?'USDT':'الأوقية'));}
   async function trayTo(i,to){var x=CY.tray[i];if(!x||!to)return;var fl=CY.files[x.fp];
-    if(to==='kc'||to==='ks'){CY.tray.splice(i,1);render();if(fl){if(x.party)fl._sup=x.party;await sendKwz([fl],to);say(to==='ks'?'نُقل إلى مطابقة المورد':'نُقل إلى إيصالات الزبون');}return;}
+    if(to==='kc'||to==='ks'){CY.tray.splice(i,1);render();if(fl){if(x.party)fl._sup=x.party;await sendKwz([fl],to);say(to==='ks'?'نُقل إلى سلة كوانزا المورد':'نُقل إلى سلة كوانزا الزبون');}return;}
     var inp=$('cyBox').querySelector('input[data-ty="'+i+'"]'),a=n(inp?inp.value:x.a);if(!(a>0)){say('اكتب المبلغ أولًا');if(inp)inp.focus();return;}
     var kk=to.split(':')[0],dir=to.split(':')[1],img=null;try{if(fl)img=await rcptStore(fl,x.fp);}catch(e){}
     CY.c[kk].push(entryOf(Object.assign({},x.p,{amount:a}),x.fp,img,x.ts,dir,x.party));CY.tray.splice(i,1);render();if(await save())say('سُجّل: '+DEST.filter(function(o){return o[0]===to;})[0][1]);}
@@ -210,7 +228,7 @@
   function onInput(e){var i=e.target;if(i.dataset&&i.dataset.ty!=null&&CY.tray[+i.dataset.ty]){CY.tray[+i.dataset.ty].a=n(i.value);return;}if(!i.dataset||!i.dataset.r||!CY.c)return;CY.c[i.dataset.r]=n(i.value);render(true);}
   function onChange(e){var i=e.target;if(i.dataset&&i.dataset.r)save();}
   async function onClick(e){var a=e.target.closest('[data-a]');if(!a||!CY.c)return;var act=a.dataset.a,k=a.dataset.k,b=$('cyBox');
-    if(act==='tg'){CY.open=!CY.open;CY.arm=null;render();return;}
+    if(act==='tosettle'){await toSettle();return;}
     if(act==='all'){openAll();return;}
     if(act==='up'){pick();return;}
     if(act==='per'){runBatch(+a.dataset.d);return;}
@@ -227,31 +245,53 @@
     if(act==='del'){var key=k+a.dataset.i;if(CY.arm!==key){CY.arm=key;render();return;}
       CY.c[k].splice(+a.dataset.i,1);CY.arm=null;CY.mv=null;render();await save();return;}}
   function load(){var s=ops(),c=null;s.forEach(function(t){var x=t.meta&&t.meta.cycle;if(x&&(!c||String(x.upd||'')>String(c.upd||'')))c=x;});
-    CY.c=c?JSON.parse(JSON.stringify(c)):blank();CY.c.usdt=CY.c.usdt||[];CY.c.mru=CY.c.mru||[];CY.open=false;CY.arm=null;CY.mv=null;CY.tray=[];CY.up=null;CY.q=[];CY.done=[];render();}
+    CY.c=c?JSON.parse(JSON.stringify(c)):blank();CY.c.usdt=CY.c.usdt||[];CY.c.mru=CY.c.mru||[];CY.open=true;CY.arm=null;CY.mv=null;CY.tray=[];CY.up=null;CY.q=[];CY.done=[];CY.kw={kc:[],ks:[]};render();}
+  function closePanel(){var p=$('cyPanel');if(p)p.parentNode.removeChild(p);CY.c=null;CY.txs=null;try{hub();}catch(e){}}
+  function openPanel(txs,title,gk){css();closePanel();CY.txs=txs||[];CY.gk=gk||null;var p=document.createElement('div');p.id='cyPanel';
+    p.innerHTML='<div class="th"><b>دورة USDT · '+esc(title||'')+'</b><button type="button">إغلاق</button></div><div class="sc"></div>';
+    p.querySelector('.th button').onclick=function(){var k=CY.kw||{kc:[],ks:[]};if((k.kc.length||k.ks.length)&&CY.gk&&!CY.warned){CY.warned=true;say('في السلة إيصالات كوانزا لم تُرسل للتسوية — اضغط إغلاق مرة أخرى لتجاهلها');return;}CY.warned=false;closePanel();};
+    document.body.appendChild(p);load();}
+  CY.openPanel=openPanel;
+  /* ── لوحة الدورات في تبويب «العمليات» ── */
+  function mruGroups(){try{return (GROUPS||[]).filter(function(g){return g.ccy==='MRU';});}catch(e){return [];}}
+  function hub(){var host=$('opBridge');if(!host||!host.parentNode)return;css();var h=$('cyHub');if(!h){h=document.createElement('div');h.id='cyHub';host.parentNode.insertBefore(h,host);
+      h.addEventListener('click',async function(e){var b=e.target.closest('[data-h]');if(!b)return;if(b.dataset.h==='all'){openAll();return;}
+        var k=b.dataset.k,g=mruGroups().find(function(x){return gKey(x)===k;});if(!g)return;b.disabled=true;
+        try{if(!TXCACHE[k])await expandFetch(g,k);openPanel(TXCACHE[k]||[],g.customer_name,k);}catch(x){say('تعذّر فتح الدورة');}b.disabled=false;});}
+    var gs=mruGroups(),html='<div class="ht"><b>دورات USDT</b><small>تجربة</small><button type="button" data-h="all">كل الدورات</button></div>';
+    if(!gs.length)html+='<div class="he">لا تسويات أوقية مفتوحة الآن. الدورات السابقة في «كل الدورات».</div>';
+    gs.forEach(function(g){var k=gKey(g);html+='<div class="hr"><div><b>'+esc(g.customer_name)+'</b><span>'+f(g.total_amount,0)+' MRU'+(g.total_settle>0?' ↔ '+f(g.total_settle,0)+' '+esc(g.settle_ccy||'AOA'):'')+' · '+g.tx_count+' عمليات</span></div><button type="button" data-h="open" data-k="'+esc(k)+'">فتح الدورة</button></div>';});
+    h.innerHTML=html;}
+  CY.hub=hub;
   /* ── كل الدورات: متابعة الأرجل الثلاث لكل دورة ── */
   async function openAll(){css();var d=$('cyAll');if(d)d.parentNode.removeChild(d);d=document.createElement('div');d.id='cyAll';
     d.innerHTML='<div class="th"><b>كل الدورات</b><button type="button">إغلاق</button></div><div class="sc"><div class="em">جارٍ التحميل…</div></div>';
     d.querySelector('button').onclick=function(){d.parentNode.removeChild(d);};document.body.appendChild(d);
     var sc=d.querySelector('.sc');
-    try{var sel='select=id,amount,ccy,settle_amount,settle_ccy,status,meta,created_at,customer_id&order=created_at.desc',rows=null;
+    try{var sel='select=id,ref,amount,ccy,settle_amount,settle_ccy,rate,status,meta,created_at,customer_id&order=created_at.desc',rows=null;
       var r=await fetch(SB+'/bdl_transactions?'+sel+'&meta->cycle=not.is.null&limit=600',{headers:H()});
       if(r.ok)rows=await r.json();else{r=await fetch(SB+'/bdl_transactions?'+sel+'&limit=800',{headers:H()});rows=r.ok?await r.json():[];}
-      rows=rows.filter(function(t){return t.meta&&t.meta.cycle&&t.meta.cycle.id;});
+      rows=rows.filter(function(t){return t.meta&&t.meta.cycle&&t.meta.cycle.id;});CY.allRows=rows;
       var names={};try{var ids=[];rows.forEach(function(t){if(t.customer_id&&ids.indexOf(t.customer_id)<0)ids.push(t.customer_id);});
         if(ids.length){var rc=await fetch(SB+'/bdl_customers?select=id,name&id=in.('+ids.slice(0,150).join(',')+')',{headers:H()});if(rc.ok)(await rc.json()).forEach(function(x){names[x.id]=x.name;});}}catch(e){}
-      sc.innerHTML=allH(group(rows),names);}catch(e){sc.innerHTML='<div class="em">تعذّر التحميل — تحقق من الاتصال</div>';}}
+      CY.allNames=names;sc.innerHTML=allH(group(rows),names);
+      sc.onclick=function(e){var cd=e.target.closest('.cd[data-cid]');if(!cd)return;var cid=cd.dataset.cid,txs=(CY.allRows||[]).filter(function(t){return t.meta.cycle.id===cid;});if(!txs.length)return;
+        var gk=null;try{var t0=txs[0];mruGroups().forEach(function(g){if(g.customer_id===t0.customer_id&&txs.some(function(t){return t.status==='open'||t.status==='settling';}))gk=gKey(g);});}catch(x){}
+        /* إن كانت التسوية ما زالت مفتوحة نستعمل كائناتها نفسها حتى لا يتعارض الحفظ */
+        var go=function(list){d.parentNode&&d.parentNode.removeChild(d);openPanel(list,names[txs[0].customer_id]||'زبون',gk);};
+        if(gk){var g=mruGroups().find(function(x){return gKey(x)===gk;});(TXCACHE[gk]?Promise.resolve():expandFetch(g,gk)).then(function(){var live=(TXCACHE[gk]||[]).filter(function(t){return t.meta&&t.meta.cycle&&t.meta.cycle.id===cid;});go(live.length?TXCACHE[gk]:txs);},function(){go(txs);});}else go(txs);};}catch(e){sc.innerHTML='<div class="em">تعذّر التحميل — تحقق من الاتصال</div>';}}
   function group(rows){var g={},ord=[];rows.forEach(function(t){var c=t.meta.cycle,x=g[c.id];if(!x){x=g[c.id]={c:c,aoa:0,mru:0,paid:0,cust:t.customer_id,at:t.created_at,settled:true};ord.push(c.id);}
       if(String(c.upd||'')>String(x.c.upd||''))x.c=c;
       if(t.ccy==='MRU')x.mru+=Number(t.amount)||0;if((t.settle_ccy||'AOA')==='AOA')x.aoa+=Number(t.settle_amount)||0;
       x.paid+=Number(t.meta.paid_aoa)||0;if(t.status!=='settled')x.settled=false;if(t.created_at<x.at)x.at=t.created_at;});
     return ord.map(function(id){var x=g[id];x.k=calc(x.c,x.aoa,x.mru);return x;});}
   CY.group=group;
-  function allH(list,names){if(!list.length)return '<div class="em">لا توجد دورات بعد — افتح تسوية وأدخل سعر المورد وسعر دبي في بطاقة «دورة USDT».</div>';
+  function allH(list,names){if(!list.length)return '<div class="em">لا توجد دورات بعد — من تبويب «العمليات» اضغط «فتح الدورة» أمام الزبون وأدخل سعر المورد وسعر دبي.</div>';
     var open=list.filter(function(x){return !x.k.done;}),uL=0,mL=0,pE=0,pR=0;
     list.forEach(function(x){if(!x.k.done){uL+=x.k.usdtLeft;mL+=x.k.mruLeft;pE+=x.k.profitExp;}else pR+=x.k.profitReal;});
     var h='<div class="tot"><div><small>دورات مفتوحة</small><b>'+open.length+' / '+list.length+'</b></div><div><small>ربح متوقع (المفتوحة)</small><b>'+f(pE,0)+' MRU</b></div><div><small>USDT باقٍ عند الموردين</small><b>'+f(uL,2)+'</b></div><div><small>أوقية باقية من دبي</small><b>'+f(mL,0)+'</b></div><div style="grid-column:1/3"><small>ربح فعلي (المكتملة)</small><b>'+f(pR,0)+' MRU</b></div></div>';
     list.forEach(function(x){var k=x.k,d=new Date(x.at),ds=('0'+d.getDate()).slice(-2)+'/'+('0'+(d.getMonth()+1)).slice(-2)+'/'+d.getFullYear(),cp=x.aoa>0?Math.round(x.paid/x.aoa*100):0;
-      h+='<div class="cd'+(k.done?' dn':'')+'"><div class="h"><b>'+esc(names[x.cust]||'زبون')+'</b><span>'+ds+' · '+(k.done?'مكتملة':'مفتوحة')+'</span></div>'
+      h+='<div class="cd'+(k.done?' dn':'')+'" data-cid="'+esc(x.c.id)+'"><div class="h"><b>'+esc(names[x.cust]||'زبون')+'</b><span>'+ds+' · '+(k.done?'مكتملة':'مفتوحة')+'</span></div>'
         +'<div class="l"><span>الزبون — كوانزا مدفوعة</span><b class="'+(cp>=100?'g':'a')+'">'+f(x.paid,0)+' / '+f(x.aoa,0)+'</b></div>'
         +'<div class="l"><span>المورد — USDT @ '+f(k.rs,0)+'</span><b class="'+(k.usdtLeft<1?'g':'a')+'">'+f(k.usdtGot,2)+' / '+f(k.usdtExp,2)+'</b></div>'
         +'<div class="l"><span>USDT مباع لدبي</span><b class="'+(k.usdtHeld<1?'g':'a')+'">'+f(k.usdtOut,2)+' / '+f(k.usdtGot,2)+'</b></div>'
@@ -260,8 +300,9 @@
         +'<div class="l"><span>'+(k.done?'الربح الفعلي':'الربح المتوقع')+' · هامش '+f(k.margin,2)+'%</span><b class="'+((k.done?k.profitReal:k.profitExp)<0?'r':'g')+'">'+f(k.done?k.profitReal:k.profitExp,0)+' MRU</b></div></div>';});
     return h;}
   CY.allH=allH;
-  function init(){var ov=$('ovl-settle');if(!ov)return;var was=false;
-    new MutationObserver(function(){var on=ov.classList.contains('on');if(on&&!was){was=true;setTimeout(load,350);}else if(!on&&was){was=false;CY.c=null;}}).observe(ov,{attributes:true,attributeFilter:['class']});
-    var due=$('ssDue');if(due)new MutationObserver(function(){if(CY.c&&!document.activeElement.closest('#cyBox'))render();}).observe(due,{childList:true,characterData:true,subtree:true});}
+  function init(){if(!$('opBridge'))return;
+    try{if(typeof loadGroups==='function'&&!loadGroups._cy){var o=loadGroups;window.loadGroups=async function(){var r=await o.apply(this,arguments);try{hub();}catch(e){}return r;};window.loadGroups._cy=true;}}catch(e){}
+    var v=$('v-ops');if(v)new MutationObserver(function(){if(v.style.display!=='none')hub();}).observe(v,{attributes:true,attributeFilter:['style']});
+    hub();setTimeout(hub,1500);}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();

@@ -89,7 +89,7 @@ module.exports = function (app, ctx) {
     } catch (e) { return ''; } finally { clearTimeout(tm); } }
 
   async function send(chatId, opts) { opts = opts || {}; const F = await facts();
-    if (!F.cycles.length) { if (opts.manual) await tg('sendMessage', { chat_id: chatId, text: 'لا توجد دورات مسجلة بعد. افتح تسوية وأدخل سعر المورد وسعر دبي في بطاقة «دورة USDT».' }); return { sent: false, empty: true }; }
+    if (!F.cycles.length) { if (opts.manual) await tg('sendMessage', { chat_id: chatId, text: 'لا توجد دورات مسجلة بعد. من تبويب «العمليات» اضغط «فتح الدورة» وأدخل سعر المورد وسعر دبي.' }); return { sent: false, empty: true }; }
     if (!opts.manual && !F.open && !F.today.closed && !F.today.usdt && !F.today.mru) return { sent: false, quiet: true }; /* لا جديد — لا إزعاج */
     const msg = text(F, await claudeNote(F));
     const ok = await tg('sendMessage', { chat_id: chatId, text: msg.slice(0, 4000), parse_mode: 'HTML' });
