@@ -92,6 +92,29 @@ function init(){
     if(zf.size>220*1048576&&!confirm('الملف كبير ('+Math.round(zf.size/1048576)+' MB) وقد لا يتحمله الهاتف.\nالأفضل تصدير «With selected media» للفترة فقط.\n\nالمتابعة؟'))return;
     zipFlow(zf,plain);};
   /* ═══ 1374: استيراد محادثة واتساب بشاشة كاملة — فتح ← تفكيك ← قراءة وتحقق، بشريط تقدم وعدّادات حية ═══ */
+/* ═══ تاريخ كل مرفق من نص المحادثة نفسه (_chat.txt) — المصدر الوحيد الموثوق؛ اسم الملف يُقبل فقط بصيغة واتساب الصريحة، ولا يُخمَّن تاريخ من أرقام مرجع ═══ */
+  function waStamp(nm){var m=String(nm).match(/(?:PHOTO|DOC|GIF|VIDEO|PTT|AUDIO)-(20\d{2})-(\d{2})-(\d{2})-(\d{2})-(\d{2})-(\d{2})/i),hasT=true;
+    if(!m){m=String(nm).match(/(?:IMG|DOC|VID|PTT|AUD)-(20\d{2})(\d{2})(\d{2})-WA\d+/i);hasT=false;}
+    if(!m)return 0;var y=+m[1],mo=+m[2],d=+m[3],h=hasT?+m[4]:12,mi=hasT?+m[5]:0,s=hasT?+m[6]:0;
+    if(mo<1||mo>12||d<1||d>31||h>23||mi>59)return 0;var t=new Date(y,mo-1,d,h,mi,s).getTime();
+    return (isNaN(t)||t>Date.now()+864e5)?0:t;}
+  async function waChatIndex(z){var map={};try{var ce=null;z.forEach(function(p,en){if(en.dir)return;if(/(^|\/)_chat\.txt$/i.test(p))ce=en;else if(!ce&&/\.txt$/i.test(p))ce=en;});
+      if(!ce)return map;var txt=await ce.async('string');
+      var re=/^[\u200e\u200f\ufeff\s]*\[?(\d{1,4})[\/.\-](\d{1,2})[\/.\-](\d{2,4}),?\s+(\d{1,2})[:.](\d{2})(?:[:.](\d{2}))?[\s\u202f\u00a0]*([APap])?/;
+      var rows=[],all=[],cur=null,a13=false,b13=false;
+      txt.split(/\r?\n/).forEach(function(line){var m=line.match(re);
+        if(m){cur={a:+m[1],b:+m[2],c:+m[3],h:+m[4],mi:+m[5],s:+(m[6]||0),ap:(m[7]||'').toLowerCase(),y4:m[1].length===4};all.push(cur);if(!cur.y4){if(cur.a>12)a13=true;if(cur.b>12)b13=true;}}
+        if(!cur)return;
+        var f=line.match(/<[^:<>]{2,24}:\s*([^<>]+?\.(?:jpe?g|png|webp|heic|pdf))\s*>/i)||line.match(/:\s[\u200e\u200f]*([^:\n]+?\.(?:jpe?g|png|webp|heic|pdf))\s*\(/i);
+        if(f)rows.push({n:f[1].replace(/[\u200e\u200f]/g,'').trim().toLowerCase(),d:cur});});
+      var mk=function(d,mode){var y,mo,da;if(d.y4){y=d.a;mo=d.b;da=d.c;}else{y=d.c<100?2000+d.c:d.c;if(mode==='mdy'){mo=d.a;da=d.b;}else{da=d.a;mo=d.b;}}
+        var h=d.h;if(d.ap==='p'&&h<12)h+=12;if(d.ap==='a'&&h===12)h=0;if(mo<1||mo>12||da<1||da>31)return 0;return new Date(y,mo-1,da,h,d.mi,d.s).getTime()||0;};
+      var inv=function(mode){var n=0,p=0;all.forEach(function(d){var t=mk(d,mode);if(!t){n+=3;return;}if(t<p)n++;p=t;});return n;};
+      var mode=a13?'dmy':b13?'mdy':(inv('mdy')<inv('dmy')?'mdy':'dmy'); /* عند الالتباس: الترتيب الزمني للمحادثة يحسم يوم/شهر */
+      rows.forEach(function(r){var t=mk(r.d,mode);if(t&&t<=Date.now()+864e5)map[r.n]=t;});
+    }catch(e){}return map;}
+  function waAge(ts){if(!ts)return 9999;var a=new Date();a.setHours(0,0,0,0);var b=new Date(ts);b.setHours(0,0,0,0);return Math.max(0,Math.round((a-b)/864e5));}
+  
   var ZV=null,ZS={};
   function zEl(){if(ZV)return ZV;ZV=document.createElement('div');ZV.id='shZip';document.body.appendChild(ZV);
     ZV.addEventListener('click',function(e){var b=e.target.closest('[data-z]');if(!b||b.disabled)return;var k=b.dataset.z;
@@ -105,7 +128,7 @@ function init(){
     if(s.phase==='open')h+='<div class="zm"><span class="zsp"></span><b>جارٍ فتح الملف…</b><small>'+esc(s.size||'')+' — قد يستغرق لحظات للملفات الكبيرة</small></div>';
     if(s.phase==='err')h+='<div class="zm"><b style="color:#B00020">'+esc(s.err)+'</b></div><button type="button" class="zb" data-z="x">إغلاق</button>';
     if(s.phase==='pick'){var c=function(a){return s.list.filter(function(x){return x.age<=a;}).length;};
-      h+='<div class="zh">اختر الفترة التي تريد إيصالاتها</div><div class="zg">'+[[0,'اليوم'],[1,'اليوم وأمس'],[7,'آخر 7 أيام'],[99999,'كل المحادثة']].map(function(o){var n=c(o[0]);return '<button type="button" data-z="'+o[0]+'"'+(n?'':' disabled')+'><b>'+n+'</b><small>'+o[1]+'</small></button>';}).join('')+'</div><div class="zn">المكرر والمستخدم في تسوية سابقة يُرفض تلقائيًا. الحد 300 إيصال في الدفعة.</div>';}
+      h+='<div class="zh">اختر الفترة التي تريد إيصالاتها</div><div class="zg">'+[[0,'اليوم'],[1,'اليوم وأمس'],[7,'آخر 7 أيام'],[99999,'كل المحادثة']].map(function(o){var n=c(o[0]);return '<button type="button" data-z="'+o[0]+'"'+(n?'':' disabled')+'><b>'+n+'</b><small>'+o[1]+'</small></button>';}).join('')+'</div><div class="zn">الفترة تُحسب من <b>تاريخ إرسال الرسالة في واتساب</b> لا من تاريخ الإيصال نفسه — إيصال قديم أُرسل اليوم يظهر ضمن اليوم، وتاريخه الحقيقي يُعرض على سطره بعد القراءة.'+(s.undated?'<br><b style="color:#B00020">'+s.undated+' مرفقًا بلا تاريخ معروف</b> — لا تدخل في أي فترة، تظهر فقط في «كل المحادثة».':'')+'<br>المكرر والمستخدم في تسوية سابقة يُرفض تلقائيًا. الحد 300 إيصال في الدفعة.</div>';}
     if(s.phase==='work'){var n=s.pickN||1,pct=Math.round(((s.done1||0)*0.25+(s.done2||0)*0.75)/n*100);if(s.finished)pct=100;
       h+='<div class="zp"><i style="width:'+pct+'%"></i></div><div class="zs">'+(s.finished?(s.stop?'أُوقف — ':'اكتمل — ')+'تحقق من النتيجة':s.stage==='unzip'?'جارٍ تفكيك الإيصالات من الملف…':'جارٍ القراءة والتحقق من كل إيصال…')+' <b>'+pct+'%</b></div>'+
         (s.curName&&!s.finished?'<div class="zf">'+esc(s.curName)+'</div>':'')+
@@ -115,19 +138,19 @@ function init(){
     zEl().innerHTML=h+'</div>';ZV.classList.add('on');}
   async function zipFlow(zf,plain){ZS={name:zName(zf.name),size:Math.round(zf.size/1048576*10)/10+' MB',phase:'open',plain:plain};zPaint();
     try{if(!window.JSZip)await new Promise(function(res,rej){var sc=document.createElement('script');sc.src='https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';sc.onload=res;sc.onerror=function(){rej(new Error('تعذّر تحميل قارئ ZIP — تحقق من الاتصال'));};document.head.appendChild(sc);});
-      var z=await window.JSZip.loadAsync(zf),list=[],t0=new Date();t0.setHours(0,0,0,0);
+      var z=await window.JSZip.loadAsync(zf),list=[],idx=await waChatIndex(z);
       z.forEach(function(p,en){if(en.dir)return;var nm=p.split('/').pop();if(!isDoc(nm,'')||/STICKER|-STK-/i.test(nm))return;
-        var m=nm.match(/(20\d{2})-(\d{2})-(\d{2})/)||nm.match(/(20\d{2})(\d{2})(\d{2})/),d=m?new Date(+m[1],+m[2]-1,+m[3]):(en.date||null);
-        list.push({nm:nm,en:en,age:d?Math.round((t0-new Date(d).setHours(0,0,0,0))/864e5):9999});});
+        var ts=idx[nm.toLowerCase()]||waStamp(nm)||0;list.push({nm:nm,en:en,ts:ts,age:waAge(ts)});});
+      ZS.undated=list.filter(function(x){return !x.ts;}).length;
       if(!list.length)throw new Error('لا صور ولا PDF في الملف — صدّر المحادثة مع الوسائط');
       ZS.list=list;ZS.total=list.length;ZS.phase='pick';zPaint();
     }catch(e){ZS.phase='err';ZS.err=(e&&e.message)||'تعذّر فتح الملف';zPaint();}}
   function sleep(ms){return new Promise(function(r){setTimeout(r,ms);});}
-  async function zRun(maxAge){var s=ZS,pick=s.list.filter(function(x){return x.age<=maxAge;}).sort(function(a,b){return a.age-b.age;}).slice(0,300);
+  async function zRun(maxAge){var s=ZS,pick=s.list.filter(function(x){return x.age<=maxAge;}).sort(function(a,b){return (b.ts||0)-(a.ts||0);}).slice(0,300);
     if(!pick.length)return;s.phase='work';s.stage='unzip';s.pickN=pick.length;s.done1=0;s.done2=0;s.ok=0;s.rev=0;s.dup=0;s.sum=0;s.stop=false;zPaint();
     var out=[];
     for(var i=0;i<pick.length&&!s.stop;i++){s.curName=pick[i].nm;try{var bl=await pick[i].en.async('blob'),ex=pick[i].nm.split('.').pop().toLowerCase();
-        out.push(new File([bl],pick[i].nm,{type:ex==='pdf'?'application/pdf':ex==='png'?'image/png':ex==='webp'?'image/webp':'image/jpeg'}));}catch(e){s.rev++;}
+        var nf=new File([bl],pick[i].nm,{type:ex==='pdf'?'application/pdf':ex==='png'?'image/png':ex==='webp'?'image/webp':'image/jpeg',lastModified:pick[i].ts||Date.now()});nf._waTs=pick[i].ts||0;out.push(nf);}catch(e){s.rev++;}
       s.done1=i+1;if(i%3===0||i===pick.length-1)zPaint();}
     s.stage='read';s.pickN=out.length;s.done1=out.length;zPaint();
     if(pkFor==='bulkSup'){ /* المورد: المطابقة الجماعية تقرأ وتطابق بنفسها */
@@ -205,7 +228,7 @@ function init(){
     if((m=d.match(/(20\d{2})[-\/.](\d{1,2})[-\/.](\d{1,2})(?:[ T]+(\d{1,2}):(\d{2})(?::(\d{2}))?)?/)))t=new Date(+m[1],+m[2]-1,+m[3],+(m[4]||0),+(m[5]||0),+(m[6]||0)).getTime();
     else if((m=d.match(/(\d{1,2})[-\/.](\d{1,2})[-\/.](20\d{2}|\d{2})(?:[ T,]+(\d{1,2}):(\d{2})(?::(\d{2}))?)?/)))t=new Date(+(m[3].length===2?'20'+m[3]:m[3]),+m[2]-1,+m[1],+(m[4]||0),+(m[5]||0),+(m[6]||0)).getTime();
     var hasTime=!!(m&&m[4]!=null&&(m.index!=null));
-    var n=String(((r.orig||r.file)||{}).name||''),f=n.match(/(20\d{2})-?(\d{2})-?(\d{2})[-_ T]?(\d{2})[-:]?(\d{2})[-:]?(\d{2})/),ft=f?new Date(+f[1],+f[2]-1,+f[3],+f[4],+f[5],+f[6]).getTime():0;
+    var of=(r.orig||r.file)||{},ft=waStamp(of.name||'')||of._waTs||0;
     if(!t||isNaN(t)){t=ft;hasTime=!!ft;}else if(!hasTime&&ft&&Math.abs(ft-t)<2*864e5){t=ft;hasTime=true;} /* تاريخ بلا وقت: يُكمَّل الوقت من ختم الملف */
     return {t:t||0,hasTime:hasTime};}
   function whenTxt(k){if(!k.t)return '';var d=new Date(k.t),z=function(x){return (x<10?'0':'')+x;};
