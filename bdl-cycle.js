@@ -300,9 +300,11 @@
         +'<div class="l"><span>'+(k.done?'الربح الفعلي':'الربح المتوقع')+' · هامش '+f(k.margin,2)+'%</span><b class="'+((k.done?k.profitReal:k.profitExp)<0?'r':'g')+'">'+f(k.done?k.profitReal:k.profitExp,0)+' MRU</b></div></div>';});
     return h;}
   CY.allH=allH;
-  function init(){if(!$('opBridge'))return;
-    try{if(typeof loadGroups==='function'&&!loadGroups._cy){var o=loadGroups;window.loadGroups=async function(){var r=await o.apply(this,arguments);try{hub();}catch(e){}return r;};window.loadGroups._cy=true;}}catch(e){}
-    var v=$('v-ops');if(v)new MutationObserver(function(){if(v.style.display!=='none')hub();}).observe(v,{attributes:true,attributeFilter:['style']});
-    hub();setTimeout(hub,1500);}
+  /* 1398: لا التفاف على loadGroups ولا أي لمس لتبويب «التسوية» — اللوحة تُحدَّث فقط عند ظهور تبويب «العمليات» */
+  function init(){var v=$('v-ops');if(!v||!$('opBridge'))return;
+    var draw=function(){try{if(v.style.display!=='none')hub();}catch(e){}};
+    new MutationObserver(draw).observe(v,{attributes:true,attributeFilter:['style']});
+    document.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('.tabs button[data-tab="ops"]');if(b)setTimeout(draw,600);});
+    draw();}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();
