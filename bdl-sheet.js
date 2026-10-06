@@ -69,6 +69,9 @@ function init(){
   '#bulkBox .mcr{display:flex;align-items:center;gap:8px;background:#FFF9E8;border:1px solid #EAD48A;border-inline-start:6px solid #E0A300;margin-bottom:6px;padding:8px 10px}#bulkBox .mcr>div{flex:1;min-width:0}#bulkBox .mcr b{display:block;font-family:"IBM Plex Mono",monospace;font-size:15px;color:#0B2447;direction:ltr;text-align:start}#bulkBox .mcr span{display:block;font-size:10.5px;color:#8A6100;direction:ltr;text-align:start}#bulkBox .mcr button{flex:none;height:40px;padding:0 14px;border:1.5px solid #0B2F70;background:#fff;color:#0B2F70;font-family:inherit;font-weight:800;font-size:12.5px;cursor:pointer}'+
   '#bulkBox .mc{display:flex;flex-wrap:wrap;gap:6px}#bulkBox .mc span{background:#FFF9E8;border:1px solid #EAD48A;padding:4px 8px;font-size:11px;font-weight:700;color:#8A6100;font-family:"IBM Plex Mono",monospace;direction:ltr}'+
   '#bulkBox .mmR{width:100%;height:42px;margin-top:10px;border:1.5px solid #0B2F70;background:#fff;color:#0B2F70;font-weight:800;font-size:13px;font-family:inherit;cursor:pointer}'+
+  '#toast,.toast{z-index:100050!important;bottom:calc(96px + env(safe-area-inset-bottom))!important}'+
+  '#bulkBox button,#shUp button,#shFoot button,#shOps button{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;touch-action:manipulation}'+
+  '#shStor{display:none;margin:0 0 12px;padding:11px 12px;background:#FFF1F1;border:1.5px solid #B00020;color:#8A1A2B;font-size:12.5px;line-height:1.7}#shStor b{display:block;font-size:13.5px;margin-bottom:2px}#shStor button{margin-top:8px;height:42px;padding:0 14px;border:0;background:#B00020;color:#fff;font-family:inherit;font-weight:800;font-size:13px;cursor:pointer}'+
   '#shFoot{position:sticky;bottom:0;z-index:6;display:grid;grid-template-columns:2fr 3fr;gap:8px;margin:14px -16px 0;padding:10px 16px calc(10px + env(safe-area-inset-bottom));background:#fff;border-top:1px solid var(--line);box-shadow:0 -6px 16px rgba(11,47,112,.08)}'+
   '#shFoot button{width:100%!important;height:54px!important;margin:0!important;font-size:13.5px!important;line-height:1.3;white-space:normal}';
   document.head.appendChild(st);
@@ -77,8 +80,9 @@ function init(){
   var hero=document.createElement('div');hero.id='shHero';
   hero.innerHTML='<div class="sub" id="shSub"></div><div class="cells"><div class="due" id="shDueC"><small>المستحق</small><b id="shDue">—</b></div><div><small>المدفوع من الإيصالات</small><b id="shPaid">0</b></div><div class="pct"><small>التغطية</small><b id="shPct">—</b></div></div><div class="bar"><i id="shBar"></i></div><div class="msg" id="shMsg"></div>';
   var steps=document.createElement('div');steps.id='shSteps';
+  var storBox=document.createElement('div');storBox.id='shStor';
   var opsBox=document.createElement('div');opsBox.id='shOps';opsBox.style.display='none';
-  var ssum=sh.querySelector('.ssum');sh.insertBefore(hero,ssum);sh.insertBefore(steps,ssum);sh.insertBefore(opsBox,ssum);
+  var ssum=sh.querySelector('.ssum');sh.insertBefore(hero,ssum);sh.insertBefore(storBox,ssum);sh.insertBefore(steps,ssum);sh.insertBefore(opsBox,ssum);
   opsBox.onclick=function(e){var b=e.target.closest('button[data-id]');if(b)dropOp(b.dataset.id,b);};
   $('shDueC').onclick=function(){try{if(typeof ssDueEdit==='function')ssDueEdit();}catch(e){}};
   $('ssN').parentNode.style.display='none';$('ssIn').parentNode.style.display='none';
@@ -333,9 +337,34 @@ function init(){
         SHM.readDone++;if(onProg)try{onProg(SHM.readDone,fresh.length);}catch(e){}matchAll();mRender();}}
     await Promise.all([worker(),worker(),worker()]);
     SHM.reading=false;matchAll();mRender();try{renderRcpts();updMatch();}catch(e){}}
+  /* ملفات هذه الجلسة تبقى في الذاكرة: إيصال حُفظ للتوّ يُفتح حتى لو لم تُخزَّن صورته في المخزن */
+  var KEEP=[];window.__shKeep=KEEP;
+  function keepScan(){try{(typeof RCPTS!=='undefined'?RCPTS:[]).forEach(function(r){if(r&&r.url&&!r._tmp&&KEEP.indexOf(r)<0)KEEP.push(r);});if(KEEP.length>600)KEEP.splice(0,KEEP.length-600);}catch(e){}}
+  function keepFind(row){var rf=nref(row.txn_ref),a=amt(row.amount),hit=null;
+    if(rf)hit=KEEP.find(function(r){return r.parsed&&nref(r.parsed.ref)===rf;});
+    if(!hit&&a){var c=KEEP.filter(function(r){return r.parsed&&amt(r.parsed.amount)===a&&(!rf||!nref(r.parsed.ref));});if(c.length===1)hit=c[0];}
+    return hit;}
+  async function openStored(path){ /* فتح من المخزن مع سبب واضح عند الفشل */
+    var base=SB.replace('/rest/v1','')+'/storage/v1/object/',hd={apikey:ANON,Authorization:'Bearer '+((typeof TOK!=='undefined'&&TOK)||ANON)},r=null;
+    try{r=await fetch(base+'authenticated/receipts/'+path,{headers:hd});if(!r.ok)r=await fetch(base+'public/receipts/'+path);}catch(e){say('تعذّر الاتصال بمخزن الصور');return;}
+    if(!r.ok){say('تعذّر فتح الصورة من المخزن (خطأ '+r.status+')');return;}
+    var bl=await r.blob();showFile(URL.createObjectURL(bl),/pdf/i.test(bl.type)||/\.pdf$/i.test(path),path.split('/').pop());}
   function openCust(c){if(!c)return;try{
-      if(c.kind==='new'){var ix=RCPTS.indexOf(c.r);if(ix>=0)rcptView(ix,false);return;}
-      var img=c.row.ocr&&c.row.ocr.image;if(img&&typeof ssOpenImg==='function')ssOpenImg(img);else say('هذا الإيصال حُفظ بلا صورة — لا ملف لفتحه');}catch(e){say('تعذّر فتح الإيصال');}}
+      if(c.kind==='new'){var ix=RCPTS.indexOf(c.r);if(ix>=0){rcptView(ix,false);return;}showFile(c.r.url,c.r.isPdf,((c.r.orig||c.r.file)||{}).name);return;}
+      var k=keepFind(c.row);if(k){showFile(k.url,k.isPdf,((k.orig||k.file)||{}).name);return;}
+      var img=c.row.ocr&&c.row.ocr.image;if(img){openStored(img);return;}
+      say(STOR.bad?'لا صورة لهذا الإيصال — مخزن الصور غير مفعّل (انظر التنبيه الأحمر أعلى الشاشة)':'هذا الإيصال حُفظ بلا صورة — لا ملف لفتحه');
+      if(STOR.bad){try{var sb=$('shStor');if(sb&&sb.scrollIntoView)sb.scrollIntoView({block:'center'});}catch(e2){}}}catch(e){say('تعذّر فتح الإيصال');}}
+  /* فحص مخزن الصور مرة واحدة: رفع ملف اختبار صغير — إن رُفض فالصور لا تُحفظ، ويظهر تنبيه مع كود الإصلاح */
+  var STOR={done:false,bad:false,code:0};
+  var STOR_SQL="insert into storage.buckets (id,name,public) values ('receipts','receipts',true) on conflict (id) do nothing;\ndrop policy if exists \"receipts_read\" on storage.objects;\ndrop policy if exists \"receipts_write\" on storage.objects;\ndrop policy if exists \"receipts_update\" on storage.objects;\ncreate policy \"receipts_read\" on storage.objects for select using (bucket_id='receipts');\ncreate policy \"receipts_write\" on storage.objects for insert to authenticated with check (bucket_id='receipts');\ncreate policy \"receipts_update\" on storage.objects for update to authenticated using (bucket_id='receipts');";
+  async function storProbe(){if(STOR.done)return;STOR.done=true;
+    try{var r=await fetch(SB.replace('/rest/v1','')+'/storage/v1/object/receipts/settle/_probe.txt',{method:'POST',headers:{apikey:ANON,Authorization:'Bearer '+((typeof TOK!=='undefined'&&TOK)||ANON),'Content-Type':'text/plain','x-upsert':'true'},body:'ok'});
+      STOR.code=r.status;STOR.bad=!(r.ok||r.status===409);}catch(e){STOR.done=false;return;}
+    var el=$('shStor');if(!el)return;
+    if(STOR.bad){el.innerHTML='<b>تنبيه: صور الإيصالات لا تُحفظ (خطأ المخزن '+STOR.code+')</b>الإيصالات تُقيَّد بمبالغها ومراجعها، لكن صورها تضيع بعد الحفظ فلا يمكن فتحها لاحقًا. الإصلاح مرة واحدة: انسخ الكود والصقه في Supabase ← SQL Editor ← Run.<br><button type="button" id="shStorB">نسخ كود الإصلاح</button>';el.style.display='block';
+      $('shStorB').onclick=async function(){try{await navigator.clipboard.writeText(STOR_SQL);say('نُسخ الكود — الصقه في Supabase SQL Editor');}catch(e){prompt('انسخ الكود:',STOR_SQL);}};}
+    else el.style.display='none';}
   function unlink(it){(it.to||[]).forEach(function(c){if(c.kind==='new'){try{rcptSupClear(RCPTS.indexOf(c.r));}catch(e){}}else if(!c.persisted)delete SHM.saved[c.row.id];});it.to=null;it.how='';it.covers=null;}
   if($('bulkBox'))$('bulkBox').addEventListener('click',function(e){var b=e.target.closest('[data-m]');if(!b||b.tagName==='SELECT')return;var it=SHM.items[+b.dataset.i],m=b.dataset.m;
     if(m==='cv'){openCust((SHM.pool||[])[+b.dataset.c]);return;}
@@ -368,7 +397,7 @@ function init(){
   new MutationObserver(function(){if(ov.classList.contains('on')&&!SHM._open){SHM._open=true;SHM.items=[];SHM.saved={};mRender();}else if(!ov.classList.contains('on'))SHM._open=false;}).observe(ov,{attributes:true,attributeFilter:['class']});
 
   if(typeof window.renderRcpts==='function'&&!window.renderRcpts._sorted){var _rr=window.renderRcpts;
-    window.renderRcpts=function(){try{if(typeof RCPTS!=='undefined'&&RCPTS.length&&!(typeof BULK!=='undefined'&&BULK&&BULK.length)){
+    window.renderRcpts=function(){try{keepScan();}catch(e){}try{if(typeof RCPTS!=='undefined'&&RCPTS.length&&!(typeof BULK!=='undefined'&&BULK&&BULK.length)){
         RCPTS.forEach(function(r){var k=rcKey(r);r._t=k.t;r._when=whenTxt(k);});
         RCPTS.forEach(function(r,i){if(r._ord==null)r._ord=(window.__shOrd=(window.__shOrd||0)+1);});
         RCPTS.sort(function(a,b){return (b._t||0)-(a._t||0)||a._ord-b._ord;});}}catch(e){}
@@ -388,7 +417,7 @@ function init(){
   new MutationObserver(function(){if(rvOn())trap();}).observe(document.body,{subtree:true,attributes:true,attributeFilter:['class']});
   var mo=new MutationObserver(paint);
   ['ssDue','ssPaid','ssPct','ssDiff','ssN','ssIn','ssPrevR','ssMatch'].forEach(function(i){var e=$(i);if(e)mo.observe(e,{childList:true,characterData:true,subtree:true,attributes:i==='ssMatch',attributeFilter:i==='ssMatch'?['class']:undefined});});
-  new MutationObserver(function(){if(ov.classList.contains('on')){trap();if(pv)pv.classList.add('shCol');sh.scrollTop=0;paint();}}).observe(ov,{attributes:true,attributeFilter:['class']});
+  new MutationObserver(function(){if(ov.classList.contains('on')){trap();try{storProbe();}catch(e){}if(pv)pv.classList.add('shCol');sh.scrollTop=0;paint();}}).observe(ov,{attributes:true,attributeFilter:['class']});
   paint();
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
