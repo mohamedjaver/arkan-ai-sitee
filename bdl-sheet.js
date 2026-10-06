@@ -359,10 +359,12 @@ function init(){
   var STOR={done:false,bad:false,code:0};
   var STOR_SQL="insert into storage.buckets (id,name,public) values ('receipts','receipts',true) on conflict (id) do nothing;\ndrop policy if exists \"receipts_read\" on storage.objects;\ndrop policy if exists \"receipts_write\" on storage.objects;\ndrop policy if exists \"receipts_update\" on storage.objects;\ncreate policy \"receipts_read\" on storage.objects for select using (bucket_id='receipts');\ncreate policy \"receipts_write\" on storage.objects for insert to authenticated with check (bucket_id='receipts');\ncreate policy \"receipts_update\" on storage.objects for update to authenticated using (bucket_id='receipts');";
   async function storProbe(){if(STOR.done)return;STOR.done=true;
-    try{var r=await fetch(SB.replace('/rest/v1','')+'/storage/v1/object/receipts/settle/_probe.txt',{method:'POST',headers:{apikey:ANON,Authorization:'Bearer '+((typeof TOK!=='undefined'&&TOK)||ANON),'Content-Type':'text/plain','x-upsert':'true'},body:'ok'});
+    try{ /* 1384: الاختبار بصورة PNG حقيقية (1×1) — الحاوية تقبل الصور و PDF فقط، وملف نصي كان يُرفض فيُظهر تنبيهًا كاذبًا */
+      var b64='iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',bin=atob(b64),u8=new Uint8Array(bin.length);for(var i=0;i<bin.length;i++)u8[i]=bin.charCodeAt(i);
+      var r=await fetch(SB.replace('/rest/v1','')+'/storage/v1/object/receipts/settle/_probe.png',{method:'POST',headers:{apikey:ANON,Authorization:'Bearer '+((typeof TOK!=='undefined'&&TOK)||ANON),'Content-Type':'image/png','x-upsert':'true'},body:new Blob([u8],{type:'image/png'})});
       STOR.code=r.status;STOR.bad=!(r.ok||r.status===409);STOR.msg='';
       if(STOR.bad){try{var ej=await r.json();STOR.msg=String(ej.message||ej.error||'').slice(0,140);var sc=String(ej.statusCode||'');
-          if(sc==='409'||/already exists|duplicate/i.test(STOR.msg))STOR.bad=false; /* الملف موجود = المخزن يعمل */
+          if(sc==='409'||/already exists|duplicate|mime type/i.test(STOR.msg))STOR.bad=false; /* الملف موجود = المخزن يعمل */
           STOR.why=/bucket not found/i.test(STOR.msg)||sc==='404'?'حاوية الصور «receipts» غير موجودة في Supabase':/row-level security|policy|unauthorized|403/i.test(STOR.msg+sc)?'الحاوية موجودة لكن صلاحيات الرفع غير مفعّلة':/jwt|token|signature/i.test(STOR.msg)?'توكن الجلسة مرفوض من المخزن — سجّل الخروج ثم الدخول':'';}catch(e){}}
     }catch(e){STOR.done=false;return;}
     var el=$('shStor');if(!el)return;
