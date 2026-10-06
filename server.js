@@ -1570,6 +1570,11 @@ try {
   require('./bdl-vault')(app, { express, jwt, JWT_SECRET, SB_REST, SB_PUB, tg,
     ownerToken: () => { const ts = Math.floor(Date.now() / 1000); return jwt.sign({ sub: phoneToUuid(OWNER_PHONES[0]), role: 'authenticated', aud: 'authenticated', arkan_role: 'owner', iat: ts, exp: ts + 300 }, JWT_SECRET); } });
 } catch (e) { console.warn('vault off:', e.message); }
+/* تقرير الدورات اليومي على Telegram + قراءة Claude (إضافي — يُحمَّل بعد vault ليبقى أمر «حذف» يعمل) */
+try {
+  require('./bdl-daily')(app, { jwt, JWT_SECRET, SB_REST, SB_PUB, tg, adminId: ENV.ADMIN_ID,
+    ownerToken: () => { const ts = Math.floor(Date.now() / 1000); return jwt.sign({ sub: phoneToUuid(OWNER_PHONES[0]), role: 'authenticated', aud: 'authenticated', arkan_role: 'owner', iat: ts, exp: ts + 300 }, JWT_SECRET); } });
+} catch (e) { console.warn('daily off:', e.message); }
 app.listen(ENV.PORT, () => {
   console.log(`▲ BDL STORE on :${ENV.PORT}`);
   console.log(`  Wallet: ${ENV.WALLET}`);
