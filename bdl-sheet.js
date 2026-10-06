@@ -252,7 +252,7 @@ function init(){
     return z(d.getDate())+'/'+z(d.getMonth()+1)+'/'+d.getFullYear()+(k.hasTime?' · '+z(d.getHours())+':'+z(d.getMinutes()):'');}
   window.__shRcKey=rcKey;
   /* ═══ 1377: محرك المطابقة — كل إيصال مورد يُطابَق آليًا مع إيصال زبون (الجديد والمحفوظ في التسوية)، والنتيجة أزواج خضراء واضحة ═══
-     الترتيب: ① رقم العملية نفسه  ② مبلغ فريد من الجهتين  ③ إيصال مورد واحد = مجموع عدة إيصالات زبون.  لا مطابقة بالتخمين. */
+     القاعدة: واحد لواحد فقط — ① رقم العملية نفسه  ② المبلغ نفسه (بعدد متساوٍ من الجهتين).  لا تجميع ولا تخمين. */
   var SHM={items:[],saved:{}};window.__SHM=SHM;
   function nref(v){v=String(v==null?'':v).replace(/\s+/g,'').toUpperCase();return v.length>=5?v:'';}
   function amt(v){v=Number(v)||0;return v>=100?v:0;} /* مبلغ أقل من 100 = قراءة خاطئة، لا يُطابَق به */
@@ -272,12 +272,7 @@ function init(){
     /* ② المبلغ: فريد من الجهتين فقط */
     var byS={};todo().forEach(function(it){var a=amt((it.parsed||{}).amount);if(a)(byS[a]=byS[a]||[]).push(it);});
     Object.keys(byS).forEach(function(a){var cs=free().filter(function(c){return c.amount===+a;});if(byS[a].length===cs.length)byS[a].forEach(function(it,k){link(it,[cs[k]],'amt');});});
-    /* ③ مجموع عدة إيصالات زبون (حتى 8 من أحدث 16) */
-    if(SHM.reading)return pool;
-    var resv={};todo().forEach(function(it){var a=amt((it.parsed||{}).amount);if(a)resv[a]=1;});SHM.items.forEach(function(it){if(!it.parsed&&!it.gone)resv._wait=1;});
-    if(!resv._wait)todo().forEach(function(it){var target=amt((it.parsed||{}).amount);if(!target)return;var pl=free().filter(function(c){return c.amount&&c.amount<target&&!resv[c.amount];}).slice(0,16),best=null;
-      (function rec(i,acc,sum){if(best)return;if(Math.abs(sum-target)<1&&acc.length>=2){best=acc.slice();return;}if(i>=pl.length||sum>target+0.5||acc.length>=8)return;rec(i+1,acc.concat([pl[i]]),sum+pl[i].amount);rec(i+1,acc,sum);})(0,[],0);
-      if(best)link(it,best,'sum');});
+    /* 1380: لا تجميع — قاعدة العمل: لكل إيصال زبون إيصال مورد واحد مقابل. ما لا يُطابَق واحدًا لواحد يبقى أحمر للمراجعة. */
     return pool;}
   function sameC(a,b){return a.kind===b.kind&&(a.kind==='new'?a.r===b.r:String(a.row.id)===String(b.row.id));}
   function holderOf(c){return SHM.items.find(function(x){return !x.gone&&x.to&&x.to.some(function(y){return sameC(y,c);});})||null;}
