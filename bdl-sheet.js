@@ -59,6 +59,12 @@ function init(){
   '#bulkBox .mp>button,#bulkBox .mu>button{border:0;background:none;color:#8A97AD;font-size:15px;cursor:pointer}'+
   '#bulkBox .mmT{margin:12px 0 6px;font-size:12px;font-weight:800;color:#B00020}'+
   '#bulkBox .mu{display:flex;align-items:center;gap:6px;background:#FFF5F6;border:1px solid #F1C4CA;border-inline-start:6px solid #B00020;margin-bottom:6px}#bulkBox .mu .sd{flex:1}#bulkBox .mu select{flex:none;width:112px;height:38px;border:1px solid #C9D6EA;background:#fff;font-family:inherit;font-size:12px;font-weight:700;color:#0B2F70}#bulkBox .mu>button{width:34px;height:38px}'+
+  '#bulkBox .mu2{background:#FFF5F6;border:1px solid #F1C4CA;border-inline-start:6px solid #B00020;margin-bottom:8px;padding:9px 10px}'+
+  '#bulkBox .mu2 .r1{display:grid;grid-template-columns:1.2fr 1fr;gap:8px}#bulkBox .mu2 label small{display:block;font-size:10.5px;font-weight:800;color:#8A1A2B;margin-bottom:3px}'+
+  '#bulkBox .mu2 input{width:100%;box-sizing:border-box;height:46px;border:1.5px solid #D9A5AE;background:#fff;padding:0 10px;font-family:"IBM Plex Mono",monospace;font-size:16px;font-weight:700;color:#0B2447;outline:none}#bulkBox .mu2 input:focus{border-color:#0B2F70}'+
+  '#bulkBox .mu2 .r2{display:flex;gap:6px;margin-top:8px;align-items:stretch}#bulkBox .mu2 .r2 button,#bulkBox .mu2 .r2 select{height:42px;font-family:inherit;font-size:12.5px;font-weight:800;cursor:pointer}'+
+  '#bulkBox .mu2 .vw{flex:1;border:1.5px solid #0B2F70;background:#fff;color:#0B2F70}#bulkBox .mu2 select{flex:1;min-width:0;border:1.5px solid #C9D6EA;background:#fff;color:#0B2F70}#bulkBox .mu2 .go{flex:1;border:0;background:#0E8F5B;color:#fff}#bulkBox .mu2 .dl{flex:none;width:42px;border:1px solid #F1C4CA;background:#fff;color:#B00020}'+
+  '#bulkBox .mu2 .nt{margin-top:7px;font-size:11.5px;font-weight:700;color:#B00020}#bulkBox .mu2 .fn{margin-top:5px;font-size:10px;color:#8A97AD;direction:ltr;text-align:start;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'+
   '#bulkBox .mc{display:flex;flex-wrap:wrap;gap:6px}#bulkBox .mc span{background:#FFF9E8;border:1px solid #EAD48A;padding:4px 8px;font-size:11px;font-weight:700;color:#8A6100;font-family:"IBM Plex Mono",monospace;direction:ltr}'+
   '#bulkBox .mmR{width:100%;height:42px;margin-top:10px;border:1.5px solid #0B2F70;background:#fff;color:#0B2F70;font-weight:800;font-size:13px;font-family:inherit;cursor:pointer}'+
   '#shFoot{position:sticky;bottom:0;z-index:6;display:grid;grid-template-columns:2fr 3fr;gap:8px;margin:14px -16px 0;padding:10px 16px calc(10px + env(safe-area-inset-bottom));background:#fff;border-top:1px solid var(--line);box-shadow:0 -6px 16px rgba(11,47,112,.08)}'+
@@ -291,9 +297,13 @@ function init(){
         '<button type="button" data-m="un" data-i="'+i+'" aria-label="فك">✕</button></div>';});
     if(un.length){h+='<div class="mmT">إيصالات مورد بلا مقابل — لم يُعثر على إيصال زبون بالمرجع أو المبلغ</div>';
       un.forEach(function(it){var p=it.parsed,i=SHM.items.indexOf(it),a=p?amt(p.amount):0;
-        h+='<div class="mu"><div class="sd" data-m="vs" data-i="'+i+'"><b>'+(p?(a?f0(a):'لم يُقرأ المبلغ'):'…')+'</b><span>'+esc((p&&nref(p.ref))||'بلا مرجع')+' · '+esc(it.file.name)+'</span></div>'+
-          (cfree.length&&p?'<select data-m="pick" data-i="'+i+'"><option value="">اربط بـ…</option>'+cfree.map(function(c){return '<option value="'+pool.indexOf(c)+'">'+f0(c.amount)+(c.ref?' · '+esc(c.ref):'')+'</option>';}).join('')+'</select>':'')+
-          '<button type="button" data-m="del" data-i="'+i+'" aria-label="حذف">✕</button></div>';});}
+        if(!p){h+='<div class="mu"><div class="sd"><b>…</b><span>'+esc(it.file.name)+'</span></div></div>';return;}
+        h+='<div class="mu2"><div class="r1"><label><small>المبلغ'+(a?'':' — لم يُقرأ، اكتبه')+'</small><input data-f="amt" data-i="'+i+'" inputmode="decimal" dir="ltr" value="'+(a||'')+'" placeholder="المبلغ"></label>'+
+          '<label><small>رقم العملية</small><input data-f="ref" data-i="'+i+'" dir="ltr" value="'+esc(nref(p.ref))+'" placeholder="المرجع"></label></div>'+
+          '<div class="r2"><button type="button" class="vw" data-m="vs" data-i="'+i+'">فتح الإيصال</button>'+
+          (cfree.length?'<select data-m="pick" data-i="'+i+'"><option value="">اربط بـ…</option>'+cfree.map(function(c){return '<option value="'+pool.indexOf(c)+'">'+f0(c.amount)+(c.ref?' · '+esc(c.ref):'')+'</option>';}).join('')+'</select>':'')+
+          '<button type="button" class="go" data-m="fix" data-i="'+i+'">طابق</button><button type="button" class="dl" data-m="del" data-i="'+i+'" aria-label="حذف">✕</button></div>'+
+          (it.note?'<div class="nt">'+esc(it.note)+'</div>':'')+'<div class="fn">'+esc(it.file.name)+'</div></div>';});}
     if(cfree.length&&its.length){h+='<div class="mmT" style="color:#8A6100">إيصالات زبون ما زالت بلا مورد ('+cfree.length+') — المجموع '+f0(cfree.reduce(function(a,c){return a+c.amount;},0))+'</div><div class="mc">'+cfree.slice(0,40).map(function(c){return '<span>'+f0(c.amount)+(c.ref?' · '+esc(c.ref):'')+'</span>';}).join('')+'</div>';}
     if(its.length&&!SHM.reading)h+='<button type="button" class="mmR" data-m="re">إعادة المطابقة</button>';
     box.innerHTML=h+'</div>';box.style.display='';SHM.pool=pool;}
@@ -310,6 +320,13 @@ function init(){
   function unlink(it){(it.to||[]).forEach(function(c){if(c.kind==='new'){try{rcptSupClear(RCPTS.indexOf(c.r));}catch(e){}}else if(!c.persisted)delete SHM.saved[c.row.id];});it.to=null;it.how='';it.covers=null;}
   if($('bulkBox'))$('bulkBox').addEventListener('click',function(e){var b=e.target.closest('[data-m]');if(!b||b.tagName==='SELECT')return;var it=SHM.items[+b.dataset.i],m=b.dataset.m;
     if(m==='re'){matchAll();mRender();try{renderRcpts();updMatch();}catch(x){}return;}if(!it)return;
+    if(m==='fix'){var box=$('bulkBox'),ia=box.querySelector('input[data-f="amt"][data-i="'+b.dataset.i+'"]'),ir=box.querySelector('input[data-f="ref"][data-i="'+b.dataset.i+'"]');
+      it.parsed=it.parsed||{};var na=parseFloat(String(ia?ia.value:'').replace(/[^\d.]/g,''))||0;
+      if(na>0){if(na!==Number(it.parsed.amount))it.manual=true;it.parsed.amount=na;}
+      if(ir){it.parsed.ref=ir.value.trim()||null;}
+      it.note='';matchAll();
+      if(!it.to)it.note=na>=100?('لا يوجد إيصال زبون غير مطابَق بالمبلغ '+f0(na)+(it.parsed.ref?' ولا بالمرجع '+it.parsed.ref:'')+' — تحقق من الرقم أو ارفع إيصال الزبون أولًا'):'اكتب المبلغ كما في الإيصال ثم اضغط «طابق»';
+      mRender();try{renderRcpts();updMatch();}catch(x){}return;}
     if(m==='vs')showFile(it.url,it.isPdf,it.file.name);
     else if(m==='vc'){var c=it.to&&it.to[0];if(c&&c.kind==='new'){try{rcptView(RCPTS.indexOf(c.r),false);}catch(x){}}else say('إيصال محفوظ — افتحه من «عرض الإيصالات المحفوظة»');}
     else if(m==='un'){unlink(it);mRender();try{renderRcpts();updMatch();}catch(x){}}
