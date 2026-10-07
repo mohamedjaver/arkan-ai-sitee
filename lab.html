@@ -40,11 +40,13 @@ h3{font-size:13.5px;margin:16px 0 8px}h3.a{color:#8A6100}h3.r{color:var(--red)}
 #lbToast{position:fixed;inset-inline:14px;bottom:calc(20px + env(safe-area-inset-bottom));background:var(--ink);color:#fff;padding:13px 16px;font-size:13.5px;font-weight:600;text-align:center;opacity:0;pointer-events:none;transform:translateY(10px);transition:.25s;z-index:60}#lbToast.on{opacity:1;transform:none}
 #lbView{position:fixed;inset:0;z-index:50;background:#0A1220;display:none;flex-direction:column}#lbView.on{display:flex;animation:up .2s ease}#lbView header{display:flex;align-items:center;gap:10px;padding:calc(10px + env(safe-area-inset-top)) 12px 10px;color:#fff}#lbView header b{flex:1;min-width:0;font-size:12px;direction:ltr;text-align:start;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#lbView header button{flex:none;height:44px;padding:0 18px;border:0;background:#fff;color:var(--navy);font-weight:700}
 #lbView .bd{flex:1;overflow:auto;-webkit-overflow-scrolling:touch}#lbView .bd img{width:100%;display:block}#lbView .bd iframe{width:100%;height:100%;border:0;background:#fff}
+#lbRep{position:fixed;inset:0;z-index:55;background:#0A1220;display:none;flex-direction:column}#lbRep.on{display:flex;animation:up .2s ease}#lbRep header{display:flex;justify-content:space-between;align-items:center;padding:calc(10px + env(safe-area-inset-top)) 14px 10px;color:#fff}#lbRep header button{height:42px;padding:0 16px;border:0;background:rgba(255,255,255,.16);color:#fff;font-weight:700}
+#lbRep .bd{flex:1;overflow:auto;padding:0 10px 10px;-webkit-overflow-scrolling:touch}#lbRep .bd img{width:100%;display:block;background:#fff}#lbRep footer{display:grid;grid-template-columns:1.4fr 1fr;gap:8px;padding:10px 14px calc(12px + env(safe-area-inset-bottom));background:#fff}#lbRep footer button{height:50px;border:1.5px solid var(--navy);background:#fff;color:var(--navy);font-weight:700;font-size:14px}#lbRep footer button.p{background:var(--navy);color:#fff}
 </style></head><body>
 <div class="top"><div class="r1"><img src="arkan-icon-512.png" alt="BDL"><div><h1>مختبر المطابقة</h1><p>افحص إيصالات الزبون مقابل إيصالات المورد</p></div><a href="settle-v2.html">رجوع</a></div>
 <div class="flag">وضع الاختبار — لا شيء يُحفظ ولا يُقيَّد في أي تسوية</div></div>
 <main id="lbMain"></main>
 <input type="file" id="lbFile" multiple style="display:none"><div id="lbToast"></div>
 <div id="lbView"><header><b></b><button type="button">إغلاق</button></header><div class="bd"></div></div>
-<script src="arkan-read.js?v=9"></script><script src="bdl-lab.js?v=1"></script>
+<script src="arkan-read.js?v=9"></script><script src="bdl-lab.js?v=2"></script>
 </body></html>

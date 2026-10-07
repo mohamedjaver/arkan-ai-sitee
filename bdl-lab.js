@@ -80,6 +80,46 @@ async function waChatIndex(z){var map={};try{var ce=null;z.forEach(function(p,en
     free(R.s).forEach(function(s){var a=amt(s.p.amount);if(!a||s.to)return;var cs=free(R.c).filter(function(x){return amt(x.p.amount)===a;});if(!cs.length)return;
       cs.sort(function(x,y){return Math.abs((x.ts||0)-(s.ts||0))-Math.abs((y.ts||0)-(s.ts||0));});link(cs[0],s,'amt');});}
 
+
+  /* 1407: تقرير المختبر كصورة بهيئة فاتورة BDL — للمشاركة فقط، لا يُحفظ شيء */
+  function drawLab(mk,d,logo){var W=1080,P=56,cv=mk(W,3600),x=cv.getContext('2d'),y=0,AR='"IBM Plex Sans Arabic","Segoe UI",Tahoma,sans-serif',NUM='"IBM Plex Mono",Inter,Arial,sans-serif';
+    var NAVY='#0B2F70',INK='#0B2447',MUT='#5C7699',LINE='#DCE5F1',GRN='#0E8F5B',RED='#B00020',AMB='#C77800';
+    function rr(a,b,w,h,r,fl,s){x.beginPath();x.moveTo(a+r,b);x.arcTo(a+w,b,a+w,b+h,r);x.arcTo(a+w,b+h,a,b+h,r);x.arcTo(a,b+h,a,b,r);x.arcTo(a,b,a+w,b,r);x.closePath();if(fl){x.fillStyle=fl;x.fill();}if(s){x.strokeStyle=s;x.lineWidth=2;x.stroke();}}
+    function T(str,a,b,size,wt,col,al,num,maxW){str=String(str==null?'':str);var fs=size;x.font=wt+' '+fs+'px '+(num?NUM:AR);x.fillStyle=col;x.textAlign=al||'right';x.textBaseline='alphabetic';try{x.direction=num?'ltr':'rtl';}catch(e){}
+      if(maxW){while(fs>size*0.6&&x.measureText(str).width>maxW){fs-=1;x.font=wt+' '+fs+'px '+(num?NUM:AR);}if(x.measureText(str).width>maxW){while(str.length>3&&x.measureText(str+'…').width>maxW)str=str.slice(0,-1);str+='…';}}x.fillText(str,a,b);}
+    x.fillStyle='#fff';x.fillRect(0,0,W,3600);
+    var g=x.createLinearGradient(0,0,W,0);g.addColorStop(0,'#1AA3F5');g.addColorStop(.45,'#0A56B8');g.addColorStop(1,'#0B2F70');x.fillStyle=g;x.fillRect(0,0,W,210);x.fillStyle='#F2B43A';x.fillRect(0,210,W,8);
+    var ok=false;try{ok=logo&&logo(x,W-P-112,48,112);}catch(e){}if(!ok){rr(W-P-112,48,112,112,24,'#fff');T('BDL',W-P-56,118,40,700,NAVY,'center',true);}
+    T('BDL · لبدال',W-P-136,100,44,700,'#fff');T('فحص مطابقة — اختبار',W-P-136,146,26,500,'rgba(255,255,255,.9)');
+    var dt=d.when,z=function(n){return (n<10?'0':'')+n;};T(z(dt.getDate())+'/'+z(dt.getMonth()+1)+'/'+dt.getFullYear()+'  '+z(dt.getHours())+':'+z(dt.getMinutes()),P,100,26,700,'#fff','left',true);T('غير محفوظ',P,140,22,600,'#F2B43A','left');
+    y=250;rr(P,y,W-2*P,86,12,d.ok?'#E9F8EF':'#FFF1F2',d.ok?GRN:RED);T(d.ok?'✓ كل الإيصالات متطابقة':'توجد إيصالات غير متطابقة',W/2,y+54,32,700,d.ok?GRN:RED,'center');y+=86+20;
+    var cw=(W-2*P-18)/2;[['الزبون',d.cname,d.cN,d.cSum,NAVY],['المورد',d.sname,d.sN,d.sSum,GRN]].forEach(function(c,i){var cx=W-P-cw-i*(cw+18);rr(cx,y,cw,150,12,'#F4F7FC',LINE);x.fillStyle=c[4];x.fillRect(cx+cw-8,y+12,8,126);
+      T(c[0]+' · '+c[2]+' إيصالًا',cx+cw-26,y+40,21,600,MUT);T(c[1]||'—',cx+cw-26,y+84,28,700,INK,'right',false,cw-52);T(f(c[3]),cx+cw-26,y+128,30,700,c[4],'right',true,cw-52);});
+    y+=150+14;var dz=Math.abs(d.cSum-d.sSum)<1;rr(P,y,W-2*P,56,10,dz?'#E9F8EF':'#FFF6E3');T('الفرق بين المجموعين: '+f(d.cSum-d.sSum),W/2,y+37,24,700,dz?GRN:AMB,'center');y+=56+26;
+    var kw=(W-2*P-36)/3;[['مطابق ✓',d.m,GRN,'#E9F8EF',d.mSum],['زبون بلا مورد',d.cu.length,AMB,'#FFF6E3',d.cu.reduce(function(a,u){return a+u.a;},0)],['مورد بلا زبون',d.su.length,RED,'#FFF1F2',d.su.reduce(function(a,u){return a+u.a;},0)]].forEach(function(c,i){var cx=W-P-kw-i*(kw+18);
+      rr(cx,y,kw,128,12,c[3],c[2]);T(String(c[1]),cx+kw-26,y+66,52,700,c[2],'right',true);T(c[0],cx+26,y+46,22,700,c[2],'left');T(f(c[4]),cx+26,y+96,24,700,INK,'left',true,kw-140);});
+    y+=128+20;
+    var list=function(title,col,bg,arr){if(!arr.length)return;y+=26;T(title+' ('+arr.length+')',W-P,y+8,25,700,col);y+=28;
+      arr.slice(0,8).forEach(function(u){rr(P,y,W-2*P,50,8,bg);x.fillStyle=col;x.fillRect(W-P-8,y,8,50);if(u.a)T(f(u.a),W-P-28,y+34,26,700,INK,'right',true);else T('لم يُقرأ المبلغ',W-P-28,y+33,22,700,col);T((u.r||'بلا مرجع')+(u.w?'  ·  '+u.w:''),P+20,y+33,21,500,MUT,'left',true,W-2*P-330);y+=58;});
+      if(arr.length>8){T('+ '+(arr.length-8)+' أخرى',W-P,y+18,21,600,MUT);y+=34;}};
+    list('إيصالات زبون بلا مورد',AMB,'#FFF6E3',d.cu);list('إيصالات مورد بلا زبون',RED,'#FFF1F2',d.su);
+    y+=20;x.fillStyle=NAVY;x.fillRect(0,y,W,74);T('فحص تجريبي من مختبر BDL — لم يُحفظ ولم يُقيَّد في أي تسوية',W-P,y+46,21,500,'rgba(255,255,255,.92)','right',false,W-2*P-200);T('lbdal.com',P,y+46,22,700,'#F2B43A','left',true);y+=74;
+    var out=mk(W,y);out.getContext('2d').drawImage(cv,0,0,W,y,0,0,W,y);return out;}
+  function repData(){var R=S.res,sum=function(a){return a.reduce(function(t,q){return t+amt(q.p.amount);},0);},cm=R.c.filter(function(q){return q.to;}),cu=R.c.filter(function(q){return !q.to;}),su=R.s.filter(function(q){return !q.to;}),mp=function(q){return {a:amt(q.p.amount),r:nref(q.p.ref),w:q.ts?dmy(q.ts):''};};
+    return {cname:S.c?S.c.name:'',sname:S.s?S.s.name:'',cN:R.c.length,sN:R.s.length,cSum:sum(R.c),sSum:sum(R.s),m:cm.length,mSum:sum(cm),cu:cu.map(mp),su:su.map(mp),ok:!cu.length&&!su.length,when:new Date()};}
+  window.__LABDRAW=drawLab;
+  async function report(){try{try{if(document.fonts&&document.fonts.ready)await Promise.race([document.fonts.ready,new Promise(function(r){setTimeout(r,1200);})]);}catch(e){}
+      var im=new Image();await new Promise(function(r){im.onload=im.onerror=r;im.src='arkan-icon-512.png';});
+      var logo=function(c,px,py,s){if(!im.naturalWidth)return false;c.save();c.beginPath();var r=24;c.moveTo(px+r,py);c.arcTo(px+s,py,px+s,py+s,r);c.arcTo(px+s,py+s,px,py+s,r);c.arcTo(px,py+s,px,py,r);c.arcTo(px,py,px+s,py,r);c.closePath();c.clip();c.drawImage(im,px,py,s,s);c.restore();return true;};
+      var cv=drawLab(function(w,h){var c=document.createElement('canvas');c.width=w;c.height=h;return c;},repData(),logo),v=$('lbRep');
+      if(!v){v=document.createElement('div');v.id='lbRep';document.body.appendChild(v);}
+      v.innerHTML='<header><b>تقرير الفحص</b><button type="button" data-r="x">إغلاق</button></header><div class="bd"><img src="'+cv.toDataURL('image/png')+'" alt=""></div><footer><button type="button" class="p" data-r="share">مشاركة</button><button type="button" data-r="save">حفظ صورة</button></footer>';v.classList.add('on');
+      v.onclick=async function(e){var b=e.target.closest('[data-r]');if(!b)return;if(b.dataset.r==='x'){v.classList.remove('on');return;}
+        try{var blob=await new Promise(function(r){cv.toBlob(r,'image/png');}),nm='BDL-فحص-مطابقة-'+new Date().toISOString().slice(0,10)+'.png',fl=new File([blob],nm,{type:'image/png'});
+          if(b.dataset.r==='share'&&navigator.canShare&&navigator.canShare({files:[fl]})){await navigator.share({files:[fl],title:'فحص مطابقة BDL'});return;}
+          var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=nm;document.body.appendChild(a);a.click();a.remove();}catch(err){if(!(err&&err.name==='AbortError'))toast('تعذّر إخراج التقرير');}};
+    }catch(e){toast('تعذّر إنشاء التقرير');}}
+
   /* ── العرض ── */
   function sideCard(k,title,hint){var o=S[k],h='<section class="sd '+k+'"><header><b>'+title+'</b><small>'+hint+'</small></header>';
     if(!o)h+='<button type="button" class="pk" data-pick="'+k+'"><i>＋</i>اختر ملف ZIP أو صورًا / PDF</button>';
@@ -101,7 +141,7 @@ async function waChatIndex(z){var map={};try{var ce=null;z.forEach(function(p,en
     if(su.length)h+='<h3 class="r">إيصالات مورد بلا زبون ('+su.length+')</h3>'+su.map(function(x){return rowH(x,R.s.indexOf(x),'r');}).join('');
     if(cu.length||su.length)h+='<div class="nt">صحّح أي مبلغ قُرئ خطأً في خانته ثم اضغط «أعد المطابقة».</div><button type="button" class="bt ln" data-a="re">أعد المطابقة</button>';
     h+='<details class="mt"><summary>الأزواج المتطابقة ('+cm.length+')</summary>'+cm.map(function(c){var s=c.to;return '<div class="pr"><span data-v="c:'+R.c.indexOf(c)+'">'+f(amt(c.p.amount))+'<small>'+esc(nref(c.p.ref)||'—')+'</small></span><em>'+(c.how==='ref'?'نفس المرجع':'نفس المبلغ')+'</em><span data-v="s:'+R.s.indexOf(s)+'">'+f(amt(s.p.amount))+'<small>'+esc(nref(s.p.ref)||'—')+'</small></span></div>';}).join('')+'</details>';
-    h+='<div class="bs"><button type="button" class="bt" data-a="copy">نسخ الملخص</button><button type="button" class="bt ln" data-a="new">فحص جديد</button></div></section>';return h;}
+    h+='<div class="bs"><button type="button" class="bt" data-a="rep">تقرير صورة</button><button type="button" class="bt ln" data-a="copy">نسخ الملخص</button></div><button type="button" class="bt ln" data-a="new">فحص جديد</button></section>';return h;}
   function paint(){var m=$('lbMain'),R=S.run,h='';
     if(R){var p=Math.round(((R.d1/Math.max(1,R.n))*0.2+(R.d2/Math.max(1,R.n))*0.8)*100);if(R.stage==='unzip')p=Math.round(R.d1/Math.max(1,R.n)*20);
       h='<section class="pg"><div class="st"><span class="'+(R.stage==='unzip'?'on':'dn')+'">١ التفكيك</span><span class="'+(R.stage==='read'?'on':'')+'">٢ القراءة</span><span>٣ المطابقة</span></div><div class="br"><i style="width:'+p+'%"></i></div><div class="tx"><b>'+p+'%</b>'+(R.stage==='unzip'?'جارٍ تفكيك الإيصالات '+R.d1+' / '+R.n:'جارٍ قراءة الإيصالات '+R.d2+' / '+R.n)+'</div>'+(R.cur?'<div class="fn">'+esc(R.cur)+'</div>':'')+'<button type="button" class="bt ln" data-a="stop">إيقاف وعرض ما قُرئ</button></section>';}
@@ -120,6 +160,7 @@ async function waChatIndex(z){var map={};try{var ce=null;z.forEach(function(p,en
     if((b=t.closest('[data-a]'))){var a=b.dataset.a;
       if(a==='go')start();else if(a==='stop'){if(S.run)S.run.stop=true;b.disabled=true;b.textContent='جارٍ الإيقاف…';}
       else if(a==='re'){match();paint();toast('أُعيدت المطابقة');}
+      else if(a==='rep'){report();}
       else if(a==='new'){if(confirm('بدء فحص جديد؟ نتيجة الفحص الحالي ستُمسح (لا شيء محفوظ).')){S.c=S.s=S.res=null;paint();}}
       else if(a==='copy'){var R=S.res,cu=R.c.filter(function(x){return !x.to;}),su=R.s.filter(function(x){return !x.to;}),L=function(x){return '• '+(amt(x.p.amount)?f(amt(x.p.amount)):'لم يُقرأ')+' — '+(nref(x.p.ref)||'بلا مرجع');};
         var txt='BDL · فحص مطابقة (اختبار)\nالزبون: '+(S.c?S.c.name:'')+' — '+R.c.length+' إيصالًا\nالمورد: '+(S.s?S.s.name:'')+' — '+R.s.length+' إيصالًا\nمطابق: '+R.c.filter(function(x){return x.to;}).length+'\n\nزبون بلا مورد ('+cu.length+'):\n'+(cu.map(L).join('\n')||'—')+'\n\nمورد بلا زبون ('+su.length+'):\n'+(su.map(L).join('\n')||'—');
