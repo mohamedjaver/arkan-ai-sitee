@@ -29,7 +29,7 @@ async function waChatIndex(z){var map={};try{var ce=null;z.forEach(function(p,en
   function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
   function f(n){return Number(n||0).toLocaleString('en-US',{maximumFractionDigits:0});}
   function nref(v){v=String(v==null?'':v).replace(/\s+/g,'').toUpperCase();return v.length>=5?v:'';}
-  function amt(v){v=Number(v)||0;return v>=100?v:0;}
+  function amt(v){v=Number(v)||0;return v>=100&&v<1e11?v:0;} /* رقم أكبر من ذلك = حساب/IBAN قُرئ كمبلغ */
   function d0(ts){var d=new Date(ts);d.setHours(0,0,0,0);return d.getTime();}
   function iso(ts){var d=new Date(ts),z=function(x){return (x<10?'0':'')+x;};return d.getFullYear()+'-'+z(d.getMonth()+1)+'-'+z(d.getDate());}
   function dmy(ts){var d=new Date(ts),z=function(x){return (x<10?'0':'')+x;};return z(d.getDate())+'/'+z(d.getMonth()+1)+'/'+d.getFullYear()+' · '+z(d.getHours())+':'+z(d.getMinutes());}
@@ -172,7 +172,8 @@ async function waChatIndex(z){var map={};try{var ce=null;z.forEach(function(p,en
       h=sideCard('c','إيصالات الزبون','ما أرسله الزبون — تحويلاته بالكوانزا')+sideCard('s','إيصالات المورد','ما أرسله المورد — تأكيداته للتحويلات نفسها')+
         '<button type="button" class="bt go" data-a="go"'+(ready?'':' disabled')+'>'+(ready?'ابدأ الفحص — '+Math.min(400,sel(c).length)+' زبون × '+Math.min(400,sel(s).length)+' مورد':'اختر ملفَّي الجهتين أولًا')+'</button>'+
         '<div class="how"><b>كيف يعمل</b>يُفكّ الملفان، يُقرأ كل إيصال، ثم يُطابَق كل إيصال زبون مع إيصال مورد واحد: برقم العملية أولًا، ثم بالمبلغ. النتيجة تُعرض هنا فقط — <u>لا شيء يُحفظ ولا يُقيَّد في أي تسوية</u>.</div>';}
-    m.innerHTML=h;}
+    if(R){var pg=m.querySelector('.pg[data-live]');if(pg){var tt=document.createElement('div');tt.innerHTML=h;var np=tt.firstChild;['.st','.br','.tx','.fn'].forEach(function(q){var o=pg.querySelector(q),n=np.querySelector(q);if(o&&n&&o.innerHTML!==n.innerHTML)o.innerHTML=n.innerHTML;else if(!o&&n)pg.insertBefore(n,pg.querySelector('button'));});return;}}
+    m.innerHTML=h;if(R){var g0=m.querySelector('.pg');if(g0)g0.setAttribute('data-live','1');}}
   async function view(k){var a=k.split(':'),it=S.res&&S.res[a[0]][+a[1]];if(!it)return;
     if(!it.url){if(!it.file&&it._si>=0)it.file=await SESS.file('match',it._si,it.nm,it.pdf);if(it.file)it.url=URL.createObjectURL(it.file);}
     if(!it.url){toast('صورة هذا الإيصال لم تُحفظ على الجهاز (الملف كبير) — أعد اختيار ملف ZIP لعرضها');return;}
