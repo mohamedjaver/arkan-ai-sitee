@@ -68,7 +68,7 @@ async function waChatIndex(z){var map={};try{var ce=null;z.forEach(function(p,en
         try{it.fp=await sha(it.file);}catch(e){}
         if(it.fp&&seen[it.side][it.fp]){R.dup++;it.dup=true;}else{if(it.fp)seen[it.side][it.fp]=1;
           var p={};try{var r=await Promise.race([window.ArkanRead.read(it.file),new Promise(function(x){setTimeout(function(){x(null);},60000);})]);var q=(r&&r.parsed)||{};
-            p={amount:Number(q.amount)||0,ref:q.transaction_id||q.reference||q.txn||'',bank:q.bank||q.institution||'',date:q.date||'',name:q.beneficiary||q.name||''};}catch(e){}
+            p={amount:Number(q.amount)||0,ref:q.transaction_id||q.reference||q.txn||'',bank:q.bank||q.institution||'',date:q.date||'',name:q.beneficiary||q.name||''};p.account=q.iban||q.account||'';p.receiver=q.receiver||'';}catch(e){}
           it.p=p;R.items[it.side].push(it);}
         R.d2++;paint();}}
     await Promise.all([wk(),wk(),wk()]);
@@ -170,6 +170,6 @@ async function waChatIndex(z){var map={};try{var ce=null;z.forEach(function(p,en
     if(t.dataset&&t.dataset.d){var d=t.dataset.d.split(':'),o=S[d[0]];if(!o||!t.value)return;var p=t.value.split('-'),ts=new Date(+p[0],+p[1]-1,+p[2]).getTime();o[d[1]]=ts;if(o.from>o.to){if(d[1]==='from')o.to=o.from;else o.from=o.to;}o.all=false;paint();return;}
     if(t.dataset&&t.dataset.e){var k=t.dataset.e.split(':'),it=S.res&&S.res[k[0]][+k[1]];if(it){it.p.amount=parseFloat(String(t.value).replace(/[^\d.]/g,''))||0;}}});
   window.addEventListener('beforeunload',function(e){if(S.run||S.res){e.preventDefault();e.returnValue='';}});
-  window.__LAB={S:S,match:match,sel:sel,paint:paint};
+  window.__LAB={S:S,match:match,sel:sel,paint:paint,h:{waChatIndex:waChatIndex,waStamp:waStamp,zName:zName,sha:sha,loadZip:loadZip,isDoc:isDoc,d0:d0,iso:iso,dmy:dmy,toast:toast,esc:esc,f:f}};
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',paint);else paint();
 })();
