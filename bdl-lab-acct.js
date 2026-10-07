@@ -71,7 +71,14 @@
         if(reg.some(function(r){return q.accts.some(function(a){return (r.accts||[]).some(function(b){return sameAcct(a,b);});});}))return;
         reg.push({accts:q.accts.slice(),names:Object.keys(q.names).slice(0,6),bank:q.bank,sup:A.res.sname,st:'ok',src:'auto',at:new Date().toISOString()});nw++;});
       if(nw){regSave(reg);A.res.learned=nw;}}
+    persist(R.c.concat(R.s));
     A.run=null;classify();A.flt=A.res.ents.some(function(e){return e.st==='red';})?'red':'all';paint();window.scrollTo({top:0,behavior:'smooth'});}
+  /* 1412: حفظ الجلسة واستعادتها — النتائج والصور تبقى حتى «إنهاء الجلسة» */
+  function persist(all){var R=A.res;if(!R)return;h.sess.save('acct',{cname:R.cname,sname:R.sname,nC:R.nC,nS:R.nS,stopped:!!R.stopped},all.map(function(it){return {file:it.file,data:{side:it.side,nm:it.nm,ts:it.ts,pdf:it.pdf,p:it.p,fp:it.fp}};})).then(function(ok){if(!ok)toast('تعذّر حفظ الجلسة على الجهاز — لا تغادر الصفحة قبل إنهاء المراجعة');});}
+  async function restore(){try{var m=await h.sess.load('acct');if(!m||!m.rows||!m.rows.length||A.res||A.run)return;
+      var all=m.rows.map(function(r,i){return {side:r.side,nm:r.nm,ts:r.ts,pdf:r.pdf,p:r.p||{},fp:r.fp,file:null,_si:r._f?i:-1};}),c=all.filter(function(x){return x.side==='c';}),s=all.filter(function(x){return x.side==='s';});
+      A.res={ents:cluster(c),sents:cluster(s).filter(function(e){return !e.blank;}),sname:m.meta.sname||'',cname:m.meta.cname||'',nC:c.length,nS:s.length,stopped:m.meta.stopped,restored:m.at,skipped:m.skipped||0};
+      classify();A.flt=A.res.ents.some(function(e){return e.st==='red';})?'red':'all';paint();}catch(e){}}
   /* ── الحكم اليدوي ── */
   function decide(i,st,sup){var R=A.res,e=R&&R.ents[i];if(!e)return;if(e.blank){toast('لا اسم ولا رقم حساب مقروء لهذه المجموعة — لا يمكن حفظها في السجل');return;}
     var reg=regLoad(),key=function(q){return e.accts.length?e.accts.some(function(a){return (q.accts||[]).some(function(b){return sameAcct(a,b);});}):(!((q.accts||[]).length)&&(q.names||[]).some(function(n){return Object.keys(e.names).some(function(m){return sameName(n,m);});}));};
@@ -80,12 +87,14 @@
     regSave(reg);e.flag=false;classify();A.open=null;paint();toast(st==='ok'?'حُفظ: حساب المورد '+sup:st==='sus'?'أُشّر كحساب مشبوه':'أُزيل من السجل');}
   function sups(){var o={};regLoad().forEach(function(q){if(q.sup&&q.st!=='sus')o[q.sup]=1;});if(A.s&&A.s.name)o[A.s.name]=1;return Object.keys(o);}
   /* ── المراجع: إيصالات المستفيد واحدًا واحدًا ── */
-  function review(i,k){var R=A.res,e=R&&R.ents[i];if(!e)return;k=Math.max(0,Math.min(e.its.length-1,k||0));A.rv={i:i,k:k};var it=e.its[k],v=$('laRv');
+  async function review(i,k){var R=A.res,e=R&&R.ents[i];if(!e)return;k=Math.max(0,Math.min(e.its.length-1,k||0));A.rv={i:i,k:k};var it=e.its[k],v=$('laRv');
     if(!v){v=document.createElement('div');v.id='laRv';document.body.appendChild(v);}
-    if(it._u)URL.revokeObjectURL(it._u);it._u=URL.createObjectURL(it.file);var p=it.p||{};
+    if(!it.file&&it._si>=0)it.file=await h.sess.file('acct',it._si,it.nm,it.pdf);
+    if(it._u){URL.revokeObjectURL(it._u);it._u='';}if(it.file)it._u=URL.createObjectURL(it.file);var p=it.p||{};
+
     v.innerHTML='<header><div><b>'+esc(e.name||'مستفيد غير مقروء')+'</b><small>إيصال '+(k+1)+' من '+e.its.length+(it.ts?' · '+h.dmy(it.ts):'')+'</small></div><button type="button" data-rv="x">إغلاق</button></header>'+
       '<div class="rd"><span><small>المبلغ</small><b>'+(Number(p.amount)>=100?f(p.amount):'لم يُقرأ')+'</b></span><span><small>المستفيد كما قُرئ</small><b>'+esc(nameOf(p)||'—')+'</b></span><span><small>الحساب</small><b dir="ltr">'+esc(acctOf(p)||'—')+'</b></span></div>'+
-      '<div class="bd">'+(it.pdf?'<iframe src="'+it._u+'"></iframe>':'<img src="'+it._u+'" alt="">')+'</div>'+
+      '<div class="bd">'+(!it._u?'<p style="color:#9FB0CC;padding:30px 16px;text-align:center;font-size:13px">صورة هذا الإيصال لم تُحفظ على الجهاز (حجم الملفات كبير). البيانات المقروءة أعلاه محفوظة — لعرض الصورة أعد اختيار ملف ZIP وافحص الفترة نفسها (تُقرأ من الذاكرة فورًا).</p>':it.pdf?'<iframe src="'+it._u+'"></iframe>':'<img src="'+it._u+'" alt="">')+'</div>'+
       '<footer><div class="nv"><button type="button" data-rv="p"'+(k?'':' disabled')+'>‹ السابق</button><button type="button" data-rv="n"'+(k<e.its.length-1?'':' disabled')+'>التالي ›</button></div>'+
       '<div class="dc"><input id="laRvSup" list="laSups" placeholder="اسم المورد صاحب الحساب" value="'+esc(e.sup||R.sname||'')+'"><button type="button" class="ok" data-rv="ok">سليم — حساب هذا المورد</button><button type="button" class="sus" data-rv="sus">مشبوه</button></div></footer>';
     v.classList.add('on');}
@@ -108,12 +117,12 @@
     if(R){var p=Math.round(R.d/Math.max(1,R.n)*100),el=(Date.now()-R.t0)/1000,eta=R.d>5?Math.round(el/R.d*(R.n-R.d)):0;
       x='<section class="pg"><div class="br"><i style="width:'+p+'%"></i></div><div class="tx"><b>'+p+'%</b>قراءة وتحليل '+R.d+' / '+R.n+(eta?' · الباقي نحو '+(eta>90?Math.round(eta/60)+' د':eta+' ث'):'')+'</div><div class="fn">'+esc(R.cur||'')+'</div><div class="nt">'+(R.hit?R.hit+' إيصالًا مقروءًا سابقًا أُخذ من الذاكرة فورًا. ':'')+'يمكنك الإيقاف وعرض ما قُرئ — ما قُرئ يُحفظ ولن يُعاد.</div><button type="button" class="bt ln" data-aa="stop">إيقاف وعرض النتيجة</button></section>';}
     else if(A.res){var E=A.res.ents,cnt=function(s){return E.filter(function(e){return e.st===s;});},sum=function(a){return a.reduce(function(t,e){return t+e.sum;},0);},red=cnt('red'),amb=cnt('amb'),grn=cnt('grn'),gry=cnt('gry'),bad=red.length+amb.length+gry.length;
-      x='<section class="rs"><div class="vd '+(bad?'no':'ok')+'"><b>'+(bad?'يوجد '+bad+' مستفيدًا يحتاج نظرك':'✓ كل الحسابات معروفة')+'</b><span>'+A.res.nC+' إيصال زبون · '+E.length+' مستفيدًا'+(A.res.nS?' · قورنت بـ '+A.res.nS+' إيصال مورد ('+esc(A.res.sname)+')':'')+(A.res.stopped?' — أُوقف قبل اكتماله':'')+(A.res.learned?' · تعلّم السجل '+A.res.learned+' حسابًا من إيصالات المورد':'')+'</span></div>'+
+      x='<section class="rs">'+(A.res.restored?'<div class="rst">فحص محفوظ من '+new Date(A.res.restored).toLocaleString('en-GB',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})+' — يبقى حتى تنهيه أنت'+(A.res.skipped?' · '+A.res.skipped+' صورة لم تُحفظ لكبر الحجم':'')+'</div>':'')+'<div class="vd '+(bad?'no':'ok')+'"><b>'+(bad?'يوجد '+bad+' مستفيدًا يحتاج نظرك':'✓ كل الحسابات معروفة')+'</b><span>'+A.res.nC+' إيصال زبون · '+E.length+' مستفيدًا'+(A.res.nS?' · قورنت بـ '+A.res.nS+' إيصال مورد ('+esc(A.res.sname)+')':'')+(A.res.stopped?' — أُوقف قبل اكتماله':'')+(A.res.learned?' · تعلّم السجل '+A.res.learned+' حسابًا من إيصالات المورد':'')+'</span></div>'+
         '<div class="kp k4"><div class="r"><b>'+red.length+'</b><small>غير معروف</small><i>'+f(sum(red))+'</i></div><div class="a"><b>'+amb.length+'</b><small>تحقق</small><i>'+f(sum(amb))+'</i></div><div class="y"><b>'+gry.length+'</b><small>غير مقروء</small><i>'+f(sum(gry))+'</i></div><div class="g"><b>'+grn.length+'</b><small>معروف</small><i>'+f(sum(grn))+'</i></div></div>'+
         '<div class="qk fl">'+[['red','غير معروف',red.length],['amb','تحقق',amb.length],['gry','غير مقروء',gry.length],['grn','معروف',grn.length],['all','الكل',E.length]].map(function(o){return '<button type="button" data-af="'+o[0]+'"'+(A.flt===o[0]?' class="on"':'')+'>'+o[1]+' '+o[2]+'</button>';}).join('')+'</div>';
       var shown=E.map(function(e,i){return [e,i];}).filter(function(q){return A.flt==='all'||q[0].st===A.flt;});
       x+=shown.length?shown.map(function(q){return entCard(q[0],q[1]);}).join(''):'<div class="nt" style="padding:20px;text-align:center">لا شيء في هذه الفئة.</div>';
-      x+='<div class="bs"><button type="button" class="bt" data-aa="copy">نسخ قائمة غير المعروف</button><button type="button" class="bt ln" data-aa="new">فحص جديد</button></div></section>';}
+      x+='<div class="bs"><button type="button" class="bt" data-aa="copy">نسخ قائمة غير المعروف</button><button type="button" class="bt ln" data-aa="new">إنهاء الجلسة وفحص جديد</button></div></section>';}
     else{var c=A.c,ok=c&&!c.busy&&!c.err&&sel(c).length,n=ok?Math.min(2500,sel(c).length)+(A.s&&!A.s.err&&!A.s.busy?Math.min(2500,sel(A.s).length):0):0;
       x=srcCard('c','إيصالات الزبون','الفترة التي تريد فحصها — حتى سنة كاملة',false)+srcCard('s','إيصالات المورد','الحسابات التي تظهر في تأكيداته تُعتبر حساباته تلقائيًا',true)+
         '<section class="rg2"><div><b>'+nOk+'</b> حسابًا مؤكدًا في السجل'+(reg.length-nOk?' · <b style="color:var(--red)">'+(reg.length-nOk)+'</b> مشبوهًا':'')+'<small>محفوظ على هذا الجهاز — صدّره لنقله أو كنسخة احتياطية</small></div><button type="button" data-aa="exp">تصدير</button><button type="button" data-aa="imp">استيراد</button></section>'+
@@ -132,7 +141,7 @@
       var sp=($('laRvSup')&&$('laRvSup').value.trim())||'';if(k==='ok'&&!sp){toast('اكتب اسم المورد صاحب الحساب أولًا');return;}$('laRv').classList.remove('on');A.rv=null;decide(rv.i,k,sp);return;}
     if((b=t.closest('[data-aa]'))){var a=b.dataset.aa;
       if(a==='go')start();else if(a==='stop'){if(A.run)A.run.stop=true;b.disabled=true;b.textContent='جارٍ الإيقاف…';}
-      else if(a==='new'){if(confirm('بدء فحص جديد؟ (السجل وذاكرة القراءة يبقيان)')){A.c=A.s=A.res=null;paint();}}
+      else if(a==='new'){if(confirm('إنهاء هذه الجلسة وبدء فحص جديد؟\nنتيجة الفحص الحالي وصوره تُمسح من الجهاز. سجل الحسابات وذاكرة القراءة يبقيان.')){A.c=A.s=A.res=null;h.sess.clear('acct');paint();}}
       else if(a==='copy'){var bad=A.res.ents.filter(function(e){return e.st==='red'||e.st==='amb';}),txt='BDL · حسابات تحتاج تحقق — '+A.res.cname+'\n\n'+(bad.map(function(e){return '• '+(e.name||'غير مقروء')+' · '+(e.bank||'')+' · '+(e.accts[0]||'بلا رقم')+'\n  '+e.its.length+' إيصالًا · '+f(e.sum)+' · '+({red:'غير معروف',amb:'تحقق'}[e.st]);}).join('\n')||'لا شيء');
         (navigator.clipboard?navigator.clipboard.writeText(txt):Promise.reject()).then(function(){toast('نُسخت القائمة');},function(){prompt('انسخ:',txt);});}
       else if(a==='exp'){var bl=new Blob([JSON.stringify(regLoad(),null,1)],{type:'application/json'}),l=document.createElement('a');l.href=URL.createObjectURL(bl);l.download='BDL-سجل-الحسابات-'+new Date().toISOString().slice(0,10)+'.json';document.body.appendChild(l);l.click();l.remove();}
@@ -145,6 +154,6 @@
   /* تبديل الوضعين */
   function mode(k){$('lbMain').style.display=k==='m'?'':'none';$('laMain').style.display=k==='a'?'':'none';[].forEach.call(document.querySelectorAll('#lbMode button'),function(b){b.classList.toggle('on',b.dataset.md===k);});if(k==='a')paint();try{localStorage.setItem('bdl_lab_mode',k);}catch(e){}}
   document.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('#lbMode button');if(b)mode(b.dataset.md);});
-  function init(){var k='m';try{k=localStorage.getItem('bdl_lab_mode')||'m';}catch(e){}mode(k==='a'?'a':'m');}
+  function init(){var k='m';try{k=localStorage.getItem('bdl_lab_mode')||'m';}catch(e){}mode(k==='a'?'a':'m');restore();}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();
