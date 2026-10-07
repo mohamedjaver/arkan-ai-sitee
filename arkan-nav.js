@@ -14,12 +14,13 @@
   var isOwner = !!localStorage.getItem('arkan_owner_auth') || !!localStorage.getItem('arkan_admin_dev');
   try { var ses = JSON.parse(localStorage.getItem('arkan_session') || 'null');
         if (ses && /36295050$/.test(String(ses.phone || '').replace(/\D/g, ''))) isOwner = true; } catch (e) {}
-  if (/^(settle-v2|settlement|books|admin|rates-admin|archive)\.html$/.test(path)) isOwner = true;
+  if (/^(settle-v2|settlement|books|admin|rates-admin|archive|lab)\.html$/.test(path)) isOwner = true;
 
   /* ترتيب التشغيل اليومي للمالك (من اليمين): 1 رفع إيصالات الزبائن (الحساب) → 2 التسويات → 3 المطابقة → 4 المحاسب */
   var TABS_OWNER = [
     { href: 'account.html',    icon: 'upload', label: '1 الرفع' },
-    { href: 'settle-v2.html',  icon: 'layers', label: '2 التسوية والمطابقة' }
+    { href: 'settle-v2.html',  icon: 'layers', label: '2 التسوية' },
+    { href: 'lab.html',        icon: 'match',  label: '3 الاختبار' }   /* 1408: مختبر المطابقة — لا يحفظ شيئًا */
   ];
   var TABS_CLIENT = [
     { href: 'index.html',   icon: 'home',    label: 'الرئيسية' },
