@@ -4,3 +4,14 @@
 .p10fw,.p10fw::before,.p10fw::after,.p10fw img,.p10dot,.sync i,.cflag,.oppipe .d,.trk3 .c3{border-radius:50%!important}
 /* تبويب «مركز المطابقة» في سطر واحد */
 .tabs button{white-space:nowrap;font-size:12.5px;padding:11px 2px}
+
+/* ═══ 1406: مظهر النوافذ — خلفية ضبابية، ظهور ناعم من الأسفل، حافة ذهبية وظل أعمق. يُحترم خيار «تقليل الحركة». ═══ */
+.ovl{background:rgba(8,21,54,.55)!important;-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
+.ovl>.sheet{box-shadow:0 -14px 44px rgba(8,21,54,.3);border-top:4px solid #F2B43A}
+@media (prefers-reduced-motion:no-preference){
+  .ovl.on{animation:bdlFade .18s ease both}
+  .ovl.on>.sheet,#shZip.on .zc{animation:bdlUp .28s cubic-bezier(.2,.85,.25,1) both}
+  #shRep.on,#rcptView.on,#cyAll,#cyPanel{animation:bdlFade .2s ease both}
+}
+@keyframes bdlFade{from{opacity:0}to{opacity:1}}
+@keyframes bdlUp{from{transform:translateY(28px);opacity:.35}to{transform:none;opacity:1}}

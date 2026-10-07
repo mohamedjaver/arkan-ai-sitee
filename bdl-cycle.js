@@ -262,7 +262,7 @@
     if(!gs.length)html+='<div class="he">لا تسويات أوقية مفتوحة الآن. الدورات السابقة في «كل الدورات».</div>';
     gs.forEach(function(g){var k=gKey(g);html+='<div class="hr"><div><b>'+esc(g.customer_name)+'</b><span>'+f(g.total_amount,0)+' MRU'+(g.total_settle>0?' ↔ '+f(g.total_settle,0)+' '+esc(g.settle_ccy||'AOA'):'')+' · '+g.tx_count+' عمليات</span></div><button type="button" data-h="open" data-k="'+esc(k)+'">فتح الدورة</button></div>';});
     h.innerHTML=html;}
-  CY.hub=hub;
+  CY.hub=hub;CY.openPanel=function(){return openPanel.apply(null,arguments);};CY.openAll=function(){return openAll();};
   /* ── كل الدورات: متابعة الأرجل الثلاث لكل دورة ── */
   async function openAll(){css();var d=$('cyAll');if(d)d.parentNode.removeChild(d);d=document.createElement('div');d.id='cyAll';
     d.innerHTML='<div class="th"><b>كل الدورات</b><button type="button">إغلاق</button></div><div class="sc"><div class="em">جارٍ التحميل…</div></div>';
