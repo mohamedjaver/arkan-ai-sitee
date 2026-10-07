@@ -447,8 +447,13 @@ function init(){
         try{it.fp=await sha256(await it.file.arrayBuffer());}catch(e){}
         if(it.fp&&SHM.items.some(function(x){return x!==it&&x.fp===it.fp&&!x.gone;})){it.gone=true;}
         else{try{it.parsed=await Promise.race([readReceipt(it.file),new Promise(function(r){setTimeout(function(){r({});},60000);})])||{};}catch(e){it.parsed={};}if(it.sup)it.parsed.sup_name=it.sup;}
-        SHM.readDone++;if(onProg)try{onProg(SHM.readDone,fresh.length);}catch(e){}matchAll();mRender();}}
+        SHM.readDone++;if(onProg)try{onProg(SHM.readDone,fresh.length);}catch(e){}matchAll();mRender();
+        if(SHM.readDone%8===0)ckpt();}}
+    /* 1403: حفظ مرحلي كل 8 إيصالات — انقطاع القراءة (إغلاق، شبكة، إعادة تحميل) لا يعيد العمل من الصفر */
+    function ckpt(){try{if(SHM.saving)return;if(typeof RCPTS!=='undefined'&&RCPTS.some(function(r){return !(r.dup&&!r.ok);}))return;
+      SHM.saving=true;saveMatching().then(function(){SHM.saving=false;},function(){SHM.saving=false;});}catch(e){SHM.saving=false;}}
     await Promise.all([worker(),worker(),worker()]);
+    for(var wq=0;wq<150&&SHM.saving;wq++)await new Promise(function(r){setTimeout(r,100);});
     SHM.reading=false;matchAll();mRender();try{renderRcpts();updMatch();}catch(e){}
     try{var hn=typeof RCPTS!=='undefined'&&RCPTS.some(function(r){return !(r.dup&&!r.ok);});
       if(hn){SHM.note='المطابقة لم تُحفظ بعد — اضغط «حفظ المطابقة» لتُحفظ مع إيصالات الزبون الجديدة';mRender();}

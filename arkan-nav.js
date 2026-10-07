@@ -133,7 +133,21 @@
   /* 1343: تحديث هادئ — لا إعادة تحميل والصفحة ظاهرة؛ تُحدَّث فقط عندما تُخفى (تبديل تطبيق/تبويب) أو في التنقل التالي */
   if ('serviceWorker' in navigator) {
     var pendingUpd = false;
-    function quietReload() { if (!pendingUpd || window.__akReloaded) return; if (document.visibilityState === 'hidden') { window.__akReloaded = true; location.reload(); } }
+    /* 1403: لا إعادة تحميل أبدًا وسط عمل — كانت تمحو إيصالات غير محفوظة وتعيد قراءة ملفات ZIP كلما بُدّل التطبيق (واتساب/منتقي الملفات) بعد نشر نسخة جديدة.
+       تُعاد الصفحة فقط إذا: لا نافذة عمل مفتوحة، لا إيصالات غير محفوظة، لا قراءة أو حفظ جارٍ، ولا تفاعل من المستخدم منذ 5 دقائق. */
+    var lastAct = Date.now();
+    ['pointerdown', 'keydown', 'input', 'change'].forEach(function (ev) { document.addEventListener(ev, function () { lastAct = Date.now(); }, { passive: true, capture: true }); });
+    function busy() {
+      try {
+        if (document.querySelector('[id^="ovl-"].on,.ovl.on,#cyPanel,#cyAll,#shAsk,#shZip.on,#rcptView.on')) return true;
+        if (typeof RCPTS !== 'undefined' && RCPTS && RCPTS.length) return true;
+        if (window.__SHM && (window.__SHM.reading || window.__SHM.saving)) return true;
+        if (window.__CYC && window.__CYC.up && window.__CYC.up.run) return true;
+        if (window.__bdlBusy) return true;
+      } catch (e) {}
+      return false;
+    }
+    function quietReload() { if (!pendingUpd || window.__akReloaded) return; if (busy() || Date.now() - lastAct < 5 * 60 * 1000) return; window.__akReloaded = true; location.reload(); }
     function mark() { pendingUpd = true; quietReload(); }
     document.addEventListener('visibilitychange', quietReload);
     var hadCtrl = !!navigator.serviceWorker.controller;
