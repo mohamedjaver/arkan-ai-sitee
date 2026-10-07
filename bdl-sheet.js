@@ -41,6 +41,16 @@ function init(){
   '#shZip .zt{border:1px solid var(--line);background:#F7F9FC;padding:2px 6px 8px;margin-bottom:14px}#shZip .zt .trk3.mini .st3{width:100px}'+
   '#shZip .zm{text-align:center;padding:26px 10px}#shZip .zm b{display:block;font-size:15px;color:#0B2F70;margin-top:10px}#shZip .zm small{display:block;margin-top:6px;font-size:12px;color:#5C7699}'+
   '#shZip .zsp{display:inline-block;width:30px;height:30px;border:3px solid #D5DEEC;border-top-color:#0B2F70;animation:trk3sp 1s linear infinite}'+
+  '#shZip .zq{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:10px;-webkit-overflow-scrolling:touch}#shZip .zq button{flex:none;height:36px;padding:0 14px;border:1.5px solid #C9D6EA;background:#fff;color:#0B2F70;font-family:inherit;font-weight:700;font-size:12.5px;cursor:pointer;white-space:nowrap}#shZip .zq button.on{background:#0B2F70;border-color:#0B2F70;color:#fff}'+
+  '#shZip .zr{display:grid;grid-template-columns:1fr 24px 1fr;align-items:center;gap:6px;margin-bottom:10px}#shZip .zr>div{border:1.5px solid #C9D6EA;background:#F7F9FC;padding:8px 12px}#shZip .zr>div.act{border-color:#0B2F70;background:#EEF4FF;box-shadow:inset 0 -3px 0 #0B2F70}#shZip .zr small{display:block;font-size:10.5px;font-weight:700;color:#5C7699}#shZip .zr b{display:block;font-family:"IBM Plex Mono",monospace;font-size:15px;color:#0B2447;direction:ltr;text-align:start;margin-top:2px}#shZip .zr>div.act b{color:#0B2F70}#shZip .zr>i{font-style:normal;text-align:center;color:#8A97AD;font-size:16px}'+
+  '#shZip .zcal{border:1px solid var(--line);background:#fff;padding:10px}#shZip .zcm{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}#shZip .zcm b{font-size:15px;color:#0B2447}#shZip .zcm button{width:40px;height:36px;border:1px solid var(--line);background:#F7F9FC;color:#0B2F70;font-size:20px;font-weight:800;cursor:pointer}#shZip .zcm button:disabled{opacity:.3}'+
+  '#shZip .zcw,#shZip .zcd{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}#shZip .zcw span{text-align:center;font-size:10.5px;font-weight:800;color:#8A97AD;padding-bottom:4px}'+
+  '#shZip .zcd button{position:relative;height:46px;border:1px solid transparent;background:#fff;font-family:inherit;cursor:pointer;padding:0;color:#B4BFCF;-webkit-user-select:none;user-select:none;touch-action:manipulation}#shZip .zcd button em{display:block;font-style:normal;font-size:14px;font-weight:700;line-height:1.2;margin-top:5px}#shZip .zcd button i{display:block;font-style:normal;font-family:"IBM Plex Mono",monospace;font-size:10px;font-weight:800;line-height:1.1}'+
+  '#shZip .zcd button.has{color:#0B2447}#shZip .zcd .l1{background:#E8F0FD}#shZip .zcd .l2{background:#C7DAFA}#shZip .zcd .l3{background:#9DBDF5}#shZip .zcd button.has i{color:#0B2F70}'+
+  '#shZip .zcd button.in{background:#0E8F5B!important;color:#fff!important}#shZip .zcd button.in i{color:#fff!important}#shZip .zcd button.in:not(.has){background:#CFEBDB!important;color:#0B7A3B!important}#shZip .zcd button.ed{box-shadow:inset 0 0 0 2.5px #0B2F70}'+
+  '#shZip .zcd button.td em{text-decoration:underline;text-underline-offset:3px}#shZip .zcd button:disabled{opacity:.25}'+
+  '#shZip .zcl{display:flex;gap:10px;align-items:center;margin-top:8px;font-size:10.5px;color:#5C7699}#shZip .zcl span{display:flex;align-items:center;gap:4px}#shZip .zcl i{display:inline-block;width:12px;height:12px}#shZip .zcl .k1{background:#E8F0FD}#shZip .zcl .k3{background:#9DBDF5}'+
+  '#shZip .zgo{position:sticky;bottom:0;display:flex;align-items:center;gap:10px;margin-top:12px;padding:10px 0;background:#fff;border-top:1px solid var(--line)}#shZip .zgo>div{flex:1;min-width:0;font-size:12.5px;font-weight:700;color:#0B2447}#shZip .zgo b{font-family:"IBM Plex Mono",monospace;font-size:20px;color:#0E8F5B}#shZip .zgo small{display:block;font-size:11px;font-weight:600;color:#8A6100;margin-top:2px}#shZip .zgo button{flex:none;height:50px;padding:0 26px;border:0;background:#0E8F5B;color:#fff;font-family:inherit;font-weight:800;font-size:15px;cursor:pointer}#shZip .zgo button:disabled{background:#B9C4D6}'+
   '#shZip .zh{font-size:13.5px;font-weight:800;color:#0B2447;margin-bottom:10px}#shZip .zg{display:grid;grid-template-columns:1fr 1fr;gap:8px}'+
   '#shZip .zg button{min-height:78px;border:1.5px solid #0B2F70;background:#fff;color:#0B2F70;font-family:inherit;cursor:pointer}#shZip .zg button:disabled{opacity:.35}#shZip .zg b{display:block;font-size:24px;font-weight:800;font-family:"IBM Plex Mono",monospace}#shZip .zg small{display:block;font-size:12.5px;font-weight:700;margin-top:2px}'+
   '#shZip .zn{margin-top:10px;font-size:11.5px;color:#5C7699;line-height:1.6}'+
@@ -155,15 +165,46 @@ function init(){
     ZV.addEventListener('click',function(e){var b=e.target.closest('[data-z]');if(!b||b.disabled)return;var k=b.dataset.z;
       if(k==='x'){ZS.stop=true;ZV.classList.remove('on');}
       else if(k==='stop'){ZS.stop=true;b.disabled=true;b.textContent='جارٍ الإيقاف بعد الإيصال الحالي…';}
-      else zRun(+k);});return ZV;}
+      else if(k==='go'){zRun();}
+      else if(k.charAt(0)==='q'){zPreset(k.slice(2));zPaint();}
+      else if(k.charAt(0)==='m'){var mm=new Date(ZS.month);mm.setMonth(mm.getMonth()+(+k.slice(2)));ZS.month=mm;zPaint();}
+      else if(k.charAt(0)==='d'){var dy=+k.slice(2);ZS.all=false;
+        if(ZS.step===1){if(dy<ZS.from){ZS.to=ZS.from;ZS.from=dy;}else ZS.to=dy;ZS.step=0;}else{ZS.from=ZS.to=dy;ZS.step=1;}zPaint();}
+    });return ZV;}
+  /* ═══ 1404: اختيار الفترة بأسلوب كشف الحساب البنكي — اختصارات + من/إلى + تقويم شهري يُظهر عدد الإيصالات في كل يوم ═══ */
+  var DAY=864e5,MON=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+  function d0(ts){var d=new Date(ts);d.setHours(0,0,0,0);return d.getTime();}
+  function dTxt(ts){var d=new Date(ts),z=function(n){return (n<10?'0':'')+n;};return z(d.getDate())+'/'+z(d.getMonth()+1)+'/'+d.getFullYear();}
+  function zInit(s){s.days={};s.list.forEach(function(x){if(x.ts){var k=d0(x.ts);s.days[k]=(s.days[k]||0)+1;}});
+    var keys=Object.keys(s.days).map(Number).sort(function(a,b){return b-a;}),t=d0(Date.now());s.maxDay=keys[0]||t;s.minDay=keys[keys.length-1]||t;
+    s.peak=keys.reduce(function(m,k){return Math.max(m,s.days[k]);},1);var def=s.days[t]?t:s.maxDay;s.from=s.to=def;s.step=0;s.all=false;var m=new Date(def);m.setDate(1);m.setHours(0,0,0,0);s.month=m;}
+  function zPreset(k){var s=ZS,t=d0(Date.now());s.all=false;s.step=0;
+    if(k==='today'){s.from=s.to=t;}else if(k==='yest'){s.from=s.to=d0(t-DAY+3600e3);}
+    else if(k==='7'){s.from=d0(t-6*DAY+3600e3);s.to=t;}else if(k==='month'){var m=new Date(t);m.setDate(1);s.from=m.getTime();s.to=t;}
+    else if(k==='all'){s.all=true;s.from=s.minDay;s.to=s.maxDay;}
+    var v=new Date(s.to);v.setDate(1);v.setHours(0,0,0,0);s.month=v;}
+  function zSel(s){return s.all?s.list.slice():s.list.filter(function(x){if(!x.ts)return false;var k=d0(x.ts);return k>=s.from&&k<=s.to;});}
+  function zPick(s){var t=d0(Date.now()),n=zSel(s).length,qs=[['today','اليوم',s.from===t&&s.to===t],['yest','أمس',s.from===d0(t-DAY+3600e3)&&s.to===s.from],['7','آخر 7 أيام',s.from===d0(t-6*DAY+3600e3)&&s.to===t],['month','هذا الشهر',new Date(s.from).getDate()===1&&s.to===t&&new Date(s.from).getMonth()===new Date(t).getMonth()&&s.from!==s.to],['all','الكل',s.all]];
+    var h='<div class="zq">'+qs.map(function(q){return '<button type="button" data-z="q:'+q[0]+'"'+(q[2]&&(q[0]==='all'||!s.all)?' class="on"':'')+'>'+q[1]+'</button>';}).join('')+'</div>';
+    h+='<div class="zr"><div'+(s.step!==1?' class="act"':'')+'><small>من</small><b>'+dTxt(s.from)+'</b></div><i>←</i><div'+(s.step===1?' class="act"':'')+'><small>إلى</small><b>'+(s.step===1?'اختر اليوم':dTxt(s.to))+'</b></div></div>';
+    var m=new Date(s.month),y=m.getFullYear(),mo=m.getMonth(),off=(new Date(y,mo,1).getDay()+6)%7,dim=new Date(y,mo+1,0).getDate(),nowM=new Date(t);nowM.setDate(1);
+    h+='<div class="zcal"><div class="zcm"><button type="button" data-z="m:-1" aria-label="الشهر السابق">›</button><b>'+MON[mo]+' '+y+'</b><button type="button" data-z="m:1" aria-label="الشهر التالي"'+(m.getTime()>=nowM.getTime()?' disabled':'')+'>‹</button></div>'+
+      '<div class="zcw"><span>ن</span><span>ث</span><span>ر</span><span>خ</span><span>ج</span><span>س</span><span>ح</span></div><div class="zcd">';
+    for(var i=0;i<off;i++)h+='<span></span>';
+    for(var d=1;d<=dim;d++){var k=new Date(y,mo,d).getTime(),c=s.days[k]||0,inr=!s.all&&k>=s.from&&k<=s.to,edge=!s.all&&(k===s.from||k===s.to),fut=k>t;
+      var lvl=c?(c/s.peak>0.66?3:c/s.peak>0.33?2:1):0;
+      h+='<button type="button" data-z="d:'+k+'" class="'+(c?'has l'+lvl:'')+(inr||s.all&&c?' in':'')+(edge?' ed':'')+(k===t?' td':'')+'"'+(fut?' disabled':'')+'><em>'+d+'</em>'+(c?'<i>'+c+'</i>':'')+'</button>';}
+    h+='</div><div class="zcl"><span><i class="k1"></i>قليل</span><span><i class="k3"></i>كثير</span><span>الرقم الصغير = عدد الإيصالات في اليوم</span></div></div>';
+    h+='<div class="zgo"><div><b>'+n+'</b> إيصالًا'+(s.all?' · كل المحادثة':(s.from===s.to?' · '+dTxt(s.from):' · '+dTxt(s.from)+' ← '+dTxt(s.to)))+(n>300?'<small>سيُستورد أحدث 300 — كرّر للباقي</small>':'')+(s.step===1?'<small>اضغط يوم النهاية لتحديد فترة، أو استورد هذا اليوم فقط</small>':'')+'</div><button type="button" data-z="go"'+(n?'':' disabled')+'>استيراد</button></div>';
+    h+='<div class="zn">الأيام تُحسب من <b>تاريخ إرسال الرسالة في واتساب</b>.'+(s.undated?' <b style="color:#B00020">'+s.undated+' مرفقًا بلا تاريخ</b> تظهر فقط في «الكل».':'')+' المكرر والمستخدم سابقًا يُرفض تلقائيًا.</div>';
+    return h;}
   function zName(n){n=String(n||'').replace(/\.zip$/i,'').replace(/\s*\(\d+\)\s*$/,'');var m=n.match(/WhatsApp Chat\s*[-–]\s*(.+)$/i)||n.match(/WhatsApp Chat with\s+(.+)$/i)||n.match(/Conversa do WhatsApp com\s+(.+)$/i)||n.match(/محادثة (?:واتساب|WhatsApp) مع\s+(.+)$/);return m?m[1].trim():n;}
   function zPaint(){var s=ZS,h='<div class="zc"><header><div><small>ملف محادثة واتساب · '+(pkFor==='bulkSup'?'إيصالات مورد':'إيصالات زبون')+'</small><b>'+esc(s.name||'')+'</b></div><button type="button" data-z="x"'+(s.phase==='work'&&!s.finished?' disabled':'')+'>✕</button></header>';
     var cur=s.phase==='open'?0:s.phase==='pick'?1:(s.stage==='unzip'?1:2);if(s.finished)cur=3;
     if(typeof trk3==='function')h+='<div class="zt">'+trk3(cur,['فتح الملف','التفكيك','القراءة والتحقق'],[s.total!=null?s.total+' إيصالًا':'',s.pickN?(s.done1||0)+' / '+s.pickN:'',s.pickN&&cur>=2?(s.done2||0)+' / '+s.pickN:''],!s.finished&&s.phase!=='pick',true)+'</div>';
     if(s.phase==='open')h+='<div class="zm"><span class="zsp"></span><b>جارٍ فتح الملف…</b><small>'+esc(s.size||'')+' — قد يستغرق لحظات للملفات الكبيرة</small></div>';
     if(s.phase==='err')h+='<div class="zm"><b style="color:#B00020">'+esc(s.err)+'</b></div><button type="button" class="zb" data-z="x">إغلاق</button>';
-    if(s.phase==='pick'){var c=function(a){return s.list.filter(function(x){return x.age<=a;}).length;};
-      h+='<div class="zh">اختر الفترة التي تريد إيصالاتها</div><div class="zg">'+[[0,'اليوم'],[1,'اليوم وأمس'],[7,'آخر 7 أيام'],[99999,'كل المحادثة']].map(function(o){var n=c(o[0]);return '<button type="button" data-z="'+o[0]+'"'+(n?'':' disabled')+'><b>'+n+'</b><small>'+o[1]+'</small></button>';}).join('')+'</div><div class="zn">الفترة تُحسب من <b>تاريخ إرسال الرسالة في واتساب</b> لا من تاريخ الإيصال نفسه — إيصال قديم أُرسل اليوم يظهر ضمن اليوم، وتاريخه الحقيقي يُعرض على سطره بعد القراءة.'+(s.undated?'<br><b style="color:#B00020">'+s.undated+' مرفقًا بلا تاريخ معروف</b> — لا تدخل في أي فترة، تظهر فقط في «كل المحادثة».':'')+'<br>المكرر والمستخدم في تسوية سابقة يُرفض تلقائيًا. الحد 300 إيصال في الدفعة.</div>';}
+    if(s.phase==='pick')h+=zPick(s);
     if(s.phase==='work'){var n=s.pickN||1,pct=Math.round(((s.done1||0)*0.25+(s.done2||0)*0.75)/n*100);if(s.finished)pct=100;
       h+='<div class="zp"><i style="width:'+pct+'%"></i></div><div class="zs">'+(s.finished?(s.stop?'أُوقف — ':'اكتمل — ')+'تحقق من النتيجة':s.stage==='unzip'?'جارٍ تفكيك الإيصالات من الملف…':'جارٍ القراءة والتحقق من كل إيصال…')+' <b>'+pct+'%</b></div>'+
         (s.curName&&!s.finished?'<div class="zf">'+esc(s.curName)+'</div>':'')+
@@ -178,10 +219,10 @@ function init(){
         var ts=idx[nm.toLowerCase()]||waStamp(nm)||0;list.push({nm:nm,en:en,ts:ts,age:waAge(ts)});});
       ZS.undated=list.filter(function(x){return !x.ts;}).length;
       if(!list.length)throw new Error('لا صور ولا PDF في الملف — صدّر المحادثة مع الوسائط');
-      ZS.list=list;ZS.total=list.length;ZS.phase='pick';zPaint();
+      ZS.list=list;ZS.total=list.length;zInit(ZS);ZS.phase='pick';zPaint();
     }catch(e){ZS.phase='err';ZS.err=(e&&e.message)||'تعذّر فتح الملف';zPaint();}}
   function sleep(ms){return new Promise(function(r){setTimeout(r,ms);});}
-  async function zRun(maxAge){var s=ZS,pick=s.list.filter(function(x){return x.age<=maxAge;}).sort(function(a,b){return (b.ts||0)-(a.ts||0);}).slice(0,300);
+  async function zRun(){var s=ZS,pick=zSel(s).sort(function(a,b){return (b.ts||0)-(a.ts||0);}).slice(0,300);
     if(!pick.length)return;s.phase='work';s.stage='unzip';s.pickN=pick.length;s.done1=0;s.done2=0;s.ok=0;s.rev=0;s.dup=0;s.sum=0;s.stop=false;zPaint();
     var out=[];
     for(var i=0;i<pick.length&&!s.stop;i++){s.curName=pick[i].nm;try{var bl=await pick[i].en.async('blob'),ex=pick[i].nm.split('.').pop().toLowerCase();
