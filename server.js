@@ -1115,6 +1115,27 @@ app.post('/wa/webhook', async (req, res) => {
   } catch (e) { console.error('wa-webhook:', e.message); }
 });
 
+/* 1410: إرسال كشف التسوية (PDF أو صورة) إلى بوت تلگرام — للمالك فقط، يُرسل إلى TELEGRAM_ADMIN_ID */
+app.post('/account/tg-report', async (req, res) => {
+  try {
+    if (!JWT_SECRET) return res.status(503).json({ ok: false, err: 'service' });
+    if (!ownerClaims(req)) return res.status(403).json({ ok: false, err: 'owner-only' });
+    if (!ENV.BOT_TOKEN || !ENV.ADMIN_ID) return res.status(503).json({ ok: false, err: 'tg-not-configured' });
+    const buf = Buffer.from(String(req.body.file || '').replace(/^data:[^,]*,/, ''), 'base64');
+    if (buf.length < 200 || buf.length > 9 * 1024 * 1024) return res.status(400).json({ ok: false, err: 'bad-file' });
+    const pdf = buf.slice(0, 4).toString('latin1') === '%PDF';
+    const name = (String(req.body.name || 'BDL-report').replace(/\.(pdf|png|jpe?g)$/i, '').replace(/[^\w\u0600-\u06FF.\- ]+/g, '-').slice(0, 80) || 'BDL-report') + (pdf ? '.pdf' : '.png');
+    const fd = new FormData();
+    fd.append('chat_id', String(ENV.ADMIN_ID));
+    fd.append('caption', String(req.body.caption || '').slice(0, 1000));
+    fd.append('document', new Blob([buf], { type: pdf ? 'application/pdf' : 'image/png' }), name);
+    const r = await fetch(`https://api.telegram.org/bot${ENV.BOT_TOKEN}/sendDocument`, { method: 'POST', body: fd });
+    const d = await r.json().catch(() => ({}));
+    if (!d.ok) return res.status(502).json({ ok: false, err: String(d.description || 'telegram').slice(0, 200) });
+    res.json({ ok: true });
+  } catch (e) { console.warn('tg-report:', e.message); res.status(500).json({ ok: false, err: 'server' }); }
+});
+
 app.post('/account/receipt-log', async (req, res) => {
   try {
     if (!JWT_SECRET) return res.status(503).json({ ok: false, err: 'service' });

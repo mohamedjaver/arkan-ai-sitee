@@ -99,6 +99,7 @@ function init(){
   '#shOps .ev{display:grid;grid-template-columns:1fr 1fr;gap:8px}#shOps .ev label{min-width:0}#shOps .ev label.w,#shOps .ev .bx,#shOps .ev p{grid-column:1/3}#shOps .ev small{display:block;font-size:10.5px;font-weight:800;color:#5C7699;margin-bottom:3px}'+
   '#shOps .ev input{width:100%;box-sizing:border-box;height:44px;border:1.5px solid #C9D6EA;padding:0 8px;font-family:"IBM Plex Mono",monospace;font-size:15px;font-weight:700;color:#0B2447;background:#fff}#shOps .ev input:focus{border-color:#0B2F70;outline:none}'+
   '#shOps .ev .bx{display:grid;grid-template-columns:2fr 1fr;gap:8px}#shOps .ev .bx button{height:44px;border:1.5px solid #0B2F70;background:#fff;color:#0B2F70;font-family:inherit;font-weight:800;font-size:13px;cursor:pointer}#shOps .ev .bx button.s{background:#0E8F5B;border-color:#0E8F5B;color:#fff}#shOps .ev p{margin:0;font-size:12px;font-weight:700;color:#B00020}'+
+  '#shRep footer.f4{grid-template-columns:1fr 1fr;grid-auto-rows:48px}#shRep footer.f4 button{height:48px;font-size:13px}#shRep footer.f4 button.p{grid-column:1/3;background:#229ED9;border-color:#229ED9;height:52px;font-size:15px}#shRep footer button:disabled{opacity:.6}'+
   '#shFoot{position:sticky;bottom:0;z-index:6;display:grid;grid-template-columns:2fr 3fr;gap:8px;margin:14px -16px 0;padding:10px 16px calc(10px + env(safe-area-inset-bottom));background:#fff;border-top:1px solid var(--line);box-shadow:0 -6px 16px rgba(11,47,112,.08)}'+
   '#shFoot button{width:100%!important;height:54px!important;margin:0!important;font-size:13.5px!important;line-height:1.3;white-space:normal}';
   document.head.appendChild(st);
@@ -731,6 +732,96 @@ function init(){
           var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=fname+'.png';document.body.appendChild(a);a.click();a.remove();
         }catch(err){if(!(err&&err.name==='AbortError'))say('تعذّر إخراج التقرير: '+((err&&err.message)||err));}};
     }catch(e){say('تعذّر إنشاء التقرير: '+(e.message||e));}}
+
+  /* ═══ 1410: كشف تسوية رسمي بمقاس A4 — ترويسة BDL، ملخص مالي، جدول العمليات، مطابقة الموردين، وفي آخره «الباقي» ═══ */
+  function numOf(s){var v=parseFloat(String(s==null?'':s).replace(/[^\d.\-]/g,''));return isFinite(v)?v:0;}
+  function a4Data(){var d=repData(),ops=[];try{ops=selected().slice();}catch(e){}
+    if(!d.cust){try{var keys=Object.keys(typeof SEL!=='undefined'?SEL:{}),g=(typeof GROUPS!=='undefined'?GROUPS:[]).find(function(x){return keys.indexOf(gKey(x))>=0;});if(g)d.cust=g.customer_name||'';}catch(e){}}
+    ops.sort(function(a,b){return (new Date(a.created_at).getTime()||0)-(new Date(b.created_at).getTime()||0);});
+    d.ops=ops.map(function(t){return {ref:String(t.ref||'').toUpperCase(),at:t.created_at,a:Number(t.amount)||0,ccy:t.ccy||'',rate:t.rate||'',sa:Number(t.settle_amount)||0,sc:t.settle_ccy||''};});
+    d.inSum=ops.reduce(function(s,t){return s+(Number(t.amount)||0);},0);d.inCcy=(ops[0]&&ops[0].ccy)||'';
+    var S0=(typeof SS!=='undefined'&&SS)||{};d.dueN=Number(S0.due)||numOf(d.due);d.paidN=Number(S0.paid)||numOf(d.paid);d.ccy=S0.dueCcy||(String(d.due).match(/[A-Z]{3,4}/)||['AOA'])[0];
+    d.rs=($('ssRs')&&$('ssRs').value)||'';d.rb=($('ssRb')&&$('ssRb').value)||'';
+    var ts=ops.map(function(t){return new Date(t.created_at).getTime();}).filter(function(x){return x>0;});d.from=ts.length?Math.min.apply(null,ts):0;d.to=ts.length?Math.max.apply(null,ts):0;
+    var z=function(n){return (n<10?'0':'')+n;},w=d.when;d.no='BDL-ST-'+w.getFullYear()+z(w.getMonth()+1)+z(w.getDate())+'-'+z(w.getHours())+z(w.getMinutes());return d;}
+  function drawA4(mk,d,logo){var W=1654,H=2339,M=96,cv=mk(W,H),x=cv.getContext('2d'),AR='"IBM Plex Sans Arabic","Segoe UI",Tahoma,sans-serif',NUM='"IBM Plex Mono",Inter,Arial,sans-serif';
+    var NAVY='#0B2F70',INK='#0B2447',MUT='#5C7699',LINE='#D5DEEC',GRN='#0E8F5B',RED='#B00020',AMB='#B86E00',R=W-M,L=M,CW=W-2*M;
+    function box(a,b,w,h,f,s,lw){if(f){x.fillStyle=f;x.fillRect(a,b,w,h);}if(s){x.strokeStyle=s;x.lineWidth=lw||2;x.strokeRect(a,b,w,h);}}
+    function T(str,a,b,size,wt,col,al,num,maxW){str=String(str==null?'':str);var fs=size;x.font=wt+' '+fs+'px '+(num?NUM:AR);x.fillStyle=col;x.textAlign=al||'right';x.textBaseline='alphabetic';try{x.direction=num?'ltr':'rtl';}catch(e){}
+      if(maxW){while(fs>size*0.62&&x.measureText(str).width>maxW){fs-=1;x.font=wt+' '+fs+'px '+(num?NUM:AR);}if(x.measureText(str).width>maxW){while(str.length>3&&x.measureText(str+'…').width>maxW)str=str.slice(0,-1);str+='…';}}x.fillText(str,a,b);}
+    var F=function(n,dg){return Number(n||0).toLocaleString('en-US',{minimumFractionDigits:dg||0,maximumFractionDigits:dg==null?2:dg});},z=function(n){return (n<10?'0':'')+n;};
+    var D=function(ts,tm){if(!ts)return '—';var q=new Date(ts);if(isNaN(q))return '—';return z(q.getDate())+'/'+z(q.getMonth()+1)+'/'+q.getFullYear()+(tm?'  '+z(q.getHours())+':'+z(q.getMinutes()):'');};
+    box(0,0,W,H,'#fff');box(0,0,W,30,NAVY);box(0,30,W,7,'#F2B43A');
+    /* الترويسة */
+    var lg=false;try{lg=logo&&logo(x,R-150,84,150);}catch(e){}if(!lg){box(R-150,84,150,150,NAVY);T('BDL',R-75,180,54,700,'#fff','center',true);}
+    T('BDL · لبدال',R-178,146,62,700,NAVY);T('خدمات الصرف والتحويل',R-178,192,28,500,MUT);T('ARKAN INTERNATIONAL TRADING',R-178,230,22,600,MUT,'right',true);
+    box(L,84,470,150,'#F4F7FC',LINE);box(L,84,470,46,NAVY);T('كشف تسوية',L+235,117,28,700,'#fff','center');
+    T('رقم الكشف',L+450,166,21,500,MUT);T(d.no,L+20,166,22,700,INK,'left',true);T('تاريخ الإصدار',L+450,210,21,500,MUT);T(D(d.when,true),L+20,210,22,700,INK,'left',true);
+    box(L,262,CW,3,NAVY);
+    /* بيانات الطرف */
+    var y=292,cw=(CW-24)/2,cell=function(cx,cy,lab,val,num){box(cx,cy,cw,84,'#FAFBFD',LINE);T(lab,cx+cw-20,cy+32,20,500,MUT);T(val||'—',cx+cw-20,cy+68,28,700,INK,'right',num,cw-40);};
+    cell(R-cw,y,'الزبون',d.cust,false);cell(L,y,'عدد العمليات',String(d.ops.length||d.n||'—'),true);
+    cell(R-cw,y+96,'الفترة',d.from?(D(d.to)!==D(d.from)?'من '+D(d.from)+' إلى '+D(d.to):D(d.from)):'—',false);cell(L,y+96,'المستلم من الزبون',F(d.inSum,0)+' '+d.inCcy,true);
+    y+=96+84+62;
+    var sec=function(n,t){box(R-8,y-26,8,34,'#F2B43A');T(n+'  '+t,R-22,y,28,700,NAVY);y+=22;};
+    var row=function(lab,val,col,bold,bg){box(L,y,CW,54,bg||null);x.strokeStyle=LINE;x.lineWidth=1.5;x.beginPath();x.moveTo(L,y+54);x.lineTo(R,y+54);x.stroke();T(lab,R-20,y+36,24,bold?700:500,bold?INK:'#33466B');T(val,L+20,y+36,bold?27:25,700,col||INK,'left',true,CW-520);y+=54;};
+    /* أولًا: الملخص المالي */
+    sec('أولًا','الملخص المالي');box(L,y,CW,2,NAVY);y+=2;
+    row('إجمالي المستلم من الزبون',F(d.inSum,0)+' '+d.inCcy);
+    if(d.rs||d.rb)row('سعر الصرف المطبَّق'+(d.rb?' (بيع / شراء)':''),(d.rs||'—')+(d.rb?'  /  '+d.rb:''));
+    row('المستحق للتسوية',F(d.dueN,2)+' '+d.ccy,NAVY,true,'#F4F7FC');
+    row('المدفوع من الإيصالات',F(d.paidN,2)+' '+d.ccy,INK,true);
+    var pc=d.dueN>0?d.paidN/d.dueN*100:0;row('نسبة التغطية',F(pc,1)+'%',pc>=99.95&&pc<=100.05?GRN:pc>100?AMB:RED,true);
+    y+=44;
+    /* ثانيًا: العمليات */
+    sec('ثانيًا','العمليات المشمولة بالتسوية');var c=[R-20,R-90,R-560,L+470,L+20];
+    box(L,y,CW,50,NAVY);T('م',c[0],y+33,21,600,'#fff');T('المرجع',c[1],y+33,21,600,'#fff');T('التاريخ',c[2],y+33,21,600,'#fff');T('المبلغ ('+d.inCcy+')',c[3],y+33,21,600,'#fff','left');T('المقابل',c[4],y+33,21,600,'#fff','left');y+=50;
+    var maxR=12,list=d.ops.length>maxR?d.ops.slice(0,maxR-1):d.ops;
+    list.forEach(function(o,i){if(i%2)box(L,y,CW,46,'#F7F9FC');T(String(i+1),c[0],y+31,21,700,MUT,'right',true);T(o.ref,c[1],y+31,21,600,INK,'right',true,440);T(D(o.at,true),c[2],y+31,20,500,'#33466B','right',true);T(F(o.a,0),c[3],y+31,22,700,INK,'left',true);T(o.sa?F(o.sa,0)+' '+o.sc:'—',c[4],y+31,21,600,'#33466B','left',true,420);y+=46;});
+    if(d.ops.length>maxR){var rest=d.ops.slice(maxR-1);box(L,y,CW,46,'#FFF9E8');T('… و'+rest.length+' عمليات أخرى',c[1],y+31,21,600,AMB);T(F(rest.reduce(function(s,o){return s+o.a;},0),0),c[3],y+31,22,700,INK,'left',true);y+=46;}
+    box(L,y,CW,50,'#EEF4FF');box(L,y,CW,2,NAVY);T('الإجمالي',c[1],y+34,23,700,NAVY);T(F(d.inSum,0),c[3],y+34,24,700,NAVY,'left',true);y+=50+44;
+    /* ثالثًا: مطابقة الموردين */
+    sec('ثالثًا','مطابقة إيصالات الموردين');var s=[R-20,L+820,L+470,L+20];
+    if(d.has&&d.sups.length){box(L,y,CW,50,NAVY);T('المورد',s[0],y+33,21,600,'#fff');T('إيصالات مطابقة',s[1],y+33,21,600,'#fff','left');T('المبلغ',s[2],y+33,21,600,'#fff','left');T('بلا مقابل',s[3],y+33,21,600,'#fff','left');y+=50;
+      d.sups.slice(0,5).forEach(function(q,i){if(i%2)box(L,y,CW,46,'#F7F9FC');T(q.name,s[0],y+31,22,600,INK,'right',false,560);T(String(q.n),s[1],y+31,22,700,GRN,'left',true);T(F(q.sum,0),s[2],y+31,22,700,INK,'left',true);T(String(q.un),s[3],y+31,22,700,q.un?RED:MUT,'left',true);y+=46;});
+      box(L,y,CW,50,'#EEF4FF');box(L,y,CW,2,NAVY);T('الإجمالي',s[0],y+34,23,700,NAVY);T(String(d.ok),s[1],y+34,24,700,GRN,'left',true);T(F(d.okSum,0),s[2],y+34,24,700,NAVY,'left',true);T(String(d.un.length),s[3],y+34,24,700,d.un.length?RED:MUT,'left',true);y+=50;
+      y+=14;T('إيصالات الزبون: '+d.custN+'   ·   بلا مورد: '+d.cfree.length+'   ·   إيصالات مورد بلا مقابل: '+d.un.length,R-20,y+26,21,500,(d.cfree.length||d.un.length)?AMB:GRN);y+=40;}
+    else{box(L,y,CW,60,'#FAFBFD',LINE);T('لم تُرفع إيصالات موردين لهذه التسوية بعد',W/2,y+39,23,500,MUT,'center');y+=60;}
+    /* الباقي — ثابت أسفل الصفحة */
+    var by=H-498,diff=d.dueN-d.paidN,zero=Math.abs(diff)<0.5,col=zero?GRN:diff>0?RED:AMB,bg=zero?'#E9F8EF':diff>0?'#FFF1F2':'#FFF6E3';
+    box(L,by,CW,170,bg,col,4);box(R-14,by,14,170,col);
+    T(zero?'الحساب مسوّى بالكامل':diff>0?'الباقي على الزبون':'مبلغ زائد لصالح الزبون',R-44,by+62,34,700,col);
+    T(zero?'لا باقٍ على أي طرف':diff>0?'المستحق أكبر من المدفوع — يُستكمل من الزبون':'المدفوع أكبر من المستحق — يُرحَّل أو يُعاد للزبون',R-44,by+116,23,500,'#33466B','right',false,CW-760);
+    T(F(Math.abs(diff),2),L+40,by+104,74,700,col,'left',true,640);T(d.ccy,L+40,by+146,24,600,col,'left',true);
+    /* التوقيعات */
+    var sy=H-258;[['أُعدّ بواسطة','نظام BDL الآلي'],['الاعتماد والتوقيع','']].forEach(function(q,i){var sx=i?L:R-560;x.strokeStyle='#8A97AD';x.lineWidth=1.5;x.beginPath();x.moveTo(sx,sy+70);x.lineTo(sx+560,sy+70);x.stroke();T(q[0],sx+560,sy+28,22,600,MUT);if(q[1])T(q[1],sx+560,sy+60,22,600,INK);});
+    /* التذييل */
+    box(0,H-96,W,96,NAVY);box(0,H-96,W,5,'#F2B43A');T('كشف آلي صادر عن نظام BDL — الأرقام كما في التسوية وقت الإصدار',R,H-40,22,500,'rgba(255,255,255,.92)');T('lbdal.com   ·   1 / 1',L,H-40,22,700,'#F2B43A','left',true);
+    return cv;}
+  window.__shDrawA4=drawA4;
+  async function reportBlob(cv,kind){ /* PDF بمقاس A4 الحقيقي أو صورة */
+    if(kind==='pdf'&&window.jspdf&&window.jspdf.jsPDF){var doc=new window.jspdf.jsPDF({unit:'pt',format:'a4',orientation:'p'});doc.addImage(cv.toDataURL('image/jpeg',.92),'JPEG',0,0,595.28,841.89);return doc.output('blob');}
+    return await new Promise(function(r){cv.toBlob(r,'image/png');});}
+  function b64Of(blob){return new Promise(function(res,rej){var fr=new FileReader();fr.onload=function(){res(String(fr.result).split(',')[1]||'');};fr.onerror=rej;fr.readAsDataURL(blob);});}
+  async function openReportA4(){try{try{if(document.fonts&&document.fonts.ready)await Promise.race([document.fonts.ready,new Promise(function(r){setTimeout(r,1200);})]);}catch(e){}
+      var d=a4Data(),cv=drawA4(function(w,h){var c=document.createElement('canvas');c.width=w;c.height=h;return c;},d,window.bdlLogo||null);
+      var v=$('shRep');if(!v){v=document.createElement('div');v.id='shRep';document.body.appendChild(v);}
+      var fname='BDL-كشف-تسوية-'+(d.cust||'').replace(/[^\w\u0600-\u06FF]+/g,'-')+'-'+d.no.slice(7);
+      v.innerHTML='<header><b>كشف التسوية — A4</b><button type="button" data-r="x">✕</button></header><div class="bd"><img src="'+cv.toDataURL('image/jpeg',.9)+'" alt="كشف التسوية"></div><footer class="f4"><button type="button" class="p" data-r="tg">إرسال إلى تلگرام</button><button type="button" data-r="share">مشاركة PDF</button><button type="button" data-r="pdf">تنزيل PDF</button><button type="button" data-r="png">صورة</button></footer>';
+      v.classList.add('on');
+      v.onclick=async function(e){var b=e.target.closest('[data-r]');if(!b||b.disabled)return;var k=b.dataset.r;if(k==='x'){v.classList.remove('on');return;}
+        var lab=b.textContent;try{b.disabled=true;
+          if(k==='tg'){b.textContent='جارٍ الإرسال…';var pdf=await reportBlob(cv,'pdf'),tk='';try{var j=JSON.parse(localStorage.getItem('arkan_sb_jwt')||'null');tk=(j&&j.token)||'';}catch(x){}if(!tk&&typeof TOK!=='undefined')tk=TOK||'';
+            var diff=d.dueN-d.paidN,cap='كشف تسوية '+d.no+'\nالزبون: '+(d.cust||'—')+'\nالمستحق: '+Number(d.dueN).toLocaleString('en-US')+' '+d.ccy+'\nالمدفوع: '+Number(d.paidN).toLocaleString('en-US')+' '+d.ccy+'\n'+(Math.abs(diff)<0.5?'الحساب مسوّى بالكامل':(diff>0?'الباقي على الزبون: ':'مبلغ زائد: ')+Math.abs(diff).toLocaleString('en-US',{maximumFractionDigits:2})+' '+d.ccy);
+            var r=await fetch('https://arkan-ai-site-production.up.railway.app/account/tg-report',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+tk},body:JSON.stringify({file:await b64Of(pdf),name:fname,caption:cap})}),o={};try{o=await r.json();}catch(x){}
+            if(r.ok&&o.ok){say('أُرسل الكشف إلى تلگرام ✓');b.textContent='أُرسل ✓';setTimeout(function(){b.textContent=lab;b.disabled=false;},2500);return;}
+            say(r.status===404?'الخادم لم يُحدَّث بعد — انتظر دقيقتين وأعد المحاولة':o.err==='tg-not-configured'?'بوت تلگرام غير مضبوط على الخادم (TELEGRAM_BOT_TOKEN / TELEGRAM_ADMIN_ID)':r.status===401||r.status===403?'انتهت الجلسة — سجّل الدخول مجددًا':'تعذّر الإرسال إلى تلگرام: '+(o.err||('خطأ '+r.status)));}
+          else if(k==='share'){var pb=await reportBlob(cv,'pdf'),f=new File([pb],fname+'.pdf',{type:'application/pdf'});if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],title:'كشف تسوية BDL'});}else{var a1=document.createElement('a');a1.href=URL.createObjectURL(pb);a1.download=fname+'.pdf';document.body.appendChild(a1);a1.click();a1.remove();}}
+          else{var bl=await reportBlob(cv,k==='pdf'?'pdf':'png'),a=document.createElement('a');a.href=URL.createObjectURL(bl);a.download=fname+(k==='pdf'?'.pdf':'.png');document.body.appendChild(a);a.click();a.remove();}
+        }catch(err){if(!(err&&err.name==='AbortError'))say('تعذّر إخراج الكشف: '+((err&&err.message)||err));}
+        b.textContent=lab;b.disabled=false;};
+    }catch(e){say('تعذّر إنشاء الكشف: '+(e.message||e));}}
+  openReport=openReportA4; /* زر «تقرير» يفتح الكشف الرسمي */
   /* ═══ 1386: حفظ المطابقة — كل إيصالات المورد (المطابَق منها وغير المطابَق) تُخزَّن بصورها وروابطها وتُربط بالتسوية المعلقة،
      وعند إعادة فتح التسوية تُستعاد كما كانت: الأزواج الخضراء، الصفوف الحمراء، أسماء الموردين، والتصحيحات اليدوية. ═══ */
   /* 1405: حفظ إيصال المورد — القيد الموجود يُحدَّث بمعرّفه مباشرة (PATCH) ويُتحقق من أن التحديث وقع فعلًا.
