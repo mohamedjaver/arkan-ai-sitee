@@ -88,6 +88,17 @@ function init(){
   '#shRep header{flex:none;display:flex;justify-content:space-between;align-items:center;padding:calc(10px + env(safe-area-inset-top)) 14px 10px;color:#fff}#shRep header b{font-size:16px}#shRep header button{width:40px;height:40px;border:0;background:rgba(255,255,255,.16);color:#fff;font-size:17px}'+
   '#shRep .bd{flex:1;overflow:auto;padding:0 10px 10px;-webkit-overflow-scrolling:touch}#shRep .bd img{width:100%;height:auto;display:block;background:#fff}'+
   '#shRep footer{flex:none;display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:8px;padding:10px 14px calc(12px + env(safe-area-inset-bottom));background:#fff}#shRep footer button{height:50px;border:1.5px solid #0B2F70;background:#fff;color:#0B2F70;font-family:inherit;font-weight:800;font-size:14px;cursor:pointer}#shRep footer button.p{background:#0B2F70;color:#fff}'+
+  '#shOps .sb{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 12px;border-bottom:1px solid var(--line);font-size:11.5px;color:#5C7699}#shOps .sb button{height:34px;padding:0 12px;border:1.5px solid #0B2F70;background:#fff;color:#0B2F70;font-family:inherit;font-weight:800;font-size:12px;cursor:pointer}#shOps .sb b{font-family:"IBM Plex Mono",monospace;color:#0B2447}'+
+  '#shOps .o2{display:grid;grid-template-columns:30px 1fr auto;gap:2px 8px;align-items:center;padding:10px 12px;border-bottom:1px solid var(--line)}#shOps .o2:last-child{border-bottom:0}#shOps .o2.on{background:#F4F8FF}'+
+  '#shOps .o2 .n{grid-row:1/3;align-self:start;width:28px;height:28px;display:grid;place-items:center;background:#0B2F70;color:#fff;font-family:"IBM Plex Mono",monospace;font-size:12.5px;font-weight:700}'+
+  '#shOps .o2 .m{min-width:0}#shOps .o2 .m b{display:block;font-family:"IBM Plex Mono",monospace;font-size:12.5px;color:#0B2447;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;direction:ltr;text-align:start}#shOps .o2 .m small{display:block;font-size:11px;color:#5C7699;direction:ltr;text-align:start}'+
+  '#shOps .o2 strong{font-family:"IBM Plex Mono",monospace;font-size:14.5px;color:#0B2F70;direction:ltr;white-space:nowrap}#shOps .o2 strong i{font-style:normal;font-size:10.5px;color:#5C7699}'+
+  '#shOps .o2 .a{grid-column:2/4;display:flex;gap:6px;margin-top:6px}#shOps .o2 .a button{flex:1;height:36px;border:1.5px solid #0B2F70;background:#fff;color:#0B2F70;font-family:inherit;font-weight:800;font-size:12px;cursor:pointer}#shOps .o2 .a button.r{border-color:#B00020;color:#B00020}'+
+  '#shOps .dv,#shOps .ev{grid-column:1/4;margin-top:8px;padding:10px;background:#fff;border:1px solid #C9D6EA}'+
+  '#shOps .dv>div{display:flex;justify-content:space-between;gap:10px;padding:5px 0;border-bottom:1px dashed var(--line);font-size:12px;color:#5C7699}#shOps .dv b{font-family:"IBM Plex Mono",monospace;color:#0B2447;direction:ltr}#shOps .dv button{width:100%;height:40px;margin-top:8px;border:0;background:#0B2F70;color:#fff;font-family:inherit;font-weight:800;font-size:12.5px;cursor:pointer}#shOps .dv button:disabled{background:#B9C4D6}'+
+  '#shOps .ev{display:grid;grid-template-columns:1fr 1fr;gap:8px}#shOps .ev label{min-width:0}#shOps .ev label.w,#shOps .ev .bx,#shOps .ev p{grid-column:1/3}#shOps .ev small{display:block;font-size:10.5px;font-weight:800;color:#5C7699;margin-bottom:3px}'+
+  '#shOps .ev input{width:100%;box-sizing:border-box;height:44px;border:1.5px solid #C9D6EA;padding:0 8px;font-family:"IBM Plex Mono",monospace;font-size:15px;font-weight:700;color:#0B2447;background:#fff}#shOps .ev input:focus{border-color:#0B2F70;outline:none}'+
+  '#shOps .ev .bx{display:grid;grid-template-columns:2fr 1fr;gap:8px}#shOps .ev .bx button{height:44px;border:1.5px solid #0B2F70;background:#fff;color:#0B2F70;font-family:inherit;font-weight:800;font-size:13px;cursor:pointer}#shOps .ev .bx button.s{background:#0E8F5B;border-color:#0E8F5B;color:#fff}#shOps .ev p{margin:0;font-size:12px;font-weight:700;color:#B00020}'+
   '#shFoot{position:sticky;bottom:0;z-index:6;display:grid;grid-template-columns:2fr 3fr;gap:8px;margin:14px -16px 0;padding:10px 16px calc(10px + env(safe-area-inset-bottom));background:#fff;border-top:1px solid var(--line);box-shadow:0 -6px 16px rgba(11,47,112,.08)}'+
   '#shFoot button{width:100%!important;height:54px!important;margin:0!important;font-size:13.5px!important;line-height:1.3;white-space:normal}';
   document.head.appendChild(st);
@@ -100,7 +111,60 @@ function init(){
   var opsBox=document.createElement('div');opsBox.id='shOps';opsBox.style.display='none';
   var nx=document.createElement('div');nx.id='shNext';
   var ssum=sh.querySelector('.ssum');sh.insertBefore(hero,ssum);sh.insertBefore(storBox,ssum);sh.insertBefore(steps,ssum);sh.insertBefore(nx,ssum);sh.insertBefore(opsBox,ssum);
-  opsBox.onclick=function(e){if(e.target.closest('.t')){SHM.opsOpen=!SHM.opsOpen;paint();return;}var b=e.target.closest('button[data-id]');if(b)dropOp(b.dataset.id,b);};
+  /* ═══ 1409: عمليات التسوية — مرقَّمة، مرتَّبة بالتاريخ، مع فتح (التفاصيل وصورة الإيصال) وتعديل (المبلغ/المرجع/التاريخ) واستبعاد ═══ */
+  function opDate(t){var d=new Date(t.created_at);if(isNaN(d))return '';var z=function(n){return (n<10?'0':'')+n;};return z(d.getDate())+'/'+z(d.getMonth()+1)+'/'+d.getFullYear()+' · '+z(d.getHours())+':'+z(d.getMinutes());}
+  function opLocal(t){var d=new Date(t.created_at);if(isNaN(d))return '';var z=function(n){return (n<10?'0':'')+n;};return d.getFullYear()+'-'+z(d.getMonth()+1)+'-'+z(d.getDate())+'T'+z(d.getHours())+':'+z(d.getMinutes());}
+  function opsPaint(ops){var n=ops.length;opsBox.style.display=n>=1?'':'none';if(!n){opsBox.innerHTML='';opsBox._h='';return;}
+    var F=function(v,d){return typeof fmt==='function'?fmt(v,d||0):String(v);},desc=SHM.opsSort!=='asc';
+    var list=ops.slice().sort(function(x,y){var a=new Date(x.created_at).getTime()||0,b=new Date(y.created_at).getTime()||0;return desc?b-a:a-b;});
+    var tot=ops.reduce(function(s,x){return s+(Number(x.amount)||0);},0),ccy=(ops[0]&&ops[0].ccy)||'';
+    var h='<div class="t"><span>عمليات هذه التسوية ('+n+')</span><i>'+(SHM.opsOpen?'▴':'▾')+'</i></div>';
+    if(SHM.opsOpen){h+='<div class="sb"><button type="button" data-op="sort">'+(desc?'الأحدث أولًا':'الأقدم أولًا')+' ⇅</button><span>المجموع <b>'+F(tot)+' '+esc(ccy)+'</b></span></div>';
+      list.forEach(function(t,i){var id=esc(t.id),ed=String(SHM.opsEdit)===String(t.id),vw=String(SHM.opsView)===String(t.id);
+        h+='<div class="o2'+(ed||vw?' on':'')+'"><span class="n">'+(i+1)+'</span><div class="m"><b>'+esc(String(t.ref||'').toUpperCase())+'</b><small>'+esc(opDate(t))+(t.meta&&t.meta.orig_amount!=null?' · معدَّلة':'')+'</small></div><strong>'+F(t.amount)+' <i>'+esc(t.ccy||'')+'</i></strong>'+
+          '<div class="a"><button type="button" data-op="open" data-id="'+id+'">'+(vw?'إخفاء':'فتح')+'</button><button type="button" data-op="edit" data-id="'+id+'">تعديل</button>'+(n>1?'<button type="button" class="r" data-op="drop" data-id="'+id+'">استبعاد</button>':'')+'</div>';
+        if(vw){var st=t.status==='settling'?'قيد التسوية':t.status==='open'?'مفتوحة':(t.status||'');
+          h+='<div class="dv"><div><span>المبلغ</span><b>'+F(t.amount)+' '+esc(t.ccy||'')+'</b></div>'+(Number(t.settle_amount)>0?'<div><span>يقابله</span><b>'+F(t.settle_amount,2)+' '+esc(t.settle_ccy||'')+'</b></div>':'')+(t.rate?'<div><span>السعر</span><b>'+esc(t.rate)+'</b></div>':'')+'<div><span>الحالة</span><b>'+esc(st)+'</b></div>'+(t.meta&&t.meta.orig_amount!=null?'<div><span>المبلغ الأصلي قبل التعديل</span><b>'+F(t.meta.orig_amount)+'</b></div>':'')+
+            '<button type="button" data-op="img" data-id="'+id+'"'+(t._img===null?' disabled':'')+'>'+(t._img===undefined?'جارٍ البحث عن صورة الإيصال…':t._img===null?'لا صورة محفوظة لهذه العملية':'عرض صورة الإيصال')+'</button></div>';}
+        if(ed)h+='<div class="ev"><label><small>المبلغ ('+esc(t.ccy||'')+')</small><input data-e="amount" inputmode="decimal" dir="ltr" value="'+(Number(t.amount)||'')+'"></label><label><small>المرجع</small><input data-e="ref" dir="ltr" value="'+esc(t.ref||'')+'"></label><label class="w"><small>التاريخ والوقت</small><input data-e="date" type="datetime-local" value="'+esc(opLocal(t))+'"></label>'+
+            '<div class="bx"><button type="button" class="s" data-op="save" data-id="'+id+'">حفظ التعديل</button><button type="button" data-op="cancel">إلغاء</button></div>'+(SHM.opsErr?'<p>'+esc(SHM.opsErr)+'</p>':'')+'</div>';
+        h+='</div>';});}
+    if(opsBox._h!==h){opsBox._h=h;opsBox.innerHTML=h;}} /* لا إعادة رسم إن لم يتغير شيء — حتى لا يُمسح ما تكتبه */
+  async function opImg(t){if(t._img!==undefined)return;try{var ref=String(t.ref||''),parts=[];
+      if(/^BDL-[0-9a-f]{8,}$/i.test(ref))parts.push('fingerprint.ilike.'+ref.slice(4).toLowerCase()+'*');
+      else{parts.push('txn_ref.eq.'+encodeURIComponent(ref));if(ref.toUpperCase()!==ref)parts.push('txn_ref.eq.'+encodeURIComponent(ref.toUpperCase()));}
+      var r=await fetch(SB+'/bdl_receipts?select=id,ocr,txn_ref,fingerprint&or=('+parts.join(',')+')&limit=5',{headers:H()}),j=r.ok?await r.json():[];
+      var hit=j.find(function(x){return x.ocr&&x.ocr.image&&!/^sup-/.test(String(x.fingerprint||''))&&x.ocr.side!=='supplier';})||j.find(function(x){return x.ocr&&x.ocr.image;});
+      t._img=hit?hit.ocr.image:null;}catch(e){t._img=null;}paint();}
+  async function opSave(id,btn){var s=selected(),t=s.find(function(x){return String(x.id)===String(id);});if(!t)return;
+    var q=function(k){var el=opsBox.querySelector('.ev input[data-e="'+k+'"]');return el?String(el.value).trim():'';};
+    var na=parseFloat(q('amount').replace(/[^\d.]/g,''))||0,nr=q('ref'),nd=q('date'),body={},old=Number(t.amount)||0;
+    if(!(na>0)){SHM.opsErr='اكتب مبلغًا صحيحًا';opsBox._h='';paint();return;}
+    if(Math.abs(na-old)>0.004){
+      var unsaved=0;try{unsaved=(typeof RCPTS!=='undefined'?RCPTS:[]).filter(function(r){return !(r.dup&&!r.ok);}).length;}catch(e){}
+      if(unsaved){SHM.opsErr='تعديل المبلغ يعيد حساب التسوية. عندك '+unsaved+' إيصالًا مرفوعًا غير محفوظ — اضغط «حفظ مؤقت» أولًا ثم عدّل.';opsBox._h='';paint();return;}
+      var k=old>0?na/old:1;body.amount=na;if(Number(t.settle_amount)>0)body.settle_amount=Math.round(Number(t.settle_amount)*k*100)/100;if(Number(t.cost)>0)body.cost=Math.round(Number(t.cost)*k*100)/100;
+      body.meta=Object.assign({},t.meta||{},{edited_at:new Date().toISOString()});if(body.meta.orig_amount==null)body.meta.orig_amount=old;}
+    if(nr&&nr!==String(t.ref||''))body.ref=nr;
+    if(nd){var di=new Date(nd);if(!isNaN(di)&&di.toISOString().slice(0,16)!==new Date(t.created_at).toISOString().slice(0,16))body.created_at=di.toISOString();}
+    if(!Object.keys(body).length){SHM.opsEdit=null;SHM.opsErr='';paint();return;}
+    if(body.amount!=null&&!confirm('تغيير مبلغ العملية من '+old.toLocaleString('en-US')+' إلى '+na.toLocaleString('en-US')+' '+(t.ccy||'')+'؟\n\nسيُعاد حساب المستحق. المبلغ الأصلي يبقى مسجَّلًا على العملية.'))return;
+    if(btn){btn.disabled=true;btn.textContent='جارٍ الحفظ…';}
+    try{var r=await fetch(SB+'/bdl_transactions?id=eq.'+encodeURIComponent(t.id),{method:'PATCH',headers:H({Prefer:'return=representation'}),body:JSON.stringify(body)}),j=[];try{j=await r.json();}catch(e){}
+      if(!r.ok||!(Array.isArray(j)&&j.length)){SHM.opsErr=r.status===409?'هذا المرجع مستخدم في عملية أخرى — اختر مرجعًا مختلفًا':'تعذّر الحفظ (خطأ '+r.status+')';opsBox._h='';paint();return;}
+      Object.assign(t,body);if(body.ref)t._img=undefined;SHM.opsEdit=null;SHM.opsErr='';say('حُفظ تعديل العملية');
+      if(body.amount!=null){try{openSettle();}catch(e){}try{if(typeof loadGroups==='function')loadGroups();}catch(e){}}
+    }catch(e){SHM.opsErr='تعذّر الاتصال — أعد المحاولة';}
+    opsBox._h='';paint();}
+  opsBox.onclick=function(e){if(e.target.closest('.t')){SHM.opsOpen=!SHM.opsOpen;paint();return;}
+    var b=e.target.closest('button[data-op]');if(!b)return;var op=b.dataset.op,id=b.dataset.id,t=null;try{t=selected().find(function(x){return String(x.id)===String(id);});}catch(x){}
+    if(op==='sort'){SHM.opsSort=SHM.opsSort==='asc'?'desc':'asc';paint();}
+    else if(op==='drop'){dropOp(id,b);}
+    else if(op==='open'){SHM.opsView=String(SHM.opsView)===String(id)?null:id;SHM.opsEdit=null;paint();if(t&&SHM.opsView)opImg(t);}
+    else if(op==='edit'){SHM.opsEdit=String(SHM.opsEdit)===String(id)?null:id;SHM.opsView=null;SHM.opsErr='';paint();}
+    else if(op==='cancel'){SHM.opsEdit=null;SHM.opsErr='';paint();}
+    else if(op==='save'){opSave(id,b);}
+    else if(op==='img'&&t&&t._img){openStored(t._img);}};
   /* 1401: الرأس ينكمش إلى سطر واحد عند النزول (بهامش يمنع الارتجاف) */
   sh.addEventListener('scroll',function(){var y=sh.scrollTop,c=hero.classList.contains('cmp');if(!c&&y>170)hero.classList.add('cmp');else if(c&&y<50)hero.classList.remove('cmp');},{passive:true});
   /* 1401: خانة التسعير تُطوى إلى سطر بعد تطبيق السعر */
@@ -297,9 +361,7 @@ function init(){
       pt.textContent=pv.classList.contains('shCol')?'عرض الإيصالات المحفوظة ▾':'إخفاء الإيصالات المحفوظة ▴';}
     if(adj&&$('ssAdjV')&&$('ssAdjV').value)adj.classList.remove('shCol');
     var ops=(typeof selected==='function')?selected():[];
-    opsBox.style.display=ops.length>1?'':'none';
-    opsBox.innerHTML=ops.length>1?('<div class="t"><span>عمليات هذه التسوية ('+ops.length+')'+(SHM.opsOpen?' — استبعد ما لا تريد تسويته الآن':'')+'</span><i>'+(SHM.opsOpen?'▴':'▾')+'</i></div>'+(!SHM.opsOpen?[]:ops).map(function(t){
-      return '<div class="o"><div><b>'+esc(String(t.ref||'').toUpperCase())+'</b><small>'+esc(typeof fmt==='function'?fmt(t.amount,0):t.amount)+' '+esc(t.ccy||'')+'</small></div><button type="button" data-id="'+esc(t.id)+'">استبعاد</button></div>';}).join('')):'';
+    opsPaint(ops);
     /* خانة التسعير: سطر ملخص، تُفتح تلقائيًا ما دام السعر غير مطبّق */
     if(rT&&rbx){var vis=rbx.style.display!=='none';rT.style.display=vis?'':'none';
       if(vis){try{if(rbx.contains(document.activeElement))SHM.rateOpen=true;}catch(e){} /* لا تُطوى أثناء الكتابة */
