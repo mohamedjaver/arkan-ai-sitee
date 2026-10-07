@@ -581,13 +581,15 @@ function init(){
       if(na>0){if(na!==Number(it.parsed.amount))it.manual=true;it.parsed.amount=na;}
       if(ir){it.parsed.ref=ir.value.trim()||null;}
       it.note=fixMatch(it)||'';
+      (function(x){saveSupItem(x).then(function(){if(x._fail)say('لم يُحفظ التصحيح بعد — اضغط «حفظ المطابقة»');else if(x.to){persistSaved().catch(function(){});}});})(it); /* التصحيح اليدوي يُحفظ فورًا */
       mRender();try{renderRcpts();updMatch();}catch(x){}return;}
     if(m==='vs'){if(it.url)showFile(it.url,it.isPdf,it.file.name);else if(it.path)openStored(it.path);else say('لا صورة محفوظة لهذا الإيصال');}
     else if(m==='vc'){openCust(it.to&&it.to[0]);}
     else if(m==='un'){unlink(it);mRender();try{renderRcpts();updMatch();}catch(x){}}
     else if(m==='del'){unlink(it);it.gone=true;mRender();}});
   if($('bulkBox'))$('bulkBox').addEventListener('change',function(e){var sl=e.target.closest('select[data-m="pick"]');if(!sl||sl.value==='')return;var it=SHM.items[+sl.dataset.i],c=(SHM.pool||[])[+sl.value];
-    if(it&&c&&!c.taken){link(it,[c],'man');mRender();try{renderRcpts();updMatch();}catch(x){}}});
+    if(it&&c&&!c.taken){link(it,[c],'man');mRender();try{renderRcpts();updMatch();}catch(x){}
+      (function(x){saveSupItem(x).then(function(){if(x._fail)say('لم يُحفظ الربط بعد — اضغط «حفظ المطابقة»');else persistSaved().catch(function(){});});})(it);}}); /* الربط اليدوي يُحفظ فورًا */
   /* حفظ مطابقات الإيصالات المحفوظة مع التسوية: إيصال المورد يُخزَّن بجانب side=supplier ويُعلَّم إيصال الزبون بأنه مطابَق */
   async function persistSaved(){var ids=Object.keys(SHM.saved);for(var i=0;i<ids.length;i++){var it=SHM.saved[ids[i]],c=(it.to||[]).find(function(x){return x.kind==='saved'&&String(x.row.id)===String(ids[i]);});
       if(!c||c.persisted||!it.fp)continue;var p=it.parsed||{},row=c.row;
@@ -669,22 +671,29 @@ function init(){
     }catch(e){say('تعذّر إنشاء التقرير: '+(e.message||e));}}
   /* ═══ 1386: حفظ المطابقة — كل إيصالات المورد (المطابَق منها وغير المطابَق) تُخزَّن بصورها وروابطها وتُربط بالتسوية المعلقة،
      وعند إعادة فتح التسوية تُستعاد كما كانت: الأزواج الخضراء، الصفوف الحمراء، أسماء الموردين، والتصحيحات اليدوية. ═══ */
-  async function saveSupItem(it){if(it.gone||!it.fp||!it.parsed)return;var p=it.parsed||{};
-    if(!it.path&&it.file&&it.file.size){try{it.path=await window.rcptStore(it.file,it.fp);}catch(e){}}
+  /* 1405: حفظ إيصال المورد — القيد الموجود يُحدَّث بمعرّفه مباشرة (PATCH) ويُتحقق من أن التحديث وقع فعلًا.
+     قبل هذا كان التحديث يمر عبر «إدراج» يصطدم بقيد البصمة الفريد فيفشل بصمت، فتضيع التصحيحات اليدوية (المبلغ، المرجع، الربط) عند كل حفظ. */
+  async function supPatch(id,bd){try{var r=await fetch(SB+'/bdl_receipts?id=eq.'+encodeURIComponent(id),{method:'PATCH',headers:H({Prefer:'return=representation'}),body:JSON.stringify(bd)});
+      if(!r.ok)return false;var j=[];try{j=await r.json();}catch(e){}return Array.isArray(j)&&j.length>0;}catch(e){return false;}}
+  async function saveSupItem(it){if(it.gone||!it.parsed||(!it.fp&&!it.id))return;var p=it.parsed||{};
+    if(!it.path&&it.file&&it.file.size&&it.fp){try{it.path=await window.rcptStore(it.file,it.fp);}catch(e){}}
     var c0=(it.to||[])[0],sig=JSON.stringify([p.amount,p.ref,it.sup,it.how||'',c0?(c0.kind==='saved'?'s'+c0.row.id:'n'+c0.r.fp):'',it.path||'']);
     if(it.id&&it._sig===sig)return;
-    var b={fingerprint:'sup-'+it.fp,amount:p.amount||null,ccy:p.ccy||null,bank:p.bank||null,account_no:p.account||null,txn_ref:p.ref||null,
-      ocr:Object.assign({},p,{side:'supplier',sup_name:it.sup||null,image:it.path||null,m_how:it.how||null,m_manual:!!it.manual,
-        m_cust:c0&&c0.kind==='saved'?c0.row.id:null,m_cust_fp:c0&&c0.kind==='new'?c0.r.fp:null,cust_ref:c0?(c0.ref||null):null,matched_at:c0?new Date().toISOString():null})};
-    try{var r=await fetch(SB+'/bdl_receipts?on_conflict=owner_id,fingerprint',{method:'POST',headers:H({Prefer:'return=representation,resolution=merge-duplicates'}),body:JSON.stringify(b)});
-      var j=r.ok?await r.json():null;
-      if(!(j&&j[0])){r=await fetch(SB+'/bdl_receipts',{method:'POST',headers:H({Prefer:'return=representation,resolution=merge-duplicates'}),body:JSON.stringify(b)});j=r.ok?await r.json():null;}
-      if(j&&j[0]){it.id=j[0].id;}
-      if(!it.id){var q0=await fetch(SB+'/bdl_receipts?select=id&fingerprint=eq.sup-'+it.fp+'&limit=1',{headers:H()});var k0=q0.ok?await q0.json():[];
-        if(k0[0]){it.id=k0[0].id;await fetch(SB+'/bdl_receipts?id=eq.'+encodeURIComponent(it.id),{method:'PATCH',headers:H(),body:JSON.stringify({amount:b.amount,txn_ref:b.txn_ref,ocr:b.ocr})});}}
-      if(!it.id&&p.ref){var q=await fetch(SB+'/bdl_receipts?select=id&ocr-%3E%3Eside=eq.supplier&txn_ref=eq.'+encodeURIComponent(p.ref)+'&limit=1',{headers:H()});var k=q.ok?await q.json():[];
-        if(k[0]){it.id=k[0].id;await fetch(SB+'/bdl_receipts?id=eq.'+encodeURIComponent(it.id),{method:'PATCH',headers:H(),body:JSON.stringify({amount:b.amount,ocr:b.ocr})});}}
-      if(it.id){it.stored=true;it._sig=sig;}}catch(e){}}
+    var ocr=Object.assign({},p,{side:'supplier',sup_name:it.sup||null,image:it.path||null,m_how:it.how||null,m_manual:!!it.manual,
+        m_cust:c0&&c0.kind==='saved'?c0.row.id:null,m_cust_fp:c0&&c0.kind==='new'?c0.r.fp:null,cust_ref:c0?(c0.ref||null):null,matched_at:c0?new Date().toISOString():null});
+    var core={amount:p.amount||null,ccy:p.ccy||null,bank:p.bank||null,account_no:p.account||null,txn_ref:p.ref||null,ocr:ocr},ok=false;
+    try{
+      if(it.id){ok=await supPatch(it.id,core);
+        if(!ok){var c2=Object.assign({},core);delete c2.txn_ref;ok=await supPatch(it.id,c2);}} /* مرجع مكرر في قيد آخر: يُحفظ الباقي والمرجع يبقى داخل ocr */
+      if(!ok&&it.fp){var b=Object.assign({fingerprint:'sup-'+it.fp},core);
+        var r=await fetch(SB+'/bdl_receipts',{method:'POST',headers:H({Prefer:'return=representation'}),body:JSON.stringify(b)}),j=null;try{j=r.ok?await r.json():null;}catch(e){}
+        if(j&&j[0]){it.id=j[0].id;ok=true;}
+        else{var q0=await fetch(SB+'/bdl_receipts?select=id&fingerprint=eq.sup-'+it.fp+'&limit=1',{headers:H()}),k0=q0.ok?await q0.json():[];
+          if(k0[0]){it.id=k0[0].id;ok=await supPatch(it.id,core);if(!ok){var c3=Object.assign({},core);delete c3.txn_ref;ok=await supPatch(it.id,c3);}}
+          else if(p.ref){var b2=Object.assign({},b);b2.txn_ref=null;r=await fetch(SB+'/bdl_receipts',{method:'POST',headers:H({Prefer:'return=representation'}),body:JSON.stringify(b2)});j=null;try{j=r.ok?await r.json():null;}catch(e){}
+            if(j&&j[0]){it.id=j[0].id;ok=true;}}}}
+    }catch(e){ok=false;}
+    if(ok){it.stored=true;it._sig=sig;it._fail=false;}else it._fail=true;}
   async function saveMatching(){var its=SHM.items.filter(function(x){return !x.gone&&x.parsed;});if(!its.length&&!Object.keys(SHM.saved).length)return {n:0,fail:0};
     var qi=0;async function wk(){while(qi<its.length){await saveSupItem(its[qi++]);}}await Promise.all([wk(),wk(),wk()]);
     try{await persistSaved();}catch(e){}
@@ -695,7 +704,8 @@ function init(){
       var gone=SHM.items.filter(function(x){return x.gone&&x.id;}).map(function(x){return x.id;});if(gone.length){var u2=un.filter(function(id){return gone.indexOf(id)<0;});if(u2.length!==un.length){un=u2;ch=true;}}
       if(!ch)continue;var nm=Object.assign({},m,{sup_rcpt_ids:un});
       try{var r=await fetch(SB+'/bdl_transactions?id=eq.'+encodeURIComponent(tx.id),{method:'PATCH',headers:H(),body:JSON.stringify({meta:nm})});if(r.ok)tx.meta=nm;}catch(e){}}
-    return {n:ids.length,fail:its.length-ids.length};}
+    var nf=its.filter(function(x){return x._fail;}).length;if(nf)say('تنبيه: تعذّر حفظ '+nf+' من إيصالات المورد/تصحيحاتها — أعد «حفظ المطابقة» قبل الخروج');
+    return {n:ids.length-nf<0?0:its.filter(function(x){return x.id&&!x._fail;}).length,fail:nf};}
   async function restoreMatching(tok){try{var s=selected(),ids=[],hasR=false;s.forEach(function(tx){var m=tx.meta||{};if((m.rcpt_ids||[]).length)hasR=true;(m.sup_rcpt_ids||[]).forEach(function(id){if(ids.indexOf(id)<0)ids.push(id);});});
       if(!ids.length&&!hasR){SHM.ready=true;return;}
       if(hasR)for(var w=0;w<24;w++){if(typeof SS!=='undefined'&&SS.prevRows&&Object.keys(SS.prevRows).length)break;await new Promise(function(r){setTimeout(r,250);});}
