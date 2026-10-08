@@ -88,11 +88,11 @@
   function untilVisible(){return document.hidden?new Promise(function(res){var fn=function(){if(!document.hidden){document.removeEventListener('visibilitychange',fn);res();}};document.addEventListener('visibilitychange',fn);}):Promise.resolve();}
   async function resume(){try{var j=await h.sess.get('job:acct');if(!j||!j.s||!j.c||A.res||A.run)return;
       toast('استئناف المسح من حيث توقف…');await pick('s',j.s);await pick('c',j.c);if(!A.s||A.s.err||!A.c||A.c.err){h.sess.del('job:acct');return;}
-      A.c.all=!!j.all;if(!j.all){A.c.from=j.from;A.c.to=j.to;}paint();start(true);}catch(e){}}
-  async function start(resumed){var P=A.s?A.s.list.slice(0,3000):[],C=A.c?selC():[];if(!P.length||!C.length)return;if(!DB)DB=await idb();
-    if(!resumed)h.sess.put('job:acct',{s:A.s.src,c:A.c.src,from:A.c.from,to:A.c.to,all:!!A.c.all,at:Date.now()}).then(function(ok){if(!ok)toast('الملف كبير — إن خرجت من الصفحة لن يُستأنف المسح تلقائيًا');});
+      A.c.all=!!j.all;if(!j.all){A.c.from=j.from;A.c.to=j.to;}if(j.sa===false){A.s.all=false;A.s.from=j.sf;A.s.to=j.st;}paint();start(true);}catch(e){}}
+  async function start(resumed){var P=A.s?sel(A.s).slice(0,3000):[],C=A.c?selC():[];if(!P.length||!C.length)return;if(!DB)DB=await idb();
+    if(!resumed)h.sess.put('job:acct',{s:A.s.src,c:A.c.src,from:A.c.from,to:A.c.to,all:!!A.c.all,sf:A.s.from,st:A.s.to,sa:!!A.s.all,at:Date.now()}).then(function(ok){if(!ok)toast('الملف كبير — إن خرجت من الصفحة لن يُستأنف المسح تلقائيًا');});
     wake();
-    var R={ph:1,n:P.length,d:0,hit:0,stop:false,t0:Date.now(),k:{acc:0,drop:0,on:0},per:perTxt(A.c)};A.run=R;A.res=null;paint();
+    var R={ph:1,n:P.length,d:0,hit:0,stop:false,t0:Date.now(),k:{acc:0,drop:0,on:0},per:perTxt(A.c),sper:A.s.all?'':perTxt(A.s)};A.run=R;A.res=null;paint();
     var seen={},accSeen={};
     async function pool(list,side,fn){var qi=0;async function wk(){while(qi<list.length&&!R.stop){var x=list[qi++];R.cur=x.nm;R.cn=x.cn||'';await untilVisible();try{var h0=HID,it=await readOne(x,side,R);if(HID!==h0&&!it.p.amount&&!it.p.name&&!it.p.account){await untilVisible();it=await readOne(x,side,R);}if(!seen[side+it.fp]){seen[side+it.fp]=1;fn(it);}}catch(e){}R.d++;paint();}}
       var w=[];for(var i=0;i<6;i++)w.push(wk());await Promise.all(w);}
@@ -170,11 +170,10 @@
     else if(o.err)x+='<div class="er">'+esc(o.err)+'</div><button type="button" class="pk" data-ap="'+k+'">اختيار ملف آخر</button>';
     else{if(k==='c')x+=o.parts.map(function(q,i){return '<div class="nm"><b>'+(i+1)+' · '+esc(q.name)+'</b><span>'+q.n+' إيصالًا في الملف</span><button type="button" data-ax="'+i+'">حذف</button></div>';}).join('')+(o.parts.length<10?'<button type="button" class="pk sm" data-ap="c"><i>＋</i>إضافة زبون آخر ('+o.parts.length+' / 10)</button>':'');
       else x+='<div class="nm"><b>'+esc(o.name)+'</b><span>'+o.list.length+' إيصالًا في الملف · '+h.dmy(o.min).slice(0,10)+' – '+h.dmy(o.max).slice(0,10)+'</span><button type="button" data-ap="'+k+'">تغيير</button></div>';
-      if(k==='s')x+='<div class="ct"><b>'+o.list.length+'</b> إيصالًا — يُفكّ الملف كاملًا لتسجيل كل حسابات المورد</div>';
-      else{var n=selC().length,q=function(id,lab,on){return '<button type="button" data-aq="c:'+id+'"'+(on?' class="on"':'')+'>'+lab+'</button>';},sp=function(dn){return !o.all&&o.to===o.max&&o.from===Math.max(o.min,o.max-(dn-1)*DAY);};
-        x+='<div class="pt">تاريخ المطابقة الذي تريده</div><div class="qk">'+q('1','آخر يوم',sp(1))+q('2','يومان',sp(2))+q('7','7 أيام',sp(7))+q('30','30 يومًا',sp(30))+q('365','سنة',sp(365))+q('all','الكل',o.all)+'</div>'+
-          '<div class="rg"><label><small>من</small><input type="date" data-ad="c:from" value="'+h.iso(o.from)+'" min="'+h.iso(o.min)+'" max="'+h.iso(o.max)+'"></label><label><small>إلى</small><input type="date" data-ad="c:to" value="'+h.iso(o.to)+'" min="'+h.iso(o.min)+'" max="'+h.iso(o.max)+'"></label></div>'+
-          '<div class="ct"><b>'+n+'</b> إيصالًا في '+perTxt(o)+(o.parts.length>1?' من '+o.parts.length+' زبائن':'')+'</div>';}}
+      var isC=k==='c',n=isC?selC().length:sel(o).length,q=function(id,lab,on){return '<button type="button" data-aq="'+k+':'+id+'"'+(on?' class="on"':'')+'>'+lab+'</button>';},sp=function(dn){return !o.all&&o.to===o.max&&o.from===Math.max(o.min,o.max-(dn-1)*DAY);};
+      x+='<div class="pt">'+(isC?'تاريخ المطابقة الذي تريده':'تاريخ إيصالات المورد')+'</div><div class="qk">'+q('1','آخر يوم',sp(1))+q('2','يومان',sp(2))+q('7','7 أيام',sp(7))+q('30','30 يومًا',sp(30))+q('365','سنة',sp(365))+q('all',isC?'الكل':'الملف كاملًا',o.all)+'</div>'+
+        '<div class="rg"><label><small>من</small><input type="date" data-ad="'+k+':from" value="'+h.iso(o.all?o.min:o.from)+'" min="'+h.iso(o.min)+'" max="'+h.iso(o.max)+'"></label><label><small>إلى</small><input type="date" data-ad="'+k+':to" value="'+h.iso(o.all?o.max:o.to)+'" min="'+h.iso(o.min)+'" max="'+h.iso(o.max)+'"></label></div>'+
+        '<div class="ct"><b>'+n+'</b> إيصالًا في '+perTxt(o)+(isC&&o.parts.length>1?' من '+o.parts.length+' زبائن':'')+(!isC&&!o.all?' — الحسابات المسجَّلة سابقًا لهذا المورد تبقى محسوبة':'')+'</div>';}
     return x+'</section>';}
   function entCard(e,i){var col={red:'r',amb:'a',grn:'g',gry:'y'}[e.st],lab={red:e.flag?'مشبوه':'غير معروف',amb:'تحقق',grn:e.auto?'معروف':'مؤكد',gry:'غير مقروء'}[e.st],op=A.open===i;
     var x='<div class="en '+col+'"><div class="eh"><div><b>'+esc(e.name||'مستفيد غير مقروء')+'</b><small dir="ltr">'+esc([e.bank,e.accts[0]?('…'+e.accts[0].slice(-8)):'بلا رقم حساب'].filter(Boolean).join(' · '))+(e.accts.length>1?' +'+(e.accts.length-1):'')+'</small></div><span class="ch">'+lab+'</span></div>'+
@@ -186,7 +185,7 @@
   function paint(){var m=$('laMain');if(!m)return;var R=A.run,x='';
     if(R){var p=Math.round(R.d/Math.max(1,R.n)*100),el=(Date.now()-R.t0)/1000,eta=R.d>8?Math.round(el/R.d*(R.n-R.d)):0;
       x='<section class="pg"><div class="st"><span class="'+(R.ph===1?'on':'dn')+'">١ مسح ملف المورد</span><span class="'+(R.ph===2?'on':'')+'">٢ فحص ملف الزبون</span><span>٣ النتيجة</span></div><div class="br"><i style="width:'+p+'%"></i></div>'+
-        '<div class="pr2">تاريخ المطابقة: <b>'+esc(R.per)+'</b></div><div class="tx"><b>'+p+'%</b>'+(R.ph===1?'تفكيك وقراءة ملف المورد كاملًا ':'فحص إيصالات الزبون '+(R.cn?'«'+esc(R.cn)+'» ':''))+R.d+' / '+R.n+(eta?' · الباقي نحو '+(eta>90?Math.round(eta/60)+' د':eta+' ث'):'')+'</div><div class="fn">'+esc(R.cur||'')+'</div>'+
+        '<div class="pr2">تاريخ المطابقة: <b>'+esc(R.per)+'</b>'+(R.sper?' · المورد: <b>'+esc(R.sper)+'</b>':'')+'</div><div class="tx"><b>'+p+'%</b>'+(R.ph===1?'تفكيك وقراءة ملف المورد كاملًا ':'فحص إيصالات الزبون '+(R.cn?'«'+esc(R.cn)+'» ':''))+R.d+' / '+R.n+(eta?' · الباقي نحو '+(eta>90?Math.round(eta/60)+' د':eta+' ث'):'')+'</div><div class="fn">'+esc(R.cur||'')+'</div>'+
         '<div class="kp"><div class="g"><b>'+R.k.acc+'</b><small>حسابات المورد</small></div><div class="y"><b>'+R.k.drop+'</b><small>مُستبعد تلقائيًا</small></div><div class="a"><b>'+R.k.on+'</b><small>على حسابات المورد</small></div></div>'+
         '<div class="nt">يمكنك ترك الصفحة — يُستأنف المسح تلقائيًا عند عودتك من حيث توقف.</div><button type="button" class="bt ln" data-aa="stop">إيقاف</button></section>';
       var pg=m.querySelector('.pg[data-live]');if(pg){var t=document.createElement('div');t.innerHTML=x;var np=t.firstChild; /* تحديث الأرقام فقط — الشاشة ثابتة لا تُعاد بناؤها */
@@ -205,7 +204,7 @@
       if(!A.sv){window.scrollTo(0,keepY);var cr=A.last&&$('sr-'+A.last.replace(':',''));if(cr&&A.y!=null){var bx=cr.getBoundingClientRect();if(bx.top<80||bx.bottom>window.innerHeight-90)cr.scrollIntoView&&cr.scrollIntoView({block:'center'});}A.y=null;}return;}
     var c=A.c,s=A.s,rdy=function(o){return o&&!o.busy&&!o.err&&sel(o).length;},ok=rdy(c)&&rdy(s),n=0;
     x=srcCard('s','الخطوة ١ — ملف المورد','يُفكّ كاملًا وتُسجَّل أسماء وأرقام حساباته')+srcCard('c','الخطوة ٢ — ملفات الزبائن (حتى 10)','يُفتح كل زبون وحده ويُبحث عنده عن إيصالات على حسابات المورد في التاريخ الذي تختاره')+
-      '<button type="button" class="bt go" data-aa="go"'+(ok?'':' disabled')+'>'+(ok?'ابدأ المسح — '+s.list.length+' مورد + '+selC().length+' من '+c.parts.length+' زبون':'اختر ملف المورد وملفات الزبائن')+'</button>'+
+      '<button type="button" class="bt go" data-aa="go"'+(ok?'':' disabled')+'>'+(ok?'ابدأ المسح — '+sel(s).length+' مورد + '+selC().length+' من '+c.parts.length+' زبون':'اختر ملف المورد وملفات الزبائن')+'</button>'+
       '<div class="how"><b>كيف يعمل</b>١ يُقرأ ملف المورد كاملًا وتُسجَّل أسماء وأرقام حساباته. ٢ يُفحص ملف الزبون: كل إيصال مدفوع على حساب أو اسم للمورد ولا يوجد مقابله في إيصالات المورد يُسجَّل وحده <u>للتأكد</u>. يُستبعد تلقائيًا: USDT والأوقية، الإيصالات غير الناجحة، وكل ما ليس على حسابات المورد.</div>';
     m.innerHTML=x;}
   document.addEventListener('click',function(e){var t=e.target,b;if(!t.closest)return;
