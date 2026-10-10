@@ -245,8 +245,8 @@
   window.addEventListener('popstate',function(){if(A.sv){A.sv=null;setTimeout(paint,0);}});
   window.__LABA={A:A,cluster:cluster,classify:classify,sameAcct:sameAcct,sameName:sameName,acctOf:acctOf,nameOf:nameOf,regLoad:regLoad,paint:paint};
   /* تبديل الوضعين */
-  function mode(k){$('lbMain').style.display=k==='m'?'':'none';$('laMain').style.display=k==='a'?'':'none';[].forEach.call(document.querySelectorAll('#lbMode button'),function(b){b.classList.toggle('on',b.dataset.md===k);});if(k==='a')paint();try{localStorage.setItem('bdl_lab_mode2',k);}catch(e){}}
+  function mode(k){$('lbMain').style.display=k==='m'?'':'none';$('laMain').style.display=k==='a'?'':'none';var ld=$('ldMain');if(ld)ld.style.display=k==='d'?'':'none';[].forEach.call(document.querySelectorAll('#lbMode button'),function(b){b.classList.toggle('on',b.dataset.md===k);});if(k==='a')paint();try{localStorage.setItem('bdl_lab_mode2',k);}catch(e){}}
   document.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('#lbMode button');if(b)mode(b.dataset.md);});
-  function init(){var k='a';try{k=localStorage.getItem('bdl_lab_mode2')||'a';}catch(e){}mode(k==='m'?'m':'a');restore().then(resume);}
+  function init(){var k='a';try{k=localStorage.getItem('bdl_lab_mode2')||'a';}catch(e){}mode(k==='m'||k==='d'?k:'a');restore().then(resume);}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();
