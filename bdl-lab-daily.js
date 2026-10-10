@@ -100,19 +100,41 @@
   var PX={};try{PX=JSON.parse(localStorage.getItem('bdl_daily_px')||'{}')||{};}catch(e){PX={};}
   function defPc(c){return c==='AOA'?'USDT':'AOA';}
   function bankOf(p){return String(p.bank||'').replace(/\s+/g,' ').trim().slice(0,28);}
-  function fin(K){var rows=[],prof={},due={},any=false;K.keys.forEach(function(c){var p=PX[c]||{},b=Number(p.b)||0,sl=Number(p.s)||0,pc=p.pc||defPc(c),t=K.tot[c].s,r={c:c,t:t,b:b,s:sl,pc:pc,profit:null,due:null};
-      if(b&&sl){r.profit=t*(sl-b);prof[pc]=(prof[pc]||0)+r.profit;any=true;}if(sl){r.due=t*sl;due[pc]=(due[pc]||0)+r.due;any=true;}rows.push(r);});
-    var bal=Object.keys(due).filter(function(pc){return K.tot[pc];}).map(function(pc){return {pc:pc,due:due[pc],got:K.tot[pc].s,diff:K.tot[pc].s-due[pc]};});
+  /* 1433: الربح بطريقة التسوية نفسها (settle-v2): العملة المسلَّمة (أوقية/USDT/دولار…) تُسعَّر مقابل ما يدفعه الزبون (كوانزا أو أوقية).
+     أوقية←كوانزا بسعر الأوقية القديمة: كوانزا = أوقية × 10 ÷ السعر (0.15–0.90).  غيرها: المقابل = المبلغ × السعر (كوانزا أو أوقية لكل 1).
+     المستحق = التحويل بسعر البيع · التكلفة = التحويل بسعر الشراء · الربح = المستحق − التكلفة (بعملة المقابل). */
+  function pairsOf(c,K){if(c==='MRU')return [{v:'OLD',tgt:'AOA',t:'كوانزا — سعر الأوقية القديمة',ps:'0.350',pb:'0.360'}];
+    var o=[{v:'AOA',tgt:'AOA',t:'كوانزا لكل 1 '+c,ps:'900',pb:'880'},{v:'MRU',tgt:'MRU',t:'أوقية لكل 1 '+c,ps:'42.4',pb:'42.0'}];
+    if(K&&!K.tot.AOA&&K.tot.MRU)o.reverse();return o;}
+  function pairCur(c,K){var o=pairsOf(c,K),v=(PX[c]||{}).pair;return o.filter(function(x){return x.v===v;})[0]||o[0];}
+  function rateOk(r,pr){return pr.v==='OLD'?(r>=0.15&&r<=0.9):r>0;}
+  function conv(a,r,pr){if(pr.v==='OLD')return a*10/r;if(pr.v==='MRU'&&r>=100)r=r/10;return a*r;}   /* 438 أوقية قديمة للدولار = 43.8 جديدة */
+  function rf(v){return String(Math.round(Number(v)*10000)/10000);}
+  function fin(K){var rows=[],prof={},due={},any=false,bad=[];K.keys.forEach(function(c){if(c==='AOA'||c==='؟')return;var p=PX[c]||{},b=Number(p.b)||0,sl=Number(p.s)||0,pr=pairCur(c,K),t=K.tot[c].s,
+        r={c:c,t:t,b:b,s:sl,pc:pr.tgt,pair:pr,profit:null,due:null,cost:null,pct:0};
+      if(sl&&!rateOk(sl,pr))bad.push(c);if(b&&!rateOk(b,pr))bad.push(c);
+      if(sl&&rateOk(sl,pr)){r.due=conv(t,sl,pr);due[pr.tgt]=(due[pr.tgt]||0)+r.due;any=true;}
+      if(b&&rateOk(b,pr)){r.cost=conv(t,b,pr);any=true;}
+      if(r.due!=null&&r.cost!=null){r.profit=r.due-r.cost;r.pct=r.cost>0?r.profit/r.cost*100:0;prof[pr.tgt]=(prof[pr.tgt]||0)+r.profit;}
+      rows.push(r);});
+    var bal=Object.keys(due).filter(function(pc){return K.tot[pc]&&!rows.some(function(r){return r.c===pc&&(r.due!=null||r.cost!=null);});}).map(function(pc){return {pc:pc,due:due[pc],got:K.tot[pc].s,diff:K.tot[pc].s-due[pc]};});
     var rate=[],real=K.keys.filter(function(c){return c!=='؟';});if(real.length===2)[['AOA','USDT'],['AOA','USD'],['AOA','EUR'],['MRU','USDT'],['MRU','USD']].forEach(function(q){if(K.tot[q[0]]&&K.tot[q[1]]&&K.tot[q[1]].s)rate.push({a:q[0],b:q[1],v:K.tot[q[0]].s/K.tot[q[1]].s});});
-    return {rows:rows,prof:prof,bal:bal,rate:rate,any:any};}
+    if(real.length===2&&K.tot.AOA&&K.tot.MRU&&K.tot.AOA.s)rate.push({old:1,v:K.tot.MRU.s*10/K.tot.AOA.s});
+    return {rows:rows,prof:prof,bal:bal,rate:rate,any:any,bad:bad};}
   function banks(K){var o={};D.res.its.forEach(function(it){if(it.st!=='ok')return;var k=it.ccy+'|'+(bankOf(it.p)||'—');(o[k]||(o[k]={c:it.ccy,b:bankOf(it.p)||'—',s:0,n:0})).s+=it.v;o[k].n++;});
     return Object.keys(o).map(function(k){return o[k];}).sort(function(a,b){return K.keys.indexOf(a.c)-K.keys.indexOf(b.c)||b.s-a.s;});}
-  function finHtml(K){var F=fin(K),T=TX.ar,x='';
-    if(F.rate.length)x+='<div class="fr">'+F.rate.map(function(r){return '<span>السعر الفعلي في الملف: <b>1 '+r.b+' = '+fm(r.v)+' '+r.a+'</b></span>';}).join('')+'</div>';
-    F.rows.forEach(function(r){if(r.profit!=null)x+='<div class="fp"><span>ربح '+r.c+' <small>'+fm(r.t)+' × ('+fm(r.s)+' − '+fm(r.b)+')</small></span><b class="'+(r.profit<0?'neg':'')+'">'+fm(r.profit)+' '+r.pc+'</b></div>';});
-    Object.keys(F.prof).forEach(function(pc){x+='<div class="fp tt"><span>إجمالي الربح</span><b class="'+(F.prof[pc]<0?'neg':'')+'">'+fm(F.prof[pc])+' '+pc+'</b></div>';});
-    F.bal.forEach(function(b){x+='<div class="fb"><span>المطلوب بسعر البيع</span><b>'+fm(b.due)+' '+b.pc+'</b><span>المستلم في الملف</span><b>'+fm(b.got)+' '+b.pc+'</b><span>'+(Math.abs(b.diff)<1?'متطابق':b.diff>0?'زائد عند الزبون (له)':'ناقص على الزبون (عليه)')+'</span><b class="'+(b.diff<-1?'neg':'pos')+'">'+fm(Math.abs(b.diff))+' '+b.pc+'</b></div>';});
-    return x||'<div class="fh">أدخل سعر الشراء والبيع لأي عملة ليظهر الربح والمطلوب. اختياري — التقرير يُولَّد بدون أسعار.</div>';}
+  function rateTxt(r){return r.old?'السعر الفعلي في الملف (أوقية قديمة): '+(Math.round(r.v*10000)/10000):'السعر الفعلي في الملف: 1 '+r.b+' = '+fm(r.v)+' '+r.a;}
+  function finHtml(K){var F=fin(K),x='';
+    if(!F.rows.length)return '<div class="fh">لا عملة مسلَّمة للتسعير في هذا الملف (الكوانزا هي المقابل).</div>';
+    if(F.rate.length)x+='<div class="fr">'+F.rate.map(function(r){return '<span><b>'+rateTxt(r)+'</b></span>';}).join('')+'</div>';
+    if(F.bad.length)x+='<div class="fh" style="color:#C8102E">سعر غير صالح لـ '+F.bad.filter(function(c,i,a){return a.indexOf(c)===i;}).join('، ')+' — سعر الأوقية القديمة بين 0.15 و 0.90 (مثل 0.360).</div>';
+    F.rows.forEach(function(r){if(r.due==null&&r.cost==null)return;
+      x+='<div class="fb"><span>'+r.c+' '+fm(r.t)+' — المستحق بسعر البيع</span><b>'+(r.due!=null?fm(r.due)+' '+r.pc:'—')+'</b><span>التكلفة بسعر الشراء</span><b>'+(r.cost!=null?fm(r.cost)+' '+r.pc:'—')+'</b>'+
+        (r.profit!=null?'<span>'+(r.profit>=0?'الربح':'خسارة')+' <small>('+(r.profit>=0?'+':'−')+Math.abs(r.pct).toFixed(2)+'%)</small></span><b class="'+(r.profit<0?'neg':'pos')+'">'+(r.profit>=0?'+':'−')+fm(Math.abs(r.profit))+' '+r.pc+'</b>':'')+'</div>'+
+        (r.profit!=null&&r.profit<0?'<div class="fh" style="color:#C8102E;font-weight:700">'+(r.pair.v==='OLD'?'في سعر الأوقية القديمة: الشراء يجب أن يكون الرقم الأعلى (مثل شراء 0.360 وبيع 0.350).':'سعر البيع أدنى من الشراء — راجع الرقمين.')+'</div>':'');});
+    Object.keys(F.prof).forEach(function(pc){x+='<div class="fp tt"><span>إجمالي الربح</span><b class="'+(F.prof[pc]<0?'neg':'')+'">'+(F.prof[pc]>=0?'+':'−')+fm(Math.abs(F.prof[pc]))+' '+pc+'</b></div>';});
+    F.bal.forEach(function(b){x+='<div class="fb"><span>مجموع المستحق على الزبون</span><b>'+fm(b.due)+' '+b.pc+'</b><span>المدفوع في الملف</span><b>'+fm(b.got)+' '+b.pc+'</b><span>'+(Math.abs(b.diff)<1?'متطابق':b.diff>0?'زائد عند الزبون (له)':'ناقص على الزبون (عليه)')+'</span><b class="'+(b.diff<-1?'neg':'pos')+'">'+fm(Math.abs(b.diff))+' '+b.pc+'</b></div>';});
+    return x||'<div class="fh">أدخل سعر البيع والشراء للعملة المسلَّمة ليظهر المستحق والربح — بنفس طريقة التسوية. اختياري.</div>';}
   function persist(){var S=D.res;if(!S)return;h.sess.save(D.key,{per:S.per,pf:S.pf,pt:S.pt,pall:S.pall,names:S.names,dupN:S.dupN,failN:S.failN||0,nrN:S.nrN||0,stopped:!!S.stopped},S.its.map(function(it){return {file:it.file,data:{cn:it.cn,nm:it.nm,ts:it.ts,pdf:it.pdf,p:it.p,fp:it.fp}};})).then(function(ok){if(!ok)toast('تعذّر حفظ الجلسة على الجهاز — لا تغادر الصفحة قبل أخذ التقرير');});}
   function saveMeta(){var S=D.res;if(!S)return;var ky=D.key+':meta';h.sess.get(ky).then(function(m){if(!m)return;m.rows.forEach(function(r,i){if(S.its[i])r.p=S.its[i].p;});h.sess.put(ky,m);});}
   function fromMeta(m){return {its:(m.rows||[]).map(function(r,i){return {cn:r.cn,nm:r.nm,ts:r.ts,pdf:r.pdf,p:r.p||{},fp:r.fp,file:null,_si:r._f?i:-1};}),per:m.meta.per||'',pf:m.meta.pf,pt:m.meta.pt,pall:m.meta.pall,names:m.meta.names||[],dupN:m.meta.dupN||0,failN:m.meta.failN||0,nrN:m.meta.nrN||0,stopped:m.meta.stopped,restored:m.at,at:m.at};}
@@ -134,8 +156,8 @@
   /* ── التقرير ── */
   function repText(){var S=D.res,K=calc(),T=TX[LG],x='BDL · '+T.t+'\n'+T.per+': '+perL(S)+'\n'+(K.cu.length>1?T.cus+': '+K.cu.length+'\n':'')+'\n'+T.tot+':\n'+(K.keys.map(function(c){return '• '+ccode(c)+': '+fm(K.tot[c].s)+' ('+K.tot[c].n+' '+T.rc+')';}).join('\n')||T.none);
     K.cu.forEach(function(q){x+='\n\n— '+q.name+' ('+q.n+' '+T.rc+')\n'+(Object.keys(q.cur).map(function(c){return '  '+ccode(c)+': '+fm(q.cur[c].s)+' ('+q.cur[c].n+')';}).join('\n')||'  '+T.none)+(q.un?'\n  '+T.un+': '+q.un:'')+(q.fail?'\n  '+T.fl+': '+q.fail:'');});
-    var F=fin(K);if(F.any){x+='\n\n'+T.px+':';F.rows.forEach(function(r){if(r.b||r.s)x+='\n• '+ccode(r.c)+': '+(r.b?T.buy+' '+fm(r.b)+' ':'')+(r.s?T.sell+' '+fm(r.s)+' ':'')+r.pc+(r.profit!=null?' → '+T.profit+' '+fm(r.profit)+' '+r.pc:'');});Object.keys(F.prof).forEach(function(pc){x+='\n'+T.tp+': '+fm(F.prof[pc])+' '+pc;});F.bal.forEach(function(b){x+='\n'+T.due+': '+fm(b.due)+' '+b.pc+' · '+T.got+': '+fm(b.got)+' '+b.pc+' · '+T.diff+': '+(b.diff>0?'+':'')+fm(b.diff)+' '+b.pc;});}
-    F.rate.forEach(function(r){x+='\n'+T.rate+': 1 '+r.b+' = '+fm(r.v)+' '+r.a;});return x;}
+    var F=fin(K);if(F.any){x+='\n\n'+T.px+':';F.rows.forEach(function(r){if(r.b||r.s)x+='\n• '+ccode(r.c)+': '+(r.s?T.sell+' '+rf(r.s)+' ':'')+(r.b?T.buy+' '+rf(r.b)+' ':'')+'→ '+r.pc+(r.profit!=null?' → '+T.profit+' '+fm(r.profit)+' '+r.pc:'');});Object.keys(F.prof).forEach(function(pc){x+='\n'+T.tp+': '+fm(F.prof[pc])+' '+pc;});F.bal.forEach(function(b){x+='\n'+T.due+': '+fm(b.due)+' '+b.pc+' · '+T.got+': '+fm(b.got)+' '+b.pc+' · '+T.diff+': '+(b.diff>0?'+':'')+fm(b.diff)+' '+b.pc;});}
+    F.rate.forEach(function(r){x+='\n'+(r.old?T.rate+' (MRU×10÷AOA): '+(Math.round(r.v*10000)/10000):T.rate+': 1 '+r.b+' = '+fm(r.v)+' '+r.a);});return x;}
   function repHtml(){var S=D.res,K=calc(),T=TX[LG],x='<div class="ph"><div><b>BDL</b><em>lbdal.com</em></div><div><span>'+T.t+'</span><small>'+T.per+': '+esc(perL(S))+'</small><small>'+(K.cu.length>1?T.cus+': '+K.cu.length:esc(K.cu[0]?K.cu[0].name:''))+' · '+T.made+' '+h.dmy(Date.now())+'</small></div></div>'+
       '<div class="pc">'+K.keys.map(function(c){return '<div><small>'+ccode(c)+' · '+cname(c)+'</small><b>'+fm(K.tot[c].s)+'</b><i>'+K.tot[c].n+' '+T.rc+'</i></div>';}).join('')+'</div>'+'<h3>'+T.tot+'</h3><table><tr><th>'+T.cur+'</th><th>'+T.n+'</th><th>'+T.sum+'</th></tr>'+K.keys.map(function(c){return '<tr><td>'+ccode(c)+' — '+cname(c)+'</td><td>'+K.tot[c].n+'</td><td class="n">'+fm(K.tot[c].s)+'</td></tr>';}).join('')+'</table>';
     /* 1425: التقرير مرتَّب حسب العملة — كل إيصالات العملة الواحدة متتالية (بالتاريخ) ثم مجموعها، ثم العملة التالية */
@@ -145,10 +167,10 @@
         '<tr class="t"><td colspan="4">'+T.sub+' '+ccode(c)+' ('+q.cur[c].n+')</td><td class="n">'+fm(q.cur[c].s)+'</td></tr></table>';});});
     var F=fin(K),B=banks(K);
     if(B.length)x+='<h3>'+T.byb+'</h3><table><tr><th>'+T.bank+'</th><th>'+T.cur+'</th><th>'+T.n+'</th><th>'+T.sum+'</th></tr>'+B.map(function(b){return '<tr><td>'+esc(b.b)+'</td><td>'+ccode(b.c)+'</td><td>'+b.n+'</td><td class="n">'+fm(b.s)+'</td></tr>';}).join('')+'</table>';
-    if(F.any){x+='<h3>'+T.px+'</h3><table><tr><th>'+T.cur+'</th><th>'+T.sum+'</th><th>'+T.buy+'</th><th>'+T.sell+'</th><th>'+T.profit+'</th></tr>'+F.rows.filter(function(r){return r.b||r.s;}).map(function(r){return '<tr><td>'+ccode(r.c)+'</td><td class="n">'+fm(r.t)+'</td><td class="n">'+(r.b?fm(r.b)+' '+r.pc:'—')+'</td><td class="n">'+(r.s?fm(r.s)+' '+r.pc:'—')+'</td><td class="n">'+(r.profit!=null?fm(r.profit)+' '+r.pc:'—')+'</td></tr>';}).join('')+
+    if(F.any){x+='<h3>'+T.px+'</h3><table><tr><th>'+T.cur+'</th><th>'+T.sum+'</th><th>'+T.buy+'</th><th>'+T.sell+'</th><th>'+T.profit+'</th></tr>'+F.rows.filter(function(r){return r.b||r.s;}).map(function(r){return '<tr><td>'+ccode(r.c)+'</td><td class="n">'+fm(r.t)+'</td><td class="n">'+(r.b?rf(r.b):'—')+'</td><td class="n">'+(r.s?rf(r.s):'—')+'</td><td class="n">'+(r.profit!=null?fm(r.profit)+' '+r.pc:'—')+'</td></tr>';}).join('')+
         Object.keys(F.prof).map(function(pc){return '<tr class="t"><td colspan="4">'+T.tp+'</td><td class="n">'+fm(F.prof[pc])+' '+pc+'</td></tr>';}).join('')+'</table>'+
         (F.bal.length?'<table style="margin-top:6px"><tr><th>'+T.due+'</th><th>'+T.got+'</th><th>'+T.diff+'</th></tr>'+F.bal.map(function(b){return '<tr><td class="n">'+fm(b.due)+' '+b.pc+'</td><td class="n">'+fm(b.got)+' '+b.pc+'</td><td class="n">'+(b.diff>0?'+':'')+fm(b.diff)+' '+b.pc+'</td></tr>';}).join('')+'</table>':'');}
-    if(F.rate.length)x+='<p>'+F.rate.map(function(r){return T.rate+': 1 '+r.b+' = '+fm(r.v)+' '+r.a;}).join(' · ')+'</p>';
+    if(F.rate.length)x+='<p>'+F.rate.map(function(r){return r.old?T.rate+' (MRU×10÷AOA): '+(Math.round(r.v*10000)/10000):T.rate+': 1 '+r.b+' = '+fm(r.v)+' '+r.a;}).join(' · ')+'</p>';
     return x+'<p class="pf">'+T.ft+'</p>';}
   /* ── عارض الإيصال مع التصحيح اليدوي ── */
   function nx(i,d){var S=D.res;for(var k=i+d;k>=0&&k<S.its.length;k+=d)if(!failed(S.its[k].p))return k;return -1;}
@@ -174,7 +196,7 @@
         '<div class="vd ok"><b>الحسابات اليومية — '+esc(S.per)+'</b><span>'+(K.cu.length>1?K.cu.length+' زبائن':'الزبون '+esc(K.cu[0]?K.cu[0].name:''))+' · '+(S.its.length-K.fail)+' إيصالًا'+(S.stopped?' — أُوقف قبل اكتماله':'')+'</span></div>'+
         '<div class="cb">'+(K.keys.map(function(c){return '<div data-df="'+c+'" class="'+(c==='؟'?'q':'')+(D.flt===c?' sel':'')+'"><small>'+fl(c)+c+(CN[c]&&CN[c]!==c?' · '+CN[c]:'')+'</small><b>'+fm(K.tot[c].s)+'</b><i>'+K.tot[c].n+' إيصالًا</i></div>';}).join('')||'<div class="q"><small>لا مبالغ مقروءة</small><b>0</b></div>')+'</div>'+
         '<div class="nt">'+(D.flt?'تعرض إيصالات <b>'+D.flt+'</b> فقط — <button type="button" data-df="" class="lk">عرض الكل</button>':'اضغط خانة أي عملة لعرض إيصالاتها وحدها. كل إيصال يُفتح ويُعدَّل ويُحفظ.')+'</div>'+
-        '<div class="px"><div class="pxh"><b>الأسعار والربح</b><small>اختياري — شراء وبيع لكل عملة</small></div>'+K.keys.filter(function(c){return c!=='؟';}).map(function(c){var p=PX[c]||{},pc=p.pc||defPc(c);return '<div class="pxr"><b>'+flag(c)+'<span>'+c+'</span></b><label><small>شراء</small><input inputmode="decimal" data-px="'+c+':b" value="'+(p.b||'')+'" placeholder="0"></label><label><small>بيع</small><input inputmode="decimal" data-px="'+c+':s" value="'+(p.s||'')+'" placeholder="0"></label><label><small>بعملة</small><select data-px="'+c+':pc">'+ORD.filter(function(o){return o!==c;}).map(function(o){return '<option value="'+o+'"'+(o===pc?' selected':'')+'>'+fl(o)+o+'</option>';}).join('')+'</select></label></div>';}).join('')+'<div id="ldFin">'+finHtml(K)+'</div></div>'+
+        '<div class="px"><div class="pxh"><b>الأسعار والربح</b><small>بطريقة التسوية — اختياري</small></div>'+K.keys.filter(function(c){return c!=='؟'&&c!=='AOA';}).map(function(c){var p=PX[c]||{},ps=pairsOf(c,K),pr=pairCur(c,K);return '<div class="pxr"><b>'+flag(c)+'<span>'+c+'</span></b><label><small>بيع</small><input inputmode="decimal" data-px="'+c+':s" value="'+(p.s||'')+'" placeholder="'+pr.ps+'"></label><label><small>شراء</small><input inputmode="decimal" data-px="'+c+':b" value="'+(p.b||'')+'" placeholder="'+pr.pb+'"></label><label class="pw"><small>المقابل</small>'+(ps.length>1?'<select data-px="'+c+':pair">'+ps.map(function(o){return '<option value="'+o.v+'"'+(o.v===pr.v?' selected':'')+'>'+o.t+'</option>';}).join('')+'</select>':'<em>'+pr.t+'</em>')+'</label></div>';}).join('')+'<div id="ldFin">'+finHtml(K)+'</div></div>'+
         (function(){var B=banks(K);return B.length?'<details class="mt bkd"><summary>حسب البنك ('+B.length+')</summary><div class="bkt">'+B.map(function(b){return '<div><span>'+esc(b.b)+'</span><small>'+b.n+' إيصالًا</small><b>'+fm(b.s)+' <i>'+b.c+'</i></b></div>';}).join('')+'</div></details>':'';})()+
         ((K.un||K.fail||S.failN||S.dupN||S.nrN)?'<div class="nt">'+[K.un?'<b style="color:#8A6100">'+K.un+' تحتاج مراجعتك (بالأصفر) — افتحها وصحّحها لتدخل في المجموع</b>':'',S.nrN?S.nrN+' صورة ليست إيصالًا استُبعدت':'',(K.fail+(S.failN||0))?(K.fail+(S.failN||0))+' غير ناجحة حُذفت تلقائيًا':'',S.dupN?S.dupN+' مكررة حُسبت مرة واحدة':''].filter(Boolean).join(' · ')+'</div>':'')+
         K.cu.map(function(q,ci){var op=!!D.open[q.name]||K.cu.length===1||!!D.flt;return '<div class="cc"><div class="ch2" data-dc="'+ci+'"><b>'+esc(q.name)+'</b><span>'+q.n+' إيصالًا'+(q.un?' · <em>'+q.un+' لم يُقرأ</em>':'')+'</span></div>'+
@@ -235,10 +257,10 @@
     if(B.length){h3(T.byb);var C4=[{w:420},{w:160,al:'c'},{w:220,al:'c'},{w:CW-800,al:'e',num:1}];row(C4,[T.bank,T.cur,T.n,T.sum],{head:1,bg:NAVY,fg:'#fff',h:38});
       B.forEach(function(b,i){row(C4,[b.b,ccode(b.c),b.n,fm(b.s)],{bg:i%2?'#F6F8FC':'#fff'});});}
     if(F.any){h3(T.px);var CP5=[{w:150},{w:CW-150-3*250,al:'e',num:1},{w:250,al:'e',num:1},{w:250,al:'e',num:1},{w:250,al:'e',num:1}];row(CP5,[T.cur,T.sum,T.buy,T.sell,T.profit],{head:1,bg:NAVY,fg:'#fff',h:38});
-      F.rows.filter(function(r){return r.b||r.s;}).forEach(function(r,i){row(CP5,[ccode(r.c),fm(r.t),r.b?fm(r.b)+' '+r.pc:'—',r.s?fm(r.s)+' '+r.pc:'—',r.profit!=null?fm(r.profit)+' '+r.pc:'—'],{bg:i%2?'#F6F8FC':'#fff'});});
+      F.rows.filter(function(r){return r.b||r.s;}).forEach(function(r,i){row(CP5,[ccode(r.c),fm(r.t),r.b?rf(r.b):'—',r.s?rf(r.s):'—',r.profit!=null?fm(r.profit)+' '+r.pc:'—'],{bg:i%2?'#F6F8FC':'#fff'});});
       Object.keys(F.prof).forEach(function(pc){row([{w:CW-320},{w:320,al:'e',num:1}],[T.tp,fm(F.prof[pc])+' '+pc],{bg:'#FFF4D6',bold:1,h:44});});
       F.bal.forEach(function(b){y+=10;row([{w:CW/3,al:'c'},{w:CW/3,al:'c'},{w:CW/3,al:'c'}],[T.due,T.got,T.diff],{head:1,bg:'#EEF4FF',fg:NAVY,h:34});row([{w:CW/3,al:'c',num:1},{w:CW/3,al:'c',num:1},{w:CW/3,al:'c',num:1}],[fm(b.due)+' '+b.pc,fm(b.got)+' '+b.pc,(b.diff>0?'+':'')+fm(b.diff)+' '+b.pc],{h:42});});}
-    if(F.rate.length){need(50);y+=16;tx(F.rate.map(function(r){return T.rate+': 1 '+r.b+' = '+fm(r.v)+' '+r.a;}).join('   ·   '),M,y+14,'s','700 19px '+AF,NAVY);y+=36;}
+    if(F.rate.length){need(50);y+=16;tx(F.rate.map(function(r){return r.old?T.rate+' (MRU×10÷AOA): '+(Math.round(r.v*10000)/10000):T.rate+': 1 '+r.b+' = '+fm(r.v)+' '+r.a;}).join('   ·   '),M,y+14,'s','700 19px '+AF,NAVY);y+=36;}
     /* تذييل كل صفحة */
     pages.forEach(function(c,i){x=c.getContext('2d');x.textBaseline='middle';x.strokeStyle='#999';x.lineWidth=1;x.beginPath();x.moveTo(M,H-M-8);x.lineTo(W-M,H-M-8);x.stroke();
       tx(fit(T.ft,CW-120,'500 13px '+AF),M,H-M+12,'s','500 13px '+AF,'#555');tx((i+1)+' / '+pages.length,W-M,H-M+12,'e','700 14px '+AF,'#555');});
@@ -283,7 +305,7 @@
         it.p.amount=v;it.p.ccy=cc;it.p.ref=String($('ldRef').value||'').trim();it.p.bank=String($('ldBank').value||'').trim();it.p.man=1;if(failed(it.p))it.p.status='';cput(it.fp,it.p);saveMeta();toast('حُفظ التعديل ودخل في المجموع');}
       if(D.v<S.its.length-1&&k==='sv'&&S.its[D.v+1].st==='un'){calc();view(D.v+1);}else closeV();return;}});
   document.addEventListener('change',function(e){var t=e.target;if(t.id==='ldFile'){pick(t.files);return;}
-    if(t.dataset&&t.dataset.px){var q=t.dataset.px.split(':'),o=PX[q[0]]||(PX[q[0]]={});if(q[1]==='pc')o.pc=t.value;else{var nv=Number(String(t.value).replace(/[\s,]/g,''))||0;o[q[1]]=nv>0?nv:0;}try{localStorage.setItem('bdl_daily_px',JSON.stringify(PX));}catch(x){}var fd=$('ldFin');if(fd&&D.res)fd.innerHTML=finHtml(calc());return;}
+    if(t.dataset&&t.dataset.px){var q=t.dataset.px.split(':'),o=PX[q[0]]||(PX[q[0]]={});if(q[1]==='pair'){o.pair=t.value;try{localStorage.setItem('bdl_daily_px',JSON.stringify(PX));}catch(x){}paint();return;}else{var nv=Number(String(t.value).replace(/[\s,]/g,''))||0;o[q[1]]=nv>0?nv:0;}try{localStorage.setItem('bdl_daily_px',JSON.stringify(PX));}catch(x){}var fd=$('ldFin');if(fd&&D.res)fd.innerHTML=finHtml(calc());return;}
     if(t.dataset&&t.dataset.dd){var c=D.c;if(!c||!t.value)return;var p=t.value.split('-');c[t.dataset.dd]=new Date(+p[0],+p[1]-1,+p[2]).getTime();if(c.all){if(t.dataset.dd==='from')c.to=c.max;else c.from=c.min;}if(c.from>c.to){if(t.dataset.dd==='from')c.to=c.from;else c.from=c.to;}c.all=false;paint();}});
   document.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('#lbMode button');if(b&&b.dataset.md==='d')paint();});
   window.__LABD={drawPages:drawPages,saveOp:saveOp,openOp:openOp,opsList:opsList,fin:fin,PX:PX,D:D,calc:calc,ccyOf:ccyOf,paint:paint,repText:repText,repHtml:repHtml};
