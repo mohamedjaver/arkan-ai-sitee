@@ -181,7 +181,7 @@
           '<div class="cv">'+(Object.keys(q.cur).map(function(c){return '<span><small>'+c+'</small><b>'+fm(q.cur[c].s)+'</b></span>';}).join('')||'<span><small>—</small><b>0</b></span>')+'</div>'+
           (K.cu.length>1?'<button type="button" class="tg" data-dc="'+ci+'">'+(op?'إخفاء الإيصالات':'عرض الإيصالات ('+q.its.length+')')+'</button>':'')+
           (op?q.its.filter(function(it){return !D.flt||(it.st==='ok'&&it.ccy===D.flt);}).map(function(it,ri,arr){var dk=it.ts?h.dmy(it.ts).slice(0,10):'بلا تاريخ',pk=ri?(arr[ri-1].ts?h.dmy(arr[ri-1].ts).slice(0,10):'بلا تاريخ'):'';return (dk!==pk?'<div class="dy">'+dk+'</div>':'')+'<div class="rw '+(it.st==='ok'?'g':it.st==='un'?'a':'r')+'"><div class="mn"><b>'+(it.st==='ok'?fm(it.v)+' <small>'+it.ccy+'</small>':it.st==='un'?esc(it.why||'لم يُقرأ المبلغ')+(it.v&&it.ccy!=='؟'?' <small>'+fm(it.v)+'</small>':''):'غير ناجحة')+'</b><span class="bk">'+esc(bankOf(it.p)||'بنك غير مقروء')+'</span><span>'+esc([it.ts?h.dmy(it.ts).slice(13):'',nr(it.p.ref)||'بلا مرجع'].filter(Boolean).join(' · '))+'</span></div>'+(it.p.man?'<em class="chk ok">معدَّل ✓</em>':'')+'<button type="button" data-do="'+it.i+'">فتح / تعديل</button></div>';}).join(''):'')+'</div>';}).join('')+
-        '<div class="lg"><span>لغة التقرير</span><button type="button" data-dl="ar"'+(LG==='ar'?' class="on"':'')+'>العربية</button><button type="button" data-dl="pt"'+(LG==='pt'?' class="on"':'')+'>Português</button></div><div class="bs"><button type="button" class="bt sv" data-da="save">'+(D.key!=='daily'?'✓ محفوظة — تحديث الحفظ':'حفظ العملية')+'</button><button type="button" class="bt" data-da="share">مشاركة التقرير</button><button type="button" class="bt" data-da="print">تقرير للطباعة / PDF</button><button type="button" class="bt ln" data-da="new">'+(D.key!=='daily'?'إغلاق — العودة للقائمة':'إنهاء وحساب جديد')+'</button>'+(D.key!=='daily'?'<button type="button" class="bt ln dl" data-dz="'+D.key+'">حذف هذه العملية</button>':'')+'</div></section>';
+        '<div class="lg"><span>لغة التقرير</span><button type="button" data-dl="ar"'+(LG==='ar'?' class="on"':'')+'>العربية</button><button type="button" data-dl="pt"'+(LG==='pt'?' class="on"':'')+'>Português</button></div><div class="bs"><button type="button" class="bt sv" data-da="save">'+(D.key!=='daily'?'✓ محفوظة — تحديث الحفظ':'حفظ العملية')+'</button><button type="button" class="bt" data-da="pdf">تقرير PDF — مشاركة</button><button type="button" class="bt ln" data-da="share">مشاركة ملخص نصي</button><button type="button" class="bt ln" data-da="print">طباعة</button><button type="button" class="bt ln" data-da="new">'+(D.key!=='daily'?'إغلاق — العودة للقائمة':'إنهاء وحساب جديد')+'</button>'+(D.key!=='daily'?'<button type="button" class="bt ln dl" data-dz="'+D.key+'">حذف هذه العملية</button>':'')+'</div></section>';
       var bo=m.querySelector('details.bkd')&&m.querySelector('details.bkd').open;m.innerHTML=x;if(bo&&m.querySelector('details.bkd'))m.querySelector('details.bkd').open=true;return;}
     var c=D.c;x='<section class="sd c"><header><b>الحسابات اليومية</b><small>ارفع ملف زبون واحد أو عدة زبائن — تُحسب كل عملة في خانتها مع المجموع وتقرير</small></header>';
     if(!c)x+='<button type="button" class="pk" data-da="pick"><i>＋</i>اختر ملفات الزبائن — حتى 10 ملفات ZIP دفعة واحدة أو واحدًا واحدًا</button>';
@@ -195,8 +195,69 @@
       '<div class="how"><b>كيف يعمل</b>يُقرأ كل إيصال في التاريخ المختار ويُصنَّف حسب عملته (كوانزا، أوقية، USDT، دولار…). لكل عملة خانة بمجموعها، ثم تفصيل كل زبون. الإيصال غير الناجح لا يُحسب، والمكرر يُحسب مرة واحدة، وما لم يُقرأ تفتحه وتكتب مبلغه. لا يُقيَّد شيء في أي تسوية.</div>';
     var OL=opsList();if(OL.length)x+='<section class="ops"><h3>العمليات المحفوظة ('+OL.length+')</h3>'+OL.map(function(o){return '<div class="op"><div class="oi"><b>'+esc((o.names||[]).join(' · ')||'عملية')+'</b><small>'+esc(o.per||'')+' · '+o.n+' إيصالًا · حُفظت '+h.dmy(o.at)+'</small><span>'+Object.keys(o.tot||{}).map(function(c){return fl(c)+c+' '+fm(o.tot[c]);}).join('  ·  ')+'</span></div><div class="ob"><button type="button" data-dp="'+o.id+'">فتح</button><button type="button" class="d" data-dz="'+o.id+'">حذف</button></div></div>';}).join('')+'</section>';
     m.innerHTML=x;}
+  /* 1430: تقرير PDF حقيقي (ملف يُشارَك في واتساب) — يُرسم على صفحات A4 ثم يُجمع بـ jsPDF. بالعربية (يمين←يسار) أو البرتغالية (يسار←يمين). */
+  function loadJs(u){return new Promise(function(res,rej){var sc=document.createElement('script');sc.src=u;sc.onload=res;sc.onerror=rej;document.head.appendChild(sc);});}
+  async function jsPdf(){var g=function(){return (window.jspdf&&window.jspdf.jsPDF)||window.jsPDF;};if(g())return g();try{await loadJs('vendor/jspdf.min.js');}catch(e){}if(g())return g();await loadJs('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');return g();}
+  function drawPages(){var S=D.res,K=calc(),T=TX[LG],F=fin(K),B=banks(K),rtl=LG!=='pt',W=1240,H=1754,M=64,CW=W-2*M,pages=[],x,y,
+      SF='"Newsreader","IBM Plex Sans Arabic",Georgia,serif',AF='"IBM Plex Sans Arabic","Segoe UI",Tahoma,sans-serif',NAVY='#0B1F3F',GOLD='#F0B429';
+    function X(v){return rtl?W-v:v;}
+    function tx(str,px,py,al,font,col){x.font=font;x.fillStyle=col||'#111';x.direction=/[؀-ۿ]/.test(str)?'rtl':'ltr';var a=al||'s';x.textAlign=(a==='c')?'center':((a==='s')!==rtl?'left':'right');x.fillText(String(str),X(px),py);}
+    function fit(str,maxw,font){x.font=font;str=String(str);if(x.measureText(str).width<=maxw)return str;while(str.length>3&&x.measureText(str+'…').width>maxw)str=str.slice(0,-1);return str+'…';}
+    function rect(px,py,w,hh,col){x.fillStyle=col;x.fillRect(rtl?W-px-w:px,py,w,hh);}
+    function page(){var c=document.createElement('canvas');c.width=W;c.height=H;x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,W,H);x.textBaseline='middle';pages.push(c);y=M;
+      if(pages.length>1){rect(M,y,CW,4,GOLD);y+=26;}}
+    function need(hh){if(y+hh>H-M-40)page();}
+    function h3(str){need(70);y+=18;rect(M,y,6,34,GOLD);tx(fit(str,CW-30,'700 26px '+SF),M+20,y+18,'s','700 26px '+SF,NAVY);y+=48;}
+    function h4(str){need(52);rect(M,y,CW,36,'#EEF4FF');tx(str,M+14,y+19,'s','700 19px '+AF,NAVY);y+=42;}
+    /* cols: [{w,al:'s'|'e'|'c',num}] */
+    function row(cols,vals,o){o=o||{};var hh=o.h||36;need(hh);if(o.bg)rect(M,y,CW,hh,o.bg);var px=M;cols.forEach(function(c,i){var v=vals[i]==null?'':String(vals[i]),f=(o.bold||c.num?'700 ':'500 ')+(c.num?'21px '+SF:'17px '+AF);if(o.head)f='700 16px '+AF;
+        var al=c.al||'s',tp=al==='e'?px+c.w-10:al==='c'?px+c.w/2:px+10;tx(fit(v,c.w-16,f),tp,y+hh/2+1,al,f,o.fg||'#111');px+=c.w;});
+      x.strokeStyle='#C5CEDD';x.lineWidth=1;x.strokeRect(M+.5,y+.5,CW-1,hh-1);y+=hh;}
+    page();
+    /* الترويسة */
+    rect(0,0,W,150,NAVY);rect(0,150,W,7,GOLD);
+    tx('BDL',M,70,'s','700 64px '+SF,'#fff');tx('lbdal.com',M+4,118,'s','500 17px '+AF,'#F0C75E');
+    tx(T.t,W-M,58,'e','700 34px '+SF,'#fff');tx(T.per+': '+perL(S),W-M,98,'e','500 18px '+AF,'#DDE6F5');
+    tx((K.cu.length>1?T.cus+': '+K.cu.length:(K.cu[0]?K.cu[0].name:''))+' · '+T.made+' '+h.dmy(Date.now()),W-M,126,'e','500 16px '+AF,'#DDE6F5');y=186;
+    /* بطاقات العملات */
+    var n=Math.max(1,Math.min(4,K.keys.length)),gw=14,cw=(CW-gw*(n-1))/n;
+    K.keys.forEach(function(c,i){var col=i%n;if(i&&!col)y+=132;if(!col)need(132);var px=M+col*(cw+gw);rect(px,y,cw,118,NAVY);
+      tx(ccode(c)+(cname(c)&&cname(c)!==c?' · '+cname(c):''),px+16,y+26,'s','700 17px '+AF,'#F0C75E');
+      var f='700 '+(n>3?30:38)+'px '+SF;tx(fit(fm(K.tot[c].s),cw-28,f),px+16,y+66,'s',f,'#fff');tx(K.tot[c].n+' '+T.rc,px+16,y+98,'s','500 15px '+AF,'#C9D6EA');});
+    y+=138;
+    /* كل زبون: كل عملة وحدها */
+    var C5=[{w:60,al:'c'},{w:250},{w:260},{w:270},{w:CW-840,al:'e',num:1}];
+    K.cu.forEach(function(q){h3(q.name+' — '+q.n+' '+T.rc+(q.un?' · '+T.un+' '+q.un:''));
+      K.keys.filter(function(c){return q.cur[c];}).forEach(function(c){h4(ccode(c)+' — '+cname(c)+'  ('+q.cur[c].n+' '+T.rc+')');
+        row(C5,['#',T.dt,T.bank,T.ref,T.amt+' ('+ccode(c)+')'],{head:1,bg:NAVY,fg:'#fff',h:38});
+        q.its.filter(function(it){return it.st==='ok'&&it.ccy===c;}).forEach(function(it,i,arr){if(i===arr.length-1)need(36+42+10);row(C5,[i+1,it.ts?h.dmy(it.ts):'—',bankOf(it.p)||'—',nr(it.p.ref)||'—',fm(it.v)],{bg:i%2?'#F6F8FC':'#fff'});});
+        row([{w:840},{w:CW-840,al:'e',num:1}],[T.sub+' '+ccode(c)+' ('+q.cur[c].n+')',fm(q.cur[c].s)],{bg:'#FFF4D6',bold:1,h:42});y+=14;});});
+    if(B.length){h3(T.byb);var C4=[{w:420},{w:160,al:'c'},{w:220,al:'c'},{w:CW-800,al:'e',num:1}];row(C4,[T.bank,T.cur,T.n,T.sum],{head:1,bg:NAVY,fg:'#fff',h:38});
+      B.forEach(function(b,i){row(C4,[b.b,ccode(b.c),b.n,fm(b.s)],{bg:i%2?'#F6F8FC':'#fff'});});}
+    if(F.any){h3(T.px);var CP5=[{w:150},{w:CW-150-3*250,al:'e',num:1},{w:250,al:'e',num:1},{w:250,al:'e',num:1},{w:250,al:'e',num:1}];row(CP5,[T.cur,T.sum,T.buy,T.sell,T.profit],{head:1,bg:NAVY,fg:'#fff',h:38});
+      F.rows.filter(function(r){return r.b||r.s;}).forEach(function(r,i){row(CP5,[ccode(r.c),fm(r.t),r.b?fm(r.b)+' '+r.pc:'—',r.s?fm(r.s)+' '+r.pc:'—',r.profit!=null?fm(r.profit)+' '+r.pc:'—'],{bg:i%2?'#F6F8FC':'#fff'});});
+      Object.keys(F.prof).forEach(function(pc){row([{w:CW-320},{w:320,al:'e',num:1}],[T.tp,fm(F.prof[pc])+' '+pc],{bg:'#FFF4D6',bold:1,h:44});});
+      F.bal.forEach(function(b){y+=10;row([{w:CW/3,al:'c'},{w:CW/3,al:'c'},{w:CW/3,al:'c'}],[T.due,T.got,T.diff],{head:1,bg:'#EEF4FF',fg:NAVY,h:34});row([{w:CW/3,al:'c',num:1},{w:CW/3,al:'c',num:1},{w:CW/3,al:'c',num:1}],[fm(b.due)+' '+b.pc,fm(b.got)+' '+b.pc,(b.diff>0?'+':'')+fm(b.diff)+' '+b.pc],{h:42});});}
+    if(F.rate.length){need(50);y+=16;tx(F.rate.map(function(r){return T.rate+': 1 '+r.b+' = '+fm(r.v)+' '+r.a;}).join('   ·   '),M,y+14,'s','700 19px '+AF,NAVY);y+=36;}
+    /* تذييل كل صفحة */
+    pages.forEach(function(c,i){x=c.getContext('2d');x.textBaseline='middle';x.strokeStyle='#999';x.lineWidth=1;x.beginPath();x.moveTo(M,H-M-8);x.lineTo(W-M,H-M-8);x.stroke();
+      tx(fit(T.ft,CW-120,'500 13px '+AF),M,H-M+12,'s','500 13px '+AF,'#555');tx((i+1)+' / '+pages.length,W-M,H-M+12,'e','700 14px '+AF,'#555');});
+    return pages;}
+  async function makePdf(){if(D.pdfBusy||!D.res)return;D.pdfBusy=1;toast(LG==='pt'?'A gerar o PDF…':'جارٍ إعداد ملف PDF…');
+    try{try{if(document.fonts&&document.fonts.ready)await Promise.race([document.fonts.ready,new Promise(function(r){setTimeout(r,1500);})]);}catch(e){}
+      var JP=await jsPdf();if(!JP)throw new Error('nolib');var pages=drawPages(),doc=new JP({unit:'pt',format:'a4',orientation:'p'});
+      pages.forEach(function(c,i){if(i)doc.addPage();doc.addImage(c.toDataURL('image/jpeg',.9),'JPEG',0,0,595.28,841.89);});
+      var S=D.res,nm='BDL-'+(LG==='pt'?'Contas':'الحسابات')+'-'+(S.names||[]).join('-').replace(/[^\w؀-ۿ-]+/g,'_').slice(0,40)+'-'+h.iso(S.pt||Date.now())+'.pdf',bl=doc.output('blob'),f=new File([bl],nm,{type:'application/pdf'});
+      if(D.pdfUrl)URL.revokeObjectURL(D.pdfUrl);D.pdf=f;D.pdfUrl=URL.createObjectURL(bl);
+      var v=$('ldPdf');if(!v){v=document.createElement('div');v.id='ldPdf';document.body.appendChild(v);}
+      v.innerHTML='<div class="pb"><b>'+(LG==='pt'?'Relatório PDF pronto':'ملف PDF جاهز')+'</b><small>'+esc(nm)+' · '+pages.length+(LG==='pt'?' pág.':' صفحة')+'</small><img alt="" src="'+pages[0].toDataURL('image/jpeg',.6)+'"><button type="button" class="bt sv" data-da="pdfshare">'+(LG==='pt'?'Partilhar PDF':'مشاركة PDF (واتساب وغيره)')+'</button><a class="bt" href="'+D.pdfUrl+'" download="'+esc(nm)+'" target="_blank">'+(LG==='pt'?'Abrir / guardar':'فتح / حفظ الملف')+'</a><button type="button" class="bt ln" data-da="pdfclose">'+(LG==='pt'?'Fechar':'إغلاق')+'</button></div>';v.classList.add('on');
+    }catch(e){toast('تعذّر إنشاء PDF — '+((e&&e.message)==='nolib'?'مكتبة PDF لم تُحمَّل، تحقق من الإنترنت':'حاول ثانية'));}
+    D.pdfBusy=0;}
   document.addEventListener('click',function(e){var t=e.target,b;if(!t.closest)return;
     if((b=t.closest('[data-da]'))){var a=b.dataset.da;
+      if(a==='pdf'){makePdf();return;}
+      if(a==='pdfclose'){var pv=$('ldPdf');if(pv)pv.classList.remove('on');return;}
+      if(a==='pdfshare'){var pf=D.pdf;if(pf&&navigator.canShare&&navigator.canShare({files:[pf]}))navigator.share({files:[pf],title:pf.name}).catch(function(){});else if(D.pdfUrl)window.open(D.pdfUrl,'_blank');return;}
       if(a==='pick'){var i=$('ldFile');i.value='';i.click();}
       else if(a==='go')start();
       else if(a==='stop'){if(D.run)D.run.stop=true;b.disabled=true;b.textContent='جارٍ الإيقاف…';}
@@ -225,7 +286,7 @@
     if(t.dataset&&t.dataset.px){var q=t.dataset.px.split(':'),o=PX[q[0]]||(PX[q[0]]={});if(q[1]==='pc')o.pc=t.value;else{var nv=Number(String(t.value).replace(/[\s,]/g,''))||0;o[q[1]]=nv>0?nv:0;}try{localStorage.setItem('bdl_daily_px',JSON.stringify(PX));}catch(x){}var fd=$('ldFin');if(fd&&D.res)fd.innerHTML=finHtml(calc());return;}
     if(t.dataset&&t.dataset.dd){var c=D.c;if(!c||!t.value)return;var p=t.value.split('-');c[t.dataset.dd]=new Date(+p[0],+p[1]-1,+p[2]).getTime();if(c.all){if(t.dataset.dd==='from')c.to=c.max;else c.from=c.min;}if(c.from>c.to){if(t.dataset.dd==='from')c.to=c.from;else c.from=c.to;}c.all=false;paint();}});
   document.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('#lbMode button');if(b&&b.dataset.md==='d')paint();});
-  window.__LABD={saveOp:saveOp,openOp:openOp,opsList:opsList,fin:fin,PX:PX,D:D,calc:calc,ccyOf:ccyOf,paint:paint,repText:repText,repHtml:repHtml};
+  window.__LABD={drawPages:drawPages,saveOp:saveOp,openOp:openOp,opsList:opsList,fin:fin,PX:PX,D:D,calc:calc,ccyOf:ccyOf,paint:paint,repText:repText,repHtml:repHtml};
   function init(){if(!$('ldFile')){var i=document.createElement('input');i.type='file';i.id='ldFile';i.multiple=true;i.style.display='none';document.body.appendChild(i);}paint();restore();}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();
