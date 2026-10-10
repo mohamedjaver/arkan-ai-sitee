@@ -60,29 +60,34 @@
   /* ── القراءة والحساب ── */
   async function readOne(x){var file=x.file;if(!file){var bl=await x.en.async('blob'),ex=x.nm.split('.').pop().toLowerCase();file=new File([bl],x.nm,{type:ex==='pdf'?'application/pdf':ex==='png'?'image/png':ex==='webp'?'image/webp':'image/jpeg'});}
     var fp=await h.sha(file),p=await cget(fp),have=p&&p.ccy!==undefined;
-    /* 1427: القراءة تعتمد على Claude (قارئ الخادم). ما قُرئ سابقًا بقارئ احتياطي يُعاد بـ Claude تلقائيًا؛ تعديلك اليدوي لا يُمس. */
-    if(!have||(!p.man&&p.eng!=='claude')){var g=null,eng='',AR=window.ArkanRead,to=function(ms){return new Promise(function(z){setTimeout(function(){z(null);},ms);});};
-      if(AR.claude){try{g=await Promise.race([AR.claude(file),to(32000)]);}catch(e){g=null;}if(g&&!(g.amount||g.is_receipt===false)){try{g=await Promise.race([AR.claude(file),to(32000)]);}catch(e){g=null;}}}
-      if(g&&(g.amount||g.is_receipt===false))eng='claude';
-      else if(!have){var r=await Promise.race([AR.read(file),to(45000)]);g=(r&&r.parsed)||{};eng=(r&&r.engine)||'ocr';}
-      if(eng){p={amount:Number(g.amount)||0,ref:g.transaction_id||g.reference||g.txn||'',bank:g.bank||g.institution||'',date:g.date||'',name:g.beneficiary||g.name||'',account:g.iban||g.account||'',receiver:g.receiver||'',ccy:String(g.currency||g.ccy||''),status:String(g.status||''),eng:eng};if(g.is_receipt===false)p.nr=1;
-        if(p.amount||p.name||p.account||p.receiver||p.nr)cput(fp,p);}}
+    /* 1428: القراءة بـ Gemini (قراءة Claude أُلغيت). ما قُرئ بنسخة قديمة أو بالقارئ المحلي يُعاد مرة واحدة بالقارئ المحسَّن؛ تعديلك اليدوي لا يُمس.
+       x.force = إعادة بـ Gemini فقط (المرور الثاني المتمهّل): إن لم يرد يبقى ما قُرئ سابقًا. */
+    if(!have||(!p.man&&(p.rv!==3||x.force))){var g=null,eng='',AR=window.ArkanRead,to=function(ms){return new Promise(function(z){setTimeout(function(){z(null);},ms);});};
+      try{var r=await Promise.race([AR.read(file,x.force?{geminiOnly:true}:undefined),to(45000)]);if(r){g=r.parsed||{};eng=r.engine||'ocr';}}catch(e){}
+      if(eng&&!(x.force&&eng!=='gemini')){p={amount:Number(g.amount)||0,ref:g.transaction_id||g.reference||g.txn||'',bank:g.bank||g.institution||'',date:g.date||'',name:g.beneficiary||g.name||'',account:g.iban||g.account||'',receiver:g.receiver||'',ccy:String(g.currency||g.ccy||''),status:String(g.status||''),eng:eng,rv:3};if(g.is_receipt===false)p.nr=1;
+        if(p.amount||p.name||p.account||p.receiver||p.nr)cput(fp,p);}
+      else if(!have)p={amount:0,ref:'',bank:'',ccy:'',status:'',eng:'',rv:0};}
     return {cn:x.cn||'',file:file,nm:x.nm,ts:x.ts||0,pdf:/pdf$/i.test(file.type||x.nm),p:p,fp:fp};}
   function untilVisible(){return document.hidden?new Promise(function(res){var fn=function(){if(!document.hidden){document.removeEventListener('visibilitychange',fn);res();}};document.addEventListener('visibilitychange',fn);}):Promise.resolve();}
   async function start(){var C=D.c?sel():[];if(!C.length)return;if(!DB)DB=await idb();
     D.key='daily';var R={n:C.length,d:0,stop:false,t0:Date.now(),per:perTxt(D.c),cur:'',cn:''};D.run=R;D.res=null;paint();
     var its=[],seen={},dupN=0,qi=0;
     async function wk(){while(qi<C.length&&!R.stop){var x=C[qi++];R.cur=x.nm;R.cn=x.cn;await untilVisible();try{var it=await readOne(x);var k=it.cn+'|'+it.fp;if(seen[k])dupN++;else{seen[k]=1;its.push(it);}}catch(e){}R.d++;paint();}}
-    var w=[];for(var i=0;i<6;i++)w.push(wk());await Promise.all(w);
+    var w=[];for(var i=0;i<3;i++)w.push(wk());await Promise.all(w);
+    var AR=window.ArkanRead,miss=its.filter(function(it){return !it.p.man&&it.p.eng!=='gemini'&&it.p.eng!=='claude';});
+    if(miss.length&&AR.hasGemini&&AR.hasGemini()&&!R.stop){R.ph2=1;R.n=miss.length;R.d=0;R.t0=Date.now();paint();
+      for(var mi=0;mi<miss.length&&!R.stop;mi++){var it2=miss[mi];R.cur=it2.nm;R.cn=it2.cn;await untilVisible();if(AR.resetQuota)AR.resetQuota();
+        try{var r2=await readOne({file:it2.file,nm:it2.nm,ts:it2.ts,cn:it2.cn,force:1});if(r2.p.eng==='gemini')it2.p=r2.p;}catch(e){}R.d++;paint();if(mi<miss.length-1)await new Promise(function(z){setTimeout(z,it2.p.eng==='gemini'?1500:6000);});}}
     /* المرجع نفسه بالمبلغ نفسه عند الزبون نفسه = الإيصال نفسه مصوَّرًا مرتين → يُحسب مرة واحدة */
     var rs={};its=its.filter(function(it){var rf=nr(it.p.ref);if(!rf||rf.length<6)return true;var k=it.cn+'|'+rf;if(rs[k]){dupN++;return false;}rs[k]=1;return true;});
     var n1=its.length;its=its.filter(function(it){return !it.p.nr||it.p.man;});var nrN=n1-its.length;
     var n0=its.length;its=its.filter(function(it){return !failed(it.p);});var failN=n0-its.length;
     its.sort(function(a,b){return (a.ts||0)-(b.ts||0);});
     D.res={its:its,per:R.per,pf:D.c.from,pt:D.c.to,pall:!!D.c.all,names:D.c.parts.map(function(q){return q.name;}),dupN:dupN,failN:failN,nrN:nrN,stopped:R.stop,at:Date.now()};D.run=null;D.open={};persist();paint();window.scrollTo(0,0);}
-  async function reread(){var S=D.res;if(!S||D.busy)return;D.busy=1;var L=S.its.filter(function(it){return !it.p.man&&it.p.eng!=='claude';}),ok=0;toast('إعادة قراءة '+L.length+' إيصالًا بـ Claude…');
-    for(var i=0;i<L.length;i++){var it=L[i];try{if(!it.file&&it._si>=0)it.file=await h.sess.file(D.key,it._si,it.nm,it.pdf);if(!it.file)continue;var r=await readOne({file:it.file,nm:it.nm,ts:it.ts,cn:it.cn});if(r.p.eng==='claude'){it.p=r.p;ok++;}}catch(e){}}
-    D.busy=0;saveMeta();paint();toast(ok?'قرأ Claude '+ok+' من '+L.length:'Claude لم يرد — '+(window.__bdlReadErr||'تحقق من تسجيل الدخول'));}
+  async function reread(){var S=D.res,AR=window.ArkanRead;if(!S||D.busy)return;D.busy=1;var L=S.its.filter(function(it){return !it.p.man&&it.p.eng!=='gemini'&&it.p.eng!=='claude';}),ok=0;
+    for(var i=0;i<L.length;i++){var it=L[i];toast('إعادة القراءة بـ Gemini… '+(i+1)+' / '+L.length);try{if(!it.file&&it._si>=0)it.file=await h.sess.file(D.key,it._si,it.nm,it.pdf);if(!it.file)continue;if(AR.resetQuota)AR.resetQuota();var r=await readOne({file:it.file,nm:it.nm,ts:it.ts,cn:it.cn,force:1});if(r.p.eng==='gemini'){it.p=r.p;ok++;}}catch(e){}
+      if(i<L.length-1)await new Promise(function(z){setTimeout(z,it.p.eng==='gemini'?1500:6000);});}
+    D.busy=0;saveMeta();paint();toast(ok?'قرأ Gemini '+ok+' من '+L.length:'Gemini لم يرد — حاول بعد دقيقة');}
   function calc(){var S=D.res,tot={},cu={},fail=0,un=0;S.names.forEach(function(n){cu[n]={name:n,n:0,un:0,fail:0,cur:{},its:[]};});
     S.its.forEach(function(it,i){it.i=i;var q=cu[it.cn]||(cu[it.cn]={name:it.cn,n:0,un:0,fail:0,cur:{},its:[]});if(failed(it.p)){it.st='fail';q.fail++;fail++;return;}q.its.push(it);
       var v=amt(it.p.amount),c=ccyOf(it.p);it.ccy=c;it.v=v;
@@ -160,13 +165,13 @@
   /* ── العرض ── */
   function paint(){var m=$('ldMain');if(!m)return;var R=D.run,x='';
     if(R){var p=Math.round(R.d/Math.max(1,R.n)*100),el=(Date.now()-R.t0)/1000,eta=R.d>8?Math.round(el/R.d*(R.n-R.d)):0;
-      x='<section class="pg"><div class="br"><i style="width:'+p+'%"></i></div><div class="pr2">الفترة: <b>'+esc(R.per)+'</b></div><div class="tx"><b>'+p+'%</b>قراءة إيصالات '+(R.cn?'«'+esc(R.cn)+'» ':'')+R.d+' / '+R.n+(eta?' · الباقي نحو '+(eta>90?Math.round(eta/60)+' د':eta+' ث'):'')+'</div><div class="fn">'+esc(R.cur||'')+'</div><button type="button" class="bt ln" data-da="stop">إيقاف</button></section>';
+      x='<section class="pg"><div class="br"><i style="width:'+p+'%"></i></div><div class="pr2">الفترة: <b>'+esc(R.per)+'</b></div><div class="tx"><b>'+p+'%</b>'+(R.ph2?'إعادة قراءة متمهّلة بـ Gemini ':'قراءة إيصالات ')+(R.cn?'«'+esc(R.cn)+'» ':'')+R.d+' / '+R.n+(eta?' · الباقي نحو '+(eta>90?Math.round(eta/60)+' د':eta+' ث'):'')+'</div><div class="fn">'+esc(R.cur||'')+'</div><button type="button" class="bt ln" data-da="stop">إيقاف</button></section>';
       var pg=m.querySelector('.pg[data-live]');if(pg){var t=document.createElement('div');t.innerHTML=x;var np=t.firstChild;pg.querySelector('.br i').style.width=p+'%';['.tx','.fn'].forEach(function(q){var o=pg.querySelector(q),n=np.querySelector(q);if(o&&n&&o.innerHTML!==n.innerHTML)o.innerHTML=n.innerHTML;});return;}
       m.innerHTML=x;m.querySelector('.pg').setAttribute('data-live','1');return;}
     if(D.res){var S=D.res,K=calc();
       x='<section class="rs">'+(S.restored?'<div class="rst">حساب محفوظ من '+new Date(S.restored).toLocaleString('en-GB',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})+' — يبقى حتى تنهيه أنت</div>':'')+
         '<div class="vd ok"><b>الحسابات اليومية — '+esc(S.per)+'</b><span>'+(K.cu.length>1?K.cu.length+' زبائن':'الزبون '+esc(K.cu[0]?K.cu[0].name:''))+' · '+(S.its.length-K.fail)+' إيصالًا'+(S.stopped?' — أُوقف قبل اكتماله':'')+'</span></div>'+
-        (function(){var nc=S.its.filter(function(it){return !it.p.man&&it.p.eng!=='claude'&&!failed(it.p);}).length;return nc?'<div class="wr"><b>'+nc+' إيصالًا لم يقرأها Claude</b> — قُرئت بالقارئ الاحتياطي الأقل دقة'+(window.__bdlReadErr?' ('+esc(window.__bdlReadErr)+')':'')+'. سجّل الدخول من «حسابي» ثم اضغط <button type="button" class="lk" data-da="reread">أعد القراءة بـ Claude</button></div>':'';})()+
+        (function(){var nc=S.its.filter(function(it){return !it.p.man&&it.p.eng!=='gemini'&&it.p.eng!=='claude'&&!failed(it.p);}).length,AR=window.ArkanRead,hk=AR.hasGemini&&AR.hasGemini();return nc?'<div class="wr"><b>'+nc+' إيصالًا قُرئت بالقارئ المحلي الضعيف</b> — '+(hk?'Gemini لم يرد عليها (ضغط أو حصة منتهية). انتظر دقيقة ثم اضغط <button type="button" class="lk" data-da="reread">أعد قراءتها بـ Gemini</button>':'مفتاح Gemini غير مضبوط على هذا الهاتف، فالقراءة كلها محلية وأقل دقة. أضف المفتاح من الإعدادات ثم أعد الحساب.')+' راجِع مبالغها.</div>':'';})()+
         '<div class="cb">'+(K.keys.map(function(c){return '<div data-df="'+c+'" class="'+(c==='؟'?'q':'')+(D.flt===c?' sel':'')+'"><small>'+fl(c)+c+(CN[c]&&CN[c]!==c?' · '+CN[c]:'')+'</small><b>'+fm(K.tot[c].s)+'</b><i>'+K.tot[c].n+' إيصالًا</i></div>';}).join('')||'<div class="q"><small>لا مبالغ مقروءة</small><b>0</b></div>')+'</div>'+
         '<div class="nt">'+(D.flt?'تعرض إيصالات <b>'+D.flt+'</b> فقط — <button type="button" data-df="" class="lk">عرض الكل</button>':'اضغط خانة أي عملة لعرض إيصالاتها وحدها. كل إيصال يُفتح ويُعدَّل ويُحفظ.')+'</div>'+
         '<div class="px"><div class="pxh"><b>الأسعار والربح</b><small>اختياري — شراء وبيع لكل عملة</small></div>'+K.keys.filter(function(c){return c!=='؟';}).map(function(c){var p=PX[c]||{},pc=p.pc||defPc(c);return '<div class="pxr"><b>'+flag(c)+'<span>'+c+'</span></b><label><small>شراء</small><input inputmode="decimal" data-px="'+c+':b" value="'+(p.b||'')+'" placeholder="0"></label><label><small>بيع</small><input inputmode="decimal" data-px="'+c+':s" value="'+(p.s||'')+'" placeholder="0"></label><label><small>بعملة</small><select data-px="'+c+':pc">'+ORD.filter(function(o){return o!==c;}).map(function(o){return '<option value="'+o+'"'+(o===pc?' selected':'')+'>'+fl(o)+o+'</option>';}).join('')+'</select></label></div>';}).join('')+'<div id="ldFin">'+finHtml(K)+'</div></div>'+

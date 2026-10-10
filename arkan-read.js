@@ -6,6 +6,14 @@ ${GEM_SCHEMA}
 - المبلغ هو قيمة حقل Montante/المبلغ/Total/Valor فقط (مثل: Kz 8 000 000,00 → 8000000). لا تضع أبدًا في amount أرقام Movimento أو Número de Operação أو Transacção أو CHAVE أو PIN أو Conta/IBAN — هذه أرقام تعريفية تذهب في transaction_id/reference.
 - إيصالات Binance (Detalhes do saque): reference هو Txid كاملًا (0x...)؛ amount قيمة USDT (فواصل عشرية أوروبية)؛ Endereço عنوان المستلم؛ التاريخ بالثواني.
 - قاعدة حاسمة لإثباتات ATLANTICO (Transfer to Atlântico / Transferência Atlântico): reference = قيمة سطر Reference/Referencia فقط (مثال: Reference 648084834 → reference=648084834). ACCOUNT NUMBER وAccount number/IBAN وCurrent account/Conta origem (مثل 292750887 أو 347805651) أرقام حسابات — يُمنع منعًا باتًا وضعها في reference أو amount. amount من Amount/Montante؛ beneficiary من Name/Nome beneficiário؛ Account number/IBAN وCurrent account أرقام حسابات لا توضع أبدًا في reference ولا amount؛ beneficiary هو سطر Name؛ العملة AKZ تعني الكوانزا.
+- ممنوع منعًا باتًا أخذ amount من: التاريخ (12-10-2026 ليس مبلغًا)، رقم العملية/التحويل، رقم الحساب/IBAN، الهاتف، الرصيد (Saldo/Solde) أو العمولة (Taxa/Frais). amount_verbatim يجب أن يكون نص سطر المبلغ نفسه ويساوي amount. قيمة بإشارة سالبة (-2.030.000,00 AKZ) مبلغها القيمة المطلقة.
+- قالب Banco BIC (جدول: Valor da operação، Número de transferência atribuído، Conta a debitar، Conta a creditar، Montante، Moeda، Data da transferência): bank="BIC"؛ amount = Montante (2.030.000,00 → 2030000)؛ currency من Moeda (AKZ → AOA)؛ reference = Número de transferência atribuído؛ iban = Conta a creditar. Conta a debitar/creditar أرقام حسابات لا تدخل في amount ولا reference.
+- قالب Multicaixa Express / ATM (Comprovativo، Transferência، Pagamento): amount = Montante/Valor؛ reference = N.º Transacção / Referência / ID؛ bank="MULTICAIXA" مع اسم البنك إن ظهر.
+- المحافظ الموريتانية (Bankily، Masrvi، Sedad، BIM، Amanty، Click): currency=MRU دائمًا؛ amount = Montant / المبلغ (لا Frais ولا Solde)؛ reference = Trs ID / Txn ID / معرف المعاملة؛ bank = اسم التطبيق.
+- المحافظ الرقمية (Binance، OKX، Trust، Bybit، TronLink): currency = اسم العملة المكتوب حرفيًا بجوار الكمية (USDT أو USDC) — لا تكتب USDC إلا إذا كانت الكلمة ظاهرة؛ amount = الكمية المحوَّلة بقيمتها المطلقة بكسورها (17,196.9 → 17196.9) لا رسوم الشبكة؛ bank = اسم المنصة أو الشبكة.
+- currency لا تُخمَّن: خذها من سطر Moeda/Currency/Devise أو الرمز بجوار المبلغ؛ إن غابت فاستنتجها من البنك (بنوك أنغولا BFA/BAI/BIC/BCI/BPC/KEVE/SOL/ATLANTICO/Multicaixa → AOA؛ محافظ موريتانيا → MRU) وإلا اتركها فارغة.
+- إن لم يكن المستند إيصال تحويل أو دفع (صورة شخصية، محادثة، بطاقة، قائمة أسعار) ضع doc_type="not_receipt" و amount=0.
+- status: "success" أو "failed" أو "pending" حسب ما يظهر (Sucesso/Concluído/Réussi/ناجحة ↔ Falhou/Rejeitada/Échec/فشلت).
 - تجاهل تمامًا أرقام التذييل القانوني (Capital Social، NIF، الهواتف).
 - الكوانزا الأنغولية: AOA (تظهر كـ Kz أو KZ أو AKZ). الأوقية: MRU (أو UM). انتبه للفواصل الأوروبية 1.234.567,89 والمسافات 8 000 000,00.
 - قيّم جودة الصورة في quality (مقصوصة؟ ضبابية؟ أثر تعديل؟ زوايا ناقصة؟).
@@ -22,6 +30,15 @@ const KEY=()=> (localStorage.getItem('gemKey')||'').trim();
 const MODELS=['gemini-2.5-flash','gemini-2.0-flash','gemini-flash-latest'];
 let QUOTA_TRIP=0; /* قاطع: بعد فشلي حصة متتاليين ننتقل محلياً لبقية الدفعة */
 
+/* 1428: تدقيق قراءة Gemini — المبلغ يُطابَق مع نصّه الحرفي (للكوانزا والأوقية، فاصلة أوروبية)، وغير الإيصال يُعلَّم */
+function fixParsed(p){try{if(!p||typeof p!=='object')return p;
+    if(/not_receipt/i.test(p.doc_type||'')&&!(+p.amount)){p.is_receipt=false;return p;}
+    const cu=String(p.currency||'').toUpperCase(),vb=String(p.amount_verbatim||'').replace(/[^\d.,]/g,'');
+    if(vb&&/AKZ|KZ|KWANZA|AOA|MRU|MRO|UM|OUGUIYA/.test(cu)){const ld=Math.max(vb.lastIndexOf('.'),vb.lastIndexOf(',')),tail=ld>=0?vb.slice(ld+1):'';
+      const pv=Number(ld>=0&&tail.length>0&&tail.length<3?vb.slice(0,ld).replace(/[.,]/g,'')+'.'+tail:vb.replace(/[.,]/g,''))||0,am=+p.amount||0;
+      if(pv>=100&&(!am||Math.abs(pv-am)/pv>0.005)){p.amount_model=am;p.amount=pv;}}
+    if(p.amount!=null)p.amount=Math.abs(+p.amount||0);
+  }catch(e){}return p;}
 async function toB64(f){
   return new Promise((res,rej)=>{const r=new FileReader();
     r.onload=()=>res(String(r.result).split(',')[1]);r.onerror=rej;r.readAsDataURL(f);});
@@ -284,8 +301,10 @@ async function miniGemini(b64,mime){
   QUOTA_TRIP=0; return p;
 }
 window.ArkanRead={
+  hasGemini(){return !!KEY();},resetQuota(){QUOTA_TRIP=0;},
   /* claude(File) → parsed بنفس شكل Gemini — القارئ الموحّد على الخادم لكل نوافذ الموقع (يتطلب جلسة) */
   async claude(file){
+    try{if(localStorage.getItem('bdl_claude_on')!=='1')return null;}catch(e){return null;}
     const j=(function(){try{return JSON.parse(localStorage.getItem('arkan_sb_jwt')||'null');}catch(e){return null;}})();
     if(!j||!j.token||(j.exp&&j.exp<Math.floor(Date.now()/1000)+60))return null;
     const mime=file.type||'image/jpeg';const isPdf=/pdf/i.test(mime)||/\.pdf$/i.test(file.name||'');
@@ -341,7 +360,7 @@ window.ArkanRead={
       try{
         await new Promise(r=>setTimeout(r,350));
         const b64=await toB64(file);
-        const parsed=await gemini(b64,mime);
+        const parsed=fixParsed(await gemini(b64,mime));
         return {parsed,text:asText(parsed),engine:'gemini'};
       }catch(e){ if(opts.geminiOnly)throw e; }
     }
