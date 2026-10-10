@@ -198,13 +198,13 @@
   /* 1430: تقرير PDF حقيقي (ملف يُشارَك في واتساب) — يُرسم على صفحات A4 ثم يُجمع بـ jsPDF. بالعربية (يمين←يسار) أو البرتغالية (يسار←يمين). */
   function loadJs(u){return new Promise(function(res,rej){var sc=document.createElement('script');sc.src=u;sc.onload=res;sc.onerror=rej;document.head.appendChild(sc);});}
   async function jsPdf(){var g=function(){return (window.jspdf&&window.jspdf.jsPDF)||window.jsPDF;};if(g())return g();try{await loadJs('vendor/jspdf.min.js');}catch(e){}if(g())return g();await loadJs('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');return g();}
-  function drawPages(){var S=D.res,K=calc(),T=TX[LG],F=fin(K),B=banks(K),rtl=LG!=='pt',W=1240,H=1754,M=64,CW=W-2*M,pages=[],x,y,
+  function drawPages(){var S=D.res,K=calc(),T=TX[LG],F=fin(K),B=banks(K),rtl=LG!=='pt',SC=2,W=1240,H=1754,M=64,CW=W-2*M,pages=[],x,y,
       SF='"Newsreader","IBM Plex Sans Arabic",Georgia,serif',AF='"IBM Plex Sans Arabic","Segoe UI",Tahoma,sans-serif',NAVY='#0B1F3F',GOLD='#F0B429';
     function X(v){return rtl?W-v:v;}
     function tx(str,px,py,al,font,col){x.font=font;x.fillStyle=col||'#111';x.direction=/[؀-ۿ]/.test(str)?'rtl':'ltr';var a=al||'s';x.textAlign=(a==='c')?'center':((a==='s')!==rtl?'left':'right');x.fillText(String(str),X(px),py);}
     function fit(str,maxw,font){x.font=font;str=String(str);if(x.measureText(str).width<=maxw)return str;while(str.length>3&&x.measureText(str+'…').width>maxw)str=str.slice(0,-1);return str+'…';}
     function rect(px,py,w,hh,col){x.fillStyle=col;x.fillRect(rtl?W-px-w:px,py,w,hh);}
-    function page(){var c=document.createElement('canvas');c.width=W;c.height=H;x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,W,H);x.textBaseline='middle';pages.push(c);y=M;
+    function page(){var c=document.createElement('canvas');c.width=W*SC;c.height=H*SC;x=c.getContext('2d');x.scale(SC,SC);x.fillStyle='#fff';x.fillRect(0,0,W,H);x.textBaseline='middle';pages.push(c);y=M;
       if(pages.length>1){rect(M,y,CW,4,GOLD);y+=26;}}
     function need(hh){if(y+hh>H-M-40)page();}
     function h3(str){need(70);y+=18;rect(M,y,6,34,GOLD);tx(fit(str,CW-30,'700 26px '+SF),M+20,y+18,'s','700 26px '+SF,NAVY);y+=48;}
@@ -246,11 +246,11 @@
   async function makePdf(){if(D.pdfBusy||!D.res)return;D.pdfBusy=1;toast(LG==='pt'?'A gerar o PDF…':'جارٍ إعداد ملف PDF…');
     try{try{if(document.fonts&&document.fonts.ready)await Promise.race([document.fonts.ready,new Promise(function(r){setTimeout(r,1500);})]);}catch(e){}
       var JP=await jsPdf();if(!JP)throw new Error('nolib');var pages=drawPages(),doc=new JP({unit:'pt',format:'a4',orientation:'p'});
-      pages.forEach(function(c,i){if(i)doc.addPage();doc.addImage(c.toDataURL('image/jpeg',.9),'JPEG',0,0,595.28,841.89);});
+      pages.forEach(function(c,i){if(i)doc.addPage();doc.addImage(c.toDataURL('image/jpeg',.95),'JPEG',0,0,595.28,841.89,undefined,'FAST');});
       var S=D.res,nm='BDL-'+(LG==='pt'?'Contas':'الحسابات')+'-'+(S.names||[]).join('-').replace(/[^\w؀-ۿ-]+/g,'_').slice(0,40)+'-'+h.iso(S.pt||Date.now())+'.pdf',bl=doc.output('blob'),f=new File([bl],nm,{type:'application/pdf'});
       if(D.pdfUrl)URL.revokeObjectURL(D.pdfUrl);D.pdf=f;D.pdfUrl=URL.createObjectURL(bl);
       var v=$('ldPdf');if(!v){v=document.createElement('div');v.id='ldPdf';document.body.appendChild(v);}
-      v.innerHTML='<div class="pb"><b>'+(LG==='pt'?'Relatório PDF pronto':'ملف PDF جاهز')+'</b><small>'+esc(nm)+' · '+pages.length+(LG==='pt'?' pág.':' صفحة')+'</small><img alt="" src="'+pages[0].toDataURL('image/jpeg',.6)+'"><button type="button" class="bt sv" data-da="pdfshare">'+(LG==='pt'?'Partilhar PDF':'مشاركة PDF (واتساب وغيره)')+'</button><a class="bt" href="'+D.pdfUrl+'" download="'+esc(nm)+'" target="_blank">'+(LG==='pt'?'Abrir / guardar':'فتح / حفظ الملف')+'</a><button type="button" class="bt ln" data-da="pdfclose">'+(LG==='pt'?'Fechar':'إغلاق')+'</button></div>';v.classList.add('on');
+      v.innerHTML='<div class="pb"><b>'+(LG==='pt'?'Relatório PDF pronto':'ملف PDF جاهز')+'</b><small>'+esc(nm)+' · '+pages.length+(LG==='pt'?' pág.':' صفحة')+'</small><img alt="" src="'+(function(){var t=document.createElement('canvas');t.width=496;t.height=702;t.getContext('2d').drawImage(pages[0],0,0,496,702);return t.toDataURL('image/jpeg',.7);})()+'"><button type="button" class="bt sv" data-da="pdfshare">'+(LG==='pt'?'Partilhar PDF':'مشاركة PDF (واتساب وغيره)')+'</button><a class="bt" href="'+D.pdfUrl+'" download="'+esc(nm)+'" target="_blank">'+(LG==='pt'?'Abrir / guardar':'فتح / حفظ الملف')+'</a><button type="button" class="bt ln" data-da="pdfclose">'+(LG==='pt'?'Fechar':'إغلاق')+'</button></div>';v.classList.add('on');
     }catch(e){toast('تعذّر إنشاء PDF — '+((e&&e.message)==='nolib'?'مكتبة PDF لم تُحمَّل، تحقق من الإنترنت':'حاول ثانية'));}
     D.pdfBusy=0;}
   document.addEventListener('click',function(e){var t=e.target,b;if(!t.closest)return;
