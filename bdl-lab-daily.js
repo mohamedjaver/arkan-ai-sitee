@@ -29,6 +29,7 @@
     return '؟';}
   function why(p,v,c){if(!v)return 'لم يُقرأ المبلغ';if(c==='؟')return 'العملة غير واضحة — اخترها';if(p.man)return '';
     var dv=String(Math.round(v)),rf=String(p.ref||'').replace(/\D/g,''),ac=String(p.account||'').replace(/\D/g,'');
+    if(p.weak)return 'قراءة غير مؤكدة — تأكد من المبلغ';
     if(c==='AOA'&&v<1000)return 'مبلغ '+fm(v)+' كوانزا غير منطقي — راجِعه';
     if(dv.length>=6&&(dv===rf||(ac&&ac.indexOf(dv)>=0)))return 'المبلغ يطابق رقم المرجع/الحساب — راجِعه';
     return '';}
@@ -62,9 +63,9 @@
     var fp=await h.sha(file),p=await cget(fp),have=p&&p.ccy!==undefined;
     /* 1428: القراءة بـ Gemini (قراءة Claude أُلغيت). ما قُرئ بنسخة قديمة أو بالقارئ المحلي يُعاد مرة واحدة بالقارئ المحسَّن؛ تعديلك اليدوي لا يُمس.
        x.force = إعادة بـ Gemini فقط (المرور الثاني المتمهّل): إن لم يرد يبقى ما قُرئ سابقًا. */
-    if(!have||(!p.man&&(p.rv!==3||x.force))){var g=null,eng='',AR=window.ArkanRead,to=function(ms){return new Promise(function(z){setTimeout(function(){z(null);},ms);});};
+    if(!have||(!p.man&&(p.rv!==4||x.force))){var g=null,eng='',AR=window.ArkanRead,to=function(ms){return new Promise(function(z){setTimeout(function(){z(null);},ms);});};
       try{var r=await Promise.race([AR.read(file,x.force?{geminiOnly:true}:undefined),to(45000)]);if(r){g=r.parsed||{};eng=r.engine||'ocr';}}catch(e){}
-      if(eng&&!(x.force&&eng!=='gemini')){p={amount:Number(g.amount)||0,ref:g.transaction_id||g.reference||g.txn||'',bank:g.bank||g.institution||'',date:g.date||'',name:g.beneficiary||g.name||'',account:g.iban||g.account||'',receiver:g.receiver||'',ccy:String(g.currency||g.ccy||''),status:String(g.status||''),eng:eng,rv:3};if(g.is_receipt===false)p.nr=1;
+      if(eng&&!(x.force&&eng!=='gemini')){p={amount:Number(g.amount)||0,ref:g.transaction_id||g.reference||g.txn||'',bank:g.bank||g.institution||'',date:g.date||'',name:g.beneficiary||g.name||'',account:g.iban||g.account||'',receiver:g.receiver||'',ccy:String(g.currency||g.ccy||''),status:String(g.status||''),eng:eng,rv:4};if(g.weak)p.weak=1;if(g.is_receipt===false)p.nr=1;
         if(p.amount||p.name||p.account||p.receiver||p.nr)cput(fp,p);}
       else if(!have)p={amount:0,ref:'',bank:'',ccy:'',status:'',eng:'',rv:0};}
     return {cn:x.cn||'',file:file,nm:x.nm,ts:x.ts||0,pdf:/pdf$/i.test(file.type||x.nm),p:p,fp:fp};}
@@ -171,7 +172,6 @@
     if(D.res){var S=D.res,K=calc();
       x='<section class="rs">'+(S.restored?'<div class="rst">حساب محفوظ من '+new Date(S.restored).toLocaleString('en-GB',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})+' — يبقى حتى تنهيه أنت</div>':'')+
         '<div class="vd ok"><b>الحسابات اليومية — '+esc(S.per)+'</b><span>'+(K.cu.length>1?K.cu.length+' زبائن':'الزبون '+esc(K.cu[0]?K.cu[0].name:''))+' · '+(S.its.length-K.fail)+' إيصالًا'+(S.stopped?' — أُوقف قبل اكتماله':'')+'</span></div>'+
-        (function(){var nc=S.its.filter(function(it){return !it.p.man&&it.p.eng!=='gemini'&&it.p.eng!=='claude'&&!failed(it.p);}).length,AR=window.ArkanRead,hk=AR.hasGemini&&AR.hasGemini();return nc?'<div class="wr"><b>'+nc+' إيصالًا قُرئت بالقارئ المحلي الضعيف</b> — '+(hk?'Gemini لم يرد عليها (ضغط أو حصة منتهية). انتظر دقيقة ثم اضغط <button type="button" class="lk" data-da="reread">أعد قراءتها بـ Gemini</button>':'مفتاح Gemini غير مضبوط على هذا الهاتف، فالقراءة كلها محلية وأقل دقة. أضف المفتاح من الإعدادات ثم أعد الحساب.')+' راجِع مبالغها.</div>':'';})()+
         '<div class="cb">'+(K.keys.map(function(c){return '<div data-df="'+c+'" class="'+(c==='؟'?'q':'')+(D.flt===c?' sel':'')+'"><small>'+fl(c)+c+(CN[c]&&CN[c]!==c?' · '+CN[c]:'')+'</small><b>'+fm(K.tot[c].s)+'</b><i>'+K.tot[c].n+' إيصالًا</i></div>';}).join('')||'<div class="q"><small>لا مبالغ مقروءة</small><b>0</b></div>')+'</div>'+
         '<div class="nt">'+(D.flt?'تعرض إيصالات <b>'+D.flt+'</b> فقط — <button type="button" data-df="" class="lk">عرض الكل</button>':'اضغط خانة أي عملة لعرض إيصالاتها وحدها. كل إيصال يُفتح ويُعدَّل ويُحفظ.')+'</div>'+
         '<div class="px"><div class="pxh"><b>الأسعار والربح</b><small>اختياري — شراء وبيع لكل عملة</small></div>'+K.keys.filter(function(c){return c!=='؟';}).map(function(c){var p=PX[c]||{},pc=p.pc||defPc(c);return '<div class="pxr"><b>'+flag(c)+'<span>'+c+'</span></b><label><small>شراء</small><input inputmode="decimal" data-px="'+c+':b" value="'+(p.b||'')+'" placeholder="0"></label><label><small>بيع</small><input inputmode="decimal" data-px="'+c+':s" value="'+(p.s||'')+'" placeholder="0"></label><label><small>بعملة</small><select data-px="'+c+':pc">'+ORD.filter(function(o){return o!==c;}).map(function(o){return '<option value="'+o+'"'+(o===pc?' selected':'')+'>'+fl(o)+o+'</option>';}).join('')+'</select></label></div>';}).join('')+'<div id="ldFin">'+finHtml(K)+'</div></div>'+

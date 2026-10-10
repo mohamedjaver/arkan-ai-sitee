@@ -102,11 +102,55 @@ async function pdfText(f){
   }finally{ try{await doc.destroy();}catch(e){} }
   return out;
 }
-async function ocrText(f){
-  const w=await worker();
-  const {data}=await w.recognize(f);
-  return data.text||'';
+/* 1429: القارئ المحلي المطوَّر — تجهيز الصورة قبل OCR (تكبير، رمادي، تباين، قلب الوضع الداكن) + مرور ثانٍ بتخطيط مختلف + PDF الممسوح */
+let _q=Promise.resolve();
+function lock(fn){const r=_q.then(fn,fn);_q=r.catch(()=>{});return r;}
+async function prepImg(src){
+  const im=(src&&src.getContext)?src:await createImageBitmap(src);const w0=im.width,h0=im.height;
+  let sc=w0<1500?Math.min(2.4,1500/w0):1;if(w0*sc>2200)sc=2200/w0;if(h0*sc>5200)sc=5200/h0;
+  const c=document.createElement('canvas');c.width=Math.max(1,Math.round(w0*sc));c.height=Math.max(1,Math.round(h0*sc));
+  const x=c.getContext('2d',{willReadFrequently:true});x.imageSmoothingQuality='high';x.drawImage(im,0,0,c.width,c.height);
+  const d=x.getImageData(0,0,c.width,c.height),a=d.data;let sum=0;const n=a.length/4;
+  for(let k=0;k<a.length;k+=4){const g=(a[k]*299+a[k+1]*587+a[k+2]*114)/1000;a[k]=g;sum+=g;}
+  const dark=(sum/n)<115;
+  for(let k=0;k<a.length;k+=4){let g=a[k];if(dark)g=255-g;g=(g-128)*1.45+128;g=g<0?0:g>255?255:g;a[k]=a[k+1]=a[k+2]=g;a[k+3]=255;}
+  x.putImageData(d,0,0);return c;
 }
+async function ocrText(f,psm){
+  const w=await worker();
+  let src=f;try{src=await prepImg(f);}catch(e){src=f;}
+  return lock(async()=>{
+    if(psm)await w.setParameters({tessedit_pageseg_mode:String(psm)});
+    try{const {data}=await w.recognize(src);return data.text||'';}
+    finally{if(psm){try{await w.setParameters({tessedit_pageseg_mode:'6'});}catch(e){}}}
+  });
+}
+async function pdfOcr(f){
+  const buf=await f.arrayBuffer();const doc=await pdfjsLib.getDocument({data:buf}).promise;
+  try{const pg=await doc.getPage(1);const vp=pg.getViewport({scale:2});const c=document.createElement('canvas');c.width=Math.round(vp.width);c.height=Math.round(vp.height);
+    await pg.render({canvasContext:c.getContext('2d'),viewport:vp}).promise;return await ocrText(c);}
+  finally{try{await doc.destroy();}catch(e){}}
+}
+/* رقم مالي: 12.500 و 12,500 = آلاف؛ 1.234.567,89 أوروبي؛ 17,196.9 أمريكي */
+function numVal(x){x=String(x).trim().replace(/[\s ]/g,'');
+  if(/^\d{1,3}(\.\d{3})+$/.test(x)||/^\d{1,3}(,\d{3})+$/.test(x))return parseFloat(x.replace(/[.,]/g,''))||0;
+  if(/^\d{1,3}(,\d{3})+\.\d{1,2}$/.test(x))return parseFloat(x.replace(/,/g,''))||0;
+  return euNum(x);}
+/* اختيار المبلغ بالنقاط: الأقرب لكلمة المبلغ أو لرمز العملة يفوز؛ التواريخ والأرصدة والعمولات وأرقام الحسابات تُستبعد */
+function pickAmount(t){
+  const re=/(\d{1,3}(?:[.\s ]\d{3})+(?:,\d{1,2})?|\d{1,3}(?:,\d{3})+(?:\.\d{1,2})?|\d+[.,]\d{1,2}|\d{3,})/g;let m,best=null;
+  while((m=re.exec(t))){const raw=m[1],i=m.index,bf=t.slice(Math.max(0,i-30),i),af=t.slice(i+raw.length,i+raw.length+16);
+    if(/[\dA-Za-z.,]$/.test(bf)||/^[\d]/.test(af)||/^[.,]\d/.test(af))continue;
+    if(/^\s*[-\/:]\s*\d/.test(af)||/\d\s*[-\/:]\s*$/.test(bf))continue;                       /* تاريخ أو وقت */
+    if(/(saldo|solde|balance|رصيد|comiss|taxa|imposto|frais|\bfee|رسوم|iban|conta|account|compte|\bnif\b|tel[eé]|phone|هاتف|capital|swift|c[oó]digo|chave)[^\n\d]{0,20}$/i.test(bf))continue;
+    const fmt=/[.,\s ]/.test(raw),v=numVal(raw);if(!(v>0))continue;
+    let sc=fmt?2:0;
+    if(/(montante|montant(?:\s*envoy[ée]+)?|amount|valor|total|import[âa]ncia|quantia|المبلغ)[^\d\n]{0,24}$/i.test(bf))sc+=5;
+    if(/^\s*(kz|akz|aoa|mru|um|usdt|usd|eur)\b/i.test(af))sc+=4;
+    if(/(?:kz|akz|aoa|mru|\bum)\s*:?\s*[-−]?\s*$/i.test(bf))sc+=4;
+    if(!fmt&&(sc<4||raw.length>=9))continue;                                                   /* رقم خام بلا تنسيق: يُقبل فقط بجوار كلمة مبلغ/عملة */
+    if(!best||sc>best.sc)best={v:v,sc:sc};}
+  return best;}
 function euNum(x){
   x=String(x).trim();
   if(/,\d{1,2}$/.test(x)) x=x.replace(/[.\s\u00A0]/g,'').replace(',','.');
@@ -195,12 +239,12 @@ function liteParse0(t){
       p.confidence=(p.amount&&p.reference)?100:80;return p;}
   }
   /* قالب BANCO SOL — Transferência Interna */
-  if(/BANCO\s+SOL/i.test(t)&&/transfer[êe]ncia/i.test(t)){
+  if(/BANCO\s+SOL|Banco\s+BIC|BCCBAOLU|bancobic/i.test(t)&&/transfer[êe]ncia/i.test(t)){const isBIC=/Banco\s+BIC|BCCBAOLU|bancobic/i.test(t)&&!/BANCO\s+SOL/i.test(t);
     const rfS=t.match(/N[úu]mero\s+de\s+transfer[êe]ncia\s+atribu[íi]do:?\s*(\d{5,})/i);
-    const amS=t.match(/Montante:?\s*([\d][\d.,\s\u00A0]{2,})/i);
+    const amS=t.match(/Montante:?\s*([\d][\d.\s\u00A0]{0,16},\d{2})/i)||t.match(/Valor\s+da\s+opera[çc][ãa]o:?\s*[-−]?\s*([\d][\d.\s\u00A0]{0,16},\d{2})/i)||t.match(/Montante:?\s*([\d][\d.,\s\u00A0]{2,})/i);
     const nmS=t.match(/Nome\s+do\s+primeiro\s+titular:?\s*([A-ZÀ-Ú][A-ZÀ-Ú .,&\-]{3,70})/i);
     const dtS=t.match(/Data\s+da\s+transfer[êe]ncia:?\s*(\d{2}-\d{2}-\d{4})/i);
-    if(rfS||amS){p.bank='SOL';p.currency='Kz';
+    if(rfS||amS){p.bank=isBIC?'BIC':'SOL';p.currency='Kz';
       if(amS)p.amount=euNum(amS[1]);
       if(rfS)p.reference=rfS[1];
       if(nmS)p.name=nmS[1].replace(/\s+(Data|Moeda|Descri|Email).*$/i,'').replace(/\s+/g,' ').trim();
@@ -245,7 +289,10 @@ function liteParse0(t){
         ||t.match(/([\d][\d.,\s\u00A0]{1,})\s*(?:MRU|UM)\b/i)
         ||t.match(/(?:Kz|AKZ|KZ)\s*([\d][\d.,\s\u00A0]{4,})/i)
         ||t.match(/([\d]{1,3}(?:[.,\s\u00A0]\d{3})+(?:,\d{2})?)/);
-  if(am)p.amount=euNum(am[1]);
+  const pk=pickAmount(t);
+  if(pk&&pk.sc>=4)p.amount=pk.v;
+  else{const dateTrap=am&&/^\s*[-\/]\s*\d{1,2}\s*[-\/]/.test(t.slice(am.index+am[0].length));
+    if(am&&!dateTrap&&euNum(am[1])>0){p.amount=euNum(am[1]);p.weak=1;}else if(pk){p.amount=pk.v;p.weak=1;}}
   const tref=t.replace(/(account\s*number(\s*\/?\s*iban)?|current\s*account|iban|n[úu]mero\s*de\s*conta|conta(\s*corrente)?)[^\n]{0,40}/gi,' ');
   const rm=tref.match(/Txn\s*ID\s*:?\s*([A-Z]{0,4}[0-9]{6,})/i)
         ||tref.match(/Trs\.?\s*ID\s*:?\s*([A-Z]{0,4}[0-9]{6,})/i)
@@ -271,6 +318,12 @@ function liteParse0(t){
 function liteParse(t){
   const p=liteParse0(t);
   try{
+    const T=String(t);
+    if(p&&!p.status){if(/(falhou|falhad|rejeitad|recusad|cancelad|n[ãa]o\s+(?:foi\s+)?(?:efectuad|efetuad|conclu[ií]d)|sem\s+sucesso|[ée]chec|[ée]chou|refus[ée]|annul[ée]|\bfailed\b|declined|unsuccessful|فشل|مرفوض|ملغا|غير\s+ناجح)/i.test(T))p.status='failed';
+      else if(/(pendente|em\s+processamento|en\s+attente|pending|processing|قيد\s+(?:المعالجة|الانتظار))/i.test(T))p.status='pending';}
+    if(p&&!p.bank){const wm=T.match(/\b(Bankily|Masrvi|Sedad|Amanty|Click|Gimtel|BIM\s*Bank|Binance|OKX|Bybit|Trust\s*Wallet|TronLink)\b/i);if(wm)p.bank=wm[1].toUpperCase();}
+    if(p&&!p.currency&&p.bank){if(/BANKILY|MASRVI|SEDAD|SADAD|AMANTY|CLICK|GIMTEL|BIM|BPM|BML/i.test(p.bank))p.currency='MRU';else if(/BFA|BAI|BIC|BCI|BPC|BNI|KEVE|SOL|ATLANTICO|ATL|YETU|MULTICAIXA/i.test(p.bank))p.currency='Kz';else if(/BINANCE|OKX|BYBIT|TRUST|TRON/i.test(p.bank))p.currency='USDT';}
+    if(p&&/BANKILY|MASRVI|SEDAD|SADAD|AMANTY/i.test(p.bank||'')&&!/USDT|USD|EUR/i.test(p.currency||''))p.currency='MRU';
     if(p&&!p.reference){const m=String(t).match(/N[úu]mero\s+de\s+transfer[êe]ncia(?:\s+atribu[íi]do)?[\s:]{0,8}(\d{5,})/i);if(m){p.reference=m[1];if(p.amount)p.confidence=Math.max(p.confidence||0,95);}}
     if(p&&!/\d{1,2}:\d{2}/.test(p.date||'')){const d=String(t).match(/Data\s+do\s+Movimento[\s:]{0,8}(\d{2}-\d{2}-\d{4})/i),h=String(t).match(/Hora\s+do\s+Movimento[\s:]{0,8}(\d{2}:\d{2}(?::\d{2})?)/i);
       if(d&&h)p.date=d[1]+' '+h[1];
@@ -301,7 +354,7 @@ async function miniGemini(b64,mime){
   QUOTA_TRIP=0; return p;
 }
 window.ArkanRead={
-  hasGemini(){return !!KEY();},resetQuota(){QUOTA_TRIP=0;},
+  hasGemini(){return !!KEY();},_parse:liteParse,_pick:pickAmount,resetQuota(){QUOTA_TRIP=0;},
   /* claude(File) → parsed بنفس شكل Gemini — القارئ الموحّد على الخادم لكل نوافذ الموقع (يتطلب جلسة) */
   async claude(file){
     try{if(localStorage.getItem('bdl_claude_on')!=='1')return null;}catch(e){return null;}
@@ -365,8 +418,10 @@ window.ArkanRead={
       }catch(e){ if(opts.geminiOnly)throw e; }
     }
     /* المحلي: PDF → نص pdf.js | صورة → OCR */
-    const raw=isPdf?await pdfText(file):await ocrText(file);
-    const parsed=liteParse(raw);
+    let raw=isPdf?await pdfText(file):await ocrText(file);
+    if(isPdf&&raw.replace(/\s/g,'').length<25){try{raw=await pdfOcr(file);}catch(e){}}
+    let parsed=liteParse(raw);
+    if(!isPdf&&(!parsed.amount||parsed.weak)){try{const raw2=await ocrText(file,4),p2=liteParse(raw2);if(p2.amount&&(!parsed.amount||(!p2.weak&&parsed.weak))){parsed=p2;raw=raw2;}}catch(e){}}
     return {parsed,text:asText(parsed,raw.slice(0,1500)),engine:isPdf?'pdf':'ocr'};
   },
   gemini, ocrText, worker, liteParse, pdfText
