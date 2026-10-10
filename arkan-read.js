@@ -105,23 +105,29 @@ async function pdfText(f){
 /* 1429: القارئ المحلي المطوَّر — تجهيز الصورة قبل OCR (تكبير، رمادي، تباين، قلب الوضع الداكن) + مرور ثانٍ بتخطيط مختلف + PDF الممسوح */
 let _q=Promise.resolve();
 function lock(fn){const r=_q.then(fn,fn);_q=r.catch(()=>{});return r;}
-async function prepImg(src){
-  const im=(src&&src.getContext)?src:await createImageBitmap(src);const w0=im.width,h0=im.height;
-  let sc=w0<1500?Math.min(2.4,1500/w0):1;if(w0*sc>2200)sc=2200/w0;if(h0*sc>5200)sc=5200/h0;
+/* mode 0: رمادي + تباين (تكبير حتى ~1900). mode 1: تكبير أكبر (~2500) + عتبة تكيّفية (أبيض/أسود) — للصور الصغيرة والمضغوطة وظلال التصوير */
+async function prepImg(src,mode){
+  const im=(src&&src.getContext)?src:await createImageBitmap(src);const w0=im.width,h0=im.height,tw=mode?2500:1900;
+  let sc=w0<tw?Math.min(4,tw/w0):1;if(w0*sc>2600)sc=2600/w0;if(h0*sc>5600)sc=5600/h0;
   const c=document.createElement('canvas');c.width=Math.max(1,Math.round(w0*sc));c.height=Math.max(1,Math.round(h0*sc));
-  const x=c.getContext('2d',{willReadFrequently:true});x.imageSmoothingQuality='high';x.drawImage(im,0,0,c.width,c.height);
-  const d=x.getImageData(0,0,c.width,c.height),a=d.data;let sum=0;const n=a.length/4;
-  for(let k=0;k<a.length;k+=4){const g=(a[k]*299+a[k+1]*587+a[k+2]*114)/1000;a[k]=g;sum+=g;}
-  const dark=(sum/n)<115;
-  for(let k=0;k<a.length;k+=4){let g=a[k];if(dark)g=255-g;g=(g-128)*1.45+128;g=g<0?0:g>255?255:g;a[k]=a[k+1]=a[k+2]=g;a[k+3]=255;}
+  const x=c.getContext('2d',{willReadFrequently:true});x.imageSmoothingEnabled=true;x.imageSmoothingQuality='high';x.drawImage(im,0,0,c.width,c.height);
+  const W=c.width,H=c.height,d=x.getImageData(0,0,W,H),a=d.data,n=W*H,g=new Uint8ClampedArray(n);let sum=0;
+  for(let k=0,q=0;q<n;k+=4,q++){const v=(a[k]*299+a[k+1]*587+a[k+2]*114)/1000;g[q]=v;sum+=v;}
+  const dark=(sum/n)<115;if(dark)for(let q=0;q<n;q++)g[q]=255-g[q];
+  if(!mode){for(let k=0,q=0;q<n;k+=4,q++){let v=(g[q]-128)*1.45+128;v=v<0?0:v>255?255:v;a[k]=a[k+1]=a[k+2]=v;a[k+3]=255;}}
+  else{const S=new Float64Array((W+1)*(H+1));for(let yy=0;yy<H;yy++){let rs=0;for(let xx=0;xx<W;xx++){rs+=g[yy*W+xx];S[(yy+1)*(W+1)+xx+1]=S[yy*(W+1)+xx+1]+rs;}}
+    const r=Math.max(12,Math.round(W/60));
+    for(let yy=0;yy<H;yy++){const y0=Math.max(0,yy-r),y1=Math.min(H,yy+r+1);for(let xx=0;xx<W;xx++){const x0=Math.max(0,xx-r),x1=Math.min(W,xx+r+1);
+        const m=(S[y1*(W+1)+x1]-S[y0*(W+1)+x1]-S[y1*(W+1)+x0]+S[y0*(W+1)+x0])/((y1-y0)*(x1-x0)),q=yy*W+xx,k=q*4;
+        let v=g[q]<m-9?0:255;if(v===255&&g[q]<m-3)v=150;a[k]=a[k+1]=a[k+2]=v;a[k+3]=255;}}}
   x.putImageData(d,0,0);return c;
 }
-async function ocrText(f,psm){
+async function ocrText(f,psm,mode){
   const w=await worker();
-  let src=f;try{src=await prepImg(f);}catch(e){src=f;}
+  let src=f;try{src=await prepImg(f,mode||0);}catch(e){src=f;}
   return lock(async()=>{
     if(psm)await w.setParameters({tessedit_pageseg_mode:String(psm)});
-    try{const {data}=await w.recognize(src);return data.text||'';}
+    try{const {data}=await w.recognize(src,{rotateAuto:true});return fixOcr(data.text||'');}
     finally{if(psm){try{await w.setParameters({tessedit_pageseg_mode:'6'});}catch(e){}}}
   });
 }
@@ -131,25 +137,35 @@ async function pdfOcr(f){
     await pg.render({canvasContext:c.getContext('2d'),viewport:vp}).promise;return await ocrText(c);}
   finally{try{await doc.destroy();}catch(e){}}
 }
+/* 1432: تنظيف نص OCR — المحرك الإنجليزي يشوّه الحروف البرتغالية/الفرنسية (operagao، Transaccgao، transferéncia) ويخلط O/0 و l/1 داخل الأرقام */
+function fixOcr(t){t=String(t||'');
+  t=t.replace(/[À-ÿ]/g,function(ch){return ch.normalize('NFD').replace(/[\u0300-\u036f]/g,'');});
+  t=t.replace(/\b(opera|transac|descri|informa|liquida|autoriza|presta|institui|movimenta)c?[gq][aã]o\b/gi,'$1cao').replace(/\b(opera|transac)[cg]{2,3}ao\b/gi,'$1cao');
+  t=t.replace(/\btransac{1,2}ao\b/gi,function(m){return /^T/.test(m)?(m===m.toUpperCase()?'TRANSACCAO':'Transaccao'):'transaccao';});
+  t=t.replace(/(\d)[Oo](?=\d)/g,'$10').replace(/(\d)[Il|](?=\d)/g,'$11').replace(/(\d[.,])[Oo](?=\d)/g,'$10').replace(/(\d)[Oo]([.,]\d)/g,'$10$2');
+  t=t.replace(/(\d)[ \t]+([.,])[ \t]*(\d{3})(?!\d)/g,'$1$2$3').replace(/(\d[.,])[ \t]+(\d{3})(?!\d)/g,'$1$2').replace(/(\d{3}),[ \t]+(\d{2})(?!\d)/g,'$1,$2').replace(/(\d{3}[.,])[oO]{2}(?!\w)/g,'$100').replace(/(\d{3}[.,])[ \t]?[oO0][gq9](?!\w)/g,'$100');
+  t=t.replace(/\bK[2Z]\b/g,'Kz').replace(/\b(AK|A0)Z\b/g,'AKZ').replace(/\bA[0O]A\b/g,'AOA').replace(/\bU[S5]DT\b/gi,'USDT').replace(/\bMR[U0O]\b/g,'MRU');
+  return t;}
 /* رقم مالي: 12.500 و 12,500 = آلاف؛ 1.234.567,89 أوروبي؛ 17,196.9 أمريكي */
 function numVal(x){x=String(x).trim().replace(/[\s ]/g,'');
   if(/^\d{1,3}(\.\d{3})+$/.test(x)||/^\d{1,3}(,\d{3})+$/.test(x))return parseFloat(x.replace(/[.,]/g,''))||0;
   if(/^\d{1,3}(,\d{3})+\.\d{1,2}$/.test(x))return parseFloat(x.replace(/,/g,''))||0;
+  if(/^\d{1,3}(\.\d{3})+\.\d{2}$/.test(x)||/^\d{1,3}(,\d{3})+,\d{2}$/.test(x)){const k=Math.max(x.lastIndexOf('.'),x.lastIndexOf(','));return parseFloat(x.slice(0,k).replace(/[.,]/g,'')+'.'+x.slice(k+1))||0;}
   return euNum(x);}
 /* اختيار المبلغ بالنقاط: الأقرب لكلمة المبلغ أو لرمز العملة يفوز؛ التواريخ والأرصدة والعمولات وأرقام الحسابات تُستبعد */
 function pickAmount(t){
-  const re=/(\d{1,3}(?:[.\s ]\d{3})+(?:,\d{1,2})?|\d{1,3}(?:,\d{3})+(?:\.\d{1,2})?|\d+[.,]\d{1,2}|\d{3,})/g;let m,best=null;
+  const re=/(\d{1,3}(?:[.\s]\d{3})+[.,]\d{2}(?!\d)|\d{1,3}(?:[.\s ]\d{3})+(?:,\d{1,2})?|\d{1,3}(?:,\d{3})+(?:\.\d{1,2})?|\d+[.,]\d{1,2}|\d{3,})/g;let m,best=null;
   while((m=re.exec(t))){const raw=m[1],i=m.index,bf=t.slice(Math.max(0,i-30),i),af=t.slice(i+raw.length,i+raw.length+16);
     if(/[\dA-Za-z.,]$/.test(bf)||/^[\d]/.test(af)||/^[.,]\d/.test(af))continue;
     if(/^\s*[-\/:]\s*\d/.test(af)||/\d\s*[-\/:]\s*$/.test(bf))continue;                       /* تاريخ أو وقت */
     if(/(saldo|solde|balance|رصيد|comiss|taxa|imposto|frais|\bfee|رسوم|iban|conta|account|compte|\bnif\b|tel[eé]|phone|هاتف|capital|swift|c[oó]digo|chave)[^\n\d]{0,20}$/i.test(bf))continue;
     const fmt=/[.,\s ]/.test(raw),v=numVal(raw);if(!(v>0))continue;
     let sc=fmt?2:0;
-    if(/(montante|montant(?:\s*envoy[ée]+)?|amount|valor|total|import[âa]ncia|quantia|المبلغ)[^\d\n]{0,24}$/i.test(bf))sc+=5;
+    if(/(montan\w{1,4}|montant(?:\s*envoy[ée]+)?|amount|va[l1]or|tota[l1]|[il1]mport\w{3,6}(?:\s+a\s+transf\w{3,6})?|quantia|المبلغ)[^\d\n]{0,24}$/i.test(bf))sc+=5;
     if(/^\s*(kz|akz|aoa|mru|um|usdt|usd|eur)\b/i.test(af))sc+=4;
     if(/(?:kz|akz|aoa|mru|\bum)\s*:?\s*[-−]?\s*$/i.test(bf))sc+=4;
     if(!fmt&&(sc<4||raw.length>=9))continue;                                                   /* رقم خام بلا تنسيق: يُقبل فقط بجوار كلمة مبلغ/عملة */
-    if(!best||sc>best.sc)best={v:v,sc:sc};}
+    if(!best||sc>best.sc)best={v:v,sc:sc,fmt:fmt};}
   return best;}
 function euNum(x){
   x=String(x).trim();
@@ -292,7 +308,8 @@ function liteParse0(t){
   const pk=pickAmount(t);
   if(pk&&pk.sc>=4)p.amount=pk.v;
   else{const dateTrap=am&&/^\s*[-\/]\s*\d{1,2}\s*[-\/]/.test(t.slice(am.index+am[0].length));
-    if(am&&!dateTrap&&euNum(am[1])>0){p.amount=euNum(am[1]);p.weak=1;}else if(pk){p.amount=pk.v;p.weak=1;}}
+    const ov=am&&!dateTrap?numVal(String(am[1]).trim().replace(/[.,\s]+$/,'')):0;
+    if(pk&&pk.fmt&&pk.v>=1000&&!(ov>=1000)){p.amount=pk.v;p.weak=1;}else if(ov>0){p.amount=ov;p.weak=1;}else if(pk){p.amount=pk.v;p.weak=1;}}
   const tref=t.replace(/(account\s*number(\s*\/?\s*iban)?|current\s*account|iban|n[úu]mero\s*de\s*conta|conta(\s*corrente)?)[^\n]{0,40}/gi,' ');
   const rm=tref.match(/Txn\s*ID\s*:?\s*([A-Z]{0,4}[0-9]{6,})/i)
         ||tref.match(/Trs\.?\s*ID\s*:?\s*([A-Z]{0,4}[0-9]{6,})/i)
@@ -315,8 +332,19 @@ function liteParse0(t){
   return p;
 }
 /* 1402: المرجع والوقت من التسميات الشائعة حين لا يلتقطهما القالب (BIC «Número de transferência atribuído»، Keve/BCI «Número de Transferência») */
+/* 1432: حارس الأرقام المتشابهة — إن ظهر في الإيصال رقم مالي آخر «يشبه» المبلغ المقروء (رقم أو رقمان مختلفان، أو أحدهما مبتور من الآخر) فالقراءة مشكوك فيها */
+function lookGuard(p,t){try{const am=+p.amount||0;if(!am)return;const cu=String(p.currency||'');
+    if(/kz|aoa|akz|mru|um/i.test(cu)&&am>=1000&&Math.abs(am-Math.round(am))>0.001)p.weak=1;      /* كسور على مبلغ كبير بالكوانزا/الأوقية = خطأ قراءة غالبًا */
+    const A=String(Math.round(am)),re=/(\d{1,3}(?:[.\s]\d{3})+(?:[.,]\d{2})?|\d{1,3}(?:,\d{3})+(?:\.\d{1,2})?)/g;let m;
+    while((m=re.exec(t))){const v=numVal(m[1]);if(!(v>0)||Math.abs(v-am)<0.01)continue;const B=String(Math.round(v));
+      if(/(saldo|solde|balance|comiss|taxa|imposto|frais|\bfee)[^\n\d]{0,20}$/i.test(t.slice(Math.max(0,m.index-30),m.index)))continue;
+      if(A.length===B.length&&A.length>=4){let d=0;for(let i=0;i<A.length;i++)if(A[i]!==B[i])d++;if(d<=2){p.weak=1;return;}}
+      else if(B.length-A.length>=3&&B.indexOf(A)===0&&/[.,]\d{2}$/.test(m[1])){p.amount=v;p.weak=1;return;}                /* 2.030 مبتور من 2.030.000,00 */
+      else if(A.length-B.length>=3&&A.indexOf(B)===0){p.weak=1;return;}}
+  }catch(e){}}
 function liteParse(t){
   const p=liteParse0(t);
+  lookGuard(p,String(t));
   try{
     const T=String(t);
     if(p&&!p.status){if(/(falhou|falhad|rejeitad|recusad|cancelad|n[ãa]o\s+(?:foi\s+)?(?:efectuad|efetuad|conclu[ií]d)|sem\s+sucesso|[ée]chec|[ée]chou|refus[ée]|annul[ée]|\bfailed\b|declined|unsuccessful|فشل|مرفوض|ملغا|غير\s+ناجح)/i.test(T))p.status='failed';
@@ -354,7 +382,7 @@ async function miniGemini(b64,mime){
   QUOTA_TRIP=0; return p;
 }
 window.ArkanRead={
-  hasGemini(){return !!KEY();},_parse:liteParse,_pick:pickAmount,resetQuota(){QUOTA_TRIP=0;},
+  hasGemini(){return !!KEY();},_ocr:ocrText,_fix:fixOcr,_parse:liteParse,_pick:pickAmount,resetQuota(){QUOTA_TRIP=0;},
   /* claude(File) → parsed بنفس شكل Gemini — القارئ الموحّد على الخادم لكل نوافذ الموقع (يتطلب جلسة) */
   async claude(file){
     try{if(localStorage.getItem('bdl_claude_on')!=='1')return null;}catch(e){return null;}
@@ -421,7 +449,17 @@ window.ArkanRead={
     let raw=isPdf?await pdfText(file):await ocrText(file);
     if(isPdf&&raw.replace(/\s/g,'').length<25){try{raw=await pdfOcr(file);}catch(e){}}
     let parsed=liteParse(raw);
-    if(!isPdf&&(!parsed.amount||parsed.weak)){try{const raw2=await ocrText(file,4),p2=liteParse(raw2);if(p2.amount&&(!parsed.amount||(!p2.weak&&parsed.weak))){parsed=p2;raw=raw2;}}catch(e){}}
+    /* 1432: قراءتان مستقلتان للصورة (تجهيزان مختلفان). إن اتفقتا على المبلغ فهو مؤكد؛ إن اختلفتا تُحسم بقراءة ثالثة (أغلبية)، وبلا أغلبية يُعلَّم «غير مؤكد» ليُراجَع */
+    if(!isPdf){try{
+      const pick2=(a,b)=>{const o=Object.assign({},a);['reference','bank','currency','date','name','receiver','status'].forEach(k=>{if(!o[k]&&b[k])o[k]=b[k];});return o;};
+      const rawB=await ocrText(file,null,1),pB=liteParse(rawB),A=+parsed.amount||0,Bv=+pB.amount||0;
+      if(A&&A===Bv){parsed=pick2(parsed.weak&&!pB.weak?pB:parsed,parsed.weak&&!pB.weak?parsed:pB);}
+      else{const rawC=await ocrText(file,4,1),pC=liteParse(rawC),Cv=+pC.amount||0;
+        if(A&&A===Cv)parsed=pick2(parsed,pC);
+        else if(Bv&&Bv===Cv){parsed=pick2(pB.weak&&!pC.weak?pC:pB,parsed);raw=rawB;}
+        else{const c=[parsed,pB,pC].filter(q=>+q.amount>0).sort((q,r)=>(q.weak?1:0)-(r.weak?1:0)||(r.confidence||0)-(q.confidence||0))[0];
+          if(c){parsed=pick2(c,c===parsed?pB:parsed);parsed.weak=1;parsed.confidence=Math.min(parsed.confidence||50,55);}}}
+    }catch(e){}}
     return {parsed,text:asText(parsed,raw.slice(0,1500)),engine:isPdf?'pdf':'ocr'};
   },
   gemini, ocrText, worker, liteParse, pdfText

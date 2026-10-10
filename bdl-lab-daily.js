@@ -63,9 +63,9 @@
     var fp=await h.sha(file),p=await cget(fp),have=p&&p.ccy!==undefined;
     /* 1428: القراءة بـ Gemini (قراءة Claude أُلغيت). ما قُرئ بنسخة قديمة أو بالقارئ المحلي يُعاد مرة واحدة بالقارئ المحسَّن؛ تعديلك اليدوي لا يُمس.
        x.force = إعادة بـ Gemini فقط (المرور الثاني المتمهّل): إن لم يرد يبقى ما قُرئ سابقًا. */
-    if(!have||(!p.man&&(p.rv!==4||x.force))){var g=null,eng='',AR=window.ArkanRead,to=function(ms){return new Promise(function(z){setTimeout(function(){z(null);},ms);});};
+    if(!have||(!p.man&&(p.rv!==5||x.force))){var g=null,eng='',AR=window.ArkanRead,to=function(ms){return new Promise(function(z){setTimeout(function(){z(null);},ms);});};
       try{var r=await Promise.race([AR.read(file,x.force?{geminiOnly:true}:undefined),to(45000)]);if(r){g=r.parsed||{};eng=r.engine||'ocr';}}catch(e){}
-      if(eng&&!(x.force&&eng!=='gemini')){p={amount:Number(g.amount)||0,ref:g.transaction_id||g.reference||g.txn||'',bank:g.bank||g.institution||'',date:g.date||'',name:g.beneficiary||g.name||'',account:g.iban||g.account||'',receiver:g.receiver||'',ccy:String(g.currency||g.ccy||''),status:String(g.status||''),eng:eng,rv:4};if(g.weak)p.weak=1;if(g.is_receipt===false)p.nr=1;
+      if(eng&&!(x.force&&eng!=='gemini')){p={amount:Number(g.amount)||0,ref:g.transaction_id||g.reference||g.txn||'',bank:g.bank||g.institution||'',date:g.date||'',name:g.beneficiary||g.name||'',account:g.iban||g.account||'',receiver:g.receiver||'',ccy:String(g.currency||g.ccy||''),status:String(g.status||''),eng:eng,rv:5};if(g.weak)p.weak=1;if(g.is_receipt===false)p.nr=1;
         if(p.amount||p.name||p.account||p.receiver||p.nr)cput(fp,p);}
       else if(!have)p={amount:0,ref:'',bank:'',ccy:'',status:'',eng:'',rv:0};}
     return {cn:x.cn||'',file:file,nm:x.nm,ts:x.ts||0,pdf:/pdf$/i.test(file.type||x.nm),p:p,fp:fp};}
