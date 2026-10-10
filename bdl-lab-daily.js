@@ -64,11 +64,12 @@
     var w=[];for(var i=0;i<6;i++)w.push(wk());await Promise.all(w);
     /* المرجع نفسه بالمبلغ نفسه عند الزبون نفسه = الإيصال نفسه مصوَّرًا مرتين → يُحسب مرة واحدة */
     var rs={};its=its.filter(function(it){var rf=nr(it.p.ref),v=amt(it.p.amount);if(!rf||!v)return true;var k=it.cn+'|'+rf+'|'+v;if(rs[k]){dupN++;return false;}rs[k]=1;return true;});
+    var n0=its.length;its=its.filter(function(it){return !failed(it.p);});var failN=n0-its.length;
     its.sort(function(a,b){return (a.ts||0)-(b.ts||0);});
-    D.res={its:its,per:R.per,pf:D.c.from,pt:D.c.to,pall:!!D.c.all,names:D.c.parts.map(function(q){return q.name;}),dupN:dupN,stopped:R.stop,at:Date.now()};D.run=null;D.open={};persist();paint();window.scrollTo(0,0);}
+    D.res={its:its,per:R.per,pf:D.c.from,pt:D.c.to,pall:!!D.c.all,names:D.c.parts.map(function(q){return q.name;}),dupN:dupN,failN:failN,stopped:R.stop,at:Date.now()};D.run=null;D.open={};persist();paint();window.scrollTo(0,0);}
   function calc(){var S=D.res,tot={},cu={},fail=0,un=0;S.names.forEach(function(n){cu[n]={name:n,n:0,un:0,fail:0,cur:{},its:[]};});
-    S.its.forEach(function(it,i){it.i=i;var q=cu[it.cn]||(cu[it.cn]={name:it.cn,n:0,un:0,fail:0,cur:{},its:[]});q.its.push(it);
-      if(failed(it.p)){it.st='fail';q.fail++;fail++;return;}var v=amt(it.p.amount),c=ccyOf(it.p);it.ccy=c;it.v=v;
+    S.its.forEach(function(it,i){it.i=i;var q=cu[it.cn]||(cu[it.cn]={name:it.cn,n:0,un:0,fail:0,cur:{},its:[]});if(failed(it.p)){it.st='fail';q.fail++;fail++;return;}q.its.push(it);
+      var v=amt(it.p.amount),c=ccyOf(it.p);it.ccy=c;it.v=v;
       if(!v){it.st='un';q.un++;un++;return;}it.st='ok';q.n++;(q.cur[c]||(q.cur[c]={s:0,n:0})).s+=v;q.cur[c].n++;(tot[c]||(tot[c]={s:0,n:0})).s+=v;tot[c].n++;});
     var keys=Object.keys(tot).sort(function(a,b){var x=ORD.indexOf(a),y=ORD.indexOf(b);return (x<0?50:x)-(y<0?50:y)||(a==='؟'?1:b==='؟'?-1:a<b?-1:1);});
     return {tot:tot,keys:keys,cu:S.names.map(function(n){return cu[n];}).concat(Object.keys(cu).filter(function(n){return S.names.indexOf(n)<0;}).map(function(n){return cu[n];})),fail:fail,un:un};}
@@ -90,10 +91,10 @@
     Object.keys(F.prof).forEach(function(pc){x+='<div class="fp tt"><span>إجمالي الربح</span><b class="'+(F.prof[pc]<0?'neg':'')+'">'+fm(F.prof[pc])+' '+pc+'</b></div>';});
     F.bal.forEach(function(b){x+='<div class="fb"><span>المطلوب بسعر البيع</span><b>'+fm(b.due)+' '+b.pc+'</b><span>المستلم في الملف</span><b>'+fm(b.got)+' '+b.pc+'</b><span>'+(Math.abs(b.diff)<1?'متطابق':b.diff>0?'زائد عند الزبون (له)':'ناقص على الزبون (عليه)')+'</span><b class="'+(b.diff<-1?'neg':'pos')+'">'+fm(Math.abs(b.diff))+' '+b.pc+'</b></div>';});
     return x||'<div class="fh">أدخل سعر الشراء والبيع لأي عملة ليظهر الربح والمطلوب. اختياري — التقرير يُولَّد بدون أسعار.</div>';}
-  function persist(){var S=D.res;if(!S)return;h.sess.save('daily',{per:S.per,pf:S.pf,pt:S.pt,pall:S.pall,names:S.names,dupN:S.dupN,stopped:!!S.stopped},S.its.map(function(it){return {file:it.file,data:{cn:it.cn,nm:it.nm,ts:it.ts,pdf:it.pdf,p:it.p,fp:it.fp}};})).then(function(ok){if(!ok)toast('تعذّر حفظ الجلسة على الجهاز — لا تغادر الصفحة قبل أخذ التقرير');});}
+  function persist(){var S=D.res;if(!S)return;h.sess.save('daily',{per:S.per,pf:S.pf,pt:S.pt,pall:S.pall,names:S.names,dupN:S.dupN,failN:S.failN||0,stopped:!!S.stopped},S.its.map(function(it){return {file:it.file,data:{cn:it.cn,nm:it.nm,ts:it.ts,pdf:it.pdf,p:it.p,fp:it.fp}};})).then(function(ok){if(!ok)toast('تعذّر حفظ الجلسة على الجهاز — لا تغادر الصفحة قبل أخذ التقرير');});}
   function saveMeta(){var S=D.res;if(!S)return;h.sess.get('daily:meta').then(function(m){if(!m)return;m.rows.forEach(function(r,i){if(S.its[i])r.p=S.its[i].p;});h.sess.put('daily:meta',m);});}
   async function restore(){try{var m=await h.sess.load('daily');if(!m||!m.meta||D.res||D.run)return;
-      D.res={its:(m.rows||[]).map(function(r,i){return {cn:r.cn,nm:r.nm,ts:r.ts,pdf:r.pdf,p:r.p||{},fp:r.fp,file:null,_si:r._f?i:-1};}),per:m.meta.per||'',pf:m.meta.pf,pt:m.meta.pt,pall:m.meta.pall,names:m.meta.names||[],dupN:m.meta.dupN||0,stopped:m.meta.stopped,restored:m.at,at:m.at};paint();}catch(e){}}
+      D.res={its:(m.rows||[]).map(function(r,i){return {cn:r.cn,nm:r.nm,ts:r.ts,pdf:r.pdf,p:r.p||{},fp:r.fp,file:null,_si:r._f?i:-1};}),per:m.meta.per||'',pf:m.meta.pf,pt:m.meta.pt,pall:m.meta.pall,names:m.meta.names||[],dupN:m.meta.dupN||0,failN:m.meta.failN||0,stopped:m.meta.stopped,restored:m.at,at:m.at};paint();}catch(e){}}
   /* ── التقرير ── */
   function repText(){var S=D.res,K=calc(),T=TX[LG],x='BDL · '+T.t+'\n'+T.per+': '+perL(S)+'\n'+(K.cu.length>1?T.cus+': '+K.cu.length+'\n':'')+'\n'+T.tot+':\n'+(K.keys.map(function(c){return '• '+ccode(c)+': '+fm(K.tot[c].s)+' ('+K.tot[c].n+' '+T.rc+')';}).join('\n')||T.none);
     K.cu.forEach(function(q){x+='\n\n— '+q.name+' ('+q.n+' '+T.rc+')\n'+(Object.keys(q.cur).map(function(c){return '  '+ccode(c)+': '+fm(q.cur[c].s)+' ('+q.cur[c].n+')';}).join('\n')||'  '+T.none)+(q.un?'\n  '+T.un+': '+q.un:'')+(q.fail?'\n  '+T.fl+': '+q.fail:'');});
@@ -112,14 +113,18 @@
     if(F.rate.length)x+='<p>'+F.rate.map(function(r){return T.rate+': 1 '+r.b+' = '+fm(r.v)+' '+r.a;}).join(' · ')+'</p>';
     return x+'<p class="pf">'+T.ft+'</p>';}
   /* ── عارض الإيصال مع التصحيح اليدوي ── */
+  function nx(i,d){var S=D.res;for(var k=i+d;k>=0&&k<S.its.length;k+=d)if(!failed(S.its[k].p))return k;return -1;}
+  function fitV(){var v=$('laRv'),vv=window.visualViewport;if(!v||!vv)return;if(D.v==null){v.style.height='';v.style.top='';v.style.bottom='';return;}v.style.top=vv.offsetTop+'px';v.style.bottom='auto';v.style.height=vv.height+'px';}
+  if(window.visualViewport){window.visualViewport.addEventListener('resize',fitV);window.visualViewport.addEventListener('scroll',fitV);}
   async function view(i){var S=D.res,it=S&&S.its[i];if(!it)return;if(D.v==null)D.y=window.scrollY;D.v=i;var v=$('laRv');if(!v){v=document.createElement('div');v.id='laRv';document.body.appendChild(v);}
     if(!it.file&&it._si>=0)it.file=await h.sess.file('daily',it._si,it.nm,it.pdf);if(it._u){URL.revokeObjectURL(it._u);it._u='';}if(it.file)it._u=URL.createObjectURL(it.file);var p=it.p||{},c=ccyOf(p),opts=ORD.concat(ORD.indexOf(c)<0&&c!=='؟'?[c]:[]);
     v.innerHTML='<header><div><b>'+esc(it.cn||'إيصال')+'</b><small>'+(bankOf(p)?esc(bankOf(p))+' · ':'')+(it.ts?h.dmy(it.ts):'')+(nr(p.ref)?' · '+esc(nr(p.ref)):'')+(failed(p)?' · غير ناجحة':'')+'</small></div><button type="button" data-dv="x">✕ إغلاق</button></header>'+
+      '<div class="et"><div class="eh2">تعديل الإيصال — صحّح ثم احفظ</div><div class="de"><label><small>المبلغ</small><input id="ldAmt" inputmode="decimal" value="'+(amt(p.amount)||'')+'" placeholder="اكتب المبلغ"></label><label><small>العملة</small><select id="ldCcy">'+(c==='؟'?'<option value="">اختر</option>':'')+opts.map(function(o){return '<option'+(o===c?' selected':'')+'>'+o+'</option>';}).join('')+'</select></label><label><small>البنك</small><input id="ldBank" value="'+esc(p.bank||'')+'" placeholder="اسم البنك"></label><label><small>المرجع / رقم العملية</small><input id="ldRef" dir="ltr" value="'+esc(p.ref||'')+'" placeholder="اختياري"></label></div>'+'</div>'+
       '<div class="bd">'+(!it._u?'<p style="color:#9FB0CC;padding:30px 16px;text-align:center;font-size:13px">صورة هذا الإيصال لم تُحفظ على الجهاز. أعد الحساب لعرضها (القراءة من الذاكرة فورًا).</p>':it.pdf?'<iframe src="'+it._u+'"></iframe>':'<img src="'+it._u+'" alt="">')+'</div>'+
-      '<footer><div class="eh2">تعديل الإيصال — صحّح ثم احفظ</div><div class="de"><label><small>المبلغ</small><input id="ldAmt" inputmode="decimal" value="'+(amt(p.amount)||'')+'" placeholder="اكتب المبلغ"></label><label><small>العملة</small><select id="ldCcy">'+(c==='؟'?'<option value="">اختر</option>':'')+opts.map(function(o){return '<option'+(o===c?' selected':'')+'>'+o+'</option>';}).join('')+'</select></label><label><small>البنك</small><input id="ldBank" value="'+esc(p.bank||'')+'" placeholder="اسم البنك"></label><label><small>المرجع / رقم العملية</small><input id="ldRef" dir="ltr" value="'+esc(p.ref||'')+'" placeholder="اختياري"></label></div>'+
-      '<div class="nv"><button type="button" data-dv="p"'+(i?'':' disabled')+'>‹ السابق</button><button type="button" data-dv="n"'+(i<S.its.length-1?'':' disabled')+'>التالي ›</button></div><div class="dc"><button type="button" class="ok" data-dv="sv">حفظ التعديل</button><button type="button" class="sus" data-dv="no">لا يُحسب</button></div></footer>';
-    v.classList.add('on');}
-  function closeV(){var v=$('laRv');if(v)v.classList.remove('on');D.v=null;paint();if(D.y!=null){window.scrollTo(0,D.y);D.y=null;}}
+      '<footer>'+
+      '<div class="nv"><button type="button" data-dv="p"'+(nx(i,-1)>=0?'':' disabled')+'>‹ السابق</button><button type="button" data-dv="n"'+(nx(i,1)>=0?'':' disabled')+'>التالي ›</button></div><div class="dc"><button type="button" class="ok" data-dv="sv">حفظ التعديل</button><button type="button" class="sus" data-dv="no">حذف من الحساب</button></div></footer>';
+    v.classList.add('on');fitV();}
+  function closeV(){var v=$('laRv');if(v)v.classList.remove('on');D.v=null;fitV();paint();if(D.y!=null){window.scrollTo(0,D.y);D.y=null;}}
   /* ── العرض ── */
   function paint(){var m=$('ldMain');if(!m)return;var R=D.run,x='';
     if(R){var p=Math.round(R.d/Math.max(1,R.n)*100),el=(Date.now()-R.t0)/1000,eta=R.d>8?Math.round(el/R.d*(R.n-R.d)):0;
@@ -128,12 +133,12 @@
       m.innerHTML=x;m.querySelector('.pg').setAttribute('data-live','1');return;}
     if(D.res){var S=D.res,K=calc();
       x='<section class="rs">'+(S.restored?'<div class="rst">حساب محفوظ من '+new Date(S.restored).toLocaleString('en-GB',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})+' — يبقى حتى تنهيه أنت</div>':'')+
-        '<div class="vd ok"><b>الحسابات اليومية — '+esc(S.per)+'</b><span>'+(K.cu.length>1?K.cu.length+' زبائن':'الزبون '+esc(K.cu[0]?K.cu[0].name:''))+' · '+S.its.length+' إيصالًا'+(S.stopped?' — أُوقف قبل اكتماله':'')+'</span></div>'+
+        '<div class="vd ok"><b>الحسابات اليومية — '+esc(S.per)+'</b><span>'+(K.cu.length>1?K.cu.length+' زبائن':'الزبون '+esc(K.cu[0]?K.cu[0].name:''))+' · '+(S.its.length-K.fail)+' إيصالًا'+(S.stopped?' — أُوقف قبل اكتماله':'')+'</span></div>'+
         '<div class="cb">'+(K.keys.map(function(c){return '<div data-df="'+c+'" class="'+(c==='؟'?'q':'')+(D.flt===c?' sel':'')+'"><small>'+c+(CN[c]&&CN[c]!==c?' · '+CN[c]:'')+'</small><b>'+fm(K.tot[c].s)+'</b><i>'+K.tot[c].n+' إيصالًا</i></div>';}).join('')||'<div class="q"><small>لا مبالغ مقروءة</small><b>0</b></div>')+'</div>'+
         '<div class="nt">'+(D.flt?'تعرض إيصالات <b>'+D.flt+'</b> فقط — <button type="button" data-df="" class="lk">عرض الكل</button>':'اضغط خانة أي عملة لعرض إيصالاتها وحدها. كل إيصال يُفتح ويُعدَّل ويُحفظ.')+'</div>'+
         '<div class="px"><div class="pxh"><b>الأسعار والربح</b><small>اختياري — شراء وبيع لكل عملة</small></div>'+K.keys.filter(function(c){return c!=='؟';}).map(function(c){var p=PX[c]||{},pc=p.pc||defPc(c);return '<div class="pxr"><b>'+c+'</b><label><small>شراء</small><input inputmode="decimal" data-px="'+c+':b" value="'+(p.b||'')+'" placeholder="0"></label><label><small>بيع</small><input inputmode="decimal" data-px="'+c+':s" value="'+(p.s||'')+'" placeholder="0"></label><label><small>بعملة</small><select data-px="'+c+':pc">'+ORD.filter(function(o){return o!==c;}).map(function(o){return '<option'+(o===pc?' selected':'')+'>'+o+'</option>';}).join('')+'</select></label></div>';}).join('')+'<div id="ldFin">'+finHtml(K)+'</div></div>'+
         (function(){var B=banks(K);return B.length?'<details class="mt bkd"><summary>حسب البنك ('+B.length+')</summary><div class="bkt">'+B.map(function(b){return '<div><span>'+esc(b.b)+'</span><small>'+b.n+' إيصالًا</small><b>'+fm(b.s)+' <i>'+b.c+'</i></b></div>';}).join('')+'</div></details>':'';})()+
-        ((K.un||K.fail||S.dupN)?'<div class="nt">'+[K.un?K.un+' لم يُقرأ مبلغها — افتحها واكتب المبلغ':'',K.fail?K.fail+' غير ناجحة لم تُحسب':'',S.dupN?S.dupN+' مكررة حُسبت مرة واحدة':''].filter(Boolean).join(' · ')+'</div>':'')+
+        ((K.un||K.fail||S.failN||S.dupN)?'<div class="nt">'+[K.un?K.un+' لم يُقرأ مبلغها — افتحها واكتب المبلغ':'',(K.fail+(S.failN||0))?(K.fail+(S.failN||0))+' غير ناجحة حُذفت تلقائيًا':'',S.dupN?S.dupN+' مكررة حُسبت مرة واحدة':''].filter(Boolean).join(' · ')+'</div>':'')+
         K.cu.map(function(q,ci){var op=!!D.open[q.name]||K.cu.length===1||!!D.flt;return '<div class="cc"><div class="ch2" data-dc="'+ci+'"><b>'+esc(q.name)+'</b><span>'+q.n+' إيصالًا'+(q.un?' · <em>'+q.un+' لم يُقرأ</em>':'')+'</span></div>'+
           '<div class="cv">'+(Object.keys(q.cur).map(function(c){return '<span><small>'+c+'</small><b>'+fm(q.cur[c].s)+'</b></span>';}).join('')||'<span><small>—</small><b>0</b></span>')+'</div>'+
           (K.cu.length>1?'<button type="button" class="tg" data-dc="'+ci+'">'+(op?'إخفاء الإيصالات':'عرض الإيصالات ('+q.its.length+')')+'</button>':'')+
@@ -167,8 +172,8 @@
     if((b=t.closest('[data-do]'))){view(+b.dataset.do);return;}
     if((b=t.closest('[data-dc]'))){var cu=calc().cu[+b.dataset.dc];if(cu){D.open[cu.name]=!D.open[cu.name];paint();}return;}
     if((b=t.closest('[data-dv]'))){var k=b.dataset.dv,S=D.res;if(D.v==null||!S)return;var it=S.its[D.v];
-      if(k==='x'){closeV();return;}if(k==='p'){view(D.v-1);return;}if(k==='n'){view(D.v+1);return;}
-      if(k==='no'){it.p.status='cancelled';it.p.man=1;cput(it.fp,it.p);saveMeta();toast('لن يُحسب هذا الإيصال');}
+      if(k==='x'){closeV();return;}if(k==='p'){view(nx(D.v,-1));return;}if(k==='n'){view(nx(D.v,1));return;}
+      if(k==='no'){it.p.status='cancelled';it.p.man=1;cput(it.fp,it.p);saveMeta();toast('حُذف الإيصال من الحساب');}
       else if(k==='sv'){var v=Number(String($('ldAmt').value).replace(/[\s,]/g,''))||0,cc=$('ldCcy').value;if(!amt(v)){toast('اكتب مبلغًا صحيحًا');return;}if(!cc){toast('اختر العملة');return;}
         it.p.amount=v;it.p.ccy=cc;it.p.ref=String($('ldRef').value||'').trim();it.p.bank=String($('ldBank').value||'').trim();it.p.man=1;if(failed(it.p))it.p.status='';cput(it.fp,it.p);saveMeta();toast('حُفظ التعديل ودخل في المجموع');}
       if(D.v<S.its.length-1&&k==='sv'&&S.its[D.v+1].st==='un'){calc();view(D.v+1);}else closeV();return;}});
