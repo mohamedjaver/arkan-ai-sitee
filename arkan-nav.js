@@ -14,7 +14,9 @@
   var isOwner = !!localStorage.getItem('arkan_owner_auth') || !!localStorage.getItem('arkan_admin_dev');
   try { var ses = JSON.parse(localStorage.getItem('arkan_session') || 'null');
         if (ses && /36295050$/.test(String(ses.phone || '').replace(/\D/g, ''))) isOwner = true; } catch (e) {}
-  if (/^(settle-v2|settlement|books|admin|rates-admin|archive|lab)\.html$/.test(path)) isOwner = true;
+  /* 1434: المختبر مفتوح للزوار — لم يعد يفرض واجهة المالك. المالك يُعرَف من جلسته، أو من زيارته السابقة لصفحات الإدارة على هذا الجهاز. */
+  if (/^(settle-v2|settlement|books|admin|rates-admin|archive)\.html$/.test(path)) { isOwner = true; try { localStorage.setItem('bdl_owner_seen', '1'); } catch (e) {} }
+  try { if (localStorage.getItem('bdl_owner_seen')) isOwner = true; } catch (e) {}
 
   /* ترتيب التشغيل اليومي للمالك (من اليمين): 1 رفع إيصالات الزبائن (الحساب) → 2 التسويات → 3 المطابقة → 4 المحاسب */
   var TABS_OWNER = [
@@ -22,10 +24,10 @@
     { href: 'settle-v2.html',  icon: 'layers', label: '2 التسوية' },
     { href: 'lab.html',        icon: 'match',  label: '3 الاختبار' }   /* 1408: مختبر المطابقة — لا يحفظ شيئًا */
   ];
+  /* 1434: الزائر يرى تبويبين فقط — الرئيسية والاختبار */
   var TABS_CLIENT = [
-    { href: 'index.html',   icon: 'home',    label: 'الرئيسية' },
-    { href: 'request.html', icon: 'send',    label: 'تحويل' },
-    { href: 'chat-v2.html', icon: 'message', label: 'الدردشة' }
+    { href: 'index.html', icon: 'home',  label: 'الرئيسية' },
+    { href: 'lab.html',   icon: 'match', label: 'الاختبار' }
   ];
   /* ورقة «المزيد» — الصفحات الثانوية الحيّة فقط */
   var MORE_OWNER = [
@@ -36,11 +38,7 @@
     { href: 'chat-v2.html',    icon: 'message', label: 'الدردشة' },
     { href: 'request.html',    icon: 'send',    label: 'طلب تحويل' }
   ];
-  var MORE_CLIENT = [
-    { href: 'rates.html',   icon: 'rate',   label: 'الأسعار' },
-    { href: 'wallet.html',  icon: 'wallet', label: 'المحفظة' },
-    { href: 'account.html', icon: 'user',   label: 'الحساب' }
-  ];
+  var MORE_CLIENT = [];
   var ICONS = {
     home:'M4 10.5 12 4l8 6.5V19a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 19v-8.5zM9.5 20.5v-6h5v6',
     send:'M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z',
@@ -93,6 +91,7 @@
     (isOwner && path === 'account.html' ? '#nav,#pendBox{display:none!important}' : '') +
     '#akTabs{width:100%!important;max-width:none!important;margin:0!important;grid-template-columns:none!important;transform:none!important}' +
     '#arkChatFab{bottom:calc(84px + env(safe-area-inset-bottom,0px))!important}' +
+    (isOwner ? '' : '#akTop a[href="chat-v2.html"],#akMoreBtn{display:none!important}') +
     '@media print{#akTabs,#akMore,#akTop{display:none!important}}';
   document.head.appendChild(css);
 
