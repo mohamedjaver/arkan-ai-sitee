@@ -67,22 +67,23 @@ async function gemini(b64,mime){
 /* ── OCR محلي مقوّى (نفس settlement) كاحتياط ── */
 let _w=null;
 async function _head(u){try{const r=await fetch(u,{method:'HEAD',cache:'no-store'});return r.ok;}catch(e){return false;}}
-async function worker(){
-  if(_w)return _w;
-  if(!window.Tesseract){
-    await new Promise((res,rej)=>{const sc=document.createElement('script');
-      sc.src='vendor/tesseract.min.js';sc.onload=res;sc.onerror=rej;document.head.appendChild(sc);});
-  }
+let _cfg=null,_pool=[],_mk=null;
+async function _tcfg(){if(_cfg)return _cfg;
+  if(!window.Tesseract){await new Promise((res,rej)=>{const sc=document.createElement('script');sc.src='vendor/tesseract.min.js';sc.onload=res;sc.onerror=rej;document.head.appendChild(sc);});}
   const V=new URL('vendor/',location.href).href;
   const ok=(await Promise.all(['worker.min.js','tesseract-core-simd-lstm.wasm.js','eng.traineddata.gz'].map(f=>_head(V+f)))).every(Boolean);
-  const cfg=ok?{workerPath:V+'worker.min.js',corePath:V+'tesseract-core-simd-lstm.wasm.js',
-      langPath:V.replace(/\/$/,''),workerBlobURL:false,gzip:true,cacheMethod:'none'}
-    :{corePath:'https://cdn.jsdelivr.net/npm/tesseract.js-core@5.1.0/tesseract-core-simd-lstm.wasm.js',
-      langPath:'https://cdn.jsdelivr.net/npm/@tesseract.js-data/eng/4.0.0_best_int'};
-  _w=await Tesseract.createWorker('eng',1,cfg);
-  await _w.setParameters({tessedit_pageseg_mode:'6'});
-  return _w;
-}
+  _cfg=ok?{workerPath:V+'worker.min.js',corePath:V+'tesseract-core-simd-lstm.wasm.js',langPath:V.replace(/\/$/,''),workerBlobURL:false,gzip:true,cacheMethod:'none'}
+    :{corePath:'https://cdn.jsdelivr.net/npm/tesseract.js-core@5.1.0/tesseract-core-simd-lstm.wasm.js',langPath:'https://cdn.jsdelivr.net/npm/@tesseract.js-data/eng/4.0.0_best_int'};
+  return _cfg;}
+async function _spawn(){const cfg=await _tcfg();const w=await Tesseract.createWorker('eng',1,cfg);await w.setParameters({tessedit_pageseg_mode:'6'});return {w:w,busy:false,psm:'6'};}
+/* 1436: حوض عاملين — عاملا OCR على الهواتف ذات 4 أنوية فأكثر (القراءة بالتوازي)، وعامل واحد على الضعيفة */
+async function worker(){if(_pool.length)return _pool[0].w;if(!_mk)_mk=_spawn().then(x=>{_pool.push(x);return x;});return (await _mk).w;}
+const _waiters=[];
+async function withWorker(fn){await worker();const want=Math.min(2,Math.max(1,Math.floor((navigator.hardwareConcurrency||2)/2)));
+  let slot=_pool.find(x=>!x.busy);
+  if(!slot&&_pool.length<want){const x=await _spawn();_pool.push(x);slot=x;}
+  while(!slot){await new Promise(r=>_waiters.push(r));slot=_pool.find(x=>!x.busy);}
+  slot.busy=true;try{return await fn(slot);}finally{slot.busy=false;const r=_waiters.shift();if(r)r();}}
 async function pdfText(f){
   if(!window.pdfjsLib){
     const inj=u=>new Promise((res,rej)=>{const sc=document.createElement('script');sc.src=u;sc.onload=res;sc.onerror=rej;document.head.appendChild(sc);});
@@ -103,12 +104,10 @@ async function pdfText(f){
   return out;
 }
 /* 1429: القارئ المحلي المطوَّر — تجهيز الصورة قبل OCR (تكبير، رمادي، تباين، قلب الوضع الداكن) + مرور ثانٍ بتخطيط مختلف + PDF الممسوح */
-let _q=Promise.resolve();
-function lock(fn){const r=_q.then(fn,fn);_q=r.catch(()=>{});return r;}
 /* mode 0: رمادي + تباين (تكبير حتى ~1900). mode 1: تكبير أكبر (~2500) + عتبة تكيّفية (أبيض/أسود) — للصور الصغيرة والمضغوطة وظلال التصوير */
 async function prepImg(src,mode){
-  const im=(src&&src.getContext)?src:await createImageBitmap(src);const w0=im.width,h0=im.height,tw=mode?2500:1900;
-  let sc=w0<tw?Math.min(4,tw/w0):1;if(w0*sc>2600)sc=2600/w0;if(h0*sc>5600)sc=5600/h0;
+  const im=(src&&src.getContext)?src:await createImageBitmap(src);const w0=im.width,h0=im.height,tw=mode?2100:1700;
+  let sc=w0<tw?Math.min(4,tw/w0):1;if(w0*sc>2200)sc=2200/w0;const MP=mode?3.6e6:3.0e6;if(w0*h0*sc*sc>MP)sc=Math.sqrt(MP/(w0*h0));
   const c=document.createElement('canvas');c.width=Math.max(1,Math.round(w0*sc));c.height=Math.max(1,Math.round(h0*sc));
   const x=c.getContext('2d',{willReadFrequently:true});x.imageSmoothingEnabled=true;x.imageSmoothingQuality='high';x.drawImage(im,0,0,c.width,c.height);
   const W=c.width,H=c.height,d=x.getImageData(0,0,W,H),a=d.data,n=W*H,g=new Uint8ClampedArray(n);let sum=0;
@@ -122,14 +121,11 @@ async function prepImg(src,mode){
         let v=g[q]<m-9?0:255;if(v===255&&g[q]<m-3)v=150;a[k]=a[k+1]=a[k+2]=v;a[k+3]=255;}}}
   x.putImageData(d,0,0);return c;
 }
-async function ocrText(f,psm,mode){
-  const w=await worker();
+async function ocrText(f,psm,mode,rot){
   let src=f;try{src=await prepImg(f,mode||0);}catch(e){src=f;}
-  return lock(async()=>{
-    if(psm)await w.setParameters({tessedit_pageseg_mode:String(psm)});
-    try{const {data}=await w.recognize(src,{rotateAuto:true});return fixOcr(data.text||'');}
-    finally{if(psm){try{await w.setParameters({tessedit_pageseg_mode:'6'});}catch(e){}}}
-  });
+  return withWorker(async(slot)=>{const w=slot.w,want=String(psm||'6');
+    if(slot.psm!==want){await w.setParameters({tessedit_pageseg_mode:want});slot.psm=want;}
+    const {data}=await w.recognize(src,rot?{rotateAuto:true}:{});return fixOcr(data.text||'');});
 }
 async function pdfOcr(f){
   const buf=await f.arrayBuffer();const doc=await pdfjsLib.getDocument({data:buf}).promise;
@@ -452,9 +448,11 @@ window.ArkanRead={
     /* 1432: قراءتان مستقلتان للصورة (تجهيزان مختلفان). إن اتفقتا على المبلغ فهو مؤكد؛ إن اختلفتا تُحسم بقراءة ثالثة (أغلبية)، وبلا أغلبية يُعلَّم «غير مؤكد» ليُراجَع */
     if(!isPdf){try{
       const pick2=(a,b)=>{const o=Object.assign({},a);['reference','bank','currency','date','name','receiver','status'].forEach(k=>{if(!o[k]&&b[k])o[k]=b[k];});return o;};
+      const sure=+parsed.amount>0&&!parsed.weak&&(parsed.confidence||0)>=95&&parsed.reference;   /* قالب معروف + مبلغ + مرجع = قراءة واحدة تكفي */
+      if(sure)throw 0;
       const rawB=await ocrText(file,null,1),pB=liteParse(rawB),A=+parsed.amount||0,Bv=+pB.amount||0;
       if(A&&A===Bv){parsed=pick2(parsed.weak&&!pB.weak?pB:parsed,parsed.weak&&!pB.weak?parsed:pB);}
-      else{const rawC=await ocrText(file,4,1),pC=liteParse(rawC),Cv=+pC.amount||0;
+      else{const rawC=await ocrText(file,4,1,true),pC=liteParse(rawC),Cv=+pC.amount||0;
         if(A&&A===Cv)parsed=pick2(parsed,pC);
         else if(Bv&&Bv===Cv){parsed=pick2(pB.weak&&!pC.weak?pC:pB,parsed);raw=rawB;}
         else{const c=[parsed,pB,pC].filter(q=>+q.amount>0).sort((q,r)=>(q.weak?1:0)-(r.weak?1:0)||(r.confidence||0)-(q.confidence||0))[0];
