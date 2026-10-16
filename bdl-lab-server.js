@@ -75,7 +75,7 @@ module.exports = function (app, ctx) {
       const mime = pdf ? 'application/pdf' : /\.png$/i.test(nm) ? 'image/png' : /\.webp$/i.test(nm) ? 'image/webp' : 'image/jpeg';
       let g = null; for (let k = 0; k < 3 && !g; k++) { try { g = await rd(buf.toString('base64'), mime); } catch (e) { if (k === 2) throw e; await new Promise(r => setTimeout(r, 1500 * (k + 1))); } }
       g = g || {};
-      p = { amount: Number(g.amount) || 0, ref: g.txn || g.reference || '', bank: g.bank || g.institution || '', date: g.date || '', name: g.receiver || g.name || '', account: g.iban || g.account || '', receiver: g.receiver || '', ccy: String(g.currency || g.ccy || ''), status: String(g.status || '') };
+      p = { amount: Number(g.amount) || 0, ref: g.txn || g.reference || '', bank: g.bank || g.institution || '', date: g.date || '', name: g.receiver || g.name || '', account: g.iban || g.account || '', receiver: g.receiver || '', ccy: String(g.currency || g.ccy || ''), status: String(g.status || ''), conf: +g.confidence || 0, weak: !!((g.confidence && +g.confidence < 70) || g.amount_model) };
     }
     if (p.amount || p.name || p.account || p.receiver) { CACHE[fp] = p; cacheDirty = true; }
     return p;
@@ -120,6 +120,13 @@ module.exports = function (app, ctx) {
   app.post('/lab/job/:id/start', wrap(async req => { const j = load(req.params.id); if (!j) throw new Error('المهمة غير موجودة'); if (j.state === 'upload') { if (!j.files.some(f => f.side === 's') || !j.files.some(f => f.side === 'c')) throw new Error('يلزم ملف مورد وملف زبون'); run(j).catch(e => { j.state = 'error'; j.err = String(e.message || e).slice(0, 300); save(j); }); } return { ok: 1, state: j.state }; }));
   app.get('/lab/job/:id', wrap(async req => { const j = load(req.params.id); if (!j) throw new Error('المهمة غير موجودة'); const o = { id: j.id, state: j.state, ph: j.ph, d: j.d, n: j.n, pre: j.pre || 0, err: j.err || '', fails: j.fails || 0, at: j.at }; if (j.state === 'done' && req.query.items) o.items = j.items; return o; }));
   app.delete('/lab/job/:id', wrap(async req => { const j = load(req.params.id); if (j) { j.stop = true; delete JOBS[req.params.id]; } try { fs.rmSync(jdir(req.params.id), { recursive: true, force: true }); } catch (e) {} return { ok: 1 }; }));
+  /* 1444: تنبيه تلغرام بعد كل فحص + تذكير صباحي (08:00 لواندا) ما دامت إيصالات بلا مورد */
+  const OPENF = path.join(DIR, 'open.json'); const tgSend = text => { try { if (ctx.tg && ctx.adminId) ctx.tg('sendMessage', { chat_id: ctx.adminId, text, disable_web_page_preview: true }); } catch (e) {} };
+  app.post('/lab/notify', express.json({ limit: '200kb' }), wrap(async req => { const b = req.body || {}; const text = String(b.text || '').slice(0, 3800); if (!text) throw new Error('نص فارغ');
+    try { fs.writeFileSync(OPENF, JSON.stringify({ open: +b.open || 0, total: +b.total || 0, text, at: Date.now() })); } catch (e) {}
+    tgSend((b.auto ? '🧪 مختبر المطابقة — نتيجة الفحص\n' : '') + text); return { ok: 1 }; }));
+  setInterval(() => { try { const now = new Date(Date.now() + 3600e3); if (now.getUTCHours() !== 7 || now.getUTCMinutes() > 4) return; const o = JSON.parse(fs.readFileSync(OPENF, 'utf8')); if (!o.open || Date.now() - o.at < 20 * 3600e3) return;
+    tgSend('⏰ تذكير: لا يزال ' + o.open + ' إيصالًا عند الزبائن بلا مورد (' + Number(o.total).toLocaleString('en-US') + ' AOA) منذ فحص ' + new Date(o.at).toLocaleDateString('en-GB') + ' — افتح مختبر المطابقة وأضف المورد أو كشف حسابه.'); } catch (e) {} }, 5 * 60e3).unref();
   /* تنظيف بعد 24 ساعة */
   setInterval(() => { try { for (const id of fs.readdirSync(DIR)) { const st = path.join(DIR, id, 'state.json'); if (!fs.existsSync(st)) continue; const j = JSON.parse(fs.readFileSync(st, 'utf8')); if (Date.now() - (j.at || 0) > 24 * 3600e3) { delete JOBS[id]; fs.rmSync(path.join(DIR, id), { recursive: true, force: true }); } } } catch (e) {} }, 3600e3).unref();
   console.log('▲ lab server ready');

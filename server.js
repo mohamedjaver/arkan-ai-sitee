@@ -1580,7 +1580,7 @@ app.post('/admin/refresh-rates', async (req,res)=>{
 /* طبقة القراءة — القارئ الموحّد للإيصالات */
 try {
   require('./bdl-reader')(app, { express, jwt, JWT_SECRET });
-  try { require('./bdl-lab-server')(app, { express, jwt, JWT_SECRET }); } catch (e) { console.error('lab server:', e.message); }
+  try { require('./bdl-lab-server')(app, { express, jwt, JWT_SECRET, tg, adminId: ENV.ADMIN_ID }); } catch (e) { console.error('lab server:', e.message); }
 } catch (e) { console.warn('reader off:', e.message); }
 /* دليل الجهات الموحّد (إضافي) */
 try {
