@@ -14,9 +14,10 @@ module.exports = function (app, ctx) {
     ' قالب ATLANTICO (Banco Millennium Atlântico — "Transfer to Atlântico" / "Transferência Atlântico"، جدول Label/Value، غالبًا لقطة شاشة لملف "proof"): bank="ATLANTICO"؛ amount = قيمة سطر Amount/Montante فقط (مثل 2394700,00 → 2394700، 1700000,00 → 1700000)؛ currency = سطر Currency/Moeda (AKZ → AOA)؛ reference = قيمة سطر Reference/Referencia فقط (9 أرقام غالبًا)؛ sender = ACCOUNT HOLDER / NOME DO TITULAR DA CONTA؛ receiver (المستفيد) = سطر Name / Nome beneficiário؛ account = سطر Account number/IBAN. لا تأخذ أبدًا رقم "ACCOUNT NUMBER / NÚMERO DE CONTA" في الرأس (مثل 292750887 1 0 001) ولا "Current account / Conta origem" كمبلغ أو مرجع. التاريخ في تذييل الصفحة بصيغة DD-MM-YYYY. confidence 95+ إذا وُجد Reference وAmount معًا.' +
     ' قالب المحافظ الموريتانية (Bankily/BPM، Masrvi، Sedad، BIM، Amanty، Click — لقطة شاشة تطبيق أو رسالة SMS بالفرنسية أو العربية): is_receipt=true دائمًا؛ currency=MRU (UM/MRU/أوقية)؛ amount = Montant / Montant envoyé / المبلغ / المبلغ المرسل فقط (لا Frais/الرسوم ولا Solde/الرصيد)؛ txn = Trs ID / Txn ID / ID de la transaction / معرف المعاملة / رقم العملية كاملًا؛ phone = رقم هاتف المستلم (8 أرقام موريتانية تبدأ بـ 2 أو 3 أو 4)؛ receiver = اسم المستلم (Bénéficiaire / à / المستلم)؛ bank = اسم التطبيق (Bankily، Masrvi، Sedad…). المبالغ قد تُكتب 12 500 أو 12,500.00 أو 12.500 — كلها 12500.' +
     ' قالب المحافظ الرقمية (لقطة تحويل USDT أو USDC من Binance/OKX/Trust/Bybit أو أي محفظة — تظهر فيها From/To بعناوين 0x… أو T…، Network، Txhash/TxID): is_receipt=true؛ currency = اسم العملة كما كُتب (USDT أو USDC)؛ amount = الكمية المحوَّلة بقيمتها المطلقة (‎-41,200 USDC → 41200) لا رسوم الشبكة؛ txn = Txhash/TxID كما يظهر حتى لو مختصرًا (0x4115...6d4c)؛ account = عنوان To كاملًا؛ sender = عنوان From؛ bank = اسم الشبكة (BNB Chain، TRON/TRC20، Ethereum…)؛ date = Time؛ status من Completed/Success.';
-  app.post('/read/receipt', express.json({ limit: '12mb' }), wrap(async req => {
-    const b = req.body || {}; if (!b.b64) throw new Error('لا ملف');
-    const mime = b.mime || 'image/jpeg';
+  /* 1442: القارئ كدالة قابلة لإعادة الاستعمال (مختبر المطابقة على الخادم يستعملها) */
+  async function readB64(b64, mime) { const b = { b64: b64, mime: mime };
+    if (!b.b64) throw new Error('لا ملف');
+    mime = b.mime || 'image/jpeg';
     const content = [mime === 'application/pdf' ? { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: b.b64 } } : { type: 'image', source: { type: 'base64', media_type: mime, data: b.b64 } }, { type: 'text', text: 'اقرأ هذا الإيصال وأعد JSON.' }];
     const r = await fetch('https://api.anthropic.com/v1/messages', { method: 'POST', headers: { 'content-type': 'application/json', 'x-api-key': KEY(), 'anthropic-version': '2023-06-01' },
       body: JSON.stringify({ model: MODEL(), max_tokens: 600, system: RECEIPT_SYS, messages: [{ role: 'user', content }] }) });
@@ -33,6 +34,8 @@ module.exports = function (app, ctx) {
     if (out.currency) { const c = String(out.currency).toUpperCase(); out.currency = /AKZ|KZ|KWANZA|AOA/.test(c) ? 'AOA' : /MRU|MRO|UM|OUGUIYA|أوقية/.test(c) ? 'MRU' : /USDT|TETHER/.test(c) ? 'USDT' : /USDC/.test(c) ? 'USDC' : /USD|\$/.test(c) ? 'USD' : /EUR|€/.test(c) ? 'EUR' : c; }
     try { if (out.phone && app.locals.parties) { const pt = await app.locals.parties.find(out.phone); if (pt && !out.receiver) out.receiver = pt.name; } } catch (e) {}
     return out;
-  }));
+  }
+  app.locals.readReceipt = readB64;
+  app.post('/read/receipt', express.json({ limit: '12mb' }), wrap(async req => { const b = req.body || {}; return readB64(b.b64, b.mime); }));
   console.log('▲ reader ready (' + MODEL() + (KEY() ? ', key on' : ', key off') + ')');
 };
