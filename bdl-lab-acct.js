@@ -73,31 +73,53 @@
   function dropWhy(p){var c=String(p.ccy||'').toUpperCase();
     if(/USDT|USDC|USD|MRU|MRO|EUR|CNY|AED/.test(c)||/bankily|masrvi|sedad|binance|trust ?wallet|tron|okx|bybit|bmci/i.test(p.bank||''))return 'fx';
     if(/fail|rejei|recus|cancel|pend|erro|declin|فشل|مرفوض|ملغ/i.test(p.status||''))return 'fail';return '';}
-  async function readOne(x,side,R){var file=x.file;if(!file){var bl=await x.en.async('blob'),ex=x.nm.split('.').pop().toLowerCase();file=new File([bl],x.nm,{type:ex==='pdf'?'application/pdf':ex==='png'?'image/png':ex==='webp'?'image/webp':'image/jpeg'});}
-    var fp=await h.sha(file),p=await cget(fp);
-    if(p&&p.ccy!==undefined)R.hit++;else{var r=await Promise.race([window.ArkanRead.read(file),new Promise(function(z){setTimeout(function(){z(null);},45000);})]),g=(r&&r.parsed)||{};
+  async function loadFile(x){var file=x.file;if(!file){var bl=await x.en.async('blob'),ex=x.nm.split('.').pop().toLowerCase();file=new File([bl],x.nm,{type:ex==='pdf'?'application/pdf':ex==='png'?'image/png':ex==='webp'?'image/webp':'image/jpeg'});}return file;}
+  /* 1439: pre(fp,sz,ts) — إن عُرفت الصورة من ملف المورد (البصمة نفسها أو الحجم نفسه في اليوم نفسه) تُؤخذ قراءتها منه ولا تُرسل للقراءة من جديد */
+  async function readOne(x,side,R,pre){var file=await loadFile(x);
+    var fp=await h.sha(file),p=await cget(fp),pr=null;
+    if(!(p&&p.ccy!==undefined)&&pre){pr=pre(fp,file.size||0,x.ts||0);if(pr){p=pr.p;R.pre++;}}
+    if(p&&p.ccy!==undefined){if(!pr)R.hit++;}else{var r=await Promise.race([window.ArkanRead.read(file),new Promise(function(z){setTimeout(function(){z(null);},45000);})]),g=(r&&r.parsed)||{};
       p={amount:Number(g.amount)||0,ref:g.transaction_id||g.reference||g.txn||'',bank:g.bank||g.institution||'',date:g.date||'',name:g.beneficiary||g.name||'',account:g.iban||g.account||'',receiver:g.receiver||'',ccy:String(g.currency||g.ccy||''),status:String(g.status||'')};
       if(p.amount||p.name||p.account||p.receiver)cput(fp,p);}
-    return {side:side,cn:x.cn||'',file:file,sz:file.size||0,nm:x.nm,ts:x.ts||0,pdf:/pdf$/i.test(file.type||x.nm),p:p,fp:fp};}
+    return {side:side,cn:x.cn||'',file:file,src:x,sz:file.size||0,nm:x.nm,ts:x.ts||0,pdf:/pdf$/i.test(file.type||x.nm),p:p,fp:fp,pre:pr?pr.how:''};}
+  function fastItem(x,side,c){return {side:side,cn:x.cn||'',file:null,src:x,sz:c.sz||0,nm:x.nm,ts:x.ts||0,pdf:/pdf$/i.test(x.nm),p:c.p||{},fp:c.fp,pre:c.pre||''};}
+  async function mat(it){if(!it.file&&it.src){try{it.file=await loadFile(it.src);}catch(e){}}return it;}
+  /* 1439: مصادر المسح تُحفظ ملفًا ملفًا (لا معاملة واحدة ضخمة) حتى تصمد ملفات السنة */
+  async function putSrc(key,o){var m={n:o.s.length+o.c.length,ns:o.s.length,from:o.from,to:o.to,all:o.all,sf:o.sf,st:o.st,sa:o.sa,at:o.at},ok=true,fl=o.s.concat(o.c);
+    for(var i=0;i<fl.length;i++){if(!(await h.sess.put(key+':f:'+i,fl[i])))ok=false;}if(!(await h.sess.put(key,m)))ok=false;return ok;}
+  async function getSrc(key){var m=await h.sess.get(key);if(!m)return null;if(m.s&&m.c)return m;if(m.n==null)return null;var fl=[];for(var i=0;i<m.n;i++){var f=await h.sess.get(key+':f:'+i);if(!f)return null;fl.push(f);}
+    return {s:fl.slice(0,m.ns),c:fl.slice(m.ns),from:m.from,to:m.to,all:m.all,sf:m.sf,st:m.st,sa:m.sa,at:m.at};}
+  async function delSrc(key){var m=await h.sess.get(key);h.sess.del(key);if(m&&m.n)for(var i=0;i<m.n;i++)h.sess.del(key+':f:'+i);}
+  /* 1439: نقطة حفظ لكل إيصال مقروء — عند العودة يُقفز فوق المقروء فورًا بلا إعادة فك ولا إعادة قراءة */
+  var CK={},CKD=false,CKT=0;function kf(side,x){return side+'|'+(x.cn||'')+'|'+x.nm+'|'+(x.file?x.file.size:'')+'|'+(x.ts||0);}
+  function ckSave(force){if(!CKD)return;if(!force&&CKT)return;if(CKT)clearTimeout(CKT);CKT=setTimeout(function(){CKT=0;CKD=false;h.sess.put('job:acct:ck',CK);},force?0:1500);}
+  var PT=0,PTT=0;function tick(){var n=Date.now();if(n-PT>300){PT=n;paint();}else if(!PTT)PTT=setTimeout(function(){PTT=0;PT=Date.now();paint();},320);}
   /* 1414: المسح لا يضيع إن خرجت — الملفان والفترة يُحفظان على الجهاز، وعند العودة يُستأنف تلقائيًا من حيث توقف (المقروء لا يُعاد).
      الشاشة تبقى مضاءة أثناء المسح، وإن أُوقف المتصفح مؤقتًا في الخلفية يُعاد أي إيصال انقطعت قراءته. */
   var HID=0,WL=null;document.addEventListener('visibilitychange',function(){if(document.hidden)HID++;else if(A.run)wake();});
   function wake(){try{if(navigator.wakeLock&&navigator.wakeLock.request)navigator.wakeLock.request('screen').then(function(w){WL=w;},function(){});}catch(e){}}
   function unwake(){try{if(WL){WL.release();WL=null;}}catch(e){}}
   function untilVisible(){return document.hidden?new Promise(function(res){var fn=function(){if(!document.hidden){document.removeEventListener('visibilitychange',fn);res();}};document.addEventListener('visibilitychange',fn);}):Promise.resolve();}
-  async function resume(){try{var j=await h.sess.get('job:acct');if(!j||!j.s||!j.c||A.res||A.run)return;
-      toast('استئناف المسح من حيث توقف…');await pick('s',j.s);await pick('c',j.c);if(!A.s||A.s.err||!A.c||A.c.err){h.sess.del('job:acct');return;}
+  async function resume(){try{if(A.res||A.run)return;var j=await getSrc('job:acct');if(!j)return;
+      toast('استئناف المسح من حيث توقف — المقروء سابقًا لا يُعاد');await pick('s',j.s);await pick('c',j.c);if(!A.s||A.s.err||!A.c||A.c.err){delSrc('job:acct');h.sess.del('job:acct:ck');return;}
       A.c.all=!!j.all;if(!j.all){A.c.from=j.from;A.c.to=j.to;}if(j.sa===false){A.s.all=false;A.s.from=j.sf;A.s.to=j.st;}paint();start(true);}catch(e){}}
   async function start(resumed){var P=A.s?selP(A.s):[],C=A.c?selP(A.c):[];if(!P.length||!C.length)return;if(!DB)DB=await idb();
-    if(!resumed)h.sess.put('job:acct',{s:A.s.src,c:A.c.src,from:A.c.from,to:A.c.to,all:!!A.c.all,sf:A.s.from,st:A.s.to,sa:!!A.s.all,at:Date.now()}).then(function(ok){if(!ok)toast('الملف كبير — إن خرجت من الصفحة لن يُستأنف المسح تلقائيًا');});
+    if(!resumed){CK={};h.sess.del('job:acct:ck');putSrc('job:acct',srcSnap()).then(function(ok){if(!ok)toast('الملف كبير جدًا للحفظ — إن خرجت من الصفحة لن يُستأنف المسح تلقائيًا');});}
+    else{CK=(await h.sess.get('job:acct:ck'))||{};}
     wake();
-    var R={ph:1,n:P.length,d:0,hit:0,stop:false,t0:Date.now(),k:{acc:0,drop:0,on:0,ok:0},live:[],per:perTxt(A.c),sper:A.s.all?'':perTxt(A.s)};A.run=R;A.res=null;paint();
+    var R={ph:1,n:P.length,d:0,hit:0,pre:0,ck:0,stop:false,t0:Date.now(),k:{acc:0,drop:0,on:0,ok:0},live:[],per:perTxt(A.c),sper:A.s.all?'':perTxt(A.s)};A.run=R;A.res=null;paint();
     var seen={},accSeen={};
-    async function pool(list,side,fn,dupFn){var qi=0;async function wk(){while(qi<list.length&&!R.stop){var x=list[qi++];R.cur=x.nm;R.cn=x.cn||'';await untilVisible();try{var h0=HID,it=await readOne(x,side,R);if(HID!==h0&&!it.p.amount&&!it.p.name&&!it.p.account){await untilVisible();it=await readOne(x,side,R);}if(!seen[side+it.fp]){seen[side+it.fp]=it.cn||'-';fn(it);}else if(dupFn)dupFn(it,seen[side+it.fp]);}catch(e){}R.d++;paint();}}
-      var w=[];for(var i=0;i<6;i++)w.push(wk());await Promise.all(w);}
+    async function pool(list,side,fn,dupFn,pre){var qi=0;
+      async function wk(){while(qi<list.length&&!R.stop){var x=list[qi++],k=kf(side,x),c=CK[k];R.cur=x.nm;R.cn=x.cn||'';
+          try{var it;if(c){it=fastItem(x,side,c);R.ck++;}else{await untilVisible();var h0=HID;it=await readOne(x,side,R,pre);if(HID!==h0&&!it.p.amount&&!it.p.name&&!it.p.account){await untilVisible();it=await readOne(x,side,R,pre);}
+              CK[k]={fp:it.fp,sz:it.sz,p:it.p,pre:it.pre};CKD=true;ckSave();}
+            if(!seen[side+it.fp]){seen[side+it.fp]=it.cn||'-';fn(it);}else if(dupFn)dupFn(it,seen[side+it.fp]);
+            it.file=null; /* الصورة لا تبقى في الذاكرة — تُعاد من الملف عند الحاجة فقط */
+          }catch(e){}R.d++;tick();}}
+      var w=[];for(var i=0;i<6;i++)w.push(wk());await Promise.all(w);ckSave(true);paint();}
     /* ١ المورد */
     var S=[];await pool(P,'s',function(it){if(dropWhy(it.p))return;S.push(it);var ac=acctOf(it.p);if(ac&&!accSeen[ac.slice(-11)]){accSeen[ac.slice(-11)]=1;R.k.acc++;}});
-    if(R.stop){A.run=null;unwake();h.sess.del('job:acct');paint();toast('أُوقف المسح قبل اكتمال ملفات الموردين');return;}
+    if(R.stop){A.run=null;unwake();delSrc('job:acct');h.sess.del('job:acct:ck');paint();toast('أُوقف المسح قبل اكتمال ملفات الموردين');return;}
     var sname=A.s.name||'',sents=[],reg=regLoad(),nw=0,SP=A.s.parts,multiS=SP.length>1,isSup={};
     SP.forEach(function(pt){isSup[pt.name]=1;cluster(S.filter(function(it){return it.cn===pt.name;})).forEach(function(e){if(!e.blank){e.sup=pt.name;sents.push(e);}});});
     sents.forEach(function(q){if(!q.accts.length)return;if(reg.some(function(r){return q.accts.some(function(x){return (r.accts||[]).some(function(b){return sameAcct(x,b);});});}))return;
@@ -108,17 +130,19 @@
     function onSup(p){var ac=acctOf(p),nm=nameOf(p),z=ac&&SA.find(function(x){return sameAcct(x.v,ac);});if(z)return {how:'acct',sup:z.sup};z=nm&&SN.find(function(n){return sameName(n.v,nm);});return z?{how:'name',sup:z.sup}:null;}
     /* ٢ الزبون — 1438: المطابقة تجري أثناء الفحص لا بعده. مفاتيح قوية أولًا: الصورة نفسها (البصمة)، ثم الحجم نفسه في اليوم نفسه (صورة مُعاد توجيهها)، ثم رقم العملية.
        المبلغ وحده يُترك لجولة أخيرة. الإيصالات بلا مقابل تُفرز وتُعرض حيًّا أثناء المسح. */
-    var rest=S.slice(),byFp={},bySz={},byRef={},rmv=function(sr){var j=rest.indexOf(sr);if(j>=0)rest.splice(j,1);};
-    S.forEach(function(sr){if(sr.fp&&!byFp[sr.fp])byFp[sr.fp]=sr;if(sr.sz>2048&&sr.ts){var k=sr.sz+':'+d0(sr.ts);(bySz[k]||(bySz[k]=[])).push(sr);}var rf=nr(sr.p.ref);if(rf&&!byRef[rf])byRef[rf]=sr;});
-    function strong(it){var sr=it.fp&&byFp[it.fp];if(sr&&rest.indexOf(sr)>=0)return {sr:sr,how:'fp'};
-      if(it.sz>2048&&it.ts){var L=bySz[it.sz+':'+d0(it.ts)]||[];for(var i=0;i<L.length;i++)if(rest.indexOf(L[i])>=0&&(!am(it.p.amount)||!am(L[i].p.amount)||am(it.p.amount)===am(L[i].p.amount)))return {sr:L[i],how:'sz'};}
-      var rf=nr(it.p.ref);sr=rf&&byRef[rf];if(sr&&rest.indexOf(sr)>=0)return {sr:sr,how:'ref'};return null;}
+    var REST={},byFp={},bySz={},byRef={},byAmt={},rmv=function(sr){delete REST[sr.fp];},free=function(sr){return !!REST[sr.fp];};
+    S.forEach(function(sr){if(!sr.fp||REST[sr.fp])return;REST[sr.fp]=sr;byFp[sr.fp]=sr;if(sr.sz>2048&&sr.ts){var k=sr.sz+':'+d0(sr.ts);(bySz[k]||(bySz[k]=[])).push(sr);}var rf=nr(sr.p.ref);if(rf&&!byRef[rf])byRef[rf]=sr;var v=am(sr.p.amount);if(v){var ka=sr.cn+':'+v;(byAmt[ka]||(byAmt[ka]=[])).push(sr);}});
+    function strong(it){var sr=it.fp&&byFp[it.fp];if(sr&&free(sr))return {sr:sr,how:'fp'};
+      if(it.sz>2048&&it.ts){var L=bySz[it.sz+':'+d0(it.ts)]||[];for(var i=0;i<L.length;i++)if(free(L[i])&&(!am(it.p.amount)||!am(L[i].p.amount)||am(it.p.amount)===am(L[i].p.amount)))return {sr:L[i],how:'sz'};}
+      var rf=nr(it.p.ref);sr=rf&&byRef[rf];if(sr&&free(sr))return {sr:sr,how:'ref'};return null;}
+    /* الصورة المعروفة من ملف المورد لا تُقرأ بالذكاء الاصطناعي — قراءة المورد تكفي */
+    function preC(fp,sz,ts){var sr=byFp[fp];if(sr&&free(sr))return {p:sr.p,how:'fp'};if(sz>2048&&ts){var L=bySz[sz+':'+d0(ts)]||[];for(var i=0;i<L.length;i++)if(free(L[i]))return {p:L[i].p,how:'sz'};}return null;}
     R.ph=2;R.n=C.length;R.d=0;R.t0=Date.now();paint();var cnt={fx:0,fail:0,other:0},on=[],un=[],nC=0,cs={},dup=[];
     await pool(C,'c',function(it){nC++;(cs[it.cn]||(cs[it.cn]={n:0,flag:0,sent:0,sum:0})).n++;var w=dropWhy(it.p);if(w){cnt[w]++;R.k.drop++;return;}var o=onSup(it.p);
-      if(o){it.on=o.how;it.sup=o.sup;on.push(it);R.k.on++;var m=strong(it);if(m){rmv(m.sr);it.sent=1;it.how=m.how;R.k.ok++;}else R.live.unshift(it);}else if(!am(it.p.amount)&&!acctOf(it.p)&&!nameOf(it.p)){it.g='u';un.push(it);}else{cnt.other++;R.k.drop++;}},function(it,first){if(dropWhy(it.p))return;var o=onSup(it.p);if(!o)return;it.sup=o.sup;it.g='d';it.why='مكرر — الصورة نفسها أُرسلت مرتين'+(first&&first!=='-'&&first!==it.cn?' (أيضًا عند «'+first+'»)':'');dup.push(it);});
+      if(o){it.on=o.how;it.sup=o.sup;on.push(it);R.k.on++;var m=strong(it);if(m){rmv(m.sr);it.sent=1;it.how=m.how;R.k.ok++;}else R.live.unshift(it);}else if(!am(it.p.amount)&&!acctOf(it.p)&&!nameOf(it.p)){it.g='u';un.push(it);}else{cnt.other++;R.k.drop++;}},function(it,first){if(dropWhy(it.p))return;var o=onSup(it.p);if(!o)return;it.sup=o.sup;it.g='d';it.why='مكرر — الصورة نفسها أُرسلت مرتين'+(first&&first!=='-'&&first!==it.cn?' (أيضًا عند «'+first+'»)':'');dup.push(it);},preC);
     /* ٣ هل أُرسل للمورد؟ — رقم العملية أولًا، ثم المبلغ نفسه (الأقرب وقتًا)، واحد لواحد */
     /* ٣ الجولة الأخيرة — المبلغ نفسه عند المورد نفسه، الأقرب وقتًا (خلال 10 أيام أولًا ثم بلا حد)، واحد لواحد */
-    [10*DAY,Infinity].forEach(function(win){on.forEach(function(it){if(it.sent)return;var v=am(it.p.amount);if(!v)return;var best=-1,bd=Infinity;rest.forEach(function(s,j){if(am(s.p.amount)===v&&s.cn===it.sup){var d=Math.abs((s.ts||0)-(it.ts||0));if(d<bd&&d<=win){bd=d;best=j;}}});if(best>=0){rest.splice(best,1);it.sent=1;it.how='amt';}});});
+    [10*DAY,Infinity].forEach(function(win){on.forEach(function(it){if(it.sent)return;var v=am(it.p.amount);if(!v)return;var L=byAmt[it.sup+':'+v]||[],best=null,bd=Infinity;L.forEach(function(sr){if(!free(sr))return;var d=Math.abs((sr.ts||0)-(it.ts||0));if(d<bd&&d<=win){bd=d;best=sr;}});if(best){rmv(best);it.sent=1;it.how='amt';}});});
     /* 1418: مكرر برقم العملية — الإيصال نفسه (المرجع نفسه) ظهر مرتين عند الزبائن */
     var refs={};on.forEach(function(it){var rf=nr(it.p.ref);if(!rf)return;var a=refs[rf];if(!a){refs[rf]=it;return;}it.dup='مكرر — رقم العملية نفسه '+(a.cn&&a.cn!==it.cn?'عند «'+a.cn+'»':'مرتين عند الزبون نفسه');var c2={};for(var kk in it)c2[kk]=it[kk];c2.g='d';c2.why=it.dup;c2.sent=0;dup.push(c2);});
     /* 1418: ذاكرة المراجعة — ما أشّرته «سليم» في مسح سابق لا يعود إلى القائمة */
@@ -128,14 +152,15 @@
     on.forEach(function(it){var q=cs[it.cn];if(!q)return;if(it.sent)q.sent++;else{q.flag++;q.sum+=am(it.p.amount);}});
     var custs=A.c.parts.map(function(q){var z=cs[q.name]||{n:0,flag:0,sent:0,sum:0};return {name:q.name,n:z.n,flag:z.flag,sent:z.sent,sum:z.sum};});
     var sups=SP.map(function(pt){var z={name:pt.name,n:S.filter(function(x){return x.cn===pt.name;}).length,accs:sents.filter(function(e){return e.sup===pt.name;}).length,flag:0,sent:0,sum:0};on.forEach(function(it){if(it.sup!==pt.name)return;if(it.sent)z.sent++;else{z.flag++;z.sum+=am(it.p.amount);}});return z;});
+    R.cur='';R.fin=true;paint();var keepL=flag.concat(un).concat(dup);for(var mi=0;mi<keepL.length;mi++){if(R.stop)break;await mat(keepL[mi]);}
     A.res={scan:1,flag:flag,un:un,dup:dup,prev:prev,cnt:cnt,sent:on.length-flag.length,nC:nC,nS:S.length,accs:sents.length,sname:sname,cname:A.c.name||'',custs:custs,sups:sups,stopped:R.stop,hit:R.hit,learned:nw,per:R.per};
-    persist();A.run=null;unwake();h.sess.del('job:acct');keepSrc();paint();window.scrollTo({top:0,behavior:'smooth'});}
+    persist();A.run=null;unwake();delSrc('job:acct');h.sess.del('job:acct:ck');CK={};keepSrc();paint();window.scrollTo({top:0,behavior:'smooth'});}
   /* 1437: إضافة زبون أو مورد بعد الفحص — تُحفظ ملفات المصدر على الجهاز بعد اكتمال المسح، فيُضاف الملف الجديد إلى الملفات نفسها
      ويُعاد الفحص (المقروء سابقًا لا يُعاد — يُؤخذ من الذاكرة). يعمل أيضًا بعد الخروج والعودة ما دامت الملفات محفوظة. */
   function srcSnap(){return {s:A.s.src,c:A.c.src,from:A.c.from,to:A.c.to,all:!!A.c.all,sf:A.s.from,st:A.s.to,sa:!!A.s.all,at:Date.now()};}
-  function keepSrc(){if(!A.s||!A.c)return;h.sess.put('src:acct',srcSnap()).then(function(ok){if(!ok)toast('الملفات كبيرة — إضافة زبون أو مورد ممكنة الآن فقط، لا بعد مغادرة الصفحة');});}
+  function keepSrc(){if(!A.s||!A.c)return;putSrc('src:acct',srcSnap()).then(function(ok){if(!ok)toast('الملفات كبيرة — إضافة زبون أو مورد ممكنة الآن فقط، لا بعد مغادرة الصفحة');});}
   async function addParty(side,files){files=[].slice.call(files||[]);if(!files.length||A.run)return;side=side==='s'?'s':'c';var keep=A.res;
-    if(!A.s||!A.c||A.s.err||A.c.err||!A.s.parts||!A.c.parts){var j=await h.sess.get('src:acct');if(!j||!j.s||!j.c){toast('ملفات الفحص الأصلية غير محفوظة على هذا الجهاز — ابدأ مسحًا جديدًا');return;}
+    if(!A.s||!A.c||A.s.err||A.c.err||!A.s.parts||!A.c.parts){var j=await getSrc('src:acct');if(!j){toast('ملفات الفحص الأصلية غير محفوظة على هذا الجهاز — ابدأ مسحًا جديدًا');return;}
       toast('جارٍ إعادة فتح ملفات الفحص…');await pick('s',j.s);await pick('c',j.c);if(!A.s||A.s.err||!A.c||A.c.err){A.res=keep;paint();toast('تعذّر إعادة فتح الملفات الأصلية');return;}
       A.c.all=!!j.all;if(!j.all){A.c.from=j.from;A.c.to=j.to;}if(j.sa===false){A.s.all=false;A.s.from=j.sf;A.s.to=j.st;}}
     var n0=A[side]&&A[side].parts?A[side].parts.length:0;await pick(side,files);
@@ -214,7 +239,7 @@
       var live=R.live.slice(0,30),eta_t=eta?(eta>90?'≈ '+Math.round(eta/60)+' دقيقة':'≈ '+eta+' ثانية'):'';
       x='<section class="pg"><div class="st"><span class="'+(R.ph===1?'on':'dn')+'">١ قراءة الموردين</span><span class="'+(R.ph===2?'on':'')+'">٢ فحص الزبائن</span><span>٣ النتيجة</span></div><div class="br"><i style="width:'+p+'%"></i></div>'+
         '<div class="pr2">فترة الزبائن: <b dir="ltr">'+esc(R.per)+'</b>'+(R.sper?' · فترة الموردين: <b dir="ltr">'+esc(R.sper)+'</b>':' · الموردون: الملف كاملًا')+'</div>'+
-        '<div class="tx"><b>'+p+'%</b><span>'+(R.ph===1?'قراءة إيصالات المورد':'فحص إيصالات الزبون')+(R.cn?' «'+esc(R.cn)+'»':'')+' — <b dir="ltr" style="font-size:14px">'+R.d+' / '+R.n+'</b>'+(eta_t?'<br><small>الوقت المتبقي '+eta_t+'</small>':'')+'</span></div><div class="fn">'+esc(R.cur||'')+'</div>'+
+        '<div class="tx"><b>'+p+'%</b><span>'+(R.ph===1?'قراءة إيصالات المورد':'فحص إيصالات الزبون')+(R.cn?' «'+esc(R.cn)+'»':'')+' — <b dir="ltr" style="font-size:14px">'+R.d+' / '+R.n+'</b>'+(eta_t?'<br><small>الوقت المتبقي '+eta_t+'</small>':'')+'</span></div><div class="fn">'+esc(R.fin?'تجهيز النتيجة…':R.cur||'')+'</div>'+(R.ck||R.pre||R.hit?'<div class="nt" style="margin:-6px 0 8px">'+(R.ck?R.ck+' استُؤنف من نقطة الحفظ · ':'')+(R.hit?R.hit+' من الذاكرة · ':'')+(R.pre?R.pre+' عُرفت من ملف المورد بلا قراءة':'')+'</div>':'')+
         (R.ph===1?'<div class="kp"><div class="g"><b>'+R.k.acc+'</b><small>حسابات الموردين</small></div><div class="y"><b>'+R.k.drop+'</b><small>مُستبعد تلقائيًا</small></div><div class="a"><b>'+R.k.on+'</b><small>على حسابات الموردين</small></div></div>'
         :'<div class="kp k4"><div class="y"><b>'+R.k.drop+'</b><small>مُستبعد</small></div><div class="a"><b>'+R.k.on+'</b><small>على حسابات الموردين</small></div><div class="g"><b>'+R.k.ok+'</b><small>موجود عند المورد ✓</small></div><div class="r"><b>'+R.live.length+'</b><small>بلا مقابل حتى الآن</small></div></div>')+
         '<div class="lv">'+(R.ph===2&&R.live.length?'<h3 class="r" style="font-size:14px;margin:6px 0">بلا مقابل حتى الآن ('+R.live.length+') — تُراجع بالمبلغ في الجولة الأخيرة</h3>'+live.map(function(it){var q=it.p||{};return '<div class="rw r"><div class="mn"><b>'+(am(q.amount)?f(q.amount):'لم يُقرأ المبلغ')+'</b><span>'+esc([nr(q.ref)||'بلا مرجع',it.ts?h.dmy(it.ts).slice(0,10):'',it.cn||''].filter(Boolean).join(' · '))+'</span></div></div>';}).join('')+(R.live.length>30?'<div class="nt">و'+(R.live.length-30)+' أخرى…</div>':''):'')+'</div>'+
@@ -256,7 +281,7 @@
     if((b=t.closest('[data-aa]'))){var a=b.dataset.aa;
       if(a==='add:c'||a==='add:s'){A._side=a;var fa=$('laFile');fa.value='';fa.click();}
       else if(a==='go')start();else if(a==='stop'){if(A.run)A.run.stop=true;b.disabled=true;b.textContent='جارٍ الإيقاف…';}
-      else if(a==='new'){if(confirm('إنهاء هذه الجلسة وبدء فحص جديد؟\nنتيجة الفحص الحالي وصوره تُمسح من الجهاز. سجل الحسابات وذاكرة القراءة يبقيان.')){A.c=A.s=A.res=null;h.sess.clear('acct');h.sess.del('src:acct');paint();}}
+      else if(a==='new'){if(confirm('إنهاء هذه الجلسة وبدء فحص جديد؟\nنتيجة الفحص الحالي وصوره تُمسح من الجهاز. سجل الحسابات وذاكرة القراءة يبقيان.')){A.c=A.s=A.res=null;h.sess.clear('acct');delSrc('src:acct');delSrc('job:acct');h.sess.del('job:acct:ck');paint();}}
       else if(a==='copy'){var bad=A.res.ents.filter(function(e){return e.st==='red'||e.st==='amb';}),txt='BDL · حسابات تحتاج تحقق — '+A.res.cname+'\n\n'+(bad.map(function(e){return '• '+(e.name||'غير مقروء')+' · '+(e.bank||'')+' · '+(e.accts[0]||'بلا رقم')+'\n  '+e.its.length+' إيصالًا · '+f(e.sum)+' · '+({red:'غير معروف',amb:'تحقق'}[e.st]);}).join('\n')||'لا شيء');
         (navigator.clipboard?navigator.clipboard.writeText(txt):Promise.reject()).then(function(){toast('نُسخت القائمة');},function(){prompt('انسخ:',txt);});}
       else if(a==='exp'){var bl=new Blob([JSON.stringify(regLoad(),null,1)],{type:'application/json'}),l=document.createElement('a');l.href=URL.createObjectURL(bl);l.download='BDL-سجل-الحسابات-'+new Date().toISOString().slice(0,10)+'.json';document.body.appendChild(l);l.click();l.remove();}
