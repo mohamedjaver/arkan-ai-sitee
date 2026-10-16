@@ -68,7 +68,14 @@
   /* ═══ 1413: المسح (Scan) — ١ يُفكّ ملف المورد كاملًا وتُسجَّل أسماء وأرقام حساباته  ٢ يُفحص ملف الزبون:
      كل إيصال مدفوع على حساب/اسم للمورد ولا يوجد مقابله في إيصالات المورد = يُسجَّل «للتأكد».
      يُستبعد تلقائيًا ولا يُحتفظ به: USDT والأوقية، الإيصالات غير الناجحة، وكل ما ليس على حسابات المورد. ═══ */
-  function nr(v){v=String(v==null?'':v).replace(/\s+/g,'').toUpperCase();return v.length>=5?v:'';}
+  function nr(v){v=String(v==null?'':v).replace(/[^A-Za-z0-9]+/g,'').toUpperCase();return v.length>=5?v:'';}
+  /* 1443: ذيل رقم العملية — الأرقام فقط، آخر 8؛ يصمد أمام بادئات مثل Nº / OP / قراءة حرف بدل رقم في البداية */
+  function nrT(v){v=String(v==null?'':v).replace(/\D/g,'');return v.length>=8?v.slice(-8):'';}
+  /* 1443: بصمة إدراكية dHash 64 بت للصورة — تطابق الصورة نفسها حتى لو أُعيد ضغطها أو حُفظت وأُرسلت من جديد */
+  async function dhash(file){if(!file||/pdf$/i.test(file.type||file.name||''))return '';try{var im=await createImageBitmap(file),c=document.createElement('canvas');c.width=9;c.height=8;var g=c.getContext('2d',{willReadFrequently:true});g.drawImage(im,0,0,9,8);var d=g.getImageData(0,0,9,8).data,b='';
+      for(var y=0;y<8;y++)for(var x=0;x<8;x++){var i=(y*9+x)*4,j=i+4,l=d[i]*.3+d[i+1]*.59+d[i+2]*.11,r=d[j]*.3+d[j+1]*.59+d[j+2]*.11;b+=l>r?'1':'0';}try{im.close();}catch(e){}return b;}catch(e){return '';}}
+  function ham(a,b){if(!a||!b||a.length!==b.length)return 99;var n=0;for(var i=0;i<a.length;i++)if(a[i]!==b[i])n++;return n;}
+  async function phOf(it){if(it.ph!==undefined)return it.ph;var f=it.file;if(!f&&it.src){try{f=await loadFile(it.src);}catch(e){}}if(!f&&it._si>=0){try{f=await h.sess.file('acct',it._si,it.nm,it.pdf);}catch(e){}}it.ph=f?await dhash(f):'';return it.ph;}
   function am(v){v=Number(v)||0;return v>=100&&v<1e11?v:0;}
   function dropWhy(p){var c=String(p.ccy||'').toUpperCase();
     if(/USDT|USDC|USD|MRU|MRO|EUR|CNY|AED/.test(c)||/bankily|masrvi|sedad|binance|trust ?wallet|tron|okx|bybit|bmci/i.test(p.bank||''))return 'fx';
@@ -166,7 +173,7 @@
     SH.forEach(function(sr){FREE[sr.fp]=sr;byFp[sr.fp]=sr;if(sr.sz>2048&&sr.ts){var k=sr.sz+':'+d0(sr.ts);(bySz[k]||(bySz[k]=[])).push(sr);}});
     var cs={},st=function(cn){return cs[cn]||(cs[cn]={n:0,flag:0,sent:0,sum:0});},CR=[],dup=[],pair=function(it,sr,how){rmv(sr);sr.mt=1;it.sent=1;it.how=how;it.sup=sr.cn;it.on='img';st(it.cn).sent++;R.k.ok++;R.k.on++;};
     CH.forEach(function(it){if(it.dupOf){it.g='d';dup.push(it);return;}st(it.cn).n++;var sr=byFp[it.fp];if(sr&&free(sr)){pair(it,sr,'fp');return;}
-      if(it.sz>2048&&it.ts){var L=bySz[it.sz+':'+d0(it.ts)]||[];for(var i=0;i<L.length;i++)if(free(L[i])){pair(it,L[i],'sz');return;}}CR.push(it);});
+      if(it.sz>2048&&it.ts){for(var dd=0;dd<3;dd++){var L=bySz[it.sz+':'+d0(it.ts+[0,-DAY,DAY][dd])]||[];for(var i=0;i<L.length;i++)if(free(L[i])){pair(it,L[i],dd?'sz1':'sz');return;}}}CR.push(it);});
     paint();
     /* ب — المورد: ما لم يُطابَق كله، ثم المطابق حتى تثبت الحسابات */
     var SU=SH.filter(function(x){return !x.mt;}),SM=SH.filter(function(x){return x.mt;});R.ph=1;R.n=SU.length+SM.length;R.d=0;R.t0=Date.now();paint();
@@ -185,16 +192,30 @@
     R.k.acc=sents.length;
     function onSup(p){var ac=acctOf(p),nm=nameOf(p),z=ac&&SA.find(function(x){return sameAcct(x.v,ac);});if(z)return {how:'acct',sup:z.sup};z=nm&&SN.find(function(n){return sameName(n.v,nm);});return z?{how:'name',sup:z.sup}:null;}
     /* ج — الزبون: ما لم يُطابَق بالصورة يُقرأ ويُطابَق فورًا */
-    var byRef={},byAmt={};SU.forEach(function(sr){if(!sr.p||dropWhy(sr.p)){rmv(sr);return;}var rf=nr(sr.p.ref);if(rf&&!byRef[rf])byRef[rf]=sr;var v=am(sr.p.amount);if(v){var ka=sr.cn+':'+v;(byAmt[ka]||(byAmt[ka]=[])).push(sr);}});
+    var byRef={},byRefT={},byAmt={};SU.forEach(function(sr){if(!sr.p||dropWhy(sr.p)){rmv(sr);return;}var rf=nr(sr.p.ref);if(rf&&!byRef[rf])byRef[rf]=sr;var rt=nrT(sr.p.ref);if(rt&&!byRefT[rt])byRefT[rt]=sr;var v=am(sr.p.amount);if(v){var ka=sr.cn+':'+v;(byAmt[ka]||(byAmt[ka]=[])).push(sr);}});
     R.ph=2;R.n=CR.length;R.d=0;R.t0=Date.now();paint();var cnt={fx:0,fail:0,other:0},on=[],un=[],nC=CH.length;
     async function readC(list){var qi=0;async function wk(){while(qi<list.length&&!R.stop){var it=list[qi++];R.cur=it.nm;R.cn=it.cn||'';
           try{await readP(it,'c');var w=dropWhy(it.p);if(w){cnt[w]++;R.k.drop++;}else{var o=onSup(it.p);
-              if(o){it.on=o.how;it.sup=o.sup;on.push(it);R.k.on++;var rf=nr(it.p.ref),sr=rf&&byRef[rf];if(sr&&free(sr)){rmv(sr);it.sent=1;it.how='ref';R.k.ok++;}else R.live.unshift(it);}
+              if(o){it.on=o.how;it.sup=o.sup;on.push(it);R.k.on++;var rf=nr(it.p.ref),sr=rf&&byRef[rf];if(!(sr&&free(sr))){var rt=nrT(it.p.ref);sr=rt&&byRefT[rt];if(sr&&free(sr)&&am(it.p.amount)&&am(sr.p.amount)&&am(it.p.amount)!==am(sr.p.amount))sr=null;}if(sr&&free(sr)){rmv(sr);it.sent=1;it.how='ref';R.k.ok++;}else R.live.unshift(it);}
               else if(!am(it.p.amount)&&!acctOf(it.p)&&!nameOf(it.p)){it.g='u';un.push(it);}else{cnt.other++;R.k.drop++;}}}catch(e){}R.d++;tick();}}
         var w=[];for(var i=0;i<6;i++)w.push(wk());await Promise.all(w);ckSave(true);paint();}
     await readC(CR);
     /* الجولة الأخيرة — المبلغ نفسه عند المورد نفسه، الأقرب وقتًا (خلال 10 أيام أولًا ثم بلا حد)، واحد لواحد */
-    [10*DAY,Infinity].forEach(function(win){on.forEach(function(it){if(it.sent)return;var v=am(it.p.amount);if(!v)return;var L=byAmt[it.sup+':'+v]||[],best=null,bd=Infinity;L.forEach(function(sr){if(!free(sr))return;var d=Math.abs((sr.ts||0)-(it.ts||0));if(d<bd&&d<=win){bd=d;best=sr;}});if(best){rmv(best);it.sent=1;it.how='amt';R.k.ok++;}});});
+    [2*DAY,10*DAY,Infinity].forEach(function(win){on.forEach(function(it){if(it.sent)return;var v=am(it.p.amount);if(!v)return;var L=byAmt[it.sup+':'+v]||[],best=null,bd=Infinity;L.forEach(function(sr){if(!free(sr))return;var d=Math.abs((sr.ts||0)-(it.ts||0));if(d<bd&&d<=win){bd=d;best=sr;}});if(best){rmv(best);it.sent=1;it.how='amt';R.k.ok++;}});});
+    /* 1443: الجولة البصرية — ما بقي بلا مقابل يُقارَن بالبصمة الإدراكية مع ما بقي عند المورد نفسه (صورة أُعيد ضغطها أو حُفظت وأُرسلت من جديد).
+       مسافة هامينغ ≤ 6 والمبلغان متفقان (أو أحدهما غير مقروء) = مطابق؛ ≤ 10 مع اتفاق المبلغ = مطابق؛ وإلا يُسجَّل كأقرب مرشح. */
+    var leftC=on.filter(function(x){return !x.sent&&!x.pdf;}),leftS={};Object.keys(FREE).forEach(function(k){var sr=FREE[k];if(sr.p&&!sr.pdf)(leftS[sr.cn]||(leftS[sr.cn]=[])).push(sr);});
+    if(leftC.length){R.ph=3;R.n=leftC.length;R.d=0;R.cur='';paint();
+      for(var li=0;li<leftC.length&&!R.stop;li++){var it=leftC[li],L=leftS[it.sup]||[];if(L.length){var hc=await phOf(it);if(hc){var best=null,bd=99;for(var si=0;si<L.length;si++){var sr=L[si];if(!free(sr))continue;var dts=Math.abs((sr.ts||0)-(it.ts||0));if(dts>45*DAY)continue;var hs=await phOf(sr),dh=ham(hc,hs);if(dh<bd){bd=dh;best=sr;}}
+          if(best){var a1=am(it.p.amount),a2=am(best.p.amount),same=!a1||!a2||a1===a2;if((bd<=6&&same)||(bd<=10&&a1&&a1===a2)){rmv(best);it.sent=1;it.how='img~';R.k.ok++;}else if(bd<=14)it.near={sr:best,dh:bd};}}}R.d++;tick();}}
+    /* 1443: لكل إيصال بلا مقابل — أقرب مرشح عند المورد (رقم عملية متقارب / مبلغ مساوٍ بتاريخ قريب / صورة متشابهة) يُعرض للمراجعة بدل الحكم الجاف */
+    on.forEach(function(it){if(it.sent)return;var p=it.p||{},a1=am(p.amount),rt=nrT(p.ref),best=null,bs=0,why='';Object.keys(FREE).forEach(function(k){var sr=FREE[k];if(sr.cn!==it.sup||!sr.p)return;var q=sr.p,sc=0,w=[];
+        if(rt&&nrT(q.ref)&&rt===nrT(q.ref)){sc+=3;w.push('رقم العملية نفسه');}else if(rt&&nrT(q.ref)&&rt.slice(-5)===nrT(q.ref).slice(-5)){sc+=1;w.push('آخر 5 أرقام من رقم العملية');}
+        var a2=am(q.amount);if(a1&&a2){if(a1===a2){sc+=2;w.push('المبلغ نفسه');}else if(Math.abs(a1-a2)/Math.max(a1,a2)<0.02){sc+=1;w.push('المبلغ متقارب');}else if(String(a1).slice(-6)===String(a2).slice(-6)&&String(a1).length!==String(a2).length){sc+=1;w.push('المبلغ يختلف برقم واحد');}}
+        var dts=Math.abs((sr.ts||0)-(it.ts||0));if(dts<=DAY){sc+=1;w.push('اليوم نفسه');}else if(dts<=3*DAY){sc+=.5;}
+        if(it.near&&it.near.sr===sr){sc+=1.5;w.push('صورة متشابهة');}
+        if(sc>bs){bs=sc;best=sr;why=w.join(' · ');}});
+      if(best&&bs>=2){it.cand={nm:best.nm,amount:am(best.p.amount),ref:best.p.ref||'',ts:best.ts,why:why,sc:bs};}});
     /* مكرر: الصورة نفسها مرتين (إن كانت الأولى مطابقة أو على حسابات المورد) أو رقم العملية نفسه مرتين */
     dup=dup.filter(function(it){var f=it.dupIt;if(!f||!(f.sent||f.on))return false;it.p=f.p||{};it.sup=f.sup;it.why='مكرر — الصورة نفسها أُرسلت مرتين'+(it.dupOf&&it.dupOf!=='-'&&it.dupOf!==it.cn?' (أيضًا عند «'+it.dupOf+'»)':'');return true;});
     var refs={};on.forEach(function(it){var rf=nr(it.p.ref);if(!rf)return;var a=refs[rf];if(!a){refs[rf]=it;return;}it.dup='مكرر — رقم العملية نفسه '+(a.cn&&a.cn!==it.cn?'عند «'+a.cn+'»':'مرتين عند الزبون نفسه');var c2={};for(var kk in it)c2[kk]=it[kk];c2.g='d';c2.why=it.dup;c2.sent=0;dup.push(c2);});
@@ -230,10 +251,10 @@
     if(R.stop){A.run=null;unwake();A.res=S0;paint();return;}
     var reg=regLoad(),SA=[],SN=[],add=function(as,ns,sup){as.forEach(function(a){SA.push({v:a,sup:sup});});ns.forEach(function(n){SN.push({v:n,sup:sup});});};
     function onSup(p){var ac=acctOf(p),nm=nameOf(p),z=ac&&SA.find(function(x){return sameAcct(x.v,ac);});if(z)return {how:'acct',sup:z.sup};z=nm&&SN.find(function(n){return sameName(n.v,nm);});return z?{how:'name',sup:z.sup}:null;}
-    var byFp={},bySz={},byRef={},byAmt={},FREE={},free=function(sr){return !!FREE[sr.fp];},rmv=function(sr){delete FREE[sr.fp];};
-    function index(sr){FREE[sr.fp]=sr;byFp[sr.fp]=sr;if(sr.sz>2048&&sr.ts){var k=sr.sz+':'+d0(sr.ts);(bySz[k]||(bySz[k]=[])).push(sr);}if(sr.p){var rf=nr(sr.p.ref);if(rf&&!byRef[rf])byRef[rf]=sr;var v=am(sr.p.amount);if(v){var ka=sr.cn+':'+v;(byAmt[ka]||(byAmt[ka]=[])).push(sr);}}}
-    function findSup(it){var sr=byFp[it.fp];if(sr&&free(sr))return {sr:sr,how:'fp'};if(it.sz>2048&&it.ts){var L=bySz[it.sz+':'+d0(it.ts)]||[];for(var i=0;i<L.length;i++)if(free(L[i]))return {sr:L[i],how:'sz'};}
-      var p=it.p||{},rf=nr(p.ref);sr=rf&&byRef[rf];if(sr&&free(sr))return {sr:sr,how:'ref'};var v=am(p.amount);if(v&&it.sup){var M=byAmt[it.sup+':'+v]||[],best=null,bd=Infinity;M.forEach(function(q){if(!free(q))return;var d=Math.abs((q.ts||0)-(it.ts||0));if(d<bd){bd=d;best=q;}});if(best)return {sr:best,how:'amt'};}return null;}
+    var byFp={},bySz={},byRef={},byRefT={},byAmt={},FREE={},free=function(sr){return !!FREE[sr.fp];},rmv=function(sr){delete FREE[sr.fp];};
+    function index(sr){FREE[sr.fp]=sr;byFp[sr.fp]=sr;if(sr.sz>2048&&sr.ts){var k=sr.sz+':'+d0(sr.ts);(bySz[k]||(bySz[k]=[])).push(sr);}if(sr.p){var rf=nr(sr.p.ref);if(rf&&!byRef[rf])byRef[rf]=sr;var rt=nrT(sr.p.ref);if(rt&&!byRefT[rt])byRefT[rt]=sr;var v=am(sr.p.amount);if(v){var ka=sr.cn+':'+v;(byAmt[ka]||(byAmt[ka]=[])).push(sr);}}}
+    function findSup(it){var sr=byFp[it.fp];if(sr&&free(sr))return {sr:sr,how:'fp'};if(it.sz>2048&&it.ts){for(var dd=0;dd<3;dd++){var L=bySz[it.sz+':'+d0(it.ts+[0,-DAY,DAY][dd])]||[];for(var i=0;i<L.length;i++)if(free(L[i]))return {sr:L[i],how:'sz'};}}
+      var p=it.p||{},rf=nr(p.ref);sr=rf&&byRef[rf];if(sr&&free(sr))return {sr:sr,how:'ref'};var rt=nrT(p.ref);sr=rt&&byRefT[rt];if(sr&&free(sr)&&(!am(p.amount)||!am(sr.p&&sr.p.amount)||am(p.amount)===am(sr.p.amount)))return {sr:sr,how:'ref'};var v=am(p.amount);if(v&&it.sup){var M=byAmt[it.sup+':'+v]||[],best=null,bd=Infinity;M.forEach(function(q){if(!free(q))return;var d=Math.abs((q.ts||0)-(it.ts||0));if(d<bd){bd=d;best=q;}});if(best)return {sr:best,how:'amt'};}return null;}
     var S=Object.assign({},S0);S.flag=S0.flag.slice();S.un=S0.un.slice();S.dup=(S0.dup||[]).slice();S.oth=(S0.oth||[]).slice();S.supFree=(S0.supFree||[]).slice();S.custs=S0.custs.slice();S.sups=S0.sups.slice();S.cnt=Object.assign({},S0.cnt);var moved=0;
     if(side==='s'){
       var Sv=items.filter(function(it){return !dropWhy(it.p);}),sents=[],isSup={};o.parts.forEach(function(pt){isSup[pt.name]=1;cluster(Sv.filter(function(it){return it.cn===pt.name;})).forEach(function(e){if(!e.blank){e.sup=pt.name;sents.push(e);}});});
@@ -263,9 +284,9 @@
     S.restored=0;S.added=(side==='s'?'مورد':'زبون')+' «'+o.parts.map(function(q){return q.name;}).join('، ')+'» — '+(side==='s'?moved+' إيصالًا وجد نظيره عند المورد الجديد وأُسقط':moved+' إيصالًا وجد نظيره عند الموردين وأُسقط');
     A.res=S;persist();A.run=null;unwake();paint();toast(S.added);window.scrollTo({top:0,behavior:'smooth'});}
   function persist(){var R=A.res;if(!R)return;h.sess.save('acct',{scan:1,per:R.per||'',cnt:R.cnt,sent:R.sent,nC:R.nC,nS:R.nS,accs:R.accs,sname:R.sname,cname:R.cname,custs:R.custs||[],sups:R.sups||[],prev:R.prev||0,stopped:!!R.stopped,supFree:R.supFree||[]},
-      R.flag.concat(R.un).concat(R.dup||[]).concat(R.oth||[]).map(function(it){return {file:it.file,data:{g:it.g,cn:it.cn||'',sup:it.sup||'',nm:it.nm,ts:it.ts,pdf:it.pdf,p:it.p,fp:it.fp,why:it.why||''}};})).then(function(ok){if(!ok)toast('تعذّر حفظ الجلسة على الجهاز — لا تغادر الصفحة قبل إنهاء المراجعة');});}
+      R.flag.concat(R.un).concat(R.dup||[]).concat(R.oth||[]).map(function(it){return {file:it.file,data:{g:it.g,cn:it.cn||'',sup:it.sup||'',nm:it.nm,ts:it.ts,pdf:it.pdf,p:it.p,fp:it.fp,why:it.why||'',cand:it.cand||null}};})).then(function(ok){if(!ok)toast('تعذّر حفظ الجلسة على الجهاز — لا تغادر الصفحة قبل إنهاء المراجعة');});}
   async function restore(){try{var m=await h.sess.load('acct');if(!m||!m.meta||A.res||A.run)return;if(!m.meta.scan){h.sess.clear('acct');return;}
-      var all=(m.rows||[]).map(function(r,i){return {g:r.g,cn:r.cn||'',sup:r.sup||'',nm:r.nm,ts:r.ts,pdf:r.pdf,p:r.p||{},fp:r.fp,why:r.why,file:null,_si:r._f?i:-1};}),mt=m.meta;
+      var all=(m.rows||[]).map(function(r,i){return {g:r.g,cn:r.cn||'',sup:r.sup||'',nm:r.nm,ts:r.ts,pdf:r.pdf,p:r.p||{},fp:r.fp,why:r.why,cand:r.cand||null,file:null,_si:r._f?i:-1};}),mt=m.meta;
       A.res={scan:1,flag:all.filter(function(x){return x.g==='f';}),un:all.filter(function(x){return x.g==='u';}),dup:all.filter(function(x){return x.g==='d';}),oth:all.filter(function(x){return x.g==='o';}),supFree:mt.supFree||[],prev:mt.prev||0,cnt:mt.cnt||{fx:0,fail:0,other:0},sent:mt.sent||0,nC:mt.nC||0,nS:mt.nS||0,accs:mt.accs||0,sname:mt.sname||'',cname:mt.cname||'',custs:mt.custs||[],sups:mt.sups||[],per:mt.per||'',stopped:mt.stopped,restored:m.at,skipped:m.skipped||0};paint();try{var y0=+sessionStorage.getItem('lab_y_a')||0;if(y0)setTimeout(function(){window.scrollTo(0,y0);},60);}catch(e){}}catch(e){}}
   function LG(R,g){return g==='u'?R.un:g==='d'?(R.dup||[]):R.flag;}
   function chk(){try{return JSON.parse(localStorage.getItem('bdl_scan_chk')||'{}')||{};}catch(e){return {};}}
@@ -329,7 +350,7 @@
       '<p>'+esc(e.why)+'</p><div class="ea"><button type="button" class="p" data-ar="'+i+'">مراجعة الإيصالات ('+e.its.length+')</button><button type="button" data-ao="'+i+'">'+(op?'إخفاء':'قرار')+'</button></div>';
     if(op)x+='<div class="ed"><input id="laSupIn" list="laSups" placeholder="اسم المورد صاحب الحساب" value="'+esc(e.sup||A.res.sname||'')+'"><div><button type="button" class="ok" data-adz="'+i+':ok">سليم — حساب هذا المورد</button><button type="button" class="sus" data-adz="'+i+':sus">مشبوه</button>'+((e.st==='grn'&&!e.auto)||e.flag?'<button type="button" data-adz="'+i+':clr">إزالة من السجل</button>':'')+'</div></div>';
     return x+'</div>';}
-  function srow(it,i,g){var p=it.p||{},c=chk()[it.fp];return '<div class="rw '+(g==='u'?'a':'r')+(A.last===g+':'+i?' cur':'')+'" id="sr-'+g+i+'"><div class="mn"><b>'+(am(p.amount)?f(p.amount):'لم يُقرأ المبلغ')+'</b><span>'+esc([nr(p.ref)||'بلا مرجع',it.ts?h.dmy(it.ts):'',nameOf(p)].filter(Boolean).join(' · '))+'</span>'+(it.why?'<span style="color:var(--red);direction:rtl;text-align:start">'+esc(it.why)+'</span>':'')+'</div>'+(c?'<em class="chk '+c+'">'+(c==='ok'?'سليم ✓':'مشكلة')+'</em>':'')+'<button type="button" data-so="'+g+':'+i+'">فتح</button></div>';}
+  function srow(it,i,g){var p=it.p||{},c=chk()[it.fp];return '<div class="rw '+(g==='u'?'a':'r')+(A.last===g+':'+i?' cur':'')+'" id="sr-'+g+i+'"><div class="mn"><b>'+(am(p.amount)?f(p.amount):'لم يُقرأ المبلغ')+'</b><span>'+esc([nr(p.ref)||'بلا مرجع',it.ts?h.dmy(it.ts):'',nameOf(p)].filter(Boolean).join(' · '))+'</span>'+(it.why?'<span style="color:var(--red);direction:rtl;text-align:start">'+esc(it.why)+'</span>':'')+(it.cand?'<span style="color:#8A6100;direction:rtl;text-align:start">⚠ أقرب مرشح عند المورد: '+f(it.cand.amount||0)+(it.cand.ref?' · '+esc(String(it.cand.ref).slice(-10)):'')+(it.cand.ts?' · '+h.dmy(it.cand.ts).slice(0,10):'')+' — '+esc(it.cand.why)+'</span>':'')+'</div>'+(c?'<em class="chk '+c+'">'+(c==='ok'?'سليم ✓':'مشكلة')+'</em>':'')+'<button type="button" data-so="'+g+':'+i+'">فتح</button></div>';}
   function paint(){var m=$('laMain');if(!m)return;var R=A.run,x='';
     if(R){var p=Math.round(R.d/Math.max(1,R.n)*100),el=(Date.now()-R.t0)/1000,eta=R.d>8?Math.round(el/R.d*(R.n-R.d)):0;
       if(R.ph==='up'||R.ph==='srv'){var sp=R.ph==='up'?Math.round(R.d/Math.max(1,R.n)*100):R.sph==='read'?Math.round(R.d/Math.max(1,R.n)*100):R.sph==='hash'?Math.round(R.d/Math.max(1,R.n)*100):0,
@@ -340,9 +361,9 @@
         var pgS=m.querySelector('.pg[data-live="srv"]');if(pgS){var tS=document.createElement('div');tS.innerHTML=x;var nS=tS.firstChild;pgS.querySelector('.br i').style.width=sp+'%';['.st','.tx','.fn'].forEach(function(q){var o=pgS.querySelector(q),n=nS.querySelector(q);if(o&&n&&o.innerHTML!==n.innerHTML)o.innerHTML=n.innerHTML;});var oN=pgS.querySelectorAll('.nt')[0],nN=nS.querySelectorAll('.nt')[0];if(oN&&nN&&oN.innerHTML!==nN.innerHTML)oN.innerHTML=nN.innerHTML;return;}
         m.innerHTML=x;m.querySelector('.pg').setAttribute('data-live','srv');return;}
       var live=R.live.slice(0,30),eta_t=eta?(eta>90?'≈ '+Math.round(eta/60)+' دقيقة':'≈ '+eta+' ثانية'):'';
-      x='<section class="pg"><div class="st"><span class="'+(R.ph===0?'on':'dn')+'">١ مطابقة الصور</span><span class="'+(R.ph===1?'on':R.ph>1?'dn':'')+'">٢ قراءة الموردين</span><span class="'+(R.ph===2?'on':'')+'">٣ فحص الزبائن</span></div><div class="br"><i style="width:'+p+'%"></i></div>'+
+      x='<section class="pg"><div class="st"><span class="'+(R.ph===0?'on':'dn')+'">١ مطابقة الصور</span><span class="'+(R.ph===1?'on':R.ph>1?'dn':'')+'">٢ قراءة الموردين</span><span class="'+(R.ph>=2?'on':'')+'">٣ فحص الزبائن'+(R.ph===3?' · مقارنة بصرية':'')+'</span></div><div class="br"><i style="width:'+p+'%"></i></div>'+
         '<div class="pr2">فترة الزبائن: <b dir="ltr">'+esc(R.per)+'</b>'+(R.sper?' · فترة الموردين: <b dir="ltr">'+esc(R.sper)+'</b>':' · الموردون: الملف كاملًا')+'</div>'+
-        '<div class="tx"><b>'+p+'%</b><span>'+(R.add?(R.ph===1?'قراءة المورد المُضاف':'قراءة الزبون المُضاف'):R.ph===0?'مطابقة الصور زبون ↔ مورد':R.ph===1?'قراءة إيصالات المورد':'فحص إيصالات الزبون')+(R.cn?' «'+esc(R.cn)+'»':'')+' — <b dir="ltr" style="font-size:14px">'+R.d+' / '+R.n+'</b>'+(eta_t?'<br><small>الوقت المتبقي '+eta_t+'</small>':'')+'</span></div><div class="fn">'+esc(R.fin?'تجهيز النتيجة…':R.cur||'')+'</div>'+(R.ck||R.pre||R.hit||R.pdf||R.srvDone?'<div class="nt" style="margin:-6px 0 8px">'+(R.ck?R.ck+' استُؤنف من نقطة الحفظ · ':'')+(R.hit?R.hit+' من الذاكرة · ':'')+(R.srvDone?'قُرئت على الخادم · ':'')+(R.pre?R.pre+' عُرفت من ملف المورد بلا قراءة · ':'')+(R.pdf?R.pdf+' PDF قُرئت محليًا':'')+'</div>':'')+
+        '<div class="tx"><b>'+p+'%</b><span>'+(R.add?(R.ph===1?'قراءة المورد المُضاف':'قراءة الزبون المُضاف'):R.ph===0?'مطابقة الصور زبون ↔ مورد':R.ph===1?'قراءة إيصالات المورد':R.ph===3?'مقارنة بصرية لما بقي بلا مقابل':'فحص إيصالات الزبون')+(R.cn?' «'+esc(R.cn)+'»':'')+' — <b dir="ltr" style="font-size:14px">'+R.d+' / '+R.n+'</b>'+(eta_t?'<br><small>الوقت المتبقي '+eta_t+'</small>':'')+'</span></div><div class="fn">'+esc(R.fin?'تجهيز النتيجة…':R.cur||'')+'</div>'+(R.ck||R.pre||R.hit||R.pdf||R.srvDone?'<div class="nt" style="margin:-6px 0 8px">'+(R.ck?R.ck+' استُؤنف من نقطة الحفظ · ':'')+(R.hit?R.hit+' من الذاكرة · ':'')+(R.srvDone?'قُرئت على الخادم · ':'')+(R.pre?R.pre+' عُرفت من ملف المورد بلا قراءة · ':'')+(R.pdf?R.pdf+' PDF قُرئت محليًا':'')+'</div>':'')+
         (R.ph<2?'<div class="kp"><div class="g"><b>'+R.k.ok+'</b><small>مطابق — أُسقط ✓</small></div><div class="g"><b>'+R.k.acc+'</b><small>حسابات الموردين</small></div><div class="y"><b>'+R.k.drop+'</b><small>مُستبعد</small></div></div>'
         :'<div class="kp k4"><div class="y"><b>'+R.k.drop+'</b><small>مُستبعد</small></div><div class="a"><b>'+R.k.on+'</b><small>على حسابات الموردين</small></div><div class="g"><b>'+R.k.ok+'</b><small>موجود عند المورد ✓</small></div><div class="r"><b>'+R.live.length+'</b><small>بلا مقابل حتى الآن</small></div></div>')+
         '<div class="lv">'+(R.ph===2&&R.live.length?'<h3 class="r" style="font-size:14px;margin:6px 0">بلا مقابل حتى الآن ('+R.live.length+') — تُراجع بالمبلغ في الجولة الأخيرة</h3>'+live.map(function(it){var q=it.p||{};return '<div class="rw r"><div class="mn"><b>'+(am(q.amount)?f(q.amount):'لم يُقرأ المبلغ')+'</b><span>'+esc([nr(q.ref)||'بلا مرجع',it.ts?h.dmy(it.ts).slice(0,10):'',it.cn||''].filter(Boolean).join(' · '))+'</span></div></div>';}).join('')+(R.live.length>30?'<div class="nt">و'+(R.live.length-30)+' أخرى…</div>':''):'')+'</div>'+
