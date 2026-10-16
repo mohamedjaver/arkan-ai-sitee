@@ -123,7 +123,18 @@
     var custs=A.c.parts.map(function(q){var z=cs[q.name]||{n:0,flag:0,sent:0,sum:0};return {name:q.name,n:z.n,flag:z.flag,sent:z.sent,sum:z.sum};});
     var sups=SP.map(function(pt){var z={name:pt.name,n:S.filter(function(x){return x.cn===pt.name;}).length,accs:sents.filter(function(e){return e.sup===pt.name;}).length,flag:0,sent:0,sum:0};on.forEach(function(it){if(it.sup!==pt.name)return;if(it.sent)z.sent++;else{z.flag++;z.sum+=am(it.p.amount);}});return z;});
     A.res={scan:1,flag:flag,un:un,dup:dup,prev:prev,cnt:cnt,sent:on.length-flag.length,nC:nC,nS:S.length,accs:sents.length,sname:sname,cname:A.c.name||'',custs:custs,sups:sups,stopped:R.stop,hit:R.hit,learned:nw,per:R.per};
-    persist();A.run=null;unwake();h.sess.del('job:acct');paint();window.scrollTo({top:0,behavior:'smooth'});}
+    persist();A.run=null;unwake();h.sess.del('job:acct');keepSrc();paint();window.scrollTo({top:0,behavior:'smooth'});}
+  /* 1437: إضافة زبون أو مورد بعد الفحص — تُحفظ ملفات المصدر على الجهاز بعد اكتمال المسح، فيُضاف الملف الجديد إلى الملفات نفسها
+     ويُعاد الفحص (المقروء سابقًا لا يُعاد — يُؤخذ من الذاكرة). يعمل أيضًا بعد الخروج والعودة ما دامت الملفات محفوظة. */
+  function srcSnap(){return {s:A.s.src,c:A.c.src,from:A.c.from,to:A.c.to,all:!!A.c.all,sf:A.s.from,st:A.s.to,sa:!!A.s.all,at:Date.now()};}
+  function keepSrc(){if(!A.s||!A.c)return;h.sess.put('src:acct',srcSnap()).then(function(ok){if(!ok)toast('الملفات كبيرة — إضافة زبون أو مورد ممكنة الآن فقط، لا بعد مغادرة الصفحة');});}
+  async function addParty(side,files){files=[].slice.call(files||[]);if(!files.length||A.run)return;side=side==='s'?'s':'c';var keep=A.res;
+    if(!A.s||!A.c||A.s.err||A.c.err||!A.s.parts||!A.c.parts){var j=await h.sess.get('src:acct');if(!j||!j.s||!j.c){toast('ملفات الفحص الأصلية غير محفوظة على هذا الجهاز — ابدأ مسحًا جديدًا');return;}
+      toast('جارٍ إعادة فتح ملفات الفحص…');await pick('s',j.s);await pick('c',j.c);if(!A.s||A.s.err||!A.c||A.c.err){A.res=keep;paint();toast('تعذّر إعادة فتح الملفات الأصلية');return;}
+      A.c.all=!!j.all;if(!j.all){A.c.from=j.from;A.c.to=j.to;}if(j.sa===false){A.s.all=false;A.s.from=j.sf;A.s.to=j.st;}}
+    var n0=A[side]&&A[side].parts?A[side].parts.length:0;await pick(side,files);
+    if(!A[side]||A[side].err||!A[side].parts||A[side].parts.length===n0){A.res=keep;paint();return;}
+    toast('أُضيف '+(side==='s'?'المورد':'الزبون')+' — تُعاد المطابقة الآن');start();}
   function persist(){var R=A.res;if(!R)return;h.sess.save('acct',{scan:1,per:R.per||'',cnt:R.cnt,sent:R.sent,nC:R.nC,nS:R.nS,accs:R.accs,sname:R.sname,cname:R.cname,custs:R.custs||[],sups:R.sups||[],prev:R.prev||0,stopped:!!R.stopped},
       R.flag.concat(R.un).concat(R.dup||[]).map(function(it){return {file:it.file,data:{g:it.g,cn:it.cn||'',sup:it.sup||'',nm:it.nm,ts:it.ts,pdf:it.pdf,p:it.p,fp:it.fp,why:it.why||''}};})).then(function(ok){if(!ok)toast('تعذّر حفظ الجلسة على الجهاز — لا تغادر الصفحة قبل إنهاء المراجعة');});}
   async function restore(){try{var m=await h.sess.load('acct');if(!m||!m.meta||A.res||A.run)return;if(!m.meta.scan){h.sess.clear('acct');return;}
@@ -212,6 +223,7 @@
         (S.dup&&S.dup.length?'<details class="mt dp"><summary style="color:#C8102E">إيصالات مكررة على حسابات الموردين ('+S.dup.length+') — افتحها للتحقق</summary><div style="padding:8px">'+S.dup.map(function(it,i){return srow(it,i,'d');}).join('')+'</div></details>':'')+
         (S.prev?'<div class="nt">'+S.prev+' إيصالًا أشّرتها «سليم» في مسح سابق — لم تُعرض من جديد. <button type="button" data-sa="mem" style="border:0;background:none;color:#0B3A8F;text-decoration:underline;font:inherit;padding:0">مسح ذاكرة المراجعة</button></div>':'')+
         (S.un.length?'<details class="mt"><summary style="color:#8A6100">إيصالات لم تُقرأ ('+S.un.length+') — افتحها إن أردت</summary><div style="padding:8px">'+S.un.map(function(it,i){return srow(it,i,'u');}).join('')+'</div></details>':'')+
+        '<div class="bs"><button type="button" class="bt ln" data-aa="add:c">＋ إضافة زبون</button><button type="button" class="bt ln" data-aa="add:s">＋ إضافة مورد</button></div><div class="nt" style="margin-top:-4px">يُضاف الملف الجديد إلى الملفات الحالية وتُعاد المطابقة — الإيصالات المقروءة لا تُقرأ من جديد.</div>'+
         '<div class="bs"><button type="button" class="bt" data-sa="copy">نسخ القائمة</button><button type="button" class="bt ln" data-sa="new">إنهاء الجلسة ومسح جديد</button></div></section>';
       var keepY=A.y!=null?A.y:window.scrollY,opn=[].map.call(m.querySelectorAll('details.mt'),function(d){return d.open?(d.classList.contains('dp')?'dp':'un'):'';});m.innerHTML=x;[].forEach.call(m.querySelectorAll('details.mt'),function(d){if(opn.indexOf(d.classList.contains('dp')?'dp':'un')>=0)d.open=true;});
       if(!A.sv){window.scrollTo(0,keepY);var cr=A.last&&$('sr-'+A.last.replace(':',''));if(cr&&A.y!=null){var bx=cr.getBoundingClientRect();if(bx.top<80||bx.bottom>window.innerHeight-90)cr.scrollIntoView&&cr.scrollIntoView({block:'center'});}A.y=null;}return;}
@@ -232,14 +244,16 @@
       if(k==='x'){$('laRv').classList.remove('on');A.rv=null;return;}if(k==='p'){review(rv.i,rv.k-1);return;}if(k==='n'){review(rv.i,rv.k+1);return;}
       var sp=($('laRvSup')&&$('laRvSup').value.trim())||'';if(k==='ok'&&!sp){toast('اكتب اسم المورد صاحب الحساب أولًا');return;}$('laRv').classList.remove('on');A.rv=null;decide(rv.i,k,sp);return;}
     if((b=t.closest('[data-aa]'))){var a=b.dataset.aa;
-      if(a==='go')start();else if(a==='stop'){if(A.run)A.run.stop=true;b.disabled=true;b.textContent='جارٍ الإيقاف…';}
-      else if(a==='new'){if(confirm('إنهاء هذه الجلسة وبدء فحص جديد؟\nنتيجة الفحص الحالي وصوره تُمسح من الجهاز. سجل الحسابات وذاكرة القراءة يبقيان.')){A.c=A.s=A.res=null;h.sess.clear('acct');paint();}}
+      if(a==='add:c'||a==='add:s'){A._side=a;var fa=$('laFile');fa.value='';fa.click();}
+      else if(a==='go')start();else if(a==='stop'){if(A.run)A.run.stop=true;b.disabled=true;b.textContent='جارٍ الإيقاف…';}
+      else if(a==='new'){if(confirm('إنهاء هذه الجلسة وبدء فحص جديد؟\nنتيجة الفحص الحالي وصوره تُمسح من الجهاز. سجل الحسابات وذاكرة القراءة يبقيان.')){A.c=A.s=A.res=null;h.sess.clear('acct');h.sess.del('src:acct');paint();}}
       else if(a==='copy'){var bad=A.res.ents.filter(function(e){return e.st==='red'||e.st==='amb';}),txt='BDL · حسابات تحتاج تحقق — '+A.res.cname+'\n\n'+(bad.map(function(e){return '• '+(e.name||'غير مقروء')+' · '+(e.bank||'')+' · '+(e.accts[0]||'بلا رقم')+'\n  '+e.its.length+' إيصالًا · '+f(e.sum)+' · '+({red:'غير معروف',amb:'تحقق'}[e.st]);}).join('\n')||'لا شيء');
         (navigator.clipboard?navigator.clipboard.writeText(txt):Promise.reject()).then(function(){toast('نُسخت القائمة');},function(){prompt('انسخ:',txt);});}
       else if(a==='exp'){var bl=new Blob([JSON.stringify(regLoad(),null,1)],{type:'application/json'}),l=document.createElement('a');l.href=URL.createObjectURL(bl);l.download='BDL-سجل-الحسابات-'+new Date().toISOString().slice(0,10)+'.json';document.body.appendChild(l);l.click();l.remove();}
       else if(a==='imp'){A._side='reg';var fi=$('laFile');fi.value='';fi.click();}}});
   document.addEventListener('change',function(e){var t=e.target;
     if(t.id==='laFile'){if(A._side==='reg'){var fl=t.files&&t.files[0];if(!fl)return;var fr=new FileReader();fr.onload=function(){try{var inc=JSON.parse(fr.result);if(!Array.isArray(inc))throw 0;var reg=regLoad(),n=0;inc.forEach(function(q){if(!q||!(q.accts||q.names))return;if(!reg.some(function(r){return (q.accts||[]).some(function(a){return (r.accts||[]).some(function(b){return sameAcct(a,b);});});})){reg.push(q);n++;}});regSave(reg);toast('استُورد '+n+' حسابًا');if(A.res)classify();paint();}catch(x){toast('ملف السجل غير صالح');}};fr.readAsText(fl);return;}
+      if(A._side==='add:c'||A._side==='add:s'){var sd=A._side.slice(4);A._side=null;addParty(sd,t.files);return;}
       pick(A._side||'c',t.files);return;}
     if(t.dataset&&t.dataset.ad){var d=t.dataset.ad.split(':'),o=A[d[0]];if(!o||!t.value)return;var p=t.value.split('-');o[d[1]]=new Date(+p[0],+p[1]-1,+p[2]).getTime();if(o.from>o.to){if(d[1]==='from')o.to=o.from;else o.from=o.to;}o.all=false;paint();}});
   window.addEventListener('popstate',function(){if(A.sv){A.sv=null;setTimeout(paint,0);}});
