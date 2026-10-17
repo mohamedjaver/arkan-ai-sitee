@@ -459,7 +459,7 @@
       pick(A._side||'c',t.files);return;}
     if(t.dataset&&t.dataset.ad){var d=t.dataset.ad.split(':'),o=A[d[0]];if(!o||!t.value)return;var p=t.value.split('-');o[d[1]]=new Date(+p[0],+p[1]-1,+p[2]).getTime();if(o.from>o.to){if(d[1]==='from')o.to=o.from;else o.from=o.to;}o.all=false;paint();}});
   window.addEventListener('popstate',function(){if(A.sv){A.sv=null;setTimeout(paint,0);}});
-  window.__LABA={A:A,addParty:addParty,cluster:cluster,classify:classify,sameAcct:sameAcct,sameName:sameName,acctOf:acctOf,nameOf:nameOf,regLoad:regLoad,paint:paint};
+  window.__LABA={A:A,addParty:addParty,dhash:dhash,ham:ham,cluster:cluster,classify:classify,sameAcct:sameAcct,sameName:sameName,acctOf:acctOf,nameOf:nameOf,regLoad:regLoad,paint:paint};
   /* تبديل الوضعين */
   function mode(k){$('lbMain').style.display=k==='m'?'':'none';$('laMain').style.display=k==='a'?'':'none';var ld=$('ldMain');if(ld)ld.style.display=k==='d'?'':'none';[].forEach.call(document.querySelectorAll('#lbMode button'),function(b){b.classList.toggle('on',b.dataset.md===k);});if(k==='a')paint();try{localStorage.setItem('bdl_lab_mode2',k);}catch(e){}}
   document.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('#lbMode button');if(b)mode(b.dataset.md);});

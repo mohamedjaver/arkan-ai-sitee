@@ -34,6 +34,22 @@
     if(dv.length>=6&&(dv===rf||(ac&&ac.indexOf(dv)>=0)))return 'المبلغ يطابق رقم المرجع/الحساب — راجِعه';
     return '';}
   function failed(p){return /fail|rejei|recus|cancel|erro|declin|فشل|مرفوض|ملغ/i.test(p.status||'');}
+  /* 1446: كشف الإيصال المُرسَل مرتين — ثلاث درجات:
+     مؤكد: الصورة نفسها (بصمة) أو رقم العملية نفسه عند الزبون نفسه → يُحسب مرة واحدة تلقائيًا.
+     مشتبه: المبلغ نفسه بالعملة نفسها عند الزبون نفسه في اليوم نفسه (أو خلال ساعتين عبر منتصف الليل)، أو صورة متشابهة بصريًا (dHash ≤ 8) خلال 3 أيام
+     → يبقى في الحساب ويُعرض بالبرتقالي حتى تحكم أنت: «مكرر — احذفه» أو «إيصالان مختلفان». */
+  function dsec(it){return it.dup||it.sus;}
+  async function dh(it){if(it.ph!==undefined)return it.ph;var L=window.__LABA;if(!L||!L.dhash||it.pdf){it.ph='';return '';}var f=it.file;if(!f&&it._si>=0){try{f=await h.sess.file(D.key,it._si,it.nm,it.pdf);}catch(e){}}it.ph=f?await L.dhash(f):'';return it.ph;}
+  async function suspectDups(its,R){var L=window.__LABA,ham=L&&L.ham,byK={},n=0;
+    its.forEach(function(it){if(it.dup||failed(it.p))return;var v=amt(it.p.amount),c=ccyOf(it.p);if(!v||c==='؟')return;var k=it.cn+'|'+c+'|'+v;(byK[k]||(byK[k]=[])).push(it);});
+    Object.keys(byK).forEach(function(k){var L2=byK[k];if(L2.length<2)return;L2.sort(function(a,b){return (a.ts||0)-(b.ts||0);});
+      for(var i=1;i<L2.length;i++){var a=L2[i],prev=null;for(var j=i-1;j>=0;j--){var b=L2[j];if(b.sus)continue;var dt=Math.abs((a.ts||0)-(b.ts||0));var ra=nr(a.p.ref),rb=nr(b.p.ref);if(ra&&rb&&ra!==rb&&ra.length>=5&&rb.length>=5&&ra.slice(-5)!==rb.slice(-5))continue; /* مرجعان مختلفان مقروءان بوضوح = إيصالان */
+          if(dt<=DAY||(a.ts&&b.ts&&h.d0(a.ts)===h.d0(b.ts))){prev=b;break;}}
+        if(prev){a.sus={how:'amt',of:prev.nm,ofts:prev.ts,ofi:prev};n++;}}});
+    if(ham&&R){var cand=its.filter(function(it){return !it.dup&&!it.sus&&!it.pdf&&!failed(it.p);});var byC={};cand.forEach(function(it){(byC[it.cn]||(byC[it.cn]=[])).push(it);});
+      R.ph3=1;R.n=cand.length;R.d=0;R.cur='';paint();
+      for(var cn in byC){var L3=byC[cn].sort(function(a,b){return (a.ts||0)-(b.ts||0);});for(var i=0;i<L3.length&&!R.stop;i++){var a=L3[i],ha=await dh(a);R.d++;if(!ha)continue;for(var j=i-1;j>=0;j--){var b=L3[j];if((a.ts||0)-(b.ts||0)>3*DAY)break;if(b.sus||b.dup)continue;var hb=await dh(b);if(hb&&ham(ha,hb)<=8){var va=amt(a.p.amount),vb=amt(b.p.amount);if(va&&vb&&va!==vb)continue;a.sus={how:'img',of:b.nm,ofts:b.ts,ofi:b};n++;break;}}if(R.d%10===0)paint();}}}
+    return n;}
   /* ── ذاكرة القراءة المشتركة ── */
   var DB=null,MEM={};
   function idb(){return new Promise(function(res){try{if(!window.indexedDB)return res(null);var q=indexedDB.open('bdl_lab_cache',1);q.onupgradeneeded=function(){q.result.createObjectStore('r');};q.onsuccess=function(){res(q.result);};q.onerror=function(){res(null);};}catch(e){res(null);}});}
@@ -73,14 +89,15 @@
   async function start(){var C=D.c?sel():[];if(!C.length)return;if(!DB)DB=await idb();
     D.key='daily';var R={n:C.length,d:0,stop:false,t0:Date.now(),per:perTxt(D.c),cur:'',cn:''};D.run=R;D.res=null;paint();
     var its=[],seen={},dupN=0,qi=0;
-    async function wk(){while(qi<C.length&&!R.stop){var x=C[qi++];R.cur=x.nm;R.cn=x.cn;await untilVisible();try{var it=await readOne(x);var k=it.cn+'|'+it.fp;if(seen[k])dupN++;else{seen[k]=1;its.push(it);}}catch(e){}R.d++;paint();}}
+    async function wk(){while(qi<C.length&&!R.stop){var x=C[qi++];R.cur=x.nm;R.cn=x.cn;await untilVisible();try{var it=await readOne(x);var k=it.cn+'|'+it.fp;if(seen[k]){dupN++;it.dup={how:'fp',of:seen[k].nm,ofts:seen[k].ts};it.p=Object.assign({},seen[k].p);its.push(it);}else{seen[k]=it;its.push(it);}}catch(e){}R.d++;paint();}}
     var w=[];for(var i=0;i<3;i++)w.push(wk());await Promise.all(w);
     var AR=window.ArkanRead,miss=its.filter(function(it){return !it.p.man&&it.p.eng!=='gemini'&&it.p.eng!=='claude';});
     if(miss.length&&AR.hasGemini&&AR.hasGemini()&&!R.stop){R.ph2=1;R.n=miss.length;R.d=0;R.t0=Date.now();paint();
       for(var mi=0;mi<miss.length&&!R.stop;mi++){var it2=miss[mi];R.cur=it2.nm;R.cn=it2.cn;await untilVisible();if(AR.resetQuota)AR.resetQuota();
         try{var r2=await readOne({file:it2.file,nm:it2.nm,ts:it2.ts,cn:it2.cn,force:1});if(r2.p.eng==='gemini')it2.p=r2.p;}catch(e){}R.d++;paint();if(mi<miss.length-1)await new Promise(function(z){setTimeout(z,it2.p.eng==='gemini'?1500:6000);});}}
     /* المرجع نفسه بالمبلغ نفسه عند الزبون نفسه = الإيصال نفسه مصوَّرًا مرتين → يُحسب مرة واحدة */
-    var rs={};its=its.filter(function(it){var rf=nr(it.p.ref);if(!rf||rf.length<6)return true;var k=it.cn+'|'+rf;if(rs[k]){dupN++;return false;}rs[k]=1;return true;});
+    var rs={};its.forEach(function(it){if(it.dup)return;var rf=nr(it.p.ref);if(!rf||rf.length<5)return;var k=it.cn+'|'+rf;if(rs[k]){dupN++;it.dup={how:'ref',of:rs[k].nm,ofts:rs[k].ts};}else rs[k]=it;});
+    await suspectDups(its,R);
     var n1=its.length;its=its.filter(function(it){return !it.p.nr||it.p.man;});var nrN=n1-its.length;
     var n0=its.length;its=its.filter(function(it){return !failed(it.p);});var failN=n0-its.length;
     its.sort(function(a,b){return (a.ts||0)-(b.ts||0);});
@@ -90,9 +107,10 @@
       if(i<L.length-1)await new Promise(function(z){setTimeout(z,it.p.eng==='gemini'?1500:6000);});}
     D.busy=0;saveMeta();paint();toast(ok?'قرأ Gemini '+ok+' من '+L.length:'Gemini لم يرد — حاول بعد دقيقة');}
   function calc(){var S=D.res,tot={},cu={},fail=0,un=0;S.names.forEach(function(n){cu[n]={name:n,n:0,un:0,fail:0,cur:{},its:[]};});
-    S.its.forEach(function(it,i){it.i=i;var q=cu[it.cn]||(cu[it.cn]={name:it.cn,n:0,un:0,fail:0,cur:{},its:[]});if(failed(it.p)){it.st='fail';q.fail++;fail++;return;}q.its.push(it);
+    var dupC=0,susC=0;S.its.forEach(function(it,i){it.i=i;var q=cu[it.cn]||(cu[it.cn]={name:it.cn,n:0,un:0,fail:0,cur:{},its:[]});if(it.dup){it.st='dup';dupC++;q.its.push(it);return;}if(it.sus)susC++;if(failed(it.p)){it.st='fail';q.fail++;fail++;return;}q.its.push(it);
       var v=amt(it.p.amount),c=ccyOf(it.p);it.ccy=c;it.v=v;
       it.why=why(it.p,v,c);if(it.why){it.st='un';q.un++;un++;return;}it.st='ok';q.n++;(q.cur[c]||(q.cur[c]={s:0,n:0})).s+=v;q.cur[c].n++;(tot[c]||(tot[c]={s:0,n:0})).s+=v;tot[c].n++;});
+    S.dupC=dupC;S.susC=susC;
     var keys=Object.keys(tot).sort(function(a,b){var x=ORD.indexOf(a),y=ORD.indexOf(b);return (x<0?50:x)-(y<0?50:y)||(a==='؟'?1:b==='؟'?-1:a<b?-1:1);});
     return {tot:tot,keys:keys,cu:S.names.map(function(n){return cu[n];}).concat(Object.keys(cu).filter(function(n){return S.names.indexOf(n)<0;}).map(function(n){return cu[n];})),fail:fail,un:un};}
   /* 1421: الأسعار والربح (اختياري) — لكل عملة سعر شراء وسعر بيع مقوَّمان بعملة أخرى. الربح = المجموع × (البيع − الشراء).
@@ -135,9 +153,9 @@
     Object.keys(F.prof).forEach(function(pc){x+='<div class="fp tt"><span>إجمالي الربح</span><b class="'+(F.prof[pc]<0?'neg':'')+'">'+(F.prof[pc]>=0?'+':'−')+fm(Math.abs(F.prof[pc]))+' '+pc+'</b></div>';});
     F.bal.forEach(function(b){x+='<div class="fb"><span>مجموع المستحق على الزبون</span><b>'+fm(b.due)+' '+b.pc+'</b><span>المدفوع في الملف</span><b>'+fm(b.got)+' '+b.pc+'</b><span>'+(Math.abs(b.diff)<1?'متطابق':b.diff>0?'زائد عند الزبون (له)':'ناقص على الزبون (عليه)')+'</span><b class="'+(b.diff<-1?'neg':'pos')+'">'+fm(Math.abs(b.diff))+' '+b.pc+'</b></div>';});
     return x||'<div class="fh">أدخل سعر البيع والشراء للعملة المسلَّمة ليظهر المستحق والربح — بنفس طريقة التسوية. اختياري.</div>';}
-  function persist(){var S=D.res;if(!S)return;h.sess.save(D.key,{per:S.per,pf:S.pf,pt:S.pt,pall:S.pall,names:S.names,dupN:S.dupN,failN:S.failN||0,nrN:S.nrN||0,stopped:!!S.stopped},S.its.map(function(it){return {file:it.file,data:{cn:it.cn,nm:it.nm,ts:it.ts,pdf:it.pdf,p:it.p,fp:it.fp}};})).then(function(ok){if(!ok)toast('تعذّر حفظ الجلسة على الجهاز — لا تغادر الصفحة قبل أخذ التقرير');});}
-  function saveMeta(){var S=D.res;if(!S)return;var ky=D.key+':meta';h.sess.get(ky).then(function(m){if(!m)return;m.rows.forEach(function(r,i){if(S.its[i])r.p=S.its[i].p;});h.sess.put(ky,m);});}
-  function fromMeta(m){return {its:(m.rows||[]).map(function(r,i){return {cn:r.cn,nm:r.nm,ts:r.ts,pdf:r.pdf,p:r.p||{},fp:r.fp,file:null,_si:r._f?i:-1};}),per:m.meta.per||'',pf:m.meta.pf,pt:m.meta.pt,pall:m.meta.pall,names:m.meta.names||[],dupN:m.meta.dupN||0,failN:m.meta.failN||0,nrN:m.meta.nrN||0,stopped:m.meta.stopped,restored:m.at,at:m.at};}
+  function persist(){var S=D.res;if(!S)return;h.sess.save(D.key,{per:S.per,pf:S.pf,pt:S.pt,pall:S.pall,names:S.names,dupN:S.dupN,failN:S.failN||0,nrN:S.nrN||0,stopped:!!S.stopped},S.its.map(function(it){return {file:it.file,data:{cn:it.cn,nm:it.nm,ts:it.ts,pdf:it.pdf,p:it.p,fp:it.fp,dup:it.dup?{how:it.dup.how,of:it.dup.of,ofts:it.dup.ofts}:null,sus:it.sus?{how:it.sus.how,of:it.sus.of,ofts:it.sus.ofts}:null}};})).then(function(ok){if(!ok)toast('تعذّر حفظ الجلسة على الجهاز — لا تغادر الصفحة قبل أخذ التقرير');});}
+  function saveMeta(){var S=D.res;if(!S)return;var ky=D.key+':meta';h.sess.get(ky).then(function(m){if(!m)return;m.rows.forEach(function(r,i){var it=S.its[i];if(!it)return;r.p=it.p;r.dup=it.dup?{how:it.dup.how,of:it.dup.of,ofts:it.dup.ofts}:null;r.sus=it.sus?{how:it.sus.how,of:it.sus.of,ofts:it.sus.ofts}:null;});h.sess.put(ky,m);});}
+  function fromMeta(m){return {its:(m.rows||[]).map(function(r,i){return {cn:r.cn,nm:r.nm,ts:r.ts,pdf:r.pdf,p:r.p||{},fp:r.fp,dup:r.dup||null,sus:r.sus||null,file:null,_si:r._f?i:-1};}),per:m.meta.per||'',pf:m.meta.pf,pt:m.meta.pt,pall:m.meta.pall,names:m.meta.names||[],dupN:m.meta.dupN||0,failN:m.meta.failN||0,nrN:m.meta.nrN||0,stopped:m.meta.stopped,restored:m.at,at:m.at};}
   async function restore(){try{var m=await h.sess.load('daily');if(!m||!m.meta||D.res||D.run)return;D.key='daily';D.res=fromMeta(m);paint();}catch(e){}}
   /* 1424: العمليات المحفوظة — «حفظ العملية» يحفظ الحساب كاملًا (البيانات + الصور + الأسعار) على الجهاز ويبقى حتى تحذفه أنت. */
   function opsList(){try{var a=JSON.parse(localStorage.getItem('bdl_daily_ops')||'[]');return Array.isArray(a)?a:[];}catch(e){return [];}}
@@ -184,11 +202,18 @@
       '<footer>'+
       '<div class="nv"><button type="button" data-dv="p"'+(nx(i,-1)>=0?'':' disabled')+'>‹ السابق</button><button type="button" data-dv="n"'+(nx(i,1)>=0?'':' disabled')+'>التالي ›</button></div><div class="dc"><button type="button" class="ok" data-dv="sv">حفظ التعديل</button><button type="button" class="sus" data-dv="no">حذف من الحساب</button></div></footer>';
     v.classList.add('on');fitV();}
+  async function cmpView(i,j){var S=D.res,a=S.its[i],b=j>=0?S.its[j]:null;if(!a)return;var v=$('laRv');if(!v){v=document.createElement('div');v.id='laRv';document.body.appendChild(v);}
+    async function u(it){if(!it)return '';if(!it.file&&it._si>=0){try{it.file=await h.sess.file(D.key,it._si,it.nm,it.pdf);}catch(e){}}return it.file?URL.createObjectURL(it.file):'';}var ua=await u(a),ub=await u(b);
+    function pane(it,url,ttl){return '<div><div style="font-size:12px;font-weight:700;text-align:center">'+ttl+(it&&it.ts?' · '+h.dmy(it.ts):'')+(it?'<br>'+fm(amt(it.p.amount))+' · '+esc(nr(it.p.ref)||'بلا مرجع'):'')+'</div>'+(url?(it.pdf?'<iframe src="'+url+'" style="width:100%;height:55vh;border:0"></iframe>':'<img src="'+url+'" style="width:100%">'):'<div class="nt">الصورة غير متاحة</div>')+'</div>';}
+    if(D.v==null)D.y=window.scrollY;D.v=i;
+    v.innerHTML='<header><div><b>مقارنة إيصالين — '+esc(a.cn||'')+'</b><small>'+(a.sus?'مشتبه بالتكرار':'مكرر مؤكد')+'</small></div><button type="button" data-dv="x">✕ إغلاق</button></header><div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:8px;overflow:auto;flex:1">'+pane(b,ub,'الأول')+pane(a,ua,'الثاني')+'</div>'+
+      (a.sus?'<footer style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:8px"><button type="button" data-dd="'+i+':dup" class="shr" style="background:#C8102E;color:#fff">مكرر — احذفه</button><button type="button" data-dd="'+i+':ok" class="shr" style="background:#E9F8EF;color:#0B7A3B">إيصالان مختلفان</button></footer>':'');
+    v.classList.add('on');fitV();}
   function closeV(){var v=$('laRv');if(v)v.classList.remove('on');D.v=null;fitV();paint();if(D.y!=null){window.scrollTo(0,D.y);D.y=null;}}
   /* ── العرض ── */
   function paint(){var m=$('ldMain');if(!m)return;var R=D.run,x='';
     if(R){var p=Math.round(R.d/Math.max(1,R.n)*100),el=(Date.now()-R.t0)/1000,eta=R.d>8?Math.round(el/R.d*(R.n-R.d)):0;
-      x='<section class="pg"><div class="br"><i style="width:'+p+'%"></i></div><div class="pr2">الفترة: <b>'+esc(R.per)+'</b></div><div class="tx"><b>'+p+'%</b>'+(R.ph2?'إعادة قراءة متمهّلة بـ Gemini ':'قراءة إيصالات ')+(R.cn?'«'+esc(R.cn)+'» ':'')+R.d+' / '+R.n+(eta?' · الباقي نحو '+(eta>90?Math.round(eta/60)+' د':eta+' ث'):'')+'</div><div class="fn">'+esc(R.cur||'')+'</div><button type="button" class="bt ln" data-da="stop">إيقاف</button></section>';
+      x='<section class="pg"><div class="br"><i style="width:'+p+'%"></i></div><div class="pr2">الفترة: <b>'+esc(R.per)+'</b></div><div class="tx"><b>'+p+'%</b>'+(R.ph3?'كشف الإيصالات المكررة بصريًا ':R.ph2?'إعادة قراءة متمهّلة بـ Gemini ':'قراءة إيصالات ')+(R.cn?'«'+esc(R.cn)+'» ':'')+R.d+' / '+R.n+(eta?' · الباقي نحو '+(eta>90?Math.round(eta/60)+' د':eta+' ث'):'')+'</div><div class="fn">'+esc(R.cur||'')+'</div><button type="button" class="bt ln" data-da="stop">إيقاف</button></section>';
       var pg=m.querySelector('.pg[data-live]');if(pg){var t=document.createElement('div');t.innerHTML=x;var np=t.firstChild;pg.querySelector('.br i').style.width=p+'%';['.tx','.fn'].forEach(function(q){var o=pg.querySelector(q),n=np.querySelector(q);if(o&&n&&o.innerHTML!==n.innerHTML)o.innerHTML=n.innerHTML;});return;}
       m.innerHTML=x;m.querySelector('.pg').setAttribute('data-live','1');return;}
     if(D.res){var S=D.res,K=calc();
@@ -198,11 +223,14 @@
         '<div class="nt">'+(D.flt?'تعرض إيصالات <b>'+D.flt+'</b> فقط — <button type="button" data-df="" class="lk">عرض الكل</button>':'اضغط خانة أي عملة لعرض إيصالاتها وحدها. كل إيصال يُفتح ويُعدَّل ويُحفظ.')+'</div>'+
         '<div class="px"><div class="pxh"><b>الأسعار والربح</b><small>بطريقة التسوية — اختياري</small></div>'+K.keys.filter(function(c){return c!=='؟'&&c!=='AOA';}).map(function(c){var p=PX[c]||{},ps=pairsOf(c,K),pr=pairCur(c,K);return '<div class="pxr"><b>'+flag(c)+'<span>'+c+'</span></b><label><small>بيع</small><input inputmode="decimal" data-px="'+c+':s" value="'+(p.s||'')+'" placeholder="'+pr.ps+'"></label><label><small>شراء</small><input inputmode="decimal" data-px="'+c+':b" value="'+(p.b||'')+'" placeholder="'+pr.pb+'"></label><label class="pw"><small>المقابل</small>'+(ps.length>1?'<select data-px="'+c+':pair">'+ps.map(function(o){return '<option value="'+o.v+'"'+(o.v===pr.v?' selected':'')+'>'+o.t+'</option>';}).join('')+'</select>':'<em>'+pr.t+'</em>')+'</label></div>';}).join('')+'<div id="ldFin">'+finHtml(K)+'</div></div>'+
         (function(){var B=banks(K);return B.length?'<details class="mt bkd"><summary>حسب البنك ('+B.length+')</summary><div class="bkt">'+B.map(function(b){return '<div><span>'+esc(b.b)+'</span><small>'+b.n+' إيصالًا</small><b>'+fm(b.s)+' <i>'+b.c+'</i></b></div>';}).join('')+'</div></details>':'';})()+
-        ((K.un||K.fail||S.failN||S.dupN||S.nrN)?'<div class="nt">'+[K.un?'<b style="color:#8A6100">'+K.un+' تحتاج مراجعتك (بالأصفر) — افتحها وصحّحها لتدخل في المجموع</b>':'',S.nrN?S.nrN+' صورة ليست إيصالًا استُبعدت':'',(K.fail+(S.failN||0))?(K.fail+(S.failN||0))+' غير ناجحة حُذفت تلقائيًا':'',S.dupN?S.dupN+' مكررة حُسبت مرة واحدة':''].filter(Boolean).join(' · ')+'</div>':'')+
+        ((K.un||K.fail||S.failN||S.dupN||S.nrN||S.dupC||S.susC)?'<div class="nt">'+[K.un?'<b style="color:#8A6100">'+K.un+' تحتاج مراجعتك (بالأصفر) — افتحها وصحّحها لتدخل في المجموع</b>':'',S.nrN?S.nrN+' صورة ليست إيصالًا استُبعدت':'',(K.fail+(S.failN||0))?(K.fail+(S.failN||0))+' غير ناجحة حُذفت تلقائيًا':'',S.dupC?'<b style="color:#C8102E">'+S.dupC+' إيصالًا مكررًا مؤكدًا (الصورة أو رقم العملية نفسه) — حُسب مرة واحدة</b>':'',S.susC?'<b style="color:#B45309">'+S.susC+' مشتبه بتكراره (المبلغ نفسه في اليوم نفسه أو صورة متشابهة) — محسوب حتى تحكم أنت</b>':''].filter(Boolean).join(' · ')+'</div>':'')+
         K.cu.map(function(q,ci){var op=!!D.open[q.name]||K.cu.length===1||!!D.flt;return '<div class="cc"><div class="ch2" data-dc="'+ci+'"><b>'+esc(q.name)+'</b><span>'+q.n+' إيصالًا'+(q.un?' · <em>'+q.un+' لم يُقرأ</em>':'')+'</span></div>'+
           '<div class="cv">'+(Object.keys(q.cur).map(function(c){return '<span><small>'+c+'</small><b>'+fm(q.cur[c].s)+'</b></span>';}).join('')||'<span><small>—</small><b>0</b></span>')+'</div>'+
           (K.cu.length>1?'<button type="button" class="tg" data-dc="'+ci+'">'+(op?'إخفاء الإيصالات':'عرض الإيصالات ('+q.its.length+')')+'</button>':'')+
-          (op?q.its.filter(function(it){return !D.flt||(it.st==='ok'&&it.ccy===D.flt);}).map(function(it,ri,arr){var dk=it.ts?h.dmy(it.ts).slice(0,10):'بلا تاريخ',pk=ri?(arr[ri-1].ts?h.dmy(arr[ri-1].ts).slice(0,10):'بلا تاريخ'):'';return (dk!==pk?'<div class="dy">'+dk+'</div>':'')+'<div class="rw '+(it.st==='ok'?'g':it.st==='un'?'a':'r')+'"><div class="mn"><b>'+(it.st==='ok'?fm(it.v)+' <small>'+it.ccy+'</small>':it.st==='un'?esc(it.why||'لم يُقرأ المبلغ')+(it.v&&it.ccy!=='؟'?' <small>'+fm(it.v)+'</small>':''):'غير ناجحة')+'</b><span class="bk">'+esc(bankOf(it.p)||'بنك غير مقروء')+'</span><span>'+esc([it.ts?h.dmy(it.ts).slice(13):'',nr(it.p.ref)||'بلا مرجع'].filter(Boolean).join(' · '))+'</span></div>'+(it.p.man?'<em class="chk ok">معدَّل ✓</em>':'')+'<button type="button" data-do="'+it.i+'">فتح / تعديل</button></div>';}).join(''):'')+'</div>';}).join('')+
+          (op?q.its.filter(function(it){return !D.flt||((it.st==='ok'||it.st==='dup')&&(it.ccy===D.flt||ccyOf(it.p)===D.flt));}).map(function(it,ri,arr){var dk=it.ts?h.dmy(it.ts).slice(0,10):'بلا تاريخ',pk=ri?(arr[ri-1].ts?h.dmy(arr[ri-1].ts).slice(0,10):'بلا تاريخ'):'';return (dk!==pk?'<div class="dy">'+dk+'</div>':'')+'<div class="rw '+(it.st==='dup'?'r':it.sus?'a':it.st==='ok'?'g':it.st==='un'?'a':'r')+'"'+(it.sus?' style="border-inline-start-color:#B45309;background:#FFF7ED"':'')+'><div class="mn"><b>'+(it.st==='dup'?'<s>'+fm(amt(it.p.amount))+'</s> <small>مكرر — لم يُحسب</small>':it.st==='ok'?fm(it.v)+' <small>'+it.ccy+'</small>':it.st==='un'?esc(it.why||'لم يُقرأ المبلغ')+(it.v&&it.ccy!=='؟'?' <small>'+fm(it.v)+'</small>':''):'غير ناجحة')+'</b><span class="bk">'+esc(bankOf(it.p)||'بنك غير مقروء')+'</span><span>'+esc([it.ts?h.dmy(it.ts).slice(13):'',nr(it.p.ref)||'بلا مرجع'].filter(Boolean).join(' · '))+'</span>'+
+            (it.dup?'<span style="color:#C8102E;direction:rtl;text-align:start">'+(it.dup.how==='fp'?'الصورة نفسها أُرسلت مرتين':'رقم العملية نفسه أُرسل مرتين')+(it.dup.ofts?' — الأولى '+h.dmy(it.dup.ofts):'')+'</span>':'')+
+            (it.sus?'<span style="color:#B45309;direction:rtl;text-align:start">⚠ مشتبه بالتكرار: '+(it.sus.how==='img'?'صورة متشابهة':'المبلغ نفسه في اليوم نفسه')+(it.sus.ofts?' — مع إيصال '+h.dmy(it.sus.ofts):'')+'</span>':'')+'</div>'+
+            (it.sus?'<div style="display:flex;flex-direction:column;gap:4px"><button type="button" data-dd="'+it.i+':dup" style="background:#C8102E;border-color:#C8102E">مكرر — احذفه</button><button type="button" data-dd="'+it.i+':ok" style="background:#fff;color:#0B7A3B;border-color:#0B7A3B">إيصالان مختلفان</button><button type="button" data-dd="'+it.i+':cmp">قارن الاثنين</button></div>':it.dup?'<div style="display:flex;flex-direction:column;gap:4px"><button type="button" data-dd="'+it.i+':cmp">قارن الاثنين</button><button type="button" data-dd="'+it.i+':ok" style="background:#fff;color:#0B7A3B;border-color:#0B7A3B">ليس مكررًا</button></div>':(it.p.man?'<em class="chk ok">معدَّل ✓</em>':'')+'<button type="button" data-do="'+it.i+'">فتح / تعديل</button>')+'</div>';}).join(''):'')+'</div>';}).join('')+
         '<div class="lg"><span>لغة التقرير</span><button type="button" data-dl="ar"'+(LG==='ar'?' class="on"':'')+'>العربية</button><button type="button" data-dl="pt"'+(LG==='pt'?' class="on"':'')+'>Português</button></div><div class="bs"><button type="button" class="bt sv" data-da="save">'+(D.key!=='daily'?'✓ محفوظة — تحديث الحفظ':'حفظ العملية')+'</button><button type="button" class="bt" data-da="pdf">تقرير PDF — مشاركة</button><button type="button" class="bt ln" data-da="share">مشاركة ملخص نصي</button><button type="button" class="bt ln" data-da="print">طباعة</button><button type="button" class="bt ln" data-da="new">'+(D.key!=='daily'?'إغلاق — العودة للقائمة':'إنهاء وحساب جديد')+'</button>'+(D.key!=='daily'?'<button type="button" class="bt ln dl" data-dz="'+D.key+'">حذف هذه العملية</button>':'')+'</div></section>';
       var bo=m.querySelector('details.bkd')&&m.querySelector('details.bkd').open;m.innerHTML=x;if(bo&&m.querySelector('details.bkd'))m.querySelector('details.bkd').open=true;return;}
     var c=D.c;x='<section class="sd c"><header><b>الحسابات اليومية</b><small>ارفع ملف زبون واحد أو عدة زبائن — تُحسب كل عملة في خانتها مع المجموع وتقرير</small></header>';
@@ -298,6 +326,11 @@
     if((b=t.closest('[data-dq]'))){var c2=D.c;if(!c2)return;c2.all=b.dataset.dq==='all';if(!c2.all){c2.to=c2.max;c2.from=Math.max(c2.min,c2.max-(+b.dataset.dq-1)*DAY);}paint();return;}
     if((b=t.closest('[data-do]'))){view(+b.dataset.do);return;}
     if((b=t.closest('[data-dc]'))){var cu=calc().cu[+b.dataset.dc];if(cu){D.open[cu.name]=!D.open[cu.name];paint();}return;}
+    if((b=t.closest('[data-dd]'))){var z=b.dataset.dd.split(':'),S2=D.res,it2=S2&&S2.its[+z[0]];if(!it2)return;var oth=(it2.sus&&it2.sus.of)||(it2.dup&&it2.dup.of),oi=S2.its.findIndex(function(q){return q.nm===oth&&q.cn===it2.cn;});
+      if(z[1]==='dup'){it2.dup={how:it2.sus?it2.sus.how:'man',of:oth,ofts:(it2.sus||it2.dup||{}).ofts};it2.sus=null;toast('حُذف الإيصال المكرر من الحساب');}
+      else if(z[1]==='ok'){it2.sus=null;it2.dup=null;it2.p.man=1;toast('أُبقي الإيصالان في الحساب');}
+      else if(z[1]==='cmp'){cmpView(+z[0],oi);return;}
+      saveMeta();paint();return;}
     if((b=t.closest('[data-dv]'))){var k=b.dataset.dv,S=D.res;if(D.v==null||!S)return;var it=S.its[D.v];
       if(k==='x'){closeV();return;}if(k==='p'){view(nx(D.v,-1));return;}if(k==='n'){view(nx(D.v,1));return;}
       if(k==='no'){it.p.status='cancelled';it.p.man=1;cput(it.fp,it.p);saveMeta();toast('حُذف الإيصال من الحساب');}
