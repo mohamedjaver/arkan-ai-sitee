@@ -1,4 +1,4 @@
-/* bdl-lab-sup.js — تدقيق المورد (Build 1448–1455)
+/* bdl-lab-sup.js — تدقيق المورد (Build 1448–1456)
    ترفع محادثة واتساب مع مورد USDT (ZIP مع الوسائط) → يُقرأ نص المحادثة والإيصالات:
    • أسعار البيع المذكورة في الرسائل (كوانزا لكل 1 USDT) → المتوسط والوسيط والمدى والتذبذب.
    • إيصالات الكوانزا التي أرسلتُها أنا للمورد (المدفوع).
@@ -32,8 +32,14 @@
     return '؟';}
   /* 1450: إيصال Binance فيه عنوان محفظة (0x…40 خانة) وTxid (0x…64 خانة). العنوان نفسه يتكرر في كل الإيصالات — لا يصلح مرجعًا */
   function addrOf(p){var a=String(p.receiver||p.account||'').replace(/\s/g,''),r=String(p.ref||'').replace(/\s/g,'');
-    if(/^0x[0-9a-fA-F]{30,42}$/.test(a)||/^T[1-9A-HJ-NP-Za-km-z]{30,34}$/.test(a))return a.toLowerCase();if(/^0x[0-9a-fA-F]{40}$/.test(r))return r.toLowerCase();return '';}
-  function refOf(p){var r=String(p.ref||'').replace(/\s/g,'');if(/^0x[0-9a-fA-F]{40}$/.test(r))return '';return nr(r);}
+    if(/^0x[0-9a-fA-F]{30,42}$/.test(a)||/^T[1-9A-HJ-NP-Za-km-z]{30,34}$/.test(a))return a.toLowerCase();if(/^0x[0-9a-fA-F]{40}$/.test(r))return r.toLowerCase();if(isAddrRef(r)){var rl=r.toLowerCase();for(var k in ADDRS){if(k.indexOf(rl)===0)return k;}return rl;}return '';}
+  /* 1456: عناوين المحافظ المعروفة في الجلسة — أي «مرجع» يبدأ بـ0x ويطابق عنوانًا (أو بدايته، لأن OCR يبتر السطر) أو يتكرر على 3 إيصالات بمبالغ مختلفة فهو عنوان لا مرجع */
+  var ADDRS={};
+  function learnAddrs(its){ADDRS={};var c={},am={};its.forEach(function(it){var p=it.p||{},a=String(p.receiver||p.account||'').replace(/\s/g,'').toLowerCase();if(/^0x[0-9a-f]{30,}$|^t[1-9a-z]{30,34}$/.test(a))ADDRS[a]=1;
+      var r=String(p.ref||'').replace(/\s/g,'').toLowerCase();if(/^0x[0-9a-f]{10,39}$/.test(r)){c[r]=(c[r]||0)+1;(am[r]||(am[r]={}))[Math.round(amt(p.amount))]=1;}});
+    Object.keys(c).forEach(function(r){if(c[r]>=3&&Object.keys(am[r]).length>=2)ADDRS[r]=1;});}
+  function isAddrRef(r){r=String(r||'').replace(/\s/g,'').toLowerCase();if(!/^0x[0-9a-f]{10,}$/.test(r))return false;if(ADDRS[r])return true;for(var a in ADDRS){if(a.indexOf(r)===0||r.indexOf(a)===0)return true;}return false;}
+  function refOf(p){var r=String(p.ref||'').replace(/\s/g,'');if(/^0x[0-9a-fA-F]{40}$/.test(r)||isAddrRef(r))return '';return nr(r);}
   function shortA(a){return a?a.slice(0,8)+'…'+a.slice(-6):'';}
   /* 1453: حسابات المورد — تُتعلَّم من إيصالات الدفع (اسم المستفيد / رقم الحساب / IBAN) وتُحفظ لكل مورد على الجهاز */
   function normName(n){return String(n||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z\u0600-\u06ff ]+/g,' ').replace(/\b(lda|limitada|sa|comercio|geral|unipessoal|e|de|da|do)\b/g,' ').replace(/\s+/g,' ').trim();}
@@ -118,14 +124,14 @@
   async function readFile(file,force){var fp=await h.sha(file),p=await cget(fp);
     if(!p||p.ccy===undefined||force||(!p.man&&!p.sv&&!(pnum(p.amount)>0))||(!p.man&&(p.rv||0)<6&&(p.weak||!(pnum(p.amount)>0)||/fail|rejei|recus|cancel|declin/i.test(p.status||'')))||(!p.man&&(p.rv||0)<7&&/USDT|USD/i.test(p.ccy||'')&&!refOf(p))){ /* 1452: ما قُرئ قبل إصلاح Binance وعُلِّم فاشلًا/ضعيفًا يُعاد مرة واحدة */var AR=window.ArkanRead,g=null,eng='';try{var r=await Promise.race([AR.read(file),new Promise(function(z){setTimeout(function(){z(null);},45000);})]);if(r){g=r.parsed||{};eng=r.engine||'ocr';}}catch(e){}
       if(eng&&!(pnum(g.amount)>0)&&r&&r.text){var mt=String(r.text).match(/(-?\s?\d[\d\s.,]{0,14}\d)\s*(USDT|USDC|USD)\b/i)||String(r.text).match(/(?:Valor|Amount|Quantia|Montante)\s*:?\s*(\d[\d\s.,]*)\s*(USDT|USDC)/i);if(mt&&pnum(mt[1])>0){g.amount=mt[1];g.currency=g.currency||'USDT';if(!g.bank)g.bank='Binance';}}
-      if(eng){p={amount:pnum(g.amount),raw:String(g.amount==null?'':g.amount),sv:2,ref:g.transaction_id||g.reference||g.txn||'',bank:g.bank||g.institution||'',date:g.date||'',name:g.beneficiary||g.name||'',account:g.iban||g.account||'',receiver:g.receiver||'',ccy:String(g.currency||g.ccy||''),status:String(g.status||''),eng:eng,rv:7};if(g.weak)p.weak=1;if(g.is_receipt===false)p.nr=1;var rr=String(p.ref||'').replace(/\s/g,'');if(/^0x[0-9a-fA-F]{40}$/.test(rr)){if(!p.receiver)p.receiver=rr;p.ref='';}if((addrOf(p)||/^0x[0-9a-fA-F]{60,}/.test(String(p.ref||'')))&&(!p.ccy||/^USD$/i.test(p.ccy)))p.ccy='USDT';cput(fp,p);}
+      if(eng){p={amount:pnum(g.amount),raw:String(g.amount==null?'':g.amount),sv:2,ref:g.transaction_id||g.reference||g.txn||'',bank:g.bank||g.institution||'',date:g.date||'',name:g.beneficiary||g.name||'',account:g.iban||g.account||'',receiver:g.receiver||'',ccy:String(g.currency||g.ccy||''),status:String(g.status||''),eng:eng,rv:7};if(g.weak)p.weak=1;if(g.is_receipt===false)p.nr=1;var rr=String(p.ref||'').replace(/\s/g,'');if(/^0x[0-9a-fA-F]{40}$/.test(rr)){if(!p.receiver)p.receiver=rr;p.ref='';}else if(/^0x/i.test(rr)&&p.receiver&&String(p.receiver).replace(/\s/g,'').toLowerCase().indexOf(rr.toLowerCase())===0)p.ref='';if((addrOf(p)||/^0x[0-9a-fA-F]{60,}/.test(String(p.ref||'')))&&(!p.ccy||/^USD$/i.test(p.ccy)))p.ccy='USDT';cput(fp,p);}
       else if(!p)p={amount:0,ref:'',bank:'',ccy:'',status:'',eng:'',rv:0};}
     return {p:p,fp:fp};}
   function feed(R,it){var p=it.p||{},v=amt(p.amount),c=it.cc||ccyOf(p),k=it.d?'d':!v||c==='؟'?'u':c===FIAT?'K':(c==='USDT'||c=='USDC')?'T':'o';R.cnt[k]++;R.sum[k==='K'?'K':k==='T'?'T':'x']+=k==='K'||k==='T'?v:0;}
   var PT=0;function paintP(){var now=Date.now();if(now-PT<400){if(!paintP.q){paintP.q=setTimeout(function(){paintP.q=0;PT=Date.now();paint();},400-(now-PT));}return;}PT=now;paint();}
   /* 1453: ممنوع تكرار الإيصالات — أربع طبقات. مؤكد (يُحسب مرة واحدة تلقائيًا): الصورة نفسها، أو رقم العملية نفسه (أو ذيله 8 خانات)، أو صورة متطابقة بصريًا بالمبلغ نفسه.
      مشتبه (طبقة مراجعة): المبلغ نفسه بالعملة نفسها في اليوم نفسه بلا رقم عملية مقروء، أو صورة متشابهة بالمبلغ نفسه خلال 3 أيام. */
-  async function dedupe(its,R){var n=0,LA=window.__LABA,rs={},tl={};
+  async function dedupe(its,R){var n=0,LA=window.__LABA,rs={},tl={};learnAddrs(its);
     its.sort(function(a,b){return (a.ts||0)-(b.ts||0);});
     its.forEach(function(it){if(it.d)return;var rf=refOf(it.p);if(!rf||rf.length<6)return;var t8=rf.slice(-8);
       if(rs[rf]){var ta=ptime(it.p),tb=ptime(rs[rf].p);if(ta&&tb&&Math.abs(ta-tb)>90e3){it.ds={of:rs[rf].nm,how:'reftime',j:rs[rf]};return;}n++;it.d={of:rs[rf].nm,how:'ref'};return;}if(rf.length>=10&&tl[t8]&&Math.round(amt(tl[t8].p.amount))===Math.round(amt(it.p.amount))){n++;it.d={of:tl[t8].nm,how:'ref8'};return;}
@@ -162,7 +168,7 @@
     if(c==='AOA'&&(v<1000||v>500e6))return 'مبلغ كوانزا غير منطقي';if(c==='MRU'&&(v<100||v>50e6))return 'مبلغ أوقية غير منطقي';if((c==='USDT'||c==='USDC')&&v>500000)return 'مبلغ USDT غير منطقي';return '';}
   /* طبقات المراجعة: dupS مشتبه بالتكرار · acct حساب غير معروف للمورد · noacct بلا مستفيد مقروء · read غير مقروء/ليست إيصالًا · fail فاشلة */
   var LAY={dupS:'مشتبه بالتكرار',acct:'حساب غير معروف للمورد',noacct:'بلا اسم مستفيد مقروء',read:'غير مقروءة أو ليست إيصالًا',fail:'فاشلة حسب القارئ'};
-  function dirT(it,S){var a=addrOf(it.p),m=S.addr||{};if(a&&m[a])return m[a]==='mine'?'s':'m';return S.tdef||'s';}
+  function dirT(it,S){var a=addrOf(it.p),m=S.addr||{};if(a&&m[a])return m[a]==='mine'?'s':'m';if(/javer|mstr|bdl|arkan/i.test(String(it.p.name||'')))return 's';return S.tdef||'s';}
   function side(it,S,KN){it.why='';it.lay='';if(it.x)return 'x';if(it.d&&!it.nd)return 'd';if(it.ds&&!it.nd){it.lay='dupS';it.why=it.ds.how==='reftime'?'رقم العملية نفسه لكن الوقت المطبوع مختلف عن إيصال '+day(it.ds.j?it.ds.j.ts:0)+' — قارن':'مبلغ مطابق لإيصال آخر في '+day(it.ds.j?it.ds.j.ts:0)+(it.ds.how==='img'?' وصورة متشابهة':' بلا رقم عملية ولا وقت مطبوع');return 'u';}
     if(failed(it.p)&&!it.ok){it.lay='fail';it.why='القارئ يقول إنها فاشلة/ملغاة — افتحها وتحقق';return 'u';}var v=amt(it.p.amount),c=it.cc||ccyOf(it.p),r=it.ow||(it.who?S.roles[it.who]:'');
     it.why=why(it,v,c);if(it.why){it.lay='read';return 'u';}if(c!==FIAT&&c!=='USDT'&&c!=='USDC')return 'o';var cr=c===FIAT?'K':'T';
@@ -185,7 +191,7 @@
     Object.keys(cnt).forEach(function(k){KN[k]=reg[k]&&reg[k].ok!=null?(reg[k].ok?1:-1):(cnt[k]>=3?1:0);});
     Object.keys(reg).forEach(function(k){if(KN[k]==null)KN[k]=reg[k].ok?1:-1;});
     return {KN:KN,cnt:cnt,lab:lab};}
-  function calc(){var S=U.res,col={mK:[],sT:[],sK:[],mT:[],u:[],o:[],x:[],d:[]},sum={mK:0,sT:0,sK:0,mT:0},KA=knownAccts(S),lays={dupS:[],acct:[],noacct:[],read:[],fail:[]};
+  function calc(){var S=U.res;learnAddrs(S.its);var col={mK:[],sT:[],sK:[],mT:[],u:[],o:[],x:[],d:[]},sum={mK:0,sT:0,sK:0,mT:0},KA=knownAccts(S),lays={dupS:[],acct:[],noacct:[],read:[],fail:[]};
     S.its.forEach(function(it,i){it.i=i;var k=side(it,S,KA.KN);it.k=k;(col[k]||col.u).push(it);if(k==='u'&&lays[it.lay||'read'])lays[it.lay||'read'].push(it);if(sum[k]!=null)sum[k]+=amt(it.p.amount);});
     var st=stats(S),avg=st.avg,netK=sum.mK-sum.sK,netT=sum.sT-sum.mT,val=netT*avg,diff=netK-val,impl=netT>0?netK/netT:0,dev=avg&&impl?(impl-avg)/avg*100:0;
     var at=0;col.sT.forEach(function(it){var r=rateAt(S,it.ts,avg);it.rt=r;at+=amt(it.p.amount)*r;});col.mT.forEach(function(it){var r=rateAt(S,it.ts,avg);it.rt=r;at-=amt(it.p.amount)*r;});
@@ -279,7 +285,7 @@
         '<button type="button" class="bt" data-sa="go"'+(nIn||nM?'':' disabled')+'>ابدأ التدقيق</button><button type="button" class="bt l" data-sa="reset">ملف آخر</button>';}
     m.innerHTML=x+'</div>';}
   function paintRes(m){var S=U.res,K=calc(),st=K.st,x='',sign=K.diff>=0;
-    x+='<div class="tb"><button type="button" data-sa="rf">تحديث الصفحة</button><button type="button" data-sa="rc">إعادة الحساب</button><span>'+S.its.length+' إيصال · '+esc(S.per)+'</span></div>';
+    x+='<div class="tb"><button type="button" data-sa="rf">تحديث الصفحة</button><button type="button" data-sa="rk">فحص الجلسة كاملة</button><span>'+S.its.length+' إيصال · '+esc(S.per)+'</span></div>';
     if(K.st.avg<=0)x+='<div class="wr"><b>لا سعر معتمد.</b> لم أجد أسعارًا في الرسائل ضمن المدى '+CFG.min+'–'+CFG.max+'. اكتب السعر يدويًا في قسم الأسعار أدناه.</div>';
     var dUsd=K.avg?K.diff/K.avg:0,small=Math.abs(K.diff)<Math.max(1000,K.netK*0.002),noT=!K.sum.sT&&!K.sum.mT,nU=K.col.u.length,tot=S.its.length,cnt=tot-nU-K.col.x.length-K.col.o.length-K.col.d.length;
     x+='<div class="hero '+(noT?'na':small?'ok':sign?'':'neg')+'"><small>'+(noT?'النتيجة غير صالحة بعد':small?'الحساب متوازن تقريبًا':sign?'لك عند المورد':'عليك للمورد')+' — '+esc(S.name)+'</small><b>'+fk(Math.abs(K.diff))+' '+fiatSym()+'</b><i>≈ '+fm(Math.abs(dUsd))+' USDT بمتوسط '+fm(K.avg)+' · '+esc(S.per)+'</i>'+
@@ -327,7 +333,7 @@
       S.rates.map(function(r,i){var hi=r.dev!=null&&Math.abs(r.dev)>5;return '<label class="rq'+(r.on?'':' off')+'"><input type="checkbox" data-ri="'+i+'"'+(r.on?' checked':'')+'><span>'+day(r.ts)+' · '+esc(r.who||'')+'<br>'+esc(r.t)+'</span><div style="text-align:end"><b>'+fm(r.v)+'</b><br>'+(r.dev!=null?'<em class="'+(hi?'hi':'')+'">'+(r.dev>0?'+':'')+fm(r.dev,1)+'%</em>':'')+'</div></label>';}).join('')+'</details>';
     /* حسب الشهر */
     /* فحص المراجع */
-    var AU=K.audit;x+='<div class="'+(AU.dup.length?'wr':'okb')+'"><b>فحص المراجع:</b> '+AU.total+' إيصال محسوب بمرجع، '+AU.unique+' مرجع فريد'+(AU.dup.length?' — <b>'+AU.dup.length+' مرجع مكرر داخل الحساب</b> (يُخصم تلقائيًا أدناه)':' — لا مرجع مكرر في الحساب ✓')+(AU.dcol?' · '+AU.dcol+' نسخة مكررة أُبعدت':'')+(AU.noRef.length?' · <button type="button" class="lk" data-sa="go2" data-k="nr">'+AU.noRef.length+' بلا مرجع مقروء</button>':'')+'</div>';
+    var AU=K.audit;x+='<div class="'+(AU.dup.length?'wr':'okb')+'"><b>فحص المراجع:</b> '+AU.total+' إيصال محسوب بمرجع، '+AU.unique+' مرجع فريد'+(AU.dup.length?' — <b>'+AU.dup.length+' مرجع مكرر داخل الحساب</b> (يُخصم تلقائيًا أدناه)':' — لا مرجع مكرر في الحساب ✓')+(AU.dcol?' · '+AU.dcol+' نسخة مكررة أُبعدت':'')+(AU.noRef.length?' · <button type="button" class="lk" data-sa="go2" data-k="nr">'+AU.noRef.length+' بلا مرجع مقروء</button>':'')+(Object.keys(ADDRS).length?' · '+Object.keys(ADDRS).length+' عنوان محفظة معروف (لا يُعد مرجعًا)':'')+'</div>';
     if(AU.dup.length)x+='<details class="ly ly-dupS" open><summary>مراجع مكررة داخل الحساب ('+AU.dup.length+')</summary><div class="mt">المرجع نفسه قُرئ على إيصالين محسوبين بمبلغين مختلفين (قراءة خاطئة لأحدهما أو مبلغ مختلف). افتح الاثنين وصحّح أو احذف أحدهما.</div>'+AU.dup.map(function(g){return '<div class="mt" style="font-weight:800;color:#0B1F3F;direction:ltr;text-align:end;margin-top:8px">'+esc(g.ref.slice(-14))+'</div>'+g.its.map(function(it){return rowHtml(it)+'<div class="qa"><button type="button" class="d" data-sa="dupy0" data-i="'+it.i+'">مكرر — احذف هذا</button><button type="button" data-sa="cmp0" data-i="'+it.i+'" data-j="'+(g.its[0]===it?g.its[1].i:g.its[0].i)+'">قارن</button></div>';}).join('');}).join('')+'</details>';
     if(AU.noRef.length)x+='<details data-dk="nr"'+(U.open.dnr?' open':'')+'><summary>محسوبة بلا مرجع مقروء ('+AU.noRef.length+')<span>'+fm(AU.noRef.reduce(function(a,it){return a+amt(it.p.amount);},0))+'</span></summary><div class="mt">هذه لا يمكن التحقق من تكرارها بالمرجع، فحُقّقت بالصورة والمبلغ واليوم فقط. افتحها واكتب المرجع إن ظهر.</div>'+AU.noRef.slice(0,U.open.nr?999:20).map(rowHtml).join('')+(AU.noRef.length>20&&!U.open.nr?'<button type="button" class="bt l" data-sa="more" data-k="nr">عرض الكل</button>':'')+'</details>';
     /* حسب الشهر → الأيام */
@@ -362,6 +368,13 @@
       '<div class="bd'+(jt?' two':'')+'">'+(!it._u?'<p style="color:#9FB0CC;padding:30px 16px;text-align:center">الصورة غير محفوظة على الجهاز.</p>':it.pdf?'<iframe src="'+it._u+'"></iframe>':'<img src="'+it._u+'" alt="">')+(jt?'<div class="sep">الإيصال المشتبه بتكراره · '+day(jt.ts)+'</div>'+(jt._u?(jt.pdf?'<iframe src="'+jt._u+'"></iframe>':'<img src="'+jt._u+'" alt="">'):''):'')+'</div>'+
       '<footer><button type="button" class="ok" data-sv="sv">حفظ</button><button type="button" class="'+(it.x?'':'dl')+'" data-sv="ex">'+(it.x?'إرجاعه للحساب':'استبعاد')+'</button><button type="button" data-sv="x">إغلاق</button></footer>';
     v.classList.add('on');}
+  /* 1456: فحص الجلسة كاملة — يعيد كشف التكرار على كل الإيصالات بالقواعد الحالية: الأحكام اليدوية تبقى، المؤكد يُحسب مرة، غير المكرر يُرفع إلى الحساب، المشكوك يبقى في المراجعة */
+  async function recheck(){var S=U.res;if(!S||U.run)return;var before={d:0,ds:0};S.its.forEach(function(it){if(it.d)before.d++;if(it.ds)before.ds++;if(it.d&&it.d.how!=='man')it.d=null;if(it.ds&&!it.nd)it.ds=null;});
+    var R={n:S.its.length,d:0,stop:false,t0:Date.now(),cur:'',t:'فحص الجلسة كاملة — كشف التكرار بالقواعد الحالية',cnt:{K:0,T:0,o:0,u:0,d:0},sum:{K:0,T:0,x:0},feed:[]};U.run=R;paint();window.scrollTo(0,0);
+    S.its.forEach(function(it){if(it.nd&&it.d&&it.d.how!=='man')it.d=null;});
+    try{await dedupe(S.its,R);}catch(e){}
+    var after={d:0,ds:0};S.its.forEach(function(it){if(it.d)after.d++;if(it.ds)after.ds++;});U.run=null;saveMeta();paint();
+    toast('فحص '+S.its.length+' إيصالًا: '+after.d+' مكرر مؤكد (كان '+before.d+') · '+after.ds+' مشتبه للمراجعة · '+Math.max(0,(before.d+before.ds)-(after.d+after.ds))+' رُفع إلى الحساب');}
   async function rereadU(){var S=U.res;if(!S||U.run)return;var KK=calc(),L2=KK.lays.read.concat(KK.lays.noacct).filter(function(it){return !it.p.man;});if(!L2.length)return toast('لا شيء لإعادة قراءته');if(!DB)DB=await idb();var ok=0;
     var R={n:L2.length,d:0,stop:false,t0:Date.now(),cur:'',t:'إعادة قراءة صندوق المراجعة',cnt:{K:0,T:0,o:0,u:0,d:0},sum:{K:0,T:0,x:0},feed:[]};U.run=R;paint();window.scrollTo(0,0);
     for(var i=0;i<L2.length&&!R.stop;i++){var it=L2[i];R.cur=it.nm;await untilVisible();try{if(!it.file&&it._si>=0)it.file=await h.sess.file(KEY,it._si,it.nm,it.pdf);if(it.file){var r=await readFile(it.file,true);if(amt(r.p.amount)&&!amt(it.p.amount)||r.p.ccy!==it.p.ccy)ok++;it.p=r.p;feed(R,it);}}catch(e){}R.d++;paintP();}
@@ -399,6 +412,7 @@
     else if(a2==='rr'){rereadU();}
     else if(a2==='rf'){saveMeta();setTimeout(function(){try{sessionStorage.setItem('lab_sup_keep','1');}catch(e){}location.reload();},150);}
     else if(a2==='rc'){paint();toast('أُعيد الحساب');}
+    else if(a2==='rk'){recheck();}
     else if(a2==='dupy0'){var it6=U.res.its[+b.dataset.i];if(it6){it6.d={of:'',how:'man'};saveMeta();paint();}}
     else if(a2==='cmp0'){return view(+b.dataset.i,+b.dataset.j);}
     else if(a2==='dupy'||a2==='cmp'){var it4=U.res.its[+b.dataset.i];if(!it4)return;if(a2==='cmp'){return view(it4.i,it4.ds&&it4.ds.j?it4.ds.j.i:-1);}it4.d={of:it4.ds?it4.ds.of:'',how:'man'};it4.ds=null;saveMeta();paint();toast('اعتُبر مكررًا — يُحسب مرة واحدة');}
