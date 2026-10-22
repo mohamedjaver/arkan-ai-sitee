@@ -218,6 +218,9 @@ function liteParse0(t){
       if(tx)p.reference=tx[1];
       if(ad)p.receiver=ad[1];
       if(dt)p.date=dt[1]+' '+dt[2];
+      /* 1452: «Por que meu saque ainda não foi concluído?» سطر مساعدة ثابت في الشاشة — ليس حالة العملية. الحالة من علامة ✓ Concluído */
+      p.status=/\bConclu[ií]do\b|\bCompleted\b|\bSuccessful\b/i.test(t)&&!/Falh|Rejeit|Cancelad/i.test(t)?'completed':'';
+      p.tpl='binance'; /* Valor (3 689) هو المبلغ مقرّبًا بعد الرسوم — ليس رقمًا متشابهًا مريبًا */
       p.confidence=(p.amount&&p.reference)?100:80;return p;}
   }
   /* قالب Comprovativo Digital — MULTICAIXA Express (PDF رقمي): Data-Hora بالثواني */
@@ -340,7 +343,7 @@ function lookGuard(p,t){try{const am=+p.amount||0;if(!am)return;const cu=String(
   }catch(e){}}
 function liteParse(t){
   const p=liteParse0(t);
-  lookGuard(p,String(t));
+  if(!(p&&p.tpl==='binance'))lookGuard(p,String(t));
   try{
     const T=String(t);
     if(p&&!p.status){if(/(falhou|falhad|rejeitad|recusad|cancelad|n[ãa]o\s+(?:foi\s+)?(?:efectuad|efetuad|conclu[ií]d)|sem\s+sucesso|[ée]chec|[ée]chou|refus[ée]|annul[ée]|\bfailed\b|declined|unsuccessful|فشل|مرفوض|ملغا|غير\s+ناجح)/i.test(T))p.status='failed';
