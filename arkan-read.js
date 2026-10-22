@@ -205,6 +205,14 @@ function liteParse0(t){
         if(mo)p.date=('0'+dl[1]).slice(-2)+'/'+('0'+mo).slice(-2)+'/'+dl[3];} /* BFA APP: «Em 6 de Outubro de 2026» */
       p.confidence=(p.amount&&p.reference)?100:80;return p;}
   }
+  /* 1455: قالب Binance P2P — «Paid 5572.68 USDT Successfully … on 2025-12-03 16:25:09(UTC)» + Order ID */
+  if(/Paid\s+[\d.,\s]+\s*USDT\s+Successfully|You\s+paid\s+[\d.,\s]+\s*USDT|Order\s*ID/i.test(t)){
+    const am=t.match(/(?:You\s+)?[Pp]aid\s+([\d][\d.,\s]{0,14}\d|\d)\s*USDT/)||t.match(/([\d][\d.,\s]{0,14}\d)\s*USDT/);
+    const oid=t.match(/Order\s*ID[\s:]{0,6}(\d{12,24})/i)||t.match(/\b(\d{16,20})\b/);
+    const dt=t.match(/(\d{4}-\d{2}-\d{2})[\sT]+(\d{2}:\d{2}(?::\d{2})?)/);
+    if(am||oid){p.bank='BINANCE P2P';p.currency='USDT';if(am)p.amount=+String(am[1]).replace(/\s/g,'').replace(/,(?=\d{3}\b)/g,'').replace(',','.');if(oid)p.reference=oid[1];if(dt)p.date=dt[1]+' '+dt[2];
+      p.status=/Successfully|Conclu[ií]do|Completed/i.test(t)?'completed':'';p.tpl='binance';p.confidence=(p.amount&&p.reference)?100:(p.amount?85:60);return p;}
+  }
   /* قالب Binance — Detalhes do saque (سحب USDT): Txid كامل + تاريخ بالثواني */
   if((/Detalhes\s+do\s+saque|Binance/i.test(t))&&/(Txid|USDT)/i.test(t)){
     const tx=t.match(/Txid[\s:]{0,6}(0x[a-fA-F0-9]{16,})/i)||t.match(/\b(0x[a-fA-F0-9]{40,})\b/);
